@@ -15,6 +15,7 @@ import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import FeedScreen from '../screens/FeedScreen';
 import CameraScreen from '../screens/CameraScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import PhotoPreviewScreen from '../screens/PhotoPreviewScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -123,7 +124,16 @@ const AppNavigator = () => {
           <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         ) : (
           // Main App - User fully authenticated and profile complete
-          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            <Stack.Screen
+              name="PhotoPreview"
+              component={PhotoPreviewScreen}
+              options={{
+                presentation: 'fullScreenModal',
+              }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
