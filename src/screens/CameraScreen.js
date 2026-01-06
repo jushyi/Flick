@@ -1,45 +1,29 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
+  Image,
+  Animated,
+  Dimensions,
   ActivityIndicator,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAuth } from '../context/AuthContext';
-import { getDailyPhotoCount } from '../services/firebase/userService';
-import { useFocusEffect } from '@react-navigation/native';
+import { createPhoto } from '../services/firebase/photoService';
 
-const CameraScreen = ({ navigation }) => {
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const CameraScreen = () => {
   const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState('off');
   const [isCapturing, setIsCapturing] = useState(false);
-  const [dailyCount, setDailyCount] = useState(0);
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
   const cameraRef = useRef(null);
-
-  // Load daily photo count when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadDailyCount();
-    }, [user])
-  );
-
-  const loadDailyCount = async () => {
-    if (!user) return;
-
-    try {
-      const result = await getDailyPhotoCount(user.uid);
-      if (result.success) {
-        setDailyCount(result.count);
-      }
-    } catch (error) {
-      console.error('Error loading daily count:', error);
-    }
-  };
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
   // Handle permission request
   if (!permission) {
@@ -88,17 +72,31 @@ const CameraScreen = ({ navigation }) => {
     return 'AUTO';
   };
 
-  const takePicture = async () => {
-    if (!cameraRef.current || isCapturing) return;
+  const playPhotoAnimation = (photoUri) => {
+    setCapturedPhoto(photoUri);
+    animatedValue.setValue(0);
 
-    // Check daily limit
-    if (dailyCount >= 36) {
-      Alert.alert(
-        'Daily Limit Reached',
-        'You have used all 36 shots for today. Come back tomorrow for a new roll!'
-      );
-      return;
-    }
+    Animated.sequence([
+      // Shrink and move to darkroom position (bottom tab bar)
+      Animated.timing(animatedValue, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      // Fade out
+      Animated.timing(animatedValue, {
+        toValue: 2,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setCapturedPhoto(null);
+      animatedValue.setValue(0);
+    });
+  };
+
+  const takePicture = async () => {
+    if (!cameraRef.current || isCapturing || !user) return;
 
     try {
       setIsCapturing(true);
@@ -110,17 +108,42 @@ const CameraScreen = ({ navigation }) => {
 
       console.log('Photo captured:', photo.uri);
 
-      // Navigate to preview screen
-      navigation.navigate('PhotoPreview', { photoUri: photo.uri });
+      // Show photo animation flying to darkroom
+      playPhotoAnimation(photo.uri);
 
-      setDailyCount(prev => prev + 1);
+      // Auto-save to darkroom (developing status)
+      const result = await createPhoto(user.uid, photo.uri);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
     } catch (error) {
-      console.error('Error taking picture:', error);
-      Alert.alert('Error', 'Failed to capture photo. Please try again.');
+      console.error('Error saving photo:', error);
     } finally {
       setIsCapturing(false);
     }
   };
+
+  // Calculate animation interpolations
+  const photoScale = animatedValue.interpolate({
+    inputRange: [0, 1, 2],
+    outputRange: [1, 0.15, 0.15],
+  });
+
+  const photoTranslateY = animatedValue.interpolate({
+    inputRange: [0, 1, 2],
+    outputRange: [0, SCREEN_HEIGHT * 0.7, SCREEN_HEIGHT * 0.7],
+  });
+
+  const photoTranslateX = animatedValue.interpolate({
+    inputRange: [0, 1, 2],
+    outputRange: [0, SCREEN_WIDTH * 0.25, SCREEN_WIDTH * 0.25], // Move to darkroom tab position
+  });
+
+  const photoOpacity = animatedValue.interpolate({
+    inputRange: [0, 1, 1.5, 2],
+    outputRange: [1, 1, 0.5, 0],
+  });
 
   return (
     <View style={styles.container}>
@@ -139,13 +162,6 @@ const CameraScreen = ({ navigation }) => {
             <Text style={styles.flashIcon}>{getFlashIcon()}</Text>
             <Text style={styles.flashLabel}>{getFlashLabel()}</Text>
           </TouchableOpacity>
-
-          <View style={styles.shotCounter}>
-            <Text style={styles.shotCountText}>
-              {dailyCount} / 36
-            </Text>
-            <Text style={styles.shotCountLabel}>shots today</Text>
-          </View>
 
           <TouchableOpacity
             style={styles.controlButton}
@@ -175,6 +191,25 @@ const CameraScreen = ({ navigation }) => {
           </View>
         </View>
       </CameraView>
+
+      {/* Animated Photo Snapshot */}
+      {capturedPhoto && (
+        <Animated.View
+          style={[
+            styles.animatedPhoto,
+            {
+              transform: [
+                { scale: photoScale },
+                { translateY: photoTranslateY },
+                { translateX: photoTranslateX },
+              ],
+              opacity: photoOpacity,
+            },
+          ]}
+        >
+          <Image source={{ uri: capturedPhoto }} style={styles.photoSnapshot} />
+        </Animated.View>
+      )}
     </View>
   );
 };
@@ -245,23 +280,6 @@ const styles = StyleSheet.create({
   controlIcon: {
     fontSize: 32,
   },
-  shotCounter: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  shotCountText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  shotCountLabel: {
-    fontSize: 10,
-    color: '#CCCCCC',
-    marginTop: 2,
-  },
   bottomControls: {
     position: 'absolute',
     bottom: 0,
@@ -290,6 +308,28 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: 34,
     backgroundColor: '#FFFFFF',
+  },
+  animatedPhoto: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginLeft: -150,
+    marginTop: -200,
+    width: 300,
+    height: 400,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  photoSnapshot: {
+    width: '100%',
+    height: '100%',
   },
 });
 

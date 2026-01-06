@@ -27,7 +27,6 @@ export const createPhoto = async (userId, photoUri) => {
       userId,
       imageURL: '', // Placeholder, will be updated after upload
       capturedAt: Timestamp.now(),
-      revealAt: calculateRevealTime(),
       status: 'developing',
       photoState: null,
       visibility: 'friends-only',
@@ -55,23 +54,11 @@ export const createPhoto = async (userId, photoUri) => {
     return {
       success: true,
       photoId,
-      revealAt: calculateRevealTime(),
     };
   } catch (error) {
     console.error('Error creating photo:', error);
     return { success: false, error: error.message };
   }
-};
-
-/**
- * Calculate random reveal time (1-3 hours from now)
- * @returns {Timestamp} - Reveal timestamp
- */
-const calculateRevealTime = () => {
-  const now = new Date();
-  const randomHours = 1 + Math.random() * 2; // Random between 1-3 hours
-  const revealTime = new Date(now.getTime() + randomHours * 60 * 60 * 1000);
-  return Timestamp.fromDate(revealTime);
 };
 
 /**
@@ -112,28 +99,106 @@ export const getUserPhotos = async (userId) => {
 };
 
 /**
- * Get user's developing photos
+ * Get count of developing photos for a user
+ * @param {string} userId - User ID
+ * @returns {Promise<number>} - Count of developing photos
+ */
+export const getDevelopingPhotoCount = async (userId) => {
+  try {
+    const developingQuery = query(
+      collection(db, 'photos'),
+      where('userId', '==', userId),
+      where('status', '==', 'developing')
+    );
+
+    const snapshot = await getDocs(developingQuery);
+    return snapshot.size;
+  } catch (error) {
+    console.error('Error getting developing photo count:', error);
+    return 0;
+  }
+};
+
+/**
+ * Get user's developing photos (both developing and revealed status)
  * @param {string} userId - User ID
  * @returns {Promise} - Array of developing photo documents
  */
 export const getDevelopingPhotos = async (userId) => {
   try {
-    const photosQuery = query(
+    // Get both developing and revealed photos
+    // Note: Removed orderBy to avoid composite index requirement
+    const developingQuery = query(
       collection(db, 'photos'),
       where('userId', '==', userId),
-      where('status', '==', 'developing'),
-      orderBy('revealAt', 'asc')
+      where('status', '==', 'developing')
     );
 
-    const snapshot = await getDocs(photosQuery);
-    const photos = snapshot.docs.map(doc => ({
+    const revealedQuery = query(
+      collection(db, 'photos'),
+      where('userId', '==', userId),
+      where('status', '==', 'revealed')
+    );
+
+    const [developingSnapshot, revealedSnapshot] = await Promise.all([
+      getDocs(developingQuery),
+      getDocs(revealedQuery),
+    ]);
+
+    const developingPhotos = developingSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     }));
 
-    return { success: true, photos };
+    const revealedPhotos = revealedSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Combine and sort by capturedAt in JavaScript (client-side sorting)
+    const allPhotos = [...developingPhotos, ...revealedPhotos].sort((a, b) => {
+      return a.capturedAt?.seconds - b.capturedAt?.seconds;
+    });
+
+    return { success: true, photos: allPhotos };
   } catch (error) {
     console.error('Error getting developing photos:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Reveal ALL developing photos at once (called when darkroom is ready)
+ * @param {string} userId - User ID
+ * @returns {Promise}
+ */
+export const revealPhotos = async (userId) => {
+  try {
+    // Get ALL developing photos for this user
+    const photosQuery = query(
+      collection(db, 'photos'),
+      where('userId', '==', userId),
+      where('status', '==', 'developing')
+    );
+
+    const snapshot = await getDocs(photosQuery);
+    const updates = [];
+
+    // Reveal ALL developing photos
+    snapshot.docs.forEach(doc => {
+      updates.push(
+        updateDoc(doc.ref, {
+          status: 'revealed',
+          revealedAt: Timestamp.now(),
+        })
+      );
+    });
+
+    await Promise.all(updates);
+
+    return { success: true, count: updates.length };
+  } catch (error) {
+    console.error('Error revealing photos:', error);
     return { success: false, error: error.message };
   }
 };

@@ -1,9 +1,10 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { Text, ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
+import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 
 // Import auth screens
 import LoginScreen from '../screens/LoginScreen';
@@ -14,16 +15,36 @@ import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 // Import main app screens
 import FeedScreen from '../screens/FeedScreen';
 import CameraScreen from '../screens/CameraScreen';
+import DarkroomScreen from '../screens/DarkroomScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import PhotoPreviewScreen from '../screens/PhotoPreviewScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 /**
- * Main Tab Navigator (Feed, Camera, Profile)
+ * Main Tab Navigator (Feed, Camera, Darkroom, Profile)
  */
 const MainTabNavigator = () => {
+  const { user } = useAuth();
+  const [darkroomCount, setDarkroomCount] = useState(0);
+
+  // Load darkroom count on mount and when tab becomes active
+  useEffect(() => {
+    if (!user) return;
+
+    const loadDarkroomCount = async () => {
+      const count = await getDevelopingPhotoCount(user.uid);
+      setDarkroomCount(count);
+    };
+
+    loadDarkroomCount();
+
+    // Poll every 30 seconds to update count
+    const interval = setInterval(loadDarkroomCount, 30000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -61,6 +82,17 @@ const MainTabNavigator = () => {
         }}
       />
       <Tab.Screen
+        name="Darkroom"
+        component={DarkroomScreen}
+        options={{
+          tabBarLabel: 'Darkroom',
+          tabBarIcon: ({ color }) => (
+            <DarkroomIcon icon="🌑" color={color} count={darkroomCount} />
+          ),
+          tabBarBadge: darkroomCount > 0 ? darkroomCount : undefined,
+        }}
+      />
+      <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
@@ -77,6 +109,37 @@ const MainTabNavigator = () => {
  */
 const TabIcon = ({ icon }) => {
   return <Text style={{ fontSize: 24 }}>{icon}</Text>;
+};
+
+/**
+ * Darkroom tab icon with badge indicator
+ */
+const DarkroomIcon = ({ icon, count }) => {
+  return (
+    <View style={{ position: 'relative' }}>
+      <Text style={{ fontSize: 24 }}>{icon}</Text>
+      {count > 0 && (
+        <View
+          style={{
+            position: 'absolute',
+            top: -4,
+            right: -8,
+            backgroundColor: '#FF3B30',
+            borderRadius: 10,
+            minWidth: 20,
+            height: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 4,
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 'bold' }}>
+            {count > 99 ? '99+' : count}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
 };
 
 /**
@@ -124,16 +187,7 @@ const AppNavigator = () => {
           <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         ) : (
           // Main App - User fully authenticated and profile complete
-          <>
-            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-            <Stack.Screen
-              name="PhotoPreview"
-              component={PhotoPreviewScreen}
-              options={{
-                presentation: 'fullScreenModal',
-              }}
-            />
-          </>
+          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
