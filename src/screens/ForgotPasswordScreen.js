@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../components';
 import { resetPassword } from '../services/firebase/authService';
 

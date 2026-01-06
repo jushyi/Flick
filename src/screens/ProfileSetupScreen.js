@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -11,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, Input } from '../components';
 import { useAuth } from '../context/AuthContext';
@@ -36,7 +36,7 @@ const ProfileSetupScreen = ({ navigation }) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
