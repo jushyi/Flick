@@ -105,6 +105,8 @@ const ProfileSetupScreen = ({ navigation }) => {
           photoURL = uploadResult.url;
         } else {
           Alert.alert('Upload Failed', 'Could not upload profile photo');
+          setUploading(false);
+          return;
         }
       }
 
@@ -113,18 +115,18 @@ const ProfileSetupScreen = ({ navigation }) => {
         displayName: displayName.trim(),
         bio: bio.trim(),
         photoURL,
+        profileSetupCompleted: true,
       };
 
       const updateResult = await updateUserDocument(user.uid, updateData);
 
       if (updateResult.success) {
-        // Update local profile state
+        // Update local profile state - this will trigger navigation via AppNavigator
         updateUserProfile({
           ...userProfile,
           ...updateData,
         });
-
-        // Navigation will be handled by AuthContext - user is now fully set up
+        // Navigation will be handled automatically by AuthContext state change
       } else {
         Alert.alert('Update Failed', 'Could not save profile information');
       }
@@ -136,8 +138,22 @@ const ProfileSetupScreen = ({ navigation }) => {
   };
 
   const handleSkip = () => {
-    // User can skip profile setup and complete it later
-    // This just dismisses the screen
+    // Set profile as completed even if user skips
+    const skipData = {
+      displayName: userProfile?.username || 'User',
+      bio: '',
+      photoURL: null,
+      profileSetupCompleted: true,
+    };
+
+    updateUserDocument(user.uid, skipData).then((result) => {
+      if (result.success) {
+        updateUserProfile({
+          ...userProfile,
+          ...skipData,
+        });
+      }
+    });
   };
 
   return (

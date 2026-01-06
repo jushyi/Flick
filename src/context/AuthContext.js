@@ -70,6 +70,7 @@ export const AuthProvider = ({ children }) => {
         photoURL: null,
         bio: '',
         friends: [],
+        profileSetupCompleted: false,
         createdAt: new Date(),
       };
 

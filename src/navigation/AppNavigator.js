@@ -94,7 +94,7 @@ const AppNavigator = () => {
   }
 
   const isAuthenticated = !!user;
-  const needsProfileSetup = isAuthenticated && userProfile && (!userProfile.displayName || userProfile.displayName === userProfile.username);
+  const needsProfileSetup = isAuthenticated && userProfile && (userProfile.profileSetupCompleted === false);
 
   return (
     <NavigationContainer>
