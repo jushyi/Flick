@@ -2,8 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components';
+import { useAuth } from '../context/AuthContext';
 
 const ProfileScreen = () => {
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
@@ -54,6 +61,13 @@ const ProfileScreen = () => {
           variant="outline"
           onPress={() => console.log('Edit profile')}
           style={styles.editButton}
+        />
+
+        <Button
+          title="Sign Out"
+          variant="secondary"
+          onPress={handleSignOut}
+          style={styles.signOutButton}
         />
       </ScrollView>
     </SafeAreaView>
@@ -155,6 +169,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   editButton: {
+    marginHorizontal: 24,
+    marginBottom: 16,
+  },
+  signOutButton: {
     marginHorizontal: 24,
     marginBottom: 24,
   },

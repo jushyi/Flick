@@ -57,7 +57,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   const handleBackToLogin = () => {
-    navigation.navigate('Login');
+    navigation.goBack();
   };
 
   if (emailSent) {

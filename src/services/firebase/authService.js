@@ -8,6 +8,36 @@ import {
 import { auth } from './firebaseConfig';
 
 /**
+ * Parse Firebase error codes into user-friendly messages
+ * @param {string} errorCode - Firebase error code
+ * @returns {string} - User-friendly error message
+ */
+const getFirebaseErrorMessage = (errorCode) => {
+  switch (errorCode) {
+    case 'auth/invalid-credential':
+      return 'Invalid email or password. Please try again.';
+    case 'auth/user-not-found':
+      return 'No account found with this email.';
+    case 'auth/wrong-password':
+      return 'Incorrect password. Please try again.';
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists.';
+    case 'auth/weak-password':
+      return 'Password is too weak. Please use a stronger password.';
+    case 'auth/invalid-email':
+      return 'Invalid email address.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled.';
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please try again later.';
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your connection.';
+    default:
+      return 'An error occurred. Please try again.';
+  }
+};
+
+/**
  * Sign up a new user with email and password
  * @param {string} email - User's email
  * @param {string} password - User's password
@@ -18,7 +48,7 @@ export const signUpWithEmail = async (email, password) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     return { success: true, user: userCredential.user };
   } catch (error) {
-    return { success: false, error: error.message };
+    return { success: false, error: getFirebaseErrorMessage(error.code) };
   }
 };
 
@@ -33,7 +63,7 @@ export const signInWithEmail = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { success: true, user: userCredential.user };
   } catch (error) {
-    return { success: false, error: error.message };
+    return { success: false, error: getFirebaseErrorMessage(error.code) };
   }
 };
 

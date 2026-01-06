@@ -101,14 +101,22 @@ const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
         }}
       >
         {!isAuthenticated ? (
           // Auth Stack - User not logged in
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} />
-            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            <Stack.Screen
+              name="SignUp"
+              component={SignUpScreen}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
+            />
           </>
         ) : needsProfileSetup ? (
           // Profile Setup - User logged in but needs to complete profile

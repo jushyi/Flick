@@ -50,7 +50,7 @@ const LoginScreen = ({ navigation }) => {
     if (result.success) {
       // Navigation handled by AuthContext state change
     } else {
-      Alert.alert('Login Failed', result.error || 'Invalid email or password');
+      Alert.alert('Error', result.error || 'Invalid email or password');
     }
   };
 
