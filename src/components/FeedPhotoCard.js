@@ -26,14 +26,23 @@ const FeedPhotoCard = ({ photo, onPress }) => {
 
   /**
    * Get top 3 reactions with counts
+   * New data structure: reactions[userId][emoji] = count
    */
   const getTopReactions = () => {
     if (!reactions || Object.keys(reactions).length === 0) return [];
 
-    // Count emoji occurrences
+    // Aggregate emoji counts across all users
     const emojiCounts = {};
-    Object.values(reactions).forEach((emoji) => {
-      emojiCounts[emoji] = (emojiCounts[emoji] || 0) + 1;
+    Object.values(reactions).forEach((userReactions) => {
+      // userReactions is now an object: { '😂': 2, '❤️': 1 }
+      if (typeof userReactions === 'object') {
+        Object.entries(userReactions).forEach(([emoji, count]) => {
+          if (!emojiCounts[emoji]) {
+            emojiCounts[emoji] = 0;
+          }
+          emojiCounts[emoji] += count;
+        });
+      }
     });
 
     // Sort by count and take top 3

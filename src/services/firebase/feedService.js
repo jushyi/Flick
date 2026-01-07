@@ -275,15 +275,17 @@ export const getFeedStats = async () => {
 };
 
 /**
- * Add or update a reaction to a photo
- * If user already reacted, updates to new emoji
+ * Toggle a reaction on a photo (increment count)
+ * New data structure: reactions[userId][emoji] = count
+ * Users can react multiple times with the same emoji
  *
  * @param {string} photoId - Photo document ID
  * @param {string} userId - User ID who is reacting
  * @param {string} emoji - Emoji reaction
+ * @param {number} currentCount - Current count for this emoji (to increment)
  * @returns {Promise} - Success/error result
  */
-export const addReaction = async (photoId, userId, emoji) => {
+export const toggleReaction = async (photoId, userId, emoji, currentCount) => {
   try {
     const photoRef = doc(db, 'photos', photoId);
     const photoDoc = await getDoc(photoRef);
@@ -295,53 +297,34 @@ export const addReaction = async (photoId, userId, emoji) => {
     const photoData = photoDoc.data();
     const reactions = photoData.reactions || {};
 
-    // Add or update user's reaction
-    reactions[userId] = emoji;
-
-    // Update photo document
-    await updateDoc(photoRef, {
-      reactions,
-      reactionCount: Object.keys(reactions).length,
-    });
-
-    return { success: true, reactions, reactionCount: Object.keys(reactions).length };
-  } catch (error) {
-    console.error('Error adding reaction:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Remove a user's reaction from a photo
- *
- * @param {string} photoId - Photo document ID
- * @param {string} userId - User ID who is removing reaction
- * @returns {Promise} - Success/error result
- */
-export const removeReaction = async (photoId, userId) => {
-  try {
-    const photoRef = doc(db, 'photos', photoId);
-    const photoDoc = await getDoc(photoRef);
-
-    if (!photoDoc.exists()) {
-      return { success: false, error: 'Photo not found' };
+    // Initialize user's reactions if not exists
+    if (!reactions[userId]) {
+      reactions[userId] = {};
     }
 
-    const photoData = photoDoc.data();
-    const reactions = photoData.reactions || {};
+    // Increment reaction count
+    const newCount = currentCount + 1;
+    reactions[userId][emoji] = newCount;
 
-    // Remove user's reaction
-    delete reactions[userId];
+    // Calculate total reaction count
+    let totalCount = 0;
+    Object.values(reactions).forEach((userReactions) => {
+      if (typeof userReactions === 'object') {
+        Object.values(userReactions).forEach((count) => {
+          totalCount += count;
+        });
+      }
+    });
 
     // Update photo document
     await updateDoc(photoRef, {
       reactions,
-      reactionCount: Object.keys(reactions).length,
+      reactionCount: totalCount,
     });
 
-    return { success: true, reactions, reactionCount: Object.keys(reactions).length };
+    return { success: true, reactions, reactionCount: totalCount };
   } catch (error) {
-    console.error('Error removing reaction:', error);
+    console.error('Error toggling reaction:', error);
     return { success: false, error: error.message };
   }
 };

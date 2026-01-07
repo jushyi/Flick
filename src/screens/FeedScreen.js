@@ -13,9 +13,8 @@ import useFeedPhotos from '../hooks/useFeedPhotos';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
 import PhotoDetailModal from '../components/PhotoDetailModal';
-import ReactionPicker from '../components/ReactionPicker';
 import { debugAllPhotos, debugJournaledPhotos } from '../utils/debugFeed';
-import { addReaction, removeReaction } from '../services/firebase/feedService';
+import { toggleReaction } from '../services/firebase/feedService';
 import { useAuth } from '../context/AuthContext';
 
 const FeedScreen = () => {
@@ -35,7 +34,6 @@ const FeedScreen = () => {
   // Modal state
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [showReactionPicker, setShowReactionPicker] = useState(false);
 
   /**
    * Handle photo card press - Open detail modal
@@ -54,75 +52,36 @@ const FeedScreen = () => {
   };
 
   /**
-   * Open reaction picker from photo modal
+   * Handle reaction toggle with optimistic UI update
+   * Increments the count for the selected emoji
    */
-  const handleReactionPress = () => {
-    console.log('FeedScreen: handleReactionPress called');
-    console.log('Current showReactionPicker:', showReactionPicker);
-    setShowReactionPicker(true);
-    console.log('Set showReactionPicker to true');
-  };
-
-  /**
-   * Close reaction picker
-   */
-  const handleCloseReactionPicker = () => {
-    setShowReactionPicker(false);
-  };
-
-  /**
-   * Handle reaction selection with optimistic UI update
-   */
-  const handleReactionSelect = async (emoji) => {
+  const handleReactionToggle = async (emoji, currentCount) => {
     if (!user || !selectedPhoto) return;
 
     const photoId = selectedPhoto.id;
     const userId = user.uid;
 
-    // Optimistic update - update local state immediately
-    const updatedReactions = { ...selectedPhoto.reactions, [userId]: emoji };
-    const updatedPhoto = {
-      ...selectedPhoto,
-      reactions: updatedReactions,
-      reactionCount: Object.keys(updatedReactions).length,
-    };
-
-    setSelectedPhoto(updatedPhoto);
-    updatePhotoInState(photoId, updatedPhoto);
-
-    // Persist to Firebase
-    try {
-      const result = await addReaction(photoId, userId, emoji);
-      if (!result.success) {
-        console.error('Failed to add reaction:', result.error);
-        // Revert optimistic update on error
-        setSelectedPhoto(selectedPhoto);
-        updatePhotoInState(photoId, selectedPhoto);
-      }
-    } catch (error) {
-      console.error('Error adding reaction:', error);
-      // Revert optimistic update on error
-      setSelectedPhoto(selectedPhoto);
-      updatePhotoInState(photoId, selectedPhoto);
-    }
-  };
-
-  /**
-   * Handle reaction removal with optimistic UI update
-   */
-  const handleRemoveReaction = async () => {
-    if (!user || !selectedPhoto) return;
-
-    const photoId = selectedPhoto.id;
-    const userId = user.uid;
-
-    // Optimistic update - update local state immediately
+    // Optimistic update - increment count immediately
     const updatedReactions = { ...selectedPhoto.reactions };
-    delete updatedReactions[userId];
+    if (!updatedReactions[userId]) {
+      updatedReactions[userId] = {};
+    }
+    updatedReactions[userId] = { ...updatedReactions[userId], [emoji]: currentCount + 1 };
+
+    // Calculate new total count
+    let newTotalCount = 0;
+    Object.values(updatedReactions).forEach((userReactions) => {
+      if (typeof userReactions === 'object') {
+        Object.values(userReactions).forEach((count) => {
+          newTotalCount += count;
+        });
+      }
+    });
+
     const updatedPhoto = {
       ...selectedPhoto,
       reactions: updatedReactions,
-      reactionCount: Object.keys(updatedReactions).length,
+      reactionCount: newTotalCount,
     };
 
     setSelectedPhoto(updatedPhoto);
@@ -130,15 +89,15 @@ const FeedScreen = () => {
 
     // Persist to Firebase
     try {
-      const result = await removeReaction(photoId, userId);
+      const result = await toggleReaction(photoId, userId, emoji, currentCount);
       if (!result.success) {
-        console.error('Failed to remove reaction:', result.error);
+        console.error('Failed to toggle reaction:', result.error);
         // Revert optimistic update on error
         setSelectedPhoto(selectedPhoto);
         updatePhotoInState(photoId, selectedPhoto);
       }
     } catch (error) {
-      console.error('Error removing reaction:', error);
+      console.error('Error toggling reaction:', error);
       // Revert optimistic update on error
       setSelectedPhoto(selectedPhoto);
       updatePhotoInState(photoId, selectedPhoto);
@@ -249,24 +208,14 @@ const FeedScreen = () => {
         />
       )}
 
-      {/* Photo Detail Modal */}
+      {/* Photo Detail Modal with Inline Reactions */}
       {selectedPhoto && (
         <PhotoDetailModal
           visible={showPhotoModal}
           photo={selectedPhoto}
           onClose={handleClosePhotoModal}
-          onReactionPress={handleReactionPress}
-        />
-      )}
-
-      {/* Reaction Picker Modal */}
-      {selectedPhoto && (
-        <ReactionPicker
-          visible={showReactionPicker}
-          currentReaction={selectedPhoto.reactions?.[user?.uid] || null}
-          onReactionSelect={handleReactionSelect}
-          onRemoveReaction={handleRemoveReaction}
-          onClose={handleCloseReactionPicker}
+          onReactionToggle={handleReactionToggle}
+          currentUserId={user?.uid}
         />
       )}
     </SafeAreaView>
