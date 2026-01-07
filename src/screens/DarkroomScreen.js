@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotos, revealPhotos, triagePhoto } from '../services/firebase/photoService';
 import { isDarkroomReadyToReveal, scheduleNextReveal } from '../services/firebase/darkroomService';
+import { debugDarkroom } from '../utils/debugDarkroom';
 
 const DarkroomScreen = () => {
   const { user } = useAuth();
@@ -32,26 +33,35 @@ const DarkroomScreen = () => {
     try {
       setLoading(true);
 
+      // DEBUG: Check darkroom status
+      console.log('=== DARKROOM SCREEN: Loading ===');
+      await debugDarkroom(user.uid);
+
       // Check if darkroom is ready to reveal photos
       const isReady = await isDarkroomReadyToReveal(user.uid);
+      console.log('Is darkroom ready to reveal?', isReady);
 
       if (isReady) {
+        console.log('Revealing photos...');
         // Reveal ALL developing photos
         const revealResult = await revealPhotos(user.uid);
         console.log(`Revealed ${revealResult.count} photos`);
 
         // Schedule next reveal time (0-2 hours from now)
         await scheduleNextReveal(user.uid);
+        console.log('Next reveal scheduled');
       }
 
       // Load all developing/revealed photos
       const result = await getDevelopingPhotos(user.uid);
+      console.log('getDevelopingPhotos result:', result);
 
       if (result.success) {
         // Filter for revealed photos only
         const revealedPhotos = result.photos.filter(
           photo => photo.status === 'revealed'
         );
+        console.log('Revealed photos to display:', revealedPhotos.length);
         setPhotos(revealedPhotos);
       }
     } catch (error) {
@@ -101,6 +111,12 @@ const DarkroomScreen = () => {
           <Text style={styles.emptyText}>
             Photos you take will develop here and be revealed when ready
           </Text>
+          <TouchableOpacity
+            onPress={() => debugDarkroom(user.uid)}
+            style={styles.debugButtonLarge}
+          >
+            <Text style={styles.debugButtonText}>🐛 Debug Darkroom</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -116,10 +132,18 @@ const DarkroomScreen = () => {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Darkroom</Text>
-        <Text style={styles.headerSubtitle}>
-          {photos.length} {photos.length === 1 ? 'photo' : 'photos'} ready to review
-        </Text>
+        <View>
+          <Text style={styles.headerTitle}>Darkroom</Text>
+          <Text style={styles.headerSubtitle}>
+            {photos.length} {photos.length === 1 ? 'photo' : 'photos'} ready to review
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => debugDarkroom(user.uid)}
+          style={styles.debugButton}
+        >
+          <Text style={styles.debugButtonIcon}>🐛</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Photo Display */}
@@ -222,12 +246,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#CCCCCC',
     textAlign: 'center',
+    marginBottom: 24,
+  },
+  debugButtonLarge: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 59, 48, 0.2)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 59, 48, 0.5)',
+  },
+  debugButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  debugButton: {
+    padding: 8,
+    backgroundColor: 'rgba(255, 59, 48, 0.2)',
+    borderRadius: 8,
+  },
+  debugButtonIcon: {
+    fontSize: 20,
   },
   headerTitle: {
     fontSize: 28,
