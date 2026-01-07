@@ -95,6 +95,16 @@ const useFeedPhotos = (enableRealtime = true) => {
   }, []);
 
   /**
+   * Update a single photo in state (for optimistic UI updates)
+   * Used for reactions without refetching entire feed
+   */
+  const updatePhotoInState = useCallback((photoId, updatedPhoto) => {
+    setPhotos((prevPhotos) =>
+      prevPhotos.map((photo) => (photo.id === photoId ? updatedPhoto : photo))
+    );
+  }, []);
+
+  /**
    * Set up real-time listener on mount
    */
   useEffect(() => {
@@ -133,6 +143,7 @@ const useFeedPhotos = (enableRealtime = true) => {
     hasMore,
     loadMorePhotos,
     refreshFeed,
+    updatePhotoInState,
   };
 };
 

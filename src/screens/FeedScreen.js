@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import useFeedPhotos from '../hooks/useFeedPhotos';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
+import PhotoDetailModal from '../components/PhotoDetailModal';
+import ReactionPicker from '../components/ReactionPicker';
 import { debugAllPhotos, debugJournaledPhotos } from '../utils/debugFeed';
+import { addReaction, removeReaction } from '../services/firebase/feedService';
+import { useAuth } from '../context/AuthContext';
 
 const FeedScreen = () => {
+  const { user } = useAuth();
   const {
     photos,
     loading,
@@ -24,15 +29,120 @@ const FeedScreen = () => {
     hasMore,
     loadMorePhotos,
     refreshFeed,
+    updatePhotoInState,
   } = useFeedPhotos(true); // Enable real-time updates
 
+  // Modal state
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+
   /**
-   * Handle photo card press
-   * TODO: Open Photo Detail Modal (Week 8)
+   * Handle photo card press - Open detail modal
    */
   const handlePhotoPress = (photo) => {
-    console.log('Photo pressed:', photo.id);
-    // TODO: Navigate to PhotoDetailModal
+    setSelectedPhoto(photo);
+    setShowPhotoModal(true);
+  };
+
+  /**
+   * Close photo modal
+   */
+  const handleClosePhotoModal = () => {
+    setShowPhotoModal(false);
+    setSelectedPhoto(null);
+  };
+
+  /**
+   * Open reaction picker from photo modal
+   */
+  const handleReactionPress = () => {
+    console.log('FeedScreen: handleReactionPress called');
+    console.log('Current showReactionPicker:', showReactionPicker);
+    setShowReactionPicker(true);
+    console.log('Set showReactionPicker to true');
+  };
+
+  /**
+   * Close reaction picker
+   */
+  const handleCloseReactionPicker = () => {
+    setShowReactionPicker(false);
+  };
+
+  /**
+   * Handle reaction selection with optimistic UI update
+   */
+  const handleReactionSelect = async (emoji) => {
+    if (!user || !selectedPhoto) return;
+
+    const photoId = selectedPhoto.id;
+    const userId = user.uid;
+
+    // Optimistic update - update local state immediately
+    const updatedReactions = { ...selectedPhoto.reactions, [userId]: emoji };
+    const updatedPhoto = {
+      ...selectedPhoto,
+      reactions: updatedReactions,
+      reactionCount: Object.keys(updatedReactions).length,
+    };
+
+    setSelectedPhoto(updatedPhoto);
+    updatePhotoInState(photoId, updatedPhoto);
+
+    // Persist to Firebase
+    try {
+      const result = await addReaction(photoId, userId, emoji);
+      if (!result.success) {
+        console.error('Failed to add reaction:', result.error);
+        // Revert optimistic update on error
+        setSelectedPhoto(selectedPhoto);
+        updatePhotoInState(photoId, selectedPhoto);
+      }
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      // Revert optimistic update on error
+      setSelectedPhoto(selectedPhoto);
+      updatePhotoInState(photoId, selectedPhoto);
+    }
+  };
+
+  /**
+   * Handle reaction removal with optimistic UI update
+   */
+  const handleRemoveReaction = async () => {
+    if (!user || !selectedPhoto) return;
+
+    const photoId = selectedPhoto.id;
+    const userId = user.uid;
+
+    // Optimistic update - update local state immediately
+    const updatedReactions = { ...selectedPhoto.reactions };
+    delete updatedReactions[userId];
+    const updatedPhoto = {
+      ...selectedPhoto,
+      reactions: updatedReactions,
+      reactionCount: Object.keys(updatedReactions).length,
+    };
+
+    setSelectedPhoto(updatedPhoto);
+    updatePhotoInState(photoId, updatedPhoto);
+
+    // Persist to Firebase
+    try {
+      const result = await removeReaction(photoId, userId);
+      if (!result.success) {
+        console.error('Failed to remove reaction:', result.error);
+        // Revert optimistic update on error
+        setSelectedPhoto(selectedPhoto);
+        updatePhotoInState(photoId, selectedPhoto);
+      }
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+      // Revert optimistic update on error
+      setSelectedPhoto(selectedPhoto);
+      updatePhotoInState(photoId, selectedPhoto);
+    }
   };
 
   /**
@@ -136,6 +246,27 @@ const FeedScreen = () => {
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
           ListEmptyComponent={renderEmptyState}
+        />
+      )}
+
+      {/* Photo Detail Modal */}
+      {selectedPhoto && (
+        <PhotoDetailModal
+          visible={showPhotoModal}
+          photo={selectedPhoto}
+          onClose={handleClosePhotoModal}
+          onReactionPress={handleReactionPress}
+        />
+      )}
+
+      {/* Reaction Picker Modal */}
+      {selectedPhoto && (
+        <ReactionPicker
+          visible={showReactionPicker}
+          currentReaction={selectedPhoto.reactions?.[user?.uid] || null}
+          onReactionSelect={handleReactionSelect}
+          onRemoveReaction={handleRemoveReaction}
+          onClose={handleCloseReactionPicker}
         />
       )}
     </SafeAreaView>

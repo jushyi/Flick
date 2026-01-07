@@ -6,6 +6,7 @@ import {
   getDocs,
   getDoc,
   onSnapshot,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
@@ -269,6 +270,78 @@ export const getFeedStats = async () => {
     };
   } catch (error) {
     console.error('Error fetching feed stats:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Add or update a reaction to a photo
+ * If user already reacted, updates to new emoji
+ *
+ * @param {string} photoId - Photo document ID
+ * @param {string} userId - User ID who is reacting
+ * @param {string} emoji - Emoji reaction
+ * @returns {Promise} - Success/error result
+ */
+export const addReaction = async (photoId, userId, emoji) => {
+  try {
+    const photoRef = doc(db, 'photos', photoId);
+    const photoDoc = await getDoc(photoRef);
+
+    if (!photoDoc.exists()) {
+      return { success: false, error: 'Photo not found' };
+    }
+
+    const photoData = photoDoc.data();
+    const reactions = photoData.reactions || {};
+
+    // Add or update user's reaction
+    reactions[userId] = emoji;
+
+    // Update photo document
+    await updateDoc(photoRef, {
+      reactions,
+      reactionCount: Object.keys(reactions).length,
+    });
+
+    return { success: true, reactions, reactionCount: Object.keys(reactions).length };
+  } catch (error) {
+    console.error('Error adding reaction:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Remove a user's reaction from a photo
+ *
+ * @param {string} photoId - Photo document ID
+ * @param {string} userId - User ID who is removing reaction
+ * @returns {Promise} - Success/error result
+ */
+export const removeReaction = async (photoId, userId) => {
+  try {
+    const photoRef = doc(db, 'photos', photoId);
+    const photoDoc = await getDoc(photoRef);
+
+    if (!photoDoc.exists()) {
+      return { success: false, error: 'Photo not found' };
+    }
+
+    const photoData = photoDoc.data();
+    const reactions = photoData.reactions || {};
+
+    // Remove user's reaction
+    delete reactions[userId];
+
+    // Update photo document
+    await updateDoc(photoRef, {
+      reactions,
+      reactionCount: Object.keys(reactions).length,
+    });
+
+    return { success: true, reactions, reactionCount: Object.keys(reactions).length };
+  } catch (error) {
+    console.error('Error removing reaction:', error);
     return { success: false, error: error.message };
   }
 };
