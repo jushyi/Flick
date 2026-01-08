@@ -37,3 +37,15 @@ export {
   deletePhoto,
   getPhotoURL,
 } from './storageService';
+
+// Export Notification service functions
+export {
+  initializeNotifications,
+  requestNotificationPermission,
+  getNotificationToken,
+  storeNotificationToken,
+  handleNotificationReceived,
+  handleNotificationTapped,
+  checkNotificationPermissions,
+  scheduleTestNotification,
+} from './notificationService';

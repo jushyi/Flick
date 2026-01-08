@@ -1,14 +1,67 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components';
 import { useAuth } from '../context/AuthContext';
+import {
+  testPhotoRevealNotification,
+  testFriendRequestNotification,
+  testReactionNotification,
+} from '../utils/testNotifications';
+import { checkNotificationPermissions } from '../services/firebase/notificationService';
+
 
 const ProfileScreen = () => {
   const { signOut } = useAuth();
+  const [testStatus, setTestStatus] = useState('');
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleTestNotification = async (notificationType) => {
+    try {
+      // Check permissions first
+      const permCheck = await checkNotificationPermissions();
+      console.log('Permission check:', permCheck);
+
+      if (!permCheck.success || !permCheck.data?.granted) {
+        Alert.alert(
+          'Notifications Not Enabled',
+          `Please enable notifications in your device settings to test this feature.\n\nStatus: ${permCheck.data?.status || 'unknown'}`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Schedule the appropriate notification
+      switch (notificationType) {
+        case 'photo_reveal':
+          await testPhotoRevealNotification();
+          break;
+        case 'friend_request':
+          await testFriendRequestNotification();
+          break;
+        case 'reaction':
+          await testReactionNotification();
+          break;
+        default:
+          await testPhotoRevealNotification();
+      }
+
+      setTestStatus('Notification scheduled! Put app in background and wait 3 seconds...');
+      Alert.alert(
+        'Notification Scheduled',
+        'Put the app in the background (minimize it) and wait 3 seconds for the notification to appear.',
+        [{ text: 'OK' }]
+      );
+
+      // Clear status after 5 seconds
+      setTimeout(() => setTestStatus(''), 5000);
+    } catch (error) {
+      console.error('Test notification error:', error);
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (
@@ -69,6 +122,29 @@ const ProfileScreen = () => {
           onPress={handleSignOut}
           style={styles.signOutButton}
         />
+
+        {testStatus ? (
+          <Text style={styles.testStatus}>{testStatus}</Text>
+        ) : null}
+
+        <View style={styles.testSection}>
+          <Text style={styles.testSectionTitle}>Test Notifications</Text>
+          <Button
+            title="📸 Photo Reveal"
+            onPress={() => handleTestNotification('photo_reveal')}
+            style={styles.testButton}
+          />
+          <Button
+            title="👋 Friend Request"
+            onPress={() => handleTestNotification('friend_request')}
+            style={styles.testButton}
+          />
+          <Button
+            title="❤️ Reaction"
+            onPress={() => handleTestNotification('reaction')}
+            style={styles.testButton}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -175,6 +251,31 @@ const styles = StyleSheet.create({
   signOutButton: {
     marginHorizontal: 24,
     marginBottom: 24,
+  },
+  testSection: {
+    marginHorizontal: 24,
+    marginBottom: 40,
+    padding: 16,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+  },
+  testSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#000000',
+  },
+  testButton: {
+    marginBottom: 12,
+  },
+  testStatus: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    marginHorizontal: 24,
+    marginBottom: 16,
+    fontStyle: 'italic',
   },
 });
 

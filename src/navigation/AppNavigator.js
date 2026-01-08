@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createRef } from 'react';
 import { Text, ActivityIndicator, View, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -6,6 +6,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+
+// Create navigation reference for programmatic navigation
+export const navigationRef = createRef();
 
 // Import auth screens
 import LoginScreen from '../screens/LoginScreen';
@@ -254,6 +257,35 @@ const ProfileIcon = ({ color }) => (
 );
 
 /**
+ * Deep linking configuration for notifications
+ */
+const linking = {
+  prefixes: ['lapse://', 'com.lapseclone.app://'],
+  config: {
+    screens: {
+      MainTabs: {
+        screens: {
+          Feed: 'feed',
+          Camera: 'camera',
+          Darkroom: 'darkroom',
+          Profile: 'profile',
+          Friends: {
+            screens: {
+              FriendsList: 'friends',
+              UserSearch: 'friends/search',
+              FriendRequests: 'friends/requests',
+            },
+          },
+        },
+      },
+      Login: 'login',
+      SignUp: 'signup',
+      ProfileSetup: 'profile-setup',
+    },
+  },
+};
+
+/**
  * Root Stack Navigator (handles auth flow)
  */
 const AppNavigator = () => {
@@ -272,7 +304,7 @@ const AppNavigator = () => {
   const needsProfileSetup = isAuthenticated && userProfile && (userProfile.profileSetupCompleted === false);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

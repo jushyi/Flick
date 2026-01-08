@@ -16,6 +16,11 @@ import { Button, Input } from '../components';
 import { useAuth } from '../context/AuthContext';
 import { uploadProfilePhoto } from '../services/firebase/storageService';
 import { updateUserDocument } from '../services/firebase/firestoreService';
+import {
+  requestNotificationPermission,
+  getNotificationToken,
+  storeNotificationToken,
+} from '../services/firebase/notificationService';
 
 const ProfileSetupScreen = ({ navigation }) => {
   const { user, userProfile, updateUserProfile } = useAuth();
@@ -87,6 +92,32 @@ const ProfileSetupScreen = ({ navigation }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const requestNotificationPermissionsAsync = async () => {
+    try {
+      // Request notification permission
+      const permissionResult = await requestNotificationPermission();
+
+      if (permissionResult.success) {
+        // Get FCM token
+        const tokenResult = await getNotificationToken();
+
+        if (tokenResult.success && tokenResult.data) {
+          // Store token in user document
+          await storeNotificationToken(user.uid, tokenResult.data);
+          console.log('Notification permissions granted and token stored');
+        } else {
+          console.log('Could not get notification token:', tokenResult.error);
+        }
+      } else {
+        console.log('Notification permission denied:', permissionResult.error);
+        // Don't show error to user - notifications are optional
+      }
+    } catch (error) {
+      console.error('Error requesting notification permissions:', error);
+      // Don't block user flow - continue even if notifications fail
+    }
+  };
+
   const handleCompleteSetup = async () => {
     if (!validate()) {
       return;
@@ -126,6 +157,11 @@ const ProfileSetupScreen = ({ navigation }) => {
           ...userProfile,
           ...updateData,
         });
+
+        // Request notification permissions after profile setup
+        // This runs in background, doesn't block navigation
+        requestNotificationPermissionsAsync();
+
         // Navigation will be handled automatically by AuthContext state change
       } else {
         Alert.alert('Update Failed', 'Could not save profile information');

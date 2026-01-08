@@ -12,7 +12,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lapseclone.app"
+    },
+    "notification": {
+      "iosDisplayInForeground": true
     },
     "android": {
       "adaptiveIcon": {
@@ -21,8 +25,6 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
@@ -40,6 +42,12 @@
           "microphonePermission": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b7da185a-d3e1-441b-88f8-0d4379333590"
+      }
+    },
+    "owner": "spoods"
   }
 }
