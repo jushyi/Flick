@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotos, revealPhotos, triagePhoto } from '../services/firebase/photoService';
@@ -105,32 +106,36 @@ const DarkroomScreen = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text style={styles.loadingText}>Loading darkroom...</Text>
-        </View>
-      </SafeAreaView>
+      <GestureHandlerRootView style={styles.container}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+            <Text style={styles.loadingText}>Loading darkroom...</Text>
+          </View>
+        </SafeAreaView>
+      </GestureHandlerRootView>
     );
   }
 
   if (photos.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📸</Text>
-          <Text style={styles.emptyTitle}>No Photos Ready</Text>
-          <Text style={styles.emptyText}>
-            Photos you take will develop here and be revealed when ready
-          </Text>
-          <TouchableOpacity
-            onPress={() => debugDarkroom(user.uid)}
-            style={styles.debugButtonLarge}
-          >
-            <Text style={styles.debugButtonText}>🐛 Debug Darkroom</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <GestureHandlerRootView style={styles.container}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>📸</Text>
+            <Text style={styles.emptyTitle}>No Photos Ready</Text>
+            <Text style={styles.emptyText}>
+              Photos you take will develop here and be revealed when ready
+            </Text>
+            <TouchableOpacity
+              onPress={() => debugDarkroom(user.uid)}
+              style={styles.debugButtonLarge}
+            >
+              <Text style={styles.debugButtonText}>🐛 Debug Darkroom</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </GestureHandlerRootView>
     );
   }
 
@@ -138,7 +143,8 @@ const DarkroomScreen = () => {
   logger.debug('Current photo', { photoId: currentPhoto?.id, hasImageURL: !!currentPhoto?.imageURL });
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <GestureHandlerRootView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -184,7 +190,8 @@ const DarkroomScreen = () => {
       >
         <Text style={styles.deleteButtonText}>🗑️ Delete Photo</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 
