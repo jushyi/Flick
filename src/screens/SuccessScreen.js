@@ -4,15 +4,10 @@ import {
   Text,
   StyleSheet,
   Dimensions,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-  Easing,
-} from 'react-native-reanimated';
 import { successNotification } from '../utils/haptics';
 import logger from '../utils/logger';
 
@@ -25,43 +20,46 @@ const ANIMATION_DURATION = 2000;
 const MAX_STAGGER_DELAY = 500;
 
 const ConfettiPiece = ({ index, color }) => {
-  const translateY = useSharedValue(-50);
-  const translateX = useSharedValue(Math.random() * SCREEN_WIDTH);
-  const rotation = useSharedValue(0);
+  const translateY = useRef(new Animated.Value(-50)).current;
+  const translateX = useRef(new Animated.Value(Math.random() * SCREEN_WIDTH)).current;
+  const rotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const staggerDelay = Math.random() * MAX_STAGGER_DELAY;
 
-    // Animate Y position (fall down)
-    translateY.value = withDelay(
-      staggerDelay,
-      withTiming(SCREEN_HEIGHT + 50, {
+    // Animate Y position (fall down) and rotation together
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: SCREEN_HEIGHT + 50,
         duration: ANIMATION_DURATION,
+        delay: staggerDelay,
         easing: Easing.linear,
-      })
-    );
-
-    // Animate rotation
-    rotation.value = withDelay(
-      staggerDelay,
-      withTiming(360, {
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotation, {
+        toValue: 360,
         duration: ANIMATION_DURATION,
+        delay: staggerDelay,
         easing: Easing.linear,
-      })
-    );
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     logger.debug('SuccessScreen: Confetti piece animated', { index, staggerDelay });
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value },
-        { rotate: `${rotation.value}deg` },
-      ],
-    };
-  });
+  const animatedStyle = {
+    transform: [
+      { translateX },
+      { translateY },
+      {
+        rotate: rotation.interpolate({
+          inputRange: [0, 360],
+          outputRange: ['0deg', '360deg'],
+        }),
+      },
+    ],
+  };
 
   return (
     <Animated.View
