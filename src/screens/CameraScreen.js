@@ -12,7 +12,7 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { createPhoto, getDevelopingPhotoCount } from '../services/firebase/photoService';
+import { createPhoto, getDarkroomCounts } from '../services/firebase/photoService';
 import logger from '../utils/logger';
 import Svg, { Path } from 'react-native-svg';
 import { DarkroomBottomSheet } from '../components';
@@ -27,24 +27,28 @@ const CameraScreen = () => {
   const [flash, setFlash] = useState('off');
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
-  const [darkroomCount, setDarkroomCount] = useState(0);
+  const [darkroomCounts, setDarkroomCounts] = useState({
+    totalCount: 0,
+    developingCount: 0,
+    revealedCount: 0,
+  });
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const cameraRef = useRef(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
 
-  // Load darkroom count on mount and poll every 30s
+  // Load darkroom counts on mount and poll every 30s
   useEffect(() => {
     if (!user) return;
 
-    const loadDarkroomCount = async () => {
-      const count = await getDevelopingPhotoCount(user.uid);
-      setDarkroomCount(count);
+    const loadDarkroomCounts = async () => {
+      const counts = await getDarkroomCounts(user.uid);
+      setDarkroomCounts(counts);
     };
 
-    loadDarkroomCount();
+    loadDarkroomCounts();
 
-    // Poll every 30 seconds to update count
-    const interval = setInterval(loadDarkroomCount, 30000);
+    // Poll every 30 seconds to update counts
+    const interval = setInterval(loadDarkroomCounts, 30000);
 
     return () => clearInterval(interval);
   }, [user]);
@@ -196,7 +200,7 @@ const CameraScreen = () => {
             </TouchableOpacity>
 
             <DarkroomButton
-              count={darkroomCount}
+              count={darkroomCounts.totalCount}
               onPress={() => setIsBottomSheetVisible(true)}
             />
           </View>
@@ -245,13 +249,18 @@ const CameraScreen = () => {
       {/* Darkroom Bottom Sheet */}
       <DarkroomBottomSheet
         visible={isBottomSheetVisible}
-        count={darkroomCount}
+        revealedCount={darkroomCounts.revealedCount}
+        developingCount={darkroomCounts.developingCount}
         onClose={() => {
           logger.debug('DarkroomButton: Bottom sheet closed');
           setIsBottomSheetVisible(false);
         }}
         onComplete={() => {
-          logger.info('CameraScreen: Navigating to Darkroom after press-and-hold', { count: darkroomCount });
+          logger.info('CameraScreen: Navigating to Darkroom after press-and-hold', {
+            revealedCount: darkroomCounts.revealedCount,
+            developingCount: darkroomCounts.developingCount,
+            totalCount: darkroomCounts.totalCount,
+          });
           setIsBottomSheetVisible(false);
           navigation.navigate('Darkroom');
         }}

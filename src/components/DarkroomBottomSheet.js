@@ -14,7 +14,7 @@ import logger from '../utils/logger';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const DarkroomBottomSheet = ({ visible, count, onClose, onComplete }) => {
+const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose, onComplete }) => {
   const [isPressing, setIsPressing] = useState(false);
   const [hapticTriggered, setHapticTriggered] = useState({
     25: false,
@@ -25,9 +25,17 @@ const DarkroomBottomSheet = ({ visible, count, onClose, onComplete }) => {
   const progressValue = useRef(new Animated.Value(0)).current;
   const progressAnimation = useRef(null);
 
+  const totalCount = (revealedCount || 0) + (developingCount || 0);
+  const hasRevealedPhotos = revealedCount > 0;
+
   useEffect(() => {
     if (visible) {
-      logger.debug('DarkroomBottomSheet: Component mounted', { count });
+      logger.debug('DarkroomBottomSheet: Component mounted', {
+        revealedCount,
+        developingCount,
+        totalCount,
+        hasRevealedPhotos,
+      });
     }
 
     return () => {
@@ -37,7 +45,7 @@ const DarkroomBottomSheet = ({ visible, count, onClose, onComplete }) => {
         logger.debug('DarkroomBottomSheet: Component unmounted, animation stopped');
       }
     };
-  }, [visible, count]);
+  }, [visible, revealedCount, developingCount, totalCount, hasRevealedPhotos]);
 
   useEffect(() => {
     // Reset progress when modal visibility changes
@@ -94,11 +102,18 @@ const DarkroomBottomSheet = ({ visible, count, onClose, onComplete }) => {
   }, [progressValue, hapticTriggered]);
 
   const handlePressIn = () => {
-    if (!visible || count === 0) return;
+    if (!visible || !hasRevealedPhotos) {
+      logger.debug('DarkroomBottomSheet: Press-and-hold blocked (no revealed photos)', {
+        hasRevealedPhotos,
+        revealedCount,
+        developingCount,
+      });
+      return;
+    }
 
     setIsPressing(true);
     setHapticTriggered({ 25: false, 50: false, 75: false, 100: false });
-    logger.info('DarkroomBottomSheet: Press-and-hold started', { count });
+    logger.info('DarkroomBottomSheet: Press-and-hold started', { revealedCount, developingCount });
 
     // Animate from 0 to 1 over 2 seconds
     progressAnimation.current = Animated.timing(progressValue, {
@@ -179,37 +194,54 @@ const DarkroomBottomSheet = ({ visible, count, onClose, onComplete }) => {
         {/* Bottom Sheet */}
         <View style={styles.sheet}>
           {/* Header */}
-          <Text style={styles.headerText}>Press and hold to reveal</Text>
+          <Text style={styles.headerText}>
+            {hasRevealedPhotos ? 'Press and hold to reveal' : 'Darkroom'}
+          </Text>
 
           {/* Badge Count Display */}
           <View style={styles.countContainer}>
-            <Text style={styles.countNumber}>{count}</Text>
+            <Text style={styles.countNumber}>{hasRevealedPhotos ? revealedCount : totalCount}</Text>
             <Text style={styles.countLabel}>
-              {count === 1 ? 'photo ready' : 'photos ready'}
+              {hasRevealedPhotos
+                ? revealedCount === 1
+                  ? 'photo ready'
+                  : 'photos ready'
+                : totalCount === 1
+                ? 'photo developing'
+                : 'photos developing'}
             </Text>
           </View>
 
-          {/* Progress Bar Container */}
-          <View
-            style={styles.progressContainer}
-            onStartShouldSetResponder={() => true}
-            onResponderGrant={handlePressIn}
-            onResponderRelease={handlePressOut}
-          >
-            <View style={styles.progressBackground}>
-              <Animated.View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: progressWidth,
-                  },
-                ]}
-              />
+          {/* Progress Bar Container - only show if photos are ready */}
+          {hasRevealedPhotos && (
+            <View
+              style={styles.progressContainer}
+              onStartShouldSetResponder={() => true}
+              onResponderGrant={handlePressIn}
+              onResponderRelease={handlePressOut}
+            >
+              <View style={styles.progressBackground}>
+                <Animated.View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: progressWidth,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressText}>
+                {isPressing ? 'Hold...' : 'Tap and hold'}
+              </Text>
             </View>
-            <Text style={styles.progressText}>
-              {isPressing ? 'Hold...' : 'Tap and hold'}
+          )}
+
+          {/* Message for developing photos */}
+          {!hasRevealedPhotos && (
+            <Text style={styles.developingText}>
+              Photos are still developing...{'\n'}Check back soon!
             </Text>
-          </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -276,6 +308,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999999',
     fontWeight: '600',
+  },
+  developingText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginTop: 8,
   },
 });
 

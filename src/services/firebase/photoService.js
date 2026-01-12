@@ -156,6 +156,55 @@ export const getDevelopingPhotoCount = async (userId) => {
 };
 
 /**
+ * Get darkroom photo counts (developing + revealed)
+ * @param {string} userId - User ID
+ * @returns {Promise<object>} - { totalCount, developingCount, revealedCount }
+ */
+export const getDarkroomCounts = async (userId) => {
+  logger.debug('PhotoService.getDarkroomCounts: Starting', { userId });
+
+  try {
+    // Query for developing photos
+    const developingQuery = query(
+      collection(db, 'photos'),
+      where('userId', '==', userId),
+      where('status', '==', 'developing')
+    );
+
+    // Query for revealed photos
+    const revealedQuery = query(
+      collection(db, 'photos'),
+      where('userId', '==', userId),
+      where('status', '==', 'revealed')
+    );
+
+    const [developingSnapshot, revealedSnapshot] = await Promise.all([
+      getDocs(developingQuery),
+      getDocs(revealedQuery),
+    ]);
+
+    const developingCount = developingSnapshot.size;
+    const revealedCount = revealedSnapshot.size;
+    const totalCount = developingCount + revealedCount;
+
+    logger.info('PhotoService.getDarkroomCounts: Retrieved counts', {
+      userId,
+      developingCount,
+      revealedCount,
+      totalCount,
+    });
+
+    return { totalCount, developingCount, revealedCount };
+  } catch (error) {
+    logger.error('PhotoService.getDarkroomCounts: Failed', {
+      userId,
+      error: error.message
+    });
+    return { totalCount: 0, developingCount: 0, revealedCount: 0 };
+  }
+};
+
+/**
  * Get user's developing photos (both developing and revealed status)
  * @param {string} userId - User ID
  * @returns {Promise} - Array of developing photo documents
