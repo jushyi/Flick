@@ -154,7 +154,7 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
    * @param {string} direction - 'left' or 'right'
    */
   const handleSwipeableOpen = async (direction) => {
-    const action = direction === 'left' ? 'Archive' : 'Journal';
+    const action = direction === 'left' ? 'Journal' : 'Archive';
 
     logger.info('SwipeablePhotoCard: Swipe action triggered', {
       photoId: photo?.id,
@@ -178,10 +178,17 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
     // Execute swipe action
     try {
       if (direction === 'left') {
-        onSwipeLeft();
+        await onSwipeLeft();
       } else if (direction === 'right') {
-        onSwipeRight();
+        await onSwipeRight();
       }
+
+      // Close the swipeable after action completes
+      // Small delay to allow Alert to show before closing
+      setTimeout(() => {
+        swipeableRef.current?.close();
+        logger.debug('SwipeablePhotoCard: Closed swipeable after action', { photoId: photo?.id });
+      }, 100);
     } catch (error) {
       logger.error('SwipeablePhotoCard: Error handling swipe', {
         photoId: photo?.id,

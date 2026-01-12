@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotos, revealPhotos, triagePhoto } from '../services/firebase/photoService';
 import { isDarkroomReadyToReveal, scheduleNextReveal } from '../services/firebase/darkroomService';
@@ -18,6 +18,7 @@ import logger from '../utils/logger';
 
 const DarkroomScreen = () => {
   const { user } = useAuth();
+  const navigation = useNavigation();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,37 +35,59 @@ const DarkroomScreen = () => {
     try {
       setLoading(true);
 
-      logger.debug('Darkroom screen loading');
+      logger.debug('DarkroomScreen: Loading photos', { userId: user.uid });
 
       // Check if darkroom is ready to reveal photos
       const isReady = await isDarkroomReadyToReveal(user.uid);
-      logger.debug('Darkroom ready status', { isReady });
+      logger.info('DarkroomScreen: Darkroom ready status', { isReady });
 
       if (isReady) {
-        logger.info('Revealing photos');
+        logger.info('DarkroomScreen: Revealing photos');
         // Reveal ALL developing photos
         const revealResult = await revealPhotos(user.uid);
-        logger.info('Photos revealed', { count: revealResult.count });
+        logger.info('DarkroomScreen: Photos revealed', {
+          count: revealResult.count,
+          success: revealResult.success,
+          error: revealResult.error
+        });
 
         // Schedule next reveal time (0-2 hours from now)
         await scheduleNextReveal(user.uid);
-        logger.debug('Next reveal scheduled');
+        logger.debug('DarkroomScreen: Next reveal scheduled');
+      } else {
+        logger.warn('DarkroomScreen: Darkroom not ready to reveal - photos still developing');
       }
 
       // Load all developing/revealed photos
       const result = await getDevelopingPhotos(user.uid);
-      logger.debug('getDevelopingPhotos result', { photoCount: result.photos?.length });
+      logger.info('DarkroomScreen: getDevelopingPhotos result', {
+        success: result.success,
+        photoCount: result.photos?.length,
+        error: result.error
+      });
 
-      if (result.success) {
+      if (result.success && result.photos) {
+        // Log all photos with their statuses
+        logger.debug('DarkroomScreen: All photos', {
+          photos: result.photos.map(p => ({ id: p.id, status: p.status, photoState: p.photoState }))
+        });
+
         // Filter for revealed photos only
         const revealedPhotos = result.photos.filter(
           photo => photo.status === 'revealed'
         );
-        logger.debug('Revealed photos to display', { count: revealedPhotos.length });
+        logger.info('DarkroomScreen: Filtered revealed photos', {
+          totalPhotos: result.photos.length,
+          revealedCount: revealedPhotos.length,
+          developingCount: result.photos.filter(p => p.status === 'developing').length
+        });
         setPhotos(revealedPhotos);
+      } else {
+        logger.warn('DarkroomScreen: Failed to get photos or no photos returned');
+        setPhotos([]);
       }
     } catch (error) {
-      logger.error('Error loading developing photos', error);
+      logger.error('DarkroomScreen: Error loading developing photos', error);
     } finally {
       setLoading(false);
     }
@@ -159,7 +182,16 @@ const DarkroomScreen = () => {
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
+        <TouchableOpacity
+          onPress={() => {
+            logger.info('DarkroomScreen: User tapped back button');
+            navigation.goBack();
+          }}
+          style={styles.backButton}
+        >
+          <Text style={styles.backButtonText}>‹</Text>
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Darkroom</Text>
           <Text style={styles.headerSubtitle}>
             {photos.length} {photos.length === 1 ? 'photo' : 'photos'} ready to review
@@ -266,10 +298,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+  },
+  backButtonText: {
+    fontSize: 32,
+    fontWeight: '300',
+    color: '#FFFFFF',
+    marginTop: -4,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 16,
+  },
   debugButton: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(255, 59, 48, 0.2)',
-    borderRadius: 8,
+    borderRadius: 20,
   },
   debugButtonIcon: {
     fontSize: 20,
@@ -279,10 +333,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 4,
+    textAlign: 'center',
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#CCCCCC',
+    textAlign: 'center',
   },
   photoCardContainer: {
     flex: 1,

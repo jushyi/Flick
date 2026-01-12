@@ -331,6 +331,7 @@ const AppNavigator = () => {
               options={{
                 presentation: 'card',
                 animation: 'slide_from_right',
+                gestureEnabled: false, // Disable back swipe to prevent accidental exit
               }}
             />
           </>
