@@ -125,7 +125,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
     progressAnimation.current.start(({ finished }) => {
       if (finished) {
         logger.debug('DarkroomBottomSheet: Progress reached 100%');
-        logger.info('DarkroomBottomSheet: Press-and-hold completed', { count });
+        logger.info('DarkroomBottomSheet: Press-and-hold completed', { revealedCount, developingCount });
 
         // Small delay to let user see full bar
         setTimeout(() => {
