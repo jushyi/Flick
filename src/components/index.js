@@ -9,3 +9,4 @@ export { default as ReactionDisplay } from './ReactionDisplay';
 export { default as UserSearchCard } from './UserSearchCard';
 export { default as FriendRequestCard } from './FriendRequestCard';
 export { default as DarkroomBottomSheet } from './DarkroomBottomSheet';
+export { default as SwipeablePhotoCard } from './SwipeablePhotoCard';
