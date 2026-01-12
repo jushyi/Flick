@@ -200,13 +200,26 @@ const CameraScreen = () => {
       >
         {/* Top Controls */}
         <View style={styles.topControls}>
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={toggleFlash}
-          >
-            <Text style={styles.flashIcon}>{getFlashIcon()}</Text>
-            <Text style={styles.flashLabel}>{getFlashLabel()}</Text>
-          </TouchableOpacity>
+          <View style={styles.leftControls}>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={toggleFlash}
+            >
+              <Text style={styles.flashIcon}>{getFlashIcon()}</Text>
+              <Text style={styles.flashLabel}>{getFlashLabel()}</Text>
+            </TouchableOpacity>
+
+            {/* TEMP DEBUG: Direct navigation to Darkroom */}
+            <TouchableOpacity
+              style={[styles.controlButton, styles.debugButton]}
+              onPress={() => {
+                logger.info('CameraScreen: Debug - Direct navigation to Darkroom');
+                navigation.navigate('Darkroom');
+              }}
+            >
+              <Text style={styles.controlIcon}>🌙</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.rightControls}>
             <TouchableOpacity
@@ -384,10 +397,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 60,
   },
+  leftControls: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
   rightControls: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
+  },
+  debugButton: {
+    backgroundColor: 'rgba(139, 0, 139, 0.6)', // Purple tint for debug button
   },
   controlButton: {
     alignItems: 'center',
