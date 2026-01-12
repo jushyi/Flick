@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
@@ -13,6 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotos, revealPhotos, triagePhoto } from '../services/firebase/photoService';
 import { isDarkroomReadyToReveal, scheduleNextReveal } from '../services/firebase/darkroomService';
+import { SwipeablePhotoCard } from '../components';
 import logger from '../utils/logger';
 
 const DarkroomScreen = () => {
@@ -69,6 +69,9 @@ const DarkroomScreen = () => {
     }
   };
 
+  // Always show first photo in the list
+  const currentPhoto = photos[0];
+
   const handleTriage = async (photoId, action) => {
     try {
       const result = await triagePhoto(photoId, action);
@@ -87,6 +90,17 @@ const DarkroomScreen = () => {
       logger.error('Error triaging photo', error);
       Alert.alert('Error', 'Failed to process photo. Please try again.');
     }
+  };
+
+  // Swipe handlers for SwipeablePhotoCard
+  const handleArchive = async () => {
+    logger.info('User swiped left to archive photo', { photoId: currentPhoto?.id });
+    await handleTriage(currentPhoto.id, 'archive');
+  };
+
+  const handleJournal = async () => {
+    logger.info('User swiped right to journal photo', { photoId: currentPhoto?.id });
+    await handleTriage(currentPhoto.id, 'journal');
   };
 
   if (loading) {
@@ -120,8 +134,6 @@ const DarkroomScreen = () => {
     );
   }
 
-  const currentPhoto = photos[0]; // Always show first photo in the list
-
   // Debug: Log the photo data
   logger.debug('Current photo', { photoId: currentPhoto?.id, hasImageURL: !!currentPhoto?.imageURL });
 
@@ -143,45 +155,13 @@ const DarkroomScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Photo Display */}
-      <View style={styles.photoCard}>
-        {currentPhoto?.imageURL ? (
-          <Image
-            source={{ uri: currentPhoto.imageURL }}
-            style={styles.photoImage}
-            resizeMode="cover"
-            onError={(error) => logger.error('Image load error', error.nativeEvent.error)}
-            onLoad={() => logger.debug('Image loaded successfully')}
-          />
-        ) : (
-          <View style={styles.loadingImageContainer}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text style={styles.loadingText}>Loading photo...</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        {/* Archive Button */}
-        <TouchableOpacity
-          style={[styles.actionButton, styles.archiveButton]}
-          onPress={() => handleTriage(currentPhoto.id, 'archive')}
-        >
-          <Text style={styles.actionButtonIcon}>📦</Text>
-          <Text style={styles.actionButtonText}>Archive</Text>
-          <Text style={styles.actionButtonSubtext}>Keep private</Text>
-        </TouchableOpacity>
-
-        {/* Journal Button */}
-        <TouchableOpacity
-          style={[styles.actionButton, styles.journalButton]}
-          onPress={() => handleTriage(currentPhoto.id, 'journal')}
-        >
-          <Text style={styles.actionButtonIcon}>📖</Text>
-          <Text style={styles.actionButtonText}>Journal</Text>
-          <Text style={styles.actionButtonSubtext}>Share to feed</Text>
-        </TouchableOpacity>
+      {/* Swipeable Photo Card */}
+      <View style={styles.photoCardContainer}>
+        <SwipeablePhotoCard
+          photo={currentPhoto}
+          onSwipeLeft={handleArchive}
+          onSwipeRight={handleJournal}
+        />
       </View>
 
       {/* Delete Button */}
@@ -285,58 +265,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#CCCCCC',
   },
-  photoCard: {
-    flex: 1,
-    margin: 24,
-    marginBottom: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#1A1A1A',
-  },
-  photoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  loadingImageContainer: {
+  photoCardContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    gap: 12,
-    marginBottom: 12,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-  },
-  archiveButton: {
-    backgroundColor: 'rgba(255, 149, 0, 0.1)',
-    borderColor: 'rgba(255, 149, 0, 0.5)',
-  },
-  journalButton: {
-    backgroundColor: 'rgba(52, 199, 89, 0.1)',
-    borderColor: 'rgba(52, 199, 89, 0.5)',
-  },
-  actionButtonIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  actionButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  actionButtonSubtext: {
-    fontSize: 12,
-    color: '#CCCCCC',
+    paddingVertical: 24,
   },
   deleteButton: {
     marginHorizontal: 24,
