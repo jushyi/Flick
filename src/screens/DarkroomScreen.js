@@ -156,18 +156,35 @@ const DarkroomScreen = () => {
     return (
       <GestureHandlerRootView style={styles.container}>
         <SafeAreaView style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => {
+                logger.info('DarkroomScreen: User tapped back button (empty state)');
+                navigation.goBack();
+              }}
+              style={styles.backButton}
+            >
+              <Text style={styles.backButtonText}>‹</Text>
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerTitle}>Darkroom</Text>
+              <Text style={styles.headerSubtitle}>No photos ready</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => debugDarkroom(user.uid)}
+              style={styles.debugButton}
+            >
+              <Text style={styles.debugButtonIcon}>🐛</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📸</Text>
             <Text style={styles.emptyTitle}>No Photos Ready</Text>
             <Text style={styles.emptyText}>
               Photos you take will develop here and be revealed when ready
             </Text>
-            <TouchableOpacity
-              onPress={() => debugDarkroom(user.uid)}
-              style={styles.debugButtonLarge}
-            >
-              <Text style={styles.debugButtonText}>🐛 Debug Darkroom</Text>
-            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </GestureHandlerRootView>
