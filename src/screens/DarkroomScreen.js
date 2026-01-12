@@ -95,12 +95,12 @@ const DarkroomScreen = () => {
 
   // Swipe handlers for SwipeablePhotoCard
   const handleArchive = async () => {
-    logger.info('User swiped left to archive photo', { photoId: currentPhoto?.id });
+    logger.info('User swiped left (right to left) to archive photo', { photoId: currentPhoto?.id });
     await handleTriage(currentPhoto.id, 'archive');
   };
 
   const handleJournal = async () => {
-    logger.info('User swiped right to journal photo', { photoId: currentPhoto?.id });
+    logger.info('User swiped right (left to right) to journal photo', { photoId: currentPhoto?.id });
     await handleTriage(currentPhoto.id, 'journal');
   };
 
@@ -165,8 +165,8 @@ const DarkroomScreen = () => {
       <View style={styles.photoCardContainer}>
         <SwipeablePhotoCard
           photo={currentPhoto}
-          onSwipeLeft={handleArchive}
-          onSwipeRight={handleJournal}
+          onSwipeLeft={handleJournal}
+          onSwipeRight={handleArchive}
         />
       </View>
 

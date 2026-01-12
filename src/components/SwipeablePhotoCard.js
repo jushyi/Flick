@@ -44,7 +44,7 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
   }, [photo?.id]);
 
   /**
-   * Render left action (Archive)
+   * Render left action (Journal)
    * Progressive animations based on swipe distance:
    * - Background opacity: 0 → 1 at 60px
    * - Text opacity: 0 → 1 at 80px
@@ -87,17 +87,17 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
     return (
       <Animated.View style={[styles.actionContainer, styles.leftAction, { opacity: backgroundOpacity }]}>
         <Animated.View style={{ transform: [{ scale: iconScale }] }}>
-          <Text style={styles.actionIcon}>📦</Text>
+          <Text style={styles.actionIcon}>📖</Text>
         </Animated.View>
         <Animated.Text style={[styles.actionText, { opacity: textOpacity }]}>
-          Archive
+          Journal
         </Animated.Text>
       </Animated.View>
     );
   };
 
   /**
-   * Render right action (Journal)
+   * Render right action (Archive)
    * Progressive animations based on swipe distance:
    * - Background opacity: 0 → 1 at -60px (right swipe)
    * - Text opacity: 0 → 1 at -80px
@@ -140,10 +140,10 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
     return (
       <Animated.View style={[styles.actionContainer, styles.rightAction, { opacity: backgroundOpacity }]}>
         <Animated.View style={{ transform: [{ scale: iconScale }] }}>
-          <Text style={styles.actionIcon}>📖</Text>
+          <Text style={styles.actionIcon}>📦</Text>
         </Animated.View>
         <Animated.Text style={[styles.actionText, { opacity: textOpacity }]}>
-          Journal
+          Archive
         </Animated.Text>
       </Animated.View>
     );
@@ -284,11 +284,11 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   leftAction: {
-    backgroundColor: '#8E8E93', // iOS system gray
+    backgroundColor: '#34C759', // iOS system green (Journal)
     marginLeft: 24,
   },
   rightAction: {
-    backgroundColor: '#34C759', // iOS system green
+    backgroundColor: '#8E8E93', // iOS system gray (Archive)
     marginRight: 24,
   },
   actionIcon: {
