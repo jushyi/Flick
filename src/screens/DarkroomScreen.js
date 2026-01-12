@@ -140,6 +140,28 @@ const DarkroomScreen = () => {
     }
   };
 
+  // Debug function to force reveal photos immediately (for testing)
+  const debugDarkroom = async (userId) => {
+    try {
+      logger.info('DarkroomScreen: Debug - Force revealing photos');
+
+      // Force reveal all developing photos
+      const revealResult = await revealPhotos(userId);
+      logger.info('DarkroomScreen: Debug - Photos force revealed', {
+        count: revealResult.count,
+        success: revealResult.success,
+      });
+
+      // Schedule next reveal time
+      await scheduleNextReveal(userId);
+
+      // Reload photos
+      await loadDevelopingPhotos();
+    } catch (error) {
+      logger.error('DarkroomScreen: Debug - Force reveal failed', error);
+    }
+  };
+
   // Swipe handlers for SwipeablePhotoCard
   const handleArchive = async () => {
     logger.info('User swiped left (right to left) to archive photo', { photoId: currentPhoto?.id });
