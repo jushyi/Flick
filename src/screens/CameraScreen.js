@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,20 +11,41 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAuth } from '../context/AuthContext';
-import { createPhoto } from '../services/firebase/photoService';
+import { useNavigation } from '@react-navigation/native';
+import { createPhoto, getDevelopingPhotoCount } from '../services/firebase/photoService';
 import logger from '../utils/logger';
+import Svg, { Path } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const CameraScreen = () => {
   const { user } = useAuth();
+  const navigation = useNavigation();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState('off');
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [darkroomCount, setDarkroomCount] = useState(0);
   const cameraRef = useRef(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
+
+  // Load darkroom count on mount and poll every 30s
+  useEffect(() => {
+    if (!user) return;
+
+    const loadDarkroomCount = async () => {
+      const count = await getDevelopingPhotoCount(user.uid);
+      setDarkroomCount(count);
+    };
+
+    loadDarkroomCount();
+
+    // Poll every 30 seconds to update count
+    const interval = setInterval(loadDarkroomCount, 30000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Handle permission request
   if (!permission) {
@@ -164,12 +185,19 @@ const CameraScreen = () => {
             <Text style={styles.flashLabel}>{getFlashLabel()}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={toggleCameraFacing}
-          >
-            <Text style={styles.controlIcon}>🔄</Text>
-          </TouchableOpacity>
+          <View style={styles.rightControls}>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={toggleCameraFacing}
+            >
+              <Text style={styles.controlIcon}>🔄</Text>
+            </TouchableOpacity>
+
+            <DarkroomButton
+              count={darkroomCount}
+              onPress={() => navigation.navigate('Darkroom')}
+            />
+          </View>
         </View>
 
         {/* Bottom Controls */}
@@ -212,6 +240,51 @@ const CameraScreen = () => {
         </Animated.View>
       )}
     </View>
+  );
+};
+
+// Darkroom Button Component (moon icon with badge count)
+const DarkroomButton = ({ count, onPress }) => {
+  const isDisabled = count === 0;
+
+  return (
+    <TouchableOpacity
+      style={[styles.darkroomButton, isDisabled && styles.darkroomButtonDisabled]}
+      onPress={onPress}
+      disabled={isDisabled}
+    >
+      <View style={{ position: 'relative' }}>
+        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+            stroke="#FFFFFF"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+        {count > 0 && (
+          <View
+            style={{
+              position: 'absolute',
+              top: -6,
+              right: -8,
+              backgroundColor: '#FF3B30',
+              borderRadius: 10,
+              minWidth: 18,
+              height: 18,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 4,
+            }}
+          >
+            <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>
+              {count > 99 ? '99+' : count}
+            </Text>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -261,6 +334,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 60,
   },
+  rightControls: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
   controlButton: {
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -268,6 +346,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     minWidth: 70,
+  },
+  darkroomButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 70,
+  },
+  darkroomButtonDisabled: {
+    opacity: 0.4,
   },
   flashIcon: {
     fontSize: 24,
