@@ -22,11 +22,11 @@ None
 **Goal**: Remove Darkroom tab from bottom navigation and add darkroom button to CameraScreen
 **Depends on**: Nothing (first phase)
 **Research**: Unlikely (React Navigation restructuring with established patterns)
-**Plans**: 2 plans
+**Plans**: 1 plan
+**Status**: Complete
 
 Plans:
-- [x] 01-01: Remove Darkroom tab from MainTabNavigator, update navigation structure
-- [ ] 01-02: Add darkroom button to CameraScreen with badge count and disabled state
+- [x] 01-01: Navigation restructure (remove Darkroom tab, add darkroom button to CameraScreen)
 
 ### Phase 2: Darkroom Bottom Sheet
 **Goal**: Implement press-and-hold reveal interaction with progress bar and haptic feedback
@@ -75,7 +75,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Navigation Restructure | 1/2 | In progress | - |
+| 1. Navigation Restructure | 1/1 | Complete | 2026-01-12 |
 | 2. Darkroom Bottom Sheet | 0/2 | Not started | - |
 | 3. Swipe Gesture Triage | 0/2 | Not started | - |
 | 4. Success & Return Flow | 0/2 | Not started | - |
