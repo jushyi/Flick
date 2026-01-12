@@ -108,13 +108,6 @@ const MainTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Darkroom"
-        component={DarkroomScreen}
-        options={{
-          tabBarIcon: ({ color }) => <DarkroomIcon color={color} count={darkroomCount} />,
-        }}
-      />
-      <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
