@@ -33,9 +33,10 @@ Plans:
 **Depends on**: Phase 1
 **Research**: Unlikely (React Native bottom sheet patterns, existing haptic utilities)
 **Plans**: 2 plans
+**Status**: In progress
 
 Plans:
-- [ ] 02-01: Create bottom sheet component with press-and-hold progress bar
+- [x] 02-01: Create bottom sheet component with press-and-hold progress bar
 - [ ] 02-02: Connect reveal logic with haptic feedback and photo triage transition
 
 ### Phase 3: Swipe Gesture Triage
@@ -76,7 +77,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Navigation Restructure | 1/1 | Complete | 2026-01-12 |
-| 2. Darkroom Bottom Sheet | 0/2 | Not started | - |
+| 2. Darkroom Bottom Sheet | 1/2 | In progress | - |
 | 3. Swipe Gesture Triage | 0/2 | Not started | - |
 | 4. Success & Return Flow | 0/2 | Not started | - |
 | 5. Camera Icon Redesign | 0/1 | Not started | - |
