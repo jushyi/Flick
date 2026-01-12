@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -152,13 +153,29 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
    * Handle swipe completion
    * @param {string} direction - 'left' or 'right'
    */
-  const handleSwipeableOpen = (direction) => {
+  const handleSwipeableOpen = async (direction) => {
+    const action = direction === 'left' ? 'Archive' : 'Journal';
+
     logger.info('SwipeablePhotoCard: Swipe action triggered', {
       photoId: photo?.id,
       direction,
-      action: direction === 'left' ? 'Archive' : 'Journal',
+      action,
     });
 
+    // Trigger haptic feedback immediately on swipe completion
+    try {
+      logger.debug(`SwipeablePhotoCard: Triggering haptic for ${action} swipe`, {
+        photoId: photo?.id,
+      });
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (error) {
+      logger.debug('SwipeablePhotoCard: Haptic failed (simulator or unsupported device)', {
+        photoId: photo?.id,
+        error: error.message,
+      });
+    }
+
+    // Execute swipe action
     try {
       if (direction === 'left') {
         onSwipeLeft();
