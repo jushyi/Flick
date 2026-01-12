@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { createPhoto, getDevelopingPhotoCount } from '../services/firebase/photoService';
 import logger from '../utils/logger';
 import Svg, { Path } from 'react-native-svg';
+import { DarkroomBottomSheet } from '../components';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -27,6 +28,7 @@ const CameraScreen = () => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [darkroomCount, setDarkroomCount] = useState(0);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const cameraRef = useRef(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -195,7 +197,7 @@ const CameraScreen = () => {
 
             <DarkroomButton
               count={darkroomCount}
-              onPress={() => navigation.navigate('Darkroom')}
+              onPress={() => setIsBottomSheetVisible(true)}
             />
           </View>
         </View>
@@ -239,6 +241,21 @@ const CameraScreen = () => {
           <Image source={{ uri: capturedPhoto }} style={styles.photoSnapshot} />
         </Animated.View>
       )}
+
+      {/* Darkroom Bottom Sheet */}
+      <DarkroomBottomSheet
+        visible={isBottomSheetVisible}
+        count={darkroomCount}
+        onClose={() => {
+          logger.debug('DarkroomButton: Bottom sheet closed');
+          setIsBottomSheetVisible(false);
+        }}
+        onComplete={() => {
+          // TODO: Will add navigation in next plan
+          logger.debug('DarkroomButton: Bottom sheet completed');
+          setIsBottomSheetVisible(false);
+        }}
+      />
     </View>
   );
 };
@@ -247,10 +264,17 @@ const CameraScreen = () => {
 const DarkroomButton = ({ count, onPress }) => {
   const isDisabled = count === 0;
 
+  const handlePress = () => {
+    if (onPress) {
+      logger.info('DarkroomButton: Opening bottom sheet', { count });
+      onPress();
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[styles.darkroomButton, isDisabled && styles.darkroomButtonDisabled]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
     >
       <View style={{ position: 'relative' }}>
