@@ -68,6 +68,10 @@ const LoginScreen = ({ navigation }) => {
     navigation.navigate('SignUp');
   };
 
+  const handlePhoneSignIn = () => {
+    navigation.navigate('PhoneInput');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -127,6 +131,13 @@ const LoginScreen = ({ navigation }) => {
               variant="secondary"
               onPress={handleAppleSignIn}
               loading={loading}
+            />
+
+            <Button
+              title="Sign in with Phone"
+              variant="secondary"
+              onPress={handlePhoneSignIn}
+              style={styles.phoneButton}
             />
 
             <Text style={styles.signupText}>
@@ -201,6 +212,9 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: '600',
     textDecorationLine: 'underline',
+  },
+  phoneButton: {
+    marginTop: 12,
   },
 });
 
