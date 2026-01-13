@@ -19,6 +19,11 @@ import { DarkroomBottomSheet } from '../components';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Layout constants
+const FOOTER_HEIGHT = 200;
+const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT;
+const FLOATING_CONTROL_OFFSET = 10; // Gap above footer edge
+
 const CameraScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
@@ -198,70 +203,72 @@ const CameraScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Camera View - no children, absolute positioned */}
       <CameraView
         ref={cameraRef}
         style={styles.camera}
         facing={facing}
         flash={flash}
-      >
-        {/* Top Controls */}
-        <View style={styles.topControls}>
-          <View style={styles.leftControls}>
-            <TouchableOpacity
-              style={styles.controlButton}
-              onPress={toggleFlash}
-            >
-              <Text style={styles.flashIcon}>{getFlashIcon()}</Text>
-              <Text style={styles.flashLabel}>{getFlashLabel()}</Text>
-            </TouchableOpacity>
+      />
 
-            {/* TEMP DEBUG: Direct navigation to Darkroom */}
-            <TouchableOpacity
-              style={[styles.controlButton, styles.debugButton]}
-              onPress={() => {
-                logger.info('CameraScreen: Debug - Direct navigation to Darkroom');
-                navigation.navigate('Darkroom');
-              }}
-            >
-              <Text style={styles.controlIcon}>🌙</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Footer Bar - solid dark background */}
+      <View style={styles.footerBar}>
+        {/* Footer Controls: Darkroom, Capture, Debug */}
+        <View style={styles.footerControls}>
+          {/* Darkroom Button (left of capture) */}
+          <DarkroomButton
+            count={darkroomCounts.totalCount}
+            onPress={() => setIsBottomSheetVisible(true)}
+          />
 
-          <View style={styles.rightControls}>
-            <TouchableOpacity
-              style={styles.controlButton}
-              onPress={toggleCameraFacing}
-            >
-              <Text style={styles.controlIcon}>🔄</Text>
-            </TouchableOpacity>
+          {/* Capture Button (center) */}
+          <TouchableOpacity
+            style={[
+              styles.captureButton,
+              isCapturing && styles.captureButtonDisabled,
+            ]}
+            onPress={takePicture}
+            disabled={isCapturing}
+          >
+            {isCapturing ? (
+              <ActivityIndicator size="large" color="#000000" />
+            ) : (
+              <View style={styles.captureButtonInner} />
+            )}
+          </TouchableOpacity>
 
-            <DarkroomButton
-              count={darkroomCounts.totalCount}
-              onPress={() => setIsBottomSheetVisible(true)}
-            />
-          </View>
+          {/* Debug Button (right of capture) */}
+          <TouchableOpacity
+            style={[styles.footerControlButton, styles.debugButton]}
+            onPress={() => {
+              logger.info('CameraScreen: Debug - Direct navigation to Darkroom');
+              navigation.navigate('Darkroom');
+            }}
+          >
+            <Text style={styles.debugIcon}>🌙</Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Bottom Controls */}
-        <View style={styles.bottomControls}>
-          <View style={styles.captureButtonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.captureButton,
-                isCapturing && styles.captureButtonDisabled,
-              ]}
-              onPress={takePicture}
-              disabled={isCapturing}
-            >
-              {isCapturing ? (
-                <ActivityIndicator size="large" color="#000000" />
-              ) : (
-                <View style={styles.captureButtonInner} />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </CameraView>
+      {/* Floating Controls Overlay - positioned above footer */}
+      <View style={styles.floatingControls}>
+        {/* Flash Button (bottom left of camera area) */}
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={toggleFlash}
+        >
+          <Text style={styles.flashIcon}>{getFlashIcon()}</Text>
+          <Text style={styles.flashLabel}>{getFlashLabel()}</Text>
+        </TouchableOpacity>
+
+        {/* Flip Camera Button (bottom right of camera area) */}
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={toggleCameraFacing}
+        >
+          <Text style={styles.controlIcon}>🔄</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Animated Photo Snapshot */}
       {capturedPhoto && (
@@ -362,9 +369,65 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
+  // Camera - absolute positioned, upper portion of screen
   camera: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: CAMERA_HEIGHT,
   },
+  // Footer bar - absolute positioned, solid dark background
+  footerBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: FOOTER_HEIGHT,
+    backgroundColor: '#1A1A1A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 40,
+    paddingBottom: 20,
+  },
+  footerControlButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  debugButton: {
+    backgroundColor: 'rgba(139, 0, 139, 0.6)', // Purple tint for debug button
+  },
+  debugIcon: {
+    fontSize: 24,
+  },
+  // Floating controls - positioned above footer edge
+  floatingControls: {
+    position: 'absolute',
+    bottom: FOOTER_HEIGHT + FLOATING_CONTROL_OFFSET,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+  },
+  floatingButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 70,
+  },
+  // Permission screens
   permissionContainer: {
     flex: 1,
     backgroundColor: '#000000',
@@ -396,46 +459,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
   },
-  topControls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  leftControls: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  rightControls: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  debugButton: {
-    backgroundColor: 'rgba(139, 0, 139, 0.6)', // Purple tint for debug button
-  },
-  controlButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 70,
-  },
+  // Darkroom button (in footer)
   darkroomButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 70,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   darkroomButtonDisabled: {
     opacity: 0.4,
   },
+  // Flash control
   flashIcon: {
     fontSize: 24,
     marginBottom: 4,
@@ -446,18 +482,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   controlIcon: {
-    fontSize: 32,
+    fontSize: 28,
   },
-  bottomControls: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingBottom: 40,
-  },
-  captureButtonContainer: {
-    alignItems: 'center',
-  },
+  // Capture button
   captureButton: {
     width: 80,
     height: 80,
@@ -477,6 +504,7 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     backgroundColor: '#FFFFFF',
   },
+  // Animated photo
   animatedPhoto: {
     position: 'absolute',
     top: '50%',
