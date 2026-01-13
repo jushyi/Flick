@@ -162,6 +162,12 @@ const CameraScreen = () => {
       if (!result.success) {
         throw new Error(result.error);
       }
+
+      // Immediately update badge count after successful photo creation
+      logger.debug('CameraScreen: Refreshing badge count after photo capture');
+      const updatedCounts = await getDarkroomCounts(user.uid);
+      setDarkroomCounts(updatedCounts);
+      logger.info('CameraScreen: Badge count updated', updatedCounts);
     } catch (error) {
       logger.error('Error saving photo', error);
     } finally {
