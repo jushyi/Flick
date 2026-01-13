@@ -6,8 +6,10 @@ import {
   Dimensions,
   Animated,
   Easing,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { successNotification } from '../utils/haptics';
 import logger from '../utils/logger';
 
@@ -73,8 +75,10 @@ const ConfettiPiece = ({ index, color }) => {
 };
 
 const SuccessScreen = () => {
+  const navigation = useNavigation();
   const confettiGenerated = useRef(false);
   const confettiPieces = useRef([]);
+  const buttonScale = useRef(new Animated.Value(1)).current;
 
   // Generate confetti pieces once
   if (!confettiGenerated.current) {
@@ -112,6 +116,39 @@ const SuccessScreen = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleReturnToCamera = async () => {
+    logger.info('SuccessScreen: User tapped Return to Camera button');
+
+    // Trigger button press animation
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.98,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(buttonScale, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Trigger medium impact haptic
+    try {
+      await successNotification();
+      logger.debug('SuccessScreen: Button press haptic triggered');
+    } catch (error) {
+      logger.warn('SuccessScreen: Haptic failed on button press', error);
+    }
+
+    // Navigate back to Camera tab
+    logger.info('SuccessScreen: Navigating back to Camera', {
+      timestamp: new Date().toISOString(),
+    });
+    navigation.navigate('MainTabs', { screen: 'Camera' });
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Confetti layer */}
@@ -130,6 +167,22 @@ const SuccessScreen = () => {
         <Text style={styles.emoji}>🎉</Text>
         <Text style={styles.title}>All Set!</Text>
         <Text style={styles.subtitle}>Your photos have been organized</Text>
+
+        {/* Return to Camera button */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleReturnToCamera}
+          activeOpacity={0.8}
+        >
+          <Animated.View
+            style={[
+              styles.buttonInner,
+              { transform: [{ scale: buttonScale }] },
+            ]}
+          >
+            <Text style={styles.buttonText}>Return to Camera</Text>
+          </Animated.View>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -169,6 +222,22 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#CCCCCC',
+  },
+  button: {
+    marginTop: 48,
+  },
+  buttonInner: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
 });
 
