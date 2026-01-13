@@ -6,7 +6,8 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 ## Milestones
 
-- [v1.1 Camera/Darkroom UX Refactor](milestones/v1.1-ROADMAP.md) (Phases 1-5) - SHIPPED 2026-01-12
+- ✅ **v1.1 Camera/Darkroom UX Refactor** - [archive](milestones/v1.1-ROADMAP.md) (Phases 1-5, shipped 2026-01-12)
+- 🚧 **v1.2 Phone Authentication** - Phases 6-8 (in progress)
 
 ## Completed Milestones
 
@@ -24,10 +25,44 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 </details>
 
+### 🚧 v1.2 Phone Authentication (In Progress)
+
+**Milestone Goal:** Migrate authentication from email/Apple Sign-In to phone-only with SMS verification
+
+#### Phase 6: Phone Auth Implementation
+
+**Goal**: Set up Firebase phone authentication with phone number input UI and SMS code verification
+**Depends on**: v1.1 complete
+**Research**: Likely (Firebase Phone Auth API, APNs setup for iOS)
+**Research topics**: Firebase Phone Auth configuration, reCAPTCHA verification, APNs silent push setup, expo-auth-session integration
+**Plans**: TBD
+
+Plans:
+- [ ] 06-01: TBD (run /gsd:plan-phase 6 to break down)
+
+#### Phase 7: Legacy Auth Removal & Cleanup
+
+**Goal**: Remove email/password and Apple Sign-In flows, update AuthContext for phone-only auth
+**Depends on**: Phase 6
+**Research**: Unlikely (internal refactoring)
+**Plans**: TBD
+
+Plans:
+- [ ] 07-01: TBD
+
+#### Phase 8: Polish & Testing
+
+**Goal**: Error handling, edge cases, phone number formatting, and international support
+**Depends on**: Phase 7
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 08-01: TBD
+
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+**Execution Order:** Phases execute in numeric order: 6 → 7 → 8
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -36,7 +71,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 3. Swipe Gesture Triage | v1.1 | 2/2 | Complete | 2026-01-12 |
 | 4. Success & Return Flow | v1.1 | 2/2 | Complete | 2026-01-13 |
 | 5. Camera Icon Redesign | v1.1 | 1/1 | Complete | 2026-01-13 |
-
-## MILESTONE COMPLETE
-
-All 5 phases finished. Total: 8 plans executed in 4.3 hours.
+| 6. Phone Auth Implementation | v1.2 | 0/? | Not started | - |
+| 7. Legacy Auth Removal & Cleanup | v1.2 | 0/? | Not started | - |
+| 8. Polish & Testing | v1.2 | 0/? | Not started | - |

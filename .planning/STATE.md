@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-12)
 
 **Core value:** Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures and haptic feedback.
-**Current focus:** v1.1 Shipped - Ready for next milestone
+**Current focus:** v1.2 Phone Authentication - Migrate to phone-only auth with SMS verification
 
 ## Current Position
 
-Phase: 5 of 5 (Camera Icon Redesign)
-Plan: Complete
-Status: v1.1 SHIPPED
-Last activity: 2026-01-12 - v1.1 milestone complete
+Phase: 6 of 8 (Phone Auth Implementation)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-12 - Milestone v1.2 created
 
-Progress: 100%
+Progress: ░░░░░░░░░░ 0%
 
 ## Performance Metrics
 
@@ -23,7 +23,7 @@ Progress: 100%
 - Average duration: 32 min
 - Total execution time: 4.3 hours
 
-**By Phase:**
+**By Phase (v1.1):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -37,7 +37,7 @@ Progress: 100%
 
 ### Decisions
 
-All decisions documented in PROJECT.md Key Decisions table with outcomes marked as Good.
+All v1.1 decisions documented in PROJECT.md Key Decisions table with outcomes marked as Good.
 
 ### Deferred Issues
 
@@ -47,14 +47,20 @@ None.
 
 None.
 
+### Roadmap Evolution
+
+- v1.1 Camera/Darkroom UX Refactor shipped: 5 phases, 8 plans (Phases 1-5) - 2026-01-12
+- Milestone v1.2 created: Phone Authentication, 3 phases (Phase 6-8)
+
 ## Session Continuity
 
 Last session: 2026-01-12
-Stopped at: v1.1 MILESTONE SHIPPED
-Resume file: None - milestone complete
+Stopped at: Milestone v1.2 initialization
+Resume file: None
 
 ## What's Next
 
-The Camera/Darkroom UX Refactor milestone is complete. Options:
-- `/gsd:discuss-milestone` - Plan next milestone
-- `/gsd:new-milestone` - Create directly if scope is clear
+Ready to begin v1.2 Phone Authentication milestone:
+- Phase 6: Phone Auth Implementation (Firebase phone auth, SMS verification UI)
+- Phase 7: Legacy Auth Removal & Cleanup (Remove email/Apple auth)
+- Phase 8: Polish & Testing (Error handling, international support)
