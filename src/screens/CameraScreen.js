@@ -20,9 +20,10 @@ import { DarkroomBottomSheet } from '../components';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Layout constants
-const FOOTER_HEIGHT = 200;
-const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT;
-const FLOATING_CONTROL_OFFSET = 10; // Gap above footer edge
+const TAB_BAR_HEIGHT = 65; // Bottom tab navigator height (includes safe area)
+const FOOTER_HEIGHT = 160;
+const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
+const FLOATING_CONTROL_OFFSET = 4; // Gap above footer edge
 
 // Flash icon SVG component - matches bottom nav design system
 const FlashIcon = ({ color = '#FFFFFF', mode = 'off' }) => (
@@ -422,10 +423,10 @@ const styles = StyleSheet.create({
     right: 0,
     height: CAMERA_HEIGHT,
   },
-  // Footer bar - absolute positioned, solid dark background
+  // Footer bar - absolute positioned, solid dark background, above tab bar
   footerBar: {
     position: 'absolute',
-    bottom: 0,
+    bottom: TAB_BAR_HEIGHT,
     left: 0,
     right: 0,
     height: FOOTER_HEIGHT,
@@ -454,10 +455,10 @@ const styles = StyleSheet.create({
   debugIcon: {
     fontSize: 24,
   },
-  // Floating controls - positioned above footer edge
+  // Floating controls - positioned above footer edge (accounting for tab bar)
   floatingControls: {
     position: 'absolute',
-    bottom: FOOTER_HEIGHT + FLOATING_CONTROL_OFFSET,
+    bottom: TAB_BAR_HEIGHT + FOOTER_HEIGHT + FLOATING_CONTROL_OFFSET,
     left: 0,
     right: 0,
     flexDirection: 'row',
