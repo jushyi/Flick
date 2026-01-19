@@ -10,14 +10,10 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
 
-// Import auth screens
-import LoginScreen from '../screens/LoginScreen';
-import SignUpScreen from '../screens/SignUpScreen';
-import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
-import ProfileSetupScreen from '../screens/ProfileSetupScreen';
-// Phone auth screens
+// Import auth screens (phone-only authentication)
 import PhoneInputScreen from '../screens/PhoneInputScreen';
 import VerificationScreen from '../screens/VerificationScreen';
+import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 
 // Import main app screens
 import FeedScreen from '../screens/FeedScreen';
@@ -275,11 +271,9 @@ const linking = {
         },
       },
       Darkroom: 'darkroom',
-      Login: 'login',
-      SignUp: 'signup',
-      ProfileSetup: 'profile-setup',
       PhoneInput: 'phone-input',
       Verification: 'verification',
+      ProfileSetup: 'profile-setup',
     },
   },
 };
@@ -325,25 +319,10 @@ const AppNavigator = () => {
         }}
       >
         {!isAuthenticated ? (
-          // Auth Stack - User not logged in
+          // Auth Stack - Phone-only authentication
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen
-              name="SignUp"
-              component={SignUpScreen}
-            />
-            <Stack.Screen
-              name="ForgotPassword"
-              component={ForgotPasswordScreen}
-            />
-            <Stack.Screen
-              name="PhoneInput"
-              component={PhoneInputScreen}
-            />
-            <Stack.Screen
-              name="Verification"
-              component={VerificationScreen}
-            />
+            <Stack.Screen name="PhoneInput" component={PhoneInputScreen} />
+            <Stack.Screen name="Verification" component={VerificationScreen} />
           </>
         ) : needsProfileSetup ? (
           // Profile Setup - User logged in but needs to complete profile
