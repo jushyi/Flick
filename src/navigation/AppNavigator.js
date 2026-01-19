@@ -300,7 +300,19 @@ const AppNavigator = () => {
   }
 
   const isAuthenticated = !!user;
-  const needsProfileSetup = isAuthenticated && userProfile && (userProfile.profileSetupCompleted === false);
+
+  // Wait for userProfile to be loaded/created before making navigation decisions
+  // This prevents briefly showing MainTabs while profile is being created for new users
+  if (isAuthenticated && userProfile === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+        <ActivityIndicator size="large" color="#000000" />
+      </View>
+    );
+  }
+
+  // Show ProfileSetup if user is authenticated but hasn't completed profile setup
+  const needsProfileSetup = isAuthenticated && userProfile && userProfile.profileSetupCompleted === false;
 
   return (
     <NavigationContainer ref={navigationRef} linking={linking}>
