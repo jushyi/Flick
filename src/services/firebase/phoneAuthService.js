@@ -21,32 +21,37 @@ export const getPhoneAuthErrorMessage = (errorCode) => {
 
   switch (errorCode) {
     case 'auth/invalid-phone-number':
-      return 'Invalid phone number format. Please check and try again.';
+      return 'Invalid phone number. Please check the number and try again.';
     case 'auth/missing-phone-number':
       return 'Please enter your phone number.';
     case 'auth/quota-exceeded':
-      return 'Too many attempts. Please try again later.';
+      return 'Too many SMS requests. Please wait a few minutes and try again.';
     case 'auth/invalid-verification-code':
-      return 'Invalid verification code. Please check and try again.';
+      return 'Incorrect code. Please check and try again.';
     case 'auth/code-expired':
     case 'auth/session-expired':
-      return 'Verification code expired. Please request a new code.';
+      return 'Code expired. Please go back and request a new code.';
     case 'auth/too-many-requests':
-      return 'Too many requests. Please wait a few minutes.';
+      return 'Too many attempts. Please wait a few minutes before trying again.';
     case 'auth/operation-not-allowed':
-      return 'Phone authentication is not enabled. Please contact support.';
+      return 'Phone sign-in is not enabled. Please contact support.';
     case 'auth/user-disabled':
-      return 'This account has been disabled.';
+      return 'This account has been disabled. Please contact support.';
     case 'auth/network-request-failed':
-      return 'Network error. Please check your connection.';
+      return 'Network error. Please check your internet connection and try again.';
     case 'auth/captcha-check-failed':
-      return 'Verification failed. Please try again.';
+      return 'Verification check failed. Please try again.';
     case 'auth/app-not-authorized':
-      return 'App not authorized. Please try again later.';
+      return 'App authorization failed. Please try again later.';
     case 'auth/missing-client-identifier':
-      return 'Configuration error. Please try again later.';
+      return 'Configuration error. Please restart the app and try again.';
+    case 'auth/internal-error':
+      return 'Something went wrong. Please try again.';
+    case 'auth/invalid-verification-id':
+      return 'Session expired. Please go back and request a new code.';
     default:
-      return 'An error occurred. Please try again.';
+      logger.warn('phoneAuthService: Unknown error code', { errorCode });
+      return 'Something went wrong. Please try again.';
   }
 };
 

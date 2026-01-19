@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Modal,
   FlatList,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../components';
@@ -50,6 +51,18 @@ const PhoneInputScreen = ({ navigation }) => {
   const [error, setError] = useState('');
   const [showCountryPicker, setShowCountryPicker] = useState(false);
 
+  // Shake animation for error feedback
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  const triggerShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  };
+
   const handleSendCode = async () => {
     logger.info('PhoneInputScreen: Send code pressed', {
       phoneNumberLength: phoneNumber.length,
@@ -62,6 +75,7 @@ const PhoneInputScreen = ({ navigation }) => {
     // Basic validation
     if (!phoneNumber.trim()) {
       setError('Please enter your phone number.');
+      triggerShake();
       return;
     }
 
@@ -87,10 +101,12 @@ const PhoneInputScreen = ({ navigation }) => {
       } else {
         logger.warn('PhoneInputScreen: Send code failed', { error: result.error });
         setError(result.error);
+        triggerShake();
       }
     } catch (err) {
       logger.error('PhoneInputScreen: Unexpected error', { error: err.message });
       setError('An unexpected error occurred. Please try again.');
+      triggerShake();
     } finally {
       setLoading(false);
     }
@@ -169,7 +185,12 @@ const PhoneInputScreen = ({ navigation }) => {
               </TouchableOpacity>
 
               {/* Phone Number Input */}
-              <View style={styles.phoneInputContainer}>
+              <Animated.View
+                style={[
+                  styles.phoneInputContainer,
+                  { transform: [{ translateX: shakeAnim }] }
+                ]}
+              >
                 <View style={styles.countryCodeDisplay}>
                   <Text style={styles.countryCodeText}>{selectedCountry.code}</Text>
                 </View>
@@ -185,7 +206,7 @@ const PhoneInputScreen = ({ navigation }) => {
                     style={styles.phoneInput}
                   />
                 </View>
-              </View>
+              </Animated.View>
 
               {/* Send Code Button */}
               <Button

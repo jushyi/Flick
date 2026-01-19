@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components';
@@ -26,8 +27,19 @@ const VerificationScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(60);
+  const [retryDelay, setRetryDelay] = useState(0); // Delay before allowing retry after error
 
   const inputRef = useRef(null);
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  const triggerShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  };
 
   // Auto-focus on mount
   useEffect(() => {
@@ -61,16 +73,33 @@ const VerificationScreen = ({ navigation, route }) => {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  // Auto-submit when 6 digits entered
+  // Retry delay countdown (prevents rapid retries after error)
   useEffect(() => {
-    if (code.length === 6) {
+    if (retryDelay <= 0) return;
+
+    const interval = setInterval(() => {
+      setRetryDelay((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [retryDelay]);
+
+  // Auto-submit when 6 digits entered (only if not in retry delay)
+  useEffect(() => {
+    if (code.length === 6 && retryDelay === 0) {
       logger.debug('VerificationScreen: Auto-submitting code');
       handleVerify();
     }
-  }, [code]);
+  }, [code, retryDelay]);
 
   const handleVerify = async () => {
-    if (loading) return;
+    if (loading || retryDelay > 0) return;
 
     logger.info('VerificationScreen: Verify pressed', { codeLength: code.length });
 
@@ -80,6 +109,7 @@ const VerificationScreen = ({ navigation, route }) => {
     // Validate code format
     if (code.length !== 6 || !/^\d{6}$/.test(code)) {
       setError('Please enter the 6-digit code.');
+      triggerShake();
       return;
     }
 
@@ -101,11 +131,18 @@ const VerificationScreen = ({ navigation, route }) => {
         logger.warn('VerificationScreen: Verification failed', { error: result.error });
         setError(result.error);
         setCode(''); // Clear code on error
+        triggerShake();
+        setRetryDelay(3); // 3 second delay before allowing retry
+        // Refocus input after clearing
+        setTimeout(() => inputRef.current?.focus(), 100);
       }
     } catch (err) {
       logger.error('VerificationScreen: Unexpected error', { error: err.message });
       setError('An unexpected error occurred. Please try again.');
       setCode('');
+      triggerShake();
+      setRetryDelay(3);
+      setTimeout(() => inputRef.current?.focus(), 100);
     } finally {
       setLoading(false);
     }
@@ -154,7 +191,12 @@ const VerificationScreen = ({ navigation, route }) => {
           </Text>
 
           {/* Code Input */}
-          <View style={styles.codeInputContainer}>
+          <Animated.View
+            style={[
+              styles.codeInputContainer,
+              { transform: [{ translateX: shakeAnim }] }
+            ]}
+          >
             <TextInput
               ref={inputRef}
               style={[styles.codeInput, error && styles.codeInputError]}
@@ -166,12 +208,21 @@ const VerificationScreen = ({ navigation, route }) => {
               autoComplete="sms-otp"
               placeholder="000000"
               placeholderTextColor="#CCCCCC"
-              editable={!loading}
+              editable={!loading && retryDelay === 0}
             />
-          </View>
+          </Animated.View>
 
           {/* Error Message */}
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+              {retryDelay > 0 && (
+                <Text style={styles.retryDelayText}>
+                  Retry in {retryDelay}s
+                </Text>
+              )}
+            </View>
+          ) : null}
 
           {/* Verify Button (hidden when auto-submit is active, but available as backup) */}
           {code.length === 6 && !loading && (
@@ -274,11 +325,21 @@ const styles = StyleSheet.create({
   codeInputError: {
     borderColor: '#FF4444',
   },
+  errorContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   errorText: {
     fontSize: 14,
     color: '#FF4444',
     textAlign: 'center',
-    marginBottom: 16,
+    fontWeight: '600',
+  },
+  retryDelayText: {
+    fontSize: 12,
+    color: '#999999',
+    textAlign: 'center',
+    marginTop: 4,
   },
   loadingText: {
     fontSize: 16,
