@@ -45,6 +45,7 @@
   "devDependencies": {
     "babel-preset-expo": "^54.0.9",
     "patch-package": "^8.0.1",
-    "react-native-dotenv": "^3.4.11"
+    "react-native-dotenv": "^3.4.11",
+    "sharp": "^0.34.5"
   }
 }
