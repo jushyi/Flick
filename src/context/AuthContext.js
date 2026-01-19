@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-// Use React Native Firebase for auth
+// Use React Native Firebase for auth and firestore (required for phone auth)
 import { getAuth, onAuthStateChanged as firebaseOnAuthStateChanged } from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 // Keep Firebase JS SDK imports for email/Apple auth (will be removed in Phase 7)
 import {
   signUpWithEmail,
@@ -10,6 +11,36 @@ import {
 } from '../services/firebase/authService';
 import { createUserDocument, getUserDocument } from '../services/firebase/firestoreService';
 import logger from '../utils/logger';
+
+// React Native Firebase Firestore functions for phone auth users
+// These use the native SDK which shares auth state with RN Firebase Auth
+const createUserDocumentNative = async (userId, userData) => {
+  try {
+    await firestore().collection('users').doc(userId).set({
+      ...userData,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      dailyPhotoCount: 0,
+      lastPhotoDate: new Date().toISOString().split('T')[0],
+    });
+    return { success: true };
+  } catch (error) {
+    logger.error('createUserDocumentNative: Failed', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
+
+const getUserDocumentNative = async (userId) => {
+  try {
+    const userDoc = await firestore().collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      return { success: true, data: { id: userDoc.id, ...userDoc.data() } };
+    }
+    return { success: false, error: 'User not found' };
+  } catch (error) {
+    logger.error('getUserDocumentNative: Failed', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
 
 const AuthContext = createContext({});
 
@@ -44,16 +75,16 @@ export const AuthProvider = ({ children }) => {
         // This triggers loading state in AppNavigator
         setUserProfile(null);
 
-        // Fetch user profile from Firestore
-        logger.debug('AuthContext: Fetching user profile from Firestore');
-        const profileResult = await getUserDocument(firebaseUser.uid);
+        // Fetch user profile from Firestore using native SDK (shares auth state with RN Firebase Auth)
+        logger.debug('AuthContext: Fetching user profile from Firestore (native)');
+        const profileResult = await getUserDocumentNative(firebaseUser.uid);
         if (profileResult.success) {
           logger.debug('AuthContext: User profile loaded', {
             profileSetupCompleted: profileResult.data?.profileSetupCompleted
           });
           setUserProfile(profileResult.data);
         } else {
-          // New user via phone auth - create profile
+          // New user via phone auth - create profile using native Firestore
           logger.debug('AuthContext: No user profile found, creating for new user');
           const userDoc = {
             uid: firebaseUser.uid,
@@ -65,12 +96,11 @@ export const AuthProvider = ({ children }) => {
             bio: '',
             friends: [],
             profileSetupCompleted: false,
-            createdAt: new Date(),
           };
 
-          const createResult = await createUserDocument(firebaseUser.uid, userDoc);
+          const createResult = await createUserDocumentNative(firebaseUser.uid, userDoc);
           if (createResult.success) {
-            setUserProfile(userDoc);
+            setUserProfile({ ...userDoc, createdAt: new Date() });
             logger.info('AuthContext: New user profile created', {
               profileSetupCompleted: userDoc.profileSetupCompleted
             });
@@ -80,7 +110,7 @@ export const AuthProvider = ({ children }) => {
             logger.error('AuthContext: Failed to create user document in Firestore', {
               error: createResult.error
             });
-            setUserProfile(userDoc);
+            setUserProfile({ ...userDoc, createdAt: new Date() });
           }
         }
       } else {
