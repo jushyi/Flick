@@ -62,7 +62,7 @@ Plans:
 - [x] 12.2-01: Service Layer (getTopPhotosByEngagement, getFriendStoriesData)
 - [x] 12.2-02: Stories Row Component (FriendStoryCard + horizontal row in FeedScreen)
 - [x] 12.2-03: Stories Viewer (StoriesViewerModal with navigation gestures)
-- [ ] 12.2-04: Feed Curation & Polish (top 5 per friend, edge cases)
+- [x] 12.2-04: Feed Curation & Polish (top 5 per friend, edge cases)
 
 **Details:**
 Feature request: PhotoCards of friends that when tapped display all of friend's snaps in IG Story-style viewer. Main feed changes to show only top 5 snaps from friends, ranked by engagement (reactionCount - no comments system exists).
@@ -144,6 +144,6 @@ Plans:
 | 11. Firebase Modular API Migration | v1.4 | 4/4 | Complete | 2026-01-19 |
 | 12. Friendship Service Fix + Testing | v1.4 | 1/1 | Complete | 2026-01-19 |
 | 12.1 Friends List Screen Crash Fix | v1.4 | 1/1 | Complete | 2026-01-19 |
-| 12.2 Feed Stories Feature | v1.4 | 3/4 | In progress | - |
+| 12.2 Feed Stories Feature | v1.4 | 4/4 | Complete | 2026-01-20 |
 | 13. Production Build & Branding | v1.4 | 0/? | Not started | - |
 | 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |
