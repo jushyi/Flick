@@ -68,8 +68,8 @@ const FriendsListScreen = ({ navigation }) => {
             const userRef = doc(db, 'users', otherUserId);
             const userDoc = await getDoc(userRef);
 
-            // Modular API uses exists as a property
-            if (userDoc.exists) {
+            // Modular API uses exists() as a method
+            if (userDoc.exists()) {
               return {
                 friendshipId: friendship.id,
                 userId: otherUserId,

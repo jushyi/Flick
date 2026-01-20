@@ -49,8 +49,8 @@ const FriendRequestCard = ({ request, type, onAccept, onDecline, onCancel, curre
         const userRef = doc(db, 'users', otherUserId);
         const userDoc = await getDoc(userRef);
 
-        // Modular API uses exists as a property
-        if (userDoc.exists) {
+        // Modular API uses exists() as a method
+        if (userDoc.exists()) {
           setOtherUser({
             id: userDoc.id,
             ...userDoc.data(),
