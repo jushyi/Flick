@@ -15,7 +15,7 @@ import useFeedPhotos from '../hooks/useFeedPhotos';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
 import PhotoDetailModal from '../components/PhotoDetailModal';
-import { FriendStoryCard } from '../components';
+import { FriendStoryCard, StoriesViewerModal } from '../components';
 import { toggleReaction, getFriendStoriesData } from '../services/firebase/feedService';
 import { useAuth } from '../context/AuthContext';
 import logger from '../utils/logger';
@@ -41,6 +41,8 @@ const FeedScreen = () => {
   // Stories state
   const [friendStories, setFriendStories] = useState([]);
   const [storiesLoading, setStoriesLoading] = useState(true);
+  const [storiesModalVisible, setStoriesModalVisible] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
 
   /**
    * Refresh feed when screen comes into focus
@@ -78,10 +80,20 @@ const FeedScreen = () => {
 
   /**
    * Handle opening stories for a friend
-   * TODO: Open StoriesViewerModal in Plan 03
    */
   const handleOpenStories = (friend) => {
-    logger.info('FeedScreen: User tapped friend story', { friendId: friend.userId, displayName: friend.displayName });
+    logger.info('FeedScreen: Opening stories viewer', { friendId: friend.userId, displayName: friend.displayName });
+    setSelectedFriend(friend);
+    setStoriesModalVisible(true);
+  };
+
+  /**
+   * Handle closing stories viewer
+   */
+  const handleCloseStories = () => {
+    logger.debug('FeedScreen: Closing stories viewer');
+    setStoriesModalVisible(false);
+    setSelectedFriend(null);
   };
 
   /**
@@ -310,6 +322,13 @@ const FeedScreen = () => {
           currentUserId={user?.uid}
         />
       )}
+
+      {/* Stories Viewer Modal */}
+      <StoriesViewerModal
+        visible={storiesModalVisible}
+        onClose={handleCloseStories}
+        friend={selectedFriend}
+      />
     </SafeAreaView>
   );
 };
