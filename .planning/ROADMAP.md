@@ -80,6 +80,19 @@ Plans:
 - [x] 13-02: Animated Splash Screen (shutter opening effect)
 - [x] 13-03: EAS Build & Distribution (iOS build, internal distribution)
 
+#### Phase 13.1: Darkroom Reveal Timing Fix (INSERTED)
+
+**Goal**: Fix inaccurate nextRevealAt calculation and change reveal interval to 0-15 minutes
+**Depends on**: Phase 13
+**Research**: Unlikely (internal debugging)
+**Plans**: 1
+
+Plans:
+- [ ] 13.1-01: Timing Fix & Countdown Display
+
+**Details:**
+User reported that darkroom "nextRevealAt" timing is inaccurate. Additionally, changing reveal interval from 0-2 hours to 0-15 minutes for faster photo reveals.
+
 #### Phase 14: Remote Notification Testing & Polish
 
 **Goal**: End-to-end notification verification, final bug fixes
@@ -148,4 +161,5 @@ Plans:
 | 12.1 Friends List Screen Crash Fix | v1.4 | 1/1 | Complete | 2026-01-19 |
 | 12.2 Feed Stories Feature | v1.4 | 4/4 | Complete | 2026-01-20 |
 | 13. Production Build & Branding | v1.4 | 3/3 | Complete | 2026-01-20 |
+| 13.1 Darkroom Reveal Timing Fix | v1.4 | 0/? | Not started | - |
 | 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |
