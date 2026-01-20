@@ -58,5 +58,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Completed 12.2-03-PLAN.md (Stories viewer modal)
+Stopped at: Completed 12.1-01-FIX4 (UAT-004 fix for friend request permission error)
 Resume file: None
