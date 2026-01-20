@@ -98,13 +98,16 @@ Fixed darkroom timing accuracy by adding ensureDarkroomInitialized() call on pho
 **Goal**: Fix darkroom not revealing photos when nextRevealAt time passes - reveal happens only when user opens DarkroomScreen
 **Depends on**: Phase 13.1
 **Research**: Unlikely (internal debugging)
-**Plans**: 1
+**Plans**: 1 + 1 FIX
 
 Plans:
 - [x] 13.2-01: Fix ensureDarkroomInitialized + Add foreground reveal check
+- [x] 13.2-01-FIX: Server-side darkroom reveal via scheduled Cloud Function
 
 **Details:**
 Bug: When nextRevealAt time passes, nothing happens automatically. The reveal logic only runs when the user opens DarkroomScreen. Additionally, ensureDarkroomInitialized() resets stale nextRevealAt without revealing photos first, causing photos to remain in 'developing' state indefinitely.
+
+**UAT Fix:** Added processDarkroomReveals scheduled Cloud Function (every 2 minutes) for server-side reveal regardless of app state.
 
 #### Phase 14: Remote Notification Testing & Polish
 
