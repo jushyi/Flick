@@ -1,19 +1,40 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
-import { ErrorBoundary } from './src/components';
+import { ErrorBoundary, AnimatedSplash } from './src/components';
 import {
   initializeNotifications,
   handleNotificationReceived,
   handleNotificationTapped,
 } from './src/services/firebase/notificationService';
 
+// Prevent the native splash screen from auto-hiding
+// This keeps it visible while our animated splash runs
+SplashScreen.preventAutoHideAsync();
+
 export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
+  const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+
+  /**
+   * Handle animated splash completion
+   * Hides the native splash and removes the animated overlay
+   */
+  const handleSplashComplete = async () => {
+    try {
+      // Hide the native splash screen
+      await SplashScreen.hideAsync();
+    } catch (e) {
+      // Ignore errors - splash may have already been hidden
+    }
+    // Remove the animated splash overlay
+    setShowAnimatedSplash(false);
+  };
 
   useEffect(() => {
     // Initialize notifications on app launch
@@ -67,6 +88,9 @@ export default function App() {
         <AuthProvider>
           <AppNavigator />
           <StatusBar style="auto" />
+          {showAnimatedSplash && (
+            <AnimatedSplash onAnimationComplete={handleSplashComplete} />
+          )}
         </AuthProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
