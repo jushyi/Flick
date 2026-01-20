@@ -45,38 +45,59 @@ const FeedScreen = () => {
   const [selectedFriend, setSelectedFriend] = useState(null);
 
   /**
-   * Refresh feed when screen comes into focus
+   * Refresh feed and stories when screen comes into focus
    * This ensures feed reflects current friendship state after adding/removing friends
    */
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      logger.debug('Feed screen focused - refreshing feed');
+      logger.debug('Feed screen focused - refreshing feed and stories');
       refreshFeed();
+      loadFriendStories();
     });
 
     return unsubscribe;
   }, [navigation, refreshFeed]);
 
   /**
+   * Load friend stories data
+   * Reusable function for initial load and refresh
+   */
+  const loadFriendStories = async () => {
+    if (!user?.uid) return;
+
+    logger.debug('FeedScreen: Loading friend stories data');
+    setStoriesLoading(true);
+    const result = await getFriendStoriesData(user.uid);
+    if (result.success) {
+      logger.info('FeedScreen: Friend stories loaded', { count: result.friendStories.length });
+      setFriendStories(result.friendStories);
+    } else {
+      logger.warn('FeedScreen: Failed to load friend stories', { error: result.error });
+    }
+    setStoriesLoading(false);
+  };
+
+  /**
    * Load friend stories data on mount
    */
   useEffect(() => {
-    const loadFriendStories = async () => {
-      logger.debug('FeedScreen: Loading friend stories data');
-      setStoriesLoading(true);
-      const result = await getFriendStoriesData(user.uid);
-      if (result.success) {
-        logger.info('FeedScreen: Friend stories loaded', { count: result.friendStories.length });
-        setFriendStories(result.friendStories);
-      } else {
-        logger.error('FeedScreen: Failed to load friend stories', { error: result.error });
-      }
-      setStoriesLoading(false);
-    };
     if (user?.uid) {
       loadFriendStories();
     }
   }, [user?.uid]);
+
+  /**
+   * Handle pull-to-refresh
+   * Refreshes both feed and stories
+   */
+  const handleRefresh = async () => {
+    logger.debug('FeedScreen: Pull-to-refresh triggered');
+    // Refresh both in parallel
+    await Promise.all([
+      refreshFeed(),
+      loadFriendStories(),
+    ]);
+  };
 
   /**
    * Handle opening stories for a friend
@@ -301,7 +322,7 @@ const FeedScreen = () => {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={refreshFeed}
+              onRefresh={handleRefresh}
               tintColor="#000000"
             />
           }

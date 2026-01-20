@@ -55,11 +55,33 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
   useEffect(() => {
     if (visible && friend?.userId) {
       logger.debug('StoriesViewer: Modal opened', { friendId: friend.userId, photoCount: topPhotos.length });
+
+      // Defensive check: close modal if friend has no photos
+      if (!topPhotos || topPhotos.length === 0) {
+        logger.warn('StoriesViewer: Friend has no photos, closing modal', { friendId: friend.userId });
+        onClose();
+        return;
+      }
+
       setCurrentIndex(0);
       translateY.setValue(0);
       opacity.setValue(1);
     }
-  }, [visible, friend?.userId]);
+  }, [visible, friend?.userId, topPhotos.length, onClose]);
+
+  // Preload next image for smoother transitions
+  useEffect(() => {
+    if (visible && topPhotos.length > 0 && currentIndex < topPhotos.length - 1) {
+      const nextPhoto = topPhotos[currentIndex + 1];
+      if (nextPhoto?.imageURL) {
+        logger.debug('StoriesViewer: Preloading next image', { nextIndex: currentIndex + 1 });
+        Image.prefetch(nextPhoto.imageURL).catch((err) => {
+          // Silent fail - preloading is best-effort
+          logger.debug('StoriesViewer: Image prefetch failed', { error: err.message });
+        });
+      }
+    }
+  }, [visible, currentIndex, topPhotos]);
 
   // Pan responder for swipe down to close
   const panResponder = useRef(
