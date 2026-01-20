@@ -49,7 +49,7 @@ Plans:
 - [x] 12.1-01: Fix Filter.or Usage
 
 **Details:**
-Fixed Filter.or access pattern - named import doesn't expose .or method per GitHub issue #7346. Solution: use firestore.Filter.or() via default import.
+Fixed Filter.or access pattern via modular API. The firestore.Filter.or() pattern was also broken. Solution: use modular or(where(...), where(...)) pattern per React Native Firebase v22+ modular API exports.
 
 #### Phase 13: Production Build & Branding
 
