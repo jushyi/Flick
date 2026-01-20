@@ -1,24 +1,7 @@
-// Export Firebase configuration and instances
-// Note: 'auth' is not exported - authentication uses React Native Firebase directly
-export { app, db, storage } from './firebaseConfig';
-
-// Export Firestore service functions
-export {
-  createUserDocument,
-  getUserDocument,
-  updateUserDocument,
-  createPhotoDocument,
-  getUserPhotos,
-  updatePhotoDocument,
-  deletePhotoDocument,
-  createFriendship,
-  acceptFriendship,
-  getUserFriends,
-  createNotification,
-  markNotificationAsRead,
-  createPhotoView,
-  hasUserViewedPhoto,
-} from './firestoreService';
+// Firebase services - All using React Native Firebase SDK
+// Auth: @react-native-firebase/auth (via AuthContext and phoneAuthService)
+// Firestore: @react-native-firebase/firestore (via service files)
+// Storage: @react-native-firebase/storage (via storageService)
 
 // Export Storage service functions
 export {
