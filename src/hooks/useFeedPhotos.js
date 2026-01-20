@@ -5,9 +5,57 @@ import { useAuth } from '../context/AuthContext';
 import logger from '../utils/logger';
 
 /**
+ * Curate feed to show top N photos per friend, ranked by engagement
+ * @param {Array} photos - Array of photo objects
+ * @param {number} limit - Max photos per friend (default: 5)
+ * @returns {Array} - Curated array of photos
+ */
+const curateTopPhotosPerFriend = (photos, limit = 5) => {
+  if (!photos || photos.length === 0) return [];
+
+  // Group photos by userId
+  const photosByUser = {};
+  photos.forEach(photo => {
+    if (!photosByUser[photo.userId]) {
+      photosByUser[photo.userId] = [];
+    }
+    photosByUser[photo.userId].push(photo);
+  });
+
+  // For each user, sort by reactionCount and take top N
+  const curatedPhotos = [];
+  Object.values(photosByUser).forEach(userPhotos => {
+    // Sort by reactionCount DESC, then capturedAt DESC as tiebreaker
+    userPhotos.sort((a, b) => {
+      const countDiff = (b.reactionCount || 0) - (a.reactionCount || 0);
+      if (countDiff !== 0) return countDiff;
+      // Tiebreaker: most recent first
+      const aTime = a.capturedAt?.seconds || a.capturedAt?.toSeconds?.() || 0;
+      const bTime = b.capturedAt?.seconds || b.capturedAt?.toSeconds?.() || 0;
+      return bTime - aTime;
+    });
+    // Take top N
+    curatedPhotos.push(...userPhotos.slice(0, limit));
+  });
+
+  // Sort final list by reactionCount DESC for overall feed order
+  curatedPhotos.sort((a, b) => (b.reactionCount || 0) - (a.reactionCount || 0));
+
+  logger.debug('useFeedPhotos: Curated feed', {
+    totalPhotos: photos.length,
+    curatedPhotos: curatedPhotos.length,
+    friendCount: Object.keys(photosByUser).length,
+    limit,
+  });
+
+  return curatedPhotos;
+};
+
+/**
  * Custom hook for managing feed photos
  * Handles initial load, pagination, real-time updates, and refresh
  * Week 9: Fetches friendships and filters feed to friends-only
+ * Week 12.2: Curates feed to top 5 photos per friend by engagement
  *
  * @param {boolean} enableRealtime - Enable real-time listener (default: true)
  * @returns {object} - Feed state and control functions
@@ -60,9 +108,12 @@ const useFeedPhotos = (enableRealtime = true) => {
       const result = await getFeedPhotos(20, null, friendUserIds, user.uid);
 
       if (result.success) {
-        setPhotos(result.photos);
+        // Curate feed to top 5 photos per friend
+        const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
+        setPhotos(curatedPhotos);
         setLastDoc(result.lastDoc);
-        setHasMore(result.hasMore);
+        // After curation, hasMore is based on curated set
+        setHasMore(result.hasMore && curatedPhotos.length >= 5);
       } else {
         setError(result.error);
       }
@@ -87,7 +138,11 @@ const useFeedPhotos = (enableRealtime = true) => {
       const result = await getFeedPhotos(10, lastDoc, friendUserIds, user?.uid);
 
       if (result.success) {
-        setPhotos((prev) => [...prev, ...result.photos]);
+        // Combine existing photos with new ones and re-curate
+        setPhotos((prev) => {
+          const allPhotos = [...prev, ...result.photos];
+          return curateTopPhotosPerFriend(allPhotos, 5);
+        });
         setLastDoc(result.lastDoc);
         setHasMore(result.hasMore);
       } else {
@@ -115,9 +170,11 @@ const useFeedPhotos = (enableRealtime = true) => {
       const result = await getFeedPhotos(20, null, friendUserIds, user?.uid);
 
       if (result.success) {
-        setPhotos(result.photos);
+        // Curate feed to top 5 photos per friend
+        const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
+        setPhotos(curatedPhotos);
         setLastDoc(result.lastDoc);
-        setHasMore(result.hasMore);
+        setHasMore(result.hasMore && curatedPhotos.length >= 5);
       } else {
         setError(result.error);
       }
@@ -174,7 +231,9 @@ const useFeedPhotos = (enableRealtime = true) => {
           // Update photos with latest data
           // Only update if not currently loading more
           if (!loadingMore) {
-            setPhotos(result.photos);
+            // Curate feed to top 5 photos per friend
+            const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
+            setPhotos(curatedPhotos);
           }
         } else {
           logger.error('Feed subscription error', { error: result.error });
