@@ -33,10 +33,10 @@ Plans:
 **Goal**: Debug and fix friendship errors, verify all social features work
 **Depends on**: Phase 11
 **Research**: Unlikely (internal debugging)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 12-01: TBD (run /gsd:plan-phase 12 to break down)
+- [x] 12-01: Fix exists() Method Calls
 
 #### Phase 13: Production Build & Branding
 
@@ -113,6 +113,6 @@ Plans:
 | 9. Firestore Services Migration | v1.3 | 2/2 | Complete | 2026-01-19 |
 | 10. Storage Migration & Cleanup | v1.3 | 2/2 | Complete | 2026-01-19 |
 | 11. Firebase Modular API Migration | v1.4 | 4/4 | Complete | 2026-01-19 |
-| 12. Friendship Service Fix + Testing | v1.4 | 0/? | Not started | - |
+| 12. Friendship Service Fix + Testing | v1.4 | 1/1 | Complete | 2026-01-19 |
 | 13. Production Build & Branding | v1.4 | 0/? | Not started | - |
 | 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |
