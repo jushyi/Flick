@@ -50,7 +50,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 Plans:
 - [x] 09-01: Core Photo Services Migration (photoService.js, darkroomService.js) - completed 2026-01-19
-- [ ] 09-02: Social Services Migration (feedService.js, friendshipService.js)
+- [x] 09-02: Social Services Migration (feedService.js, friendshipService.js) - completed 2026-01-19
 
 #### Phase 10: Storage Migration & Cleanup
 
@@ -75,5 +75,5 @@ Plans:
 | 6. Phone Auth Implementation | v1.2 | 4/4 | Complete | 2026-01-19 |
 | 7. Legacy Auth Removal & Cleanup | v1.2 | 1/1 | Complete | 2026-01-19 |
 | 8. Polish & Testing | v1.2 | 3/3 | Complete | 2026-01-19 |
-| 9. Firestore Services Migration | v1.3 | 1/2 | In progress | - |
+| 9. Firestore Services Migration | v1.3 | 2/2 | Complete | 2026-01-19 |
 | 10. Storage Migration & Cleanup | v1.3 | 0/? | Not started | - |
