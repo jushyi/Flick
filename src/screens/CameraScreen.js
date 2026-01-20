@@ -98,8 +98,11 @@ const CameraScreen = () => {
     revealedCount: 0,
   });
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
   const cameraRef = useRef(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+  const badgeBounce = useRef(new Animated.Value(1)).current;
 
   // Initialize upload queue on app start
   useEffect(() => {
@@ -186,12 +189,52 @@ const CameraScreen = () => {
     });
   };
 
+  // Play flash effect on capture (simulates camera shutter)
+  const playFlashEffect = () => {
+    setShowFlash(true);
+    flashOpacity.setValue(0);
+    Animated.sequence([
+      Animated.timing(flashOpacity, {
+        toValue: 0.8,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(flashOpacity, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setShowFlash(false));
+  };
+
+  // Play badge bounce when photo "lands" in darkroom
+  const playBadgeBounce = () => {
+    badgeBounce.setValue(1);
+    Animated.sequence([
+      Animated.spring(badgeBounce, {
+        toValue: 1.3,
+        friction: 3,
+        tension: 200,
+        useNativeDriver: true,
+      }),
+      Animated.spring(badgeBounce, {
+        toValue: 1,
+        friction: 4,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const playPhotoAnimation = (photoUri) => {
+    // Start flash effect immediately
+    playFlashEffect();
+
     setCapturedPhoto(photoUri);
     animatedValue.setValue(0);
 
     Animated.sequence([
-      // Shrink and move to darkroom position (bottom tab bar)
+      // Arc trajectory to darkroom position with physics-style easing
       Animated.timing(animatedValue, {
         toValue: 1,
         duration: 600,
@@ -207,6 +250,9 @@ const CameraScreen = () => {
       setCapturedPhoto(null);
       animatedValue.setValue(0);
     });
+
+    // Trigger badge bounce when photo reaches destination (at t=600ms)
+    setTimeout(playBadgeBounce, 600);
   };
 
   const takePicture = async () => {
@@ -243,25 +289,33 @@ const CameraScreen = () => {
     }
   };
 
-  // Calculate animation interpolations
+  // Calculate animation interpolations with curved arc trajectory
   const photoScale = animatedValue.interpolate({
-    inputRange: [0, 1, 2],
-    outputRange: [1, 0.15, 0.15],
+    inputRange: [0, 0.3, 0.7, 1, 2],
+    outputRange: [1, 0.7, 0.3, 0.15, 0.15],
   });
 
+  // Arc trajectory: rises slightly at start, then curves down to destination
   const photoTranslateY = animatedValue.interpolate({
-    inputRange: [0, 1, 2],
-    outputRange: [0, SCREEN_HEIGHT * 0.7, SCREEN_HEIGHT * 0.7],
+    inputRange: [0, 0.2, 0.5, 0.8, 1, 2],
+    outputRange: [0, -40, SCREEN_HEIGHT * 0.25, SCREEN_HEIGHT * 0.55, SCREEN_HEIGHT * 0.7, SCREEN_HEIGHT * 0.7],
   });
 
+  // Curved X path: starts moving left, then curves right toward darkroom button
   const photoTranslateX = animatedValue.interpolate({
-    inputRange: [0, 1, 2],
-    outputRange: [0, SCREEN_WIDTH * 0.25, SCREEN_WIDTH * 0.25], // Move to darkroom tab position
+    inputRange: [0, 0.3, 0.6, 1, 2],
+    outputRange: [0, -50, SCREEN_WIDTH * 0.05, SCREEN_WIDTH * 0.25, SCREEN_WIDTH * 0.25],
   });
 
   const photoOpacity = animatedValue.interpolate({
     inputRange: [0, 1, 1.5, 2],
     outputRange: [1, 1, 0.5, 0],
+  });
+
+  // Slight rotation during flight for more dynamic feel
+  const photoRotate = animatedValue.interpolate({
+    inputRange: [0, 0.3, 0.7, 1, 2],
+    outputRange: ['0deg', '-5deg', '5deg', '0deg', '0deg'],
   });
 
   return (
@@ -282,6 +336,7 @@ const CameraScreen = () => {
           <DarkroomButton
             count={darkroomCounts.totalCount}
             onPress={() => setIsBottomSheetVisible(true)}
+            bounceAnim={badgeBounce}
           />
 
           {/* Capture Button (center) */}
@@ -333,6 +388,16 @@ const CameraScreen = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Flash Overlay (camera shutter effect) */}
+      {showFlash && (
+        <Animated.View
+          style={[
+            styles.flashOverlay,
+            { opacity: flashOpacity },
+          ]}
+        />
+      )}
+
       {/* Animated Photo Snapshot */}
       {capturedPhoto && (
         <Animated.View
@@ -343,6 +408,7 @@ const CameraScreen = () => {
                 { scale: photoScale },
                 { translateY: photoTranslateY },
                 { translateX: photoTranslateX },
+                { rotate: photoRotate },
               ],
               opacity: photoOpacity,
             },
@@ -376,7 +442,7 @@ const CameraScreen = () => {
 };
 
 // Darkroom Button Component (moon icon with badge count)
-const DarkroomButton = ({ count, onPress }) => {
+const DarkroomButton = ({ count, onPress, bounceAnim }) => {
   const isDisabled = count === 0;
 
   const handlePress = () => {
@@ -403,7 +469,7 @@ const DarkroomButton = ({ count, onPress }) => {
           />
         </Svg>
         {count > 0 && (
-          <View
+          <Animated.View
             style={{
               position: 'absolute',
               top: -6,
@@ -415,12 +481,13 @@ const DarkroomButton = ({ count, onPress }) => {
               justifyContent: 'center',
               alignItems: 'center',
               paddingHorizontal: 4,
+              transform: [{ scale: bounceAnim || 1 }],
             }}
           >
             <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>
               {count > 99 ? '99+' : count}
             </Text>
-          </View>
+          </Animated.View>
         )}
       </View>
     </TouchableOpacity>
@@ -583,6 +650,16 @@ const styles = StyleSheet.create({
   photoSnapshot: {
     width: '100%',
     height: '100%',
+  },
+  // Flash overlay for camera shutter effect
+  flashOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FFFFFF',
+    zIndex: 100,
   },
 });
 
