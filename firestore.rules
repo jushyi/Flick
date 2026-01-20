@@ -14,11 +14,21 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Helper function to check if user is part of a friendship
+    // Helper function to check if user is part of a friendship (for existing documents)
     function isFriendshipMember(friendshipData) {
       return isAuthenticated() &&
              (friendshipData.user1Id == request.auth.uid ||
               friendshipData.user2Id == request.auth.uid);
+    }
+
+    // Helper function to check if user is part of a friendship by parsing document ID
+    // Document ID format: [lowerUserId]_[higherUserId] (deterministic)
+    // This allows reading non-existent documents to check if a friendship exists
+    function isFriendshipMemberById(friendshipId) {
+      let parts = friendshipId.split('_');
+      return isAuthenticated() &&
+             parts.size() == 2 &&
+             (parts[0] == request.auth.uid || parts[1] == request.auth.uid);
     }
 
     // Helper function to check if users are friends
@@ -100,7 +110,10 @@ service cloud.firestore {
     // =============================================================================
     match /friendships/{friendshipId} {
       // Read: Users can read friendships they're part of
-      allow read: if isFriendshipMember(resource.data);
+      // Two cases:
+      // 1. Collection queries (where user1Id/user2Id == userId) - use isFriendshipMember
+      // 2. Direct document reads (by friendshipId) - use isFriendshipMemberById for non-existent docs
+      allow read: if isFriendshipMember(resource.data) || isFriendshipMemberById(friendshipId);
 
       // Create: Users can create friendships where they are the requester
       allow create: if isAuthenticated() &&
