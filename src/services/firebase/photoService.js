@@ -356,8 +356,8 @@ export const addReaction = async (photoId, userId, emoji) => {
     const photoRef = doc(db, 'photos', photoId);
     const photoDoc = await getDoc(photoRef);
 
-    // In modular API, exists is a boolean property
-    if (!photoDoc.exists) {
+    // In modular API, exists() is a method
+    if (!photoDoc.exists()) {
       return { success: false, error: 'Photo not found' };
     }
 
@@ -387,8 +387,8 @@ export const removeReaction = async (photoId, userId) => {
     const photoRef = doc(db, 'photos', photoId);
     const photoDoc = await getDoc(photoRef);
 
-    // In modular API, exists is a boolean property
-    if (!photoDoc.exists) {
+    // In modular API, exists() is a method
+    if (!photoDoc.exists()) {
       return { success: false, error: 'Photo not found' };
     }
 
