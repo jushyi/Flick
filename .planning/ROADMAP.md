@@ -73,11 +73,12 @@ Feature request: PhotoCards of friends that when tapped display all of friend's 
 **Depends on**: Phase 12.2
 **Research**: Likely (EAS Build, first deployment)
 **Research topics**: EAS Build configuration, iOS App Store requirements
-**Plans**: 1+ (in progress)
+**Plans**: 3
 
 Plans:
 - [x] 13-01: Oly Brand Assets (icon, splash, app.json)
 - [x] 13-02: Animated Splash Screen (shutter opening effect)
+- [x] 13-03: EAS Build & Distribution (iOS build, internal distribution)
 
 #### Phase 14: Remote Notification Testing & Polish
 
@@ -146,5 +147,5 @@ Plans:
 | 12. Friendship Service Fix + Testing | v1.4 | 1/1 | Complete | 2026-01-19 |
 | 12.1 Friends List Screen Crash Fix | v1.4 | 1/1 | Complete | 2026-01-19 |
 | 12.2 Feed Stories Feature | v1.4 | 4/4 | Complete | 2026-01-20 |
-| 13. Production Build & Branding | v1.4 | 2/? | In progress | - |
+| 13. Production Build & Branding | v1.4 | 3/3 | Complete | 2026-01-20 |
 | 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |
