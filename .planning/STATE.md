@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 ## Current Position
 
 Phase: 12.1 of 14 (Friends List Screen Crash Fix - INSERTED)
-Plan: FIX2 applied after UAT
+Plan: FIX3 applied after UAT
 Status: Phase complete (pending re-verification)
-Last activity: 2026-01-19 - Completed 12.1-01-FIX2.md (UAT-002 fix)
+Last activity: 2026-01-19 - Completed 12.1-01-FIX3.md (UAT-003 fix)
 
 Progress: █████████░ 93%
 
@@ -57,5 +57,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-19
-Stopped at: Applied 12.1-01-FIX2 for UAT-002 (getSentRequests single-field query)
+Stopped at: Applied 12.1-01-FIX3 for UAT-003 (getSentRequests or() query pattern)
 Resume file: None
