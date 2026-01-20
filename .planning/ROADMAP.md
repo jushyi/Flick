@@ -97,11 +97,11 @@ Fixed darkroom timing accuracy by adding ensureDarkroomInitialized() call on pho
 
 **Goal**: End-to-end notification verification, final bug fixes
 **Depends on**: Phase 13
-**Research**: Unlikely (existing Cloud Functions, internal testing)
-**Plans**: TBD
+**Research**: Level 0 - Skip (existing Cloud Functions, internal testing)
+**Plans**: 1
 
 Plans:
-- [ ] 14-01: TBD (run /gsd:plan-phase 14 to break down)
+- [ ] 14-01: Remote Notification E2E Testing (all 3 notification types)
 
 ## Completed Milestones
 
@@ -162,4 +162,4 @@ Plans:
 | 12.2 Feed Stories Feature | v1.4 | 4/4 | Complete | 2026-01-20 |
 | 13. Production Build & Branding | v1.4 | 3/3 | Complete | 2026-01-20 |
 | 13.1 Darkroom Reveal Timing Fix | v1.4 | 1/1 | Complete | 2026-01-20 |
-| 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |
+| 14. Remote Notification Testing & Polish | v1.4 | 0/1 | Planned | - |
