@@ -74,7 +74,13 @@ export const createPhoto = async (userId, photoUri) => {
     });
 
     // Ensure darkroom has valid timing for this new photo
-    await ensureDarkroomInitialized(userId);
+    logger.info('PhotoService.createPhoto: Calling ensureDarkroomInitialized', { userId, photoId });
+    const darkroomResult = await ensureDarkroomInitialized(userId);
+    logger.info('PhotoService.createPhoto: ensureDarkroomInitialized result', {
+      userId,
+      photoId,
+      darkroomResult
+    });
 
     return {
       success: true,

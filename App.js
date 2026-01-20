@@ -12,6 +12,9 @@ import {
   initializeNotifications,
   handleNotificationReceived,
   handleNotificationTapped,
+  requestNotificationPermission,
+  getNotificationToken,
+  storeNotificationToken,
 } from './src/services/firebase/notificationService';
 import {
   isDarkroomReadyToReveal,
@@ -48,6 +51,31 @@ export default function App() {
     // Initialize notifications on app launch
     initializeNotifications();
 
+    // Request notification permissions and store token for authenticated users
+    // This ensures existing users who already completed profile setup get prompted
+    const requestPermissionsAndToken = async () => {
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        try {
+          const permResult = await requestNotificationPermission();
+          if (permResult.success) {
+            const tokenResult = await getNotificationToken();
+            if (tokenResult.success && tokenResult.data) {
+              await storeNotificationToken(currentUser.uid, tokenResult.data);
+              logger.info('App: Notification token stored on startup', {
+                userId: currentUser.uid,
+              });
+            }
+          }
+        } catch (error) {
+          logger.error('App: Failed to setup notifications', { error: error.message });
+        }
+      }
+    };
+
+    // Small delay to ensure auth state is ready
+    const timeoutId = setTimeout(requestPermissionsAndToken, 1000);
+
     // Listener for notifications received while app is in foreground
     notificationListener.current = Notifications.addNotificationReceivedListener(
       (notification) => {
@@ -65,7 +93,18 @@ export default function App() {
           console.log('Navigating to:', screen, 'with params:', params);
 
           // Navigate to the appropriate screen based on notification type
-          if (screen === 'Darkroom' || screen === 'Feed' || screen === 'Profile') {
+          if (screen === 'Darkroom') {
+            // Navigate to Camera tab first
+            navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
+            // Then set params after a small delay to ensure the screen is focused
+            // This works around React Navigation's nested navigator param propagation issue
+            setTimeout(() => {
+              navigationRef.current.navigate('MainTabs', {
+                screen: 'Camera',
+                params: { openDarkroom: true },
+              });
+            }, 100);
+          } else if (screen === 'Feed' || screen === 'Profile') {
             // Navigate to tab screen
             navigationRef.current.navigate('MainTabs', { screen });
           } else if (screen === 'FriendRequests') {
@@ -81,6 +120,7 @@ export default function App() {
 
     // Cleanup listeners on unmount
     return () => {
+      clearTimeout(timeoutId);
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
       }

@@ -9,9 +9,9 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v1.1 Camera/Darkroom UX Refactor** - [archive](milestones/v1.1-ROADMAP.md) (Phases 1-5, shipped 2026-01-12)
 - ✅ **v1.2 Phone Authentication** - [archive](milestones/v1.2-ROADMAP.md) (Phases 6-8, shipped 2026-01-19)
 - ✅ **v1.3 Firebase SDK Consolidation** - [archive](milestones/v1.3-ROADMAP.md) (Phases 9-10, shipped 2026-01-19)
-- 🚧 **v1.4 Production Ready** - Phases 11-14 (in progress)
+- ✅ **v1.4 Production Ready** - [archive](milestones/v1.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
 
-### 🚧 v1.4 Production Ready (In Progress)
+### ✅ v1.4 Production Ready (Complete)
 
 **Milestone Goal:** Fix all deprecation warnings, resolve service errors, and prepare app for TestFlight distribution with full notification support.
 
@@ -117,7 +117,10 @@ Bug: When nextRevealAt time passes, nothing happens automatically. The reveal lo
 **Plans**: 1
 
 Plans:
-- [ ] 14-01: Remote Notification E2E Testing (all 3 notification types)
+- [x] 14-01: Remote Notification E2E Testing (all 3 notification types)
+
+**Details:**
+All 3 notification types verified working on standalone iOS build. Fixed notification permission flow for existing users and darkroom deep link navigation. Known issue: reaction notifications send per-tap (should debounce).
 
 ## Completed Milestones
 
@@ -179,4 +182,4 @@ Plans:
 | 13. Production Build & Branding | v1.4 | 3/3 | Complete | 2026-01-20 |
 | 13.1 Darkroom Reveal Timing Fix | v1.4 | 1/1 | Complete | 2026-01-20 |
 | 13.2 Darkroom Auto-Reveal Fix | v1.4 | 1/1 | Complete | 2026-01-20 |
-| 14. Remote Notification Testing & Polish | v1.4 | 0/1 | Planned | - |
+| 14. Remote Notification Testing & Polish | v1.4 | 1/1 | Complete | 2026-01-20 |

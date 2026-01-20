@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAuth } from '../context/AuthContext';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { createPhoto, getDarkroomCounts } from '../services/firebase/photoService';
 import logger from '../utils/logger';
 import Svg, { Path } from 'react-native-svg';
@@ -85,6 +85,7 @@ const FlipCameraIcon = ({ color = '#FFFFFF' }) => (
 const CameraScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
+  const route = useRoute();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState('off');
@@ -132,6 +133,17 @@ const CameraScreen = () => {
       loadDarkroomCounts();
     }, [user])
   );
+
+  // Handle openDarkroom param from notification deep link
+  useEffect(() => {
+    logger.debug('CameraScreen: route.params changed', { params: route.params });
+    if (route.params?.openDarkroom) {
+      logger.info('CameraScreen: Opening darkroom from notification deep link');
+      setIsBottomSheetVisible(true);
+      // Clear the param to prevent re-opening on subsequent renders
+      navigation.setParams({ openDarkroom: undefined });
+    }
+  }, [route.params?.openDarkroom, navigation]);
 
   // Handle permission request
   if (!permission) {
