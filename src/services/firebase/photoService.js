@@ -1,17 +1,4 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  Timestamp,
-} from 'firebase/firestore';
-import { db } from './firebaseConfig';
+import firestore from '@react-native-firebase/firestore';
 import { uploadPhoto, deletePhoto } from './storageService';
 import logger from '../../utils/logger';
 
@@ -27,10 +14,10 @@ export const createPhoto = async (userId, photoUri) => {
   try {
     // Create photo document first to get ID
     logger.debug('PhotoService.createPhoto: Creating Firestore document');
-    const photoRef = await addDoc(collection(db, 'photos'), {
+    const photoRef = await firestore().collection('photos').add({
       userId,
       imageURL: '', // Placeholder, will be updated after upload
-      capturedAt: Timestamp.now(),
+      capturedAt: firestore.FieldValue.serverTimestamp(),
       status: 'developing',
       photoState: null,
       visibility: 'friends-only',
@@ -52,13 +39,13 @@ export const createPhoto = async (userId, photoUri) => {
         error: uploadResult.error
       });
       // If upload fails, delete the document
-      await deleteDoc(photoRef);
+      await photoRef.delete();
       return { success: false, error: uploadResult.error };
     }
 
     // Update document with imageURL
     logger.debug('PhotoService.createPhoto: Updating document with imageURL', { photoId });
-    await updateDoc(photoRef, {
+    await photoRef.update({
       imageURL: uploadResult.url,
     });
 
@@ -98,13 +85,12 @@ export const getUserPhotos = async (userId) => {
   logger.debug('PhotoService.getUserPhotos: Starting', { userId });
 
   try {
-    const photosQuery = query(
-      collection(db, 'photos'),
-      where('userId', '==', userId),
-      orderBy('capturedAt', 'desc')
-    );
+    const snapshot = await firestore()
+      .collection('photos')
+      .where('userId', '==', userId)
+      .orderBy('capturedAt', 'desc')
+      .get();
 
-    const snapshot = await getDocs(photosQuery);
     const photos = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
@@ -131,13 +117,12 @@ export const getDevelopingPhotoCount = async (userId) => {
   logger.debug('PhotoService.getDevelopingPhotoCount: Starting', { userId });
 
   try {
-    const developingQuery = query(
-      collection(db, 'photos'),
-      where('userId', '==', userId),
-      where('status', '==', 'developing')
-    );
+    const snapshot = await firestore()
+      .collection('photos')
+      .where('userId', '==', userId)
+      .where('status', '==', 'developing')
+      .get();
 
-    const snapshot = await getDocs(developingQuery);
     const count = snapshot.size;
 
     logger.info('PhotoService.getDevelopingPhotoCount: Retrieved count', {
@@ -165,22 +150,22 @@ export const getDarkroomCounts = async (userId) => {
 
   try {
     // Query for developing photos
-    const developingQuery = query(
-      collection(db, 'photos'),
-      where('userId', '==', userId),
-      where('status', '==', 'developing')
-    );
+    const developingPromise = firestore()
+      .collection('photos')
+      .where('userId', '==', userId)
+      .where('status', '==', 'developing')
+      .get();
 
     // Query for revealed photos
-    const revealedQuery = query(
-      collection(db, 'photos'),
-      where('userId', '==', userId),
-      where('status', '==', 'revealed')
-    );
+    const revealedPromise = firestore()
+      .collection('photos')
+      .where('userId', '==', userId)
+      .where('status', '==', 'revealed')
+      .get();
 
     const [developingSnapshot, revealedSnapshot] = await Promise.all([
-      getDocs(developingQuery),
-      getDocs(revealedQuery),
+      developingPromise,
+      revealedPromise,
     ]);
 
     const developingCount = developingSnapshot.size;
@@ -217,21 +202,21 @@ export const getDevelopingPhotos = async (userId) => {
     // Note: Removed orderBy to avoid composite index requirement
     logger.debug('PhotoService.getDevelopingPhotos: Querying developing and revealed photos');
 
-    const developingQuery = query(
-      collection(db, 'photos'),
-      where('userId', '==', userId),
-      where('status', '==', 'developing')
-    );
+    const developingPromise = firestore()
+      .collection('photos')
+      .where('userId', '==', userId)
+      .where('status', '==', 'developing')
+      .get();
 
-    const revealedQuery = query(
-      collection(db, 'photos'),
-      where('userId', '==', userId),
-      where('status', '==', 'revealed')
-    );
+    const revealedPromise = firestore()
+      .collection('photos')
+      .where('userId', '==', userId)
+      .where('status', '==', 'revealed')
+      .get();
 
     const [developingSnapshot, revealedSnapshot] = await Promise.all([
-      getDocs(developingQuery),
-      getDocs(revealedQuery),
+      developingPromise,
+      revealedPromise,
     ]);
 
     const developingPhotos = developingSnapshot.docs.map(doc => ({
@@ -277,21 +262,20 @@ export const getDevelopingPhotos = async (userId) => {
 export const revealPhotos = async (userId) => {
   try {
     // Get ALL developing photos for this user
-    const photosQuery = query(
-      collection(db, 'photos'),
-      where('userId', '==', userId),
-      where('status', '==', 'developing')
-    );
+    const snapshot = await firestore()
+      .collection('photos')
+      .where('userId', '==', userId)
+      .where('status', '==', 'developing')
+      .get();
 
-    const snapshot = await getDocs(photosQuery);
     const updates = [];
 
     // Reveal ALL developing photos
     snapshot.docs.forEach(doc => {
       updates.push(
-        updateDoc(doc.ref, {
+        doc.ref.update({
           status: 'revealed',
-          revealedAt: Timestamp.now(),
+          revealedAt: firestore.FieldValue.serverTimestamp(),
         })
       );
     });
@@ -313,20 +297,20 @@ export const revealPhotos = async (userId) => {
  */
 export const triagePhoto = async (photoId, action) => {
   try {
-    const photoRef = doc(db, 'photos', photoId);
+    const photoRef = firestore().collection('photos').doc(photoId);
 
     if (action === 'delete') {
       // Delete photo from Storage
       await deletePhoto(photoId);
       // Delete photo document
-      await deleteDoc(photoRef);
+      await photoRef.delete();
       return { success: true };
     }
 
     // Update photo state
-    await updateDoc(photoRef, {
+    await photoRef.update({
       status: 'triaged',
-      photoState: action, // 'journaled' or 'archived'
+      photoState: action, // 'journal' or 'archive'
     });
 
     return { success: true };
@@ -345,17 +329,19 @@ export const triagePhoto = async (photoId, action) => {
  */
 export const addReaction = async (photoId, userId, emoji) => {
   try {
-    const photoRef = doc(db, 'photos', photoId);
-    const photoDoc = await getDoc(photoRef);
+    const photoRef = firestore().collection('photos').doc(photoId);
+    const photoDoc = await photoRef.get();
 
-    if (!photoDoc.exists()) {
+    // Handle both function and property for exists check (RN Firebase version differences)
+    const docExists = typeof photoDoc.exists === 'function' ? photoDoc.exists() : photoDoc.exists;
+    if (!docExists) {
       return { success: false, error: 'Photo not found' };
     }
 
     const reactions = photoDoc.data().reactions || {};
     reactions[userId] = emoji;
 
-    await updateDoc(photoRef, {
+    await photoRef.update({
       reactions,
       reactionCount: Object.keys(reactions).length,
     });
@@ -375,17 +361,19 @@ export const addReaction = async (photoId, userId, emoji) => {
  */
 export const removeReaction = async (photoId, userId) => {
   try {
-    const photoRef = doc(db, 'photos', photoId);
-    const photoDoc = await getDoc(photoRef);
+    const photoRef = firestore().collection('photos').doc(photoId);
+    const photoDoc = await photoRef.get();
 
-    if (!photoDoc.exists()) {
+    // Handle both function and property for exists check (RN Firebase version differences)
+    const docExists = typeof photoDoc.exists === 'function' ? photoDoc.exists() : photoDoc.exists;
+    if (!docExists) {
       return { success: false, error: 'Photo not found' };
     }
 
     const reactions = photoDoc.data().reactions || {};
     delete reactions[userId];
 
-    await updateDoc(photoRef, {
+    await photoRef.update({
       reactions,
       reactionCount: Object.keys(reactions).length,
     });
