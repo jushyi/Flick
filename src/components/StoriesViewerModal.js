@@ -1,0 +1,351 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  Image,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Dimensions,
+  StatusBar,
+  PanResponder,
+  Animated,
+} from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { getTimeAgo } from '../utils/timeUtils';
+import logger from '../utils/logger';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+/**
+ * StoriesViewerModal - Full-screen photo viewer for friend's stories
+ *
+ * Features:
+ * - Full-screen photo display
+ * - Progress bar showing current photo position
+ * - Tap left/right to navigate between photos
+ * - Swipe down to close
+ * - Friend info header with profile photo
+ *
+ * @param {boolean} visible - Modal visibility state
+ * @param {function} onClose - Callback to close modal
+ * @param {object} friend - Friend object with userId, displayName, profilePhotoURL, topPhotos
+ * @param {function} onPhotoChange - Optional callback when photo changes
+ */
+const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Animated values for swipe gesture
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  // Extract friend data
+  const {
+    userId,
+    displayName,
+    profilePhotoURL,
+    topPhotos = [],
+  } = friend || {};
+
+  // Current photo
+  const currentPhoto = topPhotos[currentIndex] || null;
+
+  // Reset index when modal opens with new friend
+  useEffect(() => {
+    if (visible && friend?.userId) {
+      logger.debug('StoriesViewer: Modal opened', { friendId: friend.userId, photoCount: topPhotos.length });
+      setCurrentIndex(0);
+      translateY.setValue(0);
+      opacity.setValue(1);
+    }
+  }, [visible, friend?.userId]);
+
+  // Pan responder for swipe down to close
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to downward swipes (dy > 10)
+        return gestureState.dy > 10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow downward swipes
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+          // Fade out as user swipes down
+          const fadeAmount = Math.max(0, 1 - (gestureState.dy / SCREEN_HEIGHT));
+          opacity.setValue(fadeAmount);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // If swiped down more than 100px or fast swipe (velocity), close the modal
+        const dismissThreshold = 100;
+        if (gestureState.dy > dismissThreshold || gestureState.vy > 0.5) {
+          logger.debug('StoriesViewer: Swipe-down close triggered');
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          Animated.parallel([
+            Animated.timing(translateY, {
+              toValue: SCREEN_HEIGHT,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            onClose();
+            // Reset after a short delay to ensure smooth transition
+            setTimeout(() => {
+              translateY.setValue(0);
+              opacity.setValue(1);
+            }, 100);
+          });
+        } else {
+          // Spring back to original position with smooth animation
+          Animated.parallel([
+            Animated.spring(translateY, {
+              toValue: 0,
+              tension: 50,
+              friction: 10,
+              useNativeDriver: true,
+            }),
+            Animated.spring(opacity, {
+              toValue: 1,
+              tension: 50,
+              friction: 10,
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
+
+  /**
+   * Handle tap navigation on photo area
+   */
+  const handleTap = (event) => {
+    const { locationX } = event.nativeEvent;
+
+    if (locationX < SCREEN_WIDTH * 0.3) {
+      // Left tap - previous
+      if (currentIndex === 0) {
+        logger.debug('StoriesViewer: At first photo, closing');
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        onClose();
+      } else {
+        const newIndex = currentIndex - 1;
+        logger.debug('StoriesViewer: Navigating', { direction: 'previous', newIndex });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setCurrentIndex(newIndex);
+        if (onPhotoChange && topPhotos[newIndex]) {
+          onPhotoChange(topPhotos[newIndex]);
+        }
+      }
+    } else if (locationX > SCREEN_WIDTH * 0.7) {
+      // Right tap - next
+      if (currentIndex === topPhotos.length - 1) {
+        logger.debug('StoriesViewer: At last photo, closing');
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        onClose();
+      } else {
+        const newIndex = currentIndex + 1;
+        logger.debug('StoriesViewer: Navigating', { direction: 'next', newIndex });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setCurrentIndex(newIndex);
+        if (onPhotoChange && topPhotos[newIndex]) {
+          onPhotoChange(topPhotos[newIndex]);
+        }
+      }
+    }
+    // Center tap (40%) - do nothing for now (future: pause auto-advance)
+  };
+
+  /**
+   * Handle close button press
+   */
+  const handleClose = () => {
+    logger.debug('StoriesViewer: Close button pressed');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onClose();
+  };
+
+  /**
+   * Render progress bar segments
+   */
+  const renderProgressBar = () => {
+    return (
+      <View style={styles.progressBarContainer}>
+        {topPhotos.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.progressSegment,
+              index <= currentIndex ? styles.progressSegmentActive : styles.progressSegmentInactive,
+            ]}
+          />
+        ))}
+      </View>
+    );
+  };
+
+  if (!friend || !currentPhoto) return null;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <Animated.View style={[styles.container, { opacity }]} {...panResponder.panHandlers}>
+        <StatusBar barStyle="light-content" />
+
+        {/* Animated content wrapper */}
+        <Animated.View
+          style={[
+            styles.contentWrapper,
+            {
+              transform: [{ translateY }]
+            }
+          ]}
+        >
+          {/* Progress Bar */}
+          {renderProgressBar()}
+
+          {/* Header with friend info */}
+          <View style={styles.header}>
+            <View style={styles.friendInfo}>
+              {profilePhotoURL ? (
+                <Image
+                  source={{ uri: profilePhotoURL }}
+                  style={styles.profilePic}
+                />
+              ) : (
+                <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
+                  <Text style={styles.profilePicText}>
+                    {displayName?.[0]?.toUpperCase() || '?'}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.friendTextContainer}>
+                <Text style={styles.displayName} numberOfLines={1}>
+                  {displayName || 'Unknown User'}
+                </Text>
+                <Text style={styles.timestamp}>{getTimeAgo(currentPhoto.capturedAt)}</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>X</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Photo with tap navigation */}
+          <TouchableWithoutFeedback onPress={handleTap}>
+            <View style={styles.photoContainer}>
+              <Image
+                source={{ uri: currentPhoto.imageURL }}
+                style={styles.photo}
+                resizeMode="contain"
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  contentWrapper: {
+    flex: 1,
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    paddingTop: (StatusBar.currentHeight || 54) + 8,
+    paddingHorizontal: 8,
+    gap: 4,
+  },
+  progressSegment: {
+    flex: 1,
+    height: 3,
+    borderRadius: 1.5,
+  },
+  progressSegmentActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  progressSegmentInactive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  friendInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  profilePic: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  profilePicPlaceholder: {
+    backgroundColor: '#333333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profilePicText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#CCCCCC',
+  },
+  friendTextContainer: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  displayName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  timestamp: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginTop: 1,
+  },
+  closeButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  photoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photo: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT * 0.75,
+  },
+});
+
+export default StoriesViewerModal;

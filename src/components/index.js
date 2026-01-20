@@ -12,3 +12,4 @@ export { default as FriendRequestCard } from './FriendRequestCard';
 export { default as DarkroomBottomSheet } from './DarkroomBottomSheet';
 export { default as SwipeablePhotoCard } from './SwipeablePhotoCard';
 export { default as FriendStoryCard } from './FriendStoryCard';
+export { default as StoriesViewerModal } from './StoriesViewerModal';
