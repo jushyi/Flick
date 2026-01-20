@@ -9,6 +9,53 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v1.1 Camera/Darkroom UX Refactor** - [archive](milestones/v1.1-ROADMAP.md) (Phases 1-5, shipped 2026-01-12)
 - ✅ **v1.2 Phone Authentication** - [archive](milestones/v1.2-ROADMAP.md) (Phases 6-8, shipped 2026-01-19)
 - ✅ **v1.3 Firebase SDK Consolidation** - [archive](milestones/v1.3-ROADMAP.md) (Phases 9-10, shipped 2026-01-19)
+- 🚧 **v1.4 Production Ready** - Phases 11-14 (in progress)
+
+### 🚧 v1.4 Production Ready (In Progress)
+
+**Milestone Goal:** Fix all deprecation warnings, resolve service errors, and prepare app for TestFlight distribution with full notification support.
+
+#### Phase 11: Firebase Modular API Migration
+
+**Goal**: Migrate all services from namespaced API to modular API (v22+)
+**Depends on**: v1.3 complete
+**Research**: Likely (RN Firebase v22 migration)
+**Research topics**: RN Firebase v22 migration guide, modular API patterns
+**Plans**: TBD
+
+Plans:
+- [ ] 11-01: TBD (run /gsd:plan-phase 11 to break down)
+
+#### Phase 12: Friendship Service Fix + Testing
+
+**Goal**: Debug and fix friendship errors, verify all social features work
+**Depends on**: Phase 11
+**Research**: Unlikely (internal debugging)
+**Plans**: TBD
+
+Plans:
+- [ ] 12-01: TBD (run /gsd:plan-phase 12 to break down)
+
+#### Phase 13: Production Build & Branding
+
+**Goal**: EAS build setup, app icon, splash screen, TestFlight prep
+**Depends on**: Phase 12
+**Research**: Likely (EAS Build, first deployment)
+**Research topics**: EAS Build configuration, iOS App Store requirements
+**Plans**: TBD
+
+Plans:
+- [ ] 13-01: TBD (run /gsd:plan-phase 13 to break down)
+
+#### Phase 14: Remote Notification Testing & Polish
+
+**Goal**: End-to-end notification verification, final bug fixes
+**Depends on**: Phase 13
+**Research**: Unlikely (existing Cloud Functions, internal testing)
+**Plans**: TBD
+
+Plans:
+- [ ] 14-01: TBD (run /gsd:plan-phase 14 to break down)
 
 ## Completed Milestones
 
@@ -51,8 +98,6 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 ## Progress
 
-**All milestones complete!**
-
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Navigation Restructure | v1.1 | 1/1 | Complete | 2026-01-12 |
@@ -65,3 +110,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 | 8. Polish & Testing | v1.2 | 3/3 | Complete | 2026-01-19 |
 | 9. Firestore Services Migration | v1.3 | 2/2 | Complete | 2026-01-19 |
 | 10. Storage Migration & Cleanup | v1.3 | 2/2 | Complete | 2026-01-19 |
+| 11. Firebase Modular API Migration | v1.4 | 0/? | Not started | - |
+| 12. Friendship Service Fix + Testing | v1.4 | 0/? | Not started | - |
+| 13. Production Build & Branding | v1.4 | 0/? | Not started | - |
+| 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |

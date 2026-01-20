@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-19)
 
 **Core value:** Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
-**Current focus:** All milestones complete - Ready for next milestone planning
+**Current focus:** v1.4 Production Ready - Fix deprecation warnings, resolve errors, prepare for TestFlight
 
 ## Current Position
 
-Phase: 10 of 10 (All phases complete)
-Plan: All plans complete
-Status: v1.3 milestone shipped
-Last activity: 2026-01-19 — v1.3 milestone archived
+Phase: 11 of 14 (Firebase Modular API Migration)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-19 - Milestone v1.4 created
 
-Progress: ██████████ 100%
+Progress: ░░░░░░░░░░ 0%
 
 ## Performance Metrics
 
@@ -50,9 +50,10 @@ None.
 - v1.1 Camera/Darkroom UX Refactor shipped: 5 phases, 8 plans (Phases 1-5) - 2026-01-12
 - v1.2 Phone Authentication shipped: 3 phases, 8 plans (Phases 6-8) - 2026-01-19
 - v1.3 Firebase SDK Consolidation shipped: 2 phases, 4 plans (Phases 9-10) - 2026-01-19
+- Milestone v1.4 created: Production Ready, 4 phases (Phase 11-14)
 
 ## Session Continuity
 
 Last session: 2026-01-19
-Stopped at: v1.3 milestone complete - archived to milestones/v1.3-ROADMAP.md
+Stopped at: Milestone v1.4 initialization
 Resume file: None
