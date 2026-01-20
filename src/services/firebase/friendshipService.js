@@ -1,5 +1,8 @@
-import firestore, { Filter } from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, Filter } from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
+
+// Initialize Firestore once at module level
+const db = getFirestore();
 
 /**
  * friendshipService.js
@@ -54,12 +57,11 @@ export const sendFriendRequest = async (fromUserId, toUserId) => {
 
     // Check if friendship already exists
     const friendshipId = generateFriendshipId(fromUserId, toUserId);
-    const friendshipRef = firestore().collection('friendships').doc(friendshipId);
-    const friendshipDoc = await friendshipRef.get();
+    const friendshipRef = doc(db, 'friendships', friendshipId);
+    const friendshipDocSnap = await getDoc(friendshipRef);
 
-    const docExists = typeof friendshipDoc.exists === 'function' ? friendshipDoc.exists() : friendshipDoc.exists;
-    if (docExists) {
-      const existingStatus = friendshipDoc.data().status;
+    if (friendshipDocSnap.exists) {
+      const existingStatus = friendshipDocSnap.data().status;
       if (existingStatus === 'accepted') {
         return { success: false, error: 'Already friends' };
       } else if (existingStatus === 'pending') {
@@ -71,12 +73,12 @@ export const sendFriendRequest = async (fromUserId, toUserId) => {
     const [user1Id, user2Id] = [fromUserId, toUserId].sort();
 
     // Create friendship document
-    await friendshipRef.set({
+    await setDoc(friendshipRef, {
       user1Id,
       user2Id,
       status: 'pending',
       requestedBy: fromUserId,
-      createdAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
       acceptedAt: null,
     });
 
@@ -101,15 +103,14 @@ export const acceptFriendRequest = async (friendshipId, userId) => {
       return { success: false, error: 'Invalid parameters' };
     }
 
-    const friendshipRef = firestore().collection('friendships').doc(friendshipId);
-    const friendshipDoc = await friendshipRef.get();
+    const friendshipRef = doc(db, 'friendships', friendshipId);
+    const friendshipDocSnap = await getDoc(friendshipRef);
 
-    const docExists = typeof friendshipDoc.exists === 'function' ? friendshipDoc.exists() : friendshipDoc.exists;
-    if (!docExists) {
+    if (!friendshipDocSnap.exists) {
       return { success: false, error: 'Friend request not found' };
     }
 
-    const friendshipData = friendshipDoc.data();
+    const friendshipData = friendshipDocSnap.data();
 
     // Verify user is the recipient (not the sender)
     if (friendshipData.requestedBy === userId) {
@@ -127,9 +128,9 @@ export const acceptFriendRequest = async (friendshipId, userId) => {
     }
 
     // Update to accepted
-    await friendshipRef.update({
+    await updateDoc(friendshipRef, {
       status: 'accepted',
-      acceptedAt: firestore.FieldValue.serverTimestamp(),
+      acceptedAt: serverTimestamp(),
     });
 
     return { success: true };
@@ -153,15 +154,14 @@ export const declineFriendRequest = async (friendshipId, userId) => {
       return { success: false, error: 'Invalid parameters' };
     }
 
-    const friendshipRef = firestore().collection('friendships').doc(friendshipId);
-    const friendshipDoc = await friendshipRef.get();
+    const friendshipRef = doc(db, 'friendships', friendshipId);
+    const friendshipDocSnap = await getDoc(friendshipRef);
 
-    const docExists = typeof friendshipDoc.exists === 'function' ? friendshipDoc.exists() : friendshipDoc.exists;
-    if (!docExists) {
+    if (!friendshipDocSnap.exists) {
       return { success: false, error: 'Friend request not found' };
     }
 
-    const friendshipData = friendshipDoc.data();
+    const friendshipData = friendshipDocSnap.data();
 
     // Verify user is part of this friendship
     if (friendshipData.user1Id !== userId && friendshipData.user2Id !== userId) {
@@ -169,7 +169,7 @@ export const declineFriendRequest = async (friendshipId, userId) => {
     }
 
     // Delete friendship document
-    await friendshipRef.delete();
+    await deleteDoc(friendshipRef);
 
     return { success: true };
   } catch (error) {
@@ -193,16 +193,15 @@ export const removeFriend = async (userId1, userId2) => {
     }
 
     const friendshipId = generateFriendshipId(userId1, userId2);
-    const friendshipRef = firestore().collection('friendships').doc(friendshipId);
-    const friendshipDoc = await friendshipRef.get();
+    const friendshipRef = doc(db, 'friendships', friendshipId);
+    const friendshipDocSnap = await getDoc(friendshipRef);
 
-    const docExists = typeof friendshipDoc.exists === 'function' ? friendshipDoc.exists() : friendshipDoc.exists;
-    if (!docExists) {
+    if (!friendshipDocSnap.exists) {
       return { success: false, error: 'Friendship not found' };
     }
 
     // Delete friendship document
-    await friendshipRef.delete();
+    await deleteDoc(friendshipRef);
 
     return { success: true };
   } catch (error) {
@@ -225,13 +224,14 @@ export const getFriendships = async (userId) => {
     }
 
     // Query friendships where user is either user1Id or user2Id using Filter.or
-    const querySnapshot = await firestore()
-      .collection('friendships')
-      .where(Filter.or(
+    const q = query(
+      collection(db, 'friendships'),
+      where(Filter.or(
         Filter.where('user1Id', '==', userId),
         Filter.where('user2Id', '==', userId)
       ))
-      .get();
+    );
+    const querySnapshot = await getDocs(q);
 
     // Filter for accepted status (client-side since we need OR query for users)
     const friendships = [];
@@ -273,13 +273,14 @@ export const getPendingRequests = async (userId) => {
     }
 
     // Query friendships where user is either user1Id or user2Id using Filter.or
-    const querySnapshot = await firestore()
-      .collection('friendships')
-      .where(Filter.or(
+    const q = query(
+      collection(db, 'friendships'),
+      where(Filter.or(
         Filter.where('user1Id', '==', userId),
         Filter.where('user2Id', '==', userId)
       ))
-      .get();
+    );
+    const querySnapshot = await getDocs(q);
 
     // Filter for pending requests where user is NOT the sender
     const requests = [];
@@ -321,11 +322,12 @@ export const getSentRequests = async (userId) => {
     }
 
     // Query friendships where user is the requester
-    const querySnapshot = await firestore()
-      .collection('friendships')
-      .where('requestedBy', '==', userId)
-      .where('status', '==', 'pending')
-      .get();
+    const q = query(
+      collection(db, 'friendships'),
+      where('requestedBy', '==', userId),
+      where('status', '==', 'pending')
+    );
+    const querySnapshot = await getDocs(q);
 
     const requests = [];
     querySnapshot.forEach((doc) => {
@@ -368,15 +370,14 @@ export const checkFriendshipStatus = async (userId1, userId2) => {
     }
 
     const friendshipId = generateFriendshipId(userId1, userId2);
-    const friendshipRef = firestore().collection('friendships').doc(friendshipId);
-    const friendshipDoc = await friendshipRef.get();
+    const friendshipRef = doc(db, 'friendships', friendshipId);
+    const friendshipDocSnap = await getDoc(friendshipRef);
 
-    const docExists = typeof friendshipDoc.exists === 'function' ? friendshipDoc.exists() : friendshipDoc.exists;
-    if (!docExists) {
+    if (!friendshipDocSnap.exists) {
       return { success: true, status: 'none', friendshipId };
     }
 
-    const data = friendshipDoc.data();
+    const data = friendshipDocSnap.data();
 
     if (data.status === 'accepted') {
       return { success: true, status: 'friends', friendshipId };
@@ -411,28 +412,31 @@ export const subscribeFriendships = (userId, callback) => {
     return () => {};
   }
 
-  const unsubscribe = firestore()
-    .collection('friendships')
-    .where(Filter.or(
+  const q = query(
+    collection(db, 'friendships'),
+    where(Filter.or(
       Filter.where('user1Id', '==', userId),
       Filter.where('user2Id', '==', userId)
     ))
-    .onSnapshot(
-      (snapshot) => {
-        const friendships = [];
-        snapshot.forEach((doc) => {
-          friendships.push({
-            id: doc.id,
-            ...doc.data(),
-          });
+  );
+
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const friendships = [];
+      snapshot.forEach((docSnap) => {
+        friendships.push({
+          id: docSnap.id,
+          ...docSnap.data(),
         });
-        callback(friendships);
-      },
-      (error) => {
-        logger.error('Error in friendship subscription', error);
-        callback([]);
-      }
-    );
+      });
+      callback(friendships);
+    },
+    (error) => {
+      logger.error('Error in friendship subscription', error);
+      callback([]);
+    }
+  );
 
   return unsubscribe;
 };
