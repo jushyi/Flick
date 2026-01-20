@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 
 ## Current Position
 
-Phase: 13.1 of 14 (Darkroom Reveal Timing Fix)
+Phase: 13.2 of 14 (Darkroom Auto-Reveal Fix)
 Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-20 - Completed 13.1-01-FIX.md (UAT verification)
+Last activity: 2026-01-20 - Completed 13.2-01-PLAN.md
 
 Progress: █████████░ 99%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 14 in v1.4)
+- Total plans completed: 35 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 15 in v1.4)
 - Average duration: 18 min
 - Total execution time: 8.0 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 0.9h v1.4)
 
@@ -30,7 +30,7 @@ Progress: █████████░ 99%
 | v1.1 | 1-5 | 8 | 4.3 hours |
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
-| v1.4 | 11-13.1 | 14 | 102 min |
+| v1.4 | 11-13.2 | 15 | 104 min |
 
 ## Accumulated Context
 
@@ -55,9 +55,10 @@ None.
 - Phase 12.1 inserted after Phase 12: Friends List Screen Crash Fix (URGENT) - FriendsListScreen crashing on load
 - Phase 12.2 inserted after Phase 12.1: Feed Stories Feature - IG Stories-style viewer + curated top 5 feed
 - Phase 13.1 inserted after Phase 13: Darkroom Reveal Timing Fix (URGENT) - Fix inaccurate nextRevealAt, change interval to 0-15 min
+- Phase 13.2 inserted after Phase 13.1: Darkroom Auto-Reveal Fix (URGENT) - Reveal logic only runs when user opens DarkroomScreen, photos stuck in 'developing'
 
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Completed 13.1-01-FIX.md (UAT verification) - Phase 13.1 fully verified
+Stopped at: Completed 13.2-01-PLAN.md - Phase 13.2 complete
 Resume file: None
