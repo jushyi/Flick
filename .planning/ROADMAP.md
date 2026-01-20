@@ -23,7 +23,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 **Plans**: 4
 
 Plans:
-- [ ] 11-01: Core Services (photoService, darkroomService)
+- [x] 11-01: Core Services (photoService, darkroomService)
 - [ ] 11-02: Social Services (feedService, friendshipService)
 - [ ] 11-03: Storage & Remaining (storageService, userService, notificationService)
 - [ ] 11-04: Screens & Components (AuthContext, ProfileScreen, UserSearchScreen, FriendsListScreen, FriendRequestCard)
@@ -112,7 +112,7 @@ Plans:
 | 8. Polish & Testing | v1.2 | 3/3 | Complete | 2026-01-19 |
 | 9. Firestore Services Migration | v1.3 | 2/2 | Complete | 2026-01-19 |
 | 10. Storage Migration & Cleanup | v1.3 | 2/2 | Complete | 2026-01-19 |
-| 11. Firebase Modular API Migration | v1.4 | 0/4 | Planned | - |
+| 11. Firebase Modular API Migration | v1.4 | 1/4 | In progress | - |
 | 12. Friendship Service Fix + Testing | v1.4 | 0/? | Not started | - |
 | 13. Production Build & Branding | v1.4 | 0/? | Not started | - |
 | 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |
