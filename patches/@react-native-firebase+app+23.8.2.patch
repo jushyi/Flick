@@ -1,0 +1,15 @@
+diff --git a/node_modules/@react-native-firebase/app/package.json b/node_modules/@react-native-firebase/app/package.json
+index 1234567..abcdefg 100644
+--- a/node_modules/@react-native-firebase/app/package.json
++++ b/node_modules/@react-native-firebase/app/package.json
+@@ -109,7 +109,9 @@
+         "default": "./dist/commonjs/common/*"
+       }
+     },
+-    "./package.json": "./package.json"
++    "./package.json": "./package.json",
++    "./app.plugin.js": "./app.plugin.js",
++    "./plugin/build": "./plugin/build/index.js"
+   },
+   "peerDependencies": {
+     "expo": ">=47.0.0",
