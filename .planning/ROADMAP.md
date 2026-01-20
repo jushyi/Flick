@@ -26,7 +26,7 @@ Plans:
 - [x] 11-01: Core Services (photoService, darkroomService)
 - [x] 11-02: Social Services (feedService, friendshipService)
 - [x] 11-03: Storage & Remaining (storageService, userService, notificationService)
-- [ ] 11-04: Screens & Components (AuthContext, ProfileScreen, UserSearchScreen, FriendsListScreen, FriendRequestCard)
+- [x] 11-04: Screens & Components (AuthContext, ProfileScreen, UserSearchScreen, FriendsListScreen, FriendRequestCard)
 
 #### Phase 12: Friendship Service Fix + Testing
 
@@ -112,7 +112,7 @@ Plans:
 | 8. Polish & Testing | v1.2 | 3/3 | Complete | 2026-01-19 |
 | 9. Firestore Services Migration | v1.3 | 2/2 | Complete | 2026-01-19 |
 | 10. Storage Migration & Cleanup | v1.3 | 2/2 | Complete | 2026-01-19 |
-| 11. Firebase Modular API Migration | v1.4 | 3/4 | In progress | - |
+| 11. Firebase Modular API Migration | v1.4 | 4/4 | Complete | 2026-01-19 |
 | 12. Friendship Service Fix + Testing | v1.4 | 0/? | Not started | - |
 | 13. Production Build & Branding | v1.4 | 0/? | Not started | - |
 | 14. Remote Notification Testing & Polish | v1.4 | 0/? | Not started | - |
