@@ -8,17 +8,21 @@ A comprehensive UI/UX refactor of the Camera and Darkroom experience in the Laps
 
 Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
 
-## Current State (v1.2 Shipped)
+## Current State (v1.3 Shipped)
 
 **Shipped:** 2026-01-19
-**Execution time:** 6.4 hours total (v1.1: 4.3h + v1.2: 2.1h)
-**Phases:** 8 phases, 16 plans across both milestones
+**Execution time:** 7.1 hours total (v1.1: 4.3h + v1.2: 2.1h + v1.3: 0.7h)
+**Phases:** 10 phases, 20 plans across three milestones
 
-The Phone Authentication milestone is complete. Users now experience:
-- Phone-only authentication with SMS verification (no email/password)
-- Real-time phone number formatting as they type
-- Auto-submit verification code when 6 digits entered
-- Clear error feedback with shake animations and retry delays
+The Firebase SDK Consolidation milestone is complete. The app now uses:
+- React Native Firebase SDK exclusively (no JS SDK)
+- Unified auth state across all Firebase operations (Auth, Firestore, Storage)
+- Efficient putFile pattern for photo uploads (no blob conversion)
+- Filter.or pattern for complex OR queries in friendship service
+
+Previous v1.2 features remain:
+- Phone-only authentication with SMS verification
+- Real-time phone number formatting, auto-submit on 6 digits
 - ErrorBoundary protection against white-screen crashes
 - Custom app icon (minimalist "L") and splash screen (LAPSE branding)
 
@@ -32,6 +36,12 @@ Previous v1.1 features remain:
 ## Requirements
 
 ### Validated
+
+**v1.3 Firebase SDK Consolidation:**
+- ✓ Migrate all Firestore services to React Native Firebase — v1.3
+- ✓ Migrate storageService to React Native Firebase — v1.3
+- ✓ Remove Firebase JS SDK from codebase — v1.3
+- ✓ Unified auth state across all Firebase operations — v1.3
 
 **v1.2 Phone Authentication:**
 - ✓ Phone-only authentication with SMS verification — v1.2
@@ -75,17 +85,16 @@ Previous v1.1 features remain:
 
 ## Context
 
-**Codebase State (v1.2):**
+**Codebase State (v1.3):**
 - React Native mobile app with Expo managed workflow (SDK ~54.0.30)
-- 44 files modified in v1.2 milestone (+4,679 / -1,089 lines)
-- New: phoneAuthService, PhoneInputScreen, VerificationScreen, ErrorBoundary, phoneUtils
-- New: scripts/generate-icons.js, scripts/generate-splash.js
-- Deleted: LoginScreen, SignUpScreen, ForgotPasswordScreen, authService.js (legacy auth)
-- Updated: AuthContext (phone auth), AppNavigator (phone-only flow), app.json (icons/splash)
+- 25 files modified in v1.3 milestone (+1,853 / -776 lines)
+- Migrated: photoService, darkroomService, feedService, friendshipService, userService, storageService
+- Deleted: firebaseConfig.js (JS SDK init), firestoreService.js (unused legacy)
+- All Firebase operations now use React Native Firebase SDK exclusively
 
 **Tech Stack:**
 - Firebase BaaS for backend (Firestore, Storage, Functions)
-- React Native Firebase for phone authentication (@react-native-firebase/auth, @react-native-firebase/firestore)
+- React Native Firebase for all Firebase operations (@react-native-firebase/app, auth, firestore, storage)
 - React Navigation 7.x for screen navigation (bottom tabs + nested stacks)
 - expo-camera for camera access, expo-image-manipulator for compression
 - react-native-gesture-handler for swipe gestures
@@ -114,6 +123,11 @@ Previous v1.1 features remain:
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
+| RN Firebase method chaining pattern | Consistent with RN Firebase SDK conventions, works with native modules | ✓ Good |
+| Filter.or for OR queries | JS SDK or() unavailable in RN Firebase; Filter.or provides same functionality | ✓ Good |
+| putFile over uploadBytes | RN Firebase putFile accepts local paths directly, eliminating blob conversion overhead | ✓ Good |
+| Delete firestoreService.js | Unused legacy functions; all services migrated to dedicated files | ✓ Good |
+| Delete firebaseConfig.js | JS SDK init no longer needed; RN Firebase auto-inits from google-services | ✓ Good |
 | Remove Darkroom tab from nav | User wants unified camera experience, darkroom accessed via button | ✓ Good |
 | iOS Mail-style swipe actions | Native gesture pattern users already know, feels polished | ✓ Good |
 | Press-and-hold to reveal | Adds ceremony and engagement to photo reveal moment | ✓ Good |
@@ -138,4 +152,4 @@ Previous v1.1 features remain:
 | Sharp library for programmatic icon generation | Reproducible assets, scripts can be rerun for updates | ✓ Good |
 
 ---
-*Last updated: 2026-01-19 after v1.2 milestone*
+*Last updated: 2026-01-19 after v1.3 milestone*

@@ -1,5 +1,32 @@
 # Project Milestones: Lapse Clone
 
+## v1.3 Firebase SDK Consolidation (Shipped: 2026-01-19)
+
+**Delivered:** Consolidated all Firebase operations to React Native Firebase SDK, eliminating JS SDK and unifying auth state across Firestore and Storage.
+
+**Phases completed:** 9-10 (4 plans total)
+
+**Key accomplishments:**
+
+- Migrated all 6 Firestore services (32 functions) to React Native Firebase SDK
+- Migrated storageService.js to RN Firebase with efficient putFile pattern
+- Eliminated Firebase JS SDK entirely (deleted firebaseConfig.js, firestoreService.js)
+- Unified auth state across Auth, Firestore, and Storage operations
+- Established Filter.or pattern for complex OR queries in friendship service
+
+**Stats:**
+
+- 25 files modified, 2 deleted
+- 1,853 lines added, 776 removed (net +1,077)
+- 2 phases, 4 plans
+- 42 min execution time (13 days elapsed)
+
+**Git range:** `eaf67dd` (docs 09) → `83077cf` (docs 10-02)
+
+**What's next:** Production release preparation - TestFlight distribution, remote notification testing, final bug fixes
+
+---
+
 ## v1.2 Phone Authentication (Shipped: 2026-01-19)
 
 **Delivered:** Migrated authentication from email/Apple Sign-In to phone-only with SMS verification, removing legacy auth code and adding polish.

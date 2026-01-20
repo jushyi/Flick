@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-19)
 
 **Core value:** Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
-**Current focus:** v1.3 Firebase SDK Consolidation - COMPLETE
+**Current focus:** All milestones complete - Ready for next milestone planning
 
 ## Current Position
 
-Phase: 10 of 10 (Storage Migration & Cleanup)
-Plan: 2 of 2 in current phase
-Status: Phase complete - Milestone complete
-Last activity: 2026-01-19 - Completed 10-02-PLAN.md
+Phase: 10 of 10 (All phases complete)
+Plan: All plans complete
+Status: v1.3 milestone shipped
+Last activity: 2026-01-19 — v1.3 milestone archived
 
 Progress: ██████████ 100%
 
@@ -21,7 +21,7 @@ Progress: ██████████ 100%
 **Velocity:**
 - Total plans completed: 20 (8 in v1.1 + 8 in v1.2 + 4 in v1.3)
 - Average duration: 22 min
-- Total execution time: 7.2 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3)
+- Total execution time: 7.1 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3)
 
 **By Milestone:**
 
@@ -29,19 +29,13 @@ Progress: ██████████ 100%
 |-----------|--------|-------|----------------|
 | v1.1 | 1-5 | 8 | 4.3 hours |
 | v1.2 | 6-8 | 8 | 2.1 hours |
-| v1.3 | 9-10 | 4/4 | 42 min |
+| v1.3 | 9-10 | 4 | 42 min |
 
 ## Accumulated Context
 
 ### Decisions
 
 All decisions documented in PROJECT.md Key Decisions table with outcomes.
-
-| Phase | Decision | Rationale |
-|-------|----------|-----------|
-| 10-01 | putFile with stripped URI | RN Firebase putFile needs path without file:// prefix |
-| 10-02 | Delete firestoreService.js | Unused functions, all services migrated |
-| 10-02 | Delete firebaseConfig.js | JS SDK init no longer needed |
 
 ### Deferred Issues
 
@@ -60,5 +54,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-19
-Stopped at: Completed 10-02-PLAN.md (Remaining Services & Cleanup) - MILESTONE COMPLETE
+Stopped at: v1.3 milestone complete - archived to milestones/v1.3-ROADMAP.md
 Resume file: None
