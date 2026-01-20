@@ -10,6 +10,51 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v1.2 Phone Authentication** - [archive](milestones/v1.2-ROADMAP.md) (Phases 6-8, shipped 2026-01-19)
 - ✅ **v1.3 Firebase SDK Consolidation** - [archive](milestones/v1.3-ROADMAP.md) (Phases 9-10, shipped 2026-01-19)
 - ✅ **v1.4 Production Ready** - [archive](milestones/v1.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
+- 🚧 **v1.5 Camera Performance & UX Polish** - Phases 15-18 (in progress)
+
+### 🚧 v1.5 Camera Performance & UX Polish (In Progress)
+
+**Milestone Goal:** Make the core camera-to-darkroom experience feel instant and delightful
+
+#### Phase 15: Background Photo Upload
+
+**Goal**: Async capture pipeline with upload queue and progress indicators - photos save instantly, upload in background
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (internal patterns, React Native background task APIs well-established)
+**Plans**: TBD
+
+Plans:
+- [ ] 15-01: TBD (run /gsd:plan-phase 15 to break down)
+
+#### Phase 16: Camera Capture Feedback
+
+**Goal**: Enhanced shutter animation, haptic feedback, and visual confirmation on capture
+**Depends on**: Phase 15
+**Research**: Unlikely (established patterns, existing haptics utility)
+**Plans**: TBD
+
+Plans:
+- [ ] 16-01: TBD (run /gsd:plan-phase 16 to break down)
+
+#### Phase 17: Darkroom UX Polish
+
+**Goal**: Improved reveal animations, smoother triage gestures, better navigation flow, and polished empty/loading states
+**Depends on**: Phase 16
+**Research**: Unlikely (internal patterns, React Native Reanimated already in use)
+**Plans**: TBD
+
+Plans:
+- [ ] 17-01: TBD (run /gsd:plan-phase 17 to break down)
+
+#### Phase 18: Reaction Notification Debouncing
+
+**Goal**: Aggregate reaction notifications over 10-second window instead of per-tap to prevent spam
+**Depends on**: Phase 17
+**Research**: Unlikely (Cloud Function update to existing sendReactionNotification)
+**Plans**: TBD
+
+Plans:
+- [ ] 18-01: TBD (run /gsd:plan-phase 18 to break down)
 
 ## Completed Milestones
 
@@ -89,3 +134,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 | 13.1 Darkroom Reveal Timing Fix | v1.4 | 1/1 | Complete | 2026-01-20 |
 | 13.2 Darkroom Auto-Reveal Fix | v1.4 | 1/1 | Complete | 2026-01-20 |
 | 14. Remote Notification Testing & Polish | v1.4 | 1/1 | Complete | 2026-01-20 |
+| 15. Background Photo Upload | v1.5 | 0/? | Not started | - |
+| 16. Camera Capture Feedback | v1.5 | 0/? | Not started | - |
+| 17. Darkroom UX Polish | v1.5 | 0/? | Not started | - |
+| 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
-**Current focus:** Planning next milestone or App Store submission
+**Current focus:** v1.5 Camera Performance & UX Polish - making capture instant and delightful
 
 ## Current Position
 
-Phase: All phases complete
-Plan: N/A
-Status: v1.4 milestone archived, ready for next milestone
-Last activity: 2026-01-20 - Archived v1.4 Production Ready milestone
+Phase: 15 of 18 (Background Photo Upload)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-20 - Milestone v1.5 created
 
-Progress: ██████████ 100% (4 milestones shipped)
+Progress: ░░░░░░░░░░ 0% (v1.5: 0/4 phases)
 
 ## Performance Metrics
 
@@ -40,7 +40,6 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 
 ### Deferred Issues
 
-- Reaction notifications send per-tap (should debounce to aggregate reactions over 10s window)
 - TestFlight submission (requires App Store Connect setup)
 
 ### Blockers/Concerns
@@ -54,8 +53,12 @@ None.
 - **v1.3** Firebase SDK Consolidation: 2 phases, 4 plans - shipped 2026-01-19
 - **v1.4** Production Ready: 8 phases, 17 plans - shipped 2026-01-20
 
+### Roadmap Evolution
+
+- Milestone v1.5 created: Camera Performance & UX Polish, 4 phases (Phase 15-18)
+
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Archived v1.4 milestone
+Stopped at: Milestone v1.5 initialization
 Resume file: None
