@@ -8,7 +8,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 - ✅ **v1.1 Camera/Darkroom UX Refactor** - [archive](milestones/v1.1-ROADMAP.md) (Phases 1-5, shipped 2026-01-12)
 - ✅ **v1.2 Phone Authentication** - [archive](milestones/v1.2-ROADMAP.md) (Phases 6-8, shipped 2026-01-19)
-- 📋 **v1.3 (Planned)** - TBD
+- 🚧 **v1.3 Firebase SDK Consolidation** - Phases 9-10 (in progress)
 
 ## Completed Milestones
 
@@ -38,9 +38,31 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 </details>
 
+### 🚧 v1.3 Firebase SDK Consolidation (In Progress)
+
+**Milestone Goal:** Unify all Firebase services under React Native Firebase SDK to fix permission-denied errors caused by SDK auth state mismatch
+
+#### Phase 9: Firestore Services Migration
+
+**Goal**: Migrate photoService.js, feedService.js, and friendshipService.js from Firebase JS SDK to React Native Firebase
+**Depends on**: v1.2 complete
+**Research**: Unlikely (AuthContext.js already demonstrates correct RN Firebase pattern)
+
+Plans:
+- [ ] 09-01: TBD (run /gsd:plan-phase 9 to break down)
+
+#### Phase 10: Storage Migration & Cleanup
+
+**Goal**: Migrate storageService.js to RN Firebase, remove JS SDK dependencies, verify all functionality works
+**Depends on**: Phase 9
+**Research**: Unlikely (following same migration pattern)
+
+Plans:
+- [ ] 10-01: TBD (run /gsd:plan-phase 10 to break down)
+
 ## Progress
 
-**All phases complete through v1.2**
+**Execution Order:** Phases execute in numeric order: 9 → 10
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -52,3 +74,5 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 | 6. Phone Auth Implementation | v1.2 | 4/4 | Complete | 2026-01-19 |
 | 7. Legacy Auth Removal & Cleanup | v1.2 | 1/1 | Complete | 2026-01-19 |
 | 8. Polish & Testing | v1.2 | 3/3 | Complete | 2026-01-19 |
+| 9. Firestore Services Migration | v1.3 | 0/? | Not started | - |
+| 10. Storage Migration & Cleanup | v1.3 | 0/? | Not started | - |

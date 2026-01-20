@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-19)
 
 **Core value:** Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
-**Current focus:** Planning next milestone (v1.3 or production release)
+**Current focus:** v1.3 Firebase SDK Consolidation - unify Firebase services under RN Firebase SDK
 
 ## Current Position
 
-Phase: 8 of 8 (all complete)
-Plan: N/A (milestone complete)
-Status: v1.2 SHIPPED
-Last activity: 2026-01-19 - v1.2 Phone Authentication milestone complete
+Phase: 9 of 10 (Firestore Services Migration)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-19 - Milestone v1.3 created
 
-Progress: ██████████ 100% (v1.1 + v1.2: 16/16 plans)
+Progress: ░░░░░░░░░░ 0%
 
 ## Performance Metrics
 
@@ -29,6 +29,7 @@ Progress: ██████████ 100% (v1.1 + v1.2: 16/16 plans)
 |-----------|--------|-------|----------------|
 | v1.1 | 1-5 | 8 | 4.3 hours |
 | v1.2 | 6-8 | 8 | 2.1 hours |
+| v1.3 | 9-10 | TBD | - |
 
 ## Accumulated Context
 
@@ -48,29 +49,10 @@ None.
 
 - v1.1 Camera/Darkroom UX Refactor shipped: 5 phases, 8 plans (Phases 1-5) - 2026-01-12
 - v1.2 Phone Authentication shipped: 3 phases, 8 plans (Phases 6-8) - 2026-01-19
+- Milestone v1.3 created: Firebase SDK Consolidation, 2 phases (Phase 9-10)
 
 ## Session Continuity
 
 Last session: 2026-01-19
-Stopped at: v1.2 milestone complete
+Stopped at: Milestone v1.3 initialization
 Resume file: None
-
-### Recent Progress
-
-- v1.2 milestone archived
-- MILESTONES.md updated with v1.2 entry
-- PROJECT.md evolved with validated requirements
-- ROADMAP.md reorganized with collapsed milestones
-
-## What's Next
-
-**Plan Next Milestone** - define v1.3 features and scope
-
-`/gsd:discuss-milestone`
-
-<sub>`/clear` first -> fresh context window</sub>
-
----
-
-**Also available:**
-- `/gsd:new-milestone` - create directly if scope is clear
