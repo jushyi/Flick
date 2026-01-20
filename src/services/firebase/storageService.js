@@ -1,6 +1,9 @@
-import storage from '@react-native-firebase/storage';
+import { getStorage, ref } from '@react-native-firebase/storage';
 import * as ImageManipulator from 'expo-image-manipulator';
 import logger from '../../utils/logger';
+
+// Initialize Storage once at module level
+const storageInstance = getStorage();
 
 /**
  * Convert URI to local file path for RN Firebase putFile
@@ -51,8 +54,8 @@ export const uploadProfilePhoto = async (userId, localUri) => {
     // Convert URI to file path for RN Firebase
     const filePath = uriToFilePath(compressedUri);
 
-    // Create storage reference (RN Firebase pattern)
-    const storageRef = storage().ref(`profile_photos/${userId}.jpg`);
+    // Create storage reference (modular API pattern)
+    const storageRef = ref(storageInstance, `profile_photos/${userId}.jpg`);
 
     // Upload file directly (no blob needed with RN Firebase)
     await storageRef.putFile(filePath);
@@ -84,8 +87,8 @@ export const uploadPhoto = async (photoId, localUri) => {
     // Convert URI to file path for RN Firebase
     const filePath = uriToFilePath(compressedUri);
 
-    // Create storage reference (RN Firebase pattern)
-    const storageRef = storage().ref(`photos/${photoId}.jpg`);
+    // Create storage reference (modular API pattern)
+    const storageRef = ref(storageInstance, `photos/${photoId}.jpg`);
 
     // Upload file directly (no blob needed with RN Firebase)
     await storageRef.putFile(filePath);
@@ -110,7 +113,7 @@ export const deleteProfilePhoto = async (userId) => {
   try {
     logger.debug('StorageService.deleteProfilePhoto: Starting', { userId });
 
-    const storageRef = storage().ref(`profile_photos/${userId}.jpg`);
+    const storageRef = ref(storageInstance, `profile_photos/${userId}.jpg`);
     await storageRef.delete();
 
     logger.info('StorageService.deleteProfilePhoto: Deleted', { userId });
@@ -130,7 +133,7 @@ export const deletePhoto = async (photoId) => {
   try {
     logger.debug('StorageService.deletePhoto: Starting', { photoId });
 
-    const storageRef = storage().ref(`photos/${photoId}.jpg`);
+    const storageRef = ref(storageInstance, `photos/${photoId}.jpg`);
     await storageRef.delete();
 
     logger.info('StorageService.deletePhoto: Deleted', { photoId });
@@ -150,7 +153,7 @@ export const getPhotoURL = async (photoId) => {
   try {
     logger.debug('StorageService.getPhotoURL: Starting', { photoId });
 
-    const storageRef = storage().ref(`photos/${photoId}.jpg`);
+    const storageRef = ref(storageInstance, `photos/${photoId}.jpg`);
     const downloadURL = await storageRef.getDownloadURL();
 
     logger.info('StorageService.getPhotoURL: Retrieved', { photoId });
