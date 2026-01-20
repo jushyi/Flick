@@ -11,118 +11,24 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v1.3 Firebase SDK Consolidation** - [archive](milestones/v1.3-ROADMAP.md) (Phases 9-10, shipped 2026-01-19)
 - ✅ **v1.4 Production Ready** - [archive](milestones/v1.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
 
-### ✅ v1.4 Production Ready (Complete)
-
-**Milestone Goal:** Fix all deprecation warnings, resolve service errors, and prepare app for TestFlight distribution with full notification support.
-
-#### Phase 11: Firebase Modular API Migration
-
-**Goal**: Migrate all services from namespaced API to modular API (v22+)
-**Depends on**: v1.3 complete
-**Research**: Level 1 - Quick Verification (completed during planning)
-**Plans**: 4
-
-Plans:
-- [x] 11-01: Core Services (photoService, darkroomService)
-- [x] 11-02: Social Services (feedService, friendshipService)
-- [x] 11-03: Storage & Remaining (storageService, userService, notificationService)
-- [x] 11-04: Screens & Components (AuthContext, ProfileScreen, UserSearchScreen, FriendsListScreen, FriendRequestCard)
-
-#### Phase 12: Friendship Service Fix + Testing
-
-**Goal**: Debug and fix friendship errors, verify all social features work
-**Depends on**: Phase 11
-**Research**: Unlikely (internal debugging)
-**Plans**: 1
-
-Plans:
-- [x] 12-01: Fix exists() Method Calls
-
-#### Phase 12.1: Friends List Screen Crash Fix (INSERTED)
-
-**Goal**: Fix FriendsListScreen crash - ErrorBoundary catching component tree error
-**Depends on**: Phase 12
-**Research**: Unlikely (internal debugging)
-**Plans**: 1
-
-Plans:
-- [x] 12.1-01: Fix Filter.or Usage
-
-**Details:**
-Fixed Filter.or access pattern via modular API. The firestore.Filter.or() pattern was also broken. Solution: use modular or(where(...), where(...)) pattern per React Native Firebase v22+ modular API exports.
-
-#### Phase 12.2: Feed Stories Feature (INSERTED)
-
-**Goal**: Add Instagram Stories-style viewer for friends' photos with curated feed showing top 5 snaps
-**Depends on**: Phase 12.1
-**Research**: Level 0 - Skip (existing patterns for gestures, animations, Firestore queries)
-**Plans**: 4
-
-Plans:
-- [x] 12.2-01: Service Layer (getTopPhotosByEngagement, getFriendStoriesData)
-- [x] 12.2-02: Stories Row Component (FriendStoryCard + horizontal row in FeedScreen)
-- [x] 12.2-03: Stories Viewer (StoriesViewerModal with navigation gestures)
-- [x] 12.2-04: Feed Curation & Polish (top 5 per friend, edge cases)
-
-**Details:**
-Feature request: PhotoCards of friends that when tapped display all of friend's snaps in IG Story-style viewer. Main feed changes to show only top 5 snaps from friends, ranked by engagement (reactionCount - no comments system exists).
-
-#### Phase 13: Production Build & Branding
-
-**Goal**: EAS build setup, app icon, splash screen, TestFlight prep
-**Depends on**: Phase 12.2
-**Research**: Likely (EAS Build, first deployment)
-**Research topics**: EAS Build configuration, iOS App Store requirements
-**Plans**: 3
-
-Plans:
-- [x] 13-01: Oly Brand Assets (icon, splash, app.json)
-- [x] 13-02: Animated Splash Screen (shutter opening effect)
-- [x] 13-03: EAS Build & Distribution (iOS build, internal distribution)
-
-#### Phase 13.1: Darkroom Reveal Timing Fix (INSERTED)
-
-**Goal**: Fix inaccurate nextRevealAt calculation and change reveal interval to 0-15 minutes
-**Depends on**: Phase 13
-**Research**: Unlikely (internal debugging)
-**Plans**: 1
-
-Plans:
-- [x] 13.1-01: Timing Fix & Darkroom Initialization
-
-**Details:**
-Fixed darkroom timing accuracy by adding ensureDarkroomInitialized() call on photo capture. Reduced reveal interval from 0-2 hours to 0-15 minutes.
-
-#### Phase 13.2: Darkroom Auto-Reveal Fix (INSERTED)
-
-**Goal**: Fix darkroom not revealing photos when nextRevealAt time passes - reveal happens only when user opens DarkroomScreen
-**Depends on**: Phase 13.1
-**Research**: Unlikely (internal debugging)
-**Plans**: 1 + 1 FIX
-
-Plans:
-- [x] 13.2-01: Fix ensureDarkroomInitialized + Add foreground reveal check
-- [x] 13.2-01-FIX: Server-side darkroom reveal via scheduled Cloud Function
-
-**Details:**
-Bug: When nextRevealAt time passes, nothing happens automatically. The reveal logic only runs when the user opens DarkroomScreen. Additionally, ensureDarkroomInitialized() resets stale nextRevealAt without revealing photos first, causing photos to remain in 'developing' state indefinitely.
-
-**UAT Fix:** Added processDarkroomReveals scheduled Cloud Function (every 2 minutes) for server-side reveal regardless of app state.
-
-#### Phase 14: Remote Notification Testing & Polish
-
-**Goal**: End-to-end notification verification, final bug fixes
-**Depends on**: Phase 13
-**Research**: Level 0 - Skip (existing Cloud Functions, internal testing)
-**Plans**: 1
-
-Plans:
-- [x] 14-01: Remote Notification E2E Testing (all 3 notification types)
-
-**Details:**
-All 3 notification types verified working on standalone iOS build. Fixed notification permission flow for existing users and darkroom deep link navigation. Known issue: reaction notifications send per-tap (should debounce).
-
 ## Completed Milestones
+
+<details>
+<summary>✅ v1.4 Production Ready (Phases 11-14) - SHIPPED 2026-01-20</summary>
+
+- [x] Phase 11: Firebase Modular API Migration (4/4 plans) - completed 2026-01-19
+- [x] Phase 12: Friendship Service Fix + Testing (1/1 plan) - completed 2026-01-19
+- [x] Phase 12.1: Friends List Screen Crash Fix (1/1 plan + fixes) - completed 2026-01-20
+- [x] Phase 12.2: Feed Stories Feature (4/4 plans) - completed 2026-01-20
+- [x] Phase 13: Production Build & Branding (3/3 plans) - completed 2026-01-20
+- [x] Phase 13.1: Darkroom Reveal Timing Fix (1/1 plan) - completed 2026-01-20
+- [x] Phase 13.2: Darkroom Auto-Reveal Fix (1/1 plan + fix) - completed 2026-01-20
+- [x] Phase 14: Remote Notification Testing & Polish (1/1 plan) - completed 2026-01-20
+
+**Stats:** 8 phases, 17 plans, 1.4 hours execution time
+**See:** [Full archive](milestones/v1.4-ROADMAP.md)
+
+</details>
 
 <details>
 <summary>✅ v1.3 Firebase SDK Consolidation (Phases 9-10) - SHIPPED 2026-01-19</summary>

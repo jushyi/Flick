@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
-**Current focus:** v1.4 Production Ready - COMPLETE
+**Current focus:** Planning next milestone or App Store submission
 
 ## Current Position
 
-Phase: 14 of 14 (Remote Notification Testing & Polish)
-Plan: 1 of 1 in current phase
-Status: Phase complete, v1.4 milestone complete
-Last activity: 2026-01-20 - Completed 14-01 Remote Notification E2E Testing
+Phase: All phases complete
+Plan: N/A
+Status: v1.4 milestone archived, ready for next milestone
+Last activity: 2026-01-20 - Archived v1.4 Production Ready milestone
 
-Progress: ██████████ 100%
+Progress: ██████████ 100% (4 milestones shipped)
 
 ## Performance Metrics
 
@@ -41,24 +41,21 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 ### Deferred Issues
 
 - Reaction notifications send per-tap (should debounce to aggregate reactions over 10s window)
+- TestFlight submission (requires App Store Connect setup)
 
 ### Blockers/Concerns
 
 None.
 
-### Roadmap Evolution
+### Shipped Milestones
 
-- v1.1 Camera/Darkroom UX Refactor shipped: 5 phases, 8 plans (Phases 1-5) - 2026-01-12
-- v1.2 Phone Authentication shipped: 3 phases, 8 plans (Phases 6-8) - 2026-01-19
-- v1.3 Firebase SDK Consolidation shipped: 2 phases, 4 plans (Phases 9-10) - 2026-01-19
-- v1.4 Production Ready shipped: 8 phases, 17 plans (Phases 11-14) - 2026-01-20
-- Phase 12.1 inserted after Phase 12: Friends List Screen Crash Fix (URGENT) - FriendsListScreen crashing on load
-- Phase 12.2 inserted after Phase 12.1: Feed Stories Feature - IG Stories-style viewer + curated top 5 feed
-- Phase 13.1 inserted after Phase 13: Darkroom Reveal Timing Fix (URGENT) - Fix inaccurate nextRevealAt, change interval to 0-15 min
-- Phase 13.2 inserted after Phase 13.1: Darkroom Auto-Reveal Fix (URGENT) - Reveal logic only runs when user opens DarkroomScreen, photos stuck in 'developing'
+- **v1.1** Camera/Darkroom UX Refactor: 5 phases, 8 plans - shipped 2026-01-12
+- **v1.2** Phone Authentication: 3 phases, 8 plans - shipped 2026-01-19
+- **v1.3** Firebase SDK Consolidation: 2 phases, 4 plans - shipped 2026-01-19
+- **v1.4** Production Ready: 8 phases, 17 plans - shipped 2026-01-20
 
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Completed Phase 14 - v1.4 milestone complete
+Stopped at: Archived v1.4 milestone
 Resume file: None

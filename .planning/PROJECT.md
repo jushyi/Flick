@@ -8,34 +8,48 @@ A comprehensive UI/UX refactor of the Camera and Darkroom experience in the Laps
 
 Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
 
-## Current State (v1.3 Shipped)
+## Current State (v1.4 Shipped)
 
-**Shipped:** 2026-01-19
-**Execution time:** 7.1 hours total (v1.1: 4.3h + v1.2: 2.1h + v1.3: 0.7h)
-**Phases:** 10 phases, 20 plans across three milestones
+**Shipped:** 2026-01-20
+**Execution time:** 8.5 hours total (v1.1: 4.3h + v1.2: 2.1h + v1.3: 0.7h + v1.4: 1.4h)
+**Phases:** 18 phases, 37 plans across four milestones
 
-The Firebase SDK Consolidation milestone is complete. The app now uses:
+The Production Ready milestone is complete. The app is now ready for App Store distribution:
+- All Firebase operations use modular API (v22+) - zero namespaced patterns
+- Instagram-style Stories feature with curated top 5 photos per friend
+- Oly branding (aperture-inspired icon, animated splash with shutter effect)
+- iOS build available via EAS internal distribution
+- Server-side darkroom reveals via scheduled Cloud Function (every 2 min)
+- All 3 notification types verified working (photo reveals, friend requests, reactions)
+
+Previous v1.3 features remain:
 - React Native Firebase SDK exclusively (no JS SDK)
-- Unified auth state across all Firebase operations (Auth, Firestore, Storage)
-- Efficient putFile pattern for photo uploads (no blob conversion)
-- Filter.or pattern for complex OR queries in friendship service
+- Unified auth state across all Firebase operations
+- Efficient putFile pattern for photo uploads
 
 Previous v1.2 features remain:
 - Phone-only authentication with SMS verification
-- Real-time phone number formatting, auto-submit on 6 digits
 - ErrorBoundary protection against white-screen crashes
-- Custom app icon (minimalist "L") and splash screen (LAPSE branding)
 
 Previous v1.1 features remain:
-- Single camera tab with darkroom button (badge shows developing/revealed count)
-- Press-and-hold to reveal photos with progress bar and haptic milestones
-- Swipe gestures for triage (left=Archive, right=Journal) like iOS Mail
-- Celebration page with confetti after completing triage
-- Polished SVG icons matching the app's design system
+- Single camera tab with darkroom button
+- Press-and-hold to reveal photos with haptic milestones
+- Swipe gestures for triage like iOS Mail
+- Celebration page with confetti after triage
 
 ## Requirements
 
 ### Validated
+
+**v1.4 Production Ready:**
+- ✓ Migrate all services to Firebase modular API (v22+) — v1.4
+- ✓ Instagram-style Stories feature with friend avatars — v1.4
+- ✓ Curated feed showing top 5 photos per friend by engagement — v1.4
+- ✓ Full-screen Stories viewer with tap/swipe navigation — v1.4
+- ✓ Oly brand identity (aperture icon, animated splash) — v1.4
+- ✓ EAS Build for iOS internal distribution — v1.4
+- ✓ Server-side darkroom reveals via scheduled Cloud Function — v1.4
+- ✓ All 3 notification types working end-to-end — v1.4
 
 **v1.3 Firebase SDK Consolidation:**
 - ✓ Migrate all Firestore services to React Native Firebase — v1.3
@@ -72,7 +86,7 @@ Previous v1.1 features remain:
 
 ### Active
 
-(None - v1.2 complete, ready for next milestone)
+(None - v1.4 complete, ready for next milestone or App Store submission)
 
 ### Out of Scope
 
@@ -85,12 +99,13 @@ Previous v1.1 features remain:
 
 ## Context
 
-**Codebase State (v1.3):**
+**Codebase State (v1.4):**
 - React Native mobile app with Expo managed workflow (SDK ~54.0.30)
-- 25 files modified in v1.3 milestone (+1,853 / -776 lines)
-- Migrated: photoService, darkroomService, feedService, friendshipService, userService, storageService
-- Deleted: firebaseConfig.js (JS SDK init), firestoreService.js (unused legacy)
-- All Firebase operations now use React Native Firebase SDK exclusively
+- 80 files modified in v1.4 milestone (+8,203 / -391 lines)
+- All Firebase services use modular API (v22+) - zero namespaced patterns
+- New components: FriendStoryCard, StoriesViewerModal
+- New Cloud Function: processDarkroomReveals (scheduled every 2 min)
+- iOS build available via EAS internal distribution
 
 **Tech Stack:**
 - Firebase BaaS for backend (Firestore, Storage, Functions)
@@ -101,23 +116,23 @@ Previous v1.1 features remain:
 - expo-haptics for tactile feedback
 - react-native-svg for icon components
 - libphonenumber-js for phone validation and formatting
-- sharp for programmatic asset generation
+- expo-splash-screen for animated splash
+- eas-cli for iOS builds and distribution
 
 **User Feedback:**
-- Unified camera/darkroom flow feels more intuitive
-- Swipe gestures match iOS patterns users already know
-- Haptic feedback provides satisfying tactile confirmation
-- Celebration page adds positive reinforcement
-- Phone auth is simpler than email/password signup
+- Stories feature makes browsing friends' photos more engaging
+- Server-side reveals ensure photos are ready when expected
+- Push notifications keep users engaged
+- Oly branding feels professional and polished
 
 ## Constraints
 
-- **Platform**: Expo Go compatible during development - No features requiring standalone build
-- **Backend**: Keep existing Firebase structure - No schema changes to Firestore collections (photos, darkrooms, users)
+- **Platform**: Standalone iOS build via EAS - Full notification support enabled
+- **Backend**: Keep existing Firebase structure - No schema changes to Firestore collections
 - **Photo Lifecycle**: Preserve existing states - developing/revealed/triaged status logic unchanged
 - **Real-time Sync**: Maintain Firestore listeners - Badge counts and photo updates must remain real-time
 - **Navigation**: React Navigation 7.x - Use existing navigation framework and patterns
-- **Testing**: Physical iOS device - Swipe gestures and haptics must be tested on real hardware
+- **Testing**: Physical iOS device with standalone build for full feature testing
 
 ## Key Decisions
 
@@ -150,6 +165,13 @@ Previous v1.1 features remain:
 | 3-second retry delay after verification errors | Prevents rapid retry spam while not frustrating legitimate users | ✓ Good |
 | Minimalist L letterform for app icon | Matches Lapse brand aesthetic, professional appearance | ✓ Good |
 | Sharp library for programmatic icon generation | Reproducible assets, scripts can be rerun for updates | ✓ Good |
+| or(where(), where()) for OR queries | RN Firebase v22 modular API pattern for complex queries | ✓ Good |
+| Parse document IDs in Firestore rules | Allow reads on non-existent docs for checkFriendshipStatus | ✓ Good |
+| 2-minute schedule for processDarkroomReveals | Balance responsiveness vs cost for server-side reveals | ✓ Good |
+| Bundle ID com.spoodsjs.oly | Original com.oly.app was already registered | ✓ Good |
+| Feed curation top 5 per friend by reactionCount | No comments system exists; engagement = reactions | ✓ Good |
+| Stories viewer with tap-to-advance | Matches Instagram Stories UX patterns | ✓ Good |
+| Animated splash with shutter effect | Reinforces camera app identity | ✓ Good |
 
 ---
-*Last updated: 2026-01-19 after v1.3 milestone*
+*Last updated: 2026-01-20 after v1.4 milestone*

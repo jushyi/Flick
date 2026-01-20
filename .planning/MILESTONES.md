@@ -1,5 +1,33 @@
 # Project Milestones: Lapse Clone
 
+## v1.4 Production Ready (Shipped: 2026-01-20)
+
+**Delivered:** Production-ready iOS build with Firebase Modular API migration, Instagram-style Stories feature, Oly branding, server-side darkroom reveals, and verified push notifications.
+
+**Phases completed:** 11-14 (17 plans total, including 4 inserted fix phases: 12.1, 12.2, 13.1, 13.2)
+
+**Key accomplishments:**
+
+- Migrated all services/screens from Firebase namespaced API to modular API (v22+)
+- Added Feed Stories feature with Instagram-style viewer and curated top 5 per friend
+- Created Oly brand assets (aperture-inspired icon, animated splash screen with shutter effect)
+- Built and deployed iOS app via EAS Build for internal distribution
+- Implemented server-side darkroom reveal via scheduled Cloud Function (every 2 min)
+- Verified all 3 notification types end-to-end (photo reveals, friend requests, reactions)
+
+**Stats:**
+
+- 80 files created/modified
+- 8,203 lines added, 391 removed (net +7,812)
+- 8 phases (4 planned + 4 inserted), 17 plans
+- 1.4 hours execution time (1 day elapsed)
+
+**Git range:** `4db6def` (feat 11-01) → `d19586c` (feat 14-01)
+
+**What's next:** App Store submission, reaction notification debouncing, additional polish
+
+---
+
 ## v1.3 Firebase SDK Consolidation (Shipped: 2026-01-19)
 
 **Delivered:** Consolidated all Firebase operations to React Native Firebase SDK, eliminating JS SDK and unifying auth state across Firestore and Storage.
