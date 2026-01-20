@@ -98,12 +98,12 @@ export const scheduleNextReveal = async (userId) => {
 };
 
 /**
- * Calculate random reveal time (0-2 hours from now)
+ * Calculate random reveal time (0-15 minutes from now)
  * @returns {Timestamp} - Next reveal timestamp
  */
 const calculateNextRevealTime = () => {
   const now = new Date();
-  const randomHours = Math.random() * 2; // Random between 0-2 hours
-  const revealTime = new Date(now.getTime() + randomHours * 60 * 60 * 1000);
+  const randomMinutes = Math.random() * 15; // Random between 0-15 minutes
+  const revealTime = new Date(now.getTime() + randomMinutes * 60 * 1000);
   return Timestamp.fromDate(revealTime);
 };

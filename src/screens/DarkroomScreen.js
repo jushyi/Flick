@@ -51,7 +51,7 @@ const DarkroomScreen = () => {
           error: revealResult.error
         });
 
-        // Schedule next reveal time (0-2 hours from now)
+        // Schedule next reveal time (0-15 minutes from now)
         await scheduleNextReveal(user.uid);
         logger.debug('DarkroomScreen: Next reveal scheduled');
       } else {
