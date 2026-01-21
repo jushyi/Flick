@@ -33,7 +33,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Layout constants
 const TAB_BAR_HEIGHT = 65; // Bottom tab navigator height (includes safe area)
-const FOOTER_HEIGHT = 280; // Covers ~1/3 of screen for iOS-native camera feel
+const FOOTER_HEIGHT = 200; // Covers ~1/4 of screen for iOS-native camera feel
 const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
 const CAMERA_PREVIEW_MARGIN = 16; // Breathing room around camera preview
 const CAMERA_BORDER_RADIUS = 24; // Rounded corners for camera preview
