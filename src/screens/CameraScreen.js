@@ -446,9 +446,6 @@ const CameraScreen = () => {
               <View style={styles.captureButtonInner} />
             </View>
           </TouchableOpacity>
-
-          {/* Spacer to balance the layout */}
-          <View style={styles.circleButton} />
         </View>
       </View>
 
@@ -653,15 +650,6 @@ const styles = StyleSheet.create({
   zoomSuffix: {
     fontSize: 12, // Slightly smaller for the 'x'
     marginLeft: 1,
-  },
-  // Circle button - 50px for flash and flip (10% smaller than original 56px)
-  circleButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
   },
   // Permission screens
   permissionContainer: {
