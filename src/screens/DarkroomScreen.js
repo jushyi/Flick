@@ -365,7 +365,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 16,
+    marginTop: 16,
+    marginBottom: 16,
   },
   triageButtonBar: {
     flexDirection: 'row',

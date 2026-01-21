@@ -266,7 +266,7 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
 
 const styles = StyleSheet.create({
   photoCard: {
-    width: SCREEN_WIDTH * 0.92,
+    width: SCREEN_WIDTH * 0.95,
     alignSelf: 'center',
     borderRadius: 24,
     backgroundColor: '#2C2C2E',
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   photoImage: {
     width: '100%',
-    aspectRatio: 4 / 5,
+    aspectRatio: 3 / 4,
   },
   actionContainer: {
     flexDirection: 'column',
