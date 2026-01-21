@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 15.2 of 18.1 (Camera UI & Darkroom Animation Overhaul)
-Plan: 1 of 3 in current phase (+ FIX + FIX2 + FIX3 plans complete)
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-21 - Completed 15.2-01-FIX3 (3 UAT issues + 1 enhancement fixed)
+Last activity: 2026-01-21 - Completed 15.2-02 (Darkroom card stack button)
 
-Progress: ███░░░░░░░ 30% (v1.5: 3/7 phases partially)
+Progress: ███░░░░░░░ 35% (v1.5: 3/7 phases partially)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 42 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 5 in v1.5)
+- Total plans completed: 43 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 6 in v1.5)
 - Average duration: 17 min
-- Total execution time: 9.2 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 0.7h v1.5)
+- Total execution time: 9.4 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 0.9h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: ███░░░░░░░ 30% (v1.5: 3/7 phases partially)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.1 | 5 | 42 min |
+| v1.5 | 15-18.1 | 6 | 53 min |
 
 ## Accumulated Context
 
@@ -60,9 +60,10 @@ None.
 - Phase 18.1 inserted after Phase 18: Batched Darkroom Triage with Undo (URGENT) - better UX with local decisions, undo capability, and session persistence
 - Phase 15.1 inserted after Phase 15: Darkroom Notification Fix (URGENT) - fix notification spam, add iOS Live Activities, reveal-all-on-tap UX
 - Phase 15.2 inserted after Phase 15.1: Camera UI & Darkroom Animation Overhaul (URGENT) - footer redesign, card stack button, bounce animation, rounded camera edges
+- Phase 15.3 inserted after Phase 15.2: ISS-001 - Add True 0.5x Ultra-Wide Zoom (URGENT) - implement true ultra-wide lens switching instead of digital zoom
 
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Phase 15.2-01-FIX3 complete (3 UAT + 1 enhancement), ready for re-verification
+Stopped at: Completed 15.2-02 (Darkroom card stack button)
 Resume file: None

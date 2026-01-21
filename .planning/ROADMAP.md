@@ -46,11 +46,11 @@ Plans:
 **Goal**: Complete visual redesign of camera controls footer, darkroom card stack button, and capture animation
 **Depends on**: Phase 15.1
 **Research**: Unlikely (React Native Reanimated already in use, internal UI patterns)
-**Plans**: 1/3 complete
+**Plans**: 2/3 complete
 
 Plans:
 - [x] 15.2-01: Camera footer UI redesign - completed 2026-01-21
-- [ ] 15.2-02: Darkroom button card stack (TBD)
+- [x] 15.2-02: Darkroom button card stack - completed 2026-01-21
 - [ ] 15.2-03: Capture animation change (TBD)
 
 **Details:**
@@ -76,10 +76,23 @@ Capture Animation Change:
 - Replace with "bounce" animation on darkroom button (scale up then back to normal)
 - Quick, satisfying feedback indicating photo was captured
 
+#### Phase 15.3: ISS-001 - Add True 0.5x Ultra-Wide Zoom (INSERTED)
+
+**Goal**: Implement true 0.5x ultra-wide zoom via lens switching instead of digital zoom
+**Depends on**: Phase 15.2
+**Research**: Likely (expo-camera lens switching API, device capability detection)
+**Plans**: TBD
+
+Plans:
+- [ ] 15.3-01: TBD (run /gsd:plan-phase 15.3 to break down)
+
+**Details:**
+[To be added during planning]
+
 #### Phase 16: Camera Capture Feedback
 
 **Goal**: Enhanced shutter animation, haptic feedback, and visual confirmation on capture
-**Depends on**: Phase 15.2
+**Depends on**: Phase 15.3
 **Research**: Unlikely (established patterns, existing haptics utility)
 **Plans**: TBD
 
@@ -206,7 +219,7 @@ New behavior:
 | 14. Remote Notification Testing & Polish | v1.4 | 1/1 | Complete | 2026-01-20 |
 | 15. Background Photo Upload | v1.5 | 1/1 | Complete | 2026-01-20 |
 | 15.1 Darkroom Notification Fix | v1.5 | 1/1 | Complete | 2026-01-21 |
-| 15.2 Camera UI & Darkroom Animation Overhaul | v1.5 | 1/3 | In progress | - |
+| 15.2 Camera UI & Darkroom Animation Overhaul | v1.5 | 2/3 | In progress | - |
 | 16. Camera Capture Feedback | v1.5 | 0/? | Not started | - |
 | 17. Darkroom UX Polish | v1.5 | 0/? | Not started | - |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
