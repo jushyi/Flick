@@ -92,15 +92,20 @@ Plans:
 - selectedLens prop wiring for physical lens switching
 - Android gracefully shows 1x, 2x, 3x only
 
-#### Phase 16: Camera Capture Feedback
+#### Phase 16: Camera Capture Feedback (Complete)
 
 **Goal**: Enhanced shutter animation, haptic feedback, and visual confirmation on capture
 **Depends on**: Phase 15.3
 **Research**: Unlikely (established patterns, existing haptics utility)
-**Plans**: TBD
+**Plans**: 1/1 complete
 
 Plans:
-- [ ] 16-01: TBD (run /gsd:plan-phase 16 to break down)
+- [x] 16-01: DSLR-style capture feedback - completed 2026-01-21
+
+**Delivered:**
+- Two-stage DSLR haptic feedback: lightImpact on press-down, mediumImpact on release
+- Pressable component for onPressIn/onPressOut events
+- Flash overlay contained within camera preview bounds with rounded corners
 
 #### Phase 16.1: UI Overhaul for Darkroom Bottom Sheet (INSERTED)
 
@@ -154,6 +159,26 @@ New behavior:
 - "Done" or "Back to Camera" button finalizes and saves all decisions to Firestore
 - If darkroom closed mid-triage (app backgrounded, crash, etc.), session persists via AsyncStorage
 - Reopening darkroom restores the same batch with any previous local decisions intact
+
+#### Phase 18.2: Rename App to Rewind (INSERTED)
+
+**Goal**: Rename the entire app from "Lapse" to "Rewind" across all code, assets, and configuration
+**Depends on**: Phase 18.1
+**Research**: Unlikely (string replacement and asset updates)
+**Plans**: TBD
+
+Plans:
+- [ ] 18.2-01: TBD (run /gsd:plan-phase 18.2 to break down)
+
+**Details:**
+Complete rebrand from "Lapse" to "Rewind":
+- App display name in app.json/app.config.js
+- Bundle identifier updates (if needed)
+- All user-facing strings (splash, about, notifications)
+- Documentation (README, CLAUDE.md, project docs)
+- Firebase project references (if applicable)
+- Any "lapse" references in code comments, variable names, folder names
+- Deep link scheme (lapse:// → rewind://)
 
 ## Completed Milestones
 
@@ -237,8 +262,9 @@ New behavior:
 | 15.1 Darkroom Notification Fix | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 15.2 Camera UI & Darkroom Animation Overhaul | v1.5 | 3/3 | Complete | 2026-01-21 |
 | 15.3 ISS-001 - Add True 0.5x Ultra-Wide Zoom | v1.5 | 1/1 | Complete | 2026-01-21 |
-| 16. Camera Capture Feedback | v1.5 | 0/? | Not started | - |
+| 16. Camera Capture Feedback | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 16.1 UI Overhaul for Darkroom Bottom Sheet | v1.5 | 0/? | Not started | - |
 | 17. Darkroom UX Polish | v1.5 | 0/? | Not started | - |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
+| 18.2 Rename App to Rewind | v1.5 | 0/? | Not started | - |
