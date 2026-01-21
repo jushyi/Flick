@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 ## Current Position
 
-Phase: 16.1 of 18.2 (UI Overhaul for Darkroom Bottom Sheet)
-Plan: 1 of 1 in current phase (+ FIX plan with UAT-003 spinner fixes)
-Status: Phase complete (all UAT issues resolved)
-Last activity: 2026-01-21 - Completed 16.1-01-FIX (UAT-003 spinner fixes)
+Phase: 16.2 of 18.2 (Fix 0.5x Ultra-Wide Zoom)
+Plan: 1 of 1 in current phase
+Status: Phase complete
+Last activity: 2026-01-21 - Completed 16.2-01-PLAN.md
 
-Progress: ███████░░░ 60% (v1.5: 7/10 phases complete)
+Progress: ███████░░░ 63% (v1.5: 8/11 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 10 in v1.5)
+- Total plans completed: 48 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 11 in v1.5)
 - Average duration: 16 min
-- Total execution time: 9.8 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 1.3h v1.5)
+- Total execution time: 9.9 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 1.4h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: ███████░░░ 60% (v1.5: 7/10 phases complete)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.2 | 10 | 82 min |
+| v1.5 | 15-18.2 | 11 | 85 min |
 
 ## Accumulated Context
 
@@ -64,9 +64,10 @@ None.
 - Phase 16.1 inserted after Phase 16: UI Overhaul for Darkroom Bottom Sheet (URGENT) - redesign darkroom bottom sheet UI for improved visual polish
 - Phase 18.2 inserted after Phase 18.1: Rename App to Rewind (URGENT) - complete rebrand from "Lapse" to "Rewind" across all code and assets
 - Phase 16.2 inserted after Phase 16.1: Fix 0.5x Ultra-Wide Zoom (URGENT) - 0.5x shows same as 1x, camera not switching properly
+- Phase 16.3 inserted after Phase 16.2: Fix React Native Firebase Warnings (URGENT) - resolve package.json exports errors and migrate deprecated namespaced API
 
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 16.1-01-FIX (UAT-003 spinner fixes) - Phase 16.1 fully complete
+Stopped at: Completed 16.2-01-PLAN.md - Phase 16.2 complete
 Resume file: None

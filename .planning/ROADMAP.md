@@ -125,23 +125,40 @@ Plans:
 - Spinner that speeds up 2x during hold
 - Crescendo haptic feedback (4 intensity phases)
 
-#### Phase 16.2: Fix 0.5x Ultra-Wide Zoom (INSERTED)
+#### Phase 16.2: Fix 0.5x Ultra-Wide Zoom (INSERTED) - Complete
 
 **Goal**: Fix 0.5x zoom which appears to be showing same view as 1x and not switching cameras properly
 **Depends on**: Phase 16.1
-**Research**: Likely (need to investigate why lens switching stopped working)
+**Research**: Complete
+**Plans**: 1/1 complete
+
+Plans:
+- [x] 16.2-01: Fix ultra-wide lens switching with explicit wideAngleLens - completed 2026-01-21
+
+**Delivered:**
+- Fixed expo-camera lens switching by using explicit wideAngleLens ("Back Camera") for 1x/2x/3x instead of null
+- Added wideAngleLens useMemo for explicit lens detection
+- Added debug logging for lens switching
+
+#### Phase 16.3: Fix React Native Firebase Warnings (INSERTED)
+
+**Goal**: Resolve @react-native-firebase/app package warnings and migrate deprecated namespaced API to modular SDK
+**Depends on**: Phase 16.2
+**Research**: Likely (need to check package version compatibility and migration guide)
 **Plans**: TBD
 
 Plans:
-- [ ] 16.2-01: TBD (run /gsd:plan-phase 16.2 to break down)
+- [ ] 16.3-01: TBD (run /gsd:plan-phase 16.3 to break down)
 
 **Details:**
-Issue: The 0.5x ultra-wide zoom functionality (implemented in Phase 15.3) appears broken - shows same view as 1x and doesn't switch cameras properly.
+Two issues to resolve:
+1. Invalid package.json exports configuration in @react-native-firebase/app - files referenced in "exports" don't exist (nativeModule, NativeFirebaseError)
+2. Deprecated namespaced API usage - need to migrate to modular SDK per https://rnfirebase.io/migrating-to-v22
 
 #### Phase 17: Darkroom UX Polish
 
 **Goal**: Improved reveal animations, smoother triage gestures, better navigation flow, and polished empty/loading states
-**Depends on**: Phase 16.2
+**Depends on**: Phase 16.3
 **Research**: Unlikely (internal patterns, React Native Reanimated already in use)
 **Plans**: TBD
 
@@ -282,7 +299,8 @@ Complete rebrand from "Lapse" to "Rewind":
 | 15.3 ISS-001 - Add True 0.5x Ultra-Wide Zoom | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 16. Camera Capture Feedback | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 16.1 UI Overhaul for Darkroom Bottom Sheet | v1.5 | 1/1 | Complete | 2026-01-21 |
-| 16.2 Fix 0.5x Ultra-Wide Zoom | v1.5 | 0/? | Not started | - |
+| 16.2 Fix 0.5x Ultra-Wide Zoom | v1.5 | 1/1 | Complete | 2026-01-21 |
+| 16.3 Fix React Native Firebase Warnings | v1.5 | 0/? | Not started | - |
 | 17. Darkroom UX Polish | v1.5 | 0/? | Not started | - |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
