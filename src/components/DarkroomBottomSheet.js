@@ -60,21 +60,19 @@ const COLORS = {
   fillGradientEnd: '#A855F7',     // Lighter fill right
 };
 
-// Spinner SVG-like icon component using View (no svg dependency)
+// YouTube-style spinner: circular ring with play triangle in center
 const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
   return (
     <Animated.View
       style={[
-        styles.spinnerContainer,
-        {
-          transform: [{ rotate: rotation }],
-        },
+        styles.spinnerOuter,
+        { transform: [{ rotate: rotation }] }
       ]}
     >
-      {/* Create spinner using 3 dots in a circular pattern */}
-      <View style={[styles.spinnerDot, { top: 0, left: '50%', marginLeft: -3, backgroundColor: color }]} />
-      <View style={[styles.spinnerDot, { bottom: 2, left: 2, backgroundColor: color, opacity: 0.7 }]} />
-      <View style={[styles.spinnerDot, { bottom: 2, right: 2, backgroundColor: color, opacity: 0.4 }]} />
+      {/* Circular ring border */}
+      <View style={[styles.spinnerRing, { borderColor: color }]} />
+      {/* Play triangle in center */}
+      <View style={[styles.playTriangle, { borderLeftColor: color }]} />
     </Animated.View>
   );
 };
@@ -104,6 +102,9 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
       spinnerAnimation.current.stop();
     }
 
+    // Reset rotation value to 0 before starting
+    spinnerRotation.setValue(0);
+
     const duration = fast ? SPINNER_FAST_DURATION : SPINNER_NORMAL_DURATION;
 
     spinnerAnimation.current = Animated.loop(
@@ -112,6 +113,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
         duration,
         easing: Easing.linear,
         useNativeDriver: true,
+        isInteraction: false,
       })
     );
 
@@ -459,7 +461,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                 <View style={styles.holdButtonContent}>
                   <SpinnerIcon rotation={spinnerRotationDeg} />
                   <Text style={styles.holdButtonText}>
-                    {isPressing ? 'Opening...' : 'Hold to open photos'}
+                    {isPressing ? 'Revealing...' : 'Hold to reveal photos'}
                   </Text>
                 </View>
               </View>
@@ -587,17 +589,29 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     marginLeft: 12,
   },
-  // Spinner
-  spinnerContainer: {
+  // Spinner - YouTube-style ring with play triangle
+  spinnerOuter: {
     width: 24,
     height: 24,
-    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  spinnerDot: {
+  spinnerRing: {
     position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  playTriangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    marginLeft: 3, // Offset to center visually
   },
   developingText: {
     fontSize: 16,
