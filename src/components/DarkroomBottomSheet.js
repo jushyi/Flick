@@ -30,7 +30,7 @@ const HOLD_DURATION = 1600;
 
 // Spinner rotation durations
 const SPINNER_NORMAL_DURATION = 2000;
-const SPINNER_FAST_DURATION = 1000; // 2x faster during hold
+const SPINNER_FAST_DURATION = 667; // 3x faster during hold
 
 // Crescendo haptic configuration
 const HAPTIC_CONFIG = {
@@ -60,20 +60,32 @@ const COLORS = {
   fillGradientEnd: '#A855F7',     // Lighter fill right
 };
 
-// YouTube-style spinner: circular ring with play triangle in center
+// YouTube-style spinner: segmented ring spins around static play triangle
 const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
   return (
-    <Animated.View
-      style={[
-        styles.spinnerOuter,
-        { transform: [{ rotate: rotation }] }
-      ]}
-    >
-      {/* Circular ring border */}
-      <View style={[styles.spinnerRing, { borderColor: color }]} />
-      {/* Play triangle in center */}
+    <View style={styles.spinnerOuter}>
+      {/* Rotating segmented ring - 3/4 arc (top, right, bottom visible, left gap) */}
+      <Animated.View
+        style={[
+          styles.spinnerRingContainer,
+          { transform: [{ rotate: rotation }] }
+        ]}
+      >
+        <View
+          style={[
+            styles.spinnerRing,
+            {
+              borderTopColor: color,
+              borderRightColor: color,
+              borderBottomColor: color,
+              borderLeftColor: 'transparent',
+            }
+          ]}
+        />
+      </Animated.View>
+      {/* Static play triangle in center */}
       <View style={[styles.playTriangle, { borderLeftColor: color }]} />
-    </Animated.View>
+    </View>
   );
 };
 
@@ -589,15 +601,21 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     marginLeft: 12,
   },
-  // Spinner - YouTube-style ring with play triangle
+  // Spinner - segmented ring spins around static play triangle
   spinnerOuter: {
     width: 24,
     height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  spinnerRing: {
+  spinnerRingContainer: {
     position: 'absolute',
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spinnerRing: {
     width: 24,
     height: 24,
     borderRadius: 12,
