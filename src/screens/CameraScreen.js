@@ -130,12 +130,15 @@ const CameraScreen = () => {
     // Only show 0.5x on iOS, with ultra-wide support, on back camera
     if (Platform.OS === 'ios' && hasUltraWide && facing === 'back') {
       // Find the actual ultra-wide lens string from availableLenses
+      // iOS lens names: builtInUltraWideCamera, builtInWideAngleCamera, etc.
       const ultraWideLens = availableLenses.find(lens =>
-        lens.toLowerCase().includes('ultrawide')
+        lens.toLowerCase().includes('ultrawide') ||
+        lens.includes('UltraWide')
       );
       logger.debug('CameraScreen: Building zoom levels with ultra-wide', {
         ultraWideLens,
         facing,
+        availableLenses,
       });
       return [
         { ...ULTRA_WIDE_LEVEL, lens: ultraWideLens },
@@ -144,6 +147,37 @@ const CameraScreen = () => {
     }
     return ZOOM_LEVELS_BASE;
   }, [hasUltraWide, facing, availableLenses]);
+
+  // Fallback: Try to get lenses via async method when camera ref is available
+  useEffect(() => {
+    const checkLensesAsync = async () => {
+      if (Platform.OS === 'ios' && cameraRef.current && !hasUltraWide && facing === 'back') {
+        try {
+          const lenses = await cameraRef.current.getAvailableLensesAsync();
+          logger.info('CameraScreen: Got lenses via async method', { lenses });
+          if (lenses && lenses.length > 0) {
+            setAvailableLenses(lenses);
+            const hasUW = lenses.some(lens =>
+              lens.toLowerCase().includes('ultrawide') ||
+              lens.includes('UltraWide')
+            );
+            setHasUltraWide(hasUW);
+            if (hasUW) {
+              logger.info('CameraScreen: Ultra-wide lens detected via async method');
+            }
+          }
+        } catch (error) {
+          logger.debug('CameraScreen: getAvailableLensesAsync not available or failed', {
+            error: error.message,
+          });
+        }
+      }
+    };
+
+    // Small delay to ensure camera is mounted
+    const timeoutId = setTimeout(checkLensesAsync, 500);
+    return () => clearTimeout(timeoutId);
+  }, [facing, hasUltraWide]);
 
   // Initialize upload queue on app start
   useEffect(() => {
@@ -365,16 +399,22 @@ const CameraScreen = () => {
           zoom={zoom.cameraZoom}
           onAvailableLensesChanged={(event) => {
             // iOS only: Detect available lenses including ultra-wide
-            if (Platform.OS === 'ios') {
-              logger.debug('CameraScreen: Available lenses detected', { lenses: event.lenses });
+            if (Platform.OS === 'ios' && event?.lenses) {
+              logger.info('CameraScreen: onAvailableLensesChanged fired', {
+                lenses: event.lenses,
+                count: event.lenses.length,
+              });
               setAvailableLenses(event.lenses);
+              // Check for ultra-wide: builtInUltraWideCamera or similar
               const hasUW = event.lenses.some(lens =>
-                lens.toLowerCase().includes('ultrawide')
+                lens.toLowerCase().includes('ultrawide') ||
+                lens.includes('UltraWide')
               );
               setHasUltraWide(hasUW);
-              if (hasUW) {
-                logger.info('CameraScreen: Ultra-wide lens available');
-              }
+              logger.info('CameraScreen: Ultra-wide detection result', {
+                hasUltraWide: hasUW,
+                lenses: event.lenses,
+              });
             }
           }}
           {...(Platform.OS === 'ios' && selectedLens && { selectedLens })}
