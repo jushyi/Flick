@@ -10,7 +10,8 @@ import {
   Platform,
   Easing,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+// Note: LinearGradient removed due to "unimplemented component" error in Expo Go
+// Using solid color Views as a fallback
 import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 
@@ -443,22 +444,10 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
               onResponderRelease={handlePressOut}
               onResponderTerminate={handlePressOut}
             >
-              {/* Base purple gradient */}
-              <LinearGradient
-                colors={[COLORS.buttonGradientStart, COLORS.buttonGradientEnd]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.holdButtonGradient}
-              >
+              {/* Base purple background (solid color fallback) */}
+              <View style={styles.holdButtonBase}>
                 {/* Fill overlay that animates left-to-right */}
-                <Animated.View style={[styles.fillOverlay, { width: progressWidth }]}>
-                  <LinearGradient
-                    colors={[COLORS.fillGradientStart, COLORS.fillGradientEnd]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                </Animated.View>
+                <Animated.View style={[styles.fillOverlay, { width: progressWidth, backgroundColor: COLORS.fillGradientEnd }]} />
 
                 {/* Button content */}
                 <View style={styles.holdButtonContent}>
@@ -467,7 +456,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                     {isPressing ? 'Opening...' : 'Hold to open photos'}
                   </Text>
                 </View>
-              </LinearGradient>
+              </View>
             </View>
           )}
 
@@ -564,13 +553,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
-  holdButtonGradient: {
+  holdButtonBase: {
     width: '100%',
     height: 64,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    backgroundColor: COLORS.buttonGradientEnd, // Solid purple (#7C3AED)
   },
   fillOverlay: {
     position: 'absolute',
