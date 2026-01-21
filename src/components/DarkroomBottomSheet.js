@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SHEET_HEIGHT = 320; // Approximate height of sheet content
 
 const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose, onComplete }) => {
   const [isPressing, setIsPressing] = useState(false);
@@ -24,18 +25,31 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
   });
   const progressValue = useRef(new Animated.Value(0)).current;
   const progressAnimation = useRef(null);
+  const slideAnim = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
   const totalCount = (revealedCount || 0) + (developingCount || 0);
   const hasRevealedPhotos = revealedCount > 0;
 
+  // Animate sheet slide when visibility changes
   useEffect(() => {
     if (visible) {
+      // Slide up when opening
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 65,
+        friction: 11,
+        useNativeDriver: true,
+      }).start();
+
       logger.debug('DarkroomBottomSheet: Component mounted', {
         revealedCount,
         developingCount,
         totalCount,
         hasRevealedPhotos,
       });
+    } else {
+      // Reset to off-screen position when closed
+      slideAnim.setValue(SHEET_HEIGHT);
     }
 
     return () => {
@@ -45,7 +59,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
         logger.debug('DarkroomBottomSheet: Component unmounted, animation stopped');
       }
     };
-  }, [visible, revealedCount, developingCount, totalCount, hasRevealedPhotos]);
+  }, [visible, revealedCount, developingCount, totalCount, hasRevealedPhotos, slideAnim]);
 
   useEffect(() => {
     // Reset progress when modal visibility changes
@@ -180,19 +194,26 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={handleBackdropPress}
     >
       <View style={styles.container}>
-        {/* Backdrop */}
+        {/* Backdrop - fades in with modal */}
         <TouchableOpacity
           style={styles.backdrop}
           activeOpacity={1}
           onPress={handleBackdropPress}
         />
 
-        {/* Bottom Sheet */}
-        <View style={styles.sheet}>
+        {/* Bottom Sheet - slides up separately */}
+        <Animated.View
+          style={[
+            styles.sheet,
+            {
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
           {/* Header */}
           <Text style={styles.headerText}>
             {hasRevealedPhotos ? 'Press and hold to reveal' : 'Darkroom'}
@@ -242,7 +263,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
               Photos are still developing...{'\n'}Check back soon!
             </Text>
           )}
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
