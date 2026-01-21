@@ -22,9 +22,10 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Layout constants
 const TAB_BAR_HEIGHT = 65; // Bottom tab navigator height (includes safe area)
-const FOOTER_HEIGHT = 160;
+const FOOTER_HEIGHT = 280; // Covers ~1/3 of screen for iOS-native camera feel
 const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
-const FLOATING_CONTROL_OFFSET = 4; // Gap above footer edge
+const CAMERA_PREVIEW_MARGIN = 16; // Breathing room around camera preview
+const CAMERA_BORDER_RADIUS = 24; // Rounded corners for camera preview
 
 // Flash icon SVG component - matches bottom nav design system
 const FlashIcon = ({ color = '#FFFFFF', mode = 'off' }) => (
@@ -343,7 +344,7 @@ const CameraScreen = () => {
 
       {/* Footer Bar - solid dark background */}
       <View style={styles.footerBar}>
-        {/* Footer Controls: Darkroom, Capture, Debug */}
+        {/* Footer Controls: Darkroom button (left) and Capture button (center) */}
         <View style={styles.footerControls}>
           {/* Darkroom Button (left of capture) */}
           <DarkroomButton
@@ -352,28 +353,19 @@ const CameraScreen = () => {
             bounceAnim={badgeBounce}
           />
 
-          {/* Capture Button (center) - no spinner, flash provides instant feedback */}
+          {/* Capture Button (center) - 10% larger with spaced ring */}
           <TouchableOpacity
             style={[
-              styles.captureButton,
+              styles.captureButtonOuter,
               isCapturing && styles.captureButtonDisabled,
             ]}
             onPress={takePicture}
             disabled={isCapturing}
             activeOpacity={0.7}
           >
-            <View style={styles.captureButtonInner} />
-          </TouchableOpacity>
-
-          {/* Debug Button (right of capture) */}
-          <TouchableOpacity
-            style={[styles.footerControlButton, styles.debugButton]}
-            onPress={() => {
-              logger.info('CameraScreen: Debug - Direct navigation to Darkroom');
-              navigation.navigate('Darkroom');
-            }}
-          >
-            <Text style={styles.debugIcon}>🌙</Text>
+            <View style={styles.captureButton}>
+              <View style={styles.captureButtonInner} />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -543,12 +535,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
   },
-  debugButton: {
-    backgroundColor: 'rgba(139, 0, 139, 0.6)', // Purple tint for debug button
-  },
-  debugIcon: {
-    fontSize: 24,
-  },
   // Floating controls - positioned above footer edge (accounting for tab bar)
   floatingControls: {
     position: 'absolute',
@@ -618,24 +604,36 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
-  // Capture button
+  // Capture button - 88px (10% larger) with thin spaced ring
+  captureButtonOuter: {
+    width: 100, // 88px button + 6px gap on each side + 2px ring = 100px
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   captureButtonDisabled: {
     opacity: 0.5,
   },
   captureButtonInner: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: '#FFFFFF',
   },
   // Animated photo
