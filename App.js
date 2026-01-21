@@ -90,18 +90,19 @@ export default function App() {
 
         if (navigationData.success && navigationRef.current?.isReady()) {
           const { screen, params } = navigationData.data;
-          console.log('Navigating to:', screen, 'with params:', params);
+          logger.info('App: Notification tap navigating', { screen, params });
 
           // Navigate to the appropriate screen based on notification type
-          if (screen === 'Darkroom') {
-            // Navigate to Camera tab first
+          if (screen === 'Camera') {
+            // Navigate to Camera tab with all params (openDarkroom, revealAll, revealedCount)
+            // First navigate to ensure we're on the right tab
             navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
             // Then set params after a small delay to ensure the screen is focused
             // This works around React Navigation's nested navigator param propagation issue
             setTimeout(() => {
               navigationRef.current.navigate('MainTabs', {
                 screen: 'Camera',
-                params: { openDarkroom: true },
+                params: params,
               });
             }, 100);
           } else if (screen === 'Feed' || screen === 'Profile') {

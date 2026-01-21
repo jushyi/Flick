@@ -170,20 +170,26 @@ export const handleNotificationReceived = (notification) => {
 export const handleNotificationTapped = (notification) => {
   try {
     const { data } = notification.request.content;
-    const { type, photoId, friendshipId } = data || {};
+    const { type, photoId, friendshipId, revealAll, revealedCount } = data || {};
 
-    logger.debug('Notification tapped', { type, photoId, friendshipId });
+    logger.debug('Notification tapped', { type, photoId, friendshipId, revealAll, revealedCount });
 
     // Return navigation data based on notification type
     // The actual navigation will be handled by App.js using this data
     switch (type) {
       case 'photo_reveal':
+        // Include revealAll and revealedCount for auto-reveal behavior
+        // Values come as strings from push notification data, convert to proper types
         return {
           success: true,
           data: {
             type: 'photo_reveal',
-            screen: 'Darkroom',
-            params: {},
+            screen: 'Camera',
+            params: {
+              openDarkroom: true,
+              revealAll: revealAll === 'true' || revealAll === true,
+              revealedCount: parseInt(revealedCount, 10) || 0,
+            },
           },
         };
 
