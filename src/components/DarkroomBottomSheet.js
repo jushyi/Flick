@@ -383,7 +383,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
     if (hasRevealedPhotos) {
       return {
         color: COLORS.statusReady,
-        text: `(${revealedCount}) ready to reveal`,
+        text: `${revealedCount} photos ready to reveal`,
       };
     }
     return {
