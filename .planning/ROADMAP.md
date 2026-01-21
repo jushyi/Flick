@@ -140,20 +140,21 @@ Plans:
 - Added wideAngleLens useMemo for explicit lens detection
 - Added debug logging for lens switching
 
-#### Phase 16.3: Fix React Native Firebase Warnings (INSERTED)
+#### Phase 16.3: Fix React Native Firebase Warnings (INSERTED) - Complete
 
 **Goal**: Resolve @react-native-firebase/app package warnings and migrate deprecated namespaced API to modular SDK
 **Depends on**: Phase 16.2
-**Research**: Likely (need to check package version compatibility and migration guide)
-**Plans**: TBD
+**Research**: Complete
+**Plans**: 1/1 complete
 
 Plans:
-- [ ] 16.3-01: TBD (run /gsd:plan-phase 16.3 to break down)
+- [x] 16.3-01: Migrate App.js and friendshipService.js to modular API - completed 2026-01-21
 
-**Details:**
-Two issues to resolve:
-1. Invalid package.json exports configuration in @react-native-firebase/app - files referenced in "exports" don't exist (nativeModule, NativeFirebaseError)
-2. Deprecated namespaced API usage - need to migrate to modular SDK per https://rnfirebase.io/migrating-to-v22
+**Delivered:**
+- Migrated App.js from namespaced `auth()` to modular `getAuth()` API
+- Removed unused `firestore` default import from friendshipService.js
+- All 15+ Firebase imports now use modular API pattern
+- Zero deprecation warnings from @react-native-firebase packages
 
 #### Phase 17: Darkroom UX Polish
 
@@ -300,7 +301,7 @@ Complete rebrand from "Lapse" to "Rewind":
 | 16. Camera Capture Feedback | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 16.1 UI Overhaul for Darkroom Bottom Sheet | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 16.2 Fix 0.5x Ultra-Wide Zoom | v1.5 | 1/1 | Complete | 2026-01-21 |
-| 16.3 Fix React Native Firebase Warnings | v1.5 | 0/? | Not started | - |
+| 16.3 Fix React Native Firebase Warnings | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 17. Darkroom UX Polish | v1.5 | 0/? | Not started | - |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
