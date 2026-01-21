@@ -266,11 +266,13 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight }) => {
 
 const styles = StyleSheet.create({
   photoCard: {
-    width: SCREEN_WIDTH * 0.9,
+    width: SCREEN_WIDTH * 0.92,
     alignSelf: 'center',
     borderRadius: 24,
     backgroundColor: '#2C2C2E',
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#000000',
     // iOS-style shadow for depth
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -280,7 +282,7 @@ const styles = StyleSheet.create({
   },
   photoImage: {
     width: '100%',
-    aspectRatio: 3 / 4,
+    aspectRatio: 4 / 5,
   },
   actionContainer: {
     flexDirection: 'column',
