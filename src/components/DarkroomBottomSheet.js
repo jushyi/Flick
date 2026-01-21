@@ -10,8 +10,7 @@ import {
   Platform,
   Easing,
 } from 'react-native';
-// LinearGradient from expo-linear-gradient has compatibility issues with Expo SDK 54
-// Using a custom gradient simulation with layered Views
+// Note: Using solid colors for now. Gradients require expo-linear-gradient rebuild.
 import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 
@@ -80,40 +79,6 @@ const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
   );
 };
 
-// Custom horizontal gradient using layered Views (fallback for expo-linear-gradient issues)
-const HorizontalGradient = ({ colors, style, children }) => {
-  const [startColor, endColor] = colors;
-  // Create a gradient effect using 5 color stops
-  const stops = 5;
-  const gradientLayers = [];
-
-  for (let i = 0; i < stops; i++) {
-    const ratio = i / (stops - 1);
-    // Simple linear interpolation between colors
-    const opacity = 1;
-    gradientLayers.push(
-      <View
-        key={i}
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: `${(i / stops) * 100}%`,
-          width: `${100 / stops}%`,
-          backgroundColor: i < stops / 2 ? startColor : endColor,
-          opacity: i === 0 ? 1 : i === stops - 1 ? 1 : 0.8,
-        }}
-      />
-    );
-  }
-
-  return (
-    <View style={[{ overflow: 'hidden' }, style]}>
-      {gradientLayers}
-      {children}
-    </View>
-  );
-};
 
 const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose, onComplete }) => {
   const [isPressing, setIsPressing] = useState(false);
@@ -480,18 +445,15 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
               onResponderRelease={handlePressOut}
               onResponderTerminate={handlePressOut}
             >
-              {/* Base purple gradient */}
-              <HorizontalGradient
-                colors={[COLORS.buttonGradientStart, COLORS.buttonGradientEnd]}
-                style={styles.holdButtonGradient}
-              >
+              {/* Base purple button (solid color - gradients require rebuild) */}
+              <View style={styles.holdButtonBase}>
                 {/* Fill overlay that animates left-to-right */}
-                <Animated.View style={[styles.fillOverlay, { width: progressWidth }]}>
-                  <HorizontalGradient
-                    colors={[COLORS.fillGradientStart, COLORS.fillGradientEnd]}
-                    style={StyleSheet.absoluteFill}
-                  />
-                </Animated.View>
+                <Animated.View
+                  style={[
+                    styles.fillOverlay,
+                    { width: progressWidth, backgroundColor: COLORS.fillGradientEnd }
+                  ]}
+                />
 
                 {/* Button content */}
                 <View style={styles.holdButtonContent}>
@@ -500,7 +462,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                     {isPressing ? 'Opening...' : 'Hold to open photos'}
                   </Text>
                 </View>
-              </HorizontalGradient>
+              </View>
             </View>
           )}
 
@@ -597,13 +559,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
-  holdButtonGradient: {
+  holdButtonBase: {
     width: '100%',
     height: 64,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    backgroundColor: COLORS.buttonGradientEnd, // Solid purple (#7C3AED)
   },
   fillOverlay: {
     position: 'absolute',
