@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   Animated,
   Dimensions,
   ActivityIndicator,
@@ -15,7 +16,7 @@ import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/nativ
 import { getDarkroomCounts } from '../services/firebase/photoService';
 import { addToQueue, initializeQueue } from '../services/uploadQueueService';
 import logger from '../utils/logger';
-import { lightImpact } from '../utils/haptics';
+import { lightImpact, mediumImpact } from '../utils/haptics';
 import Svg, { Path } from 'react-native-svg';
 import { DarkroomBottomSheet } from '../components';
 
@@ -353,7 +354,8 @@ const CameraScreen = () => {
 
     try {
       setIsCapturing(true);
-      lightImpact();
+      // Second stage: medium haptic on release (like full shutter click)
+      mediumImpact();
 
       // INSTANT FEEDBACK: Flash fires immediately on tap!
       // Camera capture runs in parallel with flash animation
@@ -487,20 +489,24 @@ const CameraScreen = () => {
             fanSpreadAnim={cardFanSpread}
           />
 
-          {/* Capture Button (center) - 10% larger with spaced ring */}
-          <TouchableOpacity
-            style={[
+          {/* Capture Button (center) - 10% larger with spaced ring, two-stage haptic */}
+          <Pressable
+            style={({ pressed }) => [
               styles.captureButtonOuter,
               isCapturing && styles.captureButtonDisabled,
+              pressed && styles.captureButtonPressed,
             ]}
-            onPress={takePicture}
+            onPressIn={() => {
+              // First stage: light haptic on finger down (like half-press shutter)
+              lightImpact();
+            }}
+            onPressOut={takePicture}
             disabled={isCapturing}
-            activeOpacity={0.7}
           >
             <View style={styles.captureButton}>
               <View style={styles.captureButtonInner} />
             </View>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Invisible spacer to balance darkroom button and center capture button */}
           <View style={styles.footerSpacer} />
@@ -879,6 +885,9 @@ const styles = StyleSheet.create({
   },
   captureButtonDisabled: {
     opacity: 0.5,
+  },
+  captureButtonPressed: {
+    opacity: 0.7,
   },
   captureButtonInner: {
     width: 76,
