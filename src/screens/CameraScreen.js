@@ -563,14 +563,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
-  // Camera container - with rounded corners and margin
+  // Camera container - edge-to-edge with rounded bottom corners only
   cameraContainer: {
     position: 'absolute',
-    top: CAMERA_PREVIEW_MARGIN,
-    left: CAMERA_PREVIEW_MARGIN,
-    right: CAMERA_PREVIEW_MARGIN,
-    height: CAMERA_HEIGHT - CAMERA_PREVIEW_MARGIN * 2,
-    borderRadius: CAMERA_BORDER_RADIUS,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: CAMERA_HEIGHT,
+    borderBottomLeftRadius: CAMERA_BORDER_RADIUS,
+    borderBottomRightRadius: CAMERA_BORDER_RADIUS,
     overflow: 'hidden',
     borderWidth: 0, // Explicitly remove any border
     backgroundColor: '#000000', // Match container background to prevent outline artifacts
@@ -583,12 +584,12 @@ const styles = StyleSheet.create({
   floatingControls: {
     position: 'absolute',
     bottom: TAB_BAR_HEIGHT + FOOTER_HEIGHT + FLOATING_BUTTON_OFFSET,
-    left: CAMERA_PREVIEW_MARGIN,
-    right: CAMERA_PREVIEW_MARGIN,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
   },
   // Floating button - 45px (10% smaller than 50px), for flash and flip
   floatingButton: {
