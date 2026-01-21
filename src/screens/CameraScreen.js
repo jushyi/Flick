@@ -15,8 +15,19 @@ import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/nativ
 import { getDarkroomCounts } from '../services/firebase/photoService';
 import { addToQueue, initializeQueue } from '../services/uploadQueueService';
 import logger from '../utils/logger';
+import { lightImpact } from '../utils/haptics';
 import Svg, { Path } from 'react-native-svg';
 import { DarkroomBottomSheet } from '../components';
+
+// Zoom level configuration
+// expo-camera zoom is 0-1 range where 0 is no zoom and 1 is max zoom
+// Mapping: 0.5x=0, 1x=0.17, 2x=0.33, 3x=0.5
+const ZOOM_LEVELS = [
+  { label: '.5', value: 0.5, cameraZoom: 0 },
+  { label: '1x', value: 1, cameraZoom: 0.17 },
+  { label: '2', value: 2, cameraZoom: 0.33 },
+  { label: '3', value: 3, cameraZoom: 0.5 },
+];
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -92,6 +103,7 @@ const CameraScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState('off');
+  const [zoom, setZoom] = useState(ZOOM_LEVELS[1]); // Default to 1x
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [darkroomCounts, setDarkroomCounts] = useState({
@@ -189,6 +201,14 @@ const CameraScreen = () => {
       if (current === 'on') return 'auto';
       return 'off';
     });
+  };
+
+  const handleZoomChange = (zoomLevel) => {
+    if (zoomLevel.value !== zoom.value) {
+      lightImpact();
+      setZoom(zoomLevel);
+      logger.debug('CameraScreen: Zoom level changed', { zoom: zoomLevel.value });
+    }
   };
 
   // Play flash effect on capture (simulates camera shutter)
@@ -342,11 +362,36 @@ const CameraScreen = () => {
           style={styles.camera}
           facing={facing}
           flash={flash}
+          zoom={zoom.cameraZoom}
         />
       </View>
 
       {/* Footer Bar - solid dark background */}
       <View style={styles.footerBar}>
+        {/* Zoom Control Bar - centered above main controls */}
+        <View style={styles.zoomBar}>
+          {ZOOM_LEVELS.map((level) => (
+            <TouchableOpacity
+              key={level.value}
+              style={[
+                styles.zoomButton,
+                zoom.value === level.value && styles.zoomButtonActive,
+              ]}
+              onPress={() => handleZoomChange(level)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.zoomButtonText,
+                  zoom.value === level.value && styles.zoomButtonTextActive,
+                ]}
+              >
+                {level.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Main Controls Row: Flash (left), Darkroom, Capture, Flip (right) */}
         <View style={styles.footerControls}>
           {/* Flash Button (far left) */}
@@ -533,6 +578,33 @@ const styles = StyleSheet.create({
     gap: 24,
     paddingBottom: 20,
     paddingHorizontal: 16,
+  },
+  // Zoom control bar - same height as circle buttons
+  zoomBar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 25,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 24,
+  },
+  zoomButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  zoomButtonActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  zoomButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  zoomButtonTextActive: {
+    color: '#FFFFFF',
   },
   // Circle button - 50px for flash and flip (10% smaller than original 56px)
   circleButton: {
