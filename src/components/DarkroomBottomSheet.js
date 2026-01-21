@@ -60,36 +60,28 @@ const COLORS = {
   fillGradientEnd: '#A855F7',     // Lighter fill right
 };
 
-// YouTube-style spinner: 2/3 solid arc + dots, spins around static play triangle
+// Spinner: 3/4 solid arc with gap, spins around static play triangle
 const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
   return (
     <View style={styles.spinnerOuter}>
-      {/* Rotating ring container */}
+      {/* Rotating 3/4 arc ring */}
       <Animated.View
         style={[
           styles.spinnerRingContainer,
           { transform: [{ rotate: rotation }] }
         ]}
       >
-        {/* 2/3 solid arc (top and right sides) */}
         <View
           style={[
             styles.spinnerRing,
             {
               borderTopColor: color,
               borderRightColor: color,
-              borderBottomColor: 'transparent',
+              borderBottomColor: color,
               borderLeftColor: 'transparent',
             }
           ]}
         />
-        {/* 6 small dots for remaining 1/3 arc (bottom-left quadrant, ~180° to ~270°) */}
-        <View style={[styles.spinnerDot, styles.spinnerDot1, { backgroundColor: color }]} />
-        <View style={[styles.spinnerDot, styles.spinnerDot2, { backgroundColor: color }]} />
-        <View style={[styles.spinnerDot, styles.spinnerDot3, { backgroundColor: color }]} />
-        <View style={[styles.spinnerDot, styles.spinnerDot4, { backgroundColor: color }]} />
-        <View style={[styles.spinnerDot, styles.spinnerDot5, { backgroundColor: color }]} />
-        <View style={[styles.spinnerDot, styles.spinnerDot6, { backgroundColor: color }]} />
       </Animated.View>
       {/* Static play triangle in center */}
       <View style={[styles.playTriangle, { borderLeftColor: color }]} />
@@ -609,7 +601,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     marginLeft: 12,
   },
-  // Spinner - 2/3 solid arc + dots, spins around static play triangle
+  // Spinner - 3/4 solid arc with 1/4 gap
   spinnerOuter: {
     width: 24,
     height: 24,
@@ -628,41 +620,6 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-  },
-  // 6 dots along the left side arc where border is transparent
-  // Border ring is at edge (radius 11 from center 12,12)
-  // Dots need to be ON the ring edge, filling gap from ~135° to ~225° (90° span)
-  // 6 dots = ~15° apart across 90° arc
-  spinnerDot: {
-    position: 'absolute',
-    width: 2,
-    height: 2,
-    borderRadius: 1,
-  },
-  // Positions calculated: left = 12 + 11*cos(angle) - 1, top = 12 + 11*sin(angle) - 1
-  spinnerDot1: { // 135° (bottom-left corner, where solid arc ends)
-    left: -1,
-    top: 18,
-  },
-  spinnerDot2: { // 153°
-    left: -2,
-    top: 15,
-  },
-  spinnerDot3: { // 171°
-    left: -2,
-    top: 11,
-  },
-  spinnerDot4: { // 189°
-    left: -2,
-    top: 8,
-  },
-  spinnerDot5: { // 207°
-    left: -1,
-    top: 5,
-  },
-  spinnerDot6: { // 225° (top-left corner, where solid arc starts)
-    left: 2,
-    top: 3,
   },
   playTriangle: {
     width: 0,
