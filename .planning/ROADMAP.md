@@ -26,10 +26,58 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 Plans:
 - [x] 15-01: Background upload queue and async capture - completed 2026-01-20
 
+#### Phase 15.1: Darkroom Notification Fix (INSERTED) - Complete
+
+**Goal**: Fix notification spam and implement reveal-all-on-tap UX
+**Depends on**: Phase 15
+**Plans**: 1/1 complete
+
+Plans:
+- [x] 15.1-01: Notification tracking + reveal-all-on-tap - completed 2026-01-21
+
+**Delivered:**
+- lastNotifiedAt field prevents duplicate notifications for same batch
+- 0-photo reveals skip notification entirely
+- revealedCount and revealAll passed in notification payload
+- App navigates to Camera with reveal params on tap
+
+#### Phase 15.2: Camera UI & Darkroom Animation Overhaul (INSERTED)
+
+**Goal**: Complete visual redesign of camera controls footer, darkroom card stack button, and capture animation
+**Depends on**: Phase 15.1
+**Research**: Unlikely (React Native Reanimated already in use, internal UI patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 15.2-01: TBD (run /gsd:plan-phase 15.2 to break down)
+
+**Details:**
+Camera Footer Redesign:
+- Extend footer to cover ~1/3 of screen, background color matches nav bar
+- Remove debug darkroom button on right side
+- Capture button: 10% larger, stays white, thin spaced ring around it
+- Flash/camera-switch buttons: 10% smaller, circular icons instead of rectangles
+- Camera preview: rounded edges instead of square
+- Zoom control: rounded rectangular bar (same height as flash/flip buttons) with standard iOS zoom levels (0.5x, 1x, 2x, 3x)
+
+Darkroom Button Redesign (left side):
+- Start as singular card with rounded edges (~75% capture button size)
+- Number displayed within card instead of badge overlay
+- Card fanning animation:
+  - 1 photo: single card
+  - 2 photos: 2 cards fanned
+  - 3 photos: 3 cards fanned
+  - 4+ photos: 4 cards fanned (max), number updates on front card
+
+Capture Animation Change:
+- Remove current snapshot-to-darkroom animation
+- Replace with "bounce" animation on darkroom button (scale up then back to normal)
+- Quick, satisfying feedback indicating photo was captured
+
 #### Phase 16: Camera Capture Feedback
 
 **Goal**: Enhanced shutter animation, haptic feedback, and visual confirmation on capture
-**Depends on**: Phase 15
+**Depends on**: Phase 15.2
 **Research**: Unlikely (established patterns, existing haptics utility)
 **Plans**: TBD
 
@@ -155,6 +203,8 @@ New behavior:
 | 13.2 Darkroom Auto-Reveal Fix | v1.4 | 1/1 | Complete | 2026-01-20 |
 | 14. Remote Notification Testing & Polish | v1.4 | 1/1 | Complete | 2026-01-20 |
 | 15. Background Photo Upload | v1.5 | 1/1 | Complete | 2026-01-20 |
+| 15.1 Darkroom Notification Fix | v1.5 | 1/1 | Complete | 2026-01-21 |
+| 15.2 Camera UI & Darkroom Animation Overhaul | v1.5 | 0/? | Not started | - |
 | 16. Camera Capture Feedback | v1.5 | 0/? | Not started | - |
 | 17. Darkroom UX Polish | v1.5 | 0/? | Not started | - |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |

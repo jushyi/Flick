@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 ## Current Position
 
-Phase: 15 of 18 (Background Photo Upload)
-Plan: 1 of 1 complete + all UAT fixes
-Status: Phase complete (all UAT issues resolved)
-Last activity: 2026-01-21 - Completed 15-01-FIX2 (UAT-003 resolved)
+Phase: 15.1 of 18.1 (Darkroom Notification Fix)
+Plan: 1 of 1 complete
+Status: Phase complete
+Last activity: 2026-01-21 - Completed 15.1-01-PLAN.md
 
-Progress: ██░░░░░░░░ 25% (v1.5: 1/4 phases)
+Progress: ██░░░░░░░░ 28% (v1.5: 2/7 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 38 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 1 in v1.5)
-- Average duration: 18 min
-- Total execution time: 8.75 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 0.25h v1.5)
+- Total plans completed: 39 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 2 in v1.5)
+- Average duration: 17 min
+- Total execution time: 8.9 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 0.4h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: ██░░░░░░░░ 25% (v1.5: 1/4 phases)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18 | 1 | 15 min |
+| v1.5 | 15-18.1 | 2 | 25 min |
 
 ## Accumulated Context
 
@@ -58,9 +58,11 @@ None.
 
 - Milestone v1.5 created: Camera Performance & UX Polish, 4 phases (Phase 15-18)
 - Phase 18.1 inserted after Phase 18: Batched Darkroom Triage with Undo (URGENT) - better UX with local decisions, undo capability, and session persistence
+- Phase 15.1 inserted after Phase 15: Darkroom Notification Fix (URGENT) - fix notification spam, add iOS Live Activities, reveal-all-on-tap UX
+- Phase 15.2 inserted after Phase 15.1: Camera UI & Darkroom Animation Overhaul (URGENT) - footer redesign, card stack button, bounce animation, rounded camera edges
 
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Phase 15-01-FIX2 complete (all Phase 15 UAT issues resolved), ready for Phase 16
+Stopped at: Phase 15.1-01 complete, ready for Phase 15.2
 Resume file: None
