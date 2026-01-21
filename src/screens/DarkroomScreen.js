@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotos, revealPhotos, triagePhoto } from '../services/firebase/photoService';
 import { isDarkroomReadyToReveal, scheduleNextReveal } from '../services/firebase/darkroomService';
@@ -145,6 +146,25 @@ const DarkroomScreen = () => {
     await handleTriage(currentPhoto.id, 'journal');
   };
 
+  // Button handlers with haptic feedback
+  const handleArchiveButton = async () => {
+    logger.info('DarkroomScreen: User tapped archive button', { photoId: currentPhoto?.id });
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await handleTriage(currentPhoto.id, 'archive');
+  };
+
+  const handleDeleteButton = async () => {
+    logger.info('DarkroomScreen: User tapped delete button', { photoId: currentPhoto?.id });
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await handleTriage(currentPhoto.id, 'delete');
+  };
+
+  const handleJournalButton = async () => {
+    logger.info('DarkroomScreen: User tapped journal button', { photoId: currentPhoto?.id });
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await handleTriage(currentPhoto.id, 'journal');
+  };
+
   if (loading) {
     return (
       <GestureHandlerRootView style={styles.container}>
@@ -227,26 +247,34 @@ const DarkroomScreen = () => {
         />
       </View>
 
-      {/* Delete Button */}
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => {
-          Alert.alert(
-            'Delete Photo',
-            'Are you sure you want to permanently delete this photo?',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: () => handleTriage(currentPhoto.id, 'delete'),
-              },
-            ]
-          );
-        }}
-      >
-        <Text style={styles.deleteButtonText}>🗑️ Delete Photo</Text>
-      </TouchableOpacity>
+      {/* Triage Button Bar */}
+      <View style={styles.triageButtonBar}>
+        {/* Archive Button (left) */}
+        <TouchableOpacity
+          style={styles.archiveButton}
+          onPress={handleArchiveButton}
+        >
+          <Text style={styles.triageButtonIcon}>☐</Text>
+          <Text style={styles.archiveButtonText}>Archive</Text>
+        </TouchableOpacity>
+
+        {/* Delete Button (center) */}
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={handleDeleteButton}
+        >
+          <Text style={styles.deleteButtonIcon}>✕</Text>
+        </TouchableOpacity>
+
+        {/* Journal Button (right) */}
+        <TouchableOpacity
+          style={styles.journalButton}
+          onPress={handleJournalButton}
+        >
+          <Text style={styles.triageButtonIcon}>✓</Text>
+          <Text style={styles.journalButtonText}>Journal</Text>
+        </TouchableOpacity>
+      </View>
       </SafeAreaView>
     </GestureHandlerRootView>
   );
@@ -339,20 +367,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
   },
+  triageButtonBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginBottom: 24,
+  },
+  archiveButton: {
+    width: 100,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#8E8E93',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
   deleteButton: {
-    marginHorizontal: 24,
-    marginBottom: 16,
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 59, 48, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 59, 48, 0.5)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  deleteButtonText: {
-    fontSize: 16,
+  journalButton: {
+    width: 100,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#34C759',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  triageButtonIcon: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginRight: 4,
+  },
+  deleteButtonIcon: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  archiveButtonText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#FF3B30',
+    color: '#FFFFFF',
+  },
+  journalButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 
