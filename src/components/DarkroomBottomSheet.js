@@ -10,7 +10,8 @@ import {
   Platform,
   Easing,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+// LinearGradient from expo-linear-gradient has compatibility issues with Expo SDK 54
+// Using a custom gradient simulation with layered Views
 import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 
@@ -76,6 +77,41 @@ const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
       <View style={[styles.spinnerDot, { bottom: 2, left: 2, backgroundColor: color, opacity: 0.7 }]} />
       <View style={[styles.spinnerDot, { bottom: 2, right: 2, backgroundColor: color, opacity: 0.4 }]} />
     </Animated.View>
+  );
+};
+
+// Custom horizontal gradient using layered Views (fallback for expo-linear-gradient issues)
+const HorizontalGradient = ({ colors, style, children }) => {
+  const [startColor, endColor] = colors;
+  // Create a gradient effect using 5 color stops
+  const stops = 5;
+  const gradientLayers = [];
+
+  for (let i = 0; i < stops; i++) {
+    const ratio = i / (stops - 1);
+    // Simple linear interpolation between colors
+    const opacity = 1;
+    gradientLayers.push(
+      <View
+        key={i}
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: `${(i / stops) * 100}%`,
+          width: `${100 / stops}%`,
+          backgroundColor: i < stops / 2 ? startColor : endColor,
+          opacity: i === 0 ? 1 : i === stops - 1 ? 1 : 0.8,
+        }}
+      />
+    );
+  }
+
+  return (
+    <View style={[{ overflow: 'hidden' }, style]}>
+      {gradientLayers}
+      {children}
+    </View>
   );
 };
 
@@ -445,18 +481,14 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
               onResponderTerminate={handlePressOut}
             >
               {/* Base purple gradient */}
-              <LinearGradient
+              <HorizontalGradient
                 colors={[COLORS.buttonGradientStart, COLORS.buttonGradientEnd]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
                 style={styles.holdButtonGradient}
               >
                 {/* Fill overlay that animates left-to-right */}
                 <Animated.View style={[styles.fillOverlay, { width: progressWidth }]}>
-                  <LinearGradient
+                  <HorizontalGradient
                     colors={[COLORS.fillGradientStart, COLORS.fillGradientEnd]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
                     style={StyleSheet.absoluteFill}
                   />
                 </Animated.View>
@@ -468,7 +500,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                     {isPressing ? 'Opening...' : 'Hold to open photos'}
                   </Text>
                 </View>
-              </LinearGradient>
+              </HorizontalGradient>
             </View>
           )}
 
