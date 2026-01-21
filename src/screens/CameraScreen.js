@@ -37,7 +37,9 @@ const FOOTER_HEIGHT = 200; // Covers ~1/4 of screen for iOS-native camera feel
 const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
 const CAMERA_PREVIEW_MARGIN = 16; // Breathing room around camera preview
 const CAMERA_BORDER_RADIUS = 24; // Rounded corners for camera preview
-const CIRCLE_BUTTON_SIZE = 50; // Flash, flip, and darkroom buttons
+const CIRCLE_BUTTON_SIZE = 50; // Darkroom buttons
+const FLOATING_BUTTON_SIZE = 45; // Flash, flip buttons (10% smaller, floating above footer)
+const FLOATING_BUTTON_OFFSET = 8; // Distance above footer edge
 
 // Flash icon SVG component - matches bottom nav design system
 const FlashIcon = ({ color = '#FFFFFF', mode = 'off' }) => (
@@ -366,9 +368,18 @@ const CameraScreen = () => {
         />
       </View>
 
-      {/* Footer Bar - solid dark background */}
-      <View style={styles.footerBar}>
-        {/* Zoom Control Bar - centered above main controls */}
+      {/* Floating Controls Row - Flash (left), Zoom (center), Flip (right) - positioned above footer */}
+      <View style={styles.floatingControls}>
+        {/* Flash Button (far left) */}
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={toggleFlash}
+        >
+          <FlashIcon color="#FFFFFF" mode={flash} />
+          {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
+        </TouchableOpacity>
+
+        {/* Zoom Control Bar - centered */}
         <View style={styles.zoomBar}>
           {ZOOM_LEVELS.map((level) => (
             <TouchableOpacity
@@ -386,23 +397,25 @@ const CameraScreen = () => {
                   zoom.value === level.value && styles.zoomButtonTextActive,
                 ]}
               >
-                {level.label}
+                {zoom.value === level.value ? `${level.value === 0.5 ? '.5' : level.value}x` : (level.value === 0.5 ? '.5' : String(level.value))}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Main Controls Row: Flash (left), Darkroom, Capture, Flip (right) */}
-        <View style={styles.footerControls}>
-          {/* Flash Button (far left) */}
-          <TouchableOpacity
-            style={styles.circleButton}
-            onPress={toggleFlash}
-          >
-            <FlashIcon color="#FFFFFF" mode={flash} />
-            {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
-          </TouchableOpacity>
+        {/* Flip Camera Button (far right) */}
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={toggleCameraFacing}
+        >
+          <FlipCameraIcon color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
 
+      {/* Footer Bar - solid dark background */}
+      <View style={styles.footerBar}>
+        {/* Main Controls Row: Darkroom, Capture */}
+        <View style={styles.footerControls}>
           {/* Darkroom Button */}
           <DarkroomButton
             count={darkroomCounts.totalCount}
@@ -425,13 +438,8 @@ const CameraScreen = () => {
             </View>
           </TouchableOpacity>
 
-          {/* Flip Camera Button (far right) */}
-          <TouchableOpacity
-            style={styles.circleButton}
-            onPress={toggleCameraFacing}
-          >
-            <FlipCameraIcon color="#FFFFFF" />
-          </TouchableOpacity>
+          {/* Spacer to balance the layout */}
+          <View style={styles.circleButton} />
         </View>
       </View>
 
@@ -560,6 +568,26 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
   },
+  // Floating controls row - positioned above footer, over camera preview
+  floatingControls: {
+    position: 'absolute',
+    bottom: TAB_BAR_HEIGHT + FOOTER_HEIGHT + FLOATING_BUTTON_OFFSET,
+    left: CAMERA_PREVIEW_MARGIN,
+    right: CAMERA_PREVIEW_MARGIN,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  // Floating button - 45px (10% smaller than 50px), for flash and flip
+  floatingButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    width: FLOATING_BUTTON_SIZE,
+    height: FLOATING_BUTTON_SIZE,
+    borderRadius: FLOATING_BUTTON_SIZE / 2,
+  },
   // Footer bar - absolute positioned, solid dark background, above tab bar
   footerBar: {
     position: 'absolute',
@@ -579,16 +607,15 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 16,
   },
-  // Zoom control bar - same height as circle buttons
+  // Zoom control bar - centered in floating controls row
   zoomBar: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     borderRadius: 25,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    marginBottom: 24,
   },
   zoomButton: {
     paddingHorizontal: 14,
