@@ -21,10 +21,10 @@ import { DarkroomBottomSheet } from '../components';
 
 // Zoom level configuration
 // expo-camera zoom is 0-1 range where 0 is wide (baseline) and 1 is max zoom
-// Original mapping from 15.2-01: 0.5x=0 (widest), 1x=0.17, 2x=0.33, 3x=0.5
+// Tuned mapping: 0.5x=0 (widest), 1x=0.08 (natural), 3x=0.33 (telephoto)
 const ZOOM_LEVELS = [
   { label: '.5', value: 0.5, cameraZoom: 0 },      // Widest angle (baseline)
-  { label: '1', value: 1, cameraZoom: 0.17 },      // Normal view (slight zoom from baseline)
+  { label: '1', value: 1, cameraZoom: 0.08 },      // Normal view (feels natural, not too zoomed)
   { label: '3', value: 3, cameraZoom: 0.33 },      // Telephoto
 ];
 
