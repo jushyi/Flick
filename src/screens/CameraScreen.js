@@ -126,6 +126,17 @@ const CameraScreen = () => {
   const cardScale = useRef(new Animated.Value(1)).current;
   const cardFanSpread = useRef(new Animated.Value(0)).current; // 0 = normal, 1 = fanned out
 
+  // Get wide-angle lens string (typically "Back Camera") for base zoom levels
+  const wideAngleLens = useMemo(() => {
+    if (Platform.OS !== 'ios' || facing !== 'back' || availableLenses.length === 0) {
+      return null;
+    }
+    // Look for standard wide-angle camera
+    return availableLenses.find(lens =>
+      lens.toLowerCase() === 'back camera'
+    ) || null;
+  }, [availableLenses, facing]);
+
   // Build dynamic zoom levels based on device capabilities (iOS ultra-wide support)
   const zoomLevels = useMemo(() => {
     // Only show 0.5x on iOS, with ultra-wide support, on back camera
