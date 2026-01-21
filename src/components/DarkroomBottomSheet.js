@@ -83,10 +83,13 @@ const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
             }
           ]}
         />
-        {/* Small dots for remaining 1/3 (bottom-left quadrant) */}
+        {/* 6 small dots for remaining 1/3 arc (bottom-left quadrant, ~180° to ~270°) */}
         <View style={[styles.spinnerDot, styles.spinnerDot1, { backgroundColor: color }]} />
         <View style={[styles.spinnerDot, styles.spinnerDot2, { backgroundColor: color }]} />
         <View style={[styles.spinnerDot, styles.spinnerDot3, { backgroundColor: color }]} />
+        <View style={[styles.spinnerDot, styles.spinnerDot4, { backgroundColor: color }]} />
+        <View style={[styles.spinnerDot, styles.spinnerDot5, { backgroundColor: color }]} />
+        <View style={[styles.spinnerDot, styles.spinnerDot6, { backgroundColor: color }]} />
       </Animated.View>
       {/* Static play triangle in center */}
       <View style={[styles.playTriangle, { borderLeftColor: color }]} />
@@ -626,25 +629,39 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
   },
-  // Small dots positioned along the remaining 1/3 arc (bottom-left)
+  // 6 small dots positioned along remaining 1/3 arc (bottom-left, ~180° to ~270°)
+  // Circle radius = 12, dots at radius ~11 from center
   spinnerDot: {
     position: 'absolute',
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
+    width: 2,
+    height: 2,
+    borderRadius: 1,
   },
-  // Dots positioned at ~210°, ~240°, ~270° (bottom-left quadrant)
-  spinnerDot1: {
-    bottom: 2,
-    left: 3,
+  // Dots evenly spaced from ~195° to ~270° (15° increments)
+  // Using polar coordinates: x = 12 + 11*cos(angle), y = 12 + 11*sin(angle)
+  spinnerDot1: { // ~195°
+    left: 1,
+    top: 15,
   },
-  spinnerDot2: {
-    bottom: 5,
-    left: 0,
+  spinnerDot2: { // ~210°
+    left: 2,
+    top: 18,
   },
-  spinnerDot3: {
-    top: 10,
-    left: 0,
+  spinnerDot3: { // ~225°
+    left: 4,
+    top: 20,
+  },
+  spinnerDot4: { // ~240°
+    left: 7,
+    top: 21,
+  },
+  spinnerDot5: { // ~255°
+    left: 10,
+    top: 22,
+  },
+  spinnerDot6: { // ~270°
+    left: 13,
+    top: 22,
   },
   playTriangle: {
     width: 0,
