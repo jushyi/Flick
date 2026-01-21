@@ -26,6 +26,7 @@ const FOOTER_HEIGHT = 280; // Covers ~1/3 of screen for iOS-native camera feel
 const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
 const CAMERA_PREVIEW_MARGIN = 16; // Breathing room around camera preview
 const CAMERA_BORDER_RADIUS = 24; // Rounded corners for camera preview
+const CIRCLE_BUTTON_SIZE = 50; // Flash, flip, and darkroom buttons
 
 // Flash icon SVG component - matches bottom nav design system
 const FlashIcon = ({ color = '#FFFFFF', mode = 'off' }) => (
@@ -334,19 +335,30 @@ const CameraScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Camera View - no children, absolute positioned */}
-      <CameraView
-        ref={cameraRef}
-        style={styles.camera}
-        facing={facing}
-        flash={flash}
-      />
+      {/* Camera Preview Container - with rounded corners */}
+      <View style={styles.cameraContainer}>
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing={facing}
+          flash={flash}
+        />
+      </View>
 
       {/* Footer Bar - solid dark background */}
       <View style={styles.footerBar}>
-        {/* Footer Controls: Darkroom button (left) and Capture button (center) */}
+        {/* Main Controls Row: Flash (left), Darkroom, Capture, Flip (right) */}
         <View style={styles.footerControls}>
-          {/* Darkroom Button (left of capture) */}
+          {/* Flash Button (far left) */}
+          <TouchableOpacity
+            style={styles.circleButton}
+            onPress={toggleFlash}
+          >
+            <FlashIcon color="#FFFFFF" mode={flash} />
+            {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
+          </TouchableOpacity>
+
+          {/* Darkroom Button */}
           <DarkroomButton
             count={darkroomCounts.totalCount}
             onPress={() => setIsBottomSheetVisible(true)}
@@ -367,27 +379,15 @@ const CameraScreen = () => {
               <View style={styles.captureButtonInner} />
             </View>
           </TouchableOpacity>
+
+          {/* Flip Camera Button (far right) */}
+          <TouchableOpacity
+            style={styles.circleButton}
+            onPress={toggleCameraFacing}
+          >
+            <FlipCameraIcon color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Floating Controls Overlay - positioned above footer */}
-      <View style={styles.floatingControls}>
-        {/* Flash Button (bottom left of camera area) */}
-        <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={toggleFlash}
-        >
-          <FlashIcon color="#FFFFFF" mode={flash} />
-          {flash === 'auto' && <Text style={styles.flashLabel}>AUTO</Text>}
-        </TouchableOpacity>
-
-        {/* Flip Camera Button (bottom right of camera area) */}
-        <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={toggleCameraFacing}
-        >
-          <FlipCameraIcon color="#FFFFFF" />
-        </TouchableOpacity>
       </View>
 
       {/* Flash Overlay (camera shutter effect) */}
@@ -501,13 +501,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
-  // Camera - absolute positioned, upper portion of screen
-  camera: {
+  // Camera container - with rounded corners and margin
+  cameraContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: CAMERA_HEIGHT,
+    top: CAMERA_PREVIEW_MARGIN,
+    left: CAMERA_PREVIEW_MARGIN,
+    right: CAMERA_PREVIEW_MARGIN,
+    height: CAMERA_HEIGHT - CAMERA_PREVIEW_MARGIN * 2,
+    borderRadius: CAMERA_BORDER_RADIUS,
+    overflow: 'hidden',
+  },
+  // Camera - fills the container
+  camera: {
+    flex: 1,
   },
   // Footer bar - absolute positioned, solid dark background, above tab bar
   footerBar: {
@@ -524,34 +530,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 40,
+    gap: 24,
     paddingBottom: 20,
+    paddingHorizontal: 16,
   },
-  footerControlButton: {
+  // Circle button - 50px for flash and flip (10% smaller than original 56px)
+  circleButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  // Floating controls - positioned above footer edge (accounting for tab bar)
-  floatingControls: {
-    position: 'absolute',
-    bottom: TAB_BAR_HEIGHT + FOOTER_HEIGHT + FLOATING_CONTROL_OFFSET,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-  },
-  floatingButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 70,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   // Permission screens
   permissionContainer: {
@@ -585,24 +575,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
   },
-  // Darkroom button (in footer)
+  // Darkroom button (in footer) - matches circle button size
   darkroomButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   darkroomButtonDisabled: {
     opacity: 0.4,
   },
-  // Flash control
+  // Flash auto indicator (small letter on button)
   flashLabel: {
-    fontSize: 10,
+    position: 'absolute',
+    bottom: 4,
+    fontSize: 8,
     color: '#FFFFFF',
-    fontWeight: '600',
-    marginTop: 4,
+    fontWeight: '700',
   },
   // Capture button - 88px (10% larger) with thin spaced ring
   captureButtonOuter: {
