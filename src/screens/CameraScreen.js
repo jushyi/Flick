@@ -421,8 +421,8 @@ const CameraScreen = () => {
       <View style={styles.footerBar}>
         {/* Main Controls Row: Darkroom, Capture */}
         <View style={styles.footerControls}>
-          {/* Darkroom Button */}
-          <DarkroomButton
+          {/* Darkroom Card Stack Button */}
+          <DarkroomCardButton
             count={darkroomCounts.totalCount}
             onPress={() => setIsBottomSheetVisible(true)}
             bounceAnim={badgeBounce}
@@ -501,55 +501,94 @@ const CameraScreen = () => {
   );
 };
 
-// Darkroom Button Component (moon icon with badge count)
-const DarkroomButton = ({ count, onPress, bounceAnim }) => {
+// Card dimensions for darkroom button (4:3 aspect ratio like a photo)
+const CARD_WIDTH = 50; // ~75% of capture button width (66px would be 75% of 88, but we need to fit in footer)
+const CARD_HEIGHT = 66; // 4:3 aspect ratio
+
+// DarkroomCardButton Component - photo card stack design
+const DarkroomCardButton = ({ count, onPress, bounceAnim }) => {
   const isDisabled = count === 0;
+
+  // Determine number of cards to show (1-4 max)
+  const cardCount = Math.min(Math.max(count, 1), 4);
+
+  // Card positions for fanning effect
+  // Each card rotates and offsets progressively from the top card
+  const getCardStyle = (index, total) => {
+    if (total === 1) {
+      // Single card - no rotation or offset
+      return { rotate: '0deg', translateX: 0, zIndex: 1 };
+    }
+
+    // Calculate position from bottom (0) to top (total-1)
+    const positionFromTop = total - 1 - index;
+
+    // Progressive rotation and offset
+    // Bottom cards rotate more, top card is straight
+    const rotationPerCard = -4; // degrees per position from top
+    const offsetPerCard = 3; // pixels per position from top
+
+    return {
+      rotate: `${positionFromTop * rotationPerCard}deg`,
+      translateX: positionFromTop * offsetPerCard,
+      zIndex: index + 1, // Higher index = on top
+    };
+  };
 
   const handlePress = () => {
     if (onPress) {
-      logger.info('DarkroomButton: Opening bottom sheet', { count });
+      logger.info('DarkroomCardButton: Opening bottom sheet', { count });
       onPress();
     }
   };
 
+  // Render stack of cards
+  const renderCards = () => {
+    const cards = [];
+
+    for (let i = 0; i < cardCount; i++) {
+      const isTopCard = i === cardCount - 1;
+      const cardStyle = getCardStyle(i, cardCount);
+
+      cards.push(
+        <Animated.View
+          key={i}
+          style={[
+            styles.darkroomCard,
+            {
+              position: 'absolute',
+              transform: [
+                { rotate: cardStyle.rotate },
+                { translateX: cardStyle.translateX },
+                ...(isTopCard && bounceAnim ? [{ scale: bounceAnim }] : []),
+              ],
+              zIndex: cardStyle.zIndex,
+            },
+          ]}
+        >
+          {/* Only show count on top card */}
+          {isTopCard && count > 0 && (
+            <Text style={styles.darkroomCardText}>
+              {count > 99 ? '99+' : count}
+            </Text>
+          )}
+        </Animated.View>
+      );
+    }
+
+    return cards;
+  };
+
   return (
     <TouchableOpacity
-      style={[styles.darkroomButton, isDisabled && styles.darkroomButtonDisabled]}
+      style={[
+        styles.darkroomCardContainer,
+        isDisabled && styles.darkroomCardDisabled,
+      ]}
       onPress={handlePress}
       disabled={isDisabled}
     >
-      <View style={{ position: 'relative' }}>
-        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-            stroke="#FFFFFF"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-        {count > 0 && (
-          <Animated.View
-            style={{
-              position: 'absolute',
-              top: -6,
-              right: -8,
-              backgroundColor: '#FF3B30',
-              borderRadius: 10,
-              minWidth: 18,
-              height: 18,
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingHorizontal: 4,
-              transform: [{ scale: bounceAnim || 1 }],
-            }}
-          >
-            <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>
-              {count > 99 ? '99+' : count}
-            </Text>
-          </Animated.View>
-        )}
-      </View>
+      {renderCards()}
     </TouchableOpacity>
   );
 };
@@ -682,22 +721,43 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
   },
-  // Darkroom button (in footer) - matches circle button size
-  darkroomButton: {
-    alignItems: 'center',
+  // Darkroom card stack container - holds fanned cards
+  darkroomCardContainer: {
+    width: CARD_WIDTH + 16, // Extra space for fanning offset
+    height: CARD_HEIGHT,
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    alignItems: 'center',
   },
-  darkroomButtonDisabled: {
+  darkroomCardDisabled: {
     opacity: 0.4,
+  },
+  // Individual card in the stack
+  darkroomCard: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 8,
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Card shadow for depth
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  // Number displayed inside the top card
+  darkroomCardText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   // Invisible spacer to balance darkroom button and center capture button
   footerSpacer: {
-    width: 50, // Same as darkroom button width
-    height: 50,
+    width: CARD_WIDTH + 16, // Match container width
+    height: CARD_HEIGHT,
     opacity: 0,
   },
   // Flash auto indicator (small letter on button)
