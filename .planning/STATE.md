@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 18.1 of 18.3 (Batched Darkroom Triage with Undo)
-Plan: 2/2 complete
+Plan: 2/2 + FIX complete
 Status: Phase complete
-Last activity: 2026-01-22 - Completed 18.1-02-PLAN.md (done button batch save and undo animation)
+Last activity: 2026-01-22 - Completed 18.1-FIX-PLAN.md (UAT-001 black flash fix)
 
 Progress: █████████░ 89% (v1.5: 16/19 phases complete)
 
@@ -100,5 +100,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 18.1-02-PLAN.md - Phase 18.1 complete
+Stopped at: Completed 18.1-FIX-PLAN.md - UAT-001 black flash resolved
 Resume file: None
