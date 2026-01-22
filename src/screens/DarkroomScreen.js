@@ -29,6 +29,9 @@ const DarkroomScreen = () => {
   // 18.1: Undo stack for batched triage - stores decisions locally until Done is tapped
   // Each entry: { photo: PhotoObject, action: 'archive'|'journal'|'delete', exitDirection: 'left'|'right'|'down' }
   const [undoStack, setUndoStack] = useState([]);
+  // 18.1-02: Track when undo animation is in progress
+  // { photo, enterFrom } when animating undo, null otherwise
+  const [undoingPhoto, setUndoingPhoto] = useState(null);
   const cardRef = useRef(null);
   const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
 
@@ -231,21 +234,32 @@ const DarkroomScreen = () => {
   };
 
   // 18.1: Handle Undo button - restore last decision from undo stack
-  // Animation implementation will be added in Plan 2
-  const handleUndo = () => {
-    if (undoStack.length === 0) return;
+  // 18.1-02: Added reverse animation (cards slide back from exit direction)
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0 || undoingPhoto) return;
 
     logger.info('DarkroomScreen: User tapped Undo button', { stackSize: undoStack.length });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     // Get the last decision from the stack
     const lastDecision = undoStack[undoStack.length - 1];
+
+    // Set up entry animation
+    setUndoingPhoto({
+      photo: lastDecision.photo,
+      enterFrom: lastDecision.exitDirection,
+    });
 
     // Remove from undo stack
     setUndoStack(prev => prev.slice(0, -1));
 
     // Restore photo to the front of the photos array
     setPhotos(prev => [lastDecision.photo, ...prev]);
+
+    // Clear undo animation state after animation completes
+    setTimeout(() => {
+      setUndoingPhoto(null);
+    }, 450); // Slightly longer than ENTRY_DURATION (400ms)
 
     // Reset success state flags if we're undoing from the success screen
     setPendingSuccess(false);
@@ -257,9 +271,10 @@ const DarkroomScreen = () => {
     logger.debug('DarkroomScreen: Undo completed', {
       restoredPhotoId: lastDecision.photo.id,
       previousAction: lastDecision.action,
+      enterFrom: lastDecision.exitDirection,
       newStackSize: undoStack.length - 1,
     });
-  };
+  }, [undoStack, undoingPhoto, successFadeAnim]);
 
   // UAT-002: Trigger fade-in animation when success state is shown
   // NOTE: This useEffect must be before any early returns to comply with Rules of Hooks
@@ -314,15 +329,15 @@ const DarkroomScreen = () => {
               <TouchableOpacity
                 style={[
                   styles.undoButton,
-                  undoStack.length === 0 && styles.undoButtonDisabled
+                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
                 ]}
                 onPress={handleUndo}
-                disabled={undoStack.length === 0}
+                disabled={undoStack.length === 0 || undoingPhoto !== null}
               >
                 <Text style={styles.undoIcon}>↩</Text>
                 <Text style={[
                   styles.undoText,
-                  undoStack.length === 0 && styles.undoTextDisabled
+                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
                 ]}>
                   Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
                 </Text>
@@ -412,19 +427,19 @@ const DarkroomScreen = () => {
               {photos.length} {photos.length === 1 ? 'photo' : 'photos'} ready to review
             </Text>
           </View>
-          {/* 18.1: Undo button - dimmed when empty, shows count when decisions exist */}
+          {/* 18.1: Undo button - dimmed when empty or animating, shows count when decisions exist */}
           <TouchableOpacity
             style={[
               styles.undoButton,
-              undoStack.length === 0 && styles.undoButtonDisabled
+              (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
             ]}
             onPress={handleUndo}
-            disabled={undoStack.length === 0}
+            disabled={undoStack.length === 0 || undoingPhoto !== null}
           >
             <Text style={styles.undoIcon}>↩</Text>
             <Text style={[
               styles.undoText,
-              undoStack.length === 0 && styles.undoTextDisabled
+              (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
             ]}>
               Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
             </Text>
@@ -447,6 +462,7 @@ const DarkroomScreen = () => {
               stackIndex={stackIndex}
               isActive={isActive}
               cascading={cascading}
+              enterFrom={isActive && undoingPhoto?.photo.id === photo.id ? undoingPhoto.enterFrom : null}
               onSwipeStart={isActive ? handleSwipeStart : undefined}
               onSwipeLeft={isActive ? handleArchiveSwipe : undefined}
               onSwipeRight={isActive ? handleJournalSwipe : undefined}

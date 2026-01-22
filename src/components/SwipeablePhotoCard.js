@@ -58,7 +58,7 @@ const BUTTON_EXIT_DURATION = 1200;
  * @param {boolean} isActive - Whether this card is swipeable (only front card)
  * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
  */
-const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onSwipeStart, stackIndex = 0, isActive = true, cascading = false }, ref) => {
+const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onSwipeStart, stackIndex = 0, isActive = true, cascading = false, enterFrom = null }, ref) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
   // Animated values for gesture/front card
@@ -105,6 +105,40 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       stackBlurOpacityAnim.value = withSpring(getStackBlurOpacity(targetIndex), { damping: 15, stiffness: 150 });
     }
   }, [cascading]);
+
+  // 18.1-02: Entry animation for undo (reverse of exit animation)
+  // When enterFrom is set, card starts off-screen and animates to center
+  const ENTRY_DURATION = 400;
+  useEffect(() => {
+    if (enterFrom && isActive) {
+      // Start card off-screen in the direction it exited
+      if (enterFrom === 'left') {
+        translateX.value = -SCREEN_WIDTH * 1.5;
+        translateY.value = SCREEN_HEIGHT * 0.5;
+      } else if (enterFrom === 'right') {
+        translateX.value = SCREEN_WIDTH * 1.5;
+        translateY.value = SCREEN_HEIGHT * 0.5;
+      } else if (enterFrom === 'down') {
+        translateX.value = 0;
+        translateY.value = SCREEN_HEIGHT;
+      }
+
+      // Animate to center position
+      translateX.value = withTiming(0, {
+        duration: ENTRY_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      translateY.value = withTiming(0, {
+        duration: ENTRY_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+
+      logger.debug('SwipeablePhotoCard: Entry animation started', {
+        photoId: photo?.id,
+        enterFrom,
+      });
+    }
+  }, [enterFrom, isActive]);
 
   // Track if action is in progress to prevent multiple triggers
   const actionInProgress = useSharedValue(false);
