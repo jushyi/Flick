@@ -109,6 +109,10 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
   // Track if action is in progress to prevent multiple triggers
   const actionInProgress = useSharedValue(false);
 
+  // UAT-008: Track when delete is button-triggered (vs gesture swipe)
+  // Delete overlay should only show during button-triggered delete animation
+  const isButtonDelete = useSharedValue(false);
+
   // Context for gesture start position
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
@@ -229,6 +233,7 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       if (actionInProgress.value) return;
       logger.info('SwipeablePhotoCard: triggerDelete called', { photoId: photo?.id });
       actionInProgress.value = true;
+      isButtonDelete.value = true; // UAT-008: Mark as button-triggered delete
       // Animate to delete position (drop down)
       // Card stays opaque - flies off screen without fading
       translateY.value = withTiming(SCREEN_HEIGHT, {
@@ -239,7 +244,7 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
         runOnJS(handleDelete)();
       });
     },
-  }), [photo?.id, actionInProgress, translateX, translateY, handleArchive, handleJournal, handleDelete]);
+  }), [photo?.id, actionInProgress, isButtonDelete, translateX, translateY, handleArchive, handleJournal, handleDelete]);
 
   // Pan gesture using new Gesture API
   const panGesture = Gesture.Pan()
@@ -385,7 +390,11 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
   });
 
   // Delete overlay (button-triggered animation) - red with X icon
+  // UAT-008: Only show delete overlay during button-triggered delete animation
   const deleteOverlayStyle = useAnimatedStyle(() => {
+    // Only show overlay when delete is triggered via button, not during gesture swipes
+    if (!isButtonDelete.value) return { opacity: 0 };
+
     const opacity = translateY.value > 0
       ? interpolate(translateY.value, [0, DELETE_OVERLAY_THRESHOLD], [0, 0.7], 'clamp')
       : 0;
