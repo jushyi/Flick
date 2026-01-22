@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 17.1 of 18.2 (Darkroom Animation Refinements)
-Plan: 1 of 1 complete + FIX + FIX-2 + FIX-3 plans complete
-Status: Phase 17.1 fully complete with all UAT fixes, ready for Phase 17.2
-Last activity: 2026-01-22 - Completed 17.1-01-FIX-3.md (2 UAT issues fixed: UAT-005, UAT-006)
+Plan: 1 of 1 complete + FIX + FIX-2 + FIX-3 + FIX-4 plans complete
+Status: Phase 17.1 fully complete with all UAT fixes (UAT-001 through UAT-008), ready for Phase 17.2
+Last activity: 2026-01-22 - Completed 17.1-01-FIX-4.md (2 UAT issues fixed: UAT-007, UAT-008)
 
 Progress: ████████░░ 79% (v1.5: 12/15 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 58 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 21 in v1.5)
+- Total plans completed: 59 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 22 in v1.5)
 - Average duration: 16 min
-- Total execution time: 12.1 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 3.6h v1.5)
+- Total execution time: 12.3 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 3.8h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: ████████░░ 79% (v1.5: 12/15 phases complete)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.2 | 21 | 253 min |
+| v1.5 | 15-18.2 | 22 | 265 min |
 
 ## Accumulated Context
 
@@ -57,6 +57,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 17.1-01-FIX-2 | Screen-level translateY animation | Header swipe moves entire screen together |
 | 17.1-01-FIX-3 | Transparent GestureHandlerRootView | Prevents double-background during swipe |
 | 17.1-01-FIX-3 | goBack() for Done button | Consistent slide-down close animation |
+| 17.1-01-FIX-4 | Remove header swipe feature | Feature unnecessary, chevron/Done buttons sufficient |
+| 17.1-01-FIX-4 | isButtonDelete flag for overlay | Delete overlay only shows during button-triggered delete |
 
 ### Deferred Issues
 
@@ -91,5 +93,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 17.1-01-FIX-3.md - UAT-005/UAT-006 fixes (Phase 17.1 fully complete)
+Stopped at: Completed 17.1-01-FIX-4.md - UAT-007/UAT-008 fixes (Phase 17.1 fully complete)
 Resume file: None
