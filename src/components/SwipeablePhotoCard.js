@@ -470,7 +470,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: SCREEN_WIDTH * 0.92,
     alignSelf: 'center',
-    borderRadius: 24,
+    // UAT-014: Reduced border radius from 24 to 6 for subtler rounded corners
+    borderRadius: 6,
     backgroundColor: '#2C2C2E',
     overflow: 'hidden',
     // UAT-007: Black border removed per user request
@@ -500,7 +501,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 24,
+    // UAT-014: Match reduced border radius
+    borderRadius: 6,
   },
   archiveOverlay: {
     backgroundColor: '#8E8E93', // iOS system gray
