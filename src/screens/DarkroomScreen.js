@@ -21,6 +21,7 @@ const DarkroomScreen = () => {
   const navigation = useNavigation();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cascading, setCascading] = useState(false); // UAT-012: Track when cards are cascading
   const cardRef = useRef(null);
 
   // Load developing photos when screen comes into focus
@@ -111,34 +112,41 @@ const DarkroomScreen = () => {
       // Check if this is the last photo
       const isLastPhoto = photos.length === 1;
 
-      // UAT-012: Delay removing photo from array to allow cascade animation to complete
-      // The card exit animation takes 400ms (EXIT_DURATION in SwipeablePhotoCard)
-      // We delay slightly less (350ms) so the next card is ready when the exiting card is nearly gone
-      setTimeout(() => {
-        // Remove photo from list
-        setPhotos(prev => {
-          const newPhotos = prev.filter(p => p.id !== photoId);
-          logger.debug('DarkroomScreen: Photos updated', {
-            oldCount: prev.length,
-            newCount: newPhotos.length,
-            removedId: photoId,
-            nextPhotoId: newPhotos[0]?.id,
-            isLastPhoto,
-          });
-          return newPhotos;
+      // UAT-012: Remove photo immediately - the callback is fired AFTER the exit animation completes
+      // (400ms EXIT_DURATION in SwipeablePhotoCard), so the card is already off screen
+      // The cascade animation was triggered earlier, so stack cards are already in position
+      // Remove photo from list
+      setPhotos(prev => {
+        const newPhotos = prev.filter(p => p.id !== photoId);
+        logger.debug('DarkroomScreen: Photos updated', {
+          oldCount: prev.length,
+          newCount: newPhotos.length,
+          removedId: photoId,
+          nextPhotoId: newPhotos[0]?.id,
+          isLastPhoto,
         });
+        return newPhotos;
+      });
 
-        // Navigate to success screen if this was the last photo
-        if (isLastPhoto) {
-          logger.info('DarkroomScreen: Last photo triaged, navigating to success', { action });
-          setTimeout(() => {
-            navigation.navigate('Success');
-          }, 100);
-        }
-      }, 350);
+      // Reset cascading state for next triage
+      setCascading(false);
+
+      // Navigate to success screen if this was the last photo
+      if (isLastPhoto) {
+        logger.info('DarkroomScreen: Last photo triaged, navigating to success', { action });
+        setTimeout(() => {
+          navigation.navigate('Success');
+        }, 100);
+      }
     } catch (error) {
       logger.error('Error triaging photo', error);
     }
+  };
+
+  // UAT-012: Callback when swipe exit animation starts (threshold crossed)
+  // This triggers cascade animation on stack cards immediately
+  const handleSwipeStart = () => {
+    setCascading(true);
   };
 
   // Swipe handlers for SwipeablePhotoCard
@@ -158,21 +166,25 @@ const DarkroomScreen = () => {
   };
 
   // Button handlers - trigger card animations then let callback handle triage (UAT-003)
+  // UAT-012: Set cascading=true immediately to start stack animation during exit
   const handleArchiveButton = () => {
     logger.info('DarkroomScreen: User tapped archive button', { photoId: currentPhoto?.id });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCascading(true); // Start cascade animation immediately
     cardRef.current?.triggerArchive();
   };
 
   const handleDeleteButton = () => {
     logger.info('DarkroomScreen: User tapped delete button', { photoId: currentPhoto?.id });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCascading(true); // Start cascade animation immediately
     cardRef.current?.triggerDelete();
   };
 
   const handleJournalButton = () => {
     logger.info('DarkroomScreen: User tapped journal button', { photoId: currentPhoto?.id });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCascading(true); // Start cascade animation immediately
     cardRef.current?.triggerJournal();
   };
 
@@ -264,6 +276,8 @@ const DarkroomScreen = () => {
               photo={photo}
               stackIndex={stackIndex}
               isActive={isActive}
+              cascading={cascading}
+              onSwipeStart={isActive ? handleSwipeStart : undefined}
               onSwipeLeft={isActive ? handleArchiveSwipe : undefined}
               onSwipeRight={isActive ? handleJournalSwipe : undefined}
               onSwipeDown={isActive ? handleDeleteSwipe : undefined}

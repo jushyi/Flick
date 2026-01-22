@@ -53,7 +53,7 @@ const EXIT_DURATION = 400;
  * @param {boolean} isActive - Whether this card is swipeable (only front card)
  * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
  */
-const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, stackIndex = 0, isActive = true }, ref) => {
+const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onSwipeStart, stackIndex = 0, isActive = true, cascading = false }, ref) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
   // Animated values for gesture/front card
@@ -87,6 +87,19 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
     // UAT-011: Animate blur overlay opacity (fades out as card moves to front)
     stackBlurOpacityAnim.value = withSpring(getStackBlurOpacity(stackIndex), { damping: 15, stiffness: 150 });
   }, [stackIndex]);
+
+  // UAT-012: When cascading=true, animate stack cards forward one position
+  // This happens DURING the front card's exit animation, not after
+  useEffect(() => {
+    if (cascading && !isActive && stackIndex > 0) {
+      // Animate to the position one step forward (e.g., stackIndex 1 → position 0)
+      const targetIndex = stackIndex - 1;
+      stackScaleAnim.value = withSpring(getStackScale(targetIndex), { damping: 15, stiffness: 150 });
+      stackOffsetAnim.value = withSpring(getStackOffset(targetIndex), { damping: 15, stiffness: 150 });
+      stackOpacityAnim.value = withSpring(getStackOpacity(targetIndex), { damping: 15, stiffness: 150 });
+      stackBlurOpacityAnim.value = withSpring(getStackBlurOpacity(targetIndex), { damping: 15, stiffness: 150 });
+    }
+  }, [cascading]);
 
   // Track if action is in progress to prevent multiple triggers
   const actionInProgress = useSharedValue(false);
@@ -125,6 +138,13 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       logger.debug('SwipeablePhotoCard: Threshold reached', { photoId: photo?.id });
     }
   }, [thresholdTriggered, triggerLightHaptic, photo?.id]);
+
+  // UAT-012: Notify parent when swipe starts (triggers cascade animation)
+  const notifySwipeStart = useCallback(() => {
+    if (onSwipeStart) {
+      onSwipeStart();
+    }
+  }, [onSwipeStart]);
 
   // Action handlers
   const handleArchive = useCallback(async () => {
@@ -249,6 +269,8 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       if (isLeftSwipe) {
         // Archive (left swipe) - arc to bottom-left
         // UAT-012: Card stays opaque - flies off screen without fading
+        // Notify parent to start cascade animation on stack cards
+        runOnJS(notifySwipeStart)();
         actionInProgress.value = true;
         translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {
           duration: EXIT_DURATION,
@@ -264,6 +286,8 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       } else if (isRightSwipe) {
         // Journal (right swipe) - arc to bottom-right
         // UAT-012: Card stays opaque - flies off screen without fading
+        // Notify parent to start cascade animation on stack cards
+        runOnJS(notifySwipeStart)();
         actionInProgress.value = true;
         translateX.value = withTiming(SCREEN_WIDTH * 1.5, {
           duration: EXIT_DURATION,
