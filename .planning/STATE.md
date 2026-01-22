@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 17 of 18.2 (Darkroom UX Polish)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-22 - Completed 17-02-PLAN.md
+Plan: FIX complete (UAT issues resolved)
+Status: Phase complete with all fixes verified
+Last activity: 2026-01-22 - Completed 17-FIX-PLAN.md (5 UAT issues fixed)
 
 Progress: ████████░░ 77% (v1.5: 11/12 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 51 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 14 in v1.5)
+- Total plans completed: 52 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 15 in v1.5)
 - Average duration: 16 min
 - Total execution time: 10.3 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 1.8h v1.5)
 
@@ -31,7 +31,7 @@ Progress: ████████░░ 77% (v1.5: 11/12 phases complete)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.2 | 14 | 110 min |
+| v1.5 | 15-18.2 | 15 | 128 min |
 
 ## Accumulated Context
 
@@ -43,6 +43,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 |-------|----------|-----------|
 | 17-02 | Gesture.Pan() API for swipe gestures | useAnimatedGestureHandler deprecated in Reanimated v4 |
 | 17-02 | View-based icons for overlays | Cleaner look than emoji, consistent styling |
+| 17-FIX | Removed down-swipe delete gesture | Prevents accidental deletions during horizontal swipes |
+| 17-FIX | Fixed arc path formula (y = 0.4 * \|x\|) | Predictable card motion regardless of finger movement |
 
 ### Deferred Issues
 
@@ -74,5 +76,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 17-02-PLAN.md - Flick animation with arc motion
+Stopped at: Completed 17-FIX-PLAN.md - Fixed 5 UAT issues
 Resume file: None
