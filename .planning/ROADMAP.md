@@ -182,11 +182,12 @@ Plans:
 **Goal**: Improve darkroom open/close animations and triage completion UX
 **Depends on**: Phase 17
 **Research**: Unlikely (React Native Reanimated already in use)
-**Plans**: 1/1 complete + FIX plan
+**Plans**: 1/1 complete + FIX plans
 
 Plans:
 - [x] 17.1-01: Bottom slide animation, down chevron, inline success - completed 2026-01-22
 - [x] 17.1-01-FIX: UAT fixes (empty flash, success polish, header swipe) - completed 2026-01-22
+- [x] 17.1-01-FIX-2: UAT-004 fix (header swipe moves entire screen) - completed 2026-01-22
 
 **Details:**
 Animation Changes:

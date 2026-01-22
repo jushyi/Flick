@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 17.1 of 18.2 (Darkroom Animation Refinements)
-Plan: 1 of 1 complete + FIX plan complete
-Status: Phase 17.1 complete with UAT fixes, ready for Phase 17.2
-Last activity: 2026-01-22 - Completed 17.1-01-FIX.md (3 UAT issues fixed)
+Plan: 1 of 1 complete + FIX plan + FIX-2 plan complete
+Status: Phase 17.1 complete with all UAT fixes, ready for Phase 17.2
+Last activity: 2026-01-22 - Completed 17.1-01-FIX-2.md (1 UAT issue fixed)
 
 Progress: ████████░░ 79% (v1.5: 12/15 phases complete)
 
@@ -54,6 +54,7 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 17.1-01 | Sparkles instead of confetti | Subtle celebration effect per user feedback |
 | 17.1-01-FIX | pendingSuccess state for transition timing | Prevents empty state flash before success |
 | 17.1-01-FIX | Header-only swipe gesture | Avoids conflicts with photo triage gestures |
+| 17.1-01-FIX-2 | Screen-level translateY animation | Header swipe moves entire screen together |
 
 ### Deferred Issues
 
@@ -88,5 +89,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 17.1-01-FIX.md - UAT fixes for Phase 17.1 (Phase 17.1 fully complete)
+Stopped at: Completed 17.1-01-FIX-2.md - UAT-004 fix for Phase 17.1 (Phase 17.1 fully complete)
 Resume file: None
