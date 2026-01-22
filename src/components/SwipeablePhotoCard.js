@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Thresholds for action triggers
 const HORIZONTAL_THRESHOLD = 100;
-// VERTICAL_THRESHOLD removed - down-swipe delete disabled (UAT-002)
+// Delete overlay threshold (used for button-triggered animation overlay only)
+const DELETE_OVERLAY_THRESHOLD = 150;
 
 // Exit animation configuration
 const EXIT_DURATION = 250;
@@ -50,7 +51,7 @@ const EXIT_DURATION = 250;
  * @param {function} onSwipeDown - Callback when Delete action triggered (button only)
  * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
  */
-const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight, onSwipeDown }) => {
+const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown }, ref) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
   // Animated values
@@ -123,6 +124,63 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight, onSwipeDown }) =
     }
     triggerHeavyHaptic();
   }, [photo?.id, onSwipeDown, triggerWarningHaptic, triggerHeavyHaptic]);
+
+  // Imperative methods for button-triggered animations (UAT-003)
+  useImperativeHandle(ref, () => ({
+    // Trigger archive animation (same as left swipe)
+    triggerArchive: () => {
+      if (actionInProgress.value) return;
+      logger.info('SwipeablePhotoCard: triggerArchive called', { photoId: photo?.id });
+      actionInProgress.value = true;
+      // Animate to archive position (arc to bottom-left)
+      translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {
+        duration: EXIT_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
+        duration: EXIT_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      cardOpacity.value = withTiming(0, { duration: EXIT_DURATION }, () => {
+        'worklet';
+        runOnJS(handleArchive)();
+      });
+    },
+    // Trigger journal animation (same as right swipe)
+    triggerJournal: () => {
+      if (actionInProgress.value) return;
+      logger.info('SwipeablePhotoCard: triggerJournal called', { photoId: photo?.id });
+      actionInProgress.value = true;
+      // Animate to journal position (arc to bottom-right)
+      translateX.value = withTiming(SCREEN_WIDTH * 1.5, {
+        duration: EXIT_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
+        duration: EXIT_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      cardOpacity.value = withTiming(0, { duration: EXIT_DURATION }, () => {
+        'worklet';
+        runOnJS(handleJournal)();
+      });
+    },
+    // Trigger delete animation (drop straight down)
+    triggerDelete: () => {
+      if (actionInProgress.value) return;
+      logger.info('SwipeablePhotoCard: triggerDelete called', { photoId: photo?.id });
+      actionInProgress.value = true;
+      // Animate to delete position (drop down)
+      translateY.value = withTiming(SCREEN_HEIGHT, {
+        duration: EXIT_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+      cardOpacity.value = withTiming(0, { duration: EXIT_DURATION }, () => {
+        'worklet';
+        runOnJS(handleDelete)();
+      });
+    },
+  }), [photo?.id, actionInProgress, translateX, translateY, cardOpacity, handleArchive, handleJournal, handleDelete]);
 
   // Pan gesture using new Gesture API
   const panGesture = Gesture.Pan()
@@ -240,10 +298,10 @@ const SwipeablePhotoCard = ({ photo, onSwipeLeft, onSwipeRight, onSwipeDown }) =
     };
   });
 
-  // Delete overlay (down swipe) - red with X icon
+  // Delete overlay (button-triggered animation) - red with X icon
   const deleteOverlayStyle = useAnimatedStyle(() => {
     const opacity = translateY.value > 0
-      ? interpolate(translateY.value, [0, VERTICAL_THRESHOLD], [0, 0.7], 'clamp')
+      ? interpolate(translateY.value, [0, DELETE_OVERLAY_THRESHOLD], [0, 0.7], 'clamp')
       : 0;
 
     return {
@@ -413,6 +471,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
+});
+
 });
 
 export default SwipeablePhotoCard;

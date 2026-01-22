@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ const DarkroomScreen = () => {
   const navigation = useNavigation();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const cardRef = useRef(null);
 
   // Load developing photos when screen comes into focus
   useFocusEffect(
@@ -151,23 +152,23 @@ const DarkroomScreen = () => {
     await handleTriage(currentPhoto.id, 'delete');
   };
 
-  // Button handlers with haptic feedback
-  const handleArchiveButton = async () => {
+  // Button handlers - trigger card animations then let callback handle triage (UAT-003)
+  const handleArchiveButton = () => {
     logger.info('DarkroomScreen: User tapped archive button', { photoId: currentPhoto?.id });
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await handleTriage(currentPhoto.id, 'archive');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    cardRef.current?.triggerArchive();
   };
 
-  const handleDeleteButton = async () => {
+  const handleDeleteButton = () => {
     logger.info('DarkroomScreen: User tapped delete button', { photoId: currentPhoto?.id });
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await handleTriage(currentPhoto.id, 'delete');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    cardRef.current?.triggerDelete();
   };
 
-  const handleJournalButton = async () => {
+  const handleJournalButton = () => {
     logger.info('DarkroomScreen: User tapped journal button', { photoId: currentPhoto?.id });
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await handleTriage(currentPhoto.id, 'journal');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    cardRef.current?.triggerJournal();
   };
 
   if (loading) {
@@ -246,6 +247,7 @@ const DarkroomScreen = () => {
       {/* Swipeable Photo Card */}
       <View style={styles.photoCardContainer}>
         <SwipeablePhotoCard
+          ref={cardRef}
           key={currentPhoto.id}
           photo={currentPhoto}
           onSwipeLeft={handleArchiveSwipe}
