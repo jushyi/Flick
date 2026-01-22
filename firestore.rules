@@ -140,19 +140,22 @@ service cloud.firestore {
     // =============================================================================
     match /notifications/{notificationId} {
       // Users can only read their own notifications
+      // Note: Notifications use recipientId field (not userId)
       allow read: if isAuthenticated() &&
-                     resource.data.userId == request.auth.uid;
+                     resource.data.recipientId == request.auth.uid;
 
       // Only system (Cloud Functions) can create notifications
       // Users cannot create notifications directly
       allow create: if false;
 
       // Users can update their own notifications (e.g., mark as read)
-      allow update: if isOwner(resource.data.userId) &&
-                       request.resource.data.userId == resource.data.userId;
+      allow update: if isAuthenticated() &&
+                       resource.data.recipientId == request.auth.uid &&
+                       request.resource.data.recipientId == resource.data.recipientId;
 
       // Users can delete their own notifications
-      allow delete: if isOwner(resource.data.userId);
+      allow delete: if isAuthenticated() &&
+                       resource.data.recipientId == request.auth.uid;
     }
 
     // =============================================================================
