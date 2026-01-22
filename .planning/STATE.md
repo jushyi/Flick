@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 ## Current Position
 
-Phase: 17.2 of 18.3 (Reveal Timing 0-5 Minutes)
-Plan: 1 of 1 complete
-Status: Phase 17.2 complete, ready for Phase 18
-Last activity: 2026-01-22 - Completed 17.2-01-PLAN.md (reveal timing updated to 0-5 min)
+Phase: 18 of 18.3 (Reaction Notification Debouncing)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-01-22 - Completed 18-01-PLAN.md (reaction notification debouncing)
 
-Progress: █████████░ 81% (v1.5: 13/16 phases complete)
+Progress: █████████░ 85% (v1.5: 14/16 phases in progress)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 60 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 23 in v1.5)
+- Total plans completed: 61 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 24 in v1.5)
 - Average duration: 16 min
-- Total execution time: 12.4 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 3.9h v1.5)
+- Total execution time: 12.6 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 4.1h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: █████████░ 81% (v1.5: 13/16 phases complete)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.3 | 23 | 269 min |
+| v1.5 | 15-18.3 | 24 | 281 min |
 
 ## Accumulated Context
 
@@ -59,6 +59,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 17.1-01-FIX-3 | goBack() for Done button | Consistent slide-down close animation |
 | 17.1-01-FIX-4 | Remove header swipe feature | Feature unnecessary, chevron/Done buttons sufficient |
 | 17.1-01-FIX-4 | isButtonDelete flag for overlay | Delete overlay only shows during button-triggered delete |
+| 18-01 | In-memory pendingReactions for debouncing | Simple, effective for single-instance Cloud Functions |
+| 18-01 | Sliding window debounce (10s) | Each new reaction resets timer for better batching |
 
 ### Deferred Issues
 
@@ -90,9 +92,10 @@ None.
 - Phase 17.1 inserted after Phase 17: Darkroom Animation Refinements (URGENT) - bottom-up open animation, fall-down close, inline success state
 - Phase 17.2 inserted after Phase 17.1: Reveal Timing 0-5 Minutes (URGENT) - change reveal timing from 0-2 hours to 0-5 minutes
 - Phase 18.3 inserted after Phase 18.2: Success Sound Effect on Triage Completion (URGENT) - play celebratory sound when user finishes triaging all photos
+- Phase 18.4 inserted after Phase 18.3: Triage Animation Z-Index & Delete Suction Effect (URGENT) - fix card animations rendering over buttons, add suction effect for delete
 
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 17.2-01-PLAN.md - Reveal timing 0-5 minutes (Phase 17.2 complete)
+Stopped at: Completed 18-01-PLAN.md - Reaction notification debouncing (Phase 18 in progress)
 Resume file: None

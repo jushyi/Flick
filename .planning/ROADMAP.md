@@ -217,15 +217,16 @@ Plans:
 - Server-side revealUserPhotos() uses Math.floor(Math.random() * 6) (0-5 minutes)
 - Cloud Functions deployed to Firebase
 
-#### Phase 18: Reaction Notification Debouncing
+#### Phase 18: Reaction Notification Debouncing (In Progress)
 
 **Goal**: Aggregate reaction notifications over 10-second window instead of per-tap to prevent spam
 **Depends on**: Phase 17.2
 **Research**: Unlikely (Cloud Function update to existing sendReactionNotification)
-**Plans**: TBD
+**Plans**: 1/2 complete
 
 Plans:
-- [ ] 18-01: TBD (run /gsd:plan-phase 18 to break down)
+- [x] 18-01: Backend - Cloud Function debouncing with 10-second batching - completed 2026-01-22
+- [ ] 18-02: Frontend - Notifications feed UI with heart button
 
 #### Phase 18.1: Batched Darkroom Triage with Undo (INSERTED)
 
@@ -283,6 +284,28 @@ Plans:
 - Use expo-av for audio playback
 - Consider: chime, whoosh, or subtle celebration sound
 - Ensure sound respects device silent mode settings
+
+#### Phase 18.4: Triage Animation Z-Index & Delete Suction Effect (INSERTED)
+
+**Goal**: Fix photo card animations rendering over triage buttons and add suction effect for delete action
+**Depends on**: Phase 18.3
+**Research**: Unlikely (React Native Reanimated z-index and animation patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 18.4-01: TBD (run /gsd:plan-phase 18.4 to break down)
+
+**Details:**
+Z-Index Fix:
+- Photo card triage animations currently render on top of the triage buttons
+- Cards should animate behind the button bar, not over it
+- Ensure proper z-index layering during all animation states
+
+Delete Suction Effect:
+- Current delete animation: card falls straight down off screen
+- New behavior: card should get "sucked into" the delete button
+- Animation should scale down and move toward delete button position
+- Creates satisfying visual feedback that the photo is being deleted
 
 ## Completed Milestones
 
@@ -373,7 +396,8 @@ Plans:
 | 17. Darkroom UX Polish | v1.5 | 2/2 | Complete | 2026-01-22 |
 | 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 17.2 Reveal Timing 0-5 Minutes | v1.5 | 1/1 | Complete | 2026-01-22 |
-| 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
+| 18. Reaction Notification Debouncing | v1.5 | 1/2 | In progress | - |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
 | 18.2 Rename App to Rewind | v1.5 | 0/? | Not started | - |
 | 18.3 Success Sound Effect on Triage Completion | v1.5 | 0/? | Not started | - |
+| 18.4 Triage Animation Z-Index & Delete Suction | v1.5 | 0/? | Not started | - |
