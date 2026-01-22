@@ -33,8 +33,9 @@ const DarkroomScreen = () => {
   const cardRef = useRef(null);
   const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
 
-  // UAT-003: Header swipe-down gesture to close darkroom
-  const headerTranslateY = useSharedValue(0);
+  // UAT-003/UAT-004: Screen swipe-down gesture to close darkroom
+  // UAT-004: Renamed from headerTranslateY to screenTranslateY - now moves entire screen, not just header
+  const screenTranslateY = useSharedValue(0);
   const screenOpacity = useSharedValue(1);
 
   // UAT-003: Helper function to navigate back (needs runOnJS wrapper for worklet)
@@ -42,13 +43,13 @@ const DarkroomScreen = () => {
     navigation.goBack();
   };
 
-  // UAT-003: Pan gesture for header swipe-down-to-close
+  // UAT-003/UAT-004: Pan gesture for header swipe-down-to-close (moves entire screen)
   const headerPanGesture = Gesture.Pan()
     .onUpdate((event) => {
       'worklet';
       // Only respond to downward swipes
       if (event.translationY > 0) {
-        headerTranslateY.value = event.translationY;
+        screenTranslateY.value = event.translationY;
         // Fade out as user drags (max 50% opacity reduction at 200px drag)
         screenOpacity.value = Math.max(0.5, 1 - (event.translationY / 400));
       }
@@ -60,17 +61,15 @@ const DarkroomScreen = () => {
         runOnJS(goBack)();
       } else {
         // Spring back to original position
-        headerTranslateY.value = withSpring(0, { damping: 20, stiffness: 300 });
+        screenTranslateY.value = withSpring(0, { damping: 20, stiffness: 300 });
         screenOpacity.value = withSpring(1, { damping: 20, stiffness: 300 });
       }
     });
 
-  // UAT-003: Animated styles for header and screen
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
-
+  // UAT-003/UAT-004: Animated style for entire screen (translateY + opacity)
+  // UAT-004: Combined translateY into screenAnimatedStyle so entire screen moves together
   const screenAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: screenTranslateY.value }],
     opacity: screenOpacity.value,
   }));
 
@@ -288,9 +287,9 @@ const DarkroomScreen = () => {
       <GestureHandlerRootView style={styles.container}>
         <ReAnimated.View style={[styles.successContainer, screenAnimatedStyle]}>
           <SafeAreaView style={styles.successContainer} edges={['top', 'bottom']}>
-            {/* UAT-003: Header with swipe-down-to-close gesture */}
+            {/* UAT-003/UAT-004: Header with swipe-down-to-close gesture (moves entire screen) */}
             <GestureDetector gesture={headerPanGesture}>
-              <ReAnimated.View style={[styles.header, headerAnimatedStyle]}>
+              <View style={styles.header}>
                 <TouchableOpacity
                   onPress={() => {
                     logger.info('DarkroomScreen: User tapped back button (success state)');
@@ -305,7 +304,7 @@ const DarkroomScreen = () => {
                   <Text style={styles.headerSubtitle}>All done!</Text>
                 </View>
                 <View style={styles.headerPlaceholder} />
-              </ReAnimated.View>
+              </View>
             </GestureDetector>
 
             {/* UAT-002: Success content with fade-in animation, emoji text, bottom button */}
@@ -335,9 +334,9 @@ const DarkroomScreen = () => {
       <GestureHandlerRootView style={styles.container}>
         <ReAnimated.View style={[styles.container, screenAnimatedStyle]}>
           <SafeAreaView style={styles.container}>
-            {/* UAT-003: Header with swipe-down-to-close gesture */}
+            {/* UAT-003/UAT-004: Header with swipe-down-to-close gesture (moves entire screen) */}
             <GestureDetector gesture={headerPanGesture}>
-              <ReAnimated.View style={[styles.header, headerAnimatedStyle]}>
+              <View style={styles.header}>
                 <TouchableOpacity
                   onPress={() => {
                     logger.info('DarkroomScreen: User tapped back button (empty state)');
@@ -352,7 +351,7 @@ const DarkroomScreen = () => {
                   <Text style={styles.headerSubtitle}>No photos ready</Text>
                 </View>
                 <View style={styles.headerPlaceholder} />
-              </ReAnimated.View>
+              </View>
             </GestureDetector>
 
             <View style={styles.emptyContainer}>
@@ -375,9 +374,9 @@ const DarkroomScreen = () => {
     <GestureHandlerRootView style={styles.container}>
       <ReAnimated.View style={[styles.container, screenAnimatedStyle]}>
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        {/* UAT-003: Header with swipe-down-to-close gesture */}
+        {/* UAT-003/UAT-004: Header with swipe-down-to-close gesture (moves entire screen) */}
         <GestureDetector gesture={headerPanGesture}>
-          <ReAnimated.View style={[styles.header, headerAnimatedStyle]}>
+          <View style={styles.header}>
             <TouchableOpacity
               onPress={() => {
                 logger.info('DarkroomScreen: User tapped back button');
@@ -394,7 +393,7 @@ const DarkroomScreen = () => {
               </Text>
             </View>
             <View style={styles.headerPlaceholder} />
-          </ReAnimated.View>
+          </View>
         </GestureDetector>
 
         {/* Stacked Photo Cards (UAT-005) - render up to 3 cards */}
