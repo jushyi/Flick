@@ -6,13 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../context/AuthContext';
-import { getDevelopingPhotos, revealPhotos, triagePhoto } from '../services/firebase/photoService';
+import { getDevelopingPhotos, revealPhotos, triagePhoto, batchTriagePhotos } from '../services/firebase/photoService';
 import { isDarkroomReadyToReveal, scheduleNextReveal } from '../services/firebase/darkroomService';
 import { SwipeablePhotoCard } from '../components';
 import { successNotification } from '../utils/haptics';
@@ -32,6 +33,8 @@ const DarkroomScreen = () => {
   // 18.1-02: Track when undo animation is in progress
   // { photo, enterFrom } when animating undo, null otherwise
   const [undoingPhoto, setUndoingPhoto] = useState(null);
+  // 18.1-02: Track when batch save is in progress
+  const [saving, setSaving] = useState(false);
   const cardRef = useRef(null);
   const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
 
@@ -180,11 +183,45 @@ const DarkroomScreen = () => {
     }
   };
 
-  // Handle Done button press - use goBack() to match chevron and header swipe animations (slide down)
-  // UAT-006: Changed from navigate() which slides right, to goBack() which respects the screen's open animation
-  const handleDonePress = () => {
-    logger.info('DarkroomScreen: User tapped Done button');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // 18.1-02: Handle Done button - batch save all decisions to Firestore and close
+  // Replaces old handleDonePress which just closed without saving
+  const handleDone = async () => {
+    if (saving) return;
+
+    logger.info('DarkroomScreen: User tapped Done button', {
+      photosRemaining: photos.length,
+      decisionsToSave: undoStack.length
+    });
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // If no decisions made, just close
+    if (undoStack.length === 0) {
+      navigation.goBack();
+      return;
+    }
+
+    setSaving(true);
+
+    // Build decisions array from undo stack
+    const decisions = undoStack.map(entry => ({
+      photoId: entry.photo.id,
+      action: entry.action,
+    }));
+
+    // Batch save to Firestore (silent - no loading indicator shown to user)
+    const result = await batchTriagePhotos(decisions);
+
+    if (!result.success) {
+      logger.error('DarkroomScreen: Batch save failed', { error: result.error });
+      // On error, stay on screen and show alert
+      setSaving(false);
+      Alert.alert('Save Failed', 'Could not save your decisions. Please try again.');
+      return;
+    }
+
+    // Success - close immediately (no celebration screen)
+    successNotification(); // Play haptic on successful save
     navigation.goBack();
   };
 
@@ -325,23 +362,32 @@ const DarkroomScreen = () => {
                 <Text style={styles.headerTitle}>Darkroom</Text>
                 <Text style={styles.headerSubtitle}>All done!</Text>
               </View>
-              {/* 18.1: Undo button in success state - allows undoing from completion */}
-              <TouchableOpacity
-                style={[
-                  styles.undoButton,
-                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
-                ]}
-                onPress={handleUndo}
-                disabled={undoStack.length === 0 || undoingPhoto !== null}
-              >
-                <Text style={styles.undoIcon}>↩</Text>
-                <Text style={[
-                  styles.undoText,
-                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
-                ]}>
-                  Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
-                </Text>
-              </TouchableOpacity>
+              {/* 18.1-02: Header actions - Done button and Undo button in success state */}
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  style={[styles.doneButtonHeader, saving && styles.doneButtonDisabled]}
+                  onPress={handleDone}
+                  disabled={saving}
+                >
+                  <Text style={styles.doneButtonTextHeader}>{saving ? 'Saving...' : 'Done'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.undoButton,
+                    (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
+                  ]}
+                  onPress={handleUndo}
+                  disabled={undoStack.length === 0 || undoingPhoto !== null}
+                >
+                  <Text style={styles.undoIcon}>↩</Text>
+                  <Text style={[
+                    styles.undoText,
+                    (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
+                  ]}>
+                    Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* UAT-002: Success content with fade-in animation, emoji text, bottom button */}
@@ -351,13 +397,14 @@ const DarkroomScreen = () => {
                 <Text style={styles.successTitle}>✨ Hooray! ✨</Text>
               </View>
 
-              {/* Done button at bottom with checkmark */}
+              {/* Done button at bottom - batch saves all decisions and closes */}
               <TouchableOpacity
-                style={styles.doneButtonBottom}
-                onPress={handleDonePress}
+                style={[styles.doneButtonBottom, saving && styles.doneButtonDisabled]}
+                onPress={handleDone}
                 activeOpacity={0.8}
+                disabled={saving}
               >
-                <Text style={styles.doneButtonText}>✓ Done</Text>
+                <Text style={styles.doneButtonText}>{saving ? 'Saving...' : 'Done'}</Text>
               </TouchableOpacity>
             </Animated.View>
           </SafeAreaView>
@@ -427,23 +474,34 @@ const DarkroomScreen = () => {
               {photos.length} {photos.length === 1 ? 'photo' : 'photos'} ready to review
             </Text>
           </View>
-          {/* 18.1: Undo button - dimmed when empty or animating, shows count when decisions exist */}
-          <TouchableOpacity
-            style={[
-              styles.undoButton,
-              (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
-            ]}
-            onPress={handleUndo}
-            disabled={undoStack.length === 0 || undoingPhoto !== null}
-          >
-            <Text style={styles.undoIcon}>↩</Text>
-            <Text style={[
-              styles.undoText,
-              (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
-            ]}>
-              Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
-            </Text>
-          </TouchableOpacity>
+          {/* 18.1-02: Header actions - Done button (when decisions exist) and Undo button */}
+          <View style={styles.headerActions}>
+            {undoStack.length > 0 && (
+              <TouchableOpacity
+                style={[styles.doneButtonHeader, saving && styles.doneButtonDisabled]}
+                onPress={handleDone}
+                disabled={saving}
+              >
+                <Text style={styles.doneButtonTextHeader}>{saving ? 'Saving...' : 'Done'}</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.undoButton,
+                (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
+              ]}
+              onPress={handleUndo}
+              disabled={undoStack.length === 0 || undoingPhoto !== null}
+            >
+              <Text style={styles.undoIcon}>↩</Text>
+              <Text style={[
+                styles.undoText,
+                (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
+              ]}>
+                Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stacked Photo Cards (UAT-005) - render up to 3 cards */}
@@ -578,6 +636,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     marginHorizontal: 16,
+  },
+  // 18.1-02: Header actions container for Done + Undo buttons
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  // 18.1-02: Done button styles for header
+  doneButtonHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
+  },
+  doneButtonDisabled: {
+    opacity: 0.5,
+  },
+  doneButtonTextHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   // 18.1: Undo button styles
   undoButton: {

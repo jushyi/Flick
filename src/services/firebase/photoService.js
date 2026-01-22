@@ -416,3 +416,25 @@ export const removeReaction = async (photoId, userId) => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Batch triage multiple photos at once
+ * Used by darkroom when user taps Done to save all decisions
+ * @param {Array} decisions - Array of { photoId, action } objects
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const batchTriagePhotos = async (decisions) => {
+  try {
+    logger.debug('PhotoService.batchTriagePhotos: Starting batch', { count: decisions.length });
+
+    for (const { photoId, action } of decisions) {
+      await triagePhoto(photoId, action);
+    }
+
+    logger.info('PhotoService.batchTriagePhotos: Batch complete', { count: decisions.length });
+    return { success: true };
+  } catch (error) {
+    logger.error('PhotoService.batchTriagePhotos: Failed', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
