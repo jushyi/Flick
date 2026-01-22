@@ -7,10 +7,12 @@ import {
   RefreshControl,
   Image,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFirestore, collection, query, where, orderBy, limit, getDocs } from '@react-native-firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { getTimeAgo } from '../utils/timeUtils';
 import logger from '../utils/logger';
@@ -22,6 +24,7 @@ const db = getFirestore();
  * Instagram-style vertical list with profile photo, message, and timestamp
  */
 const NotificationsScreen = () => {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,6 +154,13 @@ const NotificationsScreen = () => {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="chevron-back" size={28} color="#000000" />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Notifications</Text>
         </View>
         <View style={styles.loadingContainer}>
@@ -164,6 +174,13 @@ const NotificationsScreen = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="chevron-back" size={28} color="#000000" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
       </View>
 
@@ -194,11 +211,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   header: {
-    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+  },
+  backButton: {
+    marginRight: 8,
   },
   headerTitle: {
     fontSize: 24,
@@ -212,6 +234,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
   notificationItem: {
     flexDirection: 'row',
@@ -259,7 +282,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
-    paddingTop: 100,
   },
   emptyTitle: {
     fontSize: 20,
