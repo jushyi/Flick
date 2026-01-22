@@ -111,26 +111,31 @@ const DarkroomScreen = () => {
       // Check if this is the last photo
       const isLastPhoto = photos.length === 1;
 
-      // Remove photo from list
-      setPhotos(prev => {
-        const newPhotos = prev.filter(p => p.id !== photoId);
-        logger.debug('DarkroomScreen: Photos updated', {
-          oldCount: prev.length,
-          newCount: newPhotos.length,
-          removedId: photoId,
-          nextPhotoId: newPhotos[0]?.id,
-          isLastPhoto,
+      // UAT-012: Delay removing photo from array to allow cascade animation to complete
+      // The card exit animation takes 400ms (EXIT_DURATION in SwipeablePhotoCard)
+      // We delay slightly less (350ms) so the next card is ready when the exiting card is nearly gone
+      setTimeout(() => {
+        // Remove photo from list
+        setPhotos(prev => {
+          const newPhotos = prev.filter(p => p.id !== photoId);
+          logger.debug('DarkroomScreen: Photos updated', {
+            oldCount: prev.length,
+            newCount: newPhotos.length,
+            removedId: photoId,
+            nextPhotoId: newPhotos[0]?.id,
+            isLastPhoto,
+          });
+          return newPhotos;
         });
-        return newPhotos;
-      });
 
-      // Navigate to success screen if this was the last photo
-      if (isLastPhoto) {
-        logger.info('DarkroomScreen: Last photo triaged, navigating to success', { action });
-        setTimeout(() => {
-          navigation.navigate('Success');
-        }, 100);
-      }
+        // Navigate to success screen if this was the last photo
+        if (isLastPhoto) {
+          logger.info('DarkroomScreen: Last photo triaged, navigating to success', { action });
+          setTimeout(() => {
+            navigation.navigate('Success');
+          }, 100);
+        }
+      }, 350);
     } catch (error) {
       logger.error('Error triaging photo', error);
     }
