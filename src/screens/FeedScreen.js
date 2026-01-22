@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { getFirestore, collection, query, where, limit, onSnapshot } from '@react-native-firebase/firestore';
+import { Ionicons } from '@expo/vector-icons';
 import useFeedPhotos from '../hooks/useFeedPhotos';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
@@ -19,6 +21,8 @@ import { FriendStoryCard, StoriesViewerModal } from '../components';
 import { toggleReaction, getFriendStoriesData } from '../services/firebase/feedService';
 import { useAuth } from '../context/AuthContext';
 import logger from '../utils/logger';
+
+const db = getFirestore();
 
 const FeedScreen = () => {
   const { user } = useAuth();
@@ -43,6 +47,9 @@ const FeedScreen = () => {
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [storiesModalVisible, setStoriesModalVisible] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
+
+  // Notifications state - red dot indicator
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
   /**
    * Refresh feed and stories when screen comes into focus
@@ -84,6 +91,32 @@ const FeedScreen = () => {
     if (user?.uid) {
       loadFriendStories();
     }
+  }, [user?.uid]);
+
+  /**
+   * Subscribe to unread notifications for red dot indicator
+   */
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    logger.debug('FeedScreen: Subscribing to unread notifications');
+
+    const q = query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', user.uid),
+      where('read', '==', false),
+      limit(1)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const hasUnread = !snapshot.empty;
+      logger.debug('FeedScreen: Unread notifications check', { hasUnread });
+      setHasNewNotifications(hasUnread);
+    }, (error) => {
+      logger.error('FeedScreen: Failed to subscribe to notifications', { error: error.message });
+    });
+
+    return () => unsubscribe();
   }, [user?.uid]);
 
   /**
@@ -302,6 +335,15 @@ const FeedScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Lapse</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Notifications')}
+          style={styles.notificationButton}
+        >
+          <Ionicons name="heart-outline" size={24} color="#000000" />
+          {hasNewNotifications && (
+            <View style={styles.notificationDot} />
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Stories Row */}
@@ -373,6 +415,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#000000',
+  },
+  notificationButton: {
+    padding: 8,
+    position: 'relative',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30', // iOS red
   },
   feedList: {
     paddingHorizontal: 16,
