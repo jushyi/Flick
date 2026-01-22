@@ -21,73 +21,6 @@ import logger from '../utils/logger';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Inline success sparkle configuration (subtle twinkling effect)
-const SPARKLE_COUNT = 8;
-
-const SparkleParticle = ({ index }) => {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.5)).current;
-
-  // Random position within center area
-  const left = useRef(SCREEN_WIDTH * 0.2 + Math.random() * SCREEN_WIDTH * 0.6).current;
-  const top = useRef(SCREEN_HEIGHT * 0.25 + Math.random() * SCREEN_HEIGHT * 0.3).current;
-
-  useEffect(() => {
-    const delay = index * 150; // Stagger sparkle appearances
-
-    // Twinkle animation: fade in, pulse, fade out, repeat
-    const twinkle = () => {
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scale, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.delay(200),
-        Animated.parallel([
-          Animated.timing(opacity, {
-            toValue: 0.3,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scale, {
-            toValue: 0.6,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.delay(300),
-      ]).start(() => twinkle());
-    };
-
-    const timer = setTimeout(twinkle, delay);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <Animated.Text
-      style={[
-        styles.sparkleParticle,
-        {
-          left,
-          top,
-          opacity,
-          transform: [{ scale }],
-        },
-      ]}
-    >
-      ✨
-    </Animated.Text>
-  );
-};
-
 const DarkroomScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
@@ -97,6 +30,7 @@ const DarkroomScreen = () => {
   const [triageComplete, setTriageComplete] = useState(false); // Track triage completion for inline success
   const [pendingSuccess, setPendingSuccess] = useState(false); // UAT-001: Track when last photo triage is in progress
   const cardRef = useRef(null);
+  const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
 
   // Load developing photos when screen comes into focus
   useFocusEffect(
@@ -292,12 +226,24 @@ const DarkroomScreen = () => {
     );
   }
 
+  // UAT-002: Trigger fade-in animation when success state is shown
+  useEffect(() => {
+    if ((triageComplete || pendingSuccess) && photos.length === 0) {
+      Animated.timing(successFadeAnim, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [triageComplete, pendingSuccess, photos.length, successFadeAnim]);
+
   // Inline success state - shows after triage completes (same structure as empty state)
   // UAT-001: Also show if pendingSuccess is true (prevents empty state flash before triageComplete is set)
+  // UAT-002: Polished UI - emoji text, bottom button with checkmark, fade-in animation
   if ((triageComplete || pendingSuccess) && photos.length === 0) {
     return (
       <GestureHandlerRootView style={styles.container}>
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <SafeAreaView style={styles.successContainer} edges={['top', 'bottom']}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
@@ -316,25 +262,22 @@ const DarkroomScreen = () => {
             <View style={styles.headerPlaceholder} />
           </View>
 
-          {/* Sparkles layer */}
-          <View style={styles.sparkleContainer} pointerEvents="none">
-            {Array.from({ length: SPARKLE_COUNT }, (_, i) => (
-              <SparkleParticle key={i} index={i} />
-            ))}
-          </View>
+          {/* UAT-002: Success content with fade-in animation, emoji text, bottom button */}
+          <Animated.View style={[styles.successContentArea, { opacity: successFadeAnim }]}>
+            {/* Centered title in upper 2/3 of screen */}
+            <View style={styles.successTitleContainer}>
+              <Text style={styles.successTitle}>✨ Hooray! ✨</Text>
+            </View>
 
-          {/* Success content in empty state position */}
-          <View style={styles.emptyContainer}>
-            <Text style={styles.successTitle}>Hooray!</Text>
-
+            {/* Done button at bottom with checkmark */}
             <TouchableOpacity
-              style={styles.doneButton}
+              style={styles.doneButtonBottom}
               onPress={handleDonePress}
               activeOpacity={0.8}
             >
-              <Text style={styles.doneButtonText}>Done</Text>
+              <Text style={styles.doneButtonText}>✓ Done</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </SafeAreaView>
       </GestureHandlerRootView>
     );
@@ -606,26 +549,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  // Inline success state styles
-  sparkleContainer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1,
+  // UAT-002: Inline success state styles (polished)
+  successContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
   },
-  sparkleParticle: {
-    position: 'absolute',
-    fontSize: 24,
+  successContentArea: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingBottom: 40,
+  },
+  successTitleContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 80, // Push title slightly up from center
   },
   successTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 32,
+    textAlign: 'center',
   },
-  doneButton: {
+  doneButtonBottom: {
     backgroundColor: '#007AFF',
     paddingVertical: 16,
     paddingHorizontal: 48,
     borderRadius: 24,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   doneButtonText: {
     fontSize: 18,
