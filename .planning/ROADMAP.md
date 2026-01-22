@@ -202,20 +202,20 @@ Triage Completion UX:
 - Stay on darkroom screen and transition empty state to success message state
 - Smoother, less janky experience when all photos are triaged
 
-#### Phase 17.2: Reveal Timing 0-5 Minutes (INSERTED)
+#### Phase 17.2: Reveal Timing 0-5 Minutes (INSERTED) - Complete
 
-**Goal**: Change darkroom reveal timing from 0-2 hours to 0-5 minutes for faster photo reveals
+**Goal**: Change darkroom reveal timing from 0-15 minutes to 0-5 minutes for faster photo reveals
 **Depends on**: Phase 17.1
 **Research**: Unlikely (simple constant change in darkroomService)
-**Plans**: TBD
+**Plans**: 1/1 complete
 
 Plans:
-- [ ] 17.2-01: TBD (run /gsd:plan-phase 17.2 to break down)
+- [x] 17.2-01: Update client/server reveal timing to 0-5 minutes - completed 2026-01-22
 
-**Details:**
-- Update reveal timing constant from 0-2 hours to 0-5 minutes
-- Provides much faster feedback loop for users
-- Small code change in darkroomService.js
+**Delivered:**
+- Client-side calculateNextRevealTime() uses Math.random() * 5 (0-5 minutes)
+- Server-side revealUserPhotos() uses Math.floor(Math.random() * 6) (0-5 minutes)
+- Cloud Functions deployed to Firebase
 
 #### Phase 18: Reaction Notification Debouncing
 
@@ -266,6 +266,23 @@ Complete rebrand from "Lapse" to "Rewind":
 - Firebase project references (if applicable)
 - Any "lapse" references in code comments, variable names, folder names
 - Deep link scheme (lapse:// → rewind://)
+
+#### Phase 18.3: Success Sound Effect on Triage Completion (INSERTED)
+
+**Goal**: Play a celebratory sound clip when user finishes triaging all photos (during success screen)
+**Depends on**: Phase 18.2
+**Research**: Unlikely (expo-av already available for audio playback)
+**Plans**: TBD
+
+Plans:
+- [ ] 18.3-01: TBD (run /gsd:plan-phase 18.3 to break down)
+
+**Details:**
+- Add satisfying audio feedback when all photos are triaged
+- Sound plays during the inline success state (sparkles animation)
+- Use expo-av for audio playback
+- Consider: chime, whoosh, or subtle celebration sound
+- Ensure sound respects device silent mode settings
 
 ## Completed Milestones
 
@@ -355,7 +372,8 @@ Complete rebrand from "Lapse" to "Rewind":
 | 16.3 Fix React Native Firebase Warnings | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 17. Darkroom UX Polish | v1.5 | 2/2 | Complete | 2026-01-22 |
 | 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
-| 17.2 Reveal Timing 0-5 Minutes | v1.5 | 0/? | Not started | - |
+| 17.2 Reveal Timing 0-5 Minutes | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
 | 18.2 Rename App to Rewind | v1.5 | 0/? | Not started | - |
+| 18.3 Success Sound Effect on Triage Completion | v1.5 | 0/? | Not started | - |
