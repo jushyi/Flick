@@ -217,16 +217,21 @@ Plans:
 - Server-side revealUserPhotos() uses Math.floor(Math.random() * 6) (0-5 minutes)
 - Cloud Functions deployed to Firebase
 
-#### Phase 18: Reaction Notification Debouncing (In Progress)
+#### Phase 18: Reaction Notification Debouncing (Complete)
 
 **Goal**: Aggregate reaction notifications over 10-second window instead of per-tap to prevent spam
 **Depends on**: Phase 17.2
 **Research**: Unlikely (Cloud Function update to existing sendReactionNotification)
-**Plans**: 1/2 complete
+**Plans**: 2/2 complete
 
 Plans:
 - [x] 18-01: Backend - Cloud Function debouncing with 10-second batching - completed 2026-01-22
-- [ ] 18-02: Frontend - Notifications feed UI with heart button
+- [x] 18-02: Frontend - Notifications feed UI with heart button - completed 2026-01-22
+
+**Delivered:**
+- Cloud Function debouncing with 10-second sliding window batching
+- NotificationsScreen with Instagram-style vertical notification list
+- Heart button in FeedScreen header with red dot indicator for unread notifications
 
 #### Phase 18.1: Batched Darkroom Triage with Undo (INSERTED)
 
@@ -396,7 +401,7 @@ Delete Suction Effect:
 | 17. Darkroom UX Polish | v1.5 | 2/2 | Complete | 2026-01-22 |
 | 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 17.2 Reveal Timing 0-5 Minutes | v1.5 | 1/1 | Complete | 2026-01-22 |
-| 18. Reaction Notification Debouncing | v1.5 | 1/2 | In progress | - |
+| 18. Reaction Notification Debouncing | v1.5 | 2/2 | Complete | 2026-01-22 |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
 | 18.2 Rename App to Rewind | v1.5 | 0/? | Not started | - |
 | 18.3 Success Sound Effect on Triage Completion | v1.5 | 0/? | Not started | - |
