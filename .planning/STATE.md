@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 17 of 18.2 (Darkroom UX Polish)
-Plan: FIX-3 complete (final UAT round - all 11 issues resolved)
+Plan: FIX-4 complete (UAT round 4 - 3 issues fixed, 14 total for Phase 17)
 Status: Phase 17 complete, ready for Phase 17.1
-Last activity: 2026-01-22 - Completed 17-FIX-3-PLAN.md (2 UAT issues fixed, 11 total)
+Last activity: 2026-01-22 - Completed 17-FIX-4-PLAN.md (cascade flash, blur visibility, border radius)
 
 Progress: ████████░░ 77% (v1.5: 11/14 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 53 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 16 in v1.5)
+- Total plans completed: 54 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 17 in v1.5)
 - Average duration: 16 min
-- Total execution time: 10.4 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 1.9h v1.5)
+- Total execution time: 10.6 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 2.1h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: ████████░░ 77% (v1.5: 11/14 phases complete)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.2 | 16 | 136 min |
+| v1.5 | 15-18.2 | 17 | 161 min |
 
 ## Accumulated Context
 
@@ -48,6 +48,7 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 17-FIX-2 | Stack offset -20/-40px for visible peek | Cards visibly peek from top at rest |
 | 17-FIX-2 | Animation duration 400ms | Balances visibility with responsiveness |
 | 17-FIX-3 | Dark overlay for stack blur effect | Animatable alternative to blurRadius |
+| 17-FIX-4 | Cascading prop for parallel animation sync | Stack cards animate during exit, not after |
 
 ### Deferred Issues
 
@@ -81,5 +82,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 17-FIX-3-PLAN.md - Fixed 2 UAT issues (11 total for Phase 17)
+Stopped at: Completed 17-FIX-4-PLAN.md - Fixed 3 UAT issues (14 total for Phase 17)
 Resume file: None
