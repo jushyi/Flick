@@ -227,11 +227,15 @@ Plans:
 Plans:
 - [x] 18-01: Backend - Cloud Function debouncing with 10-second batching - completed 2026-01-22
 - [x] 18-02: Frontend - Notifications feed UI with heart button - completed 2026-01-22
+- [x] 18-FIX: UAT fixes (Firestore rules, back button, empty state centering) - completed 2026-01-22
 
 **Delivered:**
 - Cloud Function debouncing with 10-second sliding window batching
 - NotificationsScreen with Instagram-style vertical notification list
 - Heart button in FeedScreen header with red dot indicator for unread notifications
+- Fixed Firestore security rules for notifications (recipientId field)
+- Back button navigation in NotificationsScreen
+- Properly centered empty state UI
 
 #### Phase 18.1: Batched Darkroom Triage with Undo (INSERTED)
 
@@ -401,7 +405,7 @@ Delete Suction Effect:
 | 17. Darkroom UX Polish | v1.5 | 2/2 | Complete | 2026-01-22 |
 | 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 17.2 Reveal Timing 0-5 Minutes | v1.5 | 1/1 | Complete | 2026-01-22 |
-| 18. Reaction Notification Debouncing | v1.5 | 2/2 | Complete | 2026-01-22 |
+| 18. Reaction Notification Debouncing | v1.5 | 2/2 + FIX | Complete | 2026-01-22 |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
 | 18.2 Rename App to Rewind | v1.5 | 0/? | Not started | - |
 | 18.3 Success Sound Effect on Triage Completion | v1.5 | 0/? | Not started | - |
