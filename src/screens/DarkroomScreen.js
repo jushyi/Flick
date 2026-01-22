@@ -26,6 +26,9 @@ const DarkroomScreen = () => {
   const [cascading, setCascading] = useState(false); // UAT-012: Track when cards are cascading
   const [triageComplete, setTriageComplete] = useState(false); // Track triage completion for inline success
   const [pendingSuccess, setPendingSuccess] = useState(false); // UAT-001: Track when last photo triage is in progress
+  // 18.1: Undo stack for batched triage - stores decisions locally until Done is tapped
+  // Each entry: { photo: PhotoObject, action: 'archive'|'journal'|'delete', exitDirection: 'left'|'right'|'down' }
+  const [undoStack, setUndoStack] = useState([]);
   const cardRef = useRef(null);
   const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
 
@@ -107,12 +110,28 @@ const DarkroomScreen = () => {
     try {
       logger.debug('DarkroomScreen: Starting triage', { photoId, action, currentCount: photos.length });
 
-      const result = await triagePhoto(photoId, action);
-      logger.debug('DarkroomScreen: Triage result', { success: result.success, error: result.error });
-
-      if (!result.success) {
-        throw new Error(result.error);
+      // 18.1: Find the photo object to store in undo stack
+      const photoToTriage = photos.find(p => p.id === photoId);
+      if (!photoToTriage) {
+        logger.error('DarkroomScreen: Photo not found for triage', { photoId });
+        return;
       }
+
+      // 18.1: Determine exit direction based on action
+      const exitDirection = action === 'archive' ? 'left' : action === 'journal' ? 'right' : 'down';
+
+      // 18.1: Push to undo stack instead of calling triagePhoto()
+      // Firestore save is deferred until Done button is tapped (Plan 2)
+      setUndoStack(prev => {
+        const newStack = [...prev, { photo: photoToTriage, action, exitDirection }];
+        logger.debug('DarkroomScreen: Decision pushed to undo stack', {
+          photoId,
+          action,
+          exitDirection,
+          stackSize: newStack.length,
+        });
+        return newStack;
+      });
 
       // Check if this is the last photo
       const isLastPhoto = photos.length === 1;
@@ -127,7 +146,7 @@ const DarkroomScreen = () => {
       // UAT-012: Remove photo immediately - the callback is fired AFTER the exit animation completes
       // (400ms EXIT_DURATION in SwipeablePhotoCard), so the card is already off screen
       // The cascade animation was triggered earlier, so stack cards are already in position
-      // Remove photo from list
+      // Remove photo from list (visual removal only - not saved to Firestore yet)
       setPhotos(prev => {
         const newPhotos = prev.filter(p => p.id !== photoId);
         logger.debug('DarkroomScreen: Photos updated', {
@@ -143,14 +162,14 @@ const DarkroomScreen = () => {
       // Reset cascading state for next triage
       setCascading(false);
 
-      // Show inline success state if this was the last photo
+      // 18.1: Show success state when all photos triaged but DON'T trigger success haptic
+      // Haptic feedback will be triggered when user taps Done (batch save in Plan 2)
       if (isLastPhoto) {
         // Delay to let the last card's exit animation complete, then finalize triageComplete
         setTimeout(() => {
           setTriageComplete(true);
-          // Trigger success haptic
-          successNotification();
-          logger.info('DarkroomScreen: Inline success state shown');
+          // 18.1: Removed successNotification() - no celebration until Done is tapped
+          logger.info('DarkroomScreen: All photos triaged, awaiting Done tap');
         }, 300);
       }
     } catch (error) {
@@ -213,15 +232,16 @@ const DarkroomScreen = () => {
 
   // UAT-002: Trigger fade-in animation when success state is shown
   // NOTE: This useEffect must be before any early returns to comply with Rules of Hooks
+  // 18.1: Updated condition - show success when photos are empty AND undo stack has entries
   useEffect(() => {
-    if ((triageComplete || pendingSuccess) && photos.length === 0) {
+    if (photos.length === 0 && undoStack.length > 0) {
       Animated.timing(successFadeAnim, {
         toValue: 1,
         duration: 350,
         useNativeDriver: true,
       }).start();
     }
-  }, [triageComplete, pendingSuccess, photos.length, successFadeAnim]);
+  }, [photos.length, undoStack.length, successFadeAnim]);
 
   if (loading) {
     return (
@@ -236,10 +256,10 @@ const DarkroomScreen = () => {
     );
   }
 
-  // Inline success state - shows after triage completes (same structure as empty state)
-  // UAT-001: Also show if pendingSuccess is true (prevents empty state flash before triageComplete is set)
+  // 18.1: Inline success state - shows when all photos triaged (undo stack has entries)
+  // This state shows the "All done!" screen but still requires Done tap to save
   // UAT-002: Polished UI - emoji text, bottom button with checkmark, fade-in animation
-  if ((triageComplete || pendingSuccess) && photos.length === 0) {
+  if (photos.length === 0 && undoStack.length > 0) {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <View style={styles.successContainer}>
