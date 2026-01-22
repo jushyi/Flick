@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../context/AuthContext';
@@ -371,12 +372,17 @@ const DarkroomScreen = () => {
                 onPress={handleUndo}
                 disabled={undoStack.length === 0 || undoingPhoto !== null}
               >
-                <Text style={styles.undoIcon}>↩</Text>
+                <Ionicons
+                  name="arrow-undo"
+                  size={16}
+                  color="#FFFFFF"
+                  style={styles.undoIcon}
+                />
                 <Text style={[
                   styles.undoText,
                   (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
                 ]}>
-                  Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
+                  Undo
                 </Text>
               </TouchableOpacity>
             </View>
@@ -474,12 +480,17 @@ const DarkroomScreen = () => {
             onPress={handleUndo}
             disabled={undoStack.length === 0 || undoingPhoto !== null}
           >
-            <Text style={styles.undoIcon}>↩</Text>
+            <Ionicons
+              name="arrow-undo"
+              size={16}
+              color="#FFFFFF"
+              style={styles.undoIcon}
+            />
             <Text style={[
               styles.undoText,
               (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
             ]}>
-              Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
+              Undo
             </Text>
           </TouchableOpacity>
         </View>
@@ -634,8 +645,6 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   undoIcon: {
-    fontSize: 16,
-    color: '#FFFFFF',
     marginRight: 4,
   },
   undoText: {
