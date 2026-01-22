@@ -141,6 +141,8 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       // Users can only read their own notifications
       // Note: Notifications use recipientId field (not userId)
+      // For queries: request.auth.uid must match the recipientId filter
+      // For document reads: resource.data.recipientId must match request.auth.uid
       allow read: if isAuthenticated() &&
                      resource.data.recipientId == request.auth.uid;
 
