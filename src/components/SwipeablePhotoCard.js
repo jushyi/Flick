@@ -29,6 +29,11 @@ const DELETE_OVERLAY_THRESHOLD = 150;
 // Exit animation configuration (UAT-008: increased from 250ms for more visible arc motion)
 const EXIT_DURATION = 400;
 
+// UAT-016: Button-triggered animations use slower duration for satisfying pace
+// Swipe gestures have natural lead-in time from drag, but button taps are instant
+// 1200ms (3x EXIT_DURATION) gives button animations similar perceived pace to swipes
+const BUTTON_EXIT_DURATION = 1200;
+
 /**
  * SwipeablePhotoCard - Flick-style swipeable card for photo triage
  *
@@ -178,7 +183,8 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
   // UAT-012: Removed opacity fade - card stays opaque while flying off screen
   // This prevents blocking the view of cards behind during exit animation
   useImperativeHandle(ref, () => ({
-    // Trigger archive animation (same as left swipe)
+    // Trigger archive animation (same as left swipe but slower for button)
+    // UAT-016: Button animations use BUTTON_EXIT_DURATION (1200ms) for satisfying pace
     triggerArchive: () => {
       if (actionInProgress.value) return;
       logger.info('SwipeablePhotoCard: triggerArchive called', { photoId: photo?.id });
@@ -186,18 +192,19 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       // Animate to archive position (arc to bottom-left)
       // Card stays opaque - flies off screen without fading
       translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {
-        duration: EXIT_DURATION,
+        duration: BUTTON_EXIT_DURATION,
         easing: Easing.out(Easing.cubic),
       }, () => {
         'worklet';
         runOnJS(handleArchive)();
       });
       translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
-        duration: EXIT_DURATION,
+        duration: BUTTON_EXIT_DURATION,
         easing: Easing.out(Easing.cubic),
       });
     },
-    // Trigger journal animation (same as right swipe)
+    // Trigger journal animation (same as right swipe but slower for button)
+    // UAT-016: Button animations use BUTTON_EXIT_DURATION (1200ms) for satisfying pace
     triggerJournal: () => {
       if (actionInProgress.value) return;
       logger.info('SwipeablePhotoCard: triggerJournal called', { photoId: photo?.id });
@@ -205,18 +212,19 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       // Animate to journal position (arc to bottom-right)
       // Card stays opaque - flies off screen without fading
       translateX.value = withTiming(SCREEN_WIDTH * 1.5, {
-        duration: EXIT_DURATION,
+        duration: BUTTON_EXIT_DURATION,
         easing: Easing.out(Easing.cubic),
       }, () => {
         'worklet';
         runOnJS(handleJournal)();
       });
       translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
-        duration: EXIT_DURATION,
+        duration: BUTTON_EXIT_DURATION,
         easing: Easing.out(Easing.cubic),
       });
     },
     // Trigger delete animation (drop straight down)
+    // UAT-016: Button animations use BUTTON_EXIT_DURATION (1200ms) for satisfying pace
     triggerDelete: () => {
       if (actionInProgress.value) return;
       logger.info('SwipeablePhotoCard: triggerDelete called', { photoId: photo?.id });
@@ -224,7 +232,7 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       // Animate to delete position (drop down)
       // Card stays opaque - flies off screen without fading
       translateY.value = withTiming(SCREEN_HEIGHT, {
-        duration: EXIT_DURATION,
+        duration: BUTTON_EXIT_DURATION,
         easing: Easing.out(Easing.cubic),
       }, () => {
         'worklet';
