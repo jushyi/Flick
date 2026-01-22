@@ -237,26 +237,23 @@ Plans:
 - Back button navigation in NotificationsScreen
 - Properly centered empty state UI
 
-#### Phase 18.1: Batched Darkroom Triage with Undo (INSERTED) - In Progress
+#### Phase 18.1: Batched Darkroom Triage with Undo (INSERTED) - Complete
 
 **Goal**: Batch triage decisions locally until user confirms, with undo capability and session persistence
 **Depends on**: Phase 18
 **Research**: Unlikely (React Native state management and AsyncStorage patterns)
-**Plans**: 1/2 complete
+**Plans**: 2/2 complete
 
 Plans:
 - [x] 18.1-01: Undo stack state and UI - completed 2026-01-22
-- [ ] 18.1-02: Done button batch save and undo animation
+- [x] 18.1-02: Done button batch save and undo animation - completed 2026-01-22
 
-**Details:**
-Current behavior: Triage choices (archive/journal/delete) save immediately to Firestore on swipe, no undo option.
-
-New behavior:
-- Triage decisions stored locally during session (not saved to Firestore until confirmed)
-- Undo button at top of screen to reverse last decision and re-triage that photo
-- "Done" or "Back to Camera" button finalizes and saves all decisions to Firestore
-- If darkroom closed mid-triage (app backgrounded, crash, etc.), session persists via AsyncStorage
-- Reopening darkroom restores the same batch with any previous local decisions intact
+**Delivered:**
+- Undo stack state management for local triage decisions
+- Reverse card animation (cards slide back from exit direction on undo)
+- Done button batch saves all decisions to Firestore
+- Silent close after Done tap (haptic only, no celebration screen)
+- Ionicons undo button with clean "Undo" text
 
 #### Phase 18.2: Success Sound Effect on Triage Completion (INSERTED)
 
@@ -387,6 +384,6 @@ Delete Suction Effect:
 | 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 17.2 Reveal Timing 0-5 Minutes | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 18. Reaction Notification Debouncing | v1.5 | 2/2 + FIX | Complete | 2026-01-22 |
-| 18.1 Batched Darkroom Triage with Undo | v1.5 | 1/2 | In progress | - |
+| 18.1 Batched Darkroom Triage with Undo | v1.5 | 2/2 | Complete | 2026-01-22 |
 | 18.2 Success Sound Effect on Triage Completion | v1.5 | 0/? | Not started | - |
 | 18.3 Triage Animation Z-Index & Delete Suction | v1.5 | 0/? | Not started | - |

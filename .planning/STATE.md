@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 18.1 of 18.3 (Batched Darkroom Triage with Undo)
-Plan: 1/2 complete
-Status: In progress
-Last activity: 2026-01-22 - Completed 18.1-01-PLAN.md (undo stack state and UI)
+Plan: 2/2 complete
+Status: Phase complete
+Last activity: 2026-01-22 - Completed 18.1-02-PLAN.md (done button batch save and undo animation)
 
-Progress: █████████░ 89% (v1.5: 16/19 phases in progress)
+Progress: █████████░ 89% (v1.5: 16/19 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 62 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 25 in v1.5)
+- Total plans completed: 64 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 27 in v1.5)
 - Average duration: 16 min
 - Total execution time: 12.6 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 4.1h v1.5)
 
@@ -62,6 +62,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 18-01 | In-memory pendingReactions for debouncing | Simple, effective for single-instance Cloud Functions |
 | 18-01 | Sliding window debounce (10s) | Each new reaction resets timer for better batching |
 | 18-02 | Red dot indicator vs count badge | Simpler, Instagram-style notification indicator |
+| 18.1-02 | Done button only on success screen | Cleaner triage UX without header clutter |
+| 18.1-02 | Ionicons for Undo button | Native look, no count display |
 
 ### Deferred Issues
 
@@ -98,5 +100,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 18.1-01-PLAN.md - Undo stack state and UI
+Stopped at: Completed 18.1-02-PLAN.md - Phase 18.1 complete
 Resume file: None
