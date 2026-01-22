@@ -95,6 +95,7 @@ const DarkroomScreen = () => {
   const [loading, setLoading] = useState(true);
   const [cascading, setCascading] = useState(false); // UAT-012: Track when cards are cascading
   const [triageComplete, setTriageComplete] = useState(false); // Track triage completion for inline success
+  const [pendingSuccess, setPendingSuccess] = useState(false); // UAT-001: Track when last photo triage is in progress
   const cardRef = useRef(null);
 
   // Load developing photos when screen comes into focus
@@ -185,6 +186,13 @@ const DarkroomScreen = () => {
       // Check if this is the last photo
       const isLastPhoto = photos.length === 1;
 
+      // UAT-001: Set pendingSuccess BEFORE removing photo to prevent empty state flash
+      // This ensures the success state renders immediately when photos.length hits 0
+      if (isLastPhoto) {
+        setPendingSuccess(true);
+        logger.info('DarkroomScreen: Last photo triaged, pendingSuccess set', { action });
+      }
+
       // UAT-012: Remove photo immediately - the callback is fired AFTER the exit animation completes
       // (400ms EXIT_DURATION in SwipeablePhotoCard), so the card is already off screen
       // The cascade animation was triggered earlier, so stack cards are already in position
@@ -206,8 +214,7 @@ const DarkroomScreen = () => {
 
       // Show inline success state if this was the last photo
       if (isLastPhoto) {
-        logger.info('DarkroomScreen: Last photo triaged, showing inline success', { action });
-        // Delay to let the last card's exit animation complete
+        // Delay to let the last card's exit animation complete, then finalize triageComplete
         setTimeout(() => {
           setTriageComplete(true);
           // Trigger success haptic
@@ -286,7 +293,8 @@ const DarkroomScreen = () => {
   }
 
   // Inline success state - shows after triage completes (same structure as empty state)
-  if (triageComplete && photos.length === 0) {
+  // UAT-001: Also show if pendingSuccess is true (prevents empty state flash before triageComplete is set)
+  if ((triageComplete || pendingSuccess) && photos.length === 0) {
     return (
       <GestureHandlerRootView style={styles.container}>
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
