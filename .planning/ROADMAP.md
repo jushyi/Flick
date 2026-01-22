@@ -177,15 +177,15 @@ Plans:
 - Three-stage haptic feedback (threshold, release, completion)
 - Down-swipe for delete gesture
 
-#### Phase 17.1: Darkroom Animation Refinements (INSERTED)
+#### Phase 17.1: Darkroom Animation Refinements (INSERTED) - Complete
 
 **Goal**: Improve darkroom open/close animations and triage completion UX
 **Depends on**: Phase 17
 **Research**: Unlikely (React Native Reanimated already in use)
-**Plans**: TBD
+**Plans**: 1/1 complete
 
 Plans:
-- [ ] 17.1-01: TBD (run /gsd:plan-phase 17.1 to break down)
+- [x] 17.1-01: Bottom slide animation, down chevron, inline success - completed 2026-01-22
 
 **Details:**
 Animation Changes:
@@ -350,7 +350,7 @@ Complete rebrand from "Lapse" to "Rewind":
 | 16.2 Fix 0.5x Ultra-Wide Zoom | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 16.3 Fix React Native Firebase Warnings | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 17. Darkroom UX Polish | v1.5 | 2/2 | Complete | 2026-01-22 |
-| 17.1 Darkroom Animation Refinements | v1.5 | 0/? | Not started | - |
+| 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 17.2 Reveal Timing 0-5 Minutes | v1.5 | 0/? | Not started | - |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
