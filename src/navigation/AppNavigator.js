@@ -24,6 +24,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import FriendsListScreen from '../screens/FriendsListScreen';
 import UserSearchScreen from '../screens/UserSearchScreen';
 import FriendRequestsScreen from '../screens/FriendRequestsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -271,6 +272,7 @@ const linking = {
         },
       },
       Darkroom: 'darkroom',
+      Notifications: 'notifications',
       PhoneInput: 'phone-input',
       Verification: 'verification',
       ProfileSetup: 'profile-setup',
@@ -347,6 +349,15 @@ const AppNavigator = () => {
                 presentation: 'card',
                 animation: 'slide_from_right',
                 gestureEnabled: false, // Prevent accidental back swipe
+              }}
+            />
+            <Stack.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+              options={{
+                presentation: 'card',
+                animation: 'slide_from_right',
+                headerShown: false,
               }}
             />
           </>
