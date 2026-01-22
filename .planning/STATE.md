@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 ## Current Position
 
 Phase: 17 of 18.2 (Darkroom UX Polish)
-Plan: FIX-2 complete (all UAT issues resolved)
-Status: Phase complete with all fixes verified
-Last activity: 2026-01-22 - Completed 17-FIX-2-PLAN.md (4 UAT issues fixed, 9 total)
+Plan: FIX-3 complete (final UAT round - all 11 issues resolved)
+Status: Phase 17 complete, ready for Phase 17.1
+Last activity: 2026-01-22 - Completed 17-FIX-3-PLAN.md (2 UAT issues fixed, 11 total)
 
-Progress: ████████░░ 77% (v1.5: 11/12 phases complete)
+Progress: ████████░░ 77% (v1.5: 11/14 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 52 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 15 in v1.5)
+- Total plans completed: 53 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 16 in v1.5)
 - Average duration: 16 min
-- Total execution time: 10.3 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 1.8h v1.5)
+- Total execution time: 10.4 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 1.9h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: ████████░░ 77% (v1.5: 11/12 phases complete)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.2 | 15 | 128 min |
+| v1.5 | 15-18.2 | 16 | 136 min |
 
 ## Accumulated Context
 
@@ -47,6 +47,7 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 17-FIX | Fixed arc path formula (y = 0.4 * \|x\|) | Predictable card motion regardless of finger movement |
 | 17-FIX-2 | Stack offset -20/-40px for visible peek | Cards visibly peek from top at rest |
 | 17-FIX-2 | Animation duration 400ms | Balances visibility with responsiveness |
+| 17-FIX-3 | Dark overlay for stack blur effect | Animatable alternative to blurRadius |
 
 ### Deferred Issues
 
@@ -74,9 +75,11 @@ None.
 - Phase 18.2 inserted after Phase 18.1: Rename App to Rewind (URGENT) - complete rebrand from "Lapse" to "Rewind" across all code and assets
 - Phase 16.2 inserted after Phase 16.1: Fix 0.5x Ultra-Wide Zoom (URGENT) - 0.5x shows same as 1x, camera not switching properly
 - Phase 16.3 inserted after Phase 16.2: Fix React Native Firebase Warnings (URGENT) - resolve package.json exports errors and migrate deprecated namespaced API
+- Phase 17.1 inserted after Phase 17: Darkroom Animation Refinements (URGENT) - bottom-up open animation, fall-down close, inline success state
+- Phase 17.2 inserted after Phase 17.1: Reveal Timing 0-5 Minutes (URGENT) - change reveal timing from 0-2 hours to 0-5 minutes
 
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 17-FIX-2-PLAN.md - Fixed 4 UAT issues (9 total for Phase 17)
+Stopped at: Completed 17-FIX-3-PLAN.md - Fixed 2 UAT issues (11 total for Phase 17)
 Resume file: None

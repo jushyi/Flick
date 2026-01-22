@@ -177,10 +177,46 @@ Plans:
 - Three-stage haptic feedback (threshold, release, completion)
 - Down-swipe for delete gesture
 
+#### Phase 17.1: Darkroom Animation Refinements (INSERTED)
+
+**Goal**: Improve darkroom open/close animations and triage completion UX
+**Depends on**: Phase 17
+**Research**: Unlikely (React Native Reanimated already in use)
+**Plans**: TBD
+
+Plans:
+- [ ] 17.1-01: TBD (run /gsd:plan-phase 17.1 to break down)
+
+**Details:**
+Animation Changes:
+- Darkroom opens from bottom (slide up) instead of from the side after press-and-hold reveal
+- Darkroom closes by falling towards bottom of screen (slide down)
+- Change back arrow icon from left-pointing to down-pointing to indicate dismiss direction
+
+Triage Completion UX:
+- Remove navigation to separate success screen after completing triage
+- Stay on darkroom screen and transition empty state to success message state
+- Smoother, less janky experience when all photos are triaged
+
+#### Phase 17.2: Reveal Timing 0-5 Minutes (INSERTED)
+
+**Goal**: Change darkroom reveal timing from 0-2 hours to 0-5 minutes for faster photo reveals
+**Depends on**: Phase 17.1
+**Research**: Unlikely (simple constant change in darkroomService)
+**Plans**: TBD
+
+Plans:
+- [ ] 17.2-01: TBD (run /gsd:plan-phase 17.2 to break down)
+
+**Details:**
+- Update reveal timing constant from 0-2 hours to 0-5 minutes
+- Provides much faster feedback loop for users
+- Small code change in darkroomService.js
+
 #### Phase 18: Reaction Notification Debouncing
 
 **Goal**: Aggregate reaction notifications over 10-second window instead of per-tap to prevent spam
-**Depends on**: Phase 17
+**Depends on**: Phase 17.2
 **Research**: Unlikely (Cloud Function update to existing sendReactionNotification)
 **Plans**: TBD
 
@@ -314,6 +350,8 @@ Complete rebrand from "Lapse" to "Rewind":
 | 16.2 Fix 0.5x Ultra-Wide Zoom | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 16.3 Fix React Native Firebase Warnings | v1.5 | 1/1 | Complete | 2026-01-21 |
 | 17. Darkroom UX Polish | v1.5 | 2/2 | Complete | 2026-01-22 |
+| 17.1 Darkroom Animation Refinements | v1.5 | 0/? | Not started | - |
+| 17.2 Reveal Timing 0-5 Minutes | v1.5 | 0/? | Not started | - |
 | 18. Reaction Notification Debouncing | v1.5 | 0/? | Not started | - |
 | 18.1 Batched Darkroom Triage with Undo | v1.5 | 0/? | Not started | - |
 | 18.2 Rename App to Rewind | v1.5 | 0/? | Not started | - |

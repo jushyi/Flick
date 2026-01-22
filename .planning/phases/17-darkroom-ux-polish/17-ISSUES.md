@@ -6,9 +6,19 @@
 
 ## Open Issues
 
-None - all issues resolved.
+None - all Phase 17 issues resolved.
 
 ## Resolved Issues
+
+### UAT-010: Cascade animation - card flashes gray before revealing
+**Fixed:** 2026-01-22 in 17-FIX-3
+**Commit:** 1f372da
+**Solution:** Added fadeDuration={0} to Image component and backgroundColor matching card container to prevent gray flash during cascade.
+
+### UAT-011: Enhancement request - blur background cards
+**Fixed:** 2026-01-22 in 17-FIX-3
+**Commit:** 367a8c3
+**Solution:** Added animated stackBlurOpacityAnim with dark overlay (15% for index 1, 30% for index 2) that fades out as card moves to front.
 
 ### UAT-006: Stacked cards should peek from top at rest
 **Fixed:** 2026-01-22 in 17-FIX-2
