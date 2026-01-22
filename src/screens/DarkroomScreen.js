@@ -230,6 +230,37 @@ const DarkroomScreen = () => {
     cardRef.current?.triggerJournal();
   };
 
+  // 18.1: Handle Undo button - restore last decision from undo stack
+  // Animation implementation will be added in Plan 2
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+
+    logger.info('DarkroomScreen: User tapped Undo button', { stackSize: undoStack.length });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Get the last decision from the stack
+    const lastDecision = undoStack[undoStack.length - 1];
+
+    // Remove from undo stack
+    setUndoStack(prev => prev.slice(0, -1));
+
+    // Restore photo to the front of the photos array
+    setPhotos(prev => [lastDecision.photo, ...prev]);
+
+    // Reset success state flags if we're undoing from the success screen
+    setPendingSuccess(false);
+    setTriageComplete(false);
+
+    // Reset success fade animation so it can re-trigger if needed
+    successFadeAnim.setValue(0);
+
+    logger.debug('DarkroomScreen: Undo completed', {
+      restoredPhotoId: lastDecision.photo.id,
+      previousAction: lastDecision.action,
+      newStackSize: undoStack.length - 1,
+    });
+  };
+
   // UAT-002: Trigger fade-in animation when success state is shown
   // NOTE: This useEffect must be before any early returns to comply with Rules of Hooks
   // 18.1: Updated condition - show success when photos are empty AND undo stack has entries
@@ -279,7 +310,23 @@ const DarkroomScreen = () => {
                 <Text style={styles.headerTitle}>Darkroom</Text>
                 <Text style={styles.headerSubtitle}>All done!</Text>
               </View>
-              <View style={styles.headerPlaceholder} />
+              {/* 18.1: Undo button in success state - allows undoing from completion */}
+              <TouchableOpacity
+                style={[
+                  styles.undoButton,
+                  undoStack.length === 0 && styles.undoButtonDisabled
+                ]}
+                onPress={handleUndo}
+                disabled={undoStack.length === 0}
+              >
+                <Text style={styles.undoIcon}>↩</Text>
+                <Text style={[
+                  styles.undoText,
+                  undoStack.length === 0 && styles.undoTextDisabled
+                ]}>
+                  Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* UAT-002: Success content with fade-in animation, emoji text, bottom button */}
@@ -324,7 +371,8 @@ const DarkroomScreen = () => {
                 <Text style={styles.headerTitle}>Darkroom</Text>
                 <Text style={styles.headerSubtitle}>No photos ready</Text>
               </View>
-              <View style={styles.headerPlaceholder} />
+              {/* Empty placeholder for layout balance in empty state */}
+              <View style={styles.headerRightPlaceholder} />
             </View>
 
             <View style={styles.emptyContainer}>
@@ -364,7 +412,23 @@ const DarkroomScreen = () => {
               {photos.length} {photos.length === 1 ? 'photo' : 'photos'} ready to review
             </Text>
           </View>
-          <View style={styles.headerPlaceholder} />
+          {/* 18.1: Undo button - dimmed when empty, shows count when decisions exist */}
+          <TouchableOpacity
+            style={[
+              styles.undoButton,
+              undoStack.length === 0 && styles.undoButtonDisabled
+            ]}
+            onPress={handleUndo}
+            disabled={undoStack.length === 0}
+          >
+            <Text style={styles.undoIcon}>↩</Text>
+            <Text style={[
+              styles.undoText,
+              undoStack.length === 0 && styles.undoTextDisabled
+            ]}>
+              Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Stacked Photo Cards (UAT-005) - render up to 3 cards */}
@@ -499,8 +563,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 16,
   },
-  headerPlaceholder: {
-    width: 40,
+  // 18.1: Undo button styles
+  undoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+  },
+  undoButtonDisabled: {
+    opacity: 0.3,
+  },
+  undoIcon: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginRight: 4,
+  },
+  undoText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  undoTextDisabled: {
+    opacity: 0.5,
+  },
+  // Placeholder for empty state header to maintain layout balance
+  headerRightPlaceholder: {
+    width: 70, // Approximate width of undo button for consistent header centering
     height: 40,
   },
   headerTitle: {
