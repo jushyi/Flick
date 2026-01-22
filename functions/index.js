@@ -4,6 +4,24 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
+// Track pending reactions for debouncing: { "photoId_reactorId": { timeout, reactions, photoOwnerId, fcmToken, reactorName, reactorProfilePhotoURL } }
+const pendingReactions = {};
+
+// Debounce window in milliseconds (10 seconds)
+const REACTION_DEBOUNCE_MS = 10000;
+
+/**
+ * Format reactions into "emoji×count" format for notification display
+ * @param {object} reactions - Object like { '😂': 2, '❤️': 1 }
+ * @returns {string} - Formatted string like "😂×2 ❤️×1"
+ */
+function formatReactionSummary(reactions) {
+  return Object.entries(reactions)
+    .filter(([emoji, count]) => count > 0)
+    .map(([emoji, count]) => `${emoji}×${count}`)
+    .join(' ');
+}
+
 /**
  * Reveal all developing photos for a user and schedule next reveal
  * @param {string} userId - User ID
@@ -339,8 +357,76 @@ exports.sendFriendRequestNotification = functions.firestore
   });
 
 /**
+ * Send the batched reaction notification after debounce window expires
+ * @param {string} pendingKey - Key in pendingReactions object
+ */
+async function sendBatchedReactionNotification(pendingKey) {
+  const pending = pendingReactions[pendingKey];
+  if (!pending) {
+    console.log('sendBatchedReactionNotification: No pending entry found for', pendingKey);
+    return;
+  }
+
+  const { reactions, photoOwnerId, fcmToken, reactorName, reactorId, reactorProfilePhotoURL, photoId } = pending;
+
+  // Delete pending entry immediately to prevent duplicate sends
+  delete pendingReactions[pendingKey];
+
+  const reactionSummary = formatReactionSummary(reactions);
+  if (!reactionSummary) {
+    console.log('sendBatchedReactionNotification: No reactions to send for', pendingKey);
+    return;
+  }
+
+  const title = '❤️ New Reaction';
+  const body = `${reactorName} reacted ${reactionSummary} to your photo`;
+
+  console.log('sendBatchedReactionNotification: Sending batched notification', {
+    pendingKey,
+    reactorName,
+    reactions,
+    body,
+  });
+
+  // Send push notification
+  const result = await sendPushNotification(
+    fcmToken,
+    title,
+    body,
+    {
+      type: 'reaction',
+      photoId: photoId,
+    }
+  );
+
+  // Write to notifications collection for in-app display
+  await admin.firestore().collection('notifications').add({
+    recipientId: photoOwnerId,
+    type: 'reaction',
+    senderId: reactorId,
+    senderName: reactorName,
+    senderProfilePhotoURL: reactorProfilePhotoURL || null,
+    photoId: photoId,
+    reactions: reactions,
+    message: body,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    read: false,
+  });
+
+  console.log('sendBatchedReactionNotification: Notification sent and stored', {
+    pendingKey,
+    result,
+  });
+}
+
+/**
  * Cloud Function: Send notification when someone reacts to user's photo
  * Triggered when photo document is updated with new reactions
+ *
+ * DEBOUNCING: Batches rapid reactions from same user into single notification
+ * - First reaction starts 10-second window
+ * - Subsequent reactions extend window and aggregate
+ * - After 10 seconds of inactivity, sends "Name reacted 😂×2 ❤️×1 to your photo"
  */
 exports.sendReactionNotification = functions.firestore
   .document('photos/{photoId}')
@@ -352,18 +438,20 @@ exports.sendReactionNotification = functions.firestore
 
       // Check if reactions were added (reactionCount increased)
       if (!after.reactionCount || after.reactionCount <= (before.reactionCount || 0)) {
-        console.log('No new reactions, skipping notification');
+        console.log('sendReactionNotification: No new reactions, skipping');
         return null;
       }
 
       // Get photo owner's ID
       const photoOwnerId = after.userId;
 
-      // Determine who added the reaction (newest reactant)
+      // Determine who added reactions and what changed (the DIFF)
       const beforeReactions = before.reactions || {};
       const afterReactions = after.reactions || {};
 
       let reactorId = null;
+      let reactionDiff = {}; // Only the new reactions added in this update
+
       for (const [userId, emojis] of Object.entries(afterReactions)) {
         // Skip if this is the photo owner (don't notify yourself)
         if (userId === photoOwnerId) continue;
@@ -376,19 +464,58 @@ exports.sendReactionNotification = functions.firestore
           const beforeCount = beforeUserReactions[emoji] || 0;
           if (count > beforeCount) {
             reactorId = userId;
-            break;
+            const diff = count - beforeCount;
+            reactionDiff[emoji] = (reactionDiff[emoji] || 0) + diff;
           }
         }
 
+        // Only process one reactor per update (the one who changed)
         if (reactorId) break;
       }
 
       // If no reactor found or reactor is the owner, skip
       if (!reactorId || reactorId === photoOwnerId) {
-        console.log('No valid reactor found, skipping notification');
+        console.log('sendReactionNotification: No valid reactor found, skipping');
         return null;
       }
 
+      // Generate unique key for this photo+reactor combination
+      const pendingKey = `${photoId}_${reactorId}`;
+
+      console.log('sendReactionNotification: Processing reaction update', {
+        photoId,
+        reactorId,
+        reactionDiff,
+        pendingKey,
+        hasPendingEntry: !!pendingReactions[pendingKey],
+      });
+
+      // Check if we already have a pending entry for this key
+      if (pendingReactions[pendingKey]) {
+        // Clear existing timeout
+        clearTimeout(pendingReactions[pendingKey].timeout);
+
+        // Merge new reactions into existing batch
+        for (const [emoji, count] of Object.entries(reactionDiff)) {
+          pendingReactions[pendingKey].reactions[emoji] =
+            (pendingReactions[pendingKey].reactions[emoji] || 0) + count;
+        }
+
+        console.log('sendReactionNotification: Extended debounce window', {
+          pendingKey,
+          mergedReactions: pendingReactions[pendingKey].reactions,
+        });
+
+        // Set new timeout
+        pendingReactions[pendingKey].timeout = setTimeout(
+          () => sendBatchedReactionNotification(pendingKey),
+          REACTION_DEBOUNCE_MS
+        );
+
+        return null;
+      }
+
+      // New pending entry - fetch user data
       // Get photo owner's FCM token
       const ownerDoc = await admin.firestore()
         .collection('users')
@@ -396,7 +523,7 @@ exports.sendReactionNotification = functions.firestore
         .get();
 
       if (!ownerDoc.exists) {
-        console.error('Photo owner not found:', photoOwnerId);
+        console.error('sendReactionNotification: Photo owner not found:', photoOwnerId);
         return null;
       }
 
@@ -404,38 +531,44 @@ exports.sendReactionNotification = functions.firestore
       const fcmToken = ownerData.fcmToken;
 
       if (!fcmToken) {
-        console.log('Photo owner has no FCM token, skipping notification:', photoOwnerId);
+        console.log('sendReactionNotification: Photo owner has no FCM token, skipping:', photoOwnerId);
         return null;
       }
 
-      // Get reactor's display name
+      // Get reactor's display name and profile photo
       const reactorDoc = await admin.firestore()
         .collection('users')
         .doc(reactorId)
         .get();
 
-      const reactorName = reactorDoc.exists
-        ? reactorDoc.data().displayName || reactorDoc.data().username
-        : 'Someone';
+      const reactorData = reactorDoc.exists ? reactorDoc.data() : {};
+      const reactorName = reactorData.displayName || reactorData.username || 'Someone';
+      const reactorProfilePhotoURL = reactorData.profilePhotoURL || null;
 
-      // Send notification
-      const title = '❤️ New Reaction';
-      const body = `${reactorName} reacted to your photo`;
-
-      const result = await sendPushNotification(
+      // Create new pending entry
+      pendingReactions[pendingKey] = {
+        reactions: { ...reactionDiff },
+        photoOwnerId,
         fcmToken,
-        title,
-        body,
-        {
-          type: 'reaction',
-          photoId: photoId,
-        }
-      );
+        reactorId,
+        reactorName,
+        reactorProfilePhotoURL,
+        photoId,
+        timeout: setTimeout(
+          () => sendBatchedReactionNotification(pendingKey),
+          REACTION_DEBOUNCE_MS
+        ),
+      };
 
-      console.log('Reaction notification sent to:', photoOwnerId, result);
-      return result;
+      console.log('sendReactionNotification: Started new debounce window', {
+        pendingKey,
+        reactions: reactionDiff,
+        debounceMs: REACTION_DEBOUNCE_MS,
+      });
+
+      return null;
     } catch (error) {
-      console.error('Error in sendReactionNotification:', error);
+      console.error('sendReactionNotification: Error:', error);
       return null;
     }
   });
