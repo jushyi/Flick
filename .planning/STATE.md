@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 ## Current Position
 
-Phase: 18.1 of 18.3 (Batched Darkroom Triage with Undo)
-Plan: 2/2 + FIX complete
+Phase: 18.1 of 18.4 (Batched Darkroom Triage with Undo)
+Plan: 2/2 + 2 FIX complete
 Status: Phase complete
-Last activity: 2026-01-22 - Completed 18.1-FIX-PLAN.md (UAT-001 black flash fix)
+Last activity: 2026-01-23 - Completed 18.1-FIX-2-PLAN.md (UAT-002 black flash fix)
 
-Progress: █████████░ 89% (v1.5: 16/19 phases complete)
+Progress: █████████░ 88% (v1.5: 16/20 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 64 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 27 in v1.5)
+- Total plans completed: 65 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 28 in v1.5)
 - Average duration: 16 min
-- Total execution time: 12.6 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 4.1h v1.5)
+- Total execution time: 12.9 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 4.4h v1.5)
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: █████████░ 89% (v1.5: 16/19 phases complete)
 | v1.2 | 6-8 | 8 | 2.1 hours |
 | v1.3 | 9-10 | 4 | 42 min |
 | v1.4 | 11-14 | 17 | 136 min |
-| v1.5 | 15-18.4 | 25 | 283 min |
+| v1.5 | 15-18.4 | 28 | 301 min |
 
 ## Accumulated Context
 
@@ -64,11 +64,12 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 18-02 | Red dot indicator vs count badge | Simpler, Instagram-style notification indicator |
 | 18.1-02 | Done button only on success screen | Cleaner triage UX without header clutter |
 | 18.1-02 | Ionicons for Undo button | Native look, no count display |
+| 18.1-FIX-2 | Hidden state tracking vs array mutation | Prevents React re-renders that cause black flash |
+| 18.1-FIX-2 | cascadeHandledTransition flag | Prevents double-animation during cascade |
 
 ### Deferred Issues
 
 - TestFlight submission (requires App Store Connect setup)
-- UAT-015 black flash after cascade (deferred to Phase 18.1 batch-based triage)
 
 ### Blockers/Concerns
 
@@ -94,11 +95,12 @@ None.
 - Phase 16.3 inserted after Phase 16.2: Fix React Native Firebase Warnings (URGENT) - resolve package.json exports errors and migrate deprecated namespaced API
 - Phase 17.1 inserted after Phase 17: Darkroom Animation Refinements (URGENT) - bottom-up open animation, fall-down close, inline success state
 - Phase 17.2 inserted after Phase 17.1: Reveal Timing 0-5 Minutes (URGENT) - change reveal timing from 0-2 hours to 0-5 minutes
-- Phase 18.3 inserted after Phase 18.2: Success Sound Effect on Triage Completion (URGENT) - play celebratory sound when user finishes triaging all photos
-- Phase 18.4 inserted after Phase 18.3: Triage Animation Z-Index & Delete Suction Effect (URGENT) - fix card animations rendering over buttons, add suction effect for delete
+- Phase 18.2 inserted after Phase 18.1: Success Sound Effect on Triage Completion (URGENT) - play celebratory sound when user finishes triaging all photos
+- Phase 18.3 inserted after Phase 18.2: Triage Animation Z-Index & Delete Suction (URGENT) - fix card animations rendering over buttons, add suction effect for delete
+- Phase 18.4 inserted after Phase 18.3: Triage Animation Arc Adjustment (URGENT) - reduce downward arc and rotation on Journal/Archive animations, more sideways movement
 
 ## Session Continuity
 
-Last session: 2026-01-22
-Stopped at: Completed 18.1-FIX-PLAN.md - UAT-001 black flash resolved
+Last session: 2026-01-23
+Stopped at: Completed 18.1-FIX-2-PLAN.md - UAT-002 black flash resolved
 Resume file: None

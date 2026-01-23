@@ -242,12 +242,13 @@ Plans:
 **Goal**: Batch triage decisions locally until user confirms, with undo capability and session persistence
 **Depends on**: Phase 18
 **Research**: Unlikely (React Native state management and AsyncStorage patterns)
-**Plans**: 2/2 complete
+**Plans**: 2/2 + 2 FIX complete
 
 Plans:
 - [x] 18.1-01: Undo stack state and UI - completed 2026-01-22
 - [x] 18.1-02: Done button batch save and undo animation - completed 2026-01-22
 - [x] 18.1-FIX: UAT-001 black flash after cascade animation - completed 2026-01-22
+- [x] 18.1-FIX-2: UAT-002 black flash persists fix - completed 2026-01-23
 
 **Delivered:**
 - Undo stack state management for local triage decisions
@@ -255,7 +256,7 @@ Plans:
 - Done button batch saves all decisions to Firestore
 - Silent close after Done tap (haptic only, no celebration screen)
 - Ionicons undo button with clean "Undo" text
-- Fixed black flash after cascade animation (timing-based blur overlay fade)
+- Fixed black flash after cascade animation (hidden state tracking + cascade transition flag)
 
 #### Phase 18.2: Success Sound Effect on Triage Completion (INSERTED)
 
@@ -295,6 +296,23 @@ Delete Suction Effect:
 - New behavior: card should get "sucked into" the delete button
 - Animation should scale down and move toward delete button position
 - Creates satisfying visual feedback that the photo is being deleted
+
+#### Phase 18.4: Triage Animation Arc Adjustment (INSERTED)
+
+**Goal**: Reduce downward arc and rotation on Journal/Archive triage animations so cards move more sideways and never overlap triage buttons
+**Depends on**: Phase 18.3
+**Research**: Unlikely (React Native Reanimated animation adjustments)
+**Plans**: TBD
+
+Plans:
+- [ ] 18.4-01: TBD (run /gsd:plan-phase 18.4 to break down)
+
+**Details:**
+Animation Adjustments for Journal/Archive:
+- Current behavior: cards arc downward too much during triage exit
+- New behavior: less rotation, more horizontal/sideways movement
+- Cards must never visually overlap with the triage buttons during animation
+- Maintain satisfying feel while keeping animations contained above button bar
 
 ## Completed Milestones
 
@@ -386,6 +404,7 @@ Delete Suction Effect:
 | 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 17.2 Reveal Timing 0-5 Minutes | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 18. Reaction Notification Debouncing | v1.5 | 2/2 + FIX | Complete | 2026-01-22 |
-| 18.1 Batched Darkroom Triage with Undo | v1.5 | 2/2 + FIX | Complete | 2026-01-22 |
+| 18.1 Batched Darkroom Triage with Undo | v1.5 | 2/2 + 2 FIX | Complete | 2026-01-23 |
 | 18.2 Success Sound Effect on Triage Completion | v1.5 | 0/? | Not started | - |
 | 18.3 Triage Animation Z-Index & Delete Suction | v1.5 | 0/? | Not started | - |
+| 18.4 Triage Animation Arc Adjustment | v1.5 | 0/? | Not started | - |
