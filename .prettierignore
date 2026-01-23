@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.expo/
+android/
+ios/
+coverage/
+*.lock
+.husky/
+functions/node_modules/
+patches/

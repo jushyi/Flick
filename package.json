@@ -62,5 +62,14 @@
     "prettier": "^3.8.1",
     "react-native-dotenv": "^3.4.11",
     "sharp": "^0.34.5"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }
