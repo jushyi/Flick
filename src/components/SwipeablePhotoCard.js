@@ -459,12 +459,21 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
   // Card follows a mathematically consistent arc path regardless of finger movement
   // Stack cards use animated shared values that spring-animate when stackIndex changes
   const cardStyle = useAnimatedStyle(() => {
-    // Fixed arc formula: y = 0.4 * |x| creates consistent downward curve
-    // regardless of vertical finger position during gesture
-    const arcY = Math.abs(translateX.value) * 0.4;
+    // 18.4: Exponential arc formula - starts flat, steepens as card accelerates off screen
+    // Power curve: y = maxY * (normalizedX ^ exponent)
+    // - At x=0: arcY ≈ 0 (starts flat/horizontal)
+    // - At x=50% exit: arcY ≈ 18% of final Y (still mostly flat)
+    // - At x=100% exit: arcY = 100% of final Y (reaches intended exit position)
+    const normalizedX = Math.abs(translateX.value) / (SCREEN_WIDTH * 1.5);
+    const curveProgress = Math.pow(normalizedX, 2.5); // Exponent 2.5 = gradual start, accelerating end
+    const arcY = (SCREEN_HEIGHT * 0.5) * curveProgress;
 
-    // Rotation based on horizontal movement (degrees) - only for front card
-    const rotation = isActive ? translateX.value / 15 : 0;
+    // 18.4: Rotation follows same exponential curve - starts upright, rotates more as card accelerates
+    // Max rotation 25° at full exit (similar to previous ~25° at SCREEN_WIDTH * 1.5 / 15)
+    const maxRotation = 25;
+    const rotationAmount = maxRotation * curveProgress;
+    // Apply direction (positive for right swipe, negative for left) - only for front card
+    const rotation = isActive ? (translateX.value > 0 ? rotationAmount : -rotationAmount) : 0;
 
     // 18.3 FIX: If actionInProgress, always use gesture transforms (for delete suction)
     // This ensures delete animation works even if card was still transitioning to front
