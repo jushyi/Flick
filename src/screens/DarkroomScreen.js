@@ -42,10 +42,24 @@ const DarkroomScreen = () => {
   const [hiddenPhotoIds, setHiddenPhotoIds] = useState(new Set());
   const cardRef = useRef(null);
   const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
+  // UAT-004 FIX: Track previously visible photo IDs to detect newly visible cards
+  const prevVisiblePhotoIdsRef = useRef(new Set());
 
   // 18.1-FIX-2: Compute visible photos (not hidden) for rendering
   // This prevents array mutations that cause React to re-render all cards
   const visiblePhotos = photos.filter(p => !hiddenPhotoIds.has(p.id));
+
+  // UAT-004 FIX: Compute which photos in the visible stack are newly visible (for fade-in)
+  // A card is "newly visible" if it's at position 2 (furthest back) and wasn't rendered last frame
+  const currentVisibleIds = new Set(visiblePhotos.slice(0, 3).map(p => p.id));
+  const newlyVisibleIds = new Set();
+  currentVisibleIds.forEach(id => {
+    if (!prevVisiblePhotoIdsRef.current.has(id)) {
+      newlyVisibleIds.add(id);
+    }
+  });
+  // Update ref for next render (must be done after computing newlyVisibleIds)
+  prevVisiblePhotoIdsRef.current = currentVisibleIds;
 
   // Load developing photos when screen comes into focus
   useFocusEffect(
@@ -552,6 +566,8 @@ const DarkroomScreen = () => {
           // Convert reverse index back to stack index (0=front, 1=behind, 2=furthest)
           const stackIndex = 2 - reverseIndex - (3 - Math.min(visiblePhotos.length, 3));
           const isActive = stackIndex === 0;
+          // UAT-004 FIX: Detect if this card is newly entering the visible stack
+          const isNewlyVisible = newlyVisibleIds.has(photo.id) && stackIndex === 2;
 
           return (
             <SwipeablePhotoCard
@@ -561,6 +577,7 @@ const DarkroomScreen = () => {
               stackIndex={stackIndex}
               isActive={isActive}
               cascading={cascading}
+              isNewlyVisible={isNewlyVisible}
               enterFrom={isActive && undoingPhoto?.photo.id === photo.id ? undoingPhoto.enterFrom : null}
               onSwipeStart={isActive ? handleSwipeStart : undefined}
               onSwipeLeft={isActive ? handleArchiveSwipe : undefined}

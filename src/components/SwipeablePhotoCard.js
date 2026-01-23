@@ -43,6 +43,9 @@ const CASCADE_SPRING_CONFIG = { damping: 18, stiffness: 100 };
 // UAT-004 FIX: Delay for front card transition gives exiting card time to clear
 const CASCADE_DELAY_MS = 100;
 
+// UAT-004 FIX: Fade-in duration for new cards entering the visible stack
+const STACK_ENTRY_FADE_DURATION = 300;
+
 /**
  * SwipeablePhotoCard - Flick-style swipeable card for photo triage
  *
@@ -67,7 +70,7 @@ const CASCADE_DELAY_MS = 100;
  * @param {boolean} isActive - Whether this card is swipeable (only front card)
  * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
  */
-const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onSwipeStart, stackIndex = 0, isActive = true, cascading = false, enterFrom = null }, ref) => {
+const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onSwipeStart, stackIndex = 0, isActive = true, cascading = false, enterFrom = null, isNewlyVisible = false }, ref) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
   // Animated values for gesture/front card
@@ -80,11 +83,18 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
   const getStackScale = (idx) => idx === 0 ? 1 : idx === 1 ? 0.96 : 0.92;
   const getStackOffset = (idx) => idx === 0 ? 0 : idx === 1 ? -20 : -40; // Negative = above
   const getStackOpacity = (idx) => idx === 0 ? 1 : idx === 1 ? 0.85 : 0.7;
+
+  // UAT-004 FIX: Track if this card has completed its entry animation
+  // Used to detect when a card is newly entering the visible stack
+  const hasAnimatedEntry = useSharedValue(false);
+
   // Animated values for smooth stack cascade animation (UAT-009)
   // These animate when stackIndex changes (card moves forward in stack)
+  // UAT-004 FIX: Start newly visible cards at opacity 0 for fade-in effect
+  const initialOpacity = isNewlyVisible && !hasAnimatedEntry.value ? 0 : getStackOpacity(stackIndex);
   const stackScaleAnim = useSharedValue(getStackScale(stackIndex));
   const stackOffsetAnim = useSharedValue(getStackOffset(stackIndex));
-  const stackOpacityAnim = useSharedValue(getStackOpacity(stackIndex));
+  const stackOpacityAnim = useSharedValue(initialOpacity);
 
   // Animate stack values when stackIndex changes (card moves forward)
   // 18.1-FIX-2: Track if cascade already animated this transition
@@ -139,6 +149,28 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       }
     }
   }, [cascading]);
+
+  // UAT-004 FIX: Fade-in animation for newly visible cards entering the stack
+  // When a card first enters the visible stack (position 2), fade in smoothly
+  useEffect(() => {
+    if (isNewlyVisible && !hasAnimatedEntry.value && stackIndex === 2) {
+      // Card is entering visible stack at the back - fade in from 0
+      logger.debug('SwipeablePhotoCard: New card entering visible stack, starting fade-in', {
+        photoId: photo?.id,
+        stackIndex,
+      });
+
+      // Start at 0 opacity and animate to target
+      stackOpacityAnim.value = 0;
+      stackOpacityAnim.value = withTiming(getStackOpacity(stackIndex), {
+        duration: STACK_ENTRY_FADE_DURATION,
+        easing: Easing.out(Easing.cubic),
+      });
+
+      // Mark as animated so we don't re-trigger
+      hasAnimatedEntry.value = true;
+    }
+  }, [isNewlyVisible, stackIndex]);
 
   // 18.1-02: Entry animation for undo (reverse of exit animation)
   // When enterFrom is set, card starts off-screen and animates to center
