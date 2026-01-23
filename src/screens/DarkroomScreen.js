@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
+import { Image as ExpoImage } from 'expo-image';
 import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotos, revealPhotos, triagePhoto, batchTriagePhotos } from '../services/firebase/photoService';
 import { isDarkroomReadyToReveal, scheduleNextReveal } from '../services/firebase/darkroomService';
@@ -346,6 +347,31 @@ const DarkroomScreen = () => {
       }).start();
     }
   }, [visiblePhotos.length, undoStack.length, successFadeAnim]);
+
+  // 18.1-FIX-3: Prefetch visible stack card images for smooth animations
+  // Prefetches first 4 visible photos to memory-disk cache to eliminate black flash
+  // Re-runs when hiddenPhotoIds changes (after triage/undo) to prefetch newly visible cards
+  useEffect(() => {
+    const prefetchStackImages = async () => {
+      if (photos.length === 0) return;
+
+      // Get first 4 visible photos (visible in stack)
+      const visiblePhotosForPrefetch = photos.filter(p => !hiddenPhotoIds.has(p.id)).slice(0, 4);
+      const urls = visiblePhotosForPrefetch.map(p => p.imageURL).filter(Boolean);
+
+      if (urls.length === 0) return;
+
+      try {
+        await ExpoImage.prefetch(urls, 'memory-disk');
+        logger.debug('DarkroomScreen: Prefetched stack images', { count: urls.length });
+      } catch (error) {
+        // Non-blocking - images will load on demand if prefetch fails
+        logger.warn('DarkroomScreen: Failed to prefetch some images', { error: error?.message });
+      }
+    };
+
+    prefetchStackImages();
+  }, [photos, hiddenPhotoIds]);
 
   if (loading) {
     return (
