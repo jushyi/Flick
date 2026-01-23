@@ -34,7 +34,7 @@ const EXIT_DURATION = 800;
 // UAT-016: Button-triggered animations use slower duration for satisfying pace
 // Swipe gestures have natural lead-in time from drag, but button taps are instant
 // 1200ms (3x EXIT_DURATION) gives button animations similar perceived pace to swipes
-const BUTTON_EXIT_DURATION = 1200;
+const BUTTON_EXIT_DURATION = 800;
 
 // UAT-005 FIX: Delay for front card transition gives exiting card time to clear
 const CASCADE_DELAY_MS = 100;
