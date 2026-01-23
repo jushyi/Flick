@@ -164,9 +164,9 @@ const DarkroomScreen = () => {
         logger.info('DarkroomScreen: Last photo triaged, pendingSuccess set', { action });
       }
 
-      // 18.1-FIX-2: Hide photo instead of removing from array to prevent black flash
-      // The photos array stays unchanged, preventing React from re-rendering all stack cards
-      // Only the swiped card is affected (already exited via animation)
+      // 18.1-FIX-2: Hide photo immediately - cascade animation handles smooth transition
+      // The handleTriage callback is already called AFTER exit animation completes (400ms)
+      // By this point, the cascade animation has moved stack cards to their new positions
       setHiddenPhotoIds(prev => {
         const newHidden = new Set(prev);
         newHidden.add(photoId);

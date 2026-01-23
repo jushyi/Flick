@@ -86,8 +86,22 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
 
   // Animate stack values when stackIndex changes (card moves forward)
   // UAT-001 FIX: Track previous stackIndex to detect front card transition
+  // 18.1-FIX-2: Also track if cascade already animated this transition
   const prevStackIndex = useSharedValue(stackIndex);
+  const cascadeHandledTransition = useSharedValue(false);
   useEffect(() => {
+    // 18.1-FIX-2: If cascade already handled this transition, skip redundant animation
+    // This prevents the double-animation that causes black flash
+    if (cascadeHandledTransition.value) {
+      logger.debug('SwipeablePhotoCard: Skipping stackIndex animation (cascade handled)', {
+        photoId: photo?.id,
+        stackIndex,
+      });
+      cascadeHandledTransition.value = false;
+      prevStackIndex.value = stackIndex;
+      return;
+    }
+
     const wasStackCard = prevStackIndex.value > 0;
     const isNowFrontCard = stackIndex === 0;
     const becomingFrontCard = wasStackCard && isNowFrontCard;
@@ -121,6 +135,10 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       // Animate to the position one step forward (e.g., stackIndex 1 → position 0)
       const targetIndex = stackIndex - 1;
       const becomingFrontCard = targetIndex === 0;
+
+      // 18.1-FIX-2: Mark that cascade handled this transition
+      // This prevents the stackIndex-change useEffect from re-animating
+      cascadeHandledTransition.value = true;
 
       stackScaleAnim.value = withSpring(getStackScale(targetIndex), { damping: 15, stiffness: 150 });
       stackOffsetAnim.value = withSpring(getStackOffset(targetIndex), { damping: 15, stiffness: 150 });
