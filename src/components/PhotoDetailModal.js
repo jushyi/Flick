@@ -48,25 +48,20 @@ const PhotoDetailModal = ({ visible, photo, onClose, onReactionToggle, currentUs
   const opacity = useRef(new Animated.Value(1)).current;
 
   // Extract photo data
-  const {
-    imageURL,
-    capturedAt,
-    reactions = {},
-    user = {},
-  } = photo || {};
+  const { imageURL, capturedAt, reactions = {}, user = {} } = photo || {};
 
   const { username, displayName, profilePhotoURL } = user;
 
   // Pan responder for swipe down to close
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: (evt) => {
+      onStartShouldSetPanResponder: evt => {
         // Don't capture if touch is in footer area (bottom ~100px)
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
         return touchY < footerThreshold;
       },
-      onStartShouldSetPanResponderCapture: (evt) => {
+      onStartShouldSetPanResponderCapture: evt => {
         // Don't capture if touch is in footer area
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
@@ -91,7 +86,7 @@ const PhotoDetailModal = ({ visible, photo, onClose, onReactionToggle, currentUs
         if (gestureState.dy > 0) {
           translateY.setValue(gestureState.dy);
           // Fade out as user swipes down
-          const fadeAmount = Math.max(0, 1 - (gestureState.dy / SCREEN_HEIGHT));
+          const fadeAmount = Math.max(0, 1 - gestureState.dy / SCREEN_HEIGHT);
           opacity.setValue(fadeAmount);
         }
       },
@@ -161,7 +156,7 @@ const PhotoDetailModal = ({ visible, photo, onClose, onReactionToggle, currentUs
   /**
    * Get current user's reaction counts
    */
-  const getUserReactionCount = (emoji) => {
+  const getUserReactionCount = emoji => {
     if (!currentUserId || !reactions[currentUserId]) return 0;
     return reactions[currentUserId][emoji] || 0;
   };
@@ -169,14 +164,14 @@ const PhotoDetailModal = ({ visible, photo, onClose, onReactionToggle, currentUs
   /**
    * Handle emoji button press
    */
-  const handleEmojiPress = (emoji) => {
+  const handleEmojiPress = emoji => {
     reactionHaptic();
     const currentCount = getUserReactionCount(emoji);
     onReactionToggle(emoji, currentCount);
 
     // If not frozen yet, freeze the current sorted order
     if (!frozenOrder) {
-      const emojiData = REACTION_EMOJIS.map((emoji) => ({
+      const emojiData = REACTION_EMOJIS.map(emoji => ({
         emoji,
         totalCount: groupedReactions[emoji] || 0,
       }));
@@ -226,8 +221,8 @@ const PhotoDetailModal = ({ visible, photo, onClose, onReactionToggle, currentUs
           style={[
             styles.contentWrapper,
             {
-              transform: [{ translateY }]
-            }
+              transform: [{ translateY }],
+            },
           ]}
         >
           {/* Header with close button */}
@@ -240,86 +235,72 @@ const PhotoDetailModal = ({ visible, photo, onClose, onReactionToggle, currentUs
 
           {/* Photo */}
           <View style={styles.photoScrollView}>
-            <Image
-              source={{ uri: imageURL }}
-              style={styles.photo}
-              resizeMode="cover"
-            />
+            <Image source={{ uri: imageURL }} style={styles.photo} resizeMode="cover" />
           </View>
 
           {/* Profile photo - overlapping top left of photo */}
           <View style={styles.profilePicContainer}>
-          {profilePhotoURL ? (
-            <Image
-              source={{ uri: profilePhotoURL }}
-              style={styles.profilePic}
-            />
-          ) : (
-            <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
-              <Text style={styles.profilePicText}>
-                {displayName?.[0]?.toUpperCase() || '?'}
-              </Text>
-            </View>
-          )}
-        </View>
+            {profilePhotoURL ? (
+              <Image source={{ uri: profilePhotoURL }} style={styles.profilePic} />
+            ) : (
+              <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
+                <Text style={styles.profilePicText}>{displayName?.[0]?.toUpperCase() || '?'}</Text>
+              </View>
+            )}
+          </View>
 
-        {/* User info - bottom left of photo */}
-        <View style={styles.userInfoOverlay}>
-          <Text style={styles.displayName} numberOfLines={1}>
-            {displayName || 'Unknown User'}
-          </Text>
-          <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
-        </View>
+          {/* User info - bottom left of photo */}
+          <View style={styles.userInfoOverlay}>
+            <Text style={styles.displayName} numberOfLines={1}>
+              {displayName || 'Unknown User'}
+            </Text>
+            <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
+          </View>
 
-        {/* Footer - Tappable Emoji Pills */}
-        <View style={styles.footer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.emojiPickerContainer}
-          >
-            {(() => {
-              // If frozen, use the frozen order; otherwise sort by count
-              let orderedEmojis;
-              if (frozenOrder) {
-                // Use frozen order (maintains position during rapid tapping)
-                orderedEmojis = frozenOrder;
-              } else {
-                // Sort by count (highest to lowest)
-                const emojiData = REACTION_EMOJIS.map((emoji) => ({
-                  emoji,
-                  totalCount: groupedReactions[emoji] || 0,
-                }));
-                orderedEmojis = [...emojiData]
-                  .sort((a, b) => b.totalCount - a.totalCount)
-                  .map(item => item.emoji);
-              }
+          {/* Footer - Tappable Emoji Pills */}
+          <View style={styles.footer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.emojiPickerContainer}
+            >
+              {(() => {
+                // If frozen, use the frozen order; otherwise sort by count
+                let orderedEmojis;
+                if (frozenOrder) {
+                  // Use frozen order (maintains position during rapid tapping)
+                  orderedEmojis = frozenOrder;
+                } else {
+                  // Sort by count (highest to lowest)
+                  const emojiData = REACTION_EMOJIS.map(emoji => ({
+                    emoji,
+                    totalCount: groupedReactions[emoji] || 0,
+                  }));
+                  orderedEmojis = [...emojiData]
+                    .sort((a, b) => b.totalCount - a.totalCount)
+                    .map(item => item.emoji);
+                }
 
-              return orderedEmojis.map((emoji) => {
-                const totalCount = groupedReactions[emoji] || 0;
-                const userCount = getUserReactionCount(emoji);
-                const isSelected = userCount > 0;
+                return orderedEmojis.map(emoji => {
+                  const totalCount = groupedReactions[emoji] || 0;
+                  const userCount = getUserReactionCount(emoji);
+                  const isSelected = userCount > 0;
 
-                return (
-                  <TouchableOpacity
-                    key={emoji}
-                    style={[
-                      styles.emojiPill,
-                      isSelected && styles.emojiPillSelected,
-                    ]}
-                    onPress={() => handleEmojiPress(emoji)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.emojiPillEmoji}>{emoji}</Text>
-                    {totalCount > 0 && (
-                      <Text style={styles.emojiPillCount}>{totalCount}</Text>
-                    )}
-                  </TouchableOpacity>
-                );
-              });
-            })()}
-          </ScrollView>
-        </View>
+                  return (
+                    <TouchableOpacity
+                      key={emoji}
+                      style={[styles.emojiPill, isSelected && styles.emojiPillSelected]}
+                      onPress={() => handleEmojiPress(emoji)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.emojiPillEmoji}>{emoji}</Text>
+                      {totalCount > 0 && <Text style={styles.emojiPillCount}>{totalCount}</Text>}
+                    </TouchableOpacity>
+                  );
+                });
+              })()}
+            </ScrollView>
+          </View>
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -378,7 +359,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    borderWidth: .5,
+    borderWidth: 0.5,
     borderColor: '#ffffff57',
   },
   profilePicPlaceholder: {

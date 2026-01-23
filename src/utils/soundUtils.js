@@ -31,10 +31,10 @@ export const playSuccessSound = async () => {
     );
 
     // Set up listener to unload sound when playback finishes
-    sound.setOnPlaybackStatusUpdate((status) => {
+    sound.setOnPlaybackStatusUpdate(status => {
       if (status.didJustFinish) {
         logger.debug('soundUtils: Sound playback finished, unloading');
-        sound.unloadAsync().catch((err) => {
+        sound.unloadAsync().catch(err => {
           logger.warn('soundUtils: Failed to unload sound', { error: err?.message });
         });
       }

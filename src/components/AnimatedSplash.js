@@ -38,17 +38,13 @@ const NUM_BLADES = 6;
 const ApertureBlade = ({ index, openProgress }) => {
   const screenSize = Math.max(SCREEN_WIDTH, SCREEN_HEIGHT) * 1.5;
   const anglePerBlade = 360 / NUM_BLADES;
-  const rotation = (index * anglePerBlade) - 90; // Start from top
+  const rotation = index * anglePerBlade - 90; // Start from top
 
   const animatedStyle = useAnimatedStyle(() => {
     // As openProgress goes 0→1:
     // - Blades translate outward from center
     // - Blades rotate slightly to open the shutter
-    const translateDistance = interpolate(
-      openProgress.value,
-      [0, 1],
-      [0, screenSize * 0.6]
-    );
+    const translateDistance = interpolate(openProgress.value, [0, 1], [0, screenSize * 0.6]);
     const bladeRotation = interpolate(
       openProgress.value,
       [0, 1],
@@ -78,7 +74,7 @@ const ApertureBlade = ({ index, openProgress }) => {
         {
           width: screenSize,
           height: screenSize,
-        }
+        },
       ]}
     >
       {/* Blade shape - triangle pointing toward center */}
@@ -106,7 +102,7 @@ const AnimatedSplash = ({ onAnimationComplete }) => {
     // After opening, fade out the entire overlay
     opacity.value = withDelay(
       ANIMATION_DURATION,
-      withTiming(0, { duration: FADE_OUT_DURATION }, (finished) => {
+      withTiming(0, { duration: FADE_OUT_DURATION }, finished => {
         if (finished && onAnimationComplete) {
           runOnJS(onAnimationComplete)();
         }
@@ -123,11 +119,7 @@ const AnimatedSplash = ({ onAnimationComplete }) => {
       <View style={styles.background}>
         <View style={styles.shutterContainer}>
           {Array.from({ length: NUM_BLADES }).map((_, index) => (
-            <ApertureBlade
-              key={index}
-              index={index}
-              openProgress={openProgress}
-            />
+            <ApertureBlade key={index} index={index} openProgress={openProgress} />
           ))}
         </View>
       </View>

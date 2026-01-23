@@ -224,7 +224,7 @@ export const processQueue = async () => {
         });
 
         // Wait before retrying
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await new Promise(resolve => setTimeout(resolve, delay));
       } else {
         logger.error('UploadQueueService.processQueue: Item failed permanently', {
           id: item.id,
@@ -246,7 +246,7 @@ export const processQueue = async () => {
  * @returns {Promise<void>}
  * @throws {Error} If upload fails
  */
-const uploadQueueItem = async (item) => {
+const uploadQueueItem = async item => {
   const { id, userId, photoUri } = item;
 
   logger.debug('UploadQueueService.uploadQueueItem: Starting', { id, userId });
@@ -358,7 +358,7 @@ export const getQueueLength = () => {
  */
 export const clearFailedItems = async () => {
   const initialLength = queue.length;
-  queue = queue.filter((item) => item.attempts < MAX_RETRY_ATTEMPTS);
+  queue = queue.filter(item => item.attempts < MAX_RETRY_ATTEMPTS);
   const cleared = initialLength - queue.length;
 
   if (cleared > 0) {

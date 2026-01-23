@@ -15,7 +15,7 @@ import logger from './logger';
  * @param {string} e164 - Phone number in E.164 format (e.g., "+14155551234")
  * @returns {string} - Formatted phone number or original if parsing fails
  */
-export const formatPhoneWithCountry = (e164) => {
+export const formatPhoneWithCountry = e164 => {
   if (!e164) {
     return '';
   }
@@ -31,7 +31,7 @@ export const formatPhoneWithCountry = (e164) => {
     return e164;
   } catch (error) {
     logger.warn('phoneUtils.formatPhoneWithCountry: Parse failed', {
-      error: error.message
+      error: error.message,
     });
     return e164;
   }
@@ -59,7 +59,7 @@ export const formatPhoneForDisplay = (e164, countryCode) => {
   } catch (error) {
     logger.warn('phoneUtils.formatPhoneForDisplay: Parse failed', {
       error: error.message,
-      countryCode
+      countryCode,
     });
     return e164;
   }
@@ -85,7 +85,7 @@ export const formatAsUserTypes = (digits, countryCode = 'US') => {
   } catch (error) {
     logger.warn('phoneUtils.formatAsUserTypes: Format failed', {
       error: error.message,
-      countryCode
+      countryCode,
     });
     return digits;
   }

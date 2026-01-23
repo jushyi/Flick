@@ -20,11 +20,7 @@ import {
   getNotificationToken,
   storeNotificationToken,
 } from '../services/firebase/notificationService';
-import {
-  validateLength,
-  sanitizeDisplayName,
-  sanitizeBio,
-} from '../utils/validation';
+import { validateLength, sanitizeDisplayName, sanitizeBio } from '../utils/validation';
 import logger from '../utils/logger';
 
 const ProfileSetupScreen = ({ navigation }) => {
@@ -195,7 +191,7 @@ const ProfileSetupScreen = ({ navigation }) => {
       profileSetupCompleted: true,
     };
 
-    updateUserDocumentNative(user.uid, skipData).then((result) => {
+    updateUserDocumentNative(user.uid, skipData).then(result => {
       if (result.success) {
         updateUserProfile({
           ...userProfile,
@@ -217,14 +213,9 @@ const ProfileSetupScreen = ({ navigation }) => {
         >
           <View style={styles.content}>
             <Text style={styles.title}>Complete Your Profile</Text>
-            <Text style={styles.subtitle}>
-              Help your friends recognize you
-            </Text>
+            <Text style={styles.subtitle}>Help your friends recognize you</Text>
 
-            <TouchableOpacity
-              style={styles.photoContainer}
-              onPress={showImagePickerOptions}
-            >
+            <TouchableOpacity style={styles.photoContainer} onPress={showImagePickerOptions}>
               {photoUri || userProfile?.photoURL ? (
                 <Image
                   source={{ uri: photoUri || userProfile?.photoURL }}
@@ -243,7 +234,7 @@ const ProfileSetupScreen = ({ navigation }) => {
                 label="Display Name"
                 placeholder="How should friends see you?"
                 value={displayName}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setDisplayName(text);
                   if (errors.displayName) setErrors({ ...errors, displayName: null });
                 }}

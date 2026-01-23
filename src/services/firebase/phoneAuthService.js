@@ -16,7 +16,7 @@ import logger from '../../utils/logger';
  * @param {string} errorCode - Firebase error code
  * @returns {string} - User-friendly error message
  */
-export const getPhoneAuthErrorMessage = (errorCode) => {
+export const getPhoneAuthErrorMessage = errorCode => {
   logger.debug('phoneAuthService.getPhoneAuthErrorMessage', { errorCode });
 
   switch (errorCode) {
@@ -64,7 +64,7 @@ export const getPhoneAuthErrorMessage = (errorCode) => {
 export const validatePhoneNumber = (phoneNumber, countryCode) => {
   logger.debug('phoneAuthService.validatePhoneNumber', {
     phoneNumber: phoneNumber ? `${phoneNumber.slice(0, 3)}***` : null,
-    countryCode
+    countryCode,
   });
 
   // Check for empty phone number
@@ -85,21 +85,21 @@ export const validatePhoneNumber = (phoneNumber, countryCode) => {
     if (!parsed.isValid()) {
       logger.warn('phoneAuthService.validatePhoneNumber: Invalid number', {
         countryCode,
-        isPossible: parsed.isPossible()
+        isPossible: parsed.isPossible(),
       });
       return { valid: false, error: 'Please enter a valid phone number for your region.' };
     }
 
     const result = {
       valid: true,
-      e164: parsed.format('E.164'),      // +14155551234
+      e164: parsed.format('E.164'), // +14155551234
       formatted: parsed.formatNational(), // (415) 555-1234
       country: parsed.country,
     };
 
     logger.info('phoneAuthService.validatePhoneNumber: Valid', {
       e164: result.e164,
-      country: result.country
+      country: result.country,
     });
 
     return result;
@@ -119,21 +119,21 @@ export const validatePhoneNumber = (phoneNumber, countryCode) => {
 export const sendVerificationCode = async (phoneNumber, countryCode) => {
   logger.debug('phoneAuthService.sendVerificationCode: Starting', {
     phoneNumber: phoneNumber ? `${phoneNumber.slice(0, 3)}***` : null,
-    countryCode
+    countryCode,
   });
 
   // Validate phone number first
   const validation = validatePhoneNumber(phoneNumber, countryCode);
   if (!validation.valid) {
     logger.warn('phoneAuthService.sendVerificationCode: Validation failed', {
-      error: validation.error
+      error: validation.error,
     });
     return { success: false, error: validation.error };
   }
 
   try {
     logger.debug('phoneAuthService.sendVerificationCode: Calling signInWithPhoneNumber', {
-      e164: validation.e164
+      e164: validation.e164,
     });
 
     // Get auth instance and sign in with phone number
@@ -142,7 +142,7 @@ export const sendVerificationCode = async (phoneNumber, countryCode) => {
 
     logger.info('phoneAuthService.sendVerificationCode: Code sent successfully', {
       formattedNumber: validation.formatted,
-      hasConfirmation: !!confirmation
+      hasConfirmation: !!confirmation,
     });
 
     return {
@@ -157,7 +157,7 @@ export const sendVerificationCode = async (phoneNumber, countryCode) => {
       errorCode: error.code,
       errorMessage: error.message,
       userMessage: errorMessage,
-      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
+      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error)),
     });
     return { success: false, error: errorMessage };
   }
@@ -172,7 +172,7 @@ export const sendVerificationCode = async (phoneNumber, countryCode) => {
 export const verifyCode = async (confirmation, code) => {
   logger.debug('phoneAuthService.verifyCode: Starting', {
     hasConfirmation: !!confirmation,
-    codeLength: code?.length
+    codeLength: code?.length,
   });
 
   // Validate confirmation object exists
@@ -185,7 +185,7 @@ export const verifyCode = async (confirmation, code) => {
   if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
     logger.warn('phoneAuthService.verifyCode: Invalid code format', {
       codeLength: code?.length,
-      isNumeric: /^\d+$/.test(code || '')
+      isNumeric: /^\d+$/.test(code || ''),
     });
     return { success: false, error: 'Please enter the 6-digit code.' };
   }
@@ -197,7 +197,7 @@ export const verifyCode = async (confirmation, code) => {
     const userCredential = await confirmation.confirm(code);
 
     logger.info('phoneAuthService.verifyCode: Success', {
-      userId: userCredential.user?.uid
+      userId: userCredential.user?.uid,
     });
 
     return {
@@ -209,7 +209,7 @@ export const verifyCode = async (confirmation, code) => {
     logger.error('phoneAuthService.verifyCode: Failed', {
       errorCode: error.code,
       errorMessage: error.message,
-      userMessage: errorMessage
+      userMessage: errorMessage,
     });
     return { success: false, error: errorMessage };
   }
@@ -224,7 +224,7 @@ export const getCurrentUser = () => {
   const user = auth.currentUser;
   logger.debug('phoneAuthService.getCurrentUser', {
     hasUser: !!user,
-    userId: user?.uid
+    userId: user?.uid,
   });
   return user;
 };
@@ -244,7 +244,7 @@ export const signOut = async () => {
   } catch (error) {
     logger.error('phoneAuthService.signOut: Failed', {
       errorCode: error.code,
-      errorMessage: error.message
+      errorMessage: error.message,
     });
     return { success: false, error: error.message };
   }
@@ -255,7 +255,7 @@ export const signOut = async () => {
  * @param {function} callback - Callback function (user) => void
  * @returns {function} - Unsubscribe function
  */
-export const onAuthStateChanged = (callback) => {
+export const onAuthStateChanged = callback => {
   logger.debug('phoneAuthService.onAuthStateChanged: Subscribing');
   const auth = getAuth();
   return auth.onAuthStateChanged(callback);

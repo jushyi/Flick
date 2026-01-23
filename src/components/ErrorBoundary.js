@@ -23,12 +23,7 @@
  */
 
 import React, { Component } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import logger from '../utils/logger';
 
@@ -111,9 +106,7 @@ class ErrorBoundary extends Component {
             {__DEV__ && this.state.error && (
               <View style={styles.debugContainer}>
                 <Text style={styles.debugTitle}>Debug Info:</Text>
-                <Text style={styles.debugText}>
-                  {this.state.error.message || 'Unknown error'}
-                </Text>
+                <Text style={styles.debugText}>{this.state.error.message || 'Unknown error'}</Text>
               </View>
             )}
           </View>

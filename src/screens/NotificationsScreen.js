@@ -10,7 +10,15 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFirestore, collection, query, where, orderBy, limit, getDocs } from '@react-native-firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+} from '@react-native-firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -51,7 +59,7 @@ const NotificationsScreen = () => {
       );
 
       const snapshot = await getDocs(q);
-      const notificationsList = snapshot.docs.map((doc) => ({
+      const notificationsList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
@@ -86,7 +94,7 @@ const NotificationsScreen = () => {
    */
   const renderNotificationItem = ({ item }) => {
     // Format reactions display (e.g., "reacted 😂×2 ❤️×1")
-    const formatReactionsText = (reactions) => {
+    const formatReactionsText = reactions => {
       if (!reactions || typeof reactions !== 'object') return '';
 
       const parts = Object.entries(reactions)
@@ -97,17 +105,15 @@ const NotificationsScreen = () => {
     };
 
     const reactionsText = formatReactionsText(item.reactions);
-    const displayMessage = item.message || `${item.senderName || 'Someone'} reacted ${reactionsText} to your photo`;
+    const displayMessage =
+      item.message || `${item.senderName || 'Someone'} reacted ${reactionsText} to your photo`;
 
     return (
       <View style={styles.notificationItem}>
         {/* Profile Photo */}
         <View style={styles.profilePhotoContainer}>
           {item.senderProfilePhotoURL ? (
-            <Image
-              source={{ uri: item.senderProfilePhotoURL }}
-              style={styles.profilePhoto}
-            />
+            <Image source={{ uri: item.senderProfilePhotoURL }} style={styles.profilePhoto} />
           ) : (
             <View style={styles.profilePhotoPlaceholder}>
               <Ionicons name="person" size={24} color="#888888" />
@@ -141,7 +147,7 @@ const NotificationsScreen = () => {
         <Ionicons name="heart-outline" size={64} color="#CCCCCC" />
         <Text style={styles.emptyTitle}>No notifications yet</Text>
         <Text style={styles.emptyText}>
-          When friends react to your photos, you'll see it here
+          When friends react to your photos, you&apos;ll see it here
         </Text>
       </View>
     );
@@ -188,15 +194,11 @@ const NotificationsScreen = () => {
       <FlatList
         data={notifications}
         renderItem={renderNotificationItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor="#000000"
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000000" />
         }
         ListEmptyComponent={renderEmptyState}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

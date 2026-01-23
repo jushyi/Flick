@@ -55,9 +55,9 @@ const COLORS = {
   cardBorder: 'rgba(255, 255, 255, 0.3)',
   // Neon purple gradient colors
   buttonGradientStart: '#4C1D95', // Dark purple
-  buttonGradientEnd: '#7C3AED',   // Lighter purple
-  fillGradientStart: '#6B21A8',   // Darker fill left
-  fillGradientEnd: '#A855F7',     // Lighter fill right
+  buttonGradientEnd: '#7C3AED', // Lighter purple
+  fillGradientStart: '#6B21A8', // Darker fill left
+  fillGradientEnd: '#A855F7', // Lighter fill right
 };
 
 // Spinner: 3/4 solid arc with gap, spins around static play triangle
@@ -65,12 +65,7 @@ const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
   return (
     <View style={styles.spinnerOuter}>
       {/* Rotating 3/4 arc ring */}
-      <Animated.View
-        style={[
-          styles.spinnerRingContainer,
-          { transform: [{ rotate: rotation }] }
-        ]}
-      >
+      <Animated.View style={[styles.spinnerRingContainer, { transform: [{ rotate: rotation }] }]}>
         <View
           style={[
             styles.spinnerRing,
@@ -79,7 +74,7 @@ const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
               borderRightColor: color,
               borderBottomColor: color,
               borderLeftColor: 'transparent',
-            }
+            },
           ]}
         />
       </Animated.View>
@@ -88,7 +83,6 @@ const SpinnerIcon = ({ rotation, color = COLORS.textPrimary }) => {
     </View>
   );
 };
-
 
 const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose, onComplete }) => {
   const [isPressing, setIsPressing] = useState(false);
@@ -215,7 +209,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
         // Determine which phase we're in
         if (value < 0.25) {
           config = HAPTIC_CONFIG.phase1;
-        } else if (value < 0.50) {
+        } else if (value < 0.5) {
           config = HAPTIC_CONFIG.phase2;
         } else if (value < 0.75) {
           config = HAPTIC_CONFIG.phase3;
@@ -277,7 +271,10 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
     progressAnimation.current.start(({ finished }) => {
       if (finished) {
         logger.debug('DarkroomBottomSheet: Progress reached 100%');
-        logger.info('DarkroomBottomSheet: Press-and-hold completed', { revealedCount, developingCount });
+        logger.info('DarkroomBottomSheet: Press-and-hold completed', {
+          revealedCount,
+          developingCount,
+        });
 
         // Stop crescendo haptics
         stopCrescendoHaptics();
@@ -362,8 +359,8 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
       const positionFromTop = cardCount - 1 - i;
 
       // Base rotation and offset
-      const baseRotation = (positionFromTop * BASE_ROTATION_PER_CARD) - rotationCompensation;
-      const baseOffset = (positionFromTop * BASE_OFFSET_PER_CARD) - centerCompensation;
+      const baseRotation = positionFromTop * BASE_ROTATION_PER_CARD - rotationCompensation;
+      const baseOffset = positionFromTop * BASE_OFFSET_PER_CARD - centerCompensation;
 
       cards.push(
         <View
@@ -372,18 +369,13 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
             styles.cardStackCard,
             {
               position: 'absolute',
-              transform: [
-                { rotate: `${baseRotation}deg` },
-                { translateX: baseOffset },
-              ],
+              transform: [{ rotate: `${baseRotation}deg` }, { translateX: baseOffset }],
               zIndex: i + 1,
             },
           ]}
         >
           {isTopCard && (
-            <Text style={styles.cardStackText}>
-              {totalCount > 99 ? '99+' : totalCount}
-            </Text>
+            <Text style={styles.cardStackText}>{totalCount > 99 ? '99+' : totalCount}</Text>
           )}
         </View>
       );
@@ -410,19 +402,10 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
   const statusInfo = getStatusInfo();
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleBackdropPress}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleBackdropPress}>
       <View style={styles.container}>
         {/* Backdrop - fades in with modal */}
-        <TouchableOpacity
-          style={styles.backdrop}
-          activeOpacity={1}
-          onPress={handleBackdropPress}
-        />
+        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleBackdropPress} />
 
         {/* Bottom Sheet - slides up separately */}
         <Animated.View
@@ -445,9 +428,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
             </View>
 
             {/* Right side: Card Stack */}
-            <View style={styles.cardStackContainer}>
-              {renderCardStack()}
-            </View>
+            <View style={styles.cardStackContainer}>{renderCardStack()}</View>
           </View>
 
           {/* Hold Button - only show if photos are ready */}
@@ -465,7 +446,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                 <Animated.View
                   style={[
                     styles.fillOverlay,
-                    { width: progressWidth, backgroundColor: COLORS.fillGradientEnd }
+                    { width: progressWidth, backgroundColor: COLORS.fillGradientEnd },
                   ]}
                 />
 
@@ -481,11 +462,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
           )}
 
           {/* Message for developing photos */}
-          {!hasRevealedPhotos && (
-            <Text style={styles.developingText}>
-              Check back soon!
-            </Text>
-          )}
+          {!hasRevealedPhotos && <Text style={styles.developingText}>Check back soon!</Text>}
         </Animated.View>
       </View>
     </Modal>

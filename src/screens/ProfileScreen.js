@@ -10,7 +10,6 @@ import logger from '../utils/logger';
 // Initialize Firestore
 const db = getFirestore();
 
-
 const ProfileScreen = () => {
   const { signOut, user, userProfile } = useAuth();
   const [stats, setStats] = useState({ posts: 0, friends: 0, reactions: 0 });
@@ -39,7 +38,7 @@ const ProfileScreen = () => {
 
         // Get total reactions received on user's photos
         let reactionsCount = 0;
-        photosSnapshot.docs.forEach((doc) => {
+        photosSnapshot.docs.forEach(doc => {
           const photoData = doc.data();
           reactionsCount += photoData.reactionCount || 0;
         });
@@ -84,10 +83,7 @@ const ProfileScreen = () => {
 
         <View style={styles.profileSection}>
           {userProfile?.profilePhotoURL ? (
-            <Image
-              source={{ uri: userProfile.profilePhotoURL }}
-              style={styles.profilePhoto}
-            />
+            <Image source={{ uri: userProfile.profilePhotoURL }} style={styles.profilePhoto} />
           ) : (
             <View style={styles.profilePhoto}>
               <Text style={styles.profilePhotoText}>

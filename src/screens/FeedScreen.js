@@ -11,7 +11,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { getFirestore, collection, query, where, limit, onSnapshot } from '@react-native-firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  limit,
+  onSnapshot,
+} from '@react-native-firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import useFeedPhotos from '../hooks/useFeedPhotos';
 import FeedPhotoCard from '../components/FeedPhotoCard';
@@ -108,13 +115,17 @@ const FeedScreen = () => {
       limit(1)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const hasUnread = !snapshot.empty;
-      logger.debug('FeedScreen: Unread notifications check', { hasUnread });
-      setHasNewNotifications(hasUnread);
-    }, (error) => {
-      logger.error('FeedScreen: Failed to subscribe to notifications', { error: error.message });
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        const hasUnread = !snapshot.empty;
+        logger.debug('FeedScreen: Unread notifications check', { hasUnread });
+        setHasNewNotifications(hasUnread);
+      },
+      error => {
+        logger.error('FeedScreen: Failed to subscribe to notifications', { error: error.message });
+      }
+    );
 
     return () => unsubscribe();
   }, [user?.uid]);
@@ -126,17 +137,17 @@ const FeedScreen = () => {
   const handleRefresh = async () => {
     logger.debug('FeedScreen: Pull-to-refresh triggered');
     // Refresh both in parallel
-    await Promise.all([
-      refreshFeed(),
-      loadFriendStories(),
-    ]);
+    await Promise.all([refreshFeed(), loadFriendStories()]);
   };
 
   /**
    * Handle opening stories for a friend
    */
-  const handleOpenStories = (friend) => {
-    logger.info('FeedScreen: Opening stories viewer', { friendId: friend.userId, displayName: friend.displayName });
+  const handleOpenStories = friend => {
+    logger.info('FeedScreen: Opening stories viewer', {
+      friendId: friend.userId,
+      displayName: friend.displayName,
+    });
     setSelectedFriend(friend);
     setStoriesModalVisible(true);
   };
@@ -153,7 +164,7 @@ const FeedScreen = () => {
   /**
    * Handle photo card press - Open detail modal
    */
-  const handlePhotoPress = (photo) => {
+  const handlePhotoPress = photo => {
     setSelectedPhoto(photo);
     setShowPhotoModal(true);
   };
@@ -185,9 +196,9 @@ const FeedScreen = () => {
 
     // Calculate new total count
     let newTotalCount = 0;
-    Object.values(updatedReactions).forEach((userReactions) => {
+    Object.values(updatedReactions).forEach(userReactions => {
       if (typeof userReactions === 'object') {
-        Object.values(userReactions).forEach((count) => {
+        Object.values(userReactions).forEach(count => {
           newTotalCount += count;
         });
       }
@@ -282,7 +293,7 @@ const FeedScreen = () => {
   const renderStoriesLoadingSkeleton = () => {
     return (
       <View style={styles.storiesSkeletonContainer}>
-        {[1, 2, 3, 4, 5].map((i) => (
+        {[1, 2, 3, 4, 5].map(i => (
           <View key={i} style={styles.storySkeletonItem}>
             <View style={styles.storySkeletonCircle} />
             <View style={styles.storySkeletonText} />
@@ -298,11 +309,7 @@ const FeedScreen = () => {
   const renderStoriesRow = () => {
     // Don't show stories row if loading or no friends have photos
     if (storiesLoading) {
-      return (
-        <View style={styles.storiesContainer}>
-          {renderStoriesLoadingSkeleton()}
-        </View>
-      );
+      return <View style={styles.storiesContainer}>{renderStoriesLoadingSkeleton()}</View>;
     }
 
     // Hide stories row if no friends have photos
@@ -340,9 +347,7 @@ const FeedScreen = () => {
           style={styles.notificationButton}
         >
           <Ionicons name="heart-outline" size={24} color="#000000" />
-          {hasNewNotifications && (
-            <View style={styles.notificationDot} />
-          )}
+          {hasNewNotifications && <View style={styles.notificationDot} />}
         </TouchableOpacity>
       </View>
 
@@ -358,15 +363,11 @@ const FeedScreen = () => {
         <FlatList
           data={photos}
           renderItem={renderFeedItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.feedList}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor="#000000"
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000000" />
           }
           onEndReached={loadMorePhotos}
           onEndReachedThreshold={0.5}

@@ -9,7 +9,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getFirestore, collection, query, where, limit, getDocs } from '@react-native-firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  limit,
+  getDocs,
+} from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import UserSearchCard from '../components/UserSearchCard';
 import { sendFriendRequest, checkFriendshipStatus } from '../services/firebase/friendshipService';
@@ -57,7 +64,7 @@ const UserSearchScreen = ({ navigation }) => {
   /**
    * Search users by username (case-insensitive)
    */
-  const searchUsers = async (term) => {
+  const searchUsers = async term => {
     try {
       setLoading(true);
       setError(null);
@@ -74,7 +81,7 @@ const UserSearchScreen = ({ navigation }) => {
       const querySnapshot = await getDocs(usersQuery);
 
       const results = [];
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach(doc => {
         const userData = doc.data();
         // Exclude current user from results
         if (doc.id !== user.uid) {
@@ -103,11 +110,11 @@ const UserSearchScreen = ({ navigation }) => {
   /**
    * Fetch friendship status for search results
    */
-  const fetchFriendshipStatuses = async (users) => {
+  const fetchFriendshipStatuses = async users => {
     const statuses = {};
 
     await Promise.all(
-      users.map(async (searchUser) => {
+      users.map(async searchUser => {
         const result = await checkFriendshipStatus(user.uid, searchUser.id);
         if (result.success) {
           statuses[searchUser.id] = result.status;
@@ -121,12 +128,12 @@ const UserSearchScreen = ({ navigation }) => {
   /**
    * Handle adding a friend
    */
-  const handleAddFriend = async (toUserId) => {
+  const handleAddFriend = async toUserId => {
     try {
       mediumImpact();
 
       // Optimistic update
-      setFriendshipStatuses((prev) => ({
+      setFriendshipStatuses(prev => ({
         ...prev,
         [toUserId]: 'pending_sent',
       }));
@@ -136,7 +143,7 @@ const UserSearchScreen = ({ navigation }) => {
       if (!result.success) {
         logger.error('Failed to send friend request', { error: result.error });
         // Revert optimistic update
-        setFriendshipStatuses((prev) => ({
+        setFriendshipStatuses(prev => ({
           ...prev,
           [toUserId]: 'none',
         }));
@@ -145,7 +152,7 @@ const UserSearchScreen = ({ navigation }) => {
     } catch (err) {
       logger.error('Error sending friend request', err);
       // Revert optimistic update
-      setFriendshipStatuses((prev) => ({
+      setFriendshipStatuses(prev => ({
         ...prev,
         [toUserId]: 'none',
       }));
@@ -170,13 +177,7 @@ const UserSearchScreen = ({ navigation }) => {
         ? handleRespondToRequest
         : () => handleAddFriend(item.id);
 
-    return (
-      <UserSearchCard
-        user={item}
-        friendshipStatus={friendshipStatus}
-        onAddFriend={onPress}
-      />
-    );
+    return <UserSearchCard user={item} friendshipStatus={friendshipStatus} onAddFriend={onPress} />;
   };
 
   /**
@@ -190,9 +191,7 @@ const UserSearchScreen = ({ navigation }) => {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>🔍</Text>
           <Text style={styles.emptyTitle}>Search for friends</Text>
-          <Text style={styles.emptyText}>
-            Enter a username to find friends on Lapse
-          </Text>
+          <Text style={styles.emptyText}>Enter a username to find friends on Lapse</Text>
         </View>
       );
     }
@@ -201,9 +200,7 @@ const UserSearchScreen = ({ navigation }) => {
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyIcon}>😕</Text>
         <Text style={styles.emptyTitle}>No users found</Text>
-        <Text style={styles.emptyText}>
-          Try searching for a different username
-        </Text>
+        <Text style={styles.emptyText}>Try searching for a different username</Text>
       </View>
     );
   };
@@ -236,10 +233,7 @@ const UserSearchScreen = ({ navigation }) => {
           autoFocus
         />
         {searchTerm.length > 0 && (
-          <TouchableOpacity
-            onPress={() => setSearchTerm('')}
-            style={styles.clearButton}
-          >
+          <TouchableOpacity onPress={() => setSearchTerm('')} style={styles.clearButton}>
             <Text style={styles.clearButtonText}>✕</Text>
           </TouchableOpacity>
         )}
@@ -259,7 +253,7 @@ const UserSearchScreen = ({ navigation }) => {
         <FlatList
           data={searchResults}
           renderItem={renderSearchResult}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.resultsList}
           ListEmptyComponent={renderEmptyState}
           showsVerticalScrollIndicator={false}

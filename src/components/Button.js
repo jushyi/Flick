@@ -56,7 +56,9 @@ const Button = ({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : '#000000'} />
+        <ActivityIndicator
+          color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : '#000000'}
+        />
       ) : (
         <Text style={getTextStyle()}>{title}</Text>
       )}

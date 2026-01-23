@@ -64,13 +64,7 @@ const ConfettiPiece = ({ index, color }) => {
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.confettiPiece,
-        { backgroundColor: color },
-        animatedStyle,
-      ]}
-    />
+    <Animated.View style={[styles.confettiPiece, { backgroundColor: color }, animatedStyle]} />
   );
 };
 
@@ -153,12 +147,8 @@ const SuccessScreen = () => {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Confetti layer */}
       <View style={styles.confettiContainer} pointerEvents="none">
-        {confettiPieces.current.map((piece) => (
-          <ConfettiPiece
-            key={piece.id}
-            index={piece.id}
-            color={piece.color}
-          />
+        {confettiPieces.current.map(piece => (
+          <ConfettiPiece key={piece.id} index={piece.id} color={piece.color} />
         ))}
       </View>
 
@@ -169,17 +159,8 @@ const SuccessScreen = () => {
         <Text style={styles.subtitle}>Your photos have been organized</Text>
 
         {/* Return to Camera button */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleReturnToCamera}
-          activeOpacity={0.8}
-        >
-          <Animated.View
-            style={[
-              styles.buttonInner,
-              { transform: [{ scale: buttonScale }] },
-            ]}
-          >
+        <TouchableOpacity style={styles.button} onPress={handleReturnToCamera} activeOpacity={0.8}>
+          <Animated.View style={[styles.buttonInner, { transform: [{ scale: buttonScale }] }]}>
             <Text style={styles.buttonText}>Return to Camera</Text>
           </Animated.View>
         </TouchableOpacity>

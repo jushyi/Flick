@@ -24,9 +24,9 @@ import { DarkroomBottomSheet } from '../components';
 // expo-camera zoom is 0-1 range where 0 is baseline (1x) and 1 is max zoom
 // Base zoom levels (always available)
 const ZOOM_LEVELS_BASE = [
-  { label: '1', value: 1, lens: null, cameraZoom: 0 },         // Baseline (true 1x, no zoom)
-  { label: '2', value: 2, lens: null, cameraZoom: 0.17 },      // 2x zoom
-  { label: '3', value: 3, lens: null, cameraZoom: 0.33 },      // 3x telephoto
+  { label: '1', value: 1, lens: null, cameraZoom: 0 }, // Baseline (true 1x, no zoom)
+  { label: '2', value: 2, lens: null, cameraZoom: 0.17 }, // 2x zoom
+  { label: '3', value: 3, lens: null, cameraZoom: 0.33 }, // 3x telephoto
 ];
 
 // Ultra-wide lens level (iOS only, when device supports it)
@@ -132,9 +132,7 @@ const CameraScreen = () => {
       return null;
     }
     // Look for standard wide-angle camera
-    return availableLenses.find(lens =>
-      lens.toLowerCase() === 'back camera'
-    ) || null;
+    return availableLenses.find(lens => lens.toLowerCase() === 'back camera') || null;
   }, [availableLenses, facing]);
 
   // Build dynamic zoom levels based on device capabilities (iOS ultra-wide support)
@@ -147,19 +145,16 @@ const CameraScreen = () => {
 
     // Add 0.5x only on iOS with ultra-wide support, on back camera
     if (Platform.OS === 'ios' && hasUltraWide && facing === 'back') {
-      const ultraWideLens = availableLenses.find(lens =>
-        lens.toLowerCase().includes('ultra wide') ||
-        lens.toLowerCase().includes('ultrawide')
+      const ultraWideLens = availableLenses.find(
+        lens =>
+          lens.toLowerCase().includes('ultra wide') || lens.toLowerCase().includes('ultrawide')
       );
       logger.debug('CameraScreen: Building zoom levels with ultra-wide', {
         ultraWideLens,
         wideAngleLens,
         facing,
       });
-      return [
-        { ...ULTRA_WIDE_LEVEL, lens: ultraWideLens },
-        ...baseLevels,
-      ];
+      return [{ ...ULTRA_WIDE_LEVEL, lens: ultraWideLens }, ...baseLevels];
     }
     return baseLevels;
   }, [hasUltraWide, facing, availableLenses, wideAngleLens]);
@@ -173,9 +168,10 @@ const CameraScreen = () => {
           logger.info('CameraScreen: Got lenses via async method', { lenses });
           if (lenses && lenses.length > 0) {
             setAvailableLenses(lenses);
-            const hasUW = lenses.some(lens =>
-              lens.toLowerCase().includes('ultra wide') ||
-              lens.toLowerCase().includes('ultrawide')
+            const hasUW = lenses.some(
+              lens =>
+                lens.toLowerCase().includes('ultra wide') ||
+                lens.toLowerCase().includes('ultrawide')
             );
             setHasUltraWide(hasUW);
             if (hasUW) {
@@ -272,9 +268,7 @@ const CameraScreen = () => {
     return (
       <View style={styles.permissionContainer}>
         <Text style={styles.permissionTitle}>Camera Access Required</Text>
-        <Text style={styles.permissionText}>
-          Lapse needs access to your camera to take photos
-        </Text>
+        <Text style={styles.permissionText}>Lapse needs access to your camera to take photos</Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
@@ -308,7 +302,7 @@ const CameraScreen = () => {
     });
   };
 
-  const handleZoomChange = (zoomLevel) => {
+  const handleZoomChange = zoomLevel => {
     if (zoomLevel.value !== zoom.value) {
       lightImpact();
       setZoom(zoomLevel);
@@ -430,7 +424,7 @@ const CameraScreen = () => {
           facing={facing}
           flash={flash}
           zoom={zoom.cameraZoom}
-          onAvailableLensesChanged={(event) => {
+          onAvailableLensesChanged={event => {
             // iOS only: Detect available lenses including ultra-wide
             if (Platform.OS === 'ios' && event?.lenses) {
               logger.info('CameraScreen: onAvailableLensesChanged fired', {
@@ -439,9 +433,10 @@ const CameraScreen = () => {
               });
               setAvailableLenses(event.lenses);
               // Check for ultra-wide: "Back Ultra Wide Camera" or "builtInUltraWideCamera"
-              const hasUW = event.lenses.some(lens =>
-                lens.toLowerCase().includes('ultra wide') ||
-                lens.toLowerCase().includes('ultrawide')
+              const hasUW = event.lenses.some(
+                lens =>
+                  lens.toLowerCase().includes('ultra wide') ||
+                  lens.toLowerCase().includes('ultrawide')
               );
               setHasUltraWide(hasUW);
               logger.info('CameraScreen: Ultra-wide detection result', {
@@ -453,52 +448,40 @@ const CameraScreen = () => {
           {...(Platform.OS === 'ios' && selectedLens && { selectedLens })}
         />
         {/* Flash Overlay (camera shutter effect) - contained within camera preview */}
-        {showFlash && (
-          <Animated.View
-            style={[
-              styles.flashOverlay,
-              { opacity: flashOpacity },
-            ]}
-          />
-        )}
+        {showFlash && <Animated.View style={[styles.flashOverlay, { opacity: flashOpacity }]} />}
       </View>
 
       {/* Floating Controls Row - Flash (left), Zoom (center), Flip (right) - positioned above footer */}
       <View style={styles.floatingControls}>
         {/* Flash Button (far left) */}
-        <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={toggleFlash}
-        >
+        <TouchableOpacity style={styles.floatingButton} onPress={toggleFlash}>
           <FlashIcon color="#FFFFFF" mode={flash} />
           {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
         </TouchableOpacity>
 
         {/* Zoom Control Bar - centered */}
         <View style={styles.zoomBar}>
-          {zoomLevels.map((level) => {
+          {zoomLevels.map(level => {
             const isSelected = zoom.value === level.value;
             return (
               <TouchableOpacity
                 key={level.value}
-                style={[
-                  styles.zoomButton,
-                  isSelected && styles.zoomButtonActive,
-                ]}
+                style={[styles.zoomButton, isSelected && styles.zoomButtonActive]}
                 onPress={() => handleZoomChange(level)}
                 activeOpacity={0.7}
               >
                 <View style={styles.zoomLabelContainer}>
-                  <Text
-                    style={[
-                      styles.zoomButtonText,
-                      isSelected && styles.zoomButtonTextActive,
-                    ]}
-                  >
+                  <Text style={[styles.zoomButtonText, isSelected && styles.zoomButtonTextActive]}>
                     {level.label}
                   </Text>
                   {isSelected && (
-                    <Text style={[styles.zoomButtonText, styles.zoomButtonTextActive, styles.zoomSuffix]}>
+                    <Text
+                      style={[
+                        styles.zoomButtonText,
+                        styles.zoomButtonTextActive,
+                        styles.zoomSuffix,
+                      ]}
+                    >
                       x
                     </Text>
                   )}
@@ -509,10 +492,7 @@ const CameraScreen = () => {
         </View>
 
         {/* Flip Camera Button (far right) */}
-        <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={toggleCameraFacing}
-        >
+        <TouchableOpacity style={styles.floatingButton} onPress={toggleCameraFacing}>
           <FlipCameraIcon color="#FFFFFF" />
         </TouchableOpacity>
       </View>
@@ -619,8 +599,8 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
 
       // Base rotation and offset (at rest)
       // Back cards fan RIGHT, but we subtract compensation to keep stack centered
-      const baseRotation = (positionFromTop * BASE_ROTATION_PER_CARD) - rotationCompensation;
-      const baseOffset = (positionFromTop * BASE_OFFSET_PER_CARD) - centerCompensation;
+      const baseRotation = positionFromTop * BASE_ROTATION_PER_CARD - rotationCompensation;
+      const baseOffset = positionFromTop * BASE_OFFSET_PER_CARD - centerCompensation;
 
       // Single card has no fanning
       if (cardCount === 1) {
@@ -636,9 +616,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
               },
             ]}
           >
-            <Text style={styles.darkroomCardText}>
-              {count > 99 ? '99+' : count}
-            </Text>
+            <Text style={styles.darkroomCardText}>{count > 99 ? '99+' : count}</Text>
           </Animated.View>
         );
         continue;
@@ -648,10 +626,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
       const animatedRotation = fanSpreadAnim
         ? fanSpreadAnim.interpolate({
             inputRange: [0, 1],
-            outputRange: [
-              `${baseRotation}deg`,
-              `${baseRotation * SPREAD_ROTATION_MULTIPLIER}deg`,
-            ],
+            outputRange: [`${baseRotation}deg`, `${baseRotation * SPREAD_ROTATION_MULTIPLIER}deg`],
           })
         : `${baseRotation}deg`;
 
@@ -689,11 +664,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
           ]}
         >
           {/* Only show count on top card */}
-          {isTopCard && (
-            <Text style={styles.darkroomCardText}>
-              {count > 99 ? '99+' : count}
-            </Text>
-          )}
+          {isTopCard && <Text style={styles.darkroomCardText}>{count > 99 ? '99+' : count}</Text>}
         </Animated.View>
       );
     }
@@ -703,10 +674,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
 
   return (
     <TouchableOpacity
-      style={[
-        styles.darkroomCardContainer,
-        isDisabled && styles.darkroomCardDisabled,
-      ]}
+      style={[styles.darkroomCardContainer, isDisabled && styles.darkroomCardDisabled]}
       onPress={handlePress}
       disabled={isDisabled}
     >

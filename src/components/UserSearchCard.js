@@ -66,9 +66,7 @@ const UserSearchCard = ({ user, friendshipStatus, onAddFriend, disabled = false 
           <Image source={{ uri: profilePhotoURL }} style={styles.profilePic} />
         ) : (
           <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
-            <Text style={styles.profilePicText}>
-              {displayName?.[0]?.toUpperCase() || '?'}
-            </Text>
+            <Text style={styles.profilePicText}>{displayName?.[0]?.toUpperCase() || '?'}</Text>
           </View>
         )}
       </View>

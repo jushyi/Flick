@@ -3,6 +3,8 @@
  * Used throughout the app for displaying relative time
  */
 
+import logger from './logger';
+
 /**
  * Convert Firestore timestamp to "X ago" format
  * Examples: "2m ago", "3h ago", "1d ago", "Jan 5"
@@ -10,7 +12,7 @@
  * @param {object} timestamp - Firestore Timestamp object
  * @returns {string} - Formatted time string
  */
-export const getTimeAgo = (timestamp) => {
+export const getTimeAgo = timestamp => {
   if (!timestamp) return 'Unknown';
 
   try {
@@ -52,7 +54,7 @@ export const getTimeAgo = (timestamp) => {
     // More than 4 weeks - show date
     return formatDate(date);
   } catch (error) {
-    console.error('Error formatting time ago:', error);
+    logger.error('timeUtils: Error formatting time ago', { error: error.message });
     return 'Unknown';
   }
 };
@@ -63,10 +65,23 @@ export const getTimeAgo = (timestamp) => {
  * @param {Date} date - Date object
  * @returns {string} - Formatted date string
  */
-export const formatDate = (date) => {
+export const formatDate = date => {
   try {
     const now = new Date();
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const month = months[date.getMonth()];
     const day = date.getDate();
     const year = date.getFullYear();
@@ -78,7 +93,7 @@ export const formatDate = (date) => {
 
     return `${month} ${day}, ${year}`;
   } catch (error) {
-    console.error('Error formatting date:', error);
+    logger.error('timeUtils: Error formatting date', { error: error.message });
     return 'Unknown';
   }
 };
@@ -90,12 +105,25 @@ export const formatDate = (date) => {
  * @param {object} timestamp - Firestore Timestamp object
  * @returns {string} - Formatted date and time string
  */
-export const formatFullDateTime = (timestamp) => {
+export const formatFullDateTime = timestamp => {
   if (!timestamp) return 'Unknown';
 
   try {
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const month = months[date.getMonth()];
     const day = date.getDate();
     const year = date.getFullYear();
@@ -109,7 +137,7 @@ export const formatFullDateTime = (timestamp) => {
 
     return `${month} ${day}, ${year} at ${hours}:${minutesStr} ${ampm}`;
   } catch (error) {
-    console.error('Error formatting full date time:', error);
+    logger.error('timeUtils: Error formatting full date time', { error: error.message });
     return 'Unknown';
   }
 };
@@ -121,7 +149,7 @@ export const formatFullDateTime = (timestamp) => {
  * @param {object} timestamp - Firestore Timestamp object (nextRevealAt)
  * @returns {string} - Countdown string
  */
-export const getRevealCountdown = (timestamp) => {
+export const getRevealCountdown = timestamp => {
   if (!timestamp) return 'Unknown';
 
   try {
@@ -147,7 +175,7 @@ export const getRevealCountdown = (timestamp) => {
 
     return `Reveals in ${minutes}m`;
   } catch (error) {
-    console.error('Error formatting reveal countdown:', error);
+    logger.error('timeUtils: Error formatting reveal countdown', { error: error.message });
     return 'Unknown';
   }
 };
@@ -158,7 +186,7 @@ export const getRevealCountdown = (timestamp) => {
  * @param {object} timestamp - Firestore Timestamp object
  * @returns {boolean} - True if timestamp is today
  */
-export const isToday = (timestamp) => {
+export const isToday = timestamp => {
   if (!timestamp) return false;
 
   try {
@@ -181,7 +209,7 @@ export const isToday = (timestamp) => {
  * @param {object} timestamp - Firestore Timestamp object
  * @returns {boolean} - True if within last 7 days
  */
-export const isWithinLastWeek = (timestamp) => {
+export const isWithinLastWeek = timestamp => {
   if (!timestamp) return false;
 
   try {

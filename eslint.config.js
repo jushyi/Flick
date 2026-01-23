@@ -25,4 +25,17 @@ module.exports = defineConfig([
       'scripts/*',
     ],
   },
+
+  // Rule overrides for Expo-specific packages
+  {
+    settings: {
+      'import/ignore': ['@expo/vector-icons', 'react-native'],
+    },
+    rules: {
+      // Allow @expo/vector-icons which resolves at Expo runtime
+      'import/no-unresolved': ['error', { ignore: ['^@expo/vector-icons$'] }],
+      // Disable import/namespace for react-native (TypeScript parse issues)
+      'import/namespace': 'off',
+    },
+  },
 ]);

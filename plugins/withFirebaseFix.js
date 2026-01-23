@@ -11,10 +11,10 @@ const path = require('path');
  *
  * See: https://github.com/invertase/react-native-firebase/issues/8657
  */
-const withFirebaseFix = (config) => {
+const withFirebaseFix = config => {
   return withDangerousMod(config, [
     'ios',
-    async (config) => {
+    async config => {
       const podfilePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
 
       if (fs.existsSync(podfilePath)) {

@@ -139,7 +139,7 @@ const useFeedPhotos = (enableRealtime = true) => {
 
       if (result.success) {
         // Combine existing photos with new ones and re-curate
-        setPhotos((prev) => {
+        setPhotos(prev => {
           const allPhotos = [...prev, ...result.photos];
           return curateTopPhotosPerFriend(allPhotos, 5);
         });
@@ -191,9 +191,7 @@ const useFeedPhotos = (enableRealtime = true) => {
    * Used for reactions without refetching entire feed
    */
   const updatePhotoInState = useCallback((photoId, updatedPhoto) => {
-    setPhotos((prevPhotos) =>
-      prevPhotos.map((photo) => (photo.id === photoId ? updatedPhoto : photo))
-    );
+    setPhotos(prevPhotos => prevPhotos.map(photo => (photo.id === photoId ? updatedPhoto : photo)));
   }, []);
 
   /**
@@ -226,19 +224,24 @@ const useFeedPhotos = (enableRealtime = true) => {
     let unsubscribe = () => {};
 
     if (enableRealtime) {
-      unsubscribe = subscribeFeedPhotos((result) => {
-        if (result.success) {
-          // Update photos with latest data
-          // Only update if not currently loading more
-          if (!loadingMore) {
-            // Curate feed to top 5 photos per friend
-            const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
-            setPhotos(curatedPhotos);
+      unsubscribe = subscribeFeedPhotos(
+        result => {
+          if (result.success) {
+            // Update photos with latest data
+            // Only update if not currently loading more
+            if (!loadingMore) {
+              // Curate feed to top 5 photos per friend
+              const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
+              setPhotos(curatedPhotos);
+            }
+          } else {
+            logger.error('Feed subscription error', { error: result.error });
           }
-        } else {
-          logger.error('Feed subscription error', { error: result.error });
-        }
-      }, 20, friendUserIds, user.uid);
+        },
+        20,
+        friendUserIds,
+        user.uid
+      );
     }
 
     // Cleanup

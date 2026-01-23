@@ -33,7 +33,7 @@ const FeedLoadingSkeleton = ({ count = 3 }) => {
     outputRange: [0.3, 0.7],
   });
 
-  const renderSkeletonCard = (index) => (
+  const renderSkeletonCard = index => (
     <View key={index} style={styles.card}>
       {/* Profile section */}
       <View style={styles.profileSection}>

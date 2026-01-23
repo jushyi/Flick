@@ -90,9 +90,7 @@ export const getNotificationToken = async () => {
 
     // Get Expo project ID from app config
     const projectId =
-      Constants.expoConfig?.extra?.eas?.projectId ||
-      Constants.easConfig?.projectId ||
-      undefined;
+      Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId || undefined;
 
     // Get Expo push token
     // For Expo Go: projectId may be undefined (works without it in some cases)
@@ -146,7 +144,7 @@ export const storeNotificationToken = async (userId, token) => {
  * Handle notification received while app is in foreground
  * @param {object} notification - Notification object from expo-notifications
  */
-export const handleNotificationReceived = (notification) => {
+export const handleNotificationReceived = notification => {
   try {
     logger.debug('Notification received in foreground', {
       title: notification.request.content.title,
@@ -167,7 +165,7 @@ export const handleNotificationReceived = (notification) => {
  * @param {object} notification - Notification object from expo-notifications
  * @returns {object} - Navigation data {type, screen, params}
  */
-export const handleNotificationTapped = (notification) => {
+export const handleNotificationTapped = notification => {
   try {
     const { data } = notification.request.content;
     const { type, photoId, friendshipId, revealAll, revealedCount } = data || {};

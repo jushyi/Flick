@@ -7,9 +7,6 @@ import { useAuth } from '../context/AuthContext';
 import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 
-// Create navigation reference for programmatic navigation
-export const navigationRef = createRef();
-
 // Import auth screens (phone-only authentication)
 import PhoneInputScreen from '../screens/PhoneInputScreen';
 import VerificationScreen from '../screens/VerificationScreen';
@@ -25,6 +22,9 @@ import FriendsListScreen from '../screens/FriendsListScreen';
 import UserSearchScreen from '../screens/UserSearchScreen';
 import FriendRequestsScreen from '../screens/FriendRequestsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+
+// Create navigation reference for programmatic navigation
+export const navigationRef = createRef();
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -165,14 +165,7 @@ const CameraIcon = ({ color }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <Circle
-      cx="12"
-      cy="13.5"
-      r="3.5"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
+    <Circle cx="12" cy="13.5" r="3.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
   </Svg>
 );
 
@@ -187,12 +180,7 @@ const FriendsIcon = ({ color }) => (
       strokeWidth="1.5"
       strokeLinecap="round"
     />
-    <Path
-      d="M16 20c0-3.5 2.5-6 6-6"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
+    <Path d="M16 20c0-3.5 2.5-6 6-6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
   </Svg>
 );
 
@@ -234,14 +222,7 @@ const DarkroomIcon = ({ color, count }) => (
 // Profile Icon - Simple user silhouette
 const ProfileIcon = ({ color }) => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <Circle
-      cx="12"
-      cy="8"
-      r="4"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
+    <Circle cx="12" cy="8" r="4" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
     <Path
       d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8"
       stroke={color}
@@ -290,7 +271,14 @@ const AppNavigator = () => {
   // Show loading screen while checking auth state
   if (initializing) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#FFFFFF',
+        }}
+      >
         <ActivityIndicator size="large" color="#000000" />
       </View>
     );
@@ -302,7 +290,14 @@ const AppNavigator = () => {
   // This prevents briefly showing MainTabs while profile is being created for new users
   if (isAuthenticated && userProfile === null) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#FFFFFF',
+        }}
+      >
         <ActivityIndicator size="large" color="#000000" />
       </View>
     );
@@ -310,7 +305,8 @@ const AppNavigator = () => {
 
   // Show ProfileSetup if user is authenticated but hasn't completed profile setup
   // Check for both false AND undefined/missing (for users created before this field existed)
-  const needsProfileSetup = isAuthenticated && userProfile && userProfile.profileSetupCompleted !== true;
+  const needsProfileSetup =
+    isAuthenticated && userProfile && userProfile.profileSetupCompleted !== true;
 
   return (
     <NavigationContainer ref={navigationRef} linking={linking}>

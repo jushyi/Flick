@@ -21,7 +21,7 @@ const getTodayDate = () => {
  * @param {string} userId - User ID
  * @returns {Promise} - Daily photo count
  */
-export const getDailyPhotoCount = async (userId) => {
+export const getDailyPhotoCount = async userId => {
   try {
     const userRef = doc(db, 'users', userId);
     const userDocSnap = await getDoc(userRef);
@@ -54,7 +54,7 @@ export const getDailyPhotoCount = async (userId) => {
  * @param {string} userId - User ID
  * @returns {Promise}
  */
-export const incrementDailyPhotoCount = async (userId) => {
+export const incrementDailyPhotoCount = async userId => {
   try {
     const userRef = doc(db, 'users', userId);
     const userDocSnap = await getDoc(userRef);
@@ -92,7 +92,7 @@ export const incrementDailyPhotoCount = async (userId) => {
  * @param {string} userId - User ID
  * @returns {Promise} - { canTakePhoto, remainingShots }
  */
-export const checkDailyLimit = async (userId) => {
+export const checkDailyLimit = async userId => {
   try {
     const result = await getDailyPhotoCount(userId);
 

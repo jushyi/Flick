@@ -77,63 +77,59 @@ export default function App() {
     const timeoutId = setTimeout(requestPermissionsAndToken, 1000);
 
     // Listener for notifications received while app is in foreground
-    notificationListener.current = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        handleNotificationReceived(notification);
-      }
-    );
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      handleNotificationReceived(notification);
+    });
 
     // Listener for when user taps a notification
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        const navigationData = handleNotificationTapped(response.notification);
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const navigationData = handleNotificationTapped(response.notification);
 
-        if (navigationData.success && navigationRef.current?.isReady()) {
-          const { screen, params } = navigationData.data;
-          logger.info('App: Notification tap navigating', { screen, params });
+      if (navigationData.success && navigationRef.current?.isReady()) {
+        const { screen, params } = navigationData.data;
+        logger.info('App: Notification tap navigating', { screen, params });
 
-          // Navigate to the appropriate screen based on notification type
-          if (screen === 'Camera') {
-            // Navigate to Camera tab with all params (openDarkroom, revealAll, revealedCount)
-            // First navigate to ensure we're on the right tab
-            navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
-            // Then set params after a small delay to ensure the screen is focused
-            // This works around React Navigation's nested navigator param propagation issue
-            setTimeout(() => {
-              navigationRef.current.navigate('MainTabs', {
-                screen: 'Camera',
-                params: params,
-              });
-            }, 100);
-          } else if (screen === 'Feed' || screen === 'Profile') {
-            // Navigate to tab screen
-            navigationRef.current.navigate('MainTabs', { screen });
-          } else if (screen === 'FriendRequests') {
-            // Navigate to Friends tab, then to FriendRequests screen
+        // Navigate to the appropriate screen based on notification type
+        if (screen === 'Camera') {
+          // Navigate to Camera tab with all params (openDarkroom, revealAll, revealedCount)
+          // First navigate to ensure we're on the right tab
+          navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
+          // Then set params after a small delay to ensure the screen is focused
+          // This works around React Navigation's nested navigator param propagation issue
+          setTimeout(() => {
             navigationRef.current.navigate('MainTabs', {
-              screen: 'Friends',
-              params: { screen: 'FriendRequests' },
+              screen: 'Camera',
+              params: params,
             });
-          }
+          }, 100);
+        } else if (screen === 'Feed' || screen === 'Profile') {
+          // Navigate to tab screen
+          navigationRef.current.navigate('MainTabs', { screen });
+        } else if (screen === 'FriendRequests') {
+          // Navigate to Friends tab, then to FriendRequests screen
+          navigationRef.current.navigate('MainTabs', {
+            screen: 'Friends',
+            params: { screen: 'FriendRequests' },
+          });
         }
       }
-    );
+    });
 
     // Cleanup listeners on unmount
     return () => {
       clearTimeout(timeoutId);
       if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+        notificationListener.current.remove();
       }
       if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+        responseListener.current.remove();
       }
     };
   }, []);
 
   // Check for pending photo reveals when app comes to foreground
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+    const subscription = AppState.addEventListener('change', async nextAppState => {
       if (nextAppState === 'active') {
         // Check for pending reveals when app comes to foreground
         const currentUser = getAuth().currentUser;
@@ -173,9 +169,7 @@ export default function App() {
         <AuthProvider>
           <AppNavigator />
           <StatusBar style="auto" />
-          {showAnimatedSplash && (
-            <AnimatedSplash onAnimationComplete={handleSplashComplete} />
-          )}
+          {showAnimatedSplash && <AnimatedSplash onAnimationComplete={handleSplashComplete} />}
         </AuthProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

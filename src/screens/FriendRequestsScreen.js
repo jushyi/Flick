@@ -81,14 +81,12 @@ const FriendRequestsScreen = () => {
     fetchRequests();
 
     // Set up real-time listener for friendship changes
-    const unsubscribe = subscribeFriendships(user.uid, (friendships) => {
+    const unsubscribe = subscribeFriendships(user.uid, friendships => {
       // Filter for pending requests
       const received = friendships.filter(
-        (f) => f.status === 'pending' && f.requestedBy !== user.uid
+        f => f.status === 'pending' && f.requestedBy !== user.uid
       );
-      const sent = friendships.filter(
-        (f) => f.status === 'pending' && f.requestedBy === user.uid
-      );
+      const sent = friendships.filter(f => f.status === 'pending' && f.requestedBy === user.uid);
 
       setReceivedRequests(received);
       setSentRequests(sent);
@@ -108,7 +106,7 @@ const FriendRequestsScreen = () => {
   /**
    * Handle accepting a friend request
    */
-  const handleAccept = async (friendshipId) => {
+  const handleAccept = async friendshipId => {
     try {
       mediumImpact();
 
@@ -128,7 +126,7 @@ const FriendRequestsScreen = () => {
   /**
    * Handle declining a friend request
    */
-  const handleDecline = async (friendshipId) => {
+  const handleDecline = async friendshipId => {
     try {
       mediumImpact();
 
@@ -148,7 +146,7 @@ const FriendRequestsScreen = () => {
   /**
    * Handle canceling a sent request
    */
-  const handleCancel = async (friendshipId) => {
+  const handleCancel = async friendshipId => {
     try {
       mediumImpact();
 
@@ -234,9 +232,7 @@ const FriendRequestsScreen = () => {
           onPress={() => setActiveTab('sent')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.tabText, activeTab === 'sent' && styles.tabTextActive]}>
-            Sent
-          </Text>
+          <Text style={[styles.tabText, activeTab === 'sent' && styles.tabTextActive]}>Sent</Text>
         </TouchableOpacity>
       </View>
 
@@ -257,16 +253,12 @@ const FriendRequestsScreen = () => {
         <FlatList
           data={currentData}
           renderItem={renderRequest}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={renderEmptyState}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor="#000000"
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000000" />
           }
         />
       )}

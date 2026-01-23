@@ -21,7 +21,7 @@ const db = getFirestore();
  * @param {string} userId - User ID
  * @returns {Promise} - Darkroom data
  */
-export const getDarkroom = async (userId) => {
+export const getDarkroom = async userId => {
   try {
     const darkroomRef = doc(db, 'darkrooms', userId);
     const darkroomDoc = await getDoc(darkroomRef);
@@ -64,7 +64,7 @@ export const getDarkroom = async (userId) => {
  * @param {string} userId - User ID
  * @returns {Promise<boolean>} - True if ready to reveal
  */
-export const isDarkroomReadyToReveal = async (userId) => {
+export const isDarkroomReadyToReveal = async userId => {
   try {
     const result = await getDarkroom(userId);
     if (!result.success) return false;
@@ -84,7 +84,7 @@ export const isDarkroomReadyToReveal = async (userId) => {
  * @param {string} userId - User ID
  * @returns {Promise}
  */
-export const scheduleNextReveal = async (userId) => {
+export const scheduleNextReveal = async userId => {
   try {
     const darkroomRef = doc(db, 'darkrooms', userId);
     const nextRevealAt = calculateNextRevealTime();
@@ -107,7 +107,7 @@ export const scheduleNextReveal = async (userId) => {
  * @param {string} userId - User ID
  * @returns {Promise}
  */
-export const ensureDarkroomInitialized = async (userId) => {
+export const ensureDarkroomInitialized = async userId => {
   logger.info('DarkroomService.ensureDarkroomInitialized: ENTRY', { userId });
 
   try {
@@ -118,16 +118,19 @@ export const ensureDarkroomInitialized = async (userId) => {
     const darkroomDoc = await getDoc(darkroomRef);
     logger.debug('DarkroomService.ensureDarkroomInitialized: Doc fetched', {
       exists: darkroomDoc.exists(),
-      userId
+      userId,
     });
 
     if (!darkroomDoc.exists()) {
       // Create new darkroom with initial reveal time
-      logger.info('DarkroomService.ensureDarkroomInitialized: Darkroom does not exist, creating new one', { userId });
+      logger.info(
+        'DarkroomService.ensureDarkroomInitialized: Darkroom does not exist, creating new one',
+        { userId }
+      );
       const nextRevealAt = calculateNextRevealTime();
       logger.debug('DarkroomService.ensureDarkroomInitialized: Calculated nextRevealAt', {
         nextRevealAt: nextRevealAt.toDate().toISOString(),
-        userId
+        userId,
       });
 
       await setDoc(darkroomRef, {
@@ -136,7 +139,9 @@ export const ensureDarkroomInitialized = async (userId) => {
         lastRevealedAt: null,
         createdAt: Timestamp.now(),
       });
-      logger.info('DarkroomService.ensureDarkroomInitialized: SUCCESS - Created new darkroom', { userId });
+      logger.info('DarkroomService.ensureDarkroomInitialized: SUCCESS - Created new darkroom', {
+        userId,
+      });
       return { success: true, created: true };
     }
 
@@ -149,15 +154,18 @@ export const ensureDarkroomInitialized = async (userId) => {
       userId,
       nextRevealAt: nextRevealAt ? nextRevealAt.toDate().toISOString() : 'null',
       now: now.toDate().toISOString(),
-      isStale: !nextRevealAt || nextRevealAt.seconds < now.seconds
+      isStale: !nextRevealAt || nextRevealAt.seconds < now.seconds,
     });
 
     if (!nextRevealAt || nextRevealAt.seconds < now.seconds) {
       // nextRevealAt is stale or missing - reveal overdue photos first, then set a new time
-      logger.info('DarkroomService.ensureDarkroomInitialized: Revealing overdue photos before resetting', {
-        userId,
-        oldNextRevealAt: nextRevealAt ? nextRevealAt.toDate().toISOString() : 'null',
-      });
+      logger.info(
+        'DarkroomService.ensureDarkroomInitialized: Revealing overdue photos before resetting',
+        {
+          userId,
+          oldNextRevealAt: nextRevealAt ? nextRevealAt.toDate().toISOString() : 'null',
+        }
+      );
 
       // Inline reveal logic to avoid circular import with photoService
       let revealedCount = 0;
@@ -197,28 +205,34 @@ export const ensureDarkroomInitialized = async (userId) => {
       const newNextRevealAt = calculateNextRevealTime();
       logger.info('DarkroomService.ensureDarkroomInitialized: Scheduling next reveal', {
         userId,
-        newNextRevealAt: newNextRevealAt.toDate().toISOString()
+        newNextRevealAt: newNextRevealAt.toDate().toISOString(),
       });
 
       await updateDoc(darkroomRef, {
         nextRevealAt: newNextRevealAt,
         lastRevealedAt: serverTimestamp(),
       });
-      logger.info('DarkroomService.ensureDarkroomInitialized: SUCCESS - Revealed and refreshed stale nextRevealAt', {
-        userId,
-        revealedCount,
-      });
+      logger.info(
+        'DarkroomService.ensureDarkroomInitialized: SUCCESS - Revealed and refreshed stale nextRevealAt',
+        {
+          userId,
+          revealedCount,
+        }
+      );
       return { success: true, refreshed: true, revealed: revealedCount };
     }
 
     // nextRevealAt is still in the future - no change needed
-    logger.info('DarkroomService.ensureDarkroomInitialized: SUCCESS - No change needed, nextRevealAt still valid', { userId });
+    logger.info(
+      'DarkroomService.ensureDarkroomInitialized: SUCCESS - No change needed, nextRevealAt still valid',
+      { userId }
+    );
     return { success: true };
   } catch (error) {
     logger.error('DarkroomService.ensureDarkroomInitialized: FAILED', {
       userId,
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
     return { success: false, error: error.message };
   }

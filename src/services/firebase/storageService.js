@@ -10,7 +10,7 @@ const storageInstance = getStorage();
  * @param {string} uri - File URI (may start with file://)
  * @returns {string} - Local file path without file:// prefix
  */
-const uriToFilePath = (uri) => {
+const uriToFilePath = uri => {
   // RN Firebase putFile needs path without file:// prefix
   if (uri.startsWith('file://')) {
     return uri.substring(7);
@@ -109,7 +109,7 @@ export const uploadPhoto = async (photoId, localUri) => {
  * @param {string} userId - User ID
  * @returns {Promise}
  */
-export const deleteProfilePhoto = async (userId) => {
+export const deleteProfilePhoto = async userId => {
   try {
     logger.debug('StorageService.deleteProfilePhoto: Starting', { userId });
 
@@ -129,7 +129,7 @@ export const deleteProfilePhoto = async (userId) => {
  * @param {string} photoId - Photo ID
  * @returns {Promise}
  */
-export const deletePhoto = async (photoId) => {
+export const deletePhoto = async photoId => {
   try {
     logger.debug('StorageService.deletePhoto: Starting', { photoId });
 
@@ -149,7 +149,7 @@ export const deletePhoto = async (photoId) => {
  * @param {string} photoId - Photo ID
  * @returns {Promise}
  */
-export const getPhotoURL = async (photoId) => {
+export const getPhotoURL = async photoId => {
   try {
     logger.debug('StorageService.getPhotoURL: Starting', { photoId });
 

@@ -46,10 +46,7 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false }) => {
       <View style={[styles.avatarRing, hasPhotos && styles.avatarRingActive]}>
         <View style={styles.avatarInner}>
           {profilePhotoURL ? (
-            <Image
-              source={{ uri: profilePhotoURL }}
-              style={styles.avatar}
-            />
+            <Image source={{ uri: profilePhotoURL }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
               <Text style={styles.avatarInitial}>{getInitial()}</Text>

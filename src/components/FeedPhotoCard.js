@@ -14,13 +14,7 @@ const PHOTO_SIZE = SCREEN_WIDTH - CARD_PADDING * 2;
  * @param {function} onPress - Callback when card is tapped
  */
 const FeedPhotoCard = ({ photo, onPress }) => {
-  const {
-    imageURL,
-    capturedAt,
-    reactions = {},
-    reactionCount = 0,
-    user = {},
-  } = photo;
+  const { imageURL, capturedAt, reactions = {}, reactionCount = 0, user = {} } = photo;
 
   const { username, displayName, profilePhotoURL } = user;
 
@@ -33,7 +27,7 @@ const FeedPhotoCard = ({ photo, onPress }) => {
 
     // Aggregate emoji counts across all users
     const emojiCounts = {};
-    Object.values(reactions).forEach((userReactions) => {
+    Object.values(reactions).forEach(userReactions => {
       // userReactions is now an object: { '😂': 2, '❤️': 1 }
       if (typeof userReactions === 'object') {
         Object.entries(userReactions).forEach(([emoji, count]) => {
@@ -55,25 +49,16 @@ const FeedPhotoCard = ({ photo, onPress }) => {
   const topReactions = getTopReactions();
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress}
-      activeOpacity={0.95}
-    >
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.95}>
       {/* Profile section */}
       <View style={styles.profileSection}>
         {/* Profile photo */}
         <View style={styles.profilePicContainer}>
           {profilePhotoURL ? (
-            <Image
-              source={{ uri: profilePhotoURL }}
-              style={styles.profilePic}
-            />
+            <Image source={{ uri: profilePhotoURL }} style={styles.profilePic} />
           ) : (
             <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
-              <Text style={styles.profilePicText}>
-                {displayName?.[0]?.toUpperCase() || '?'}
-              </Text>
+              <Text style={styles.profilePicText}>{displayName?.[0]?.toUpperCase() || '?'}</Text>
             </View>
           )}
         </View>
@@ -89,18 +74,12 @@ const FeedPhotoCard = ({ photo, onPress }) => {
         </View>
 
         {/* Timestamp */}
-        <Text style={styles.timestamp}>
-          {getTimeAgo(capturedAt)}
-        </Text>
+        <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
       </View>
 
       {/* Photo */}
       <View style={styles.photoContainer}>
-        <Image
-          source={{ uri: imageURL }}
-          style={styles.photo}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: imageURL }} style={styles.photo} resizeMode="cover" />
       </View>
 
       {/* Reaction bar */}
@@ -112,11 +91,7 @@ const FeedPhotoCard = ({ photo, onPress }) => {
               <Text style={styles.reactionCount}>{reaction.count}</Text>
             </View>
           ))}
-          {reactionCount > 3 && (
-            <Text style={styles.moreReactions}>
-              +{reactionCount - 3} more
-            </Text>
-          )}
+          {reactionCount > 3 && <Text style={styles.moreReactions}>+{reactionCount - 3} more</Text>}
         </View>
       )}
 

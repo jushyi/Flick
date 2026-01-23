@@ -9,19 +9,11 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
  * @param {boolean} elevated - Whether to show shadow elevation
  */
 const Card = ({ children, onPress, style, elevated = true }) => {
-  const containerStyle = [
-    styles.card,
-    elevated && styles.elevated,
-    style,
-  ];
+  const containerStyle = [styles.card, elevated && styles.elevated, style];
 
   if (onPress) {
     return (
-      <TouchableOpacity
-        style={containerStyle}
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity style={containerStyle} onPress={onPress} activeOpacity={0.8}>
         {children}
       </TouchableOpacity>
     );

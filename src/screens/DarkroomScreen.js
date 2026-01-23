@@ -15,7 +15,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { Image as ExpoImage } from 'expo-image';
 import { useAuth } from '../context/AuthContext';
-import { getDevelopingPhotos, revealPhotos, triagePhoto, batchTriagePhotos } from '../services/firebase/photoService';
+import {
+  getDevelopingPhotos,
+  revealPhotos,
+  triagePhoto,
+  batchTriagePhotos,
+} from '../services/firebase/photoService';
 import { isDarkroomReadyToReveal, scheduleNextReveal } from '../services/firebase/darkroomService';
 import { SwipeablePhotoCard } from '../components';
 import { successNotification } from '../utils/haptics';
@@ -91,7 +96,7 @@ const DarkroomScreen = () => {
         logger.info('DarkroomScreen: Photos revealed', {
           count: revealResult.count,
           success: revealResult.success,
-          error: revealResult.error
+          error: revealResult.error,
         });
 
         // Schedule next reveal time (0-15 minutes from now)
@@ -106,23 +111,25 @@ const DarkroomScreen = () => {
       logger.info('DarkroomScreen: getDevelopingPhotos result', {
         success: result.success,
         photoCount: result.photos?.length,
-        error: result.error
+        error: result.error,
       });
 
       if (result.success && result.photos) {
         // Log all photos with their statuses
         logger.debug('DarkroomScreen: All photos', {
-          photos: result.photos.map(p => ({ id: p.id, status: p.status, photoState: p.photoState }))
+          photos: result.photos.map(p => ({
+            id: p.id,
+            status: p.status,
+            photoState: p.photoState,
+          })),
         });
 
         // Filter for revealed photos only
-        const revealedPhotos = result.photos.filter(
-          photo => photo.status === 'revealed'
-        );
+        const revealedPhotos = result.photos.filter(photo => photo.status === 'revealed');
         logger.info('DarkroomScreen: Filtered revealed photos', {
           totalPhotos: result.photos.length,
           revealedCount: revealedPhotos.length,
-          developingCount: result.photos.filter(p => p.status === 'developing').length
+          developingCount: result.photos.filter(p => p.status === 'developing').length,
         });
         setPhotos(revealedPhotos);
         // 18.1-FIX-2: Clear hidden state when photos reload to prevent stale state
@@ -148,7 +155,11 @@ const DarkroomScreen = () => {
 
   const handleTriage = async (photoId, action) => {
     try {
-      logger.debug('DarkroomScreen: Starting triage', { photoId, action, currentCount: visiblePhotos.length });
+      logger.debug('DarkroomScreen: Starting triage', {
+        photoId,
+        action,
+        currentCount: visiblePhotos.length,
+      });
 
       // 18.1: Find the photo object to store in undo stack
       const photoToTriage = photos.find(p => p.id === photoId);
@@ -226,7 +237,7 @@ const DarkroomScreen = () => {
 
     logger.info('DarkroomScreen: User tapped Done button', {
       photosRemaining: photos.length,
-      decisionsToSave: undoStack.length
+      decisionsToSave: undoStack.length,
     });
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -268,18 +279,21 @@ const DarkroomScreen = () => {
   // 18.6: Handle early exit clearance - hides photo to trigger cascade while card still visible
   // This is called at ~60% exit progress, before the exit animation completes
   // The handleTriage callback still fires at exit completion for undo stack and success state
-  const handleExitClearance = useCallback((photoId) => {
-    logger.debug('DarkroomScreen: Exit clearance reached, triggering early cascade', { photoId });
+  const handleExitClearance = useCallback(
+    photoId => {
+      logger.debug('DarkroomScreen: Exit clearance reached, triggering early cascade', { photoId });
 
-    // Only hide if not already hidden (prevent double-hide)
-    if (!hiddenPhotoIds.has(photoId)) {
-      setHiddenPhotoIds(prev => {
-        const newHidden = new Set(prev);
-        newHidden.add(photoId);
-        return newHidden;
-      });
-    }
-  }, [hiddenPhotoIds]);
+      // Only hide if not already hidden (prevent double-hide)
+      if (!hiddenPhotoIds.has(photoId)) {
+        setHiddenPhotoIds(prev => {
+          const newHidden = new Set(prev);
+          newHidden.add(photoId);
+          return newHidden;
+        });
+      }
+    },
+    [hiddenPhotoIds]
+  );
 
   // Swipe handlers for SwipeablePhotoCard
   const handleArchiveSwipe = async () => {
@@ -288,7 +302,9 @@ const DarkroomScreen = () => {
   };
 
   const handleJournalSwipe = async () => {
-    logger.info('DarkroomScreen: User swiped right to journal photo', { photoId: currentPhoto?.id });
+    logger.info('DarkroomScreen: User swiped right to journal photo', {
+      photoId: currentPhoto?.id,
+    });
     await handleTriage(currentPhoto.id, 'journal');
   };
 
@@ -466,21 +482,18 @@ const DarkroomScreen = () => {
               <TouchableOpacity
                 style={[
                   styles.undoButton,
-                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
+                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled,
                 ]}
                 onPress={handleUndo}
                 disabled={undoStack.length === 0 || undoingPhoto !== null}
               >
-                <Ionicons
-                  name="arrow-undo"
-                  size={16}
-                  color="#FFFFFF"
-                  style={styles.undoIcon}
-                />
-                <Text style={[
-                  styles.undoText,
-                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
-                ]}>
+                <Ionicons name="arrow-undo" size={16} color="#FFFFFF" style={styles.undoIcon} />
+                <Text
+                  style={[
+                    styles.undoText,
+                    (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled,
+                  ]}
+                >
                   Undo
                 </Text>
               </TouchableOpacity>
@@ -548,114 +561,113 @@ const DarkroomScreen = () => {
   }
 
   // Debug: Log the photo data
-  logger.debug('Current photo', { photoId: currentPhoto?.id, hasImageURL: !!currentPhoto?.imageURL });
+  logger.debug('Current photo', {
+    photoId: currentPhoto?.id,
+    hasImageURL: !!currentPhoto?.imageURL,
+  });
 
   return (
     <GestureHandlerRootView style={styles.gestureRootView}>
       <View style={styles.container}>
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => {
-              logger.info('DarkroomScreen: User tapped back button');
-              navigation.goBack();
-            }}
-            style={styles.backButton}
-          >
-            <View style={styles.downChevron} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Darkroom</Text>
-            {/* 18.1-FIX-2: Use visiblePhotos.length for header subtitle */}
-            <Text style={styles.headerSubtitle}>
-              {visiblePhotos.length} {visiblePhotos.length === 1 ? 'photo' : 'photos'} ready to review
-            </Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => {
+                logger.info('DarkroomScreen: User tapped back button');
+                navigation.goBack();
+              }}
+              style={styles.backButton}
+            >
+              <View style={styles.downChevron} />
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerTitle}>Darkroom</Text>
+              {/* 18.1-FIX-2: Use visiblePhotos.length for header subtitle */}
+              <Text style={styles.headerSubtitle}>
+                {visiblePhotos.length} {visiblePhotos.length === 1 ? 'photo' : 'photos'} ready to
+                review
+              </Text>
+            </View>
+            {/* 18.1: Undo button only in triage header - Done button only shows on success screen */}
+            <TouchableOpacity
+              style={[
+                styles.undoButton,
+                (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled,
+              ]}
+              onPress={handleUndo}
+              disabled={undoStack.length === 0 || undoingPhoto !== null}
+            >
+              <Ionicons name="arrow-undo" size={16} color="#FFFFFF" style={styles.undoIcon} />
+              <Text
+                style={[
+                  styles.undoText,
+                  (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled,
+                ]}
+              >
+                Undo
+              </Text>
+            </TouchableOpacity>
           </View>
-          {/* 18.1: Undo button only in triage header - Done button only shows on success screen */}
-          <TouchableOpacity
-            style={[
-              styles.undoButton,
-              (undoStack.length === 0 || undoingPhoto !== null) && styles.undoButtonDisabled
-            ]}
-            onPress={handleUndo}
-            disabled={undoStack.length === 0 || undoingPhoto !== null}
-          >
-            <Ionicons
-              name="arrow-undo"
-              size={16}
-              color="#FFFFFF"
-              style={styles.undoIcon}
-            />
-            <Text style={[
-              styles.undoText,
-              (undoStack.length === 0 || undoingPhoto !== null) && styles.undoTextDisabled
-            ]}>
-              Undo
-            </Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Stacked Photo Cards (UAT-005) - render up to 3 cards */}
-        {/* 18.1-FIX-2: Use visiblePhotos for rendering to prevent black flash */}
-      <View style={styles.photoCardContainer}>
-        {/* Render stack in reverse order so front card renders last (on top) */}
-        {visiblePhotos.slice(0, 3).reverse().map((photo, reverseIndex) => {
-          // Convert reverse index back to stack index (0=front, 1=behind, 2=furthest)
-          const stackIndex = 2 - reverseIndex - (3 - Math.min(visiblePhotos.length, 3));
-          const isActive = stackIndex === 0;
-          // UAT-004 FIX: Detect if this card is newly entering the visible stack
-          const isNewlyVisible = newlyVisibleIds.has(photo.id) && stackIndex === 2;
+          {/* Stacked Photo Cards (UAT-005) - render up to 3 cards */}
+          {/* 18.1-FIX-2: Use visiblePhotos for rendering to prevent black flash */}
+          <View style={styles.photoCardContainer}>
+            {/* Render stack in reverse order so front card renders last (on top) */}
+            {visiblePhotos
+              .slice(0, 3)
+              .reverse()
+              .map((photo, reverseIndex) => {
+                // Convert reverse index back to stack index (0=front, 1=behind, 2=furthest)
+                const stackIndex = 2 - reverseIndex - (3 - Math.min(visiblePhotos.length, 3));
+                const isActive = stackIndex === 0;
+                // UAT-004 FIX: Detect if this card is newly entering the visible stack
+                const isNewlyVisible = newlyVisibleIds.has(photo.id) && stackIndex === 2;
 
-          return (
-            <SwipeablePhotoCard
-              ref={isActive ? cardRef : undefined}
-              key={photo.id}
-              photo={photo}
-              stackIndex={stackIndex}
-              isActive={isActive}
-              isNewlyVisible={isNewlyVisible}
-              enterFrom={isActive && undoingPhoto?.photo.id === photo.id ? undoingPhoto.enterFrom : null}
-              onSwipeLeft={isActive ? handleArchiveSwipe : undefined}
-              onSwipeRight={isActive ? handleJournalSwipe : undefined}
-              onSwipeDown={isActive ? handleDeleteSwipe : undefined}
-              onDeleteComplete={isActive ? handleDeletePulse : undefined}
-              onExitClearance={isActive ? () => handleExitClearance(photo.id) : undefined}
-            />
-          );
-        })}
-      </View>
+                return (
+                  <SwipeablePhotoCard
+                    ref={isActive ? cardRef : undefined}
+                    key={photo.id}
+                    photo={photo}
+                    stackIndex={stackIndex}
+                    isActive={isActive}
+                    isNewlyVisible={isNewlyVisible}
+                    enterFrom={
+                      isActive && undoingPhoto?.photo.id === photo.id
+                        ? undoingPhoto.enterFrom
+                        : null
+                    }
+                    onSwipeLeft={isActive ? handleArchiveSwipe : undefined}
+                    onSwipeRight={isActive ? handleJournalSwipe : undefined}
+                    onSwipeDown={isActive ? handleDeleteSwipe : undefined}
+                    onDeleteComplete={isActive ? handleDeletePulse : undefined}
+                    onExitClearance={isActive ? () => handleExitClearance(photo.id) : undefined}
+                  />
+                );
+              })}
+          </View>
 
-      {/* Triage Button Bar */}
-      <View style={styles.triageButtonBar}>
-        {/* Archive Button (left) */}
-        <TouchableOpacity
-          style={styles.archiveButton}
-          onPress={handleArchiveButton}
-        >
-          <Text style={styles.triageButtonIcon}>☐</Text>
-          <Text style={styles.archiveButtonText}>Archive</Text>
-        </TouchableOpacity>
+          {/* Triage Button Bar */}
+          <View style={styles.triageButtonBar}>
+            {/* Archive Button (left) */}
+            <TouchableOpacity style={styles.archiveButton} onPress={handleArchiveButton}>
+              <Text style={styles.triageButtonIcon}>☐</Text>
+              <Text style={styles.archiveButtonText}>Archive</Text>
+            </TouchableOpacity>
 
-        {/* Delete Button (center) - wrapped in Animated.View for pulse effect */}
-        <Animated.View style={{ transform: [{ scale: deleteButtonScale }] }}>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDeleteButton}
-          >
-            <Text style={styles.deleteButtonIcon}>✕</Text>
-          </TouchableOpacity>
-        </Animated.View>
+            {/* Delete Button (center) - wrapped in Animated.View for pulse effect */}
+            <Animated.View style={{ transform: [{ scale: deleteButtonScale }] }}>
+              <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteButton}>
+                <Text style={styles.deleteButtonIcon}>✕</Text>
+              </TouchableOpacity>
+            </Animated.View>
 
-        {/* Journal Button (right) */}
-        <TouchableOpacity
-          style={styles.journalButton}
-          onPress={handleJournalButton}
-        >
-          <Text style={styles.triageButtonIcon}>✓</Text>
-          <Text style={styles.journalButtonText}>Journal</Text>
-        </TouchableOpacity>
-      </View>
+            {/* Journal Button (right) */}
+            <TouchableOpacity style={styles.journalButton} onPress={handleJournalButton}>
+              <Text style={styles.triageButtonIcon}>✓</Text>
+              <Text style={styles.journalButtonText}>Journal</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </View>
     </GestureHandlerRootView>

@@ -14,7 +14,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import { getFriendships, removeFriend, subscribeFriendships } from '../services/firebase/friendshipService';
+import {
+  getFriendships,
+  removeFriend,
+  subscribeFriendships,
+} from '../services/firebase/friendshipService';
 import { mediumImpact } from '../utils/haptics';
 import logger from '../utils/logger';
 
@@ -59,7 +63,7 @@ const FriendsListScreen = ({ navigation }) => {
 
       // Fetch user data for each friend
       const friendsWithUserData = await Promise.all(
-        result.friendships.map(async (friendship) => {
+        result.friendships.map(async friendship => {
           // Determine the other user's ID
           const otherUserId =
             friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id;
@@ -87,7 +91,7 @@ const FriendsListScreen = ({ navigation }) => {
 
       // Filter out any null entries and sort alphabetically by displayName
       const validFriends = friendsWithUserData
-        .filter((f) => f !== null)
+        .filter(f => f !== null)
         .sort((a, b) => {
           const nameA = (a.displayName || a.username || '').toLowerCase();
           const nameB = (b.displayName || b.username || '').toLowerCase();
@@ -112,7 +116,7 @@ const FriendsListScreen = ({ navigation }) => {
     fetchFriends();
 
     // Set up real-time listener for friendship changes
-    const unsubscribe = subscribeFriendships(user.uid, (friendships) => {
+    const unsubscribe = subscribeFriendships(user.uid, friendships => {
       // Re-fetch friends when friendships change
       fetchFriends();
     });
@@ -130,7 +134,7 @@ const FriendsListScreen = ({ navigation }) => {
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = friends.filter((friend) => {
+    const filtered = friends.filter(friend => {
       const displayName = (friend.displayName || '').toLowerCase();
       const username = (friend.username || '').toLowerCase();
       return displayName.includes(query) || username.includes(query);
@@ -150,7 +154,7 @@ const FriendsListScreen = ({ navigation }) => {
   /**
    * Handle remove friend
    */
-  const handleRemoveFriend = (friend) => {
+  const handleRemoveFriend = friend => {
     Alert.alert(
       'Remove Friend',
       `Are you sure you want to remove ${friend.displayName || friend.username} as a friend?`,
@@ -250,9 +254,7 @@ const FriendsListScreen = ({ navigation }) => {
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyIcon}>👥</Text>
         <Text style={styles.emptyTitle}>No friends yet</Text>
-        <Text style={styles.emptyText}>
-          Add friends to see their photos in your feed
-        </Text>
+        <Text style={styles.emptyText}>Add friends to see their photos in your feed</Text>
         <TouchableOpacity
           style={styles.addFriendsButton}
           onPress={() => navigation.navigate('UserSearch')}
@@ -297,10 +299,7 @@ const FriendsListScreen = ({ navigation }) => {
             autoCorrect={false}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery('')}
-              style={styles.clearButton}
-            >
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
               <Text style={styles.clearButtonText}>✕</Text>
             </TouchableOpacity>
           )}
@@ -324,16 +323,12 @@ const FriendsListScreen = ({ navigation }) => {
         <FlatList
           data={filteredFriends}
           renderItem={renderFriend}
-          keyExtractor={(item) => item.friendshipId}
+          keyExtractor={item => item.friendshipId}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={renderEmptyState}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor="#000000"
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000000" />
           }
         />
       )}

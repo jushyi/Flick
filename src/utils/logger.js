@@ -81,11 +81,11 @@ const SENSITIVE_FIELDS = [
  * @param {string} str - String to check
  * @returns {boolean} True if string contains sensitive data
  */
-const containsSensitiveData = (str) => {
+const containsSensitiveData = str => {
   if (typeof str !== 'string') {
     return false;
   }
-  return SENSITIVE_PATTERNS.some((pattern) => pattern.test(str));
+  return SENSITIVE_PATTERNS.some(pattern => pattern.test(str));
 };
 
 /**
@@ -93,7 +93,7 @@ const containsSensitiveData = (str) => {
  * @param {any} data - Data to sanitize
  * @returns {any} Sanitized data
  */
-const sanitizeData = (data) => {
+const sanitizeData = data => {
   // Handle null/undefined
   if (data === null || data === undefined) {
     return data;
@@ -110,7 +110,7 @@ const sanitizeData = (data) => {
 
   // Handle arrays
   if (Array.isArray(data)) {
-    return data.map((item) => sanitizeData(item));
+    return data.map(item => sanitizeData(item));
   }
 
   // Handle objects
@@ -156,7 +156,7 @@ const formatLog = (level, message, data) => {
  * @param {number} level - Log level to check
  * @returns {boolean} True if log should be output
  */
-const shouldLog = (level) => {
+const shouldLog = level => {
   return level >= CURRENT_LOG_LEVEL;
 };
 

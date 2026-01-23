@@ -14,7 +14,7 @@
  * @param {string} email - Email address to validate
  * @returns {boolean} True if email is valid
  */
-export const isValidEmail = (email) => {
+export const isValidEmail = email => {
   if (!email || typeof email !== 'string') {
     return false;
   }
@@ -29,7 +29,7 @@ export const isValidEmail = (email) => {
  * @param {string} email - Email address to validate
  * @returns {string|null} Error message or null if valid
  */
-export const validateEmail = (email) => {
+export const validateEmail = email => {
   if (!email) {
     return 'Email is required';
   }
@@ -52,7 +52,7 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/; // Alphanumeric + underscore only
  * @param {string} username - Username to validate
  * @returns {boolean} True if username format is valid
  */
-export const isValidUsername = (username) => {
+export const isValidUsername = username => {
   if (!username || typeof username !== 'string') {
     return false;
   }
@@ -77,7 +77,7 @@ export const isValidUsername = (username) => {
  * @param {string} username - Username to validate
  * @returns {string|null} Error message or null if valid
  */
-export const validateUsername = (username) => {
+export const validateUsername = username => {
   if (!username) {
     return 'Username is required';
   }
@@ -104,7 +104,7 @@ export const validateUsername = (username) => {
  * @param {string} username - Username to normalize
  * @returns {string} Normalized username
  */
-export const normalizeUsername = (username) => {
+export const normalizeUsername = username => {
   return username.trim().toLowerCase();
 };
 
@@ -119,7 +119,7 @@ const PASSWORD_MIN_LENGTH = 8;
  * @param {string} password - Password to validate
  * @returns {boolean} True if password meets requirements
  */
-export const isValidPassword = (password) => {
+export const isValidPassword = password => {
   if (!password || typeof password !== 'string') {
     return false;
   }
@@ -137,7 +137,7 @@ export const isValidPassword = (password) => {
  * @param {string} password - Password to validate
  * @returns {string|null} Error message or null if valid
  */
-export const validatePassword = (password) => {
+export const validatePassword = password => {
   if (!password) {
     return 'Password is required';
   }
@@ -179,7 +179,7 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic
  * @param {number} sizeInBytes - File size in bytes
  * @returns {boolean} True if size is valid
  */
-export const isValidPhotoSize = (sizeInBytes) => {
+export const isValidPhotoSize = sizeInBytes => {
   return sizeInBytes > 0 && sizeInBytes <= MAX_PHOTO_SIZE;
 };
 
@@ -188,7 +188,7 @@ export const isValidPhotoSize = (sizeInBytes) => {
  * @param {number} sizeInBytes - File size in bytes
  * @returns {string|null} Error message or null if valid
  */
-export const validatePhotoSize = (sizeInBytes) => {
+export const validatePhotoSize = sizeInBytes => {
   if (!sizeInBytes || sizeInBytes <= 0) {
     return 'Invalid photo file';
   }
@@ -206,7 +206,7 @@ export const validatePhotoSize = (sizeInBytes) => {
  * @param {string} mimeType - MIME type of the photo
  * @returns {boolean} True if MIME type is allowed
  */
-export const isValidPhotoType = (mimeType) => {
+export const isValidPhotoType = mimeType => {
   return ALLOWED_IMAGE_TYPES.includes(mimeType?.toLowerCase());
 };
 
@@ -215,7 +215,7 @@ export const isValidPhotoType = (mimeType) => {
  * @param {string} mimeType - MIME type of the photo
  * @returns {string|null} Error message or null if valid
  */
-export const validatePhotoType = (mimeType) => {
+export const validatePhotoType = mimeType => {
   if (!mimeType) {
     return 'Invalid photo type';
   }
@@ -237,7 +237,7 @@ export const validatePhotoType = (mimeType) => {
  * @param {string} input - User input to sanitize
  * @returns {string} Sanitized input
  */
-export const sanitizeInput = (input) => {
+export const sanitizeInput = input => {
   if (!input || typeof input !== 'string') {
     return '';
   }
@@ -348,7 +348,7 @@ export const validateLength = (value, min, max, fieldName = 'This field') => {
  * @param {string} url - URL to validate
  * @returns {boolean} True if URL is valid
  */
-export const isValidUrl = (url) => {
+export const isValidUrl = url => {
   if (!url || typeof url !== 'string') {
     return false;
   }

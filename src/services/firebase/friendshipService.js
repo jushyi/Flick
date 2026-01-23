@@ -1,4 +1,18 @@
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, or, onSnapshot, serverTimestamp } from '@react-native-firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  or,
+  onSnapshot,
+  serverTimestamp,
+} from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
 
 // Initialize Firestore once at module level
@@ -217,7 +231,7 @@ export const removeFriend = async (userId1, userId2) => {
  * @param {string} userId - User ID
  * @returns {Promise<{success: boolean, friendships?: Array, error?: string}>}
  */
-export const getFriendships = async (userId) => {
+export const getFriendships = async userId => {
   try {
     if (!userId) {
       return { success: false, error: 'Invalid user ID' };
@@ -226,16 +240,13 @@ export const getFriendships = async (userId) => {
     // Query friendships where user is either user1Id or user2Id using modular or() function
     const q = query(
       collection(db, 'friendships'),
-      or(
-        where('user1Id', '==', userId),
-        where('user2Id', '==', userId)
-      )
+      or(where('user1Id', '==', userId), where('user2Id', '==', userId))
     );
     const querySnapshot = await getDocs(q);
 
     // Filter for accepted status (client-side since we need OR query for users)
     const friendships = [];
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach(doc => {
       const data = doc.data();
       if (data.status === 'accepted') {
         friendships.push({
@@ -266,7 +277,7 @@ export const getFriendships = async (userId) => {
  * @param {string} userId - User ID
  * @returns {Promise<{success: boolean, requests?: Array, error?: string}>}
  */
-export const getPendingRequests = async (userId) => {
+export const getPendingRequests = async userId => {
   try {
     if (!userId) {
       return { success: false, error: 'Invalid user ID' };
@@ -275,16 +286,13 @@ export const getPendingRequests = async (userId) => {
     // Query friendships where user is either user1Id or user2Id using modular or() function
     const q = query(
       collection(db, 'friendships'),
-      or(
-        where('user1Id', '==', userId),
-        where('user2Id', '==', userId)
-      )
+      or(where('user1Id', '==', userId), where('user2Id', '==', userId))
     );
     const querySnapshot = await getDocs(q);
 
     // Filter for pending requests where user is NOT the sender
     const requests = [];
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach(doc => {
       const data = doc.data();
       if (data.status === 'pending' && data.requestedBy !== userId) {
         requests.push({
@@ -315,7 +323,7 @@ export const getPendingRequests = async (userId) => {
  * @param {string} userId - User ID
  * @returns {Promise<{success: boolean, requests?: Array, error?: string}>}
  */
-export const getSentRequests = async (userId) => {
+export const getSentRequests = async userId => {
   try {
     if (!userId) {
       return { success: false, error: 'Invalid user ID' };
@@ -325,16 +333,13 @@ export const getSentRequests = async (userId) => {
     // (Firestore security rules only allow queries where user is user1Id or user2Id)
     const q = query(
       collection(db, 'friendships'),
-      or(
-        where('user1Id', '==', userId),
-        where('user2Id', '==', userId)
-      )
+      or(where('user1Id', '==', userId), where('user2Id', '==', userId))
     );
     const querySnapshot = await getDocs(q);
 
     // Filter for pending requests WHERE USER IS THE SENDER (client-side)
     const requests = [];
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach(doc => {
       const data = doc.data();
       if (data.status === 'pending' && data.requestedBy === userId) {
         requests.push({
@@ -422,17 +427,14 @@ export const subscribeFriendships = (userId, callback) => {
   // Query using modular or() function
   const q = query(
     collection(db, 'friendships'),
-    or(
-      where('user1Id', '==', userId),
-      where('user2Id', '==', userId)
-    )
+    or(where('user1Id', '==', userId), where('user2Id', '==', userId))
   );
 
   const unsubscribe = onSnapshot(
     q,
-    (snapshot) => {
+    snapshot => {
       const friendships = [];
-      snapshot.forEach((docSnap) => {
+      snapshot.forEach(docSnap => {
         friendships.push({
           id: docSnap.id,
           ...docSnap.data(),
@@ -440,7 +442,7 @@ export const subscribeFriendships = (userId, callback) => {
       });
       callback(friendships);
     },
-    (error) => {
+    error => {
       logger.error('Error in friendship subscription', error);
       callback([]);
     }
@@ -457,7 +459,7 @@ export const subscribeFriendships = (userId, callback) => {
  * @param {string} userId - User ID
  * @returns {Promise<{success: boolean, friendUserIds?: Array<string>, error?: string}>}
  */
-export const getFriendUserIds = async (userId) => {
+export const getFriendUserIds = async userId => {
   try {
     const result = await getFriendships(userId);
 
@@ -466,7 +468,7 @@ export const getFriendUserIds = async (userId) => {
     }
 
     // Extract the "other user" ID from each friendship
-    const friendUserIds = result.friendships.map((friendship) => {
+    const friendUserIds = result.friendships.map(friendship => {
       if (friendship.user1Id === userId) {
         return friendship.user2Id;
       } else {

@@ -59,18 +59,10 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
           return (
             <View
               key={index}
-              style={[
-                styles.compactPill,
-                userReacted && styles.compactPillHighlighted,
-              ]}
+              style={[styles.compactPill, userReacted && styles.compactPillHighlighted]}
             >
               <Text style={styles.compactEmoji}>{reaction.emoji}</Text>
-              <Text
-                style={[
-                  styles.compactCount,
-                  userReacted && styles.compactCountHighlighted,
-                ]}
-              >
+              <Text style={[styles.compactCount, userReacted && styles.compactCountHighlighted]}>
                 {reaction.count}
               </Text>
             </View>
@@ -97,19 +89,11 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
           return (
             <TouchableOpacity
               key={index}
-              style={[
-                styles.reactionCard,
-                userReacted && styles.reactionCardHighlighted,
-              ]}
+              style={[styles.reactionCard, userReacted && styles.reactionCardHighlighted]}
               activeOpacity={0.7}
             >
               <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
-              <Text
-                style={[
-                  styles.reactionCount,
-                  userReacted && styles.reactionCountHighlighted,
-                ]}
-              >
+              <Text style={[styles.reactionCount, userReacted && styles.reactionCountHighlighted]}>
                 {reaction.count}
               </Text>
             </TouchableOpacity>

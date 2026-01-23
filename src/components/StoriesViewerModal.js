@@ -41,12 +41,7 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
   const opacity = useRef(new Animated.Value(1)).current;
 
   // Extract friend data
-  const {
-    userId,
-    displayName,
-    profilePhotoURL,
-    topPhotos = [],
-  } = friend || {};
+  const { userId, displayName, profilePhotoURL, topPhotos = [] } = friend || {};
 
   // Current photo
   const currentPhoto = topPhotos[currentIndex] || null;
@@ -54,11 +49,16 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
   // Reset index when modal opens with new friend
   useEffect(() => {
     if (visible && friend?.userId) {
-      logger.debug('StoriesViewer: Modal opened', { friendId: friend.userId, photoCount: topPhotos.length });
+      logger.debug('StoriesViewer: Modal opened', {
+        friendId: friend.userId,
+        photoCount: topPhotos.length,
+      });
 
       // Defensive check: close modal if friend has no photos
       if (!topPhotos || topPhotos.length === 0) {
-        logger.warn('StoriesViewer: Friend has no photos, closing modal', { friendId: friend.userId });
+        logger.warn('StoriesViewer: Friend has no photos, closing modal', {
+          friendId: friend.userId,
+        });
         onClose();
         return;
       }
@@ -75,7 +75,7 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
       const nextPhoto = topPhotos[currentIndex + 1];
       if (nextPhoto?.imageURL) {
         logger.debug('StoriesViewer: Preloading next image', { nextIndex: currentIndex + 1 });
-        Image.prefetch(nextPhoto.imageURL).catch((err) => {
+        Image.prefetch(nextPhoto.imageURL).catch(err => {
           // Silent fail - preloading is best-effort
           logger.debug('StoriesViewer: Image prefetch failed', { error: err.message });
         });
@@ -96,7 +96,7 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
         if (gestureState.dy > 0) {
           translateY.setValue(gestureState.dy);
           // Fade out as user swipes down
-          const fadeAmount = Math.max(0, 1 - (gestureState.dy / SCREEN_HEIGHT));
+          const fadeAmount = Math.max(0, 1 - gestureState.dy / SCREEN_HEIGHT);
           opacity.setValue(fadeAmount);
         }
       },
@@ -149,7 +149,7 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
   /**
    * Handle tap navigation on photo area
    */
-  const handleTap = (event) => {
+  const handleTap = event => {
     const { locationX } = event.nativeEvent;
 
     if (locationX < SCREEN_WIDTH * 0.3) {
@@ -232,8 +232,8 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
           style={[
             styles.contentWrapper,
             {
-              transform: [{ translateY }]
-            }
+              transform: [{ translateY }],
+            },
           ]}
         >
           {/* Progress Bar */}
@@ -243,10 +243,7 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
           <View style={styles.header}>
             <View style={styles.friendInfo}>
               {profilePhotoURL ? (
-                <Image
-                  source={{ uri: profilePhotoURL }}
-                  style={styles.profilePic}
-                />
+                <Image source={{ uri: profilePhotoURL }} style={styles.profilePic} />
               ) : (
                 <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
                   <Text style={styles.profilePicText}>
