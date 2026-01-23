@@ -1,5 +1,33 @@
 # Project Milestones: Lapse Clone
 
+## v1.5 Camera Performance & UX Polish (Shipped: 2026-01-23)
+
+**Delivered:** Instant camera capture with background uploads, redesigned darkroom UI with fluid triage animations, batched undo system, and notification feed.
+
+**Phases completed:** 15-18.6 (37 plans total, including 14 inserted decimal phases)
+
+**Key accomplishments:**
+
+- Background photo upload queue with instant capture (camera releases immediately, uploads in background)
+- Camera UI overhaul with card stack darkroom button, zoom controls, and DSLR-style haptic feedback
+- Darkroom bottom sheet redesign with dark theme, neon purple hold-to-reveal, and crescendo haptics
+- Flick-style triage animations with arc motion, on-card overlays, and three-stage haptics
+- Batched triage with undo - decisions saved locally until Done, reverse card animation on undo
+- Notification system with reaction debouncing (10-second window) and Instagram-style feed
+
+**Stats:**
+
+- 156 files changed
+- 21,126 lines added, 964 removed (net +20,162)
+- 22 phases (4 planned + 18 inserted), 37 plans
+- 5.8 hours execution time (4 days elapsed)
+
+**Git range:** `c48af56` (feat 15-01) → `c229847` (feat 18.6-01)
+
+**What's next:** TestFlight submission, App Store preparation
+
+---
+
 ## v1.4 Production Ready (Shipped: 2026-01-20)
 
 **Delivered:** Production-ready iOS build with Firebase Modular API migration, Instagram-style Stories feature, Oly branding, server-side darkroom reveals, and verified push notifications.

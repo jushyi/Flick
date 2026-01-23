@@ -2,30 +2,37 @@
 
 ## What This Is
 
-A comprehensive UI/UX refactor of the Camera and Darkroom experience in the Lapse social media clone app, now with phone-only authentication. This consolidates the two separate tabs into a unified camera experience with native iOS gestures for photo triage, a press-and-hold reveal interaction, visual consistency across all camera controls, and streamlined phone-based sign-in.
+A comprehensive UI/UX refactor of the Camera and Darkroom experience in the Lapse social media clone app. The app features instant photo capture with background uploads, a redesigned darkroom with fluid triage animations, batched undo capability, and a polished notification system - all with phone-only authentication and native iOS gestures throughout.
 
 ## Core Value
 
-Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
+Instant, delightful photo capture and reveal experience - photos capture without blocking, triage flows like flipping through a deck of cards, and every interaction feels responsive with haptic feedback.
 
-## Current State (v1.4 Shipped)
+## Current State (v1.5 Shipped)
 
-**Shipped:** 2026-01-20
-**Execution time:** 8.5 hours total (v1.1: 4.3h + v1.2: 2.1h + v1.3: 0.7h + v1.4: 1.4h)
-**Phases:** 18 phases, 37 plans across four milestones
+**Shipped:** 2026-01-23
+**Execution time:** 14.3 hours total (v1.1: 4.3h + v1.2: 2.1h + v1.3: 0.7h + v1.4: 1.4h + v1.5: 5.8h)
+**Phases:** 40 phases, 74 plans across five milestones
 
-The Production Ready milestone is complete. The app is now ready for App Store distribution:
-- All Firebase operations use modular API (v22+) - zero namespaced patterns
+The Camera Performance & UX Polish milestone is complete:
+- Background photo upload with instant capture (camera releases immediately)
+- Camera UI overhaul with card stack darkroom button, zoom controls (0.5x-3x), DSLR haptics
+- Darkroom bottom sheet with dark theme, neon purple hold-to-reveal, crescendo haptics
+- Flick-style triage animations with arc motion, on-card overlays, three-stage haptics
+- Batched triage with undo - decisions saved locally, reverse card animation on undo
+- Notification feed with reaction debouncing (10-second batching window)
+- Camera launches as default screen (capture-first philosophy)
+
+Previous v1.4 features remain:
+- All Firebase operations use modular API (v22+)
 - Instagram-style Stories feature with curated top 5 photos per friend
-- Oly branding (aperture-inspired icon, animated splash with shutter effect)
-- iOS build available via EAS internal distribution
+- Oly branding (aperture-inspired icon, animated splash)
 - Server-side darkroom reveals via scheduled Cloud Function (every 2 min)
-- All 3 notification types verified working (photo reveals, friend requests, reactions)
+- All 3 notification types working (photo reveals, friend requests, reactions)
 
 Previous v1.3 features remain:
 - React Native Firebase SDK exclusively (no JS SDK)
 - Unified auth state across all Firebase operations
-- Efficient putFile pattern for photo uploads
 
 Previous v1.2 features remain:
 - Phone-only authentication with SMS verification
@@ -34,12 +41,24 @@ Previous v1.2 features remain:
 Previous v1.1 features remain:
 - Single camera tab with darkroom button
 - Press-and-hold to reveal photos with haptic milestones
-- Swipe gestures for triage like iOS Mail
-- Celebration page with confetti after triage
 
 ## Requirements
 
 ### Validated
+
+**v1.5 Camera Performance & UX Polish:**
+- ✓ Background photo upload with instant capture (no blocking) — v1.5
+- ✓ Camera UI overhaul (card stack button, zoom controls, DSLR haptics) — v1.5
+- ✓ Darkroom bottom sheet redesign (dark theme, neon purple hold-to-reveal) — v1.5
+- ✓ Flick-style triage animations with arc motion and overlays — v1.5
+- ✓ Batched triage with undo capability — v1.5
+- ✓ Notification feed with reaction debouncing — v1.5
+- ✓ 0.5x ultra-wide zoom on supported iOS devices — v1.5
+- ✓ Reveal timing reduced to 0-5 minutes — v1.5
+- ✓ Success sound effect on triage completion — v1.5
+- ✓ Delete suction animation with button pulse — v1.5
+- ✓ Camera as default launch screen — v1.5
+- ✓ Fluid cascade animation with early trigger — v1.5
 
 **v1.4 Production Ready:**
 - ✓ Migrate all services to Firebase modular API (v22+) — v1.4
@@ -86,7 +105,7 @@ Previous v1.1 features remain:
 
 ### Active
 
-(None - v1.4 complete, ready for next milestone or App Store submission)
+(None - v1.5 complete, ready for App Store submission)
 
 ### Out of Scope
 
@@ -99,12 +118,12 @@ Previous v1.1 features remain:
 
 ## Context
 
-**Codebase State (v1.4):**
+**Codebase State (v1.5):**
 - React Native mobile app with Expo managed workflow (SDK ~54.0.30)
-- 80 files modified in v1.4 milestone (+8,203 / -391 lines)
-- All Firebase services use modular API (v22+) - zero namespaced patterns
-- New components: FriendStoryCard, StoriesViewerModal
-- New Cloud Function: processDarkroomReveals (scheduled every 2 min)
+- 156 files changed in v1.5 milestone (+21,126 / -964 lines)
+- Total codebase: ~14,500 lines JavaScript across 48 source files
+- New components: uploadQueueService, soundUtils
+- New dependencies: expo-linear-gradient, expo-av, expo-image
 - iOS build available via EAS internal distribution
 
 **Tech Stack:**
@@ -112,18 +131,20 @@ Previous v1.1 features remain:
 - React Native Firebase for all Firebase operations (@react-native-firebase/app, auth, firestore, storage)
 - React Navigation 7.x for screen navigation (bottom tabs + nested stacks)
 - expo-camera for camera access, expo-image-manipulator for compression
-- react-native-gesture-handler for swipe gestures
+- react-native-gesture-handler + react-native-reanimated for gestures and animations
 - expo-haptics for tactile feedback
-- react-native-svg for icon components
+- expo-image for optimized image loading with native caching
+- expo-av for audio playback (success sounds)
+- expo-linear-gradient for gradient UI elements
 - libphonenumber-js for phone validation and formatting
 - expo-splash-screen for animated splash
 - eas-cli for iOS builds and distribution
 
 **User Feedback:**
-- Stories feature makes browsing friends' photos more engaging
-- Server-side reveals ensure photos are ready when expected
-- Push notifications keep users engaged
-- Oly branding feels professional and polished
+- Instant capture feels responsive and professional
+- Triage animations are fluid and satisfying
+- Undo feature provides confidence during triage
+- Notification feed keeps users engaged with reactions
 
 ## Constraints
 
@@ -172,6 +193,14 @@ Previous v1.1 features remain:
 | Feed curation top 5 per friend by reactionCount | No comments system exists; engagement = reactions | ✓ Good |
 | Stories viewer with tap-to-advance | Matches Instagram Stories UX patterns | ✓ Good |
 | Animated splash with shutter effect | Reinforces camera app identity | ✓ Good |
+| Gesture.Pan() API for swipe gestures | useAnimatedGestureHandler deprecated in Reanimated v4 | ✓ Good |
+| expo-image instead of RN Image | Native caching + 200ms transitions eliminates black flash | ✓ Good |
+| onExitClearance callback for early cascade | Fluid triage without perceptible gaps | ✓ Good |
+| 100ms clearance delay | Instant cascade feel while card still visible | ✓ Good |
+| Exponential power curve (x^2.5) for arc | Cards start flat, accelerate downward naturally | ✓ Good |
+| Red dot indicator vs count badge | Instagram-style simplicity | ✓ Good |
+| Silent close after Done tap | Haptic-only feedback, no celebration screen needed | ✓ Good |
+| initialRouteName="Camera" | Capture-first philosophy | ✓ Good |
 
 ---
-*Last updated: 2026-01-20 after v1.4 milestone*
+*Last updated: 2026-01-23 after v1.5 milestone*

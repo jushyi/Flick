@@ -10,342 +10,36 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v1.2 Phone Authentication** - [archive](milestones/v1.2-ROADMAP.md) (Phases 6-8, shipped 2026-01-19)
 - ✅ **v1.3 Firebase SDK Consolidation** - [archive](milestones/v1.3-ROADMAP.md) (Phases 9-10, shipped 2026-01-19)
 - ✅ **v1.4 Production Ready** - [archive](milestones/v1.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
-- 🚧 **v1.5 Camera Performance & UX Polish** - Phases 15-18.6 (in progress)
-
-### 🚧 v1.5 Camera Performance & UX Polish (In Progress)
-
-**Milestone Goal:** Make the core camera-to-darkroom experience feel instant and delightful
-
-#### Phase 15: Background Photo Upload (Complete)
-
-**Goal**: Async capture pipeline with upload queue and progress indicators - photos save instantly, upload in background
-**Depends on**: Previous milestone complete
-**Research**: Unlikely (internal patterns, React Native background task APIs well-established)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 15-01: Background upload queue and async capture - completed 2026-01-20
-
-#### Phase 15.1: Darkroom Notification Fix (INSERTED) - Complete
-
-**Goal**: Fix notification spam and implement reveal-all-on-tap UX
-**Depends on**: Phase 15
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 15.1-01: Notification tracking + reveal-all-on-tap - completed 2026-01-21
-
-**Delivered:**
-- lastNotifiedAt field prevents duplicate notifications for same batch
-- 0-photo reveals skip notification entirely
-- revealedCount and revealAll passed in notification payload
-- App navigates to Camera with reveal params on tap
-
-#### Phase 15.2: Camera UI & Darkroom Animation Overhaul (INSERTED) - Complete
-
-**Goal**: Complete visual redesign of camera controls footer, darkroom card stack button, and capture animation
-**Depends on**: Phase 15.1
-**Research**: Unlikely (React Native Reanimated already in use, internal UI patterns)
-**Plans**: 3/3 complete
-
-Plans:
-- [x] 15.2-01: Camera footer UI redesign - completed 2026-01-21
-- [x] 15.2-02: Darkroom button card stack - completed 2026-01-21
-- [x] 15.2-03: Capture animation change - completed 2026-01-21
-
-**Details:**
-Camera Footer Redesign:
-- Extend footer to cover ~1/3 of screen, background color matches nav bar
-- Remove debug darkroom button on right side
-- Capture button: 10% larger, stays white, thin spaced ring around it
-- Flash/camera-switch buttons: 10% smaller, circular icons instead of rectangles
-- Camera preview: rounded edges instead of square
-- Zoom control: rounded rectangular bar (same height as flash/flip buttons) with standard iOS zoom levels (0.5x, 1x, 2x, 3x)
-
-Darkroom Button Redesign (left side):
-- Start as singular card with rounded edges (~75% capture button size)
-- Number displayed within card instead of badge overlay
-- Card fanning animation:
-  - 1 photo: single card
-  - 2 photos: 2 cards fanned
-  - 3 photos: 3 cards fanned
-  - 4+ photos: 4 cards fanned (max), number updates on front card
-
-Capture Animation Change:
-- Remove current snapshot-to-darkroom animation
-- Replace with "bounce" animation on darkroom button (scale up then back to normal)
-- Quick, satisfying feedback indicating photo was captured
-
-#### Phase 15.3: ISS-001 - Add True 0.5x Ultra-Wide Zoom (INSERTED) - Complete
-
-**Goal**: Implement true 0.5x ultra-wide zoom via lens switching instead of digital zoom
-**Depends on**: Phase 15.2
-**Research**: Complete
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 15.3-01: True 0.5x ultra-wide zoom via iOS lens switching - completed 2026-01-21
-
-**Delivered:**
-- iOS ultra-wide lens detection via onAvailableLensesChanged + async fallback
-- Dynamic 0.5x zoom option appears only on iOS devices with ultra-wide (back camera)
-- selectedLens prop wiring for physical lens switching
-- Android gracefully shows 1x, 2x, 3x only
-
-#### Phase 16: Camera Capture Feedback (Complete)
-
-**Goal**: Enhanced shutter animation, haptic feedback, and visual confirmation on capture
-**Depends on**: Phase 15.3
-**Research**: Unlikely (established patterns, existing haptics utility)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 16-01: DSLR-style capture feedback - completed 2026-01-21
-
-**Delivered:**
-- Two-stage DSLR haptic feedback: lightImpact on press-down, mediumImpact on release
-- Pressable component for onPressIn/onPressOut events
-- Flash overlay contained within camera preview bounds with rounded corners
-
-#### Phase 16.1: UI Overhaul for Darkroom Bottom Sheet (INSERTED) - Complete
-
-**Goal**: Redesign the darkroom bottom sheet UI for improved visual polish and user experience
-**Depends on**: Phase 16
-**Research**: Unlikely (React Native Reanimated already in use, internal UI patterns)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 16.1-01: Darkroom bottom sheet UI overhaul - completed 2026-01-21
-
-**Delivered:**
-- Dark theme (#1A1A1A) with header layout (title + status dot + status text)
-- Card stack display (1-4 fanned cards) in bottom sheet header
-- Neon purple gradient hold-to-reveal button using expo-linear-gradient
-- Fill animation left-to-right (1600ms, 1.25x faster)
-- Spinner that speeds up 2x during hold
-- Crescendo haptic feedback (4 intensity phases)
-
-#### Phase 16.2: Fix 0.5x Ultra-Wide Zoom (INSERTED) - Complete
-
-**Goal**: Fix 0.5x zoom which appears to be showing same view as 1x and not switching cameras properly
-**Depends on**: Phase 16.1
-**Research**: Complete
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 16.2-01: Fix ultra-wide lens switching with explicit wideAngleLens - completed 2026-01-21
-
-**Delivered:**
-- Fixed expo-camera lens switching by using explicit wideAngleLens ("Back Camera") for 1x/2x/3x instead of null
-- Added wideAngleLens useMemo for explicit lens detection
-- Added debug logging for lens switching
-
-#### Phase 16.3: Fix React Native Firebase Warnings (INSERTED) - Complete
-
-**Goal**: Resolve @react-native-firebase/app package warnings and migrate deprecated namespaced API to modular SDK
-**Depends on**: Phase 16.2
-**Research**: Complete
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 16.3-01: Migrate App.js and friendshipService.js to modular API - completed 2026-01-21
-
-**Delivered:**
-- Migrated App.js from namespaced `auth()` to modular `getAuth()` API
-- Removed unused `firestore` default import from friendshipService.js
-- All 15+ Firebase imports now use modular API pattern
-- Zero deprecation warnings from @react-native-firebase packages
-
-#### Phase 17: Darkroom UX Polish (Complete)
-
-**Goal**: Improved reveal animations, smoother triage gestures, better navigation flow, and polished empty/loading states
-**Depends on**: Phase 16.3
-**Research**: Unlikely (internal patterns, React Native Reanimated already in use)
-**Plans**: 2/2 complete
-
-Plans:
-- [x] 17-01: Triage flow polish - confirmations removed, button triage added, photo cards resized - completed 2026-01-21
-- [x] 17-02: Flick animation with arc motion, on-card overlays, three-stage haptics - completed 2026-01-22
-
-**Delivered:**
-- Removed all confirmation popups for instant triage
-- Added Archive/Delete/Journal button bar with haptic feedback
-- Increased photo card size (92% width, 4:5 aspect ratio) with black border
-- Removed debug button from header
-- Flick-style swipe animation with downward arc motion
-- On-card confirmation overlays with non-emoji icons
-- Three-stage haptic feedback (threshold, release, completion)
-- Down-swipe for delete gesture
-
-#### Phase 17.1: Darkroom Animation Refinements (INSERTED) - Complete
-
-**Goal**: Improve darkroom open/close animations and triage completion UX
-**Depends on**: Phase 17
-**Research**: Unlikely (React Native Reanimated already in use)
-**Plans**: 1/1 complete + FIX plans
-
-Plans:
-- [x] 17.1-01: Bottom slide animation, down chevron, inline success - completed 2026-01-22
-- [x] 17.1-01-FIX: UAT fixes (empty flash, success polish, header swipe) - completed 2026-01-22
-- [x] 17.1-01-FIX-2: UAT-004 fix (header swipe moves entire screen) - completed 2026-01-22
-- [x] 17.1-01-FIX-3: UAT-005/UAT-006 fix (transparent gesture root, goBack for Done) - completed 2026-01-22
-- [x] 17.1-01-FIX-4: UAT-007/UAT-008 fix (remove header swipe, button-only delete overlay) - completed 2026-01-22
-
-**Details:**
-Animation Changes:
-- Darkroom opens from bottom (slide up) instead of from the side after press-and-hold reveal
-- Darkroom closes by falling towards bottom of screen (slide down)
-- Change back arrow icon from left-pointing to down-pointing to indicate dismiss direction
-
-Triage Completion UX:
-- Remove navigation to separate success screen after completing triage
-- Stay on darkroom screen and transition empty state to success message state
-- Smoother, less janky experience when all photos are triaged
-
-#### Phase 17.2: Reveal Timing 0-5 Minutes (INSERTED) - Complete
-
-**Goal**: Change darkroom reveal timing from 0-15 minutes to 0-5 minutes for faster photo reveals
-**Depends on**: Phase 17.1
-**Research**: Unlikely (simple constant change in darkroomService)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 17.2-01: Update client/server reveal timing to 0-5 minutes - completed 2026-01-22
-
-**Delivered:**
-- Client-side calculateNextRevealTime() uses Math.random() * 5 (0-5 minutes)
-- Server-side revealUserPhotos() uses Math.floor(Math.random() * 6) (0-5 minutes)
-- Cloud Functions deployed to Firebase
-
-#### Phase 18: Reaction Notification Debouncing (Complete)
-
-**Goal**: Aggregate reaction notifications over 10-second window instead of per-tap to prevent spam
-**Depends on**: Phase 17.2
-**Research**: Unlikely (Cloud Function update to existing sendReactionNotification)
-**Plans**: 2/2 complete
-
-Plans:
-- [x] 18-01: Backend - Cloud Function debouncing with 10-second batching - completed 2026-01-22
-- [x] 18-02: Frontend - Notifications feed UI with heart button - completed 2026-01-22
-- [x] 18-FIX: UAT fixes (Firestore rules, back button, empty state centering) - completed 2026-01-22
-
-**Delivered:**
-- Cloud Function debouncing with 10-second sliding window batching
-- NotificationsScreen with Instagram-style vertical notification list
-- Heart button in FeedScreen header with red dot indicator for unread notifications
-- Fixed Firestore security rules for notifications (recipientId field)
-- Back button navigation in NotificationsScreen
-- Properly centered empty state UI
-
-#### Phase 18.1: Batched Darkroom Triage with Undo (INSERTED) - Complete
-
-**Goal**: Batch triage decisions locally until user confirms, with undo capability and session persistence
-**Depends on**: Phase 18
-**Research**: Unlikely (React Native state management and AsyncStorage patterns)
-**Plans**: 2/2 + 6 FIX complete
-
-Plans:
-- [x] 18.1-01: Undo stack state and UI - completed 2026-01-22
-- [x] 18.1-02: Done button batch save and undo animation - completed 2026-01-22
-- [x] 18.1-FIX: UAT-001 black flash after cascade animation - completed 2026-01-22
-- [x] 18.1-FIX-2: UAT-002 black flash persists fix - completed 2026-01-23
-- [x] 18.1-FIX-3: UAT-003 expo-image migration for black flash - completed 2026-01-23
-- [x] 18.1-FIX-4: UAT-004 card cascade animation fix - completed 2026-01-23
-- [x] 18.1-FIX-5: UAT-005 cascade animation race condition fix - completed 2026-01-23
-- [x] 18.1-FIX-6: UAT-006 cascade animation snap fix - completed 2026-01-23
-
-**Delivered:**
-- Undo stack state management for local triage decisions
-- Reverse card animation (cards slide back from exit direction on undo)
-- Done button batch saves all decisions to Firestore
-- Silent close after Done tap (haptic only, no celebration screen)
-- Ionicons undo button with clean "Undo" text
-- Fixed black flash after cascade animation (hidden state tracking + cascade transition flag)
-- expo-image migration with native caching and 200ms transitions
-- Smooth cascade animation with isTransitioningToFront flag for proper animation-to-gesture handoff
-- Fade-in animation for new cards entering visible stack (300ms)
-
-#### Phase 18.2: Success Sound Effect on Triage Completion (INSERTED) - Complete
-
-**Goal**: Play a celebratory sound clip when user finishes triaging all photos (during success screen)
-**Depends on**: Phase 18.1
-**Research**: Unlikely (expo-av already available for audio playback)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 18.2-01: Install expo-av and integrate success sound - completed 2026-01-23
-
-**Delivered:**
-- expo-av ~16.0.8 installed for audio playback
-- soundUtils.js with playSuccessSound function
-- Success sound plays in sync with sparkles animation
-- Sound respects iOS silent mode by default
-- Auto-unload pattern prevents memory leaks
-
-#### Phase 18.3: Triage Animation Z-Index & Delete Suction Effect (INSERTED) - Complete
-
-**Goal**: Fix photo card animations rendering over triage buttons and add suction effect for delete action
-**Depends on**: Phase 18.2
-**Research**: Unlikely (React Native Reanimated z-index and animation patterns)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 18.3-01: Z-index fix and delete suction animation - completed 2026-01-23
-
-**Delivered:**
-- zIndex: 10 on triageButtonBar ensures cards animate behind buttons
-- Delete suction animation: card shrinks (1→0.1) and moves toward button
-- Easing.in(cubic) for accelerating "pulled in" feel
-- Delete button pulses (scale 1→1.15→1) when card arrives
-
-#### Phase 18.4: Triage Animation Arc Adjustment (INSERTED) - Complete
-
-**Goal**: Reduce downward arc and rotation on Journal/Archive triage animations so cards move more sideways and never overlap triage buttons
-**Depends on**: Phase 18.3
-**Research**: Unlikely (React Native Reanimated animation adjustments)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 18.4-01: Exponential arc curve + 800ms duration - completed 2026-01-23
-
-**Delivered:**
-- Exponential power curve (x^2.5) for arc path - cards start flat, accelerate downward
-- Linear rotation preserved for natural tilt feel
-- EXIT_DURATION increased to 800ms for smooth arc visibility
-- Physics-based momentum feel instead of immediate dive
-
-#### Phase 18.5: Camera Default Launch Screen (INSERTED) - Complete
-
-**Goal**: Make the Camera screen the default screen that loads on app launch instead of the Feed
-**Depends on**: Phase 18.4
-**Research**: Unlikely (React Navigation initial route configuration)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 18.5-01: Set Camera as initial route in MainTabNavigator - completed 2026-01-23
-
-**Delivered:**
-- initialRouteName="Camera" added to Tab.Navigator
-- App launches directly to Camera tab instead of Feed
-- Aligns with capture-first philosophy
-
-#### Phase 18.6: Triage Animation Timing Optimization (INSERTED) - Complete
-
-**Goal**: Eliminate delay between card exit and next card animation - make triage feel instant and fluid
-**Depends on**: Phase 18.5
-**Research**: Unlikely (React Native Reanimated timing and callback patterns)
-**Plans**: 1/1 complete
-
-Plans:
-- [x] 18.6-01: Early cascade trigger via onExitClearance callback - completed 2026-01-23
-
-**Delivered:**
-- onExitClearance callback prop fires at 100ms into exit animation
-- Cascade animation starts while exiting card still visible
-- No perceptible gap between card exit and cascade
-- Fluid triage flow like flipping through a deck of cards
+- ✅ **v1.5 Camera Performance & UX Polish** - [archive](milestones/v1.5-ROADMAP.md) (Phases 15-18.6, shipped 2026-01-23)
 
 ## Completed Milestones
+
+<details>
+<summary>✅ v1.5 Camera Performance & UX Polish (Phases 15-18.6) - SHIPPED 2026-01-23</summary>
+
+- [x] Phase 15: Background Photo Upload (1/1 plan) - completed 2026-01-20
+- [x] Phase 15.1: Darkroom Notification Fix (1/1 plan) - completed 2026-01-21
+- [x] Phase 15.2: Camera UI & Darkroom Animation Overhaul (3/3 plans) - completed 2026-01-21
+- [x] Phase 15.3: ISS-001 - Add True 0.5x Ultra-Wide Zoom (1/1 plan) - completed 2026-01-21
+- [x] Phase 16: Camera Capture Feedback (1/1 plan) - completed 2026-01-21
+- [x] Phase 16.1: UI Overhaul for Darkroom Bottom Sheet (1/1 plan) - completed 2026-01-21
+- [x] Phase 16.2: Fix 0.5x Ultra-Wide Zoom (1/1 plan) - completed 2026-01-21
+- [x] Phase 16.3: Fix React Native Firebase Warnings (1/1 plan) - completed 2026-01-21
+- [x] Phase 17: Darkroom UX Polish (2/2 plans + fixes) - completed 2026-01-22
+- [x] Phase 17.1: Darkroom Animation Refinements (1/1 plan + fixes) - completed 2026-01-22
+- [x] Phase 17.2: Reveal Timing 0-5 Minutes (1/1 plan) - completed 2026-01-22
+- [x] Phase 18: Reaction Notification Debouncing (2/2 plans + fix) - completed 2026-01-22
+- [x] Phase 18.1: Batched Darkroom Triage with Undo (2/2 plans + 6 fixes) - completed 2026-01-23
+- [x] Phase 18.2: Success Sound Effect on Triage Completion (1/1 plan) - completed 2026-01-23
+- [x] Phase 18.3: Triage Animation Z-Index & Delete Suction (1/1 plan) - completed 2026-01-23
+- [x] Phase 18.4: Triage Animation Arc Adjustment (1/1 plan) - completed 2026-01-23
+- [x] Phase 18.5: Camera Default Launch Screen (1/1 plan) - completed 2026-01-23
+- [x] Phase 18.6: Triage Animation Timing Optimization (1/1 plan) - completed 2026-01-23
+
+**Stats:** 22 phases, 37 plans, 5.8 hours execution time
+**See:** [Full archive](milestones/v1.5-ROADMAP.md)
+
+</details>
 
 <details>
 <summary>✅ v1.4 Production Ready (Phases 11-14) - SHIPPED 2026-01-20</summary>
@@ -441,3 +135,7 @@ Plans:
 | 18.4 Triage Animation Arc Adjustment | v1.5 | 1/1 | Complete | 2026-01-23 |
 | 18.5 Camera Default Launch Screen | v1.5 | 1/1 | Complete | 2026-01-23 |
 | 18.6 Triage Animation Timing Optimization | v1.5 | 1/1 | Complete | 2026-01-23 |
+
+---
+
+**All milestones complete. Ready for App Store submission.**

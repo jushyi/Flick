@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-20)
+See: .planning/PROJECT.md (updated 2026-01-23)
 
-**Core value:** Seamless, native-feeling photo capture and reveal experience that combines the camera and darkroom into one intuitive flow with smooth iOS gestures, haptic feedback, and frictionless phone authentication.
-**Current focus:** v1.5 Camera Performance & UX Polish - making capture instant and delightful
+**Core value:** Instant, delightful photo capture and reveal experience - photos capture without blocking, triage flows like flipping through a deck of cards, and every interaction feels responsive with haptic feedback.
+**Current focus:** All milestones complete - ready for App Store submission
 
 ## Current Position
 
-Phase: 18.6 of 18.6 (Triage Animation Timing Optimization)
-Plan: 1/1 complete
-Status: Milestone complete
-Last activity: 2026-01-23 - Completed 18.6-01-PLAN.md (Early cascade trigger)
+Phase: All complete (v1.1-v1.5 shipped)
+Plan: N/A
+Status: Ready for App Store submission
+Last activity: 2026-01-23 - v1.5 milestone shipped
 
-Progress: ██████████ 100% (v1.5: 22/22 phases complete)
+Progress: ██████████ 100% (5 milestones shipped)
 
 ## Performance Metrics
 
@@ -101,27 +101,10 @@ None.
 - **v1.4** Production Ready: 8 phases, 17 plans - shipped 2026-01-20
 - **v1.5** Camera Performance & UX Polish: 22 phases, 37 plans - shipped 2026-01-23
 
-### Roadmap Evolution
-
-- Milestone v1.5 created: Camera Performance & UX Polish, 4 phases (Phase 15-18)
-- Phase 18.1 inserted after Phase 18: Batched Darkroom Triage with Undo (URGENT) - better UX with local decisions, undo capability, and session persistence
-- Phase 15.1 inserted after Phase 15: Darkroom Notification Fix (URGENT) - fix notification spam, add iOS Live Activities, reveal-all-on-tap UX
-- Phase 15.2 inserted after Phase 15.1: Camera UI & Darkroom Animation Overhaul (URGENT) - footer redesign, card stack button, bounce animation, rounded camera edges
-- Phase 15.3 inserted after Phase 15.2: ISS-001 - Add True 0.5x Ultra-Wide Zoom (URGENT) - implement true ultra-wide lens switching instead of digital zoom
-- Phase 16.1 inserted after Phase 16: UI Overhaul for Darkroom Bottom Sheet (URGENT) - redesign darkroom bottom sheet UI for improved visual polish
-- Phase 18.2 (Rename App to Rewind) removed - deferred to future milestone
-- Phase 16.2 inserted after Phase 16.1: Fix 0.5x Ultra-Wide Zoom (URGENT) - 0.5x shows same as 1x, camera not switching properly
-- Phase 16.3 inserted after Phase 16.2: Fix React Native Firebase Warnings (URGENT) - resolve package.json exports errors and migrate deprecated namespaced API
-- Phase 17.1 inserted after Phase 17: Darkroom Animation Refinements (URGENT) - bottom-up open animation, fall-down close, inline success state
-- Phase 17.2 inserted after Phase 17.1: Reveal Timing 0-5 Minutes (URGENT) - change reveal timing from 0-2 hours to 0-5 minutes
-- Phase 18.2 inserted after Phase 18.1: Success Sound Effect on Triage Completion (URGENT) - play celebratory sound when user finishes triaging all photos
-- Phase 18.3 inserted after Phase 18.2: Triage Animation Z-Index & Delete Suction (URGENT) - fix card animations rendering over buttons, add suction effect for delete
-- Phase 18.4 inserted after Phase 18.3: Triage Animation Arc Adjustment (URGENT) - reduce downward arc and rotation on Journal/Archive animations, more sideways movement
-- Phase 18.5 inserted after Phase 18.4: Camera Default Launch Screen (URGENT) - make Camera the default screen on app launch instead of Feed
-- Phase 18.6 inserted after Phase 18.5: Triage Animation Timing Optimization (URGENT) - eliminate delay between card exit and next card cascade animation for fluid triage feel
+**Total:** 40 phases, 74 plans, 14.3 hours execution time across 5 milestones
 
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 18.6-01-PLAN.md - v1.5 milestone complete
+Stopped at: v1.5 milestone archived - ready for App Store submission
 Resume file: None
