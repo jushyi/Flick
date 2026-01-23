@@ -46,3 +46,4 @@ yarn-error.*
 # Claude Code temp files
 tmpclaude-*
 nul
+CLAUDE.md
