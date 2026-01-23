@@ -37,7 +37,14 @@ const EXIT_DURATION = 800;
 const BUTTON_EXIT_DURATION = 800;
 
 // UAT-005 FIX: Delay for front card transition gives exiting card time to clear
-const CASCADE_DELAY_MS = 100;
+// 18.6: Reduced to 0ms since onExitClearance now triggers cascade early
+const CASCADE_DELAY_MS = 0;
+
+// 18.6: Clearance delay - time at which card clears visual overlap with stack
+// At ~60% of exit, card has moved one card width (clears overlap with stack)
+// This is when we fire onExitClearance to trigger cascade animation early
+const SWIPE_CLEARANCE_DELAY = Math.round(EXIT_DURATION * 0.6); // ~480ms for 800ms exit
+const BUTTON_CLEARANCE_DELAY = Math.round(BUTTON_EXIT_DURATION * 0.6); // ~480ms for buttons
 
 // UAT-004 FIX: Fade-in duration for new cards entering the visible stack
 const STACK_ENTRY_FADE_DURATION = 300;
@@ -66,7 +73,7 @@ const STACK_ENTRY_FADE_DURATION = 300;
  * @param {boolean} isActive - Whether this card is swipeable (only front card)
  * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
  */
-const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onDeleteComplete, stackIndex = 0, isActive = true, enterFrom = null, isNewlyVisible = false }, ref) => {
+const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onDeleteComplete, onExitClearance, stackIndex = 0, isActive = true, enterFrom = null, isNewlyVisible = false }, ref) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
   // Animated values for gesture/front card
@@ -304,6 +311,12 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       if (actionInProgress.value) return;
       logger.info('SwipeablePhotoCard: triggerArchive called', { photoId: photo?.id });
       actionInProgress.value = true;
+      // 18.6: Fire clearance callback early to trigger cascade while card still visible
+      if (onExitClearance) {
+        setTimeout(() => {
+          onExitClearance();
+        }, BUTTON_CLEARANCE_DELAY);
+      }
       // Animate to archive position (arc to bottom-left)
       // Card stays opaque - flies off screen without fading
       translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {
@@ -324,6 +337,12 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       if (actionInProgress.value) return;
       logger.info('SwipeablePhotoCard: triggerJournal called', { photoId: photo?.id });
       actionInProgress.value = true;
+      // 18.6: Fire clearance callback early to trigger cascade while card still visible
+      if (onExitClearance) {
+        setTimeout(() => {
+          onExitClearance();
+        }, BUTTON_CLEARANCE_DELAY);
+      }
       // Animate to journal position (arc to bottom-right)
       // Card stays opaque - flies off screen without fading
       translateX.value = withTiming(SCREEN_WIDTH * 1.5, {
@@ -377,7 +396,7 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
         easing: Easing.in(Easing.cubic),
       });
     },
-  }), [photo?.id, actionInProgress, isButtonDelete, translateX, translateY, cardScale, handleArchive, handleJournal, handleDelete, onDeleteComplete]);
+  }), [photo?.id, actionInProgress, isButtonDelete, translateX, translateY, cardScale, handleArchive, handleJournal, handleDelete, onDeleteComplete, onExitClearance]);
 
   // Pan gesture using new Gesture API
   const panGesture = Gesture.Pan()
@@ -416,6 +435,12 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
         // Archive (left swipe) - arc to bottom-left
         // UAT-005 FIX: Removed notifySwipeStart - cascade happens on stackIndex change
         actionInProgress.value = true;
+        // 18.6: Fire clearance callback early to trigger cascade while card still visible
+        if (onExitClearance) {
+          setTimeout(() => {
+            onExitClearance();
+          }, SWIPE_CLEARANCE_DELAY);
+        }
         translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {
           duration: EXIT_DURATION,
           easing: Easing.out(Easing.cubic),
@@ -431,6 +456,12 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
         // Journal (right swipe) - arc to bottom-right
         // UAT-005 FIX: Removed notifySwipeStart - cascade happens on stackIndex change
         actionInProgress.value = true;
+        // 18.6: Fire clearance callback early to trigger cascade while card still visible
+        if (onExitClearance) {
+          setTimeout(() => {
+            onExitClearance();
+          }, SWIPE_CLEARANCE_DELAY);
+        }
         translateX.value = withTiming(SCREEN_WIDTH * 1.5, {
           duration: EXIT_DURATION,
           easing: Easing.out(Easing.cubic),
