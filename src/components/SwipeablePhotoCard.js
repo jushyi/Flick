@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
+  withDelay,
   runOnJS,
   interpolate,
   Easing,
@@ -33,6 +34,14 @@ const EXIT_DURATION = 400;
 // Swipe gestures have natural lead-in time from drag, but button taps are instant
 // 1200ms (3x EXIT_DURATION) gives button animations similar perceived pace to swipes
 const BUTTON_EXIT_DURATION = 1200;
+
+// UAT-004 FIX: Smoother spring config for cascade animation
+// Lower stiffness (100 vs 150) = more gradual transition, less snap
+// Higher damping (18 vs 15) = less bounce, more settling feel
+const CASCADE_SPRING_CONFIG = { damping: 18, stiffness: 100 };
+
+// UAT-004 FIX: Delay for front card transition gives exiting card time to clear
+const CASCADE_DELAY_MS = 100;
 
 /**
  * SwipeablePhotoCard - Flick-style swipeable card for photo triage
@@ -94,9 +103,10 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       return;
     }
 
-    stackScaleAnim.value = withSpring(getStackScale(stackIndex), { damping: 15, stiffness: 150 });
-    stackOffsetAnim.value = withSpring(getStackOffset(stackIndex), { damping: 15, stiffness: 150 });
-    stackOpacityAnim.value = withSpring(getStackOpacity(stackIndex), { damping: 15, stiffness: 150 });
+    // UAT-004 FIX: Use smoother spring config for gradual settling
+    stackScaleAnim.value = withSpring(getStackScale(stackIndex), CASCADE_SPRING_CONFIG);
+    stackOffsetAnim.value = withSpring(getStackOffset(stackIndex), CASCADE_SPRING_CONFIG);
+    stackOpacityAnim.value = withSpring(getStackOpacity(stackIndex), CASCADE_SPRING_CONFIG);
 
     // Update previous stackIndex for next comparison
     prevStackIndex.value = stackIndex;
@@ -104,6 +114,7 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
 
   // UAT-012: When cascading=true, animate stack cards forward one position
   // This happens DURING the front card's exit animation, not after
+  // UAT-004 FIX: Added delay for front card (targetIndex=0) to let exiting card clear
   useEffect(() => {
     if (cascading && !isActive && stackIndex > 0) {
       // Animate to the position one step forward (e.g., stackIndex 1 → position 0)
@@ -113,9 +124,19 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       // This prevents the stackIndex-change useEffect from re-animating
       cascadeHandledTransition.value = true;
 
-      stackScaleAnim.value = withSpring(getStackScale(targetIndex), { damping: 15, stiffness: 150 });
-      stackOffsetAnim.value = withSpring(getStackOffset(targetIndex), { damping: 15, stiffness: 150 });
-      stackOpacityAnim.value = withSpring(getStackOpacity(targetIndex), { damping: 15, stiffness: 150 });
+      // UAT-004 FIX: Add slight delay when transitioning to front position
+      // This gives the exiting card time to clear, creating a smooth settling feel
+      if (targetIndex === 0) {
+        // Card becoming the new front - add delay for smooth settling
+        stackScaleAnim.value = withDelay(CASCADE_DELAY_MS, withSpring(getStackScale(targetIndex), CASCADE_SPRING_CONFIG));
+        stackOffsetAnim.value = withDelay(CASCADE_DELAY_MS, withSpring(getStackOffset(targetIndex), CASCADE_SPRING_CONFIG));
+        stackOpacityAnim.value = withDelay(CASCADE_DELAY_MS, withSpring(getStackOpacity(targetIndex), CASCADE_SPRING_CONFIG));
+      } else {
+        // Back cards animate immediately with smoother spring
+        stackScaleAnim.value = withSpring(getStackScale(targetIndex), CASCADE_SPRING_CONFIG);
+        stackOffsetAnim.value = withSpring(getStackOffset(targetIndex), CASCADE_SPRING_CONFIG);
+        stackOpacityAnim.value = withSpring(getStackOpacity(targetIndex), CASCADE_SPRING_CONFIG);
+      }
     }
   }, [cascading]);
 
