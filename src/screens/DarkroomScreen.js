@@ -36,8 +36,15 @@ const DarkroomScreen = () => {
   const [undoingPhoto, setUndoingPhoto] = useState(null);
   // 18.1-02: Track when batch save is in progress
   const [saving, setSaving] = useState(false);
+  // 18.1-FIX-2: Track hidden photos instead of removing from array to prevent black flash
+  // Hidden photos are swiped but not yet batch-saved. They stay in array but aren't rendered.
+  const [hiddenPhotoIds, setHiddenPhotoIds] = useState(new Set());
   const cardRef = useRef(null);
   const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
+
+  // 18.1-FIX-2: Compute visible photos (not hidden) for rendering
+  // This prevents array mutations that cause React to re-render all cards
+  const visiblePhotos = photos.filter(p => !hiddenPhotoIds.has(p.id));
 
   // Load developing photos when screen comes into focus
   useFocusEffect(
@@ -110,12 +117,12 @@ const DarkroomScreen = () => {
     }
   };
 
-  // Always show first photo in the list
-  const currentPhoto = photos[0];
+  // 18.1-FIX-2: Always show first visible (non-hidden) photo in the list
+  const currentPhoto = visiblePhotos[0];
 
   const handleTriage = async (photoId, action) => {
     try {
-      logger.debug('DarkroomScreen: Starting triage', { photoId, action, currentCount: photos.length });
+      logger.debug('DarkroomScreen: Starting triage', { photoId, action, currentCount: visiblePhotos.length });
 
       // 18.1: Find the photo object to store in undo stack
       const photoToTriage = photos.find(p => p.id === photoId);
@@ -140,30 +147,29 @@ const DarkroomScreen = () => {
         return newStack;
       });
 
-      // Check if this is the last photo
-      const isLastPhoto = photos.length === 1;
+      // Check if this is the last visible photo
+      const isLastPhoto = visiblePhotos.length === 1;
 
-      // UAT-001: Set pendingSuccess BEFORE removing photo to prevent empty state flash
-      // This ensures the success state renders immediately when photos.length hits 0
+      // UAT-001: Set pendingSuccess BEFORE hiding photo to prevent empty state flash
+      // This ensures the success state renders immediately when visiblePhotos.length hits 0
       if (isLastPhoto) {
         setPendingSuccess(true);
         logger.info('DarkroomScreen: Last photo triaged, pendingSuccess set', { action });
       }
 
-      // UAT-012: Remove photo immediately - the callback is fired AFTER the exit animation completes
-      // (400ms EXIT_DURATION in SwipeablePhotoCard), so the card is already off screen
-      // The cascade animation was triggered earlier, so stack cards are already in position
-      // Remove photo from list (visual removal only - not saved to Firestore yet)
-      setPhotos(prev => {
-        const newPhotos = prev.filter(p => p.id !== photoId);
-        logger.debug('DarkroomScreen: Photos updated', {
-          oldCount: prev.length,
-          newCount: newPhotos.length,
-          removedId: photoId,
-          nextPhotoId: newPhotos[0]?.id,
+      // 18.1-FIX-2: Hide photo instead of removing from array to prevent black flash
+      // The photos array stays unchanged, preventing React from re-rendering all stack cards
+      // Only the swiped card is affected (already exited via animation)
+      setHiddenPhotoIds(prev => {
+        const newHidden = new Set(prev);
+        newHidden.add(photoId);
+        logger.debug('DarkroomScreen: Photo hidden', {
+          photoId,
+          hiddenCount: newHidden.size,
+          remainingVisible: photos.length - newHidden.size,
           isLastPhoto,
         });
-        return newPhotos;
+        return newHidden;
       });
 
       // Reset cascading state for next triage
@@ -273,6 +279,7 @@ const DarkroomScreen = () => {
 
   // 18.1: Handle Undo button - restore last decision from undo stack
   // 18.1-02: Added reverse animation (cards slide back from exit direction)
+  // 18.1-FIX-2: Now unhides photo instead of adding to array (photo was never removed)
   const handleUndo = useCallback(() => {
     if (undoStack.length === 0 || undoingPhoto) return;
 
@@ -291,8 +298,13 @@ const DarkroomScreen = () => {
     // Remove from undo stack
     setUndoStack(prev => prev.slice(0, -1));
 
-    // Restore photo to the front of the photos array
-    setPhotos(prev => [lastDecision.photo, ...prev]);
+    // 18.1-FIX-2: Unhide the photo instead of adding to array
+    // The photo was never removed, just hidden - so we reveal it by removing from hiddenPhotoIds
+    setHiddenPhotoIds(prev => {
+      const next = new Set(prev);
+      next.delete(lastDecision.photo.id);
+      return next;
+    });
 
     // Clear undo animation state after animation completes
     setTimeout(() => {
@@ -317,15 +329,16 @@ const DarkroomScreen = () => {
   // UAT-002: Trigger fade-in animation when success state is shown
   // NOTE: This useEffect must be before any early returns to comply with Rules of Hooks
   // 18.1: Updated condition - show success when photos are empty AND undo stack has entries
+  // 18.1-FIX-2: Use visiblePhotos.length instead of photos.length
   useEffect(() => {
-    if (photos.length === 0 && undoStack.length > 0) {
+    if (visiblePhotos.length === 0 && undoStack.length > 0) {
       Animated.timing(successFadeAnim, {
         toValue: 1,
         duration: 350,
         useNativeDriver: true,
       }).start();
     }
-  }, [photos.length, undoStack.length, successFadeAnim]);
+  }, [visiblePhotos.length, undoStack.length, successFadeAnim]);
 
   if (loading) {
     return (
@@ -343,7 +356,8 @@ const DarkroomScreen = () => {
   // 18.1: Inline success state - shows when all photos triaged (undo stack has entries)
   // This state shows the "All done!" screen but still requires Done tap to save
   // UAT-002: Polished UI - emoji text, bottom button with checkmark, fade-in animation
-  if (photos.length === 0 && undoStack.length > 0) {
+  // 18.1-FIX-2: Use visiblePhotos.length instead of photos.length
+  if (visiblePhotos.length === 0 && undoStack.length > 0) {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <View style={styles.successContainer}>
@@ -410,7 +424,8 @@ const DarkroomScreen = () => {
     );
   }
 
-  if (photos.length === 0) {
+  // 18.1-FIX-2: Use visiblePhotos.length for empty state check
+  if (visiblePhotos.length === 0) {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <View style={styles.container}>
@@ -467,8 +482,9 @@ const DarkroomScreen = () => {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Darkroom</Text>
+            {/* 18.1-FIX-2: Use visiblePhotos.length for header subtitle */}
             <Text style={styles.headerSubtitle}>
-              {photos.length} {photos.length === 1 ? 'photo' : 'photos'} ready to review
+              {visiblePhotos.length} {visiblePhotos.length === 1 ? 'photo' : 'photos'} ready to review
             </Text>
           </View>
           {/* 18.1: Undo button only in triage header - Done button only shows on success screen */}
@@ -496,11 +512,12 @@ const DarkroomScreen = () => {
         </View>
 
         {/* Stacked Photo Cards (UAT-005) - render up to 3 cards */}
+        {/* 18.1-FIX-2: Use visiblePhotos for rendering to prevent black flash */}
       <View style={styles.photoCardContainer}>
         {/* Render stack in reverse order so front card renders last (on top) */}
-        {photos.slice(0, 3).reverse().map((photo, reverseIndex) => {
+        {visiblePhotos.slice(0, 3).reverse().map((photo, reverseIndex) => {
           // Convert reverse index back to stack index (0=front, 1=behind, 2=furthest)
-          const stackIndex = 2 - reverseIndex - (3 - Math.min(photos.length, 3));
+          const stackIndex = 2 - reverseIndex - (3 - Math.min(visiblePhotos.length, 3));
           const isActive = stackIndex === 0;
 
           return (
