@@ -72,6 +72,7 @@ const MainTabNavigator = () => {
 
   return (
     <Tab.Navigator
+      initialRouteName="Camera"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
