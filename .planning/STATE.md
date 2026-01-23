@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 20 of 29 (Debug Cleanup)
-Plan: 0 of ? in current phase
-Status: Ready to start
-Last activity: 2026-01-23 - Completed Phase 19 (19-02-PLAN.md)
+Plan: 1 of 1 in current phase
+Status: Phase complete
+Last activity: 2026-01-23 - Completed 20-01-PLAN.md
 
-Progress: █░░░░░░░░░ ~9%
+Progress: ██░░░░░░░░ ~10%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 76 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 2 in v1.6)
+- Total plans completed: 77 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 3 in v1.6)
 - Average duration: 16 min
-- Total execution time: 14.7 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 0.4h v1.6)
+- Total execution time: 14.9 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 0.6h v1.6)
 
 **By Milestone:**
 
@@ -33,7 +33,7 @@ Progress: █░░░░░░░░░ ~9%
 | v1.3      | 9-10    | 4     | 42 min         |
 | v1.4      | 11-14   | 17    | 136 min        |
 | v1.5      | 15-18.6 | 37    | 390 min        |
-| v1.6      | 19      | 2     | 26 min         |
+| v1.6      | 19-20   | 3     | 38 min         |
 
 ## Accumulated Context
 
@@ -86,6 +86,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 18.4-01       | EXIT_DURATION 800ms                                  | Slower animation for smooth arc visibility                                           |
 | 18.5-01       | initialRouteName="Camera"                            | Aligns with capture-first philosophy                                                 |
 | 18.6-01       | 100ms clearance delay for cascade                    | Instant, fluid triage feel without perceptible gap                                   |
+| 20-01         | firebase-functions.logger for Cloud Functions        | Structured logging with Cloud Logging integration                                    |
+| 20-01         | DEBUG/INFO filtered in production                    | Zero console noise in production, only WARN/ERROR logged                             |
 
 ### Deferred Issues
 
@@ -112,5 +114,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed Phase 19 (Linting and Prettier Setup)
+Stopped at: Completed 20-01-PLAN.md (Debug Cleanup)
 Resume file: None
