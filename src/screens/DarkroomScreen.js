@@ -106,9 +106,16 @@ const DarkroomScreen = () => {
           developingCount: result.photos.filter(p => p.status === 'developing').length
         });
         setPhotos(revealedPhotos);
+        // 18.1-FIX-2: Clear hidden state when photos reload to prevent stale state
+        setHiddenPhotoIds(new Set());
+        // Also clear undo stack since these are fresh photos
+        setUndoStack([]);
       } else {
         logger.warn('DarkroomScreen: Failed to get photos or no photos returned');
         setPhotos([]);
+        // 18.1-FIX-2: Clear hidden state on empty result too
+        setHiddenPhotoIds(new Set());
+        setUndoStack([]);
       }
     } catch (error) {
       logger.error('DarkroomScreen: Error loading developing photos', error);
