@@ -11,6 +11,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v1.3 Firebase SDK Consolidation** - [archive](milestones/v1.3-ROADMAP.md) (Phases 9-10, shipped 2026-01-19)
 - ✅ **v1.4 Production Ready** - [archive](milestones/v1.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
 - ✅ **v1.5 Camera Performance & UX Polish** - [archive](milestones/v1.5-ROADMAP.md) (Phases 15-18.6, shipped 2026-01-23)
+- 🚧 **v1.6 Code Quality, Security & Documentation** - Phases 19-29 (in progress)
 
 ## Completed Milestones
 
@@ -136,6 +137,139 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 | 18.5 Camera Default Launch Screen | v1.5 | 1/1 | Complete | 2026-01-23 |
 | 18.6 Triage Animation Timing Optimization | v1.5 | 1/1 | Complete | 2026-01-23 |
 
+### 🚧 v1.6 Code Quality, Security & Documentation (In Progress)
+
+**Milestone Goal:** Comprehensive codebase cleanup, security hardening, and documentation for maintainability and contributor onboarding
+
+**Constraints:**
+- No breaking changes - all external behavior must stay identical
+- No functional changes - everything works exactly as it does now
+- No visual changes - UI/UX must remain the same
+
+#### Phase 19: Linting and Prettier Setup
+
+**Goal**: Configure ESLint, Prettier, husky pre-commit hooks, and format all existing files
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (established patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 19-01: TBD (run /gsd:plan-phase 19 to break down)
+
+#### Phase 20: Debug Cleanup
+
+**Goal**: Remove all console.log/console.error statements, replace with logger utility
+**Depends on**: Phase 19
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 20-01: TBD
+
+#### Phase 21: Global Constants and Design System
+
+**Goal**: Extract and centralize colors, typography, spacing, layout, timing, and config values into src/constants/
+**Depends on**: Phase 20
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 21-01: TBD
+
+#### Phase 22: Environment and Configuration
+
+**Goal**: Create .env.example template and prepare for security audit
+**Depends on**: Phase 21
+**Research**: Unlikely (established patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 22-01: TBD
+
+#### Phase 23: Firestore Security Rules Audit
+
+**Goal**: Audit and harden Firestore security rules
+**Depends on**: Phase 22
+**Research**: Likely (security best practices)
+**Research topics**: Firestore security rules patterns, field-level validation, rate limiting patterns
+**Plans**: TBD
+
+Plans:
+- [ ] 23-01: TBD
+
+#### Phase 24: Cloud Functions Validation and Security
+
+**Goal**: Add input validation and security hardening to Cloud Functions
+**Depends on**: Phase 23
+**Research**: Likely (security best practices)
+**Research topics**: Cloud Functions input validation, rate limiting, error handling patterns
+**Plans**: TBD
+
+Plans:
+- [ ] 24-01: TBD
+
+#### Phase 25: Authentication and Data Security
+
+**Goal**: Implement SecureStore for sensitive data, signed URLs for photos, secure logout
+**Depends on**: Phase 24
+**Research**: Likely (expo-secure-store, Firebase signed URLs)
+**Research topics**: expo-secure-store API, Firebase signed URLs with expiration, FCM token cleanup
+**Plans**: TBD
+
+Plans:
+- [ ] 25-01: TBD
+
+#### Phase 26: Privacy Features
+
+**Goal**: Add privacy policy screen, terms of service screen, and account deletion feature
+**Depends on**: Phase 25
+**Research**: Likely (App Store requirements)
+**Research topics**: iOS App Store privacy policy requirements, account deletion requirements
+**Plans**: TBD
+
+Plans:
+- [ ] 26-01: TBD
+
+#### Phase 27: Test Suite Setup
+
+**Goal**: Configure Jest with mocks, write tests for auth, photo lifecycle, friendships, reactions
+**Depends on**: Phase 26
+**Research**: Unlikely (established patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 27-01: TBD
+
+#### Phase 28: Code Refactoring
+
+**Goal**: Extract large components (SwipeablePhotoCard, CameraScreen, DarkroomScreen) into custom hooks
+**Depends on**: Phase 27 (tests written first)
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 28-01: TBD
+
+#### Phase 29: Documentation
+
+**Goal**: JSDoc on all services, document complex animation logic, update README, create CONTRIBUTING.md
+**Depends on**: Phase 28
+**Research**: Unlikely (established patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 29-01: TBD
+
 ---
 
-**All milestones complete. Ready for App Store submission.**
+| 19. Linting and Prettier Setup | v1.6 | 0/? | Not started | - |
+| 20. Debug Cleanup | v1.6 | 0/? | Not started | - |
+| 21. Global Constants and Design System | v1.6 | 0/? | Not started | - |
+| 22. Environment and Configuration | v1.6 | 0/? | Not started | - |
+| 23. Firestore Security Rules Audit | v1.6 | 0/? | Not started | - |
+| 24. Cloud Functions Validation | v1.6 | 0/? | Not started | - |
+| 25. Authentication and Data Security | v1.6 | 0/? | Not started | - |
+| 26. Privacy Features | v1.6 | 0/? | Not started | - |
+| 27. Test Suite Setup | v1.6 | 0/? | Not started | - |
+| 28. Code Refactoring | v1.6 | 0/? | Not started | - |
+| 29. Documentation | v1.6 | 0/? | Not started | - |

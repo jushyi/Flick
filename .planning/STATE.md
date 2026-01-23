@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** Instant, delightful photo capture and reveal experience - photos capture without blocking, triage flows like flipping through a deck of cards, and every interaction feels responsive with haptic feedback.
-**Current focus:** All milestones complete - ready for App Store submission
+**Current focus:** v1.6 Code Quality, Security & Documentation - codebase cleanup, security hardening, and documentation
 
 ## Current Position
 
-Phase: All complete (v1.1-v1.5 shipped)
-Plan: N/A
-Status: Ready for App Store submission
-Last activity: 2026-01-23 - v1.5 milestone shipped
+Phase: 19 of 29 (Linting and Prettier Setup)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-23 - Milestone v1.6 created
 
-Progress: ██████████ 100% (5 milestones shipped)
+Progress: ░░░░░░░░░░ 0%
 
 ## Performance Metrics
 
@@ -103,8 +103,12 @@ None.
 
 **Total:** 40 phases, 74 plans, 14.3 hours execution time across 5 milestones
 
+### Roadmap Evolution
+
+- Milestone v1.6 created: Code quality, security hardening, and documentation, 11 phases (Phase 19-29)
+
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: v1.5 milestone archived - ready for App Store submission
+Stopped at: Milestone v1.6 initialization
 Resume file: None
