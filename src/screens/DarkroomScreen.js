@@ -745,6 +745,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     // UAT-012: Black background prevents gray flash during cascade animation
     backgroundColor: '#000000',
+    // 18.3: Establish stacking context for proper z-index layering
+    // Cards have zIndex 1-3, container at zIndex 1 keeps them contained
+    zIndex: 1,
   },
   triageButtonBar: {
     flexDirection: 'row',
@@ -752,6 +755,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 24,
     gap: 8,
+    // 18.3: Ensure buttons always render above photo cards (which have zIndex 1-3)
+    // Cards animate behind the button bar, not over it
+    zIndex: 10,
+    elevation: 10, // Android equivalent
   },
   archiveButton: {
     flex: 1,
