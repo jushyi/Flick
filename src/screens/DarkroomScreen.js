@@ -46,6 +46,8 @@ const DarkroomScreen = () => {
   const successFadeAnim = useRef(new Animated.Value(0)).current; // UAT-002: Fade-in animation for success state
   // UAT-004 FIX: Track previously visible photo IDs to detect newly visible cards
   const prevVisiblePhotoIdsRef = useRef(new Set());
+  // 18.3: Delete button pulse animation - pulses when card arrives via suction animation
+  const deleteButtonScale = useRef(new Animated.Value(1)).current;
 
   // 18.1-FIX-2: Compute visible photos (not hidden) for rendering
   // This prevents array mutations that cause React to re-render all cards
@@ -294,6 +296,23 @@ const DarkroomScreen = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     cardRef.current?.triggerJournal();
   };
+
+  // 18.3: Delete button pulse animation - triggered when card arrives via suction
+  // Creates satisfying feedback that the delete action completed
+  const handleDeletePulse = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(deleteButtonScale, {
+        toValue: 1.15,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(deleteButtonScale, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [deleteButtonScale]);
 
   // 18.1: Handle Undo button - restore last decision from undo stack
   // 18.1-02: Added reverse animation (cards slide back from exit direction)
@@ -580,6 +599,7 @@ const DarkroomScreen = () => {
               onSwipeLeft={isActive ? handleArchiveSwipe : undefined}
               onSwipeRight={isActive ? handleJournalSwipe : undefined}
               onSwipeDown={isActive ? handleDeleteSwipe : undefined}
+              onDeleteComplete={isActive ? handleDeletePulse : undefined}
             />
           );
         })}
@@ -596,13 +616,15 @@ const DarkroomScreen = () => {
           <Text style={styles.archiveButtonText}>Archive</Text>
         </TouchableOpacity>
 
-        {/* Delete Button (center) */}
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={handleDeleteButton}
-        >
-          <Text style={styles.deleteButtonIcon}>✕</Text>
-        </TouchableOpacity>
+        {/* Delete Button (center) - wrapped in Animated.View for pulse effect */}
+        <Animated.View style={{ transform: [{ scale: deleteButtonScale }] }}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteButton}
+          >
+            <Text style={styles.deleteButtonIcon}>✕</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Journal Button (right) */}
         <TouchableOpacity

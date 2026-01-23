@@ -65,13 +65,15 @@ const STACK_ENTRY_FADE_DURATION = 300;
  * @param {boolean} isActive - Whether this card is swipeable (only front card)
  * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
  */
-const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, stackIndex = 0, isActive = true, enterFrom = null, isNewlyVisible = false }, ref) => {
+const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwipeDown, onDeleteComplete, stackIndex = 0, isActive = true, enterFrom = null, isNewlyVisible = false }, ref) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
   // Animated values for gesture/front card
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
+  // 18.3: Scale for delete suction animation (card shrinks as it gets sucked into delete button)
+  const cardScale = useSharedValue(1);
 
   // Helper functions for stack styling (UAT-006, UAT-009, UAT-011)
   // Cards peek from TOP (negative Y = above front card)
@@ -335,24 +337,45 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
         easing: Easing.out(Easing.cubic),
       });
     },
-    // Trigger delete animation (drop straight down)
-    // UAT-016: Button animations use BUTTON_EXIT_DURATION (1200ms) for satisfying pace
+    // Trigger delete animation (vacuum suction toward delete button)
+    // 18.3: Card shrinks and accelerates toward delete button position
+    // Uses Easing.in for "being pulled in" feel (accelerates into target)
     triggerDelete: () => {
       if (actionInProgress.value) return;
       logger.info('SwipeablePhotoCard: triggerDelete called', { photoId: photo?.id });
       actionInProgress.value = true;
       isButtonDelete.value = true; // UAT-008: Mark as button-triggered delete
-      // Animate to delete position (drop down)
-      // Card stays opaque - flies off screen without fading
-      translateY.value = withTiming(SCREEN_HEIGHT, {
-        duration: BUTTON_EXIT_DURATION,
-        easing: Easing.out(Easing.cubic),
+
+      // 18.3: Vacuum suction animation - shorter duration for snappy feel
+      const SUCTION_DURATION = 450;
+
+      // Card shrinks to 10% size as it gets "sucked in"
+      cardScale.value = withTiming(0.1, {
+        duration: SUCTION_DURATION,
+        easing: Easing.in(Easing.cubic), // Accelerates into target
+      });
+
+      // Card moves down toward delete button (bottom center of screen)
+      // Delete button is approximately SCREEN_HEIGHT * 0.35 below card center
+      translateY.value = withTiming(SCREEN_HEIGHT * 0.35, {
+        duration: SUCTION_DURATION,
+        easing: Easing.in(Easing.cubic),
+      });
+
+      // Center card horizontally (in case it was offset)
+      translateX.value = withTiming(0, {
+        duration: SUCTION_DURATION,
+        easing: Easing.in(Easing.cubic),
       }, () => {
         'worklet';
+        // Signal delete button to pulse, then trigger delete callback
+        if (onDeleteComplete) {
+          runOnJS(onDeleteComplete)();
+        }
         runOnJS(handleDelete)();
       });
     },
-  }), [photo?.id, actionInProgress, isButtonDelete, translateX, translateY, handleArchive, handleJournal, handleDelete]);
+  }), [photo?.id, actionInProgress, isButtonDelete, translateX, translateY, cardScale, handleArchive, handleJournal, handleDelete, onDeleteComplete]);
 
   // Pan gesture using new Gesture API
   const panGesture = Gesture.Pan()
@@ -464,12 +487,13 @@ const SwipeablePhotoCard = forwardRef(({ photo, onSwipeLeft, onSwipeRight, onSwi
       };
     } else {
       // Front card (not transitioning) - apply gesture transforms
+      // 18.3: Include cardScale for delete suction animation
       return {
         transform: [
           { translateX: translateX.value },
           { translateY: translateY.value + arcY },
           { rotate: `${rotation}deg` },
-          { scale: 1 },
+          { scale: cardScale.value },
         ],
         opacity: cardOpacity.value,
       };
