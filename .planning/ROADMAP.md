@@ -242,7 +242,7 @@ Plans:
 **Goal**: Batch triage decisions locally until user confirms, with undo capability and session persistence
 **Depends on**: Phase 18
 **Research**: Unlikely (React Native state management and AsyncStorage patterns)
-**Plans**: 2/2 + 4 FIX complete
+**Plans**: 2/2 + 5 FIX complete
 
 Plans:
 - [x] 18.1-01: Undo stack state and UI - completed 2026-01-22
@@ -251,6 +251,7 @@ Plans:
 - [x] 18.1-FIX-2: UAT-002 black flash persists fix - completed 2026-01-23
 - [x] 18.1-FIX-3: UAT-003 expo-image migration for black flash - completed 2026-01-23
 - [x] 18.1-FIX-4: UAT-004 card cascade animation fix - completed 2026-01-23
+- [x] 18.1-FIX-5: UAT-005 cascade animation race condition fix - completed 2026-01-23
 
 **Delivered:**
 - Undo stack state management for local triage decisions
@@ -260,7 +261,7 @@ Plans:
 - Ionicons undo button with clean "Undo" text
 - Fixed black flash after cascade animation (hidden state tracking + cascade transition flag)
 - expo-image migration with native caching and 200ms transitions
-- Smooth cascade animation with adjusted spring config and 100ms delay
+- Smooth cascade animation with single animation trigger (timing-based, 350ms)
 - Fade-in animation for new cards entering visible stack (300ms)
 
 #### Phase 18.2: Success Sound Effect on Triage Completion (INSERTED)
@@ -318,6 +319,21 @@ Animation Adjustments for Journal/Archive:
 - New behavior: less rotation, more horizontal/sideways movement
 - Cards must never visually overlap with the triage buttons during animation
 - Maintain satisfying feel while keeping animations contained above button bar
+
+#### Phase 18.5: Camera Default Launch Screen (INSERTED)
+
+**Goal**: Make the Camera screen the default screen that loads on app launch instead of the Feed
+**Depends on**: Phase 18.4
+**Research**: Unlikely (React Navigation initial route configuration)
+**Plans**: TBD
+
+Plans:
+- [ ] 18.5-01: TBD (run /gsd:plan-phase 18.5 to break down)
+
+**Details:**
+- Change the app's initial route to Camera screen instead of Feed
+- Ensures users land on the camera-first experience on app launch
+- Aligns with the app's core philosophy of capture-first UX
 
 ## Completed Milestones
 
@@ -409,7 +425,8 @@ Animation Adjustments for Journal/Archive:
 | 17.1 Darkroom Animation Refinements | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 17.2 Reveal Timing 0-5 Minutes | v1.5 | 1/1 | Complete | 2026-01-22 |
 | 18. Reaction Notification Debouncing | v1.5 | 2/2 + FIX | Complete | 2026-01-22 |
-| 18.1 Batched Darkroom Triage with Undo | v1.5 | 2/2 + 4 FIX | Complete | 2026-01-23 |
+| 18.1 Batched Darkroom Triage with Undo | v1.5 | 2/2 + 5 FIX | Complete | 2026-01-23 |
 | 18.2 Success Sound Effect on Triage Completion | v1.5 | 0/? | Not started | - |
 | 18.3 Triage Animation Z-Index & Delete Suction | v1.5 | 0/? | Not started | - |
 | 18.4 Triage Animation Arc Adjustment | v1.5 | 0/? | Not started | - |
+| 18.5 Camera Default Launch Screen | v1.5 | 0/? | Not started | - |
