@@ -197,6 +197,32 @@ Plans:
 
 - [x] 21.1-01: API Key Exposure Remediation - completed 2026-01-24
 
+#### Phase 21.2: EAS Secure Google Services File (INSERTED)
+
+**Goal**: Configure EAS file environment variables to securely pass GoogleService-Info.plist to builds without checking into version control
+**Depends on**: Phase 21.1
+**Research**: Complete
+**Plans**: 1
+**Status**: Complete
+**Priority**: HIGH - Required for successful EAS builds
+
+Plans:
+
+- [x] 21.2-01: EAS file environment variable and dynamic app.config.js - completed 2026-01-24
+
+#### Phase 21.3: App Crashes When Inputting Phone Number (INSERTED)
+
+**Goal**: Fix crash that occurs when user inputs phone number
+**Depends on**: Phase 21.2
+**Research**: Likely (need to reproduce and diagnose)
+**Plans**: TBD
+**Status**: Not started
+**Priority**: URGENT - User-facing crash
+
+Plans:
+
+- [ ] 21.3-01: TBD
+
 #### Phase 22: Environment and Configuration
 
 **Goal**: Create .env.example template and prepare for security audit
@@ -295,6 +321,8 @@ Plans:
 | 20. Debug Cleanup | v1.6 | 1/1 | Complete | 2026-01-23 |
 | 21. Global Constants and Design System | v1.6 | 1/1 | Complete | 2026-01-23 |
 | 21.1 API Key Exposure Remediation | v1.6 | 1/1 | Complete | 2026-01-24 |
+| 21.2 EAS Secure Google Services File | v1.6 | 1/1 | Complete | 2026-01-24 |
+| 21.3 App Crashes When Inputting Phone Number | v1.6 | 0/? | Not started | - |
 | 22. Environment and Configuration | v1.6 | 0/? | Not started | - |
 | 23. Firestore Security Rules Audit | v1.6 | 0/? | Not started | - |
 | 24. Cloud Functions Validation | v1.6 | 0/? | Not started | - |
