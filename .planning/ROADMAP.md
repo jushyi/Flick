@@ -106,11 +106,15 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 **Goal**: Complete identity overhaul - new name "Rewind", user's color palette, app icon, splash screen, all brand assets
 **Depends on**: Previous milestone complete
 **Research**: Unlikely (internal design work)
-**Plans**: TBD
+**Plans**: 5
 
 Plans:
 
-- [ ] 30-01: TBD (run /gsd:plan-phase 30 to break down)
+- [x] 30-01: Design Tokens - Rewind brand palette with purple/pink gradients
+- [ ] 30-02: TBD
+- [ ] 30-03: TBD
+- [ ] 30-04: TBD
+- [ ] 30-05: TBD
 
 #### Phase 31: Personalization Scaffolding
 
@@ -229,7 +233,7 @@ Plans:
 | 18.4 Triage Animation Arc Adjustment           | v0.5      | 1/1            | Complete    | 2026-01-23 |
 | 18.5 Camera Default Launch Screen              | v0.5      | 1/1            | Complete    | 2026-01-23 |
 | 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete    | 2026-01-23 |
-| 30. Rewind Rebrand                             | v0.7      | 0/?            | Not started | -          |
+| 30. Rewind Rebrand                             | v0.7      | 1/5            | In progress | -          |
 | 31. Personalization Scaffolding                | v0.7      | 0/?            | Not started | -          |
 | 32. Navigation Restructure                     | v0.7      | 0/?            | Not started | -          |
 | 33. Feed Header & Notifications                | v0.7      | 0/?            | Not started | -          |
