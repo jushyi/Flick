@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 ## Current Position
 
 Phase: 33 of 37 (Feed Header & Notifications)
-Plan: 1 of ? in current phase
-Status: In progress
-Last activity: 2026-01-25 - Completed 33-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-25 - Completed 33-02-PLAN.md
 
-Progress: ██████░░░░ 29%
+Progress: ██████░░░░ 30%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 108 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 8 in v0.7)
+- Total plans completed: 109 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 9 in v0.7)
 - Average duration: 16 min
-- Total execution time: 19.4 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 35m v0.7)
+- Total execution time: 19.5 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 39m v0.7)
 
 **By Milestone:**
 
@@ -135,6 +135,9 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 32-01         | Friends screens to root stack (not nested in tabs)    | Enables Phase 33 activity page to navigate to Friends screens                        |
 | 33-01         | MaterialTopTabNavigator for Activity two-tab layout   | Standard Instagram-style activity page pattern                                       |
 | 33-01         | Placeholder tabs for Phase 33-02 implementation       | Allows incremental delivery without blocking navigation wiring                       |
+| 33-02         | ScrollView with sections for Activity tabs            | Mixed content (requests + reactions) better than FlatList                            |
+| 33-02         | useFocusEffect for mark-as-read trigger               | Marks notifications read when NotificationsTab gains focus                           |
+| 33-02         | Batch Firestore updates for mark-as-read              | Efficient update of multiple notification documents                                  |
 
 ### Deferred Issues
 
@@ -166,5 +169,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 33-01-PLAN.md (ActivityScreen with MaterialTopTabNavigator, two placeholder tabs)
+Stopped at: Completed 33-02-PLAN.md (NotificationsTab, FriendsTab, mark-as-read)
 Resume file: None
