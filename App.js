@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { getAuth } from '@react-native-firebase/auth';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, ThemeProvider } from './src/context';
 import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
 import { ErrorBoundary, AnimatedSplash } from './src/components';
 import {
@@ -40,7 +40,7 @@ export default function App() {
     try {
       // Hide the native splash screen
       await SplashScreen.hideAsync();
-    } catch (e) {
+    } catch (_err) {
       // Ignore errors - splash may have already been hidden
     }
     // Remove the animated splash overlay
@@ -166,11 +166,13 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <AuthProvider>
-          <AppNavigator />
-          <StatusBar style="auto" />
-          {showAnimatedSplash && <AnimatedSplash onAnimationComplete={handleSplashComplete} />}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppNavigator />
+            <StatusBar style="auto" />
+            {showAnimatedSplash && <AnimatedSplash onAnimationComplete={handleSplashComplete} />}
+          </AuthProvider>
+        </ThemeProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

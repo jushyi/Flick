@@ -1,6 +1,9 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
+
+const THEME_STORAGE_KEY = '@rewind_theme_palette';
 
 /**
  * Preset color palettes for user personalization
@@ -47,13 +50,37 @@ export const useTheme = () => {
  */
 export const ThemeProvider = ({ children }) => {
   const [currentPalette, setCurrentPalette] = useState('purple');
-  const [initializing, setInitializing] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+
+  // Load saved palette from AsyncStorage on mount
+  useEffect(() => {
+    const loadSavedPalette = async () => {
+      try {
+        logger.debug('ThemeContext: Loading saved palette from storage');
+        const savedPalette = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (savedPalette && PALETTES[savedPalette]) {
+          logger.info('ThemeContext: Loaded saved palette', { palette: savedPalette });
+          setCurrentPalette(savedPalette);
+        } else {
+          logger.debug('ThemeContext: No saved palette, using default purple');
+        }
+      } catch (error) {
+        logger.warn('ThemeContext: Failed to load saved palette, using default', {
+          error: error.message,
+        });
+      } finally {
+        setInitializing(false);
+      }
+    };
+
+    loadSavedPalette();
+  }, []);
 
   /**
-   * Update the current palette
+   * Update the current palette and persist to storage
    * @param {string} paletteName - Name of palette from PALETTES
    */
-  const setPalette = paletteName => {
+  const setPalette = async paletteName => {
     if (!PALETTES[paletteName]) {
       logger.warn('ThemeContext: Invalid palette name', { paletteName });
       return;
@@ -63,6 +90,14 @@ export const ThemeProvider = ({ children }) => {
       to: paletteName,
     });
     setCurrentPalette(paletteName);
+
+    // Persist to AsyncStorage
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, paletteName);
+      logger.debug('ThemeContext: Palette persisted to storage', { palette: paletteName });
+    } catch (error) {
+      logger.warn('ThemeContext: Failed to persist palette', { error: error.message });
+    }
   };
 
   // Derive theme object from current palette merged with static colors
