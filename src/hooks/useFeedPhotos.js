@@ -1,3 +1,18 @@
+/**
+ * useFeedPhotos hook
+ *
+ * Manages feed photo state including initial load, pagination, real-time
+ * updates, and refresh. Filters feed to friends-only and curates to show
+ * top photos per friend ranked by engagement.
+ *
+ * Features:
+ * - Initial load with friend filtering
+ * - Pagination (load more)
+ * - Pull-to-refresh
+ * - Real-time subscription
+ * - Optimistic UI updates for reactions
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { getFeedPhotos, subscribeFeedPhotos } from '../services/firebase/feedService';
 import { getFriendUserIds } from '../services/firebase/friendshipService';
