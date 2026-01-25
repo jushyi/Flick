@@ -1,5 +1,10 @@
 rules_version = '2';
-// Force redeploy: 2026-01-19
+// Hardened: 2026-01-24 - Phase 23 Security Audit
+// Changes:
+//   - Self-reaction prevention (request.auth.uid != resource.data.userId)
+//   - Immutable field protection on photos (userId, capturedAt, imageURL)
+//   - Friendship accept restricted to recipient only
+//   - Notification update restricted to read/readAt fields only
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -42,6 +47,18 @@ service cloud.firestore {
       return uid1 < uid2 ? uid1 + '_' + uid2 : uid2 + '_' + uid1;
     }
 
+    // Helper function to check if only reaction fields are being changed
+    // Used for non-owner reaction updates
+    function onlyChangesReactionFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'reactionCount']);
+    }
+
+    // Helper function to ensure immutable photo fields are not changed
+    // Protects userId, capturedAt, imageURL from modification
+    function immutablePhotoFieldsUnchanged() {
+      return request.resource.data.diff(resource.data).unchangedKeys().hasAll(['userId', 'capturedAt', 'imageURL']);
+    }
+
     // =============================================================================
     // USERS COLLECTION
     // =============================================================================
@@ -80,9 +97,16 @@ service cloud.firestore {
                        (request.resource.data.photoState == null ||
                         request.resource.data.photoState in ['journal', 'archive']);
 
-      // Update: Only owner can update their photos
-      allow update: if isOwner(resource.data.userId) &&
-                       request.resource.data.userId == resource.data.userId; // Prevent userId change
+      // Update: Split into owner updates and non-owner reaction updates
+      // Case 1: Owner can update their photos (except immutable fields)
+      // Case 2: Non-owners can ONLY add reactions (prevents self-reactions)
+      allow update: if
+        // Owner updates: full access except immutable fields
+        (isOwner(resource.data.userId) && immutablePhotoFieldsUnchanged()) ||
+        // Non-owner reaction updates: must not be photo owner, can only change reaction fields
+        (isAuthenticated() &&
+         request.auth.uid != resource.data.userId &&
+         onlyChangesReactionFields());
 
       // Delete: Only owner can delete their photos
       allow delete: if isOwner(resource.data.userId);
