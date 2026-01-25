@@ -12,6 +12,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v0.4 Production Ready** - [archive](milestones/v0.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
 - ✅ **v0.5 Camera Performance & UX Polish** - [archive](milestones/v0.5-ROADMAP.md) (Phases 15-18.6, shipped 2026-01-23)
 - ✅ **v0.6 Code Quality, Security & Documentation** - [archive](milestones/v0.6-ROADMAP.md) (Phases 19-29, shipped 2026-01-25)
+- 🚧 **v0.7 Rewind Rebrand & Feed Overhaul** - Phases 30-37 (in progress)
 
 ## Completed Milestones
 
@@ -96,46 +97,146 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 </details>
 
+### 🚧 v0.7 Rewind Rebrand & Feed Overhaul (In Progress)
+
+**Milestone Goal:** Transform app identity to Rewind while overhauling the feed experience with new navigation, notifications, stories, and comments
+
+#### Phase 30: Rewind Rebrand
+
+**Goal**: Complete identity overhaul - new name "Rewind", user's color palette, app icon, splash screen, all brand assets
+**Depends on**: Previous milestone complete
+**Research**: Unlikely (internal design work)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 30-01: TBD (run /gsd:plan-phase 30 to break down)
+
+#### Phase 31: Personalization Scaffolding
+
+**Goal**: Theme context/infrastructure for users to change color palettes (future feature prep)
+**Depends on**: Phase 30
+**Research**: Unlikely (React Context patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 31-01: TBD
+
+#### Phase 32: Navigation Restructure
+
+**Goal**: 4 tabs → 3 tabs (Feed, Camera center, Profile) - Instagram-style layout
+**Depends on**: Phase 31
+**Research**: Unlikely (established patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 32-01: TBD
+
+#### Phase 33: Feed Header & Notifications
+
+**Goal**: Logo + notifications bell header, activity feed + friend requests combined (Instagram-style activity)
+**Depends on**: Phase 32
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 33-01: TBD
+
+#### Phase 34: Feed Card Redesign
+
+**Goal**: Complete overhaul of card layout, interaction patterns, loading/transitions
+**Depends on**: Phase 33
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 34-01: TBD
+
+#### Phase 35: Stories Redesign
+
+**Goal**: Complete visual and interaction overhaul of stories row
+**Depends on**: Phase 34
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 35-01: TBD
+
+#### Phase 36: Comments Feature
+
+**Goal**: Bottom sheet for photo comments (new social feature)
+**Depends on**: Phase 35
+**Research**: Unlikely (Firestore patterns established)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 36-01: TBD
+
+#### Phase 37: Profile Placeholder
+
+**Goal**: Friends button only (full Profile refactor deferred to later milestone)
+**Depends on**: Phase 36
+**Research**: Unlikely (simple addition)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 37-01: TBD
+
 ## Progress
 
-| Phase                                          | Milestone | Plans Complete | Status   | Completed  |
-| ---------------------------------------------- | --------- | -------------- | -------- | ---------- |
-| 1. Navigation Restructure                      | v0.1      | 1/1            | Complete | 2026-01-12 |
-| 2. Darkroom Bottom Sheet                       | v0.1      | 2/2            | Complete | 2026-01-12 |
-| 3. Swipe Gesture Triage                        | v0.1      | 2/2            | Complete | 2026-01-12 |
-| 4. Success & Return Flow                       | v0.1      | 2/2            | Complete | 2026-01-13 |
-| 5. Camera Icon Redesign                        | v0.1      | 1/1            | Complete | 2026-01-13 |
-| 6. Phone Auth Implementation                   | v0.2      | 4/4            | Complete | 2026-01-19 |
-| 7. Legacy Auth Removal & Cleanup               | v0.2      | 1/1            | Complete | 2026-01-19 |
-| 8. Polish & Testing                            | v0.2      | 3/3            | Complete | 2026-01-19 |
-| 9. Firestore Services Migration                | v0.3      | 2/2            | Complete | 2026-01-19 |
-| 10. Storage Migration & Cleanup                | v0.3      | 2/2            | Complete | 2026-01-19 |
-| 11. Firebase Modular API Migration             | v0.4      | 4/4            | Complete | 2026-01-19 |
-| 12. Friendship Service Fix + Testing           | v0.4      | 1/1            | Complete | 2026-01-19 |
-| 12.1 Friends List Screen Crash Fix             | v0.4      | 1/1            | Complete | 2026-01-19 |
-| 12.2 Feed Stories Feature                      | v0.4      | 4/4            | Complete | 2026-01-20 |
-| 13. Production Build & Branding                | v0.4      | 3/3            | Complete | 2026-01-20 |
-| 13.1 Darkroom Reveal Timing Fix                | v0.4      | 1/1            | Complete | 2026-01-20 |
-| 13.2 Darkroom Auto-Reveal Fix                  | v0.4      | 1/1            | Complete | 2026-01-20 |
-| 14. Remote Notification Testing & Polish       | v0.4      | 1/1            | Complete | 2026-01-20 |
-| 15. Background Photo Upload                    | v0.5      | 1/1            | Complete | 2026-01-20 |
-| 15.1 Darkroom Notification Fix                 | v0.5      | 1/1            | Complete | 2026-01-21 |
-| 15.2 Camera UI & Darkroom Animation Overhaul   | v0.5      | 3/3            | Complete | 2026-01-21 |
-| 15.3 ISS-001 - Add True 0.5x Ultra-Wide Zoom   | v0.5      | 1/1            | Complete | 2026-01-21 |
-| 16. Camera Capture Feedback                    | v0.5      | 1/1            | Complete | 2026-01-21 |
-| 16.1 UI Overhaul for Darkroom Bottom Sheet     | v0.5      | 1/1            | Complete | 2026-01-21 |
-| 16.2 Fix 0.5x Ultra-Wide Zoom                  | v0.5      | 1/1            | Complete | 2026-01-21 |
-| 16.3 Fix React Native Firebase Warnings        | v0.5      | 1/1            | Complete | 2026-01-21 |
-| 17. Darkroom UX Polish                         | v0.5      | 2/2            | Complete | 2026-01-22 |
-| 17.1 Darkroom Animation Refinements            | v0.5      | 1/1            | Complete | 2026-01-22 |
-| 17.2 Reveal Timing 0-5 Minutes                 | v0.5      | 1/1            | Complete | 2026-01-22 |
-| 18. Reaction Notification Debouncing           | v0.5      | 2/2 + FIX      | Complete | 2026-01-22 |
-| 18.1 Batched Darkroom Triage with Undo         | v0.5      | 2/2 + 6 FIX    | Complete | 2026-01-23 |
-| 18.2 Success Sound Effect on Triage Completion | v0.5      | 1/1            | Complete | 2026-01-23 |
-| 18.3 Triage Animation Z-Index & Delete Suction | v0.5      | 1/1            | Complete | 2026-01-23 |
-| 18.4 Triage Animation Arc Adjustment           | v0.5      | 1/1            | Complete | 2026-01-23 |
-| 18.5 Camera Default Launch Screen              | v0.5      | 1/1            | Complete | 2026-01-23 |
-| 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete | 2026-01-23 |
+| Phase                                          | Milestone | Plans Complete | Status      | Completed  |
+| ---------------------------------------------- | --------- | -------------- | ----------- | ---------- |
+| 1. Navigation Restructure                      | v0.1      | 1/1            | Complete    | 2026-01-12 |
+| 2. Darkroom Bottom Sheet                       | v0.1      | 2/2            | Complete    | 2026-01-12 |
+| 3. Swipe Gesture Triage                        | v0.1      | 2/2            | Complete    | 2026-01-12 |
+| 4. Success & Return Flow                       | v0.1      | 2/2            | Complete    | 2026-01-13 |
+| 5. Camera Icon Redesign                        | v0.1      | 1/1            | Complete    | 2026-01-13 |
+| 6. Phone Auth Implementation                   | v0.2      | 4/4            | Complete    | 2026-01-19 |
+| 7. Legacy Auth Removal & Cleanup               | v0.2      | 1/1            | Complete    | 2026-01-19 |
+| 8. Polish & Testing                            | v0.2      | 3/3            | Complete    | 2026-01-19 |
+| 9. Firestore Services Migration                | v0.3      | 2/2            | Complete    | 2026-01-19 |
+| 10. Storage Migration & Cleanup                | v0.3      | 2/2            | Complete    | 2026-01-19 |
+| 11. Firebase Modular API Migration             | v0.4      | 4/4            | Complete    | 2026-01-19 |
+| 12. Friendship Service Fix + Testing           | v0.4      | 1/1            | Complete    | 2026-01-19 |
+| 12.1 Friends List Screen Crash Fix             | v0.4      | 1/1            | Complete    | 2026-01-19 |
+| 12.2 Feed Stories Feature                      | v0.4      | 4/4            | Complete    | 2026-01-20 |
+| 13. Production Build & Branding                | v0.4      | 3/3            | Complete    | 2026-01-20 |
+| 13.1 Darkroom Reveal Timing Fix                | v0.4      | 1/1            | Complete    | 2026-01-20 |
+| 13.2 Darkroom Auto-Reveal Fix                  | v0.4      | 1/1            | Complete    | 2026-01-20 |
+| 14. Remote Notification Testing & Polish       | v0.4      | 1/1            | Complete    | 2026-01-20 |
+| 15. Background Photo Upload                    | v0.5      | 1/1            | Complete    | 2026-01-20 |
+| 15.1 Darkroom Notification Fix                 | v0.5      | 1/1            | Complete    | 2026-01-21 |
+| 15.2 Camera UI & Darkroom Animation Overhaul   | v0.5      | 3/3            | Complete    | 2026-01-21 |
+| 15.3 ISS-001 - Add True 0.5x Ultra-Wide Zoom   | v0.5      | 1/1            | Complete    | 2026-01-21 |
+| 16. Camera Capture Feedback                    | v0.5      | 1/1            | Complete    | 2026-01-21 |
+| 16.1 UI Overhaul for Darkroom Bottom Sheet     | v0.5      | 1/1            | Complete    | 2026-01-21 |
+| 16.2 Fix 0.5x Ultra-Wide Zoom                  | v0.5      | 1/1            | Complete    | 2026-01-21 |
+| 16.3 Fix React Native Firebase Warnings        | v0.5      | 1/1            | Complete    | 2026-01-21 |
+| 17. Darkroom UX Polish                         | v0.5      | 2/2            | Complete    | 2026-01-22 |
+| 17.1 Darkroom Animation Refinements            | v0.5      | 1/1            | Complete    | 2026-01-22 |
+| 17.2 Reveal Timing 0-5 Minutes                 | v0.5      | 1/1            | Complete    | 2026-01-22 |
+| 18. Reaction Notification Debouncing           | v0.5      | 2/2 + FIX      | Complete    | 2026-01-22 |
+| 18.1 Batched Darkroom Triage with Undo         | v0.5      | 2/2 + 6 FIX    | Complete    | 2026-01-23 |
+| 18.2 Success Sound Effect on Triage Completion | v0.5      | 1/1            | Complete    | 2026-01-23 |
+| 18.3 Triage Animation Z-Index & Delete Suction | v0.5      | 1/1            | Complete    | 2026-01-23 |
+| 18.4 Triage Animation Arc Adjustment           | v0.5      | 1/1            | Complete    | 2026-01-23 |
+| 18.5 Camera Default Launch Screen              | v0.5      | 1/1            | Complete    | 2026-01-23 |
+| 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete    | 2026-01-23 |
+| 30. Rewind Rebrand                             | v0.7      | 0/?            | Not started | -          |
+| 31. Personalization Scaffolding                | v0.7      | 0/?            | Not started | -          |
+| 32. Navigation Restructure                     | v0.7      | 0/?            | Not started | -          |
+| 33. Feed Header & Notifications                | v0.7      | 0/?            | Not started | -          |
+| 34. Feed Card Redesign                         | v0.7      | 0/?            | Not started | -          |
+| 35. Stories Redesign                           | v0.7      | 0/?            | Not started | -          |
+| 36. Comments Feature                           | v0.7      | 0/?            | Not started | -          |
+| 37. Profile Placeholder                        | v0.7      | 0/?            | Not started | -          |
 
 <details>
 <summary>✅ v0.6 Code Quality, Security & Documentation (Phases 19-29) - SHIPPED 2026-01-25</summary>
