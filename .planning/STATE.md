@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 28 of 30 (Code Refactoring)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 28-02-PLAN.md (CameraScreen refactoring)
+Last activity: 2026-01-25 - Completed 28-03-PLAN.md (DarkroomScreen refactoring)
 
-Progress: ██████░░░░ ~63%
+Progress: ██████░░░░ ~65%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 94 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 20 in v1.6)
+- Total plans completed: 95 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 21 in v1.6)
 - Average duration: 16 min
 - Total execution time: 18.2 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 3.9h v1.6)
 
@@ -33,7 +33,7 @@ Progress: ██████░░░░ ~63%
 | v1.3      | 9-10    | 4     | 42 min         |
 | v1.4      | 11-14   | 17    | 136 min        |
 | v1.5      | 15-18.6 | 37    | 390 min        |
-| v1.6      | 19-28   | 20    | 256 min        |
+| v1.6      | 19-28   | 21    | 268 min        |
 
 ## Accumulated Context
 
@@ -122,6 +122,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 28-01         | Constants kept in hook file                           | Component-specific values (thresholds, durations) not global design tokens           |
 | 28-02         | Single useCamera hook vs multiple focused hooks       | Camera logic is cohesive; single hook is clearer at a glance                         |
 | 28-02         | Layout constants duplicated in hook and styles        | Both need FOOTER_HEIGHT, TAB_BAR_HEIGHT for calculations/positioning                 |
+| 28-03         | Single useDarkroom hook for all logic                 | Triage logic is cohesive (undo stack, batch save, hidden photos)                     |
+| 28-03         | Component at 277 lines with 4 render states           | 4 distinct render branches (loading, success, empty, main) require more JSX          |
 
 ### Deferred Issues
 
@@ -151,5 +153,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 28-02-PLAN.md (CameraScreen refactoring) - Plan 2 of 4 in Phase 28
+Stopped at: Completed 28-03-PLAN.md (DarkroomScreen refactoring) - Plan 3 of 4 in Phase 28
 Resume file: None
