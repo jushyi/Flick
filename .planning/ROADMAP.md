@@ -305,11 +305,15 @@ Plans:
 **Goal**: Extract large components (SwipeablePhotoCard, CameraScreen, DarkroomScreen) into custom hooks
 **Depends on**: Phase 27 (tests written first)
 **Research**: Unlikely (internal patterns)
-**Plans**: TBD
+**Plans**: 4
+**Status**: In progress
 
 Plans:
 
-- [ ] 28-01: TBD
+- [x] 28-01: Infrastructure + SwipeablePhotoCard refactoring - completed 2026-01-25
+- [ ] 28-02: CameraScreen refactoring
+- [ ] 28-03: DarkroomScreen refactoring
+- [ ] 28-04: Remaining components refactoring
 
 #### Phase 29: Documentation
 
@@ -336,5 +340,5 @@ Plans:
 | 25. Authentication and Data Security | v1.6 | 2/2 | Complete | 2026-01-25 |
 | 26. Privacy Features | v1.6 | 2/2 | Complete | 2026-01-25 |
 | 27. Test Suite Setup | v1.6 | 4/4 | Complete | 2026-01-25 |
-| 28. Code Refactoring | v1.6 | 0/? | Not started | - |
+| 28. Code Refactoring | v1.6 | 1/4 | In progress | - |
 | 29. Documentation | v1.6 | 0/? | Not started | - |
