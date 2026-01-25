@@ -27,9 +27,9 @@ import { animations } from '../constants/animations';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Use design tokens for brand colors
-const APERTURE_COLOR = colors.brand.purple; // '#8B5CF6'
-const BACKGROUND_COLOR = colors.background.primary; // '#0F0F0F'
+// Black blades on transparent background to reveal camera behind
+const APERTURE_COLOR = '#000000'; // Pure black for camera shutter blades
+const BACKGROUND_COLOR = 'transparent'; // Transparent to show camera view
 
 // Animation timing from design tokens
 const ANIMATION_DURATION = animations.STARTUP?.SHUTTER_DURATION || 800;
