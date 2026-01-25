@@ -1,7 +1,16 @@
+/**
+ * Account Service
+ *
+ * Handles account-level operations including account deletion.
+ * Uses Cloud Functions for secure server-side operations.
+ *
+ * Key functions:
+ * - deleteUserAccount: Delete account and all associated data
+ */
+
 import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
 import logger from '../../utils/logger';
 
-// Initialize Functions once at module level
 const functions = getFunctions();
 
 /**

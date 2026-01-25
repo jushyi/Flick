@@ -1,7 +1,17 @@
+/**
+ * Signed URL Service
+ *
+ * Provides secure, time-limited access to photos via signed URLs.
+ * Calls Cloud Functions to generate signed URLs with 24-hour expiration.
+ *
+ * Key functions:
+ * - getSignedPhotoUrl: Get signed URL for a storage path
+ * - convertToSignedUrl: Convert full URL or path to signed URL
+ */
+
 import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
 import logger from '../../utils/logger';
 
-// Initialize Functions once at module level
 const functions = getFunctions();
 
 /**

@@ -1,3 +1,16 @@
+/**
+ * Darkroom Service
+ *
+ * Manages the batch photo reveal system. Photos are captured in "developing"
+ * status and revealed together at random intervals (0-5 minutes).
+ *
+ * Key functions:
+ * - getDarkroom: Get or create darkroom document for user
+ * - isDarkroomReadyToReveal: Check if photos are ready to reveal
+ * - scheduleNextReveal: Set next reveal time after revealing
+ * - ensureDarkroomInitialized: Ensure darkroom exists with valid timing
+ */
+
 import {
   getFirestore,
   collection,
@@ -13,7 +26,6 @@ import {
 } from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
 
-// Initialize Firestore once at module level
 const db = getFirestore();
 
 /**

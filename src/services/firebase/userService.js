@@ -1,7 +1,18 @@
+/**
+ * User Service
+ *
+ * Manages user profile data and daily photo limits. Tracks photo counts
+ * per day with automatic reset at midnight.
+ *
+ * Key functions:
+ * - getDailyPhotoCount: Get user's daily photo count
+ * - incrementDailyPhotoCount: Increment daily count after capture
+ * - checkDailyLimit: Check if user can take more photos (36/day limit)
+ */
+
 import { getFirestore, doc, getDoc, updateDoc } from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
 
-// Initialize Firestore once at module level
 const db = getFirestore();
 
 /**

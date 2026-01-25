@@ -1,3 +1,17 @@
+/**
+ * Notification Service
+ *
+ * Handles push notification permissions, token management, and notification
+ * handling. Uses Expo Push Notifications with Firebase Cloud Functions.
+ *
+ * Key functions:
+ * - initializeNotifications: Set up notification channels
+ * - requestNotificationPermission: Request iOS notification permissions
+ * - getNotificationToken: Get Expo push token
+ * - storeNotificationToken: Save token to Firestore and SecureStore
+ * - handleNotificationTapped: Extract deep link data from tap
+ */
+
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
@@ -6,7 +20,6 @@ import { getFirestore, doc, updateDoc, serverTimestamp } from '@react-native-fir
 import logger from '../../utils/logger';
 import { secureStorage, STORAGE_KEYS } from '../secureStorageService';
 
-// Initialize Firestore once at module level
 const db = getFirestore();
 
 /**

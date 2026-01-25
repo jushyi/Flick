@@ -1,3 +1,17 @@
+/**
+ * Feed Service
+ *
+ * Handles feed queries and reaction management. Fetches journaled photos
+ * from friends, provides real-time subscriptions, and manages emoji reactions.
+ *
+ * Key functions:
+ * - getFeedPhotos: Fetch paginated feed with friend filtering
+ * - subscribeFeedPhotos: Real-time feed listener
+ * - getPhotoById: Fetch single photo with user data
+ * - toggleReaction: Add/increment emoji reactions
+ * - getFriendStoriesData: Get friend stories for Stories UI
+ */
+
 import {
   getFirestore,
   collection,
@@ -13,7 +27,6 @@ import {
 import logger from '../../utils/logger';
 import { getFriendUserIds } from './friendshipService';
 
-// Initialize Firestore once at module level
 const db = getFirestore();
 
 /**

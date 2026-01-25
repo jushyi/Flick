@@ -1,3 +1,18 @@
+/**
+ * Photo Service
+ *
+ * Manages photo CRUD operations and lifecycle transitions. Photos flow through
+ * statuses: developing -> revealed -> triaged (with photoState: journal/archive).
+ *
+ * Key functions:
+ * - createPhoto: Create photo document and upload to Storage
+ * - getUserPhotos: Get all photos for a user
+ * - getDevelopingPhotos: Get developing/revealed photos for darkroom
+ * - revealPhotos: Batch reveal all developing photos
+ * - triagePhoto: Journal, archive, or delete a photo
+ * - batchTriagePhotos: Batch triage multiple photos
+ */
+
 import {
   getFirestore,
   collection,
@@ -16,7 +31,6 @@ import { uploadPhoto, deletePhoto } from './storageService';
 import { ensureDarkroomInitialized } from './darkroomService';
 import logger from '../../utils/logger';
 
-// Initialize Firestore once at module level
 const db = getFirestore();
 
 /**

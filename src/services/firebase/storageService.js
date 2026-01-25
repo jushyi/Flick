@@ -1,8 +1,20 @@
+/**
+ * Storage Service
+ *
+ * Handles Firebase Cloud Storage operations for photos and profile images.
+ * Includes image compression before upload.
+ *
+ * Key functions:
+ * - uploadPhoto: Compress and upload photo to Storage
+ * - uploadProfilePhoto: Upload profile photo
+ * - deletePhoto: Delete photo from Storage
+ * - getPhotoURL: Get download URL for a photo
+ */
+
 import { getStorage, ref } from '@react-native-firebase/storage';
 import * as ImageManipulator from 'expo-image-manipulator';
 import logger from '../../utils/logger';
 
-// Initialize Storage once at module level
 const storageInstance = getStorage();
 
 /**
