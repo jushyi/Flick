@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 
 ## Current Position
 
-Phase: 21 of 29 (Global Constants and Design System)
+Phase: 21.1 of 29 (API Key Exposure Remediation)
 Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-23 - Completed 21-01-PLAN.md
+Last activity: 2026-01-24 - Completed 21.1-01-PLAN.md
 
-Progress: ██░░░░░░░░ ~14%
+Progress: ██░░░░░░░░ ~17%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 78 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 4 in v1.6)
+- Total plans completed: 79 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 5 in v1.6)
 - Average duration: 16 min
-- Total execution time: 15.0 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 0.7h v1.6)
+- Total execution time: 15.1 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 0.8h v1.6)
 
 **By Milestone:**
 
@@ -33,7 +33,7 @@ Progress: ██░░░░░░░░ ~14%
 | v1.3      | 9-10    | 4     | 42 min         |
 | v1.4      | 11-14   | 17    | 136 min        |
 | v1.5      | 15-18.6 | 37    | 390 min        |
-| v1.6      | 19-21   | 4     | 43 min         |
+| v1.6      | 19-21.1 | 5     | 51 min         |
 
 ## Accumulated Context
 
@@ -88,6 +88,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 18.6-01       | 100ms clearance delay for cascade                    | Instant, fluid triage feel without perceptible gap                                   |
 | 20-01         | firebase-functions.logger for Cloud Functions        | Structured logging with Cloud Logging integration                                    |
 | 20-01         | DEBUG/INFO filtered in production                    | Zero console noise in production, only WARN/ERROR logged                             |
+| 21.1-01       | git-filter-repo for history rewriting                | GitHub recommended, Python-based (no Java for BFG)                                   |
+| 21.1-01       | Force push to overwrite remote history               | Required for complete security remediation                                           |
 
 ### Deferred Issues
 
@@ -110,9 +112,10 @@ None.
 ### Roadmap Evolution
 
 - Milestone v1.6 created: Code quality, security hardening, and documentation, 11 phases (Phase 19-29)
+- Phase 21.1 inserted after Phase 21: API Key Exposure Remediation (URGENT) - Security incident response for exposed GoogleService-Info.plist
 
 ## Session Continuity
 
-Last session: 2026-01-23
-Stopped at: Completed 21-01-PLAN.md (Global Constants and Design System)
+Last session: 2026-01-24
+Stopped at: Completed 21.1-01-PLAN.md (API Key Exposure Remediation)
 Resume file: None

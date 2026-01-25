@@ -184,6 +184,19 @@ Plans:
 
 - [x] 21-01: Design System Constants Infrastructure - completed 2026-01-23
 
+#### Phase 21.1: API Key Exposure Remediation (INSERTED)
+
+**Goal**: Remove exposed GoogleService-Info.plist from git history and prevent future exposure
+**Depends on**: Phase 21
+**Research**: Complete
+**Plans**: 1
+**Status**: Complete
+**Priority**: URGENT - Security incident response
+
+Plans:
+
+- [x] 21.1-01: API Key Exposure Remediation - completed 2026-01-24
+
 #### Phase 22: Environment and Configuration
 
 **Goal**: Create .env.example template and prepare for security audit
@@ -281,6 +294,7 @@ Plans:
 | 19. Linting and Prettier Setup | v1.6 | 2/2 | Complete | 2026-01-23 |
 | 20. Debug Cleanup | v1.6 | 1/1 | Complete | 2026-01-23 |
 | 21. Global Constants and Design System | v1.6 | 1/1 | Complete | 2026-01-23 |
+| 21.1 API Key Exposure Remediation | v1.6 | 1/1 | Complete | 2026-01-24 |
 | 22. Environment and Configuration | v1.6 | 0/? | Not started | - |
 | 23. Firestore Security Rules Audit | v1.6 | 0/? | Not started | - |
 | 24. Cloud Functions Validation | v1.6 | 0/? | Not started | - |
