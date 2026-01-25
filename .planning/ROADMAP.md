@@ -345,12 +345,13 @@ Plans:
 **Goal**: JSDoc on all services, document complex animation logic, update README, create CONTRIBUTING.md
 **Depends on**: Phase 28
 **Research**: Unlikely (established patterns)
-**Plans**: 1
+**Plans**: 2
 **Status**: Complete
 
 Plans:
 
 - [x] 29-01: Project documentation (README.md, CONTRIBUTING.md) - completed 2026-01-25
+- [x] 29-02: Animation system documentation (ANIMATIONS.md, JSDoc) - completed 2026-01-25
 
 ---
 
@@ -368,4 +369,4 @@ Plans:
 | 27. Test Suite Setup | v1.6 | 4/4 | Complete | 2026-01-25 |
 | 28. Code Refactoring | v1.6 | 4/4 | Complete | 2026-01-25 |
 | 28.1 Fix Photo Upload Permission Denied | v1.6 | 1/1 | Complete | 2026-01-25 |
-| 29. Documentation | v1.6 | 1/1 | Complete | 2026-01-25 |
+| 29. Documentation | v1.6 | 2/2 | Complete | 2026-01-25 |
