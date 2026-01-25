@@ -23,6 +23,9 @@ import FriendsListScreen from '../screens/FriendsListScreen';
 import UserSearchScreen from '../screens/UserSearchScreen';
 import FriendRequestsScreen from '../screens/FriendRequestsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -43,6 +46,24 @@ const FriendsStackNavigator = () => {
       <Stack.Screen name="FriendsList" component={FriendsListScreen} />
       <Stack.Screen name="UserSearch" component={UserSearchScreen} />
       <Stack.Screen name="FriendRequests" component={FriendRequestsScreen} />
+    </Stack.Navigator>
+  );
+};
+
+/**
+ * Profile Stack Navigator (Profile, Settings, PrivacyPolicy, TermsOfService)
+ */
+const ProfileStackNavigator = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
     </Stack.Navigator>
   );
 };
@@ -112,7 +133,7 @@ const MainTabNavigator = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{
           tabBarIcon: ({ color }) => <ProfileIcon color={color} />,
         }}
@@ -244,7 +265,14 @@ const linking = {
         screens: {
           Feed: 'feed',
           Camera: 'camera',
-          Profile: 'profile',
+          Profile: {
+            screens: {
+              ProfileMain: 'profile',
+              Settings: 'profile/settings',
+              PrivacyPolicy: 'profile/privacy',
+              TermsOfService: 'profile/terms',
+            },
+          },
           Friends: {
             screens: {
               FriendsList: 'friends',
