@@ -1,9 +1,10 @@
 # Compiled JavaScript files
-# Note: index.js and logger.js are source code (not TypeScript compiled), so we track them
+# Note: index.js, logger.js, and validation.js are source code (not TypeScript compiled), so we track them
 **/*.js
 **/*.js.map
 !index.js
 !logger.js
+!validation.js
 
 # TypeScript v1 declaration files
 typings/
