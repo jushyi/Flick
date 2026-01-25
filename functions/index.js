@@ -1,6 +1,13 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const logger = require('./logger');
+const {
+  validateOrNull,
+  DarkroomDocSchema,
+  PhotoDocSchema,
+  FriendshipDocSchema,
+  UserDocSchema,
+} = require('./validation');
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -30,6 +37,12 @@ function formatReactionSummary(reactions) {
  * @returns {Promise<object>} - Result of reveal operation
  */
 async function revealUserPhotos(userId, now) {
+  // Guard: validate userId is non-empty string
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    logger.warn('revealUserPhotos: Invalid userId', { userId });
+    return { userId, success: false, error: 'Invalid userId' };
+  }
+
   logger.info(`revealUserPhotos: Processing user ${userId}`);
 
   // Query developing photos for this user
@@ -202,6 +215,16 @@ exports.sendPhotoRevealNotification = functions.firestore
       const before = change.before.data();
       const after = change.after.data();
 
+      // Guard: validate document data exists
+      if (!after || typeof after !== 'object') {
+        logger.warn('sendPhotoRevealNotification: Invalid after data', { userId });
+        return null;
+      }
+      if (!before || typeof before !== 'object') {
+        logger.warn('sendPhotoRevealNotification: Invalid before data', { userId });
+        return null;
+      }
+
       // Check if this is a reveal event (lastRevealedAt changed)
       const lastRevealedAtBefore = before.lastRevealedAt?.toMillis() || 0;
       const lastRevealedAtAfter = after.lastRevealedAt?.toMillis() || 0;
@@ -306,6 +329,34 @@ exports.sendFriendRequestNotification = functions.firestore
       const friendshipId = context.params.friendshipId;
       const friendshipData = snap.data();
 
+      // Guard: validate friendshipData exists and has required shape
+      if (!friendshipData || typeof friendshipData !== 'object') {
+        logger.warn('sendFriendRequestNotification: Invalid friendship data', { friendshipId });
+        return null;
+      }
+
+      // Guard: verify required IDs are present and valid
+      const { requestedBy, user1Id, user2Id } = friendshipData;
+      if (!requestedBy || !user1Id || !user2Id) {
+        logger.warn('sendFriendRequestNotification: Missing required user IDs', {
+          friendshipId,
+          hasRequestedBy: !!requestedBy,
+          hasUser1Id: !!user1Id,
+          hasUser2Id: !!user2Id,
+        });
+        return null;
+      }
+
+      // Guard: verify IDs are different (not self-friendship)
+      if (user1Id === user2Id) {
+        logger.warn('sendFriendRequestNotification: Self-friendship detected', {
+          friendshipId,
+          user1Id,
+          user2Id,
+        });
+        return null;
+      }
+
       // Only send notification for pending friend requests
       if (friendshipData.status !== 'pending') {
         logger.debug(
@@ -314,9 +365,8 @@ exports.sendFriendRequestNotification = functions.firestore
         return null;
       }
 
-      const requestedBy = friendshipData.requestedBy;
-      const recipientId =
-        friendshipData.user1Id === requestedBy ? friendshipData.user2Id : friendshipData.user1Id;
+      // Use IDs already validated above
+      const recipientId = user1Id === requestedBy ? user2Id : user1Id;
 
       // Get recipient's FCM token
       const recipientDoc = await admin.firestore().collection('users').doc(recipientId).get();
@@ -446,6 +496,22 @@ exports.sendReactionNotification = functions.firestore
       const photoId = context.params.photoId;
       const before = change.before.data();
       const after = change.after.data();
+
+      // Guard: validate document data exists
+      if (!after || typeof after !== 'object') {
+        logger.warn('sendReactionNotification: Invalid after data', { photoId });
+        return null;
+      }
+      if (!before || typeof before !== 'object') {
+        logger.warn('sendReactionNotification: Invalid before data', { photoId });
+        return null;
+      }
+
+      // Guard: ensure after has required fields for reaction processing
+      if (!after.userId) {
+        logger.warn('sendReactionNotification: Missing userId in photo data', { photoId });
+        return null;
+      }
 
       // Check if reactions were added (reactionCount increased)
       if (!after.reactionCount || after.reactionCount <= (before.reactionCount || 0)) {
