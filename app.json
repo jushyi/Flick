@@ -68,6 +68,11 @@
       "@react-native-firebase/auth",
       "./plugins/withFirebaseFix"
     ],
-    "owner": "spoodsjs"
+    "owner": "spoodsjs",
+    "extra": {
+      "eas": {
+        "projectId": "d604ae31-6cc9-4459-9b96-cf3d84f85099"
+      }
+    }
   }
 }
