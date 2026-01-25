@@ -1,6 +1,35 @@
 # Project Milestones: Lapse Clone
 
-## v1.5 Camera Performance & UX Polish (Shipped: 2026-01-23)
+## v0.6 Code Quality, Security & Documentation (Shipped: 2026-01-25)
+
+**Delivered:** Comprehensive codebase cleanup with linting, security hardening with Firestore rules and SecureStore, full test suite, component refactoring into hooks, and complete project documentation.
+
+**Phases completed:** 19-29 (26 plans total, including 4 inserted phases: 21.1, 21.2, 21.3, 28.1)
+
+**Key accomplishments:**
+
+- ESLint 9 + Prettier + Husky pre-commit hooks for automated code quality enforcement
+- Security hardening: API key remediation, Firestore rules audit, Cloud Functions Zod validation
+- SecureStore for iOS Keychain encrypted storage with comprehensive 6-step secure logout
+- Privacy features: Settings screen, legal screens, and full account deletion flow with re-auth
+- Jest test suite: 25 unit tests across 6 service files + 6 integration tests for flows
+- Component refactoring: 4 major components extracted into custom hooks (SwipeablePhotoCard, CameraScreen, DarkroomScreen, PhotoDetailModal)
+- Project documentation: README.md, CONTRIBUTING.md, ANIMATIONS.md, and JSDoc on all services
+
+**Stats:**
+
+- 196 files changed
+- 38,154 lines added, 7,940 removed (net +30,214)
+- 15 phases (11 planned + 4 inserted), 26 plans
+- 4.6 hours execution time (3 days elapsed)
+
+**Git range:** `c8b7c7b` (docs 19) → `ce1f9b7` (docs 29-03)
+
+**What's next:** TestFlight submission, App Store preparation
+
+---
+
+## v0.5 Camera Performance & UX Polish (Shipped: 2026-01-23)
 
 **Delivered:** Instant camera capture with background uploads, redesigned darkroom UI with fluid triage animations, batched undo system, and notification feed.
 
@@ -28,7 +57,7 @@
 
 ---
 
-## v1.4 Production Ready (Shipped: 2026-01-20)
+## v0.4 Production Ready (Shipped: 2026-01-20)
 
 **Delivered:** Production-ready iOS build with Firebase Modular API migration, Instagram-style Stories feature, Oly branding, server-side darkroom reveals, and verified push notifications.
 
@@ -56,7 +85,7 @@
 
 ---
 
-## v1.3 Firebase SDK Consolidation (Shipped: 2026-01-19)
+## v0.3 Firebase SDK Consolidation (Shipped: 2026-01-19)
 
 **Delivered:** Consolidated all Firebase operations to React Native Firebase SDK, eliminating JS SDK and unifying auth state across Firestore and Storage.
 
@@ -83,7 +112,7 @@
 
 ---
 
-## v1.2 Phone Authentication (Shipped: 2026-01-19)
+## v0.2 Phone Authentication (Shipped: 2026-01-19)
 
 **Delivered:** Migrated authentication from email/Apple Sign-In to phone-only with SMS verification, removing legacy auth code and adding polish.
 
@@ -107,11 +136,11 @@
 
 **Git range:** `b72b9d4` (chore 06-01) → `44b236f` (docs 08-03)
 
-**What's next:** v1.3 or production release - TestFlight distribution, remote notification testing, final bug fixes
+**What's next:** v0.3 or production release - TestFlight distribution, remote notification testing, final bug fixes
 
 ---
 
-## v1.1 Camera/Darkroom UX Refactor (Shipped: 2026-01-12)
+## v0.1 Camera/Darkroom UX Refactor (Shipped: 2026-01-12)
 
 **Delivered:** Unified camera and darkroom experience with native iOS gestures, press-and-hold reveals, swipe-to-triage actions, and visual polish.
 

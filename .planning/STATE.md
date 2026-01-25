@@ -2,38 +2,38 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-23)
+See: .planning/PROJECT.md (updated 2026-01-25)
 
 **Core value:** Instant, delightful photo capture and reveal experience - photos capture without blocking, triage flows like flipping through a deck of cards, and every interaction feels responsive with haptic feedback.
-**Current focus:** v1.6 Code Quality, Security & Documentation - codebase cleanup, security hardening, and documentation
+**Current focus:** Planning next milestone - TestFlight submission or new features
 
 ## Current Position
 
-Phase: 29 of 30 (Documentation)
-Plan: 3 of 3 in current phase
-Status: Milestone v1.6 complete
-Last activity: 2026-01-25 - Completed 29-03-PLAN.md (JSDoc service documentation)
+Phase: 29 of 29 (Documentation) - MILESTONE COMPLETE
+Plan: Complete
+Status: v0.6 shipped, planning next milestone
+Last activity: 2026-01-25 - v0.6 milestone complete
 
-Progress: ████████░░ ~80%
+Progress: ██████████ 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 100 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 26 in v1.6)
+- Total plans completed: 100 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6)
 - Average duration: 16 min
-- Total execution time: 18.9 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 4.6h v1.6)
+- Total execution time: 18.9 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6)
 
 **By Milestone:**
 
 | Milestone | Phases  | Plans | Execution Time |
 | --------- | ------- | ----- | -------------- |
-| v1.1      | 1-5     | 8     | 4.3 hours      |
-| v1.2      | 6-8     | 8     | 2.1 hours      |
-| v1.3      | 9-10    | 4     | 42 min         |
-| v1.4      | 11-14   | 17    | 136 min        |
-| v1.5      | 15-18.6 | 37    | 390 min        |
-| v1.6      | 19-29   | 26    | 311 min        |
+| v0.1      | 1-5     | 8     | 4.3 hours      |
+| v0.2      | 6-8     | 8     | 2.1 hours      |
+| v0.3      | 9-10    | 4     | 42 min         |
+| v0.4      | 11-14   | 17    | 136 min        |
+| v0.5      | 15-18.6 | 37    | 390 min        |
+| v0.6      | 19-29   | 26    | 311 min        |
 
 ## Accumulated Context
 
@@ -139,24 +139,23 @@ None.
 
 ### Shipped Milestones
 
-- **v1.1** Camera/Darkroom UX Refactor: 5 phases, 8 plans - shipped 2026-01-12
-- **v1.2** Phone Authentication: 3 phases, 8 plans - shipped 2026-01-19
-- **v1.3** Firebase SDK Consolidation: 2 phases, 4 plans - shipped 2026-01-19
-- **v1.4** Production Ready: 8 phases, 17 plans - shipped 2026-01-20
-- **v1.5** Camera Performance & UX Polish: 22 phases, 37 plans - shipped 2026-01-23
+- **v0.1** Camera/Darkroom UX Refactor: 5 phases, 8 plans - shipped 2026-01-12
+- **v0.2** Phone Authentication: 3 phases, 8 plans - shipped 2026-01-19
+- **v0.3** Firebase SDK Consolidation: 2 phases, 4 plans - shipped 2026-01-19
+- **v0.4** Production Ready: 8 phases, 17 plans - shipped 2026-01-20
+- **v0.5** Camera Performance & UX Polish: 22 phases, 37 plans - shipped 2026-01-23
+- **v0.6** Code Quality, Security & Documentation: 15 phases, 26 plans - shipped 2026-01-25
 
-**Total:** 40 phases, 74 plans, 14.3 hours execution time across 5 milestones
+**Total:** 55 phases, 100 plans, 18.9 hours execution time across 6 milestones
 
 ### Roadmap Evolution
 
-- Milestone v1.6 created: Code quality, security hardening, and documentation, 11 phases (Phase 19-29)
-- Phase 21.1 inserted after Phase 21: API Key Exposure Remediation (URGENT) - Security incident response for exposed GoogleService-Info.plist
-- Phase 21.2 inserted after Phase 21.1: EAS Secure Google Services File - Configure EAS file environment variables for secure plist handling during builds
-- Phase 21.3 inserted after Phase 21.2: App Crashes When Inputting Phone Number (URGENT) - User-facing crash during phone input
-- Phase 28.1 inserted after Phase 28: Fix Photo Upload Permission Denied (URGENT) - Firestore security rules blocking photo document updates after Storage upload
+- Milestone v0.6 complete: Code quality, security hardening, and documentation - shipped 2026-01-25
+- 4 phases inserted during v0.6: 21.1, 21.2, 21.3 (security/auth fixes), 28.1 (Firestore rules fix)
+- Version scheme changed from v1.x to v0.x (v1.0 reserved for TestFlight release)
 
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 29-03-PLAN.md (JSDoc documentation) - Ready for /gsd:complete-milestone
+Stopped at: v0.6 milestone complete, ready for next milestone planning
 Resume file: None
