@@ -344,7 +344,7 @@ const FeedScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Rewind</Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate('Notifications')}
+          onPress={() => navigation.navigate('Activity')}
           style={styles.notificationButton}
         >
           <Ionicons name="heart-outline" size={24} color={colors.text.primary} />

@@ -23,6 +23,7 @@ import FriendsListScreen from '../screens/FriendsListScreen';
 import UserSearchScreen from '../screens/UserSearchScreen';
 import FriendRequestsScreen from '../screens/FriendRequestsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import ActivityScreen from '../screens/ActivityScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
@@ -240,7 +241,7 @@ const linking = {
         },
       },
       Darkroom: 'darkroom',
-      Notifications: 'notifications',
+      Activity: 'notifications',
       FriendsList: 'friends',
       UserSearch: 'friends/search',
       FriendRequests: 'friends/requests',
@@ -345,8 +346,8 @@ const AppNavigator = () => {
                 }}
               />
               <Stack.Screen
-                name="Notifications"
-                component={NotificationsScreen}
+                name="Activity"
+                component={ActivityScreen}
                 options={{
                   presentation: 'card',
                   animation: 'slide_from_right',
