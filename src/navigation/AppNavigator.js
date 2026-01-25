@@ -309,61 +309,67 @@ const AppNavigator = () => {
   const needsProfileSetup =
     isAuthenticated && userProfile && userProfile.profileSetupCompleted !== true;
 
+  // Wrap with PhoneAuthProvider when not authenticated to share confirmation ref
+  // between PhoneInputScreen and VerificationScreen without serialization crash
+  const Wrapper = !isAuthenticated ? PhoneAuthProvider : ({ children }) => children;
+
   return (
-    <NavigationContainer ref={navigationRef} linking={linking}>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          gestureEnabled: true,
-          gestureDirection: 'horizontal',
-        }}
-      >
-        {!isAuthenticated ? (
-          // Auth Stack - Phone-only authentication
-          // Wrapped in PhoneAuthProvider to share confirmation ref between screens
-          // This prevents serialization crash when passing Firebase ConfirmationResult
-          <PhoneAuthProvider>
-            <Stack.Screen name="PhoneInput" component={PhoneInputScreen} />
-            <Stack.Screen name="Verification" component={VerificationScreen} />
-          </PhoneAuthProvider>
-        ) : needsProfileSetup ? (
-          // Profile Setup - User logged in but needs to complete profile
-          <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-        ) : (
-          // Main App - User fully authenticated and profile complete
-          <>
-            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-            <Stack.Screen
-              name="Darkroom"
-              component={DarkroomScreen}
-              options={{
-                presentation: 'card',
-                animation: 'slide_from_bottom',
-                gestureEnabled: false, // Disable back swipe to prevent accidental exit
-              }}
-            />
-            <Stack.Screen
-              name="Success"
-              component={SuccessScreen}
-              options={{
-                presentation: 'card',
-                animation: 'slide_from_right',
-                gestureEnabled: false, // Prevent accidental back swipe
-              }}
-            />
-            <Stack.Screen
-              name="Notifications"
-              component={NotificationsScreen}
-              options={{
-                presentation: 'card',
-                animation: 'slide_from_right',
-                headerShown: false,
-              }}
-            />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Wrapper>
+      <NavigationContainer ref={navigationRef} linking={linking}>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: true,
+            gestureDirection: 'horizontal',
+          }}
+        >
+          {!isAuthenticated ? (
+            // Auth Stack - Phone-only authentication
+            // PhoneAuthProvider wraps NavigationContainer (see below) to share
+            // confirmation ref between screens without serialization crash
+            <>
+              <Stack.Screen name="PhoneInput" component={PhoneInputScreen} />
+              <Stack.Screen name="Verification" component={VerificationScreen} />
+            </>
+          ) : needsProfileSetup ? (
+            // Profile Setup - User logged in but needs to complete profile
+            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+          ) : (
+            // Main App - User fully authenticated and profile complete
+            <>
+              <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+              <Stack.Screen
+                name="Darkroom"
+                component={DarkroomScreen}
+                options={{
+                  presentation: 'card',
+                  animation: 'slide_from_bottom',
+                  gestureEnabled: false, // Disable back swipe to prevent accidental exit
+                }}
+              />
+              <Stack.Screen
+                name="Success"
+                component={SuccessScreen}
+                options={{
+                  presentation: 'card',
+                  animation: 'slide_from_right',
+                  gestureEnabled: false, // Prevent accidental back swipe
+                }}
+              />
+              <Stack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
+                options={{
+                  presentation: 'card',
+                  animation: 'slide_from_right',
+                  headerShown: false,
+                }}
+              />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Wrapper>
   );
 };
 
