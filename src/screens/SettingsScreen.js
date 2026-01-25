@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,10 +21,7 @@ const SettingsScreen = () => {
 
   const handleDeleteAccount = () => {
     logger.debug('SettingsScreen: Delete Account pressed');
-    // Delete Account will be implemented in Plan 02
-    Alert.alert('Coming Soon', 'Account deletion will be available in the next update.', [
-      { text: 'OK' },
-    ]);
+    navigation.navigate('DeleteAccount');
   };
 
   const menuItems = [

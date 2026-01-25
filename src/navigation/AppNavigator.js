@@ -26,6 +26,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
+import DeleteAccountScreen from '../screens/DeleteAccountScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -51,7 +52,7 @@ const FriendsStackNavigator = () => {
 };
 
 /**
- * Profile Stack Navigator (Profile, Settings, PrivacyPolicy, TermsOfService)
+ * Profile Stack Navigator (Profile, Settings, PrivacyPolicy, TermsOfService, DeleteAccount)
  */
 const ProfileStackNavigator = () => {
   return (
@@ -64,6 +65,7 @@ const ProfileStackNavigator = () => {
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
     </Stack.Navigator>
   );
 };
@@ -271,6 +273,7 @@ const linking = {
               Settings: 'profile/settings',
               PrivacyPolicy: 'profile/privacy',
               TermsOfService: 'profile/terms',
+              DeleteAccount: 'profile/delete-account',
             },
           },
           Friends: {
@@ -337,12 +340,12 @@ const AppNavigator = () => {
   const needsProfileSetup =
     isAuthenticated && userProfile && userProfile.profileSetupCompleted !== true;
 
-  // Wrap with PhoneAuthProvider when not authenticated to share confirmation ref
-  // between PhoneInputScreen and VerificationScreen without serialization crash
-  const Wrapper = !isAuthenticated ? PhoneAuthProvider : ({ children }) => children;
+  // Always wrap with PhoneAuthProvider to share confirmation ref
+  // between PhoneInputScreen/VerificationScreen during auth, and for
+  // DeleteAccountScreen re-authentication flow when already logged in
 
   return (
-    <Wrapper>
+    <PhoneAuthProvider>
       <NavigationContainer ref={navigationRef} linking={linking}>
         <Stack.Navigator
           screenOptions={{
@@ -397,7 +400,7 @@ const AppNavigator = () => {
           )}
         </Stack.Navigator>
       </NavigationContainer>
-    </Wrapper>
+    </PhoneAuthProvider>
   );
 };
 
