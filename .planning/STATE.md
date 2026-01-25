@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 28 of 30 (Code Refactoring)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-25 - Completed 28-03-PLAN.md (DarkroomScreen refactoring)
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-01-25 - Completed 28-04-PLAN.md (FeedPhotoCard + PhotoDetailModal refactoring)
 
-Progress: ██████░░░░ ~65%
+Progress: ██████░░░░ ~70%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 95 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 21 in v1.6)
+- Total plans completed: 96 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 22 in v1.6)
 - Average duration: 16 min
-- Total execution time: 18.2 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 3.9h v1.6)
+- Total execution time: 18.4 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 4.1h v1.6)
 
 **By Milestone:**
 
@@ -33,7 +33,7 @@ Progress: ██████░░░░ ~65%
 | v1.3      | 9-10    | 4     | 42 min         |
 | v1.4      | 11-14   | 17    | 136 min        |
 | v1.5      | 15-18.6 | 37    | 390 min        |
-| v1.6      | 19-28   | 21    | 268 min        |
+| v1.6      | 19-28   | 22    | 280 min        |
 
 ## Accumulated Context
 
@@ -124,6 +124,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 28-02         | Layout constants duplicated in hook and styles        | Both need FOOTER_HEIGHT, TAB_BAR_HEIGHT for calculations/positioning                 |
 | 28-03         | Single useDarkroom hook for all logic                 | Triage logic is cohesive (undo stack, batch save, hidden photos)                     |
 | 28-03         | Component at 277 lines with 4 render states           | 4 distinct render branches (loading, success, empty, main) require more JSX          |
+| 28-04         | FeedPhotoCard styles-only extraction                  | Presentational component with no significant state - hook unnecessary                |
+| 28-04         | PhotoDetailModal full hook extraction                 | Has PanResponder, animated values, reaction state - warrants full extraction         |
 
 ### Deferred Issues
 
@@ -153,5 +155,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 28-03-PLAN.md (DarkroomScreen refactoring) - Plan 3 of 4 in Phase 28
+Stopped at: Completed 28-04-PLAN.md (Phase 28 complete) - Ready for Phase 29
 Resume file: None

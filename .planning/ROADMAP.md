@@ -306,14 +306,14 @@ Plans:
 **Depends on**: Phase 27 (tests written first)
 **Research**: Unlikely (internal patterns)
 **Plans**: 4
-**Status**: In progress
+**Status**: Complete
 
 Plans:
 
 - [x] 28-01: Infrastructure + SwipeablePhotoCard refactoring - completed 2026-01-25
 - [x] 28-02: CameraScreen refactoring - completed 2026-01-25
 - [x] 28-03: DarkroomScreen refactoring - completed 2026-01-25
-- [ ] 28-04: Remaining components refactoring
+- [x] 28-04: FeedPhotoCard + PhotoDetailModal refactoring - completed 2026-01-25
 
 #### Phase 29: Documentation
 
@@ -340,5 +340,5 @@ Plans:
 | 25. Authentication and Data Security | v1.6 | 2/2 | Complete | 2026-01-25 |
 | 26. Privacy Features | v1.6 | 2/2 | Complete | 2026-01-25 |
 | 27. Test Suite Setup | v1.6 | 4/4 | Complete | 2026-01-25 |
-| 28. Code Refactoring | v1.6 | 3/4 | In progress | - |
+| 28. Code Refactoring | v1.6 | 4/4 | Complete | 2026-01-25 |
 | 29. Documentation | v1.6 | 0/? | Not started | - |
