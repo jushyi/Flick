@@ -147,13 +147,12 @@ service cloud.firestore {
                        request.resource.data.status == 'pending' &&
                        request.resource.data.keys().hasAll(['user1Id', 'user2Id', 'status', 'requestedBy', 'createdAt']);
 
-      // Update: Users can accept/decline requests they received
+      // Update: Only recipient (not requester) can accept, and only status/acceptedAt fields can change
+      // Security: Prevents requester from accepting their own request
+      // Security: Restricts field changes to prevent data tampering
       allow update: if isFriendshipMember(resource.data) &&
-                       // User can only accept requests sent TO them
-                       (request.resource.data.status == 'accepted' &&
-                        resource.data.requestedBy != request.auth.uid) ||
-                       // Or update other friendship data if they're a member
-                       isFriendshipMember(request.resource.data);
+                       resource.data.requestedBy != request.auth.uid &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt']);
 
       // Delete: Users can delete friendships they're part of (unfriend/cancel request)
       allow delete: if isFriendshipMember(resource.data);
@@ -174,10 +173,11 @@ service cloud.firestore {
       // Users cannot create notifications directly
       allow create: if false;
 
-      // Users can update their own notifications (e.g., mark as read)
+      // Users can update their own notifications (only mark as read)
+      // Security: Restricts updates to read/readAt fields only, preventing content modification
       allow update: if isAuthenticated() &&
                        resource.data.recipientId == request.auth.uid &&
-                       request.resource.data.recipientId == resource.data.recipientId;
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
 
       // Users can delete their own notifications
       allow delete: if isAuthenticated() &&
