@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 
 ## Current Position
 
-Phase: 21.3 of 30 (App Crashes When Inputting Phone Number)
-Plan: 1 of 1 in current phase + FIX
-Status: Phase complete (UAT-001 resolved)
-Last activity: 2026-01-24 - Completed 21.3-01-FIX.md
+Phase: 22 of 30 (Environment and Configuration)
+Plan: 1 of 1 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 22-01-PLAN.md
 
-Progress: ██░░░░░░░░ ~20%
+Progress: ██░░░░░░░░ ~25%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 81 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 7 in v1.6)
+- Total plans completed: 82 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 8 in v1.6)
 - Average duration: 16 min
-- Total execution time: 15.4 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 1.1h v1.6)
+- Total execution time: 15.6 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 1.3h v1.6)
 
 **By Milestone:**
 
@@ -33,7 +33,7 @@ Progress: ██░░░░░░░░ ~20%
 | v1.3      | 9-10    | 4     | 42 min         |
 | v1.4      | 11-14   | 17    | 136 min        |
 | v1.5      | 15-18.6 | 37    | 390 min        |
-| v1.6      | 19-21.3 | 7     | 71 min         |
+| v1.6      | 19-22   | 8     | 83 min         |
 
 ## Accumulated Context
 
@@ -96,6 +96,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 21.3-01       | React Context for cross-screen sharing               | Cleaner than navigation params, no serialization                                     |
 | 21.3-01-FIX   | New iOS OAuth client for com.spoodsjs.oly            | Old client was for wrong bundle ID (com.lapseclone.app)                              |
 | 21.3-01-FIX   | REVERSED_CLIENT_ID in URL schemes                    | Required for Firebase Phone Auth reCAPTCHA callback                                  |
+| 22-01         | grep pattern matching for secret detection           | No external dependencies, runs in husky pre-commit                                   |
+| 22-01         | .secretsignore for exception handling                | Allows intentional commits of files matching secret patterns                         |
 
 ### Deferred Issues
 
@@ -125,5 +127,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-24
-Stopped at: Completed 21.3-01-FIX.md (Phone Crash UAT-001 Resolved)
+Stopped at: Completed 22-01-PLAN.md (Environment Configuration)
 Resume file: None
