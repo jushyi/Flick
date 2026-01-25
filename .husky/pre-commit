@@ -1,1 +1,45 @@
+#!/usr/bin/env sh
+
+# Run lint-staged for code formatting
 npx lint-staged
+
+# Check for accidentally staged secrets
+# Matches common sensitive file patterns that should never be committed
+STAGED_SECRETS=$(git diff --cached --name-only | grep -iE "(GoogleService-Info\.plist|google-services\.json|\.env$|\.env\.local|\.env\.development|\.env\.production|\.p8$|\.p12$|\.key$|\.mobileprovision$)" || true)
+
+if [ -n "$STAGED_SECRETS" ]; then
+  # Check if files are in .secretsignore (intentional exceptions)
+  SECRETS_TO_BLOCK=""
+
+  if [ -f ".secretsignore" ]; then
+    while IFS= read -r staged_file; do
+      # Check if file is in .secretsignore
+      if ! grep -qxF "$staged_file" .secretsignore 2>/dev/null; then
+        SECRETS_TO_BLOCK="$SECRETS_TO_BLOCK$staged_file
+"
+      fi
+    done <<EOF
+$STAGED_SECRETS
+EOF
+  else
+    SECRETS_TO_BLOCK="$STAGED_SECRETS"
+  fi
+
+  # Remove trailing newline
+  SECRETS_TO_BLOCK=$(echo "$SECRETS_TO_BLOCK" | sed '/^$/d')
+
+  if [ -n "$SECRETS_TO_BLOCK" ]; then
+    echo ""
+    echo "========================================"
+    echo "ERROR: Potentially sensitive files staged for commit:"
+    echo "========================================"
+    echo "$SECRETS_TO_BLOCK"
+    echo ""
+    echo "These files should not be committed. Please unstage them:"
+    echo "  git reset HEAD <file>"
+    echo ""
+    echo "If this is intentional (e.g., test fixtures), add the file path to .secretsignore"
+    echo "========================================"
+    exit 1
+  fi
+fi
