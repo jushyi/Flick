@@ -115,6 +115,7 @@ Plans:
 - [x] 30-03: App Configuration - app.json identity, Oly references removed + FIX (ISS-002 deferred)
 - [x] 30-04: Animated Splash Rebrand - Purple blades on dark background with blur-to-focus effect
 - [x] 30-05: Darkroom Design Tokens - Purple→pink color storytelling for reveal animation
+- [x] 30-FIX: EAS ProjectId Mismatch Resolution - Reinitialize EAS for Rewind slug, dev build enabled
 
 #### Phase 31: Personalization Scaffolding
 

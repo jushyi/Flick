@@ -130,6 +130,7 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 29-01         | Minimal documentation style                           | Match CLAUDE.md tone, no emojis, practical rather than formal                        |
 | 30-05         | Purple base with pink fill for hold button            | Creates "anticipation → payoff" visual storytelling in reveal animation              |
 | 30-03-FIX     | Defer external dashboard rebranding to TestFlight     | OAuth brand verification is heavyweight for admin-only visibility                    |
+| 30-FIX        | Reinitialize EAS with new project for Rewind slug     | Cleaner than renaming old Oly project, avoids potential state issues                 |
 
 ### Deferred Issues
 
@@ -161,5 +162,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 30-03-FIX-PLAN.md (external dashboard rebranding deferred to ISS-002)
+Stopped at: Completed 30-FIX-PLAN.md (EAS projectId mismatch resolved, dev build enabled)
 Resume file: None
