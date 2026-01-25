@@ -192,7 +192,7 @@ const UserSearchScreen = ({ navigation }) => {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>🔍</Text>
           <Text style={styles.emptyTitle}>Search for friends</Text>
-          <Text style={styles.emptyText}>Enter a username to find friends on Lapse</Text>
+          <Text style={styles.emptyText}>Enter a username to find friends on Rewind</Text>
         </View>
       );
     }

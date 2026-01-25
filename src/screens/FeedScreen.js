@@ -342,7 +342,7 @@ const FeedScreen = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Lapse</Text>
+        <Text style={styles.headerTitle}>Rewind</Text>
         <TouchableOpacity
           onPress={() => navigation.navigate('Notifications')}
           style={styles.notificationButton}

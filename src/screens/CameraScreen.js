@@ -242,7 +242,7 @@ const CameraScreen = () => {
     return (
       <View style={styles.permissionContainer}>
         <Text style={styles.permissionTitle}>Camera Access Required</Text>
-        <Text style={styles.permissionText}>Lapse needs access to your camera to take photos</Text>
+        <Text style={styles.permissionText}>Rewind needs access to your camera to take photos</Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
