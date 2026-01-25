@@ -133,11 +133,11 @@ Plans:
 **Goal**: 4 tabs → 3 tabs (Feed, Camera center, Profile) - Instagram-style layout
 **Depends on**: Phase 31
 **Research**: Unlikely (established patterns)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
 
-- [ ] 32-01: TBD
+- [x] 32-01: Restructure tabs and relocate Friends screens to root stack
 
 #### Phase 33: Feed Header & Notifications
 
@@ -236,7 +236,7 @@ Plans:
 | 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete    | 2026-01-23 |
 | 30. Rewind Rebrand                             | v0.7      | 5/5            | Complete    | 2026-01-25 |
 | 31. Personalization Scaffolding                | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 32. Navigation Restructure                     | v0.7      | 0/?            | Not started | -          |
+| 32. Navigation Restructure                     | v0.7      | 1/1            | Complete    | 2026-01-25 |
 | 33. Feed Header & Notifications                | v0.7      | 0/?            | Not started | -          |
 | 34. Feed Card Redesign                         | v0.7      | 0/?            | Not started | -          |
 | 35. Stories Redesign                           | v0.7      | 0/?            | Not started | -          |
