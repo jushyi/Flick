@@ -129,10 +129,12 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 28.1-01       | Conditional immutability for imageURL                 | Allow empty→non-empty (initial set), block non-empty→any (tampering)                 |
 | 29-01         | Minimal documentation style                           | Match CLAUDE.md tone, no emojis, practical rather than formal                        |
 | 30-05         | Purple base with pink fill for hold button            | Creates "anticipation → payoff" visual storytelling in reveal animation              |
+| 30-03-FIX     | Defer external dashboard rebranding to TestFlight     | OAuth brand verification is heavyweight for admin-only visibility                    |
 
 ### Deferred Issues
 
 - TestFlight submission (requires App Store Connect setup)
+- ISS-002: External dashboard rebranding (Firebase, Google Cloud, Expo) - batch with TestFlight prep
 
 ### Blockers/Concerns
 
@@ -159,5 +161,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 30-05-PLAN.md (Phase 30 complete)
+Stopped at: Completed 30-03-FIX-PLAN.md (external dashboard rebranding deferred to ISS-002)
 Resume file: None

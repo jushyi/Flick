@@ -4,6 +4,19 @@ Enhancements discovered during execution. Not critical - address in future phase
 
 ## Open Enhancements
 
+### ISS-002: Update external service dashboard names to "Rewind"
+
+- **Discovered:** Phase 30-03-FIX (2026-01-25)
+- **Type:** Branding
+- **Description:** Firebase Console, Google Cloud Console, and Expo Dashboard still show "Oly" as the project name. Updating requires OAuth brand verification through Google Cloud Console, which is a heavyweight process.
+- **Services affected:**
+  - Firebase Console: Public-facing name
+  - Google Cloud Console: Project display name, OAuth client names
+  - Expo Dashboard: Project slug mismatch (projectId points to "Oly")
+- **Impact:** None for users (admin-only visibility)
+- **Effort:** Medium (OAuth brand verification process)
+- **Suggested phase:** TestFlight preparation (batch with other pre-launch requirements)
+
 ### ISS-001: Add true 0.5x ultra-wide zoom via lens switching
 
 - **Discovered:** Phase 15.2-01-FIX4 (2026-01-21)
@@ -20,4 +33,5 @@ Enhancements discovered during execution. Not critical - address in future phase
 [None yet]
 
 ---
-*Last updated: 2026-01-21*
+
+_Last updated: 2026-01-25_

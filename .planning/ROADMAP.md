@@ -112,7 +112,7 @@ Plans:
 
 - [x] 30-01: Design Tokens - Rewind brand palette with purple/pink gradients
 - [x] 30-02: Brand Assets - Cassette tape icon, splash screen, favicon
-- [x] 30-03: App Configuration - app.json identity, Oly references removed
+- [x] 30-03: App Configuration - app.json identity, Oly references removed + FIX (ISS-002 deferred)
 - [x] 30-04: Animated Splash Rebrand - Purple blades on dark background with blur-to-focus effect
 - [x] 30-05: Darkroom Design Tokens - Purple→pink color storytelling for reveal animation
 
