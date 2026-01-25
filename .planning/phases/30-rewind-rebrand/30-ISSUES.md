@@ -6,9 +6,47 @@
 
 ## Open Issues
 
-[None]
+None.
 
 ## Resolved Issues
+
+### UAT-003: Dark theme not applied to Feed, Profile, Friends, Auth screens
+
+**Discovered:** 2026-01-25
+**Resolved:** 2026-01-25
+**Phase/Plan:** 30-01, 30-03 → Fixed in 30-FIX-2
+**Severity:** Major
+**Feature:** Dark Mode Default
+**Description:** Only Camera and Darkroom screens have dark backgrounds. Feed, Profile, Friends list, and Auth screens still use light/white backgrounds.
+
+**Resolution:**
+Applied dark theme using design tokens from colors.js to 8 screens:
+
+- FeedScreen: background, header, stories, buttons
+- ProfileScreen: background, header, stats, placeholder
+- FriendsListScreen: background, search input, list items
+- FriendRequestsScreen: background, tabs, badges
+- UserSearchScreen: background, search input, results
+- PhoneInputScreen: background, form inputs, country picker modal
+- VerificationScreen: background, code input, timer text
+- ProfileSetupScreen: background, photo placeholder, form
+
+### UAT-002: Animated splash should have black blades on transparent camera background
+
+**Discovered:** 2026-01-25
+**Resolved:** 2026-01-25
+**Phase/Plan:** 30-04 → Fixed in 30-FIX-2
+**Severity:** Minor
+**Feature:** Animated Splash Screen
+**Description:** User wants splash screen to show black aperture blades with transparent background revealing the camera screen underneath, not purple blades on solid dark background.
+
+**Resolution:**
+Simplified AnimatedSplash to blur-focus effect only:
+
+- Removed aperture blade animation entirely
+- Kept blur-to-focus lens effect
+- Made animation 2x faster (300ms blur, 150ms fade)
+- Total animation time ~450ms (was ~1700ms)
 
 ### UAT-001: EAS projectId mismatch prevents app launch
 
