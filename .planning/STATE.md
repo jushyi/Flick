@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 
 ## Current Position
 
-Phase: 28 of 30 (Code Refactoring)
-Plan: 4 of 4 in current phase
+Phase: 28.1 of 30 (Fix Photo Upload Permission Denied)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-25 - Completed 28-04-PLAN.md (FeedPhotoCard + PhotoDetailModal refactoring)
+Last activity: 2026-01-25 - Completed 28.1-01-PLAN.md (Firestore security rules fix)
 
-Progress: ██████░░░░ ~70%
+Progress: ██████░░░░ ~72%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 96 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 22 in v1.6)
+- Total plans completed: 97 (8 in v1.1 + 8 in v1.2 + 4 in v1.3 + 17 in v1.4 + 37 in v1.5 + 23 in v1.6)
 - Average duration: 16 min
-- Total execution time: 18.4 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 4.1h v1.6)
+- Total execution time: 18.6 hours (4.3h v1.1 + 2.1h v1.2 + 0.7h v1.3 + 1.4h v1.4 + 5.8h v1.5 + 4.3h v1.6)
 
 **By Milestone:**
 
@@ -33,7 +33,7 @@ Progress: ██████░░░░ ~70%
 | v1.3      | 9-10    | 4     | 42 min         |
 | v1.4      | 11-14   | 17    | 136 min        |
 | v1.5      | 15-18.6 | 37    | 390 min        |
-| v1.6      | 19-28   | 22    | 280 min        |
+| v1.6      | 19-28.1 | 23    | 289 min        |
 
 ## Accumulated Context
 
@@ -126,6 +126,7 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 28-03         | Component at 277 lines with 4 render states           | 4 distinct render branches (loading, success, empty, main) require more JSX          |
 | 28-04         | FeedPhotoCard styles-only extraction                  | Presentational component with no significant state - hook unnecessary                |
 | 28-04         | PhotoDetailModal full hook extraction                 | Has PanResponder, animated values, reaction state - warrants full extraction         |
+| 28.1-01       | Conditional immutability for imageURL                 | Allow empty→non-empty (initial set), block non-empty→any (tampering)                 |
 
 ### Deferred Issues
 
@@ -151,9 +152,10 @@ None.
 - Phase 21.1 inserted after Phase 21: API Key Exposure Remediation (URGENT) - Security incident response for exposed GoogleService-Info.plist
 - Phase 21.2 inserted after Phase 21.1: EAS Secure Google Services File - Configure EAS file environment variables for secure plist handling during builds
 - Phase 21.3 inserted after Phase 21.2: App Crashes When Inputting Phone Number (URGENT) - User-facing crash during phone input
+- Phase 28.1 inserted after Phase 28: Fix Photo Upload Permission Denied (URGENT) - Firestore security rules blocking photo document updates after Storage upload
 
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 28-04-PLAN.md (Phase 28 complete) - Ready for Phase 29
+Stopped at: Completed 28.1-01-PLAN.md (Phase 28.1 complete) - Ready for Phase 29
 Resume file: None

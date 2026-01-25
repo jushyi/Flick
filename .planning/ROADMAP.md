@@ -315,6 +315,31 @@ Plans:
 - [x] 28-03: DarkroomScreen refactoring - completed 2026-01-25
 - [x] 28-04: FeedPhotoCard + PhotoDetailModal refactoring - completed 2026-01-25
 
+#### Phase 28.1: Fix Photo Upload Permission Denied (INSERTED)
+
+**Goal**: Fix Firestore permission-denied error when updating photo document after Storage upload
+**Depends on**: Phase 28
+**Research**: Complete (logs show UploadQueueService can upload to Storage but fails to update Firestore document)
+**Plans**: 1
+**Status**: Complete
+**Priority**: URGENT - Photos not saving properly
+
+**Root Cause Analysis:**
+
+- Storage upload succeeds: `StorageService.uploadPhoto: Upload successful`
+- Firestore update fails: `[firestore/permission-denied] The caller does not have permission to execute the specified operation`
+- The UploadQueueService creates a placeholder document, uploads to Storage, then tries to update the document with the URL
+- Security rules were blocking the update operation (immutablePhotoFieldsUnchanged required imageURL to be unchanged)
+
+**Fix Applied:**
+
+- Modified `immutablePhotoFieldsUnchanged()` to allow imageURL to change from empty to non-empty (initial set)
+- imageURL still protected once set (prevents tampering)
+
+Plans:
+
+- [x] 28.1-01: Fix Firestore security rules for photo document updates - completed 2026-01-25
+
 #### Phase 29: Documentation
 
 **Goal**: JSDoc on all services, document complex animation logic, update README, create CONTRIBUTING.md
@@ -341,4 +366,5 @@ Plans:
 | 26. Privacy Features | v1.6 | 2/2 | Complete | 2026-01-25 |
 | 27. Test Suite Setup | v1.6 | 4/4 | Complete | 2026-01-25 |
 | 28. Code Refactoring | v1.6 | 4/4 | Complete | 2026-01-25 |
+| 28.1 Fix Photo Upload Permission Denied | v1.6 | 1/1 | Complete | 2026-01-25 |
 | 29. Documentation | v1.6 | 0/? | Not started | - |
