@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../components';
 import { sendVerificationCode } from '../services/firebase/phoneAuthService';
 import { formatAsUserTypes } from '../utils/phoneUtils';
+import { usePhoneAuth } from '../context/PhoneAuthContext';
 import logger from '../utils/logger';
 
 /**
@@ -50,6 +51,10 @@ const PhoneInputScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+
+  // Get confirmationRef from context to store Firebase ConfirmationResult
+  // Using ref instead of navigation params prevents serialization crash on iOS
+  const { confirmationRef } = usePhoneAuth();
 
   // Shake animation for error feedback
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -89,9 +94,15 @@ const PhoneInputScreen = ({ navigation }) => {
           formattedNumber: result.formattedNumber,
         });
 
-        // Navigate to verification screen with confirmation object
+        // Store confirmation in ref (not serialized) to avoid iOS crash
+        // Firebase ConfirmationResult contains functions that cannot be serialized
+        confirmationRef.current = result.confirmation;
+        logger.debug('PhoneInputScreen: Stored confirmation in context ref', {
+          hasConfirmation: !!confirmationRef.current,
+        });
+
+        // Navigate to verification screen WITHOUT confirmation object
         navigation.navigate('Verification', {
-          confirmation: result.confirmation,
           phoneNumber: result.formattedNumber,
           e164: result.e164,
         });
