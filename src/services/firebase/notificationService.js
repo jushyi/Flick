@@ -16,7 +16,17 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { getFirestore, doc, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+  writeBatch,
+} from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
 import { secureStorage, STORAGE_KEYS } from '../secureStorageService';
 
@@ -324,6 +334,54 @@ export const scheduleTestNotification = async (title, body, seconds = 5) => {
     return { success: true, data: notificationId };
   } catch (error) {
     logger.error('Error scheduling test notification', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Mark all unread notifications as read for a user
+ * @param {string} userId - User ID whose notifications to mark as read
+ * @returns {Promise<{success: boolean, count?: number, error?: string}>}
+ */
+export const markNotificationsAsRead = async userId => {
+  try {
+    if (!userId) {
+      return { success: false, error: 'Invalid user ID' };
+    }
+
+    // Query all unread notifications for this user
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(
+      notificationsRef,
+      where('recipientId', '==', userId),
+      where('read', '==', false)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      logger.debug('markNotificationsAsRead: No unread notifications', { userId });
+      return { success: true, count: 0 };
+    }
+
+    // Batch update all unread notifications
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(docSnap => {
+      batch.update(docSnap.ref, { read: true });
+    });
+
+    await batch.commit();
+
+    logger.info('markNotificationsAsRead: Marked notifications as read', {
+      userId,
+      count: snapshot.docs.length,
+    });
+
+    return { success: true, count: snapshot.docs.length };
+  } catch (error) {
+    logger.error('markNotificationsAsRead: Failed to mark notifications as read', {
+      error: error.message,
+    });
     return { success: false, error: error.message };
   }
 };

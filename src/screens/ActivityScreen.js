@@ -42,6 +42,7 @@ import {
 } from '../services/firebase/friendshipService';
 import { getTimeAgo } from '../utils/timeUtils';
 import { mediumImpact } from '../utils/haptics';
+import { markNotificationsAsRead } from '../services/firebase/notificationService';
 import logger from '../utils/logger';
 
 const db = getFirestore();
@@ -133,6 +134,18 @@ const NotificationsTab = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  /**
+   * Mark notifications as read when tab is focused
+   */
+  useFocusEffect(
+    useCallback(() => {
+      // Only mark as read if data is loaded
+      if (!loading && user?.uid) {
+        markNotificationsAsRead(user.uid);
+      }
+    }, [loading, user?.uid])
+  );
 
   /**
    * Handle pull-to-refresh
