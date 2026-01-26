@@ -46,12 +46,17 @@ export const usePhotoDetailModal = ({
   onClose,
   onReactionToggle,
   currentUserId,
+  onFriendTransition, // Callback for friend-to-friend transition with cube animation
 }) => {
   // Stories mode: current photo index
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   // State to track if we should re-sort or freeze current order
   const [frozenOrder, setFrozenOrder] = useState(null);
   const sortTimerRef = useRef(null);
+
+  // Minimum display time tracking for rapid taps (ensures each photo is briefly visible)
+  const lastTapTimeRef = useRef(0);
+  const MIN_DISPLAY_TIME = 80; // ms - minimum time each photo is displayed
 
   // Animated values for swipe gesture
   const translateY = useRef(new Animated.Value(0)).current;
@@ -165,9 +170,19 @@ export const usePhotoDetailModal = ({
   /**
    * Navigate to previous photo in stories mode
    * Returns true if navigated, false if at first photo (caller should close)
+   * Uses minimum display time to ensure each photo is briefly visible during rapid tapping
    */
   const goPrev = useCallback(() => {
     if (mode !== 'stories') return false;
+
+    // Check minimum display time for rapid tapping
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapTimeRef.current;
+    if (timeSinceLastTap < MIN_DISPLAY_TIME) {
+      // Too fast - ignore this tap to ensure current photo is visible
+      return true; // Return true to prevent close, but don't navigate
+    }
+    lastTapTimeRef.current = now;
 
     if (currentIndex === 0) {
       logger.debug('usePhotoDetailModal: At first photo');
@@ -187,12 +202,32 @@ export const usePhotoDetailModal = ({
   /**
    * Navigate to next photo in stories mode
    * Returns true if navigated, false if at last photo (caller should close)
+   * Uses minimum display time to ensure each photo is briefly visible during rapid tapping
+   * If onFriendTransition is provided and at last photo, triggers friend transition instead of close
    */
   const goNext = useCallback(() => {
     if (mode !== 'stories') return false;
 
+    // Check minimum display time for rapid tapping
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapTimeRef.current;
+    if (timeSinceLastTap < MIN_DISPLAY_TIME) {
+      // Too fast - ignore this tap to ensure current photo is visible
+      return true; // Return true to prevent close, but don't navigate
+    }
+    lastTapTimeRef.current = now;
+
     if (currentIndex >= photos.length - 1) {
       logger.debug('usePhotoDetailModal: At last photo');
+      // Try friend-to-friend transition if available
+      if (onFriendTransition) {
+        const transitioned = onFriendTransition();
+        if (transitioned) {
+          logger.debug('usePhotoDetailModal: Transitioning to next friend');
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          return true;
+        }
+      }
       return false;
     }
 
@@ -204,7 +239,7 @@ export const usePhotoDetailModal = ({
       onPhotoChange(photos[newIndex], newIndex);
     }
     return true;
-  }, [mode, currentIndex, photos, onPhotoChange]);
+  }, [mode, currentIndex, photos, onPhotoChange, onFriendTransition]);
 
   /**
    * Handle tap navigation on photo area (stories mode only)

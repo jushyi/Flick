@@ -8,8 +8,9 @@
  * - Inline horizontal emoji picker in footer
  * - Multiple reactions per user with counts
  * - Stories mode: progress bar, tap navigation, multi-photo
+ * - 3D cube rotation for friend-to-friend transitions
  */
-import React from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,11 +20,14 @@ import {
   ScrollView,
   StatusBar,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { getTimeAgo } from '../utils/timeUtils';
 import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { styles } from '../styles/PhotoDetailModal.styles';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 /**
  * PhotoDetailModal Component
@@ -37,6 +41,8 @@ import { styles } from '../styles/PhotoDetailModal.styles';
  * @param {function} onClose - Callback to close modal
  * @param {function} onReactionToggle - Callback when emoji is toggled (emoji, currentCount)
  * @param {string} currentUserId - Current user's ID
+ * @param {function} onRequestNextFriend - Callback for friend-to-friend transition (stories mode)
+ * @param {boolean} hasNextFriend - Whether there's another friend's stories after this
  */
 const PhotoDetailModal = ({
   mode = 'feed',
@@ -48,7 +54,50 @@ const PhotoDetailModal = ({
   onClose,
   onReactionToggle,
   currentUserId,
+  onRequestNextFriend,
+  hasNextFriend = false,
 }) => {
+  // Cube transition animation for friend-to-friend
+  const cubeRotation = useRef(new Animated.Value(0)).current;
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Reset cube rotation when modal opens or friend changes
+  useEffect(() => {
+    if (visible) {
+      cubeRotation.setValue(0);
+      setIsTransitioning(false);
+    }
+  }, [visible, photos]);
+
+  /**
+   * Handle friend-to-friend transition with cube animation
+   */
+  const handleFriendTransition = useCallback(() => {
+    if (!hasNextFriend || !onRequestNextFriend || isTransitioning) return false;
+
+    setIsTransitioning(true);
+
+    // Animate cube rotation out (0 -> -90 degrees)
+    Animated.timing(cubeRotation, {
+      toValue: -90,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      // Trigger friend change callback
+      onRequestNextFriend();
+      // Reset rotation for incoming friend (from 90 -> 0)
+      cubeRotation.setValue(90);
+      Animated.timing(cubeRotation, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start(() => {
+        setIsTransitioning(false);
+      });
+    });
+
+    return true;
+  }, [hasNextFriend, onRequestNextFriend, cubeRotation, isTransitioning]);
   const {
     // Mode
     showProgressBar,
@@ -85,6 +134,7 @@ const PhotoDetailModal = ({
     onClose,
     onReactionToggle,
     currentUserId,
+    onFriendTransition: hasNextFriend ? handleFriendTransition : null,
   });
 
   // In feed mode, check photo prop; in stories mode, check currentPhoto
@@ -102,12 +152,21 @@ const PhotoDetailModal = ({
       <Animated.View style={[styles.container, { opacity }]} {...panResponder.panHandlers}>
         <StatusBar barStyle="light-content" />
 
-        {/* Animated content wrapper */}
+        {/* Animated content wrapper with cube transition */}
         <Animated.View
           style={[
             styles.contentWrapper,
             {
-              transform: [{ translateY }],
+              transform: [
+                { translateY },
+                { perspective: 1000 },
+                {
+                  rotateY: cubeRotation.interpolate({
+                    inputRange: [-90, 0, 90],
+                    outputRange: ['-90deg', '0deg', '90deg'],
+                  }),
+                },
+              ],
             },
           ]}
         >

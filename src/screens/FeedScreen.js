@@ -64,6 +64,7 @@ const FeedScreen = () => {
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [storiesModalVisible, setStoriesModalVisible] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [selectedFriendIndex, setSelectedFriendIndex] = useState(0); // Track position in friendStories for navigation
 
   // Notifications state - red dot indicator
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
@@ -167,16 +168,28 @@ const FeedScreen = () => {
     // Calculate starting index based on viewed photos
     const startIndex = getFirstUnviewedIndex(friend.topPhotos || []);
 
+    // Find index in sorted friends array for friend-to-friend navigation
+    const sortedFriends = [...friendStories].sort((a, b) => {
+      const aViewed = hasViewedAllPhotos(a.topPhotos);
+      const bViewed = hasViewedAllPhotos(b.topPhotos);
+      if (aViewed === bViewed) return 0;
+      return aViewed ? 1 : -1;
+    });
+    const friendIdx = sortedFriends.findIndex(f => f.userId === friend.userId);
+
     logger.info('FeedScreen: Opening stories viewer', {
       friendId: friend.userId,
       displayName: friend.displayName,
       startIndex,
       photoCount: friend.topPhotos?.length || 0,
+      friendIndex: friendIdx,
+      totalFriends: sortedFriends.length,
     });
 
     setStoriesInitialIndex(startIndex);
     setStoriesCurrentIndex(startIndex);
     setSelectedFriend(friend);
+    setSelectedFriendIndex(friendIdx);
     setStoriesModalVisible(true);
   };
 
@@ -187,6 +200,68 @@ const FeedScreen = () => {
   const handleStoriesPhotoChange = (photo, index) => {
     logger.debug('FeedScreen: Stories photo changed', { photoId: photo?.id, index });
     setStoriesCurrentIndex(index);
+  };
+
+  /**
+   * Get sorted friends array for consistent navigation
+   */
+  const getSortedFriends = () => {
+    return [...friendStories].sort((a, b) => {
+      const aViewed = hasViewedAllPhotos(a.topPhotos);
+      const bViewed = hasViewedAllPhotos(b.topPhotos);
+      if (aViewed === bViewed) return 0;
+      return aViewed ? 1 : -1;
+    });
+  };
+
+  /**
+   * Handle transitioning to next friend's stories (cube animation)
+   * Called when user reaches end of current friend's photos
+   */
+  const handleRequestNextFriend = () => {
+    if (!selectedFriend) return;
+
+    const sortedFriends = getSortedFriends();
+    const nextFriendIdx = selectedFriendIndex + 1;
+
+    if (nextFriendIdx >= sortedFriends.length) {
+      logger.debug('FeedScreen: No more friends, closing stories');
+      handleCloseStories();
+      return;
+    }
+
+    // Mark current friend's photos as viewed before transitioning
+    const currentPhotos = selectedFriend.topPhotos || [];
+    const photoIds = currentPhotos.map(p => p.id);
+    if (photoIds.length > 0) {
+      markPhotosAsViewed(photoIds);
+      markAsViewed(selectedFriend.userId);
+    }
+
+    // Get next friend
+    const nextFriend = sortedFriends[nextFriendIdx];
+    const nextStartIndex = getFirstUnviewedIndex(nextFriend.topPhotos || []);
+
+    logger.info('FeedScreen: Transitioning to next friend', {
+      fromFriend: selectedFriend.displayName,
+      toFriend: nextFriend.displayName,
+      nextFriendIndex: nextFriendIdx,
+      startIndex: nextStartIndex,
+    });
+
+    // Update state for next friend
+    setSelectedFriend(nextFriend);
+    setSelectedFriendIndex(nextFriendIdx);
+    setStoriesInitialIndex(nextStartIndex);
+    setStoriesCurrentIndex(nextStartIndex);
+  };
+
+  /**
+   * Check if there's a next friend available
+   */
+  const hasNextFriend = () => {
+    const sortedFriends = getSortedFriends();
+    return selectedFriendIndex < sortedFriends.length - 1;
   };
 
   /**
@@ -553,7 +628,7 @@ const FeedScreen = () => {
               {renderStoriesRow()}
               {photos.length > 0 && (
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>🔥 Hot</Text>
+                  <Text style={styles.sectionTitle}>Feed</Text>
                 </View>
               )}
             </>
@@ -586,6 +661,8 @@ const FeedScreen = () => {
           onClose={handleCloseStories}
           onReactionToggle={handleStoriesReactionToggle}
           currentUserId={user?.uid}
+          onRequestNextFriend={handleRequestNextFriend}
+          hasNextFriend={hasNextFriend()}
         />
       )}
     </SafeAreaView>
