@@ -26,7 +26,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import CommentRow from './CommentRow';
+import CommentWithReplies from './CommentWithReplies';
 import CommentInput from './CommentInput';
 import useComments from '../../hooks/useComments';
 import { colors } from '../../constants/colors';
@@ -290,45 +290,20 @@ const CommentsBottomSheet = ({
   );
 
   /**
-   * Render individual comment row
+   * Render individual comment row with replies
    */
   const renderCommentItem = useCallback(
     ({ item: comment }) => {
-      const isOwner = isOwnerComment(comment);
-      const canDelete = canDeleteComment(comment);
-
       return (
-        <View>
-          {/* Main comment */}
-          <CommentRow
-            comment={comment}
-            user={comment.user}
-            onReply={handleReply}
-            onLike={handleLike}
-            onDelete={handleDelete}
-            isOwnerComment={isOwner}
-            canDelete={canDelete}
-            isLiked={isLikedByUser(comment.id)}
-            isTopLevel={true}
-          />
-
-          {/* Replies (nested under parent) */}
-          {comment.replies?.map(reply => (
-            <View key={reply.id} style={styles.replyContainer}>
-              <CommentRow
-                comment={reply}
-                user={reply.user}
-                onReply={null}
-                onLike={handleLike}
-                onDelete={handleDelete}
-                isOwnerComment={isOwnerComment(reply)}
-                canDelete={canDeleteComment(reply)}
-                isLiked={isLikedByUser(reply.id)}
-                isTopLevel={false}
-              />
-            </View>
-          ))}
-        </View>
+        <CommentWithReplies
+          comment={comment}
+          onReply={handleReply}
+          onLike={handleLike}
+          onDelete={handleDelete}
+          isOwnerComment={isOwnerComment}
+          canDeleteComment={canDeleteComment}
+          isLikedByUser={isLikedByUser}
+        />
       );
     },
     [handleReply, handleLike, handleDelete, isOwnerComment, canDeleteComment, isLikedByUser]

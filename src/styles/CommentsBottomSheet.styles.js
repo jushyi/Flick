@@ -121,8 +121,39 @@ export const styles = StyleSheet.create({
     color: colors.status.danger,
     textAlign: 'center',
   },
-  // Reply indicator in list (indented replies)
+  // Reply indicator in list (indented replies) - legacy, kept for compatibility
   replyContainer: {
     paddingLeft: 52, // Align with parent comment text (40px photo + 12px margin)
+  },
+  // Replies section container with visual nesting
+  repliesSection: {
+    marginLeft: 52, // Align with parent comment text (40px photo + 12px margin)
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255, 255, 255, 0.1)',
+    paddingLeft: 12,
+    marginTop: -4, // Pull up slightly to connect visually with parent
+  },
+  // View/Hide replies toggle button
+  viewRepliesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  // Small horizontal line before toggle text
+  viewRepliesLine: {
+    width: 24,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginRight: 8,
+  },
+  // Toggle text styling
+  viewRepliesText: {
+    color: colors.text.secondary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  // Individual reply item container
+  replyItem: {
+    marginTop: 4,
   },
 });
