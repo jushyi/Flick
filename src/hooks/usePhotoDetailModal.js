@@ -320,6 +320,7 @@ export const usePhotoDetailModal = ({
    * Pan responder for swipe-down-to-close gesture.
    * Excludes footer area (bottom 100px) to allow emoji taps.
    * Dismisses modal when swiped 1/3 of screen height or with velocity > 0.5.
+   * UAT-028 fix: Better gesture detection - check vertical vs horizontal movement
    */
   const panResponder = useRef(
     PanResponder.create({
@@ -335,17 +336,23 @@ export const usePhotoDetailModal = ({
         // Don't respond if touch started in footer area
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
-        // Only respond to downward swipes (dy > 5) outside footer
-        // Lowered from 10 to 5 for better gesture capture in feed mode (UAT-026 fix)
-        return gestureState.dy > 5 && touchY < footerThreshold;
+        if (touchY >= footerThreshold) return false;
+
+        // UAT-028 fix: Check for vertical swipe (dy > dx) and downward movement
+        const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        const isDownward = gestureState.dy > 5;
+        return isVerticalSwipe && isDownward;
       },
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
         // Don't capture if touch is in footer area
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
-        // Capture gesture if it's a clear downward swipe outside footer
-        // Lowered from 10 to 5 for better gesture capture in feed mode (UAT-026 fix)
-        return gestureState.dy > 5 && touchY < footerThreshold;
+        if (touchY >= footerThreshold) return false;
+
+        // UAT-028 fix: Capture gesture when vertical swipe is detected
+        const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        const isDownward = gestureState.dy > 5;
+        return isVerticalSwipe && isDownward;
       },
       onPanResponderMove: (_, gestureState) => {
         // Only allow downward swipes
