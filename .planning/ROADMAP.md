@@ -263,7 +263,7 @@ Plans:
 Plans:
 
 - [x] 36-01: Comment service layer with CRUD operations and Firestore rules
-- [ ] 36-02: Comments UI components
+- [x] 36-02: Comments UI components (CommentRow, CommentInput, CommentsBottomSheet)
 - [ ] 36-03: Comments bottom sheet integration
 - [ ] 36-04: Comment likes feature
 - [ ] 36-05: Comment input with media
@@ -290,6 +290,17 @@ Plans:
 Plans:
 
 - [ ] 37.1-01: TBD
+
+#### Phase 37.2: Stories Thumbnail Flash Fix & Feed Skeleton Update (INSERTED)
+
+**Goal**: Fix stories photo thumbnails flashing gray when swiping down on photo modal and returning; update feed loading skeleton to reflect current feed structure
+**Depends on**: Phase 37.1
+**Research**: Unlikely (bug fix + UI polish)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 37.2-01: TBD
 
 ## Progress
 
@@ -347,6 +358,7 @@ Plans:
 | 36. Comments Feature                           | v0.7      | 1/6            | In progress | -          |
 | 37. Profile Placeholder                        | v0.7      | 0/?            | Not started | -          |
 | 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7      | 0/?            | Not started | -          |
+| 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7      | 0/?            | Not started | -          |
 
 <details>
 <summary>✅ v0.6 Code Quality, Security & Documentation (Phases 19-29) - SHIPPED 2026-01-25</summary>
