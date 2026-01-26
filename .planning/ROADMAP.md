@@ -269,6 +269,7 @@ Plans:
 - [x] 36-03-FIX-2: UAT Round 3 fixes (rotation timing, showViewAll, spacing, input alignment)
 - [x] 36-03-FIX-3: UAT Round 4 fixes (swipe gestures, keyboard sheet movement, spacing polish)
 - [x] 36-03-FIX-4: UAT Round 5 fixes (gesture detection, keyboard offset, UI spacing)
+- [x] 36-03-FIX-5: UAT Round 6 fixes (feed swipe-to-close, border radius, user info position, dot spacing)
 - [ ] 36-04: Comment likes feature
 - [ ] 36-05: Comment input with media
 - [ ] 36-06: Feed card comment preview

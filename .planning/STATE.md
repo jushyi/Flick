@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 ## Current Position
 
 Phase: 36 of 39 (Comments Feature)
-Plan: 3 of 6 in current phase (+ 36-03-FIX, 36-03-FIX-2, 36-03-FIX-3, 36-03-FIX-4 complete)
+Plan: 3 of 6 in current phase (+ 36-03-FIX, 36-03-FIX-2, 36-03-FIX-3, 36-03-FIX-4, 36-03-FIX-5 complete)
 Status: In progress
-Last activity: 2026-01-26 - Completed 36-03-FIX-4.md (UAT Round 5 fixes)
+Last activity: 2026-01-26 - Completed 36-03-FIX-5.md (UAT Round 6 fixes)
 
 Progress: ████████░░ 80%
 
@@ -20,9 +20,9 @@ Progress: ████████░░ 80%
 
 **Velocity:**
 
-- Total plans completed: 127 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 27 in v0.7)
+- Total plans completed: 128 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 28 in v0.7)
 - Average duration: 16 min
-- Total execution time: 22.1 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 198m v0.7)
+- Total execution time: 22.2 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 203m v0.7)
 
 **By Milestone:**
 
@@ -178,6 +178,7 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 36-03-FIX-4   | Vertical vs horizontal gesture check                  | Differentiates swipe-down-to-close from tap navigation                               |
 | 36-03-FIX-4   | 60% keyboard offset for comment sheet                 | Full height excessive; 60% keeps input visible while maintaining context             |
 | 36-03-FIX-4   | 44x44 send button dimensions                          | Matches inputWrapper visual height (40px minHeight + padding)                        |
+| 36-03-FIX-5   | Unified TouchableWithoutFeedback for both modes       | Feed mode needs touch tracking for panResponder swipe-to-close                       |
 
 ### Deferred Issues
 
@@ -218,5 +219,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 36-03-FIX-4.md (UAT Round 5 fixes)
+Stopped at: Completed 36-03-FIX-5.md (UAT Round 6 fixes)
 Resume file: None - ready for verification or 36-04-PLAN.md
