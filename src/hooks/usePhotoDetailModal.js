@@ -335,15 +335,17 @@ export const usePhotoDetailModal = ({
         // Don't respond if touch started in footer area
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
-        // Only respond to downward swipes (dy > 10) outside footer
-        return gestureState.dy > 10 && touchY < footerThreshold;
+        // Only respond to downward swipes (dy > 5) outside footer
+        // Lowered from 10 to 5 for better gesture capture in feed mode (UAT-026 fix)
+        return gestureState.dy > 5 && touchY < footerThreshold;
       },
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
         // Don't capture if touch is in footer area
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
         // Capture gesture if it's a clear downward swipe outside footer
-        return gestureState.dy > 10 && touchY < footerThreshold;
+        // Lowered from 10 to 5 for better gesture capture in feed mode (UAT-026 fix)
+        return gestureState.dy > 5 && touchY < footerThreshold;
       },
       onPanResponderMove: (_, gestureState) => {
         // Only allow downward swipes
