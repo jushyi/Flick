@@ -6,9 +6,65 @@
 
 ## Open Issues
 
-None - all UAT Round 3 issues resolved in 36-03-FIX-2.
+None - all Round 4 issues resolved.
 
 ## Resolved Issues
+
+### UAT-020: CommentsBottomSheet swipe-to-close doesn't work
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** abc6602
+**Fix:** Added PanResponder to handle bar area with swipe-to-close gesture
+
+### UAT-021: Keyboard covers comments content (sheet should move up)
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** 3653441
+**Fix:** Sheet moves UP using translateY animation instead of expanding height
+
+### UAT-022: Username too close to photo bottom when no comments
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** ef3817b
+**Fix:** Adjusted no-comments bottom position from 100 to 102
+
+### UAT-023: Spacing between user info and comment preview too large
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** ef3817b
+**Fix:** Reduced userInfoOverlay bottom from 140 to 130 (30px gap vs 40px)
+
+### UAT-024: Comment timestamp too far from reply button
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** 23c398a
+**Fix:** Reduced dot marginHorizontal from 6 to 4
+
+### UAT-025: Send button shorter than comment input bar
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** 79f35e5
+**Fix:** Increased send button size from 36x36 to 40x40 to match input field
+
+### UAT-026: PhotoDetailModal swipe-to-close doesn't work (feed mode)
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** 950a781
+**Fix:** Lowered PanResponder swipe threshold from dy > 10 to dy > 5
+
+### UAT-027: User info and preview comments need 6px rightward shift
+
+**Discovered:** 2026-01-26 (Round 4)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-3
+**Commit:** efb8680
+**Fix:** Changed left position from 16 to 22 for profilePicContainer, userInfoOverlay, commentPreviewContainer
 
 ### UAT-011: Comment preview still misaligned with username
 
@@ -150,5 +206,5 @@ None - all UAT Round 3 issues resolved in 36-03-FIX-2.
 
 _Phase: 36-comments-feature_
 _Plan: 03_
-_Tested: 2026-01-26 (Round 1), 2026-01-26 (Round 2), 2026-01-26 (Round 3)_
-_Fixed: 2026-01-26 (via 36-03-FIX)_
+_Tested: 2026-01-26 (Round 1), 2026-01-26 (Round 2), 2026-01-26 (Round 3), 2026-01-26 (Round 4)_
+_Fixed: 2026-01-26 (via 36-03-FIX, 36-03-FIX-2)_
