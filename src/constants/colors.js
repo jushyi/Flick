@@ -73,4 +73,11 @@ export const colors = {
     text: '#2A2A2A',
     textSecondary: '#5A5A5A',
   },
+
+  // Story card styling (Polaroid mini-cards)
+  storyCard: {
+    frame: '#2A2A2A', // Dark gray frame (matches dark theme)
+    glowViewed: '#3A3A3A', // Subtle gray border when viewed
+    textName: '#FFFFFF', // Name text below card
+  },
 };
