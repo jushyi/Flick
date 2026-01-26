@@ -17,14 +17,14 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   // Progress bar for stories mode - positioned above footer
-  // Matches footer horizontal padding (16px) so edges align
+  // Matches photo marginHorizontal (8px) so edges align with photo
   progressBarScrollView: {
     flexGrow: 0, // Prevent ScrollView from expanding and pushing photo
   },
   progressBarContainer: {
     flexDirection: 'row',
     paddingBottom: 8,
-    paddingHorizontal: 0,
+    paddingHorizontal: 8,
     gap: 2,
   },
   progressSegment: {
@@ -119,7 +119,7 @@ export const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   footer: {
-    paddingHorizontal: 0,
+    paddingHorizontal: 8,
     paddingTop: 0,
     paddingBottom: 32,
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
