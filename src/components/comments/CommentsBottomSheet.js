@@ -22,6 +22,7 @@ import {
   Animated,
   ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import CommentRow from './CommentRow';
@@ -51,6 +52,7 @@ const CommentsBottomSheet = ({
 }) => {
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const inputRef = useRef(null);
+  const insets = useSafeAreaInsets(); // UAT-010 fix: safe area for bottom input
 
   // Use comments hook for state management
   const {
@@ -76,7 +78,6 @@ const CommentsBottomSheet = ({
 
   /**
    * Animate sheet on visibility change
-   * Auto-focus input after animation completes
    */
   useEffect(() => {
     if (visible) {
@@ -86,12 +87,7 @@ const CommentsBottomSheet = ({
         useNativeDriver: true,
         damping: 20,
         stiffness: 100,
-      }).start(() => {
-        // Auto-focus input after sheet animation completes (UAT-007 fix)
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
-      });
+      }).start();
 
       logger.info('CommentsBottomSheet: Opened', { photoId });
     } else {
@@ -345,17 +341,19 @@ const CommentsBottomSheet = ({
               />
             )}
 
-            {/* Comment Input */}
-            <CommentInput
-              ref={inputRef}
-              onSubmit={handleSubmitComment}
-              onImagePick={() => {
-                logger.debug('CommentsBottomSheet: Image picker (Plan 06)');
-              }}
-              replyingTo={replyingTo}
-              onCancelReply={cancelReply}
-              placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
-            />
+            {/* Comment Input - with safe area padding (UAT-010 fix) */}
+            <View style={{ paddingBottom: Math.max(insets.bottom, 8) }}>
+              <CommentInput
+                ref={inputRef}
+                onSubmit={handleSubmitComment}
+                onImagePick={() => {
+                  logger.debug('CommentsBottomSheet: Image picker (Plan 06)');
+                }}
+                replyingTo={replyingTo}
+                onCancelReply={cancelReply}
+                placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
+              />
+            </View>
           </Animated.View>
         </KeyboardAvoidingView>
       </View>
