@@ -167,7 +167,7 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 35.4-01-FIX   | 80ms minimum display time for rapid taps              | User sees each photo briefly during rapid tapping                                    |
 | 35.4-01-FIX   | 3D cube rotation for friend transitions               | Instagram-style visual feedback for context change                                   |
 | 35.4-01-FIX   | Progress bar matches footer padding (16px)            | Visual consistency between progress bar and emoji pills                              |
-| 35.5-01       | Edge-to-edge progress bar/footer (0 padding)          | Instagram-style full-width UI for cohesive visual flow                               |
+| 35.5-01       | Progress bar/footer aligned with photo (8px padding)  | Matches photo marginHorizontal for consistent alignment                              |
 
 ### Deferred Issues
 
@@ -202,6 +202,7 @@ None.
 - Phase 35.3 inserted after Phase 35.2: Stories Performance & View State Fix (URGENT) - clunky story navigation, incorrect view state tracking
 - Phase 35.4 inserted after Phase 35.3: Stories Feed Data & Resume Fix (URGENT) - missing journaled photos from friends, incorrect story ordering, resume tracking broken
 - Phase 35.5 inserted after Phase 35.4: Feed Layout Polish (URGENT) - align progress bar/emoji footer to photo width, remove "Feed" header for seamless transition
+- Phase 37.1 inserted after Phase 37: Darkroom Visual Feedback (URGENT) - gradient button indicator for readiness state, swipe-to-reveal gesture for bottom sheet
 
 ## Session Continuity
 
