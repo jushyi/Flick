@@ -326,6 +326,7 @@ const PhotoDetailModal = ({
                 comments={previewComments}
                 totalCount={currentPhoto?.commentCount || 0}
                 onPress={() => setShowComments(true)}
+                showViewAll={false}
               />
             </View>
           )}
