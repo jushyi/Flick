@@ -109,10 +109,10 @@ const CommentsBottomSheet = ({
     const showSub = Keyboard.addListener(showEvent, event => {
       const keyboardHeight = event.endCoordinates.height;
       setKeyboardVisible(true);
-      // UAT-029 fix: Move up 90% of keyboard height - clears suggestions bar
-      // 60% didn't clear suggestions, 80% still tight, 100% had excess gap
+      // UAT-029 fix: Move up 87% of keyboard height - clears suggestions bar
+      // 60% didn't clear suggestions, 80% still tight, 90% slightly high, 100% had excess gap
       Animated.timing(sheetTranslateY, {
-        toValue: -(keyboardHeight * 0.9),
+        toValue: -(keyboardHeight * 0.87),
         duration: 250,
         useNativeDriver: true,
       }).start();
