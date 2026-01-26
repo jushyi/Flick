@@ -315,8 +315,8 @@ const PhotoDetailModal = ({
                       ? 130
                       : 110
                     : previewComments?.length > 0
-                      ? 115
-                      : 95,
+                      ? 120
+                      : 100,
               },
             ]}
           >
@@ -331,7 +331,7 @@ const PhotoDetailModal = ({
               Feed mode: original position */}
           {previewComments.length > 0 && (
             <View
-              style={[styles.commentPreviewContainer, { bottom: mode === 'stories' ? 100 : 85 }]}
+              style={[styles.commentPreviewContainer, { bottom: mode === 'stories' ? 100 : 90 }]}
             >
               <CommentPreview
                 comments={previewComments}
