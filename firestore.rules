@@ -53,6 +53,18 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'reactionCount']);
     }
 
+    // Helper function to check if only comment count is being changed
+    // Used for authenticated users updating comment count via increment
+    function onlyChangesCommentCount() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']);
+    }
+
+    // Helper function to check if only reaction or comment count fields are being changed
+    // Used for non-owner updates (reactions and comment count)
+    function onlyChangesReactionOrCommentFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'reactionCount', 'commentCount']);
+    }
+
     // Helper function to ensure immutable photo fields are not changed
     // Protects userId, capturedAt from ALL modification
     // Protects imageURL from modification AFTER it's set (allows initial setting from empty)
@@ -113,19 +125,65 @@ service cloud.firestore {
                        (request.resource.data.photoState == null ||
                         request.resource.data.photoState in ['journal', 'archive']);
 
-      // Update: Split into owner updates and non-owner reaction updates
+      // Update: Split into owner updates and non-owner updates
       // Case 1: Owner can update their photos (except immutable fields)
-      // Case 2: Non-owners can ONLY add reactions (prevents self-reactions)
+      // Case 2: Non-owners can add reactions (prevents self-reactions)
+      // Case 3: Any authenticated user can update commentCount (for comment operations)
       allow update: if
         // Owner updates: full access except immutable fields
         (isOwner(resource.data.userId) && immutablePhotoFieldsUnchanged()) ||
         // Non-owner reaction updates: must not be photo owner, can only change reaction fields
         (isAuthenticated() &&
          request.auth.uid != resource.data.userId &&
-         onlyChangesReactionFields());
+         onlyChangesReactionFields()) ||
+        // Any authenticated user can update comment count (comment add/delete operations)
+        (isAuthenticated() && onlyChangesCommentCount());
 
       // Delete: Only owner can delete their photos
       allow delete: if isOwner(resource.data.userId);
+
+      // =============================================================================
+      // COMMENTS SUBCOLLECTION (photos/{photoId}/comments/{commentId})
+      // =============================================================================
+      match /comments/{commentId} {
+        // Anyone authenticated can read comments on journaled photos
+        allow read: if isAuthenticated();
+
+        // Only authenticated users can create comments
+        // Must set own userId, likeCount must be 0
+        allow create: if isAuthenticated() &&
+                         request.resource.data.userId == request.auth.uid &&
+                         request.resource.data.likeCount == 0 &&
+                         request.resource.data.keys().hasAll(['userId', 'text', 'likeCount', 'createdAt']);
+
+        // Only comment author can update their comment (for editing - future feature)
+        // Can only change text field
+        allow update: if isAuthenticated() &&
+                         resource.data.userId == request.auth.uid &&
+                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text']);
+
+        // Comment author OR photo owner can delete
+        allow delete: if isAuthenticated() &&
+                         (resource.data.userId == request.auth.uid ||
+                          get(/databases/$(database)/documents/photos/$(photoId)).data.userId == request.auth.uid);
+
+        // =============================================================================
+        // LIKES SUBCOLLECTION (photos/{photoId}/comments/{commentId}/likes/{likeId})
+        // =============================================================================
+        match /likes/{likeId} {
+          // Anyone authenticated can read likes
+          allow read: if isAuthenticated();
+
+          // Can create like with own userId
+          // likeId format: ${photoId}_${commentId}_${userId} (deterministic)
+          allow create: if isAuthenticated() &&
+                           request.resource.data.userId == request.auth.uid;
+
+          // Can delete own likes
+          allow delete: if isAuthenticated() &&
+                           resource.data.userId == request.auth.uid;
+        }
+      }
     }
 
     // =============================================================================
