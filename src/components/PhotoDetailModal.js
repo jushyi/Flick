@@ -80,15 +80,23 @@ const PhotoDetailModal = ({
   // Progress bar scroll ref for auto-scrolling
   const progressScrollRef = useRef(null);
 
-  // Reset cube rotation and comments when modal opens or friend changes
-  // Honor initialShowComments prop to open comments sheet immediately (UAT-005 fix)
+  // Track previous visibility for initialShowComments logic (UAT-009 fix)
+  const wasVisible = useRef(false);
+
+  // Reset cube rotation and comments when modal opens
+  // Only apply initialShowComments on FALSE -> TRUE transition (UAT-009 fix)
   useEffect(() => {
-    if (visible) {
+    if (visible && !wasVisible.current) {
+      // Only on initial open (false -> true transition)
       cubeRotation.setValue(0);
       setIsTransitioning(false);
       setShowComments(initialShowComments);
+    } else if (!visible) {
+      // Reset transition state when closing
+      setIsTransitioning(false);
     }
-  }, [visible, photos, initialShowComments]);
+    wasVisible.current = visible;
+  }, [visible, initialShowComments]);
 
   /**
    * Handle friend-to-friend transition with cube animation
