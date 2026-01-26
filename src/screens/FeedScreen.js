@@ -25,7 +25,7 @@ import { useViewedStories } from '../hooks/useViewedStories';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
 import PhotoDetailModal from '../components/PhotoDetailModal';
-import { FriendStoryCard, StoriesViewerModal } from '../components';
+import { FriendStoryCard } from '../components';
 import { toggleReaction, getFriendStoriesData } from '../services/firebase/feedService';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
@@ -65,6 +65,8 @@ const FeedScreen = () => {
 
   // Track initial index for stories modal
   const [storiesInitialIndex, setStoriesInitialIndex] = useState(0);
+  // Track current index in stories modal (updated via onPhotoChange)
+  const [storiesCurrentIndex, setStoriesCurrentIndex] = useState(0);
 
   /**
    * Refresh feed and stories when screen comes into focus
@@ -164,8 +166,18 @@ const FeedScreen = () => {
     });
 
     setStoriesInitialIndex(startIndex);
+    setStoriesCurrentIndex(startIndex);
     setSelectedFriend(friend);
     setStoriesModalVisible(true);
+  };
+
+  /**
+   * Handle photo change in stories modal
+   * Updates current index for reaction tracking
+   */
+  const handleStoriesPhotoChange = (photo, index) => {
+    logger.debug('FeedScreen: Stories photo changed', { photoId: photo?.id, index });
+    setStoriesCurrentIndex(index);
   };
 
   /**
@@ -255,6 +267,77 @@ const FeedScreen = () => {
       // Revert optimistic update on error
       setSelectedPhoto(selectedPhoto);
       updatePhotoInState(photoId, selectedPhoto);
+    }
+  };
+
+  /**
+   * Handle reaction toggle for stories photos
+   * Updates the photo in selectedFriend.topPhotos and persists to Firebase
+   */
+  const handleStoriesReactionToggle = async (emoji, currentCount) => {
+    if (!user || !selectedFriend) return;
+
+    const userId = user.uid;
+    const topPhotos = selectedFriend.topPhotos || [];
+    const currentPhoto = topPhotos[storiesCurrentIndex];
+
+    if (!currentPhoto) {
+      logger.warn('FeedScreen: No current photo for stories reaction');
+      return;
+    }
+
+    const photoId = currentPhoto.id;
+    logger.debug('FeedScreen: Stories reaction toggle', { photoId, emoji, currentCount });
+
+    // Optimistic update - update the photo in selectedFriend.topPhotos
+    const updatedReactions = { ...currentPhoto.reactions };
+    if (!updatedReactions[userId]) {
+      updatedReactions[userId] = {};
+    }
+    updatedReactions[userId] = { ...updatedReactions[userId], [emoji]: currentCount + 1 };
+
+    // Calculate new total count
+    let newTotalCount = 0;
+    Object.values(updatedReactions).forEach(userReactions => {
+      if (typeof userReactions === 'object') {
+        Object.values(userReactions).forEach(count => {
+          newTotalCount += count;
+        });
+      }
+    });
+
+    // Update the photo in the array
+    const updatedPhotos = [...topPhotos];
+    updatedPhotos[storiesCurrentIndex] = {
+      ...currentPhoto,
+      reactions: updatedReactions,
+      reactionCount: newTotalCount,
+    };
+
+    // Update selectedFriend state
+    setSelectedFriend(prev => ({
+      ...prev,
+      topPhotos: updatedPhotos,
+    }));
+
+    // Persist to Firebase
+    try {
+      const result = await toggleReaction(photoId, userId, emoji, currentCount);
+      if (!result.success) {
+        logger.error('Failed to toggle stories reaction', { error: result.error });
+        // Revert optimistic update on error
+        setSelectedFriend(prev => ({
+          ...prev,
+          topPhotos: topPhotos,
+        }));
+      }
+    } catch (error) {
+      logger.error('Error toggling stories reaction', error);
+      // Revert optimistic update on error
+      setSelectedFriend(prev => ({
+        ...prev,
+        topPhotos: topPhotos,
+      }));
     }
   };
 
@@ -426,9 +509,10 @@ const FeedScreen = () => {
         />
       )}
 
-      {/* Photo Detail Modal with Inline Reactions */}
+      {/* Photo Detail Modal - Feed Mode */}
       {selectedPhoto && (
         <PhotoDetailModal
+          mode="feed"
           visible={showPhotoModal}
           photo={selectedPhoto}
           onClose={handleClosePhotoModal}
@@ -437,13 +521,19 @@ const FeedScreen = () => {
         />
       )}
 
-      {/* Stories Viewer Modal */}
-      <StoriesViewerModal
-        visible={storiesModalVisible}
-        onClose={handleCloseStories}
-        friend={selectedFriend}
-        initialIndex={storiesInitialIndex}
-      />
+      {/* Photo Detail Modal - Stories Mode */}
+      {selectedFriend && (
+        <PhotoDetailModal
+          mode="stories"
+          visible={storiesModalVisible}
+          photos={selectedFriend.topPhotos || []}
+          initialIndex={storiesInitialIndex}
+          onPhotoChange={handleStoriesPhotoChange}
+          onClose={handleCloseStories}
+          onReactionToggle={handleStoriesReactionToggle}
+          currentUserId={user?.uid}
+        />
+      )}
     </SafeAreaView>
   );
 };
