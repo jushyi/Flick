@@ -19,7 +19,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
 import { uploadCommentImage } from '../../services/firebase/storageService';
-import { openGifPicker, useGifSelection } from './GifPicker';
+// Note: Giphy SDK requires dev client build, not Expo Go
+// import { openGifPicker, useGifSelection } from './GifPicker';
 import { styles } from '../../styles/CommentInput.styles';
 
 /**
@@ -49,25 +50,18 @@ const CommentInput = forwardRef(
     const [isUploading, setIsUploading] = useState(false);
     const inputRef = useRef(null);
 
-    /**
-     * Handle GIF selection from Giphy dialog
-     */
-    const handleGifSelected = useCallback(gifUrl => {
-      logger.info('CommentInput: GIF selected', { urlLength: gifUrl?.length });
-      setSelectedMedia({ uri: gifUrl, type: 'gif' });
-    }, []);
-
-    // Set up Giphy selection listener
-    useGifSelection(handleGifSelected);
-
-    /**
-     * Handle GIF picker button press
-     */
-    const handleGifPick = useCallback(() => {
-      logger.info('CommentInput: GIF picker pressed');
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      openGifPicker();
-    }, []);
+    // Note: GIF functionality disabled for Expo Go compatibility
+    // Uncomment when using dev client build:
+    // const handleGifSelected = useCallback(gifUrl => {
+    //   logger.info('CommentInput: GIF selected', { urlLength: gifUrl?.length });
+    //   setSelectedMedia({ uri: gifUrl, type: 'gif' });
+    // }, []);
+    // useGifSelection(handleGifSelected);
+    // const handleGifPick = useCallback(() => {
+    //   logger.info('CommentInput: GIF picker pressed');
+    //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    //   openGifPicker();
+    // }, []);
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -292,8 +286,8 @@ const CommentInput = forwardRef(
               />
             </TouchableOpacity>
 
-            {/* GIF Picker Button */}
-            <TouchableOpacity
+            {/* GIF Picker Button - disabled for Expo Go, enable in dev client */}
+            {/* <TouchableOpacity
               style={styles.gifButton}
               onPress={handleGifPick}
               disabled={isUploading}
@@ -301,7 +295,7 @@ const CommentInput = forwardRef(
               <Text style={[styles.gifButtonText, isUploading && styles.gifButtonTextDisabled]}>
                 GIF
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Send Button */}
