@@ -16,7 +16,7 @@ const FRAME_PADDING_BOTTOM = 50; // Thick bottom for user info (Polaroid signatu
 export const styles = StyleSheet.create({
   // Polaroid frame container
   card: {
-    backgroundColor: colors.polaroid.cream,
+    backgroundColor: colors.polaroid.muted,
     marginHorizontal: CARD_MARGIN,
     marginBottom: 20,
     borderRadius: 4, // Polaroids have slight rounded corners
