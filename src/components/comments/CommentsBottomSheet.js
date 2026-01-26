@@ -321,8 +321,14 @@ const CommentsBottomSheet = ({
           ]}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 20}
         >
-          {/* Animated sheet */}
-          <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
+          {/* Animated sheet (UAT-017 fix: expand when keyboard visible) */}
+          <Animated.View
+            style={[
+              styles.sheet,
+              { transform: [{ translateY }] },
+              keyboardVisible && { maxHeight: undefined, flex: 1 },
+            ]}
+          >
             {/* Handle bar */}
             <View style={styles.handleBarContainer}>
               <View style={styles.handleBar} />
