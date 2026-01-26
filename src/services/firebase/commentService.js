@@ -475,37 +475,32 @@ export const getPreviewComments = async (photoId, photoOwnerId) => {
       return { success: false, error: 'Missing photoId' };
     }
 
-    // Fetch recent comments (client-side filter for top-level to avoid composite index)
+    // Fetch top-level comments using composite index (UAT-006 fix)
+    // Index: parentId ASC + createdAt DESC defined in firestore.indexes.json
     const commentsRef = collection(db, 'photos', photoId, 'comments');
     const q = query(
       commentsRef,
+      where('parentId', '==', null),
       orderBy('createdAt', 'desc'),
-      firestoreLimit(20) // Fetch more to filter top-level and find owner's comment
+      firestoreLimit(10) // Only need a few for preview
     );
 
     const snapshot = await getDocs(q);
 
     logger.debug('commentService.getPreviewComments: Query complete', {
       photoId,
-      totalCount: snapshot.size,
+      topLevelCount: snapshot.size,
     });
 
     if (snapshot.empty) {
       return { success: true, previewComments: [] };
     }
 
-    // Convert to array with IDs, filter to top-level only (parentId === null)
-    const allComments = snapshot.docs
-      .map(docSnap => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }))
-      .filter(comment => !comment.parentId); // Only top-level comments
-
-    logger.debug('commentService.getPreviewComments: Filtered to top-level', {
-      photoId,
-      topLevelCount: allComments.length,
-    });
+    // Convert to array with IDs (already filtered by query)
+    const allComments = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
 
     if (allComments.length === 0) {
       return { success: true, previewComments: [] };
