@@ -714,6 +714,132 @@ exports.getSignedPhotoUrl = onCall(async request => {
 });
 
 /**
+ * Cloud Function: Send notification when someone comments on a photo
+ * Triggered when a new comment is created in the comments subcollection
+ *
+ * Only sends notifications for top-level comments to photo owner.
+ * Skips self-comments (commenter is photo owner) and replies.
+ */
+exports.sendCommentNotification = functions.firestore
+  .document('photos/{photoId}/comments/{commentId}')
+  .onCreate(async (snap, context) => {
+    const { photoId, commentId } = context.params;
+    const comment = snap.data();
+
+    try {
+      // Guard: validate comment data
+      if (!comment || typeof comment !== 'object') {
+        logger.warn('sendCommentNotification: Invalid comment data', { photoId, commentId });
+        return null;
+      }
+
+      // Skip notifications for replies (only notify on top-level comments)
+      if (comment.parentId) {
+        logger.info('sendCommentNotification: Skipping notification for reply', {
+          photoId,
+          commentId,
+          parentId: comment.parentId,
+        });
+        return null;
+      }
+
+      // Get photo to find owner
+      const photoDoc = await admin.firestore().collection('photos').doc(photoId).get();
+
+      if (!photoDoc.exists) {
+        logger.warn('sendCommentNotification: Photo not found', { photoId });
+        return null;
+      }
+
+      const photo = photoDoc.data();
+      const photoOwnerId = photo.userId;
+
+      // Don't notify if commenter is the photo owner (self-comment)
+      if (comment.userId === photoOwnerId) {
+        logger.info('sendCommentNotification: Skipping self-comment notification', {
+          photoId,
+          commentId,
+          userId: comment.userId,
+        });
+        return null;
+      }
+
+      // Get photo owner's FCM token
+      const ownerDoc = await admin.firestore().collection('users').doc(photoOwnerId).get();
+
+      if (!ownerDoc.exists || !ownerDoc.data().fcmToken) {
+        logger.warn('sendCommentNotification: No FCM token for photo owner', { photoOwnerId });
+        return null;
+      }
+
+      // Get commenter's name for notification
+      const commenterDoc = await admin.firestore().collection('users').doc(comment.userId).get();
+
+      const commenterName = commenterDoc.exists
+        ? commenterDoc.data().displayName || commenterDoc.data().username || 'Someone'
+        : 'Someone';
+
+      // Build comment preview for notification body
+      let commentPreview;
+      if (comment.text && comment.text.trim()) {
+        // Truncate text to 50 chars
+        const truncatedText = comment.text.substring(0, 50);
+        commentPreview = truncatedText + (comment.text.length > 50 ? '...' : '');
+      } else if (comment.mediaType === 'gif') {
+        commentPreview = 'sent a GIF';
+      } else if (comment.mediaType === 'image') {
+        commentPreview = 'sent a photo';
+      } else {
+        commentPreview = 'commented';
+      }
+
+      // Send notification via Expo Push API
+      const title = '💬 New Comment';
+      const body = `${commenterName}: ${commentPreview}`;
+
+      const result = await sendPushNotification(ownerDoc.data().fcmToken, title, body, {
+        type: 'comment',
+        photoId,
+        commentId,
+        screen: 'Feed',
+      });
+
+      // Write to notifications collection for in-app display
+      await admin
+        .firestore()
+        .collection('notifications')
+        .add({
+          recipientId: photoOwnerId,
+          type: 'comment',
+          senderId: comment.userId,
+          senderName: commenterName,
+          senderProfilePhotoURL: commenterDoc.exists ? commenterDoc.data().profilePhotoURL : null,
+          photoId: photoId,
+          commentId: commentId,
+          message: body,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          read: false,
+        });
+
+      logger.info('sendCommentNotification: Notification sent', {
+        photoId,
+        commentId,
+        to: photoOwnerId,
+        commenter: comment.userId,
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('sendCommentNotification: Failed', {
+        error: error.message,
+        photoId,
+        commentId,
+      });
+      return null;
+    }
+  });
+
+/**
  * Delete user account and all associated data
  * Called after user re-authenticates via phone verification
  * Order: Storage files -> Photos -> Friendships -> Darkroom -> User -> Auth
