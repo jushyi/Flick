@@ -27,8 +27,8 @@ import { getTimeAgo } from '../utils/timeUtils';
 import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { styles } from '../styles/PhotoDetailModal.styles';
 
-// Progress bar constants - matches footer horizontal padding (16px)
-const PROGRESS_BAR_HORIZONTAL_PADDING = 16;
+// Progress bar constants - matches photo marginHorizontal (8px)
+const PROGRESS_BAR_HORIZONTAL_PADDING = 8;
 const PROGRESS_BAR_GAP = 2;
 const MIN_SEGMENT_WIDTH = 4;
 const MAX_VISIBLE_SEGMENTS = 20;
