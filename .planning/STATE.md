@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 ## Current Position
 
 Phase: 36 of 39 (Comments Feature)
-Plan: 3 of 6 in current phase (+ 36-03-FIX complete)
+Plan: 3 of 6 in current phase (+ 36-03-FIX, 36-03-FIX-2 complete)
 Status: In progress
-Last activity: 2026-01-26 - Completed 36-03-FIX.md (UAT Round 2 fixes)
+Last activity: 2026-01-26 - Completed 36-03-FIX-2.md (UAT Round 3 fixes)
 
 Progress: ████████░░ 80%
 
@@ -20,9 +20,9 @@ Progress: ████████░░ 80%
 
 **Velocity:**
 
-- Total plans completed: 124 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 24 in v0.7)
+- Total plans completed: 125 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 25 in v0.7)
 - Average duration: 16 min
-- Total execution time: 21.9 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 182m v0.7)
+- Total execution time: 22.0 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 190m v0.7)
 
 **By Milestone:**
 
@@ -172,6 +172,9 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 36-03-FIX     | Dynamic maxHeight removal when keyboard visible       | Keyboard.addListener with platform-specific events for proper avoidance              |
 | 36-03-FIX     | TouchableWithoutFeedback only in stories mode         | Feed mode needs clean touch propagation to footer comment button                     |
 | 36-03-FIX     | 4-second rotation with 200ms fade for comment preview | Readable interval, smooth transitions between rotating comments                      |
+| 36-03-FIX-2   | 2-second rotation for comment preview                 | User preference for snappier feel                                                    |
+| 36-03-FIX-2   | showViewAll prop for context-specific control         | Modal vs feed need different UX                                                      |
+| 36-03-FIX-2   | Dynamic userInfoOverlay bottom (140/100)              | Adjust spacing based on comment presence                                             |
 
 ### Deferred Issues
 
@@ -212,5 +215,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 36-03-FIX.md (UAT Round 2 fixes for CommentsBottomSheet)
-Resume file: None - ready for 36-04-PLAN.md (Comment likes feature)
+Stopped at: Completed 36-03-FIX-2.md (UAT Round 3 fixes)
+Resume file: None - ready for verification or 36-04-PLAN.md

@@ -266,6 +266,7 @@ Plans:
 - [x] 36-02: Comments UI components (CommentRow, CommentInput, CommentsBottomSheet)
 - [x] 36-03: Comments bottom sheet integration with preview comments
 - [x] 36-03-FIX: UAT Round 2 fixes (sheet closing, keyboard, feed mode tap, alignment, rotation)
+- [x] 36-03-FIX-2: UAT Round 3 fixes (rotation timing, showViewAll, spacing, input alignment)
 - [ ] 36-04: Comment likes feature
 - [ ] 36-05: Comment input with media
 - [ ] 36-06: Feed card comment preview
@@ -356,7 +357,7 @@ Plans:
 | 35.3 Stories Performance & View State Fix      | v0.7      | 1/1            | Complete    | 2026-01-25 |
 | 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7      | 1/1 + FIX      | Complete    | 2026-01-26 |
 | 35.5 Feed Layout Polish (INSERTED)             | v0.7      | 1/1            | Complete    | 2026-01-26 |
-| 36. Comments Feature                           | v0.7      | 3/6            | In progress | -          |
+| 36. Comments Feature                           | v0.7      | 3/6 + 2 FIX    | In progress | -          |
 | 37. Profile Placeholder                        | v0.7      | 0/?            | Not started | -          |
 | 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7      | 0/?            | Not started | -          |
 | 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7      | 0/?            | Not started | -          |

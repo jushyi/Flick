@@ -6,107 +6,95 @@
 
 ## Open Issues
 
-### UAT-002: Comment doesn't appear in list after submitting
+None - all UAT Round 3 issues resolved in 36-03-FIX-2.
 
-**Discovered:** 2026-01-26
-**Phase/Plan:** 36-03
-**Severity:** Major
-**Feature:** CommentsBottomSheet comment submission
-**Description:** When user types and submits a comment, it saves but doesn't appear in the comments list within the bottom sheet.
-**Expected:** New comment immediately appears in the comments list
-**Actual:** Comment doesn't show in the list (but may be saving to Firestore)
-**Status:** Needs verification - real-time subscription code appears correct, UX fixes may resolve this
-**Update 2026-01-26:** User reports submit now works and comments appear in list. May be resolved.
-
-### UAT-009: CommentsBottomSheet cannot be closed (BLOCKER)
-
-**Discovered:** 2026-01-26
-**Phase/Plan:** 36-03
-**Severity:** Blocker
-**Feature:** CommentsBottomSheet
-**Description:** Once the CommentsBottomSheet is opened, it cannot be closed. Every attempt to close it (swipe down, tap outside, any method) results in the sheet immediately reopening.
-**Expected:** User can close the bottom sheet by swiping down or tapping outside
-**Actual:** Sheet keeps reopening after every close attempt
-**Repro:**
-
-1. Open a photo from the feed (or tap comment preview on feed card)
-2. Tap on the comment area in the footer to open CommentsBottomSheet
-3. Try to close by swiping down or tapping outside
-4. Sheet immediately reopens
-
-### UAT-010: Comment input clips into bottom safe area
-
-**Discovered:** 2026-01-26
-**Phase/Plan:** 36-03
-**Severity:** Minor
-**Feature:** CommentsBottomSheet input area
-**Description:** The comment input box and send button are clipping into the bottom of the phone screen (safe area issue). Additionally, the send button is not vertically aligned with the comment input box.
-**Expected:** Input area respects safe area insets, send button vertically centered with input
-**Actual:** Elements clip into bottom safe area, send button misaligned
-**Repro:**
-
-1. Open CommentsBottomSheet
-2. Look at the bottom input area
+## Resolved Issues
 
 ### UAT-011: Comment preview still misaligned with username
 
 **Discovered:** 2026-01-26
-**Phase/Plan:** 36-03
-**Severity:** Minor
-**Feature:** Comment preview in PhotoDetailModal
-**Description:** Despite fix in commit 3732516, user reports comment preview in modal still does not align with the username. It's positioned too far to the left.
-**Expected:** Comment preview should align with the username/user info
-**Actual:** Preview is offset to the left
-**Note:** May need different fix approach than UAT-004
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-2
+**Commit:** 67dd0e0
+**Fix:** Removed paddingBottom from commentPreviewContainer for better alignment with username
+
+### UAT-015: Comment rotation timing should be 2 seconds, not 4 seconds
+
+**Discovered:** 2026-01-26 (Round 3)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-2
+**Commit:** 78518f6
+**Fix:** Changed rotation interval from 4000ms to 2000ms
+
+### UAT-016: "View all comments" should only appear on feed cards
+
+**Discovered:** 2026-01-26 (Round 3)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-2
+**Commits:** 78518f6, 9f0eb7c
+**Fix:** Added showViewAll prop to CommentPreview, pass showViewAll={false} in PhotoDetailModal
+
+### UAT-019: Empty comment preview leaves excess space between photo and username
+
+**Discovered:** 2026-01-26 (Round 3)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-2
+**Commit:** 67dd0e0
+**Fix:** Dynamic userInfoOverlay bottom position (140 with comments, 100 without)
+
+### UAT-018: Comment input placeholder has asymmetric vertical padding
+
+**Discovered:** 2026-01-26 (Round 3)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-2
+**Commit:** 155f17b
+**Fix:** Added textAlignVertical: 'center', changed inputWrapper alignItems to 'center'
+
+### UAT-017: Keyboard covers comments content when typing
+
+**Discovered:** 2026-01-26 (Round 3)
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX-2
+**Commit:** ec844c6
+**Fix:** Expand sheet height when keyboard visible (remove maxHeight, add flex: 1)
+
+### UAT-002: Comment doesn't appear in list after submitting
+
+**Discovered:** 2026-01-26
+**Resolved:** 2026-01-26 (Round 3 verified)
+**Fix:** Real-time subscription now correctly shows new comments after submit
+**Note:** User reported this working in Round 2, confirmed in Round 3
+
+### UAT-009: CommentsBottomSheet cannot be closed (BLOCKER)
+
+**Discovered:** 2026-01-26
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX
+**Commit:** f3dc8e0
+**Fix:** Used wasVisible ref to track visibility transitions - only apply initialShowComments on false->true transition
+
+### UAT-010: Comment input clips into bottom safe area
+
+**Discovered:** 2026-01-26
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX
+**Commit:** ea0aaca
+**Fix:** Added Math.max(insets.bottom, 8) for minimum safe area padding
 
 ### UAT-012: Show single rotating comment preview instead of multiple
 
 **Discovered:** 2026-01-26
-**Phase/Plan:** 36-03
-**Severity:** Minor
-**Feature:** Comment preview in PhotoDetailModal
-**Description:** User feedback - should only show one comment preview at a time and rotate through comments if there are multiple, rather than showing multiple previews at once.
-**Expected:** Single comment preview that cycles through available comments
-**Actual:** Multiple comment previews shown simultaneously
-**Repro:**
-
-1. Open a photo modal with multiple comments
-2. Observe preview area shows multiple comments
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX
+**Commit:** 3f95862
+**Fix:** Single rotating comment with 4-second interval and 200ms fade animation
+**Note:** Timing preference (2s vs 4s) tracked separately as UAT-015
 
 ### UAT-013: Keyboard covers comment input when typing
 
 **Discovered:** 2026-01-26
-**Phase/Plan:** 36-03
-**Severity:** Major
-**Feature:** CommentsBottomSheet keyboard handling
-**Description:** When the keyboard opens in CommentsBottomSheet, it covers the comment input area and send button. The sheet should move up when keyboard is open so the input remains visible above the keyboard.
-**Expected:** Comment input and send button stay visible above keyboard
-**Actual:** Keyboard covers the input area, user can't see what they're typing
-**Repro:**
-
-1. Open CommentsBottomSheet
-2. Tap on comment input to open keyboard
-3. Keyboard covers the input area
+**Partially Resolved:** 2026-01-26 - Fixed in 36-03-FIX
+**Commit:** 268b87a
+**Fix:** Dynamic maxHeight removal when keyboard visible
+**Note:** Input remains usable, but comments content still covered - tracked as UAT-017
 
 ### UAT-014: Comment tap doesn't open sheet in feed mode (only stories work)
 
 **Discovered:** 2026-01-26
-**Phase/Plan:** 36-03
-**Severity:** Major
-**Feature:** PhotoDetailModal comment trigger in feed mode
-**Description:** When opening a photo modal from feed cards, tapping the comment area in the footer doesn't open CommentsBottomSheet. However, the same action works correctly when viewing stories.
-**Expected:** Tapping comment area opens CommentsBottomSheet in both feed and stories mode
-**Actual:** Comment tap only works in stories mode, not feed mode
-**Repro:**
-
-1. On Feed, tap a photo to open PhotoDetailModal (feed mode)
-2. Tap the comment area in the footer
-3. CommentsBottomSheet does NOT open
-4. Now open a story (stories mode)
-5. Tap the comment area
-6. CommentsBottomSheet opens correctly
-
-## Resolved Issues
+**Resolved:** 2026-01-26 - Fixed in 36-03-FIX
+**Commit:** a1fc929
+**Fix:** Conditional TouchableWithoutFeedback only in stories mode - feed mode has clean touch propagation
 
 ### UAT-001: Footer layout is ~1/3 not 50/50 as designed
 
@@ -162,5 +150,5 @@
 
 _Phase: 36-comments-feature_
 _Plan: 03_
-_Tested: 2026-01-26_
-_Fixed: 2026-01-26_
+_Tested: 2026-01-26 (Round 1), 2026-01-26 (Round 2), 2026-01-26 (Round 3)_
+_Fixed: 2026-01-26 (via 36-03-FIX)_
