@@ -9,7 +9,7 @@
  * - CommentInput at bottom with reply state management
  * - Dark theme matching app aesthetics
  */
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import {
   Platform,
   Animated,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -53,6 +54,21 @@ const CommentsBottomSheet = ({
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const inputRef = useRef(null);
   const insets = useSafeAreaInsets(); // UAT-010 fix: safe area for bottom input
+  const [keyboardVisible, setKeyboardVisible] = useState(false); // UAT-013 fix: keyboard state
+
+  // Track keyboard visibility to adjust layout (UAT-013 fix)
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // Use comments hook for state management
   const {
@@ -296,11 +312,14 @@ const CommentsBottomSheet = ({
           <View style={styles.backdrop} />
         </TouchableWithoutFeedback>
 
-        {/* KeyboardAvoidingView for keyboard handling */}
+        {/* KeyboardAvoidingView for keyboard handling (UAT-013 fix: dynamic maxHeight) */}
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidContainer}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          style={[
+            styles.keyboardAvoidContainer,
+            keyboardVisible && { maxHeight: undefined, flex: 1 },
+          ]}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 20}
         >
           {/* Animated sheet */}
           <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
