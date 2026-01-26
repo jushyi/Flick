@@ -58,19 +58,18 @@ export const colors = {
 
   // Polaroid frame styling
   polaroid: {
-    // Full contrast - bright cream on dark background
+    // Dark gray - blends with dark theme
+    dark: '#2A2A2A',
+    darkShadow: 'rgba(0, 0, 0, 0.3)',
+
+    // Text on dark Polaroid
+    textLight: '#FFFFFF',
+    textLightSecondary: '#A0A0A0',
+
+    // Legacy light options (kept for reference)
     cream: '#FAF8F5',
-    creamShadow: 'rgba(250, 248, 245, 0.15)',
-
-    // Softened - warm gray that blends more
     warmGray: '#E8E4E0',
-    warmGrayShadow: 'rgba(232, 228, 224, 0.12)',
-
-    // Muted - darker off-white for subtle effect
     muted: '#D4D0CC',
-    mutedShadow: 'rgba(212, 208, 204, 0.10)',
-
-    // Text on Polaroid (handwriting feel)
     text: '#2A2A2A',
     textSecondary: '#5A5A5A',
   },
