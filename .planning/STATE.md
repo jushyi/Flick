@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 
 ## Current Position
 
-Phase: 35.3 of 38 (Stories Performance & View State Fix)
+Phase: 35.4 of 38 (Stories Feed Data & Resume Fix)
 Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-25 - Completed 35.3-01-PLAN.md
+Last activity: 2026-01-26 - Completed 35.4-01-PLAN.md
 
-Progress: ███████░░░ 73%
+Progress: ███████░░░ 76%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 118 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 18 in v0.7)
+- Total plans completed: 119 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 19 in v0.7)
 - Average duration: 16 min
-- Total execution time: 20.9 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 125m v0.7)
+- Total execution time: 21.1 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 137m v0.7)
 
 **By Milestone:**
 
@@ -158,6 +158,10 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 35.2-01       | Progress bar at bottom of modal                       | Natural info hierarchy: user info → progress → reactions                             |
 | 35.3-01       | Instant cut vs fade for story photos                  | User preferred snappy feel over smooth 200ms transition                              |
 | 35.3-01       | Ring color based on ALL photos viewed                 | Modal open doesn't mean content was seen; photo-level tracking is accurate           |
+| 35.4-01       | Fetch ALL journal photos instead of top 5             | Show complete content in stories, not just engagement-ranked subset                  |
+| 35.4-01       | Chronological order (oldest first) for stories        | Natural timeline viewing experience                                                  |
+| 35.4-01       | useRef for synchronous state access                   | React setState is async; ref provides immediate access for resume calculation        |
+| 35.4-01       | Mark friend viewed only when ALL photos seen          | Accurate ring color (gradient until complete, then gray)                             |
 
 ### Deferred Issues
 
@@ -190,9 +194,10 @@ None.
 - Phase 35.1 inserted after Phase 35: Unified Photo Modal (URGENT) - identical appearance for stories/feed, story segments only in stories mode, feed photos don't trigger viewed
 - Phase 35.2 inserted after Phase 35.1: Feed Header & Bottom Padding (URGENT) - black header, scroll-hide behavior, bottom padding for tab bar
 - Phase 35.3 inserted after Phase 35.2: Stories Performance & View State Fix (URGENT) - clunky story navigation, incorrect view state tracking
+- Phase 35.4 inserted after Phase 35.3: Stories Feed Data & Resume Fix (URGENT) - missing journaled photos from friends, incorrect story ordering, resume tracking broken
 
 ## Session Continuity
 
-Last session: 2026-01-25
-Stopped at: Completed Phase 35.3 (stories performance & view state fix)
-Resume file: None - ready for Phase 36 (Comments Feature)
+Last session: 2026-01-26
+Stopped at: Completed Phase 35.4 (Stories Feed Data & Resume Fix)
+Resume file: None - ready for Phase 36 (Comments Feature) or Phase 37 (Profile Placeholder)

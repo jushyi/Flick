@@ -230,6 +230,17 @@ Plans:
 
 - [x] 35.3-01: expo-image for instant loads, hasViewedAllPhotos for accurate ring color
 
+#### Phase 35.4: Stories Feed Data & Resume Fix (INSERTED)
+
+**Goal**: Fix stories not showing all journaled photos from friends, incorrect story ordering (newly journaled inserted in middle), and photo tracking for resume feature
+**Depends on**: Phase 35.3
+**Research**: Unlikely (debugging existing implementation)
+**Plans**: TBD
+
+Plans:
+
+- [x] 35.4-01: Fix stories to fetch all photos in chronological order, fix resume tracking
+
 #### Phase 36: Comments Feature
 
 **Goal**: Bottom sheet for photo comments (new social feature)
@@ -303,6 +314,7 @@ Plans:
 | 35.1 Unified Photo Modal (INSERTED)            | v0.7      | 1/1            | Complete    | 2026-01-25 |
 | 35.2 Feed Header & Bottom Padding (INSERTED)   | v0.7      | 1/1            | Complete    | 2026-01-25 |
 | 35.3 Stories Performance & View State Fix      | v0.7      | 1/1            | Complete    | 2026-01-25 |
+| 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7      | 1/1            | Complete    | 2026-01-26 |
 | 36. Comments Feature                           | v0.7      | 0/?            | Not started | -          |
 | 37. Profile Placeholder                        | v0.7      | 0/?            | Not started | -          |
 
