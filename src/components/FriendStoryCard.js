@@ -5,10 +5,10 @@ import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 /**
- * FriendStoryCard component - Polaroid mini-card design
+ * FriendStoryCard component - Simple blurred photo thumbnail
  *
- * Displays a friend's story as a mini Polaroid with blurred photo thumbnail
- * and gradient glow border for unviewed stories.
+ * Displays a friend's story as a compact blurred photo with
+ * gradient border for unviewed stories.
  *
  * @param {object} friend - Friend data object
  * @param {string} friend.userId - Friend's user ID
@@ -44,24 +44,22 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false, isViewed = false })
   };
 
   /**
-   * Render the Polaroid frame with photo thumbnail
+   * Render the photo thumbnail (blurred)
    */
-  const renderPolaroidFrame = () => (
-    <View style={styles.polaroidFrame}>
-      <View style={styles.photoContainer}>
-        {thumbnailUrl ? (
-          <Image
-            source={{ uri: thumbnailUrl }}
-            style={styles.photoThumbnail}
-            blurRadius={20}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.placeholderInitial}>{getInitial()}</Text>
-          </View>
-        )}
-      </View>
+  const renderPhotoContent = () => (
+    <View style={styles.photoContainer}>
+      {thumbnailUrl ? (
+        <Image
+          source={{ uri: thumbnailUrl }}
+          style={styles.photoThumbnail}
+          blurRadius={20}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={styles.photoPlaceholder}>
+          <Text style={styles.placeholderInitial}>{getInitial()}</Text>
+        </View>
+      )}
     </View>
   );
 
@@ -71,7 +69,7 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false, isViewed = false })
       onPress={handlePress}
       activeOpacity={0.8}
     >
-      {/* Gradient glow border for unviewed stories, gray border for viewed */}
+      {/* Gradient border for unviewed stories, subtle border for viewed */}
       {hasPhotos && !isViewed ? (
         <LinearGradient
           colors={colors.brand.gradient.developing}
@@ -79,11 +77,11 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false, isViewed = false })
           end={{ x: 1, y: 1 }}
           style={styles.gradientBorder}
         >
-          {renderPolaroidFrame()}
+          {renderPhotoContent()}
         </LinearGradient>
       ) : (
         <View style={[styles.viewedBorder, !hasPhotos && styles.noBorder]}>
-          {renderPolaroidFrame()}
+          {renderPhotoContent()}
         </View>
       )}
 
@@ -95,17 +93,13 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false, isViewed = false })
   );
 };
 
-// Card dimensions (Polaroid proportions scaled down)
-const CARD_WIDTH = 100;
-const CARD_HEIGHT = 120;
+// Compact square card dimensions (no Polaroid frame)
+const PHOTO_SIZE = 68;
 const BORDER_WIDTH = 3;
-const FRAME_PADDING_TOP = 6;
-const FRAME_PADDING_SIDES = 6;
-const FRAME_PADDING_BOTTOM = 20;
 
 const styles = StyleSheet.create({
   container: {
-    width: CARD_WIDTH + 8, // Extra width for padding
+    width: PHOTO_SIZE + BORDER_WIDTH * 2 + 8, // Photo + border + padding
     alignItems: 'center',
     marginRight: 8,
   },
@@ -113,16 +107,16 @@ const styles = StyleSheet.create({
     marginLeft: 0,
   },
   gradientBorder: {
-    width: CARD_WIDTH + BORDER_WIDTH * 2,
-    height: CARD_HEIGHT + BORDER_WIDTH * 2,
-    borderRadius: 6,
+    width: PHOTO_SIZE + BORDER_WIDTH * 2,
+    height: PHOTO_SIZE + BORDER_WIDTH * 2,
+    borderRadius: 12,
     padding: BORDER_WIDTH,
     marginBottom: 6,
   },
   viewedBorder: {
-    width: CARD_WIDTH + BORDER_WIDTH * 2,
-    height: CARD_HEIGHT + BORDER_WIDTH * 2,
-    borderRadius: 6,
+    width: PHOTO_SIZE + BORDER_WIDTH * 2,
+    height: PHOTO_SIZE + BORDER_WIDTH * 2,
+    borderRadius: 12,
     padding: BORDER_WIDTH,
     borderWidth: 2,
     borderColor: colors.storyCard.glowViewed,
@@ -131,17 +125,9 @@ const styles = StyleSheet.create({
   noBorder: {
     borderColor: 'transparent',
   },
-  polaroidFrame: {
-    flex: 1,
-    backgroundColor: colors.storyCard.frame,
-    borderRadius: 4,
-    paddingTop: FRAME_PADDING_TOP,
-    paddingHorizontal: FRAME_PADDING_SIDES,
-    paddingBottom: FRAME_PADDING_BOTTOM,
-  },
   photoContainer: {
     flex: 1,
-    borderRadius: 2,
+    borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: colors.background.tertiary,
   },
@@ -156,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
   },
   placeholderInitial: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '600',
     color: colors.text.secondary,
   },
@@ -164,7 +150,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.storyCard.textName,
     textAlign: 'center',
-    maxWidth: CARD_WIDTH,
+    maxWidth: PHOTO_SIZE + BORDER_WIDTH * 2,
   },
 });
 
