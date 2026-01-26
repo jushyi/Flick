@@ -10,7 +10,7 @@
  * - Stories mode: progress bar, tap navigation, multi-photo
  * - 3D cube rotation for friend-to-friend transitions
  */
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,11 +21,17 @@ import {
   StatusBar,
   Animated,
   Dimensions,
-} from 'react-native';
+} from 'react-native'; // After this, we scroll
 import { Image } from 'expo-image';
 import { getTimeAgo } from '../utils/timeUtils';
 import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { styles } from '../styles/PhotoDetailModal.styles';
+
+// Progress bar constants
+const PROGRESS_BAR_HORIZONTAL_PADDING = 24;
+const PROGRESS_BAR_GAP = 4;
+const MIN_SEGMENT_WIDTH = 4;
+const MAX_VISIBLE_SEGMENTS = 20;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -60,6 +66,9 @@ const PhotoDetailModal = ({
   // Cube transition animation for friend-to-friend
   const cubeRotation = useRef(new Animated.Value(0)).current;
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Progress bar scroll ref for auto-scrolling
+  const progressScrollRef = useRef(null);
 
   // Reset cube rotation when modal opens or friend changes
   useEffect(() => {
@@ -136,6 +145,53 @@ const PhotoDetailModal = ({
     currentUserId,
     onFriendTransition: hasNextFriend ? handleFriendTransition : null,
   });
+
+  // Calculate segment width based on total photos
+  const { segmentWidth, needsScroll } = useMemo(() => {
+    if (totalPhotos <= 0) return { segmentWidth: MIN_SEGMENT_WIDTH, needsScroll: false };
+
+    const availableWidth = SCREEN_WIDTH - PROGRESS_BAR_HORIZONTAL_PADDING * 2;
+    const totalGapWidth = (totalPhotos - 1) * PROGRESS_BAR_GAP;
+    const widthForSegments = availableWidth - totalGapWidth;
+    const calculatedWidth = widthForSegments / totalPhotos;
+
+    // If segments would be smaller than min, use min width and enable scrolling
+    if (calculatedWidth < MIN_SEGMENT_WIDTH) {
+      return { segmentWidth: MIN_SEGMENT_WIDTH, needsScroll: true };
+    }
+
+    // If more than MAX_VISIBLE_SEGMENTS, cap width and scroll
+    if (totalPhotos > MAX_VISIBLE_SEGMENTS) {
+      const cappedWidth =
+        (availableWidth - (MAX_VISIBLE_SEGMENTS - 1) * PROGRESS_BAR_GAP) / MAX_VISIBLE_SEGMENTS;
+      return { segmentWidth: Math.max(cappedWidth, MIN_SEGMENT_WIDTH), needsScroll: true };
+    }
+
+    return { segmentWidth: calculatedWidth, needsScroll: false };
+  }, [totalPhotos]);
+
+  // Auto-scroll progress bar to keep current segment visible
+  useEffect(() => {
+    if (needsScroll && progressScrollRef.current && totalPhotos > 0) {
+      const segmentTotalWidth = segmentWidth + PROGRESS_BAR_GAP;
+      const visibleWidth = SCREEN_WIDTH - PROGRESS_BAR_HORIZONTAL_PADDING * 2;
+      const totalContentWidth = totalPhotos * segmentWidth + (totalPhotos - 1) * PROGRESS_BAR_GAP;
+
+      // Calculate scroll position to center current segment (or keep it in view)
+      // We want to show a few segments before and after current
+      const currentSegmentStart = currentIndex * segmentTotalWidth;
+      const currentSegmentCenter = currentSegmentStart + segmentWidth / 2;
+
+      // Scroll so current segment is about 1/3 from left edge (shows context of what's coming)
+      const targetScrollX = Math.max(0, currentSegmentCenter - visibleWidth / 3);
+      const maxScrollX = Math.max(0, totalContentWidth - visibleWidth);
+
+      progressScrollRef.current.scrollTo({
+        x: Math.min(targetScrollX, maxScrollX),
+        animated: true,
+      });
+    }
+  }, [currentIndex, needsScroll, segmentWidth, totalPhotos]);
 
   // In feed mode, check photo prop; in stories mode, check currentPhoto
   if (mode === 'feed' && !photo) return null;
@@ -216,8 +272,10 @@ const PhotoDetailModal = ({
           {/* Progress bar - stories mode only, positioned below user info */}
           {showProgressBar && totalPhotos > 0 && (
             <ScrollView
+              ref={progressScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
+              scrollEnabled={needsScroll}
               style={styles.progressBarScrollView}
               contentContainerStyle={styles.progressBarContainer}
             >
@@ -226,6 +284,7 @@ const PhotoDetailModal = ({
                   key={index}
                   style={[
                     styles.progressSegment,
+                    { width: segmentWidth },
                     index <= currentIndex
                       ? styles.progressSegmentActive
                       : styles.progressSegmentInactive,

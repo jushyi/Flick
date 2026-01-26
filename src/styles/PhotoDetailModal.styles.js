@@ -27,8 +27,7 @@ export const styles = StyleSheet.create({
     gap: 4,
   },
   progressSegment: {
-    flex: 1,
-    minWidth: 4, // Ensures segments remain visible even with many photos
+    // Width is now calculated dynamically in component based on total photos
     height: 3,
     borderRadius: 1.5,
   },
