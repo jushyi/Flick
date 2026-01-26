@@ -82,4 +82,51 @@ export const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: colors.background.tertiary,
   },
+  // Media preview (above input row)
+  mediaPreviewContainer: {
+    position: 'relative',
+    marginHorizontal: 12,
+    marginTop: 8,
+    marginBottom: 4,
+    alignSelf: 'flex-start',
+  },
+  mediaPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  removeMediaButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    zIndex: 1,
+  },
+  removeMediaButtonBg: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gifBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  gifBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  // Uploading indicator text
+  uploadingText: {
+    color: colors.text.tertiary,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 });

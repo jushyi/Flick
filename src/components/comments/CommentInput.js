@@ -4,23 +4,27 @@
  * Text input for adding comments with:
  * - TextInput with multiline support
  * - Image picker button for media comments
+ * - GIF button for Giphy integration
+ * - Media preview with remove button
  * - Send button (disabled when empty)
  * - Reply banner showing "Replying to @name" with cancel
  * - forwardRef for external focus control
  */
 import React, { useState, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
+import { uploadCommentImage } from '../../services/firebase/storageService';
 import { styles } from '../../styles/CommentInput.styles';
 
 /**
  * CommentInput Component
  *
  * @param {function} onSubmit - Callback with (text, mediaUrl, mediaType) when sent
- * @param {function} onImagePick - Callback to open image picker (Plan 06)
  * @param {object} replyingTo - Comment object if replying (shows "Replying to @name")
  * @param {function} onCancelReply - Callback to cancel reply mode
  * @param {string} placeholder - Custom placeholder text
@@ -31,7 +35,6 @@ const CommentInput = forwardRef(
   (
     {
       onSubmit,
-      onImagePick,
       replyingTo = null,
       onCancelReply,
       placeholder = 'Add a comment...',
@@ -41,9 +44,11 @@ const CommentInput = forwardRef(
   ) => {
     const [text, setText] = useState('');
     const [isFocused, setIsFocused] = useState(false);
+    const [selectedMedia, setSelectedMedia] = useState(null); // { uri, type: 'image' | 'gif' }
+    const [isUploading, setIsUploading] = useState(false);
     const inputRef = useRef(null);
 
-    // Expose focus method to parent via ref
+    // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
       focus: () => {
         logger.debug('CommentInput: Focus called via ref');
@@ -56,6 +61,11 @@ const CommentInput = forwardRef(
       clear: () => {
         logger.debug('CommentInput: Clear called via ref');
         setText('');
+        setSelectedMedia(null);
+      },
+      setMedia: media => {
+        logger.debug('CommentInput: setMedia called via ref', { mediaType: media?.type });
+        setSelectedMedia(media);
       },
     }));
 
@@ -67,41 +77,104 @@ const CommentInput = forwardRef(
     }, []);
 
     /**
+     * Clear selected media
+     */
+    const clearMedia = useCallback(() => {
+      logger.debug('CommentInput: Clearing media');
+      setSelectedMedia(null);
+    }, []);
+
+    /**
+     * Handle image picker button press
+     */
+    const handleImagePick = useCallback(async () => {
+      logger.info('CommentInput: Image picker pressed');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      try {
+        // Request permission
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (!permissionResult.granted) {
+          Alert.alert('Permission Required', 'Please grant camera roll access to attach images.');
+          return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1], // Square crop for thumbnails
+          quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+          logger.info('CommentInput: Image selected', {
+            width: result.assets[0].width,
+            height: result.assets[0].height,
+          });
+          setSelectedMedia({ uri: result.assets[0].uri, type: 'image' });
+        }
+      } catch (error) {
+        logger.error('CommentInput: Image picker error', { error: error.message });
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
+      }
+    }, []);
+
+    /**
      * Handle send button press
      */
-    const handleSend = useCallback(() => {
+    const handleSend = useCallback(async () => {
       const trimmedText = text.trim();
-      if (!trimmedText) {
-        logger.debug('CommentInput: Send blocked - empty text');
+      if (!trimmedText && !selectedMedia) {
+        logger.debug('CommentInput: Send blocked - empty text and no media');
         return;
       }
 
       logger.info('CommentInput: Sending comment', {
         textLength: trimmedText.length,
+        hasMedia: !!selectedMedia,
+        mediaType: selectedMedia?.type,
         isReply: !!replyingTo,
       });
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+      let mediaUrl = null;
+      let mediaType = null;
+
+      if (selectedMedia) {
+        try {
+          setIsUploading(true);
+
+          if (selectedMedia.type === 'image') {
+            // Upload image to Firebase Storage
+            logger.debug('CommentInput: Uploading image');
+            mediaUrl = await uploadCommentImage(selectedMedia.uri);
+            mediaType = 'image';
+            logger.info('CommentInput: Image uploaded', { mediaUrl: mediaUrl?.substring(0, 50) });
+          } else if (selectedMedia.type === 'gif') {
+            // GIF URL is already a remote URL from Giphy
+            mediaUrl = selectedMedia.uri;
+            mediaType = 'gif';
+          }
+        } catch (error) {
+          logger.error('CommentInput: Media upload failed', { error: error.message });
+          Alert.alert('Upload Failed', 'Failed to upload media. Please try again.');
+          setIsUploading(false);
+          return;
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
       if (onSubmit) {
-        onSubmit(trimmedText, null, null);
+        onSubmit(trimmedText, mediaUrl, mediaType);
       }
 
-      // Clear text after submit
+      // Clear text and media after submit
       setText('');
-    }, [text, replyingTo, onSubmit]);
-
-    /**
-     * Handle image picker button press
-     */
-    const handleImagePick = useCallback(() => {
-      logger.info('CommentInput: Image picker pressed');
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-      if (onImagePick) {
-        onImagePick();
-      }
-    }, [onImagePick]);
+      setSelectedMedia(null);
+    }, [text, selectedMedia, replyingTo, onSubmit]);
 
     /**
      * Handle cancel reply
@@ -119,12 +192,13 @@ const CommentInput = forwardRef(
      * Handle submit on keyboard return
      */
     const handleSubmitEditing = useCallback(() => {
-      if (text.trim()) {
+      if (text.trim() || selectedMedia) {
         handleSend();
       }
-    }, [text, handleSend]);
+    }, [text, selectedMedia, handleSend]);
 
-    const isDisabled = !text.trim();
+    const canSubmit = !!(text.trim() || selectedMedia);
+    const isDisabled = !canSubmit || isUploading;
     const replyUsername = replyingTo?.user?.username || replyingTo?.user?.displayName || 'user';
 
     return (
@@ -138,6 +212,27 @@ const CommentInput = forwardRef(
             <TouchableOpacity style={styles.replyBannerCancel} onPress={handleCancelReply}>
               <Ionicons name="close" size={18} color={colors.text.secondary} />
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Media Preview - shown when media is selected */}
+        {selectedMedia && (
+          <View style={styles.mediaPreviewContainer}>
+            <Image
+              source={{ uri: selectedMedia.uri }}
+              style={styles.mediaPreview}
+              contentFit="cover"
+            />
+            <TouchableOpacity onPress={clearMedia} style={styles.removeMediaButton}>
+              <View style={styles.removeMediaButtonBg}>
+                <Ionicons name="close" size={14} color="white" />
+              </View>
+            </TouchableOpacity>
+            {selectedMedia.type === 'gif' && (
+              <View style={styles.gifBadge}>
+                <Text style={styles.gifBadgeText}>GIF</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -164,8 +259,16 @@ const CommentInput = forwardRef(
             />
 
             {/* Image Picker Button */}
-            <TouchableOpacity style={styles.imageButton} onPress={handleImagePick}>
-              <Ionicons name="image-outline" size={22} color={colors.text.secondary} />
+            <TouchableOpacity
+              style={styles.imageButton}
+              onPress={handleImagePick}
+              disabled={isUploading}
+            >
+              <Ionicons
+                name="image-outline"
+                size={22}
+                color={isUploading ? colors.text.tertiary : colors.text.secondary}
+              />
             </TouchableOpacity>
           </View>
 
@@ -175,11 +278,15 @@ const CommentInput = forwardRef(
             onPress={handleSend}
             disabled={isDisabled}
           >
-            <Ionicons
-              name="arrow-up"
-              size={20}
-              color={isDisabled ? colors.text.tertiary : colors.text.primary}
-            />
+            {isUploading ? (
+              <Text style={styles.uploadingText}>...</Text>
+            ) : (
+              <Ionicons
+                name="arrow-up"
+                size={20}
+                color={isDisabled ? colors.text.tertiary : colors.text.primary}
+              />
+            )}
           </TouchableOpacity>
         </View>
       </View>

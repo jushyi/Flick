@@ -175,3 +175,45 @@ export const getPhotoURL = async photoId => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Upload comment image to Firebase Storage
+ * Images are compressed before upload and stored in comment-images folder
+ *
+ * @param {string} localUri - Local image URI
+ * @returns {Promise<string>} - Download URL of uploaded image
+ * @throws {Error} - If upload fails
+ */
+export const uploadCommentImage = async localUri => {
+  try {
+    logger.debug('StorageService.uploadCommentImage: Starting');
+
+    // Generate unique filename
+    const filename = `comment-images/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.jpg`;
+
+    // Compress image first (higher quality for comments)
+    const compressedUri = await compressImage(localUri, 0.8);
+
+    // Convert URI to file path for RN Firebase
+    const filePath = uriToFilePath(compressedUri);
+
+    // Create storage reference
+    const storageRef = ref(storageInstance, filename);
+
+    // Upload file
+    await storageRef.putFile(filePath);
+
+    // Get download URL
+    const downloadURL = await storageRef.getDownloadURL();
+
+    logger.info('StorageService.uploadCommentImage: Upload successful', {
+      filename,
+      urlLength: downloadURL.length,
+    });
+
+    return downloadURL;
+  } catch (error) {
+    logger.error('StorageService.uploadCommentImage: Failed', { error: error.message });
+    throw error;
+  }
+};
