@@ -97,7 +97,7 @@ export const styles = StyleSheet.create({
   },
   userInfoOverlay: {
     position: 'absolute',
-    bottom: 108,
+    bottom: 140, // UAT-004 fix: Increased from 108 to give space for comment preview
     left: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -118,9 +118,12 @@ export const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
-  // Comment preview container - below user info
+  // Comment preview container - below user info (UAT-004 fix: absolute positioning)
   commentPreviewContainer: {
-    paddingHorizontal: 16,
+    position: 'absolute',
+    bottom: 100, // Below userInfoOverlay, above footer
+    left: 16,
+    right: 16,
     paddingBottom: 8,
   },
   footer: {
@@ -132,9 +135,9 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
     gap: 8,
   },
-  // Comment input trigger - left side of footer
+  // Comment input trigger - left side of footer (UAT-001 fix: 50/50 split)
   commentInputTrigger: {
-    flex: 0.45,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2A2A2A',
@@ -150,9 +153,9 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: '#888888',
   },
-  // Emoji pills scroll view - right side of footer
+  // Emoji pills scroll view - right side of footer (UAT-001 fix: 50/50 split)
   emojiPickerScrollView: {
-    flex: 0.55,
+    flex: 1,
   },
   emojiPickerContainer: {
     gap: 8,
