@@ -14,13 +14,13 @@ import {
   View,
   Text,
   Modal,
-  Image,
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
   StatusBar,
   Animated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { getTimeAgo } from '../utils/timeUtils';
 import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { styles } from '../styles/PhotoDetailModal.styles';
@@ -122,14 +122,23 @@ const PhotoDetailModal = ({
           {/* Photo - with tap navigation in stories mode, touchable in feed mode for swipe gesture */}
           <TouchableWithoutFeedback onPress={mode === 'stories' ? handleTapNavigation : undefined}>
             <View style={styles.photoScrollView}>
-              <Image source={{ uri: imageURL }} style={styles.photo} resizeMode="cover" />
+              <Image
+                source={{ uri: imageURL }}
+                style={styles.photo}
+                contentFit="cover"
+                transition={0}
+              />
             </View>
           </TouchableWithoutFeedback>
 
           {/* Profile photo - overlapping top left of photo */}
           <View style={styles.profilePicContainer}>
             {profilePhotoURL ? (
-              <Image source={{ uri: profilePhotoURL }} style={styles.profilePic} />
+              <Image
+                source={{ uri: profilePhotoURL }}
+                style={styles.profilePic}
+                contentFit="cover"
+              />
             ) : (
               <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
                 <Text style={styles.profilePicText}>{displayName?.[0]?.toUpperCase() || '?'}</Text>
