@@ -475,31 +475,41 @@ export const getPreviewComments = async (photoId, photoOwnerId) => {
       return { success: false, error: 'Missing photoId' };
     }
 
-    // Fetch top-level comments only (no replies in preview)
+    // Fetch recent comments (client-side filter for top-level to avoid composite index)
     const commentsRef = collection(db, 'photos', photoId, 'comments');
     const q = query(
       commentsRef,
-      where('parentId', '==', null),
       orderBy('createdAt', 'desc'),
-      firestoreLimit(10) // Fetch more to find owner's comment if needed
+      firestoreLimit(20) // Fetch more to filter top-level and find owner's comment
     );
 
     const snapshot = await getDocs(q);
 
     logger.debug('commentService.getPreviewComments: Query complete', {
       photoId,
-      topLevelCount: snapshot.size,
+      totalCount: snapshot.size,
     });
 
     if (snapshot.empty) {
       return { success: true, previewComments: [] };
     }
 
-    // Convert to array with IDs
-    const allComments = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
+    // Convert to array with IDs, filter to top-level only (parentId === null)
+    const allComments = snapshot.docs
+      .map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }))
+      .filter(comment => !comment.parentId); // Only top-level comments
+
+    logger.debug('commentService.getPreviewComments: Filtered to top-level', {
+      photoId,
+      topLevelCount: allComments.length,
+    });
+
+    if (allComments.length === 0) {
+      return { success: true, previewComments: [] };
+    }
 
     // Find owner's comment (first top-level comment by photo owner)
     const ownerComment = photoOwnerId ? allComments.find(c => c.userId === photoOwnerId) : null;
