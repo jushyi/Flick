@@ -20,7 +20,7 @@ import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
 import { uploadCommentImage } from '../../services/firebase/storageService';
 // Note: Giphy SDK requires dev client build, not Expo Go
-// import { openGifPicker, useGifSelection } from './GifPicker';
+import { openGifPicker, useGifSelection } from './GifPicker';
 import { styles } from '../../styles/CommentInput.styles';
 
 /**
@@ -52,16 +52,16 @@ const CommentInput = forwardRef(
 
     // Note: GIF functionality disabled for Expo Go compatibility
     // Uncomment when using dev client build:
-    // const handleGifSelected = useCallback(gifUrl => {
-    //   logger.info('CommentInput: GIF selected', { urlLength: gifUrl?.length });
-    //   setSelectedMedia({ uri: gifUrl, type: 'gif' });
-    // }, []);
-    // useGifSelection(handleGifSelected);
-    // const handleGifPick = useCallback(() => {
-    //   logger.info('CommentInput: GIF picker pressed');
-    //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    //   openGifPicker();
-    // }, []);
+    const handleGifSelected = useCallback(gifUrl => {
+      logger.info('CommentInput: GIF selected', { urlLength: gifUrl?.length });
+      setSelectedMedia({ uri: gifUrl, type: 'gif' });
+    }, []);
+    useGifSelection(handleGifSelected);
+    const handleGifPick = useCallback(() => {
+      logger.info('CommentInput: GIF picker pressed');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      openGifPicker();
+    }, []);
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -287,15 +287,17 @@ const CommentInput = forwardRef(
             </TouchableOpacity>
 
             {/* GIF Picker Button - disabled for Expo Go, enable in dev client */}
-            {/* <TouchableOpacity
-              style={styles.gifButton}
-              onPress={handleGifPick}
-              disabled={isUploading}
-            >
-              <Text style={[styles.gifButtonText, isUploading && styles.gifButtonTextDisabled]}>
-                GIF
-              </Text>
-            </TouchableOpacity> */}
+            {
+              <TouchableOpacity
+                style={styles.gifButton}
+                onPress={handleGifPick}
+                disabled={isUploading}
+              >
+                <Text style={[styles.gifButtonText, isUploading && styles.gifButtonTextDisabled]}>
+                  GIF
+                </Text>
+              </TouchableOpacity>
+            }
           </View>
 
           {/* Send Button */}
