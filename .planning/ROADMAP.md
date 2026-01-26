@@ -182,7 +182,7 @@ Plans:
 
 Plans:
 
-- [ ] 34.2-01: Scrollable stories, simplified cards, overlapping profile photos
+- [x] 34.2-01: Scrollable stories, rectangular story cards with profile photo, feed cards horizontal layout
 
 #### Phase 35: Stories Redesign
 
@@ -265,7 +265,7 @@ Plans:
 | 33. Feed Header & Notifications                | v0.7      | 2/2            | Complete    | 2026-01-25 |
 | 34. Feed Card Redesign                         | v0.7      | 1/1            | Complete    | 2026-01-25 |
 | 34.1 Instagram-Style Feed Cards (INSERTED)     | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 34.2 Feed & Stories UI Refinements (INSERTED)  | v0.7      | 0/1            | Planned     | -          |
+| 34.2 Feed & Stories UI Refinements (INSERTED)  | v0.7      | 1/1            | Complete    | 2026-01-25 |
 | 35. Stories Redesign                           | v0.7      | 3/3            | Complete    | 2026-01-25 |
 | 36. Comments Feature                           | v0.7      | 0/?            | Not started | -          |
 | 37. Profile Placeholder                        | v0.7      | 0/?            | Not started | -          |

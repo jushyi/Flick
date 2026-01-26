@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 
 ## Current Position
 
-Phase: 35 of 37 (Stories Redesign)
-Plan: 3 of 3 in current phase
+Phase: 34.2 of 37 (Feed & Stories UI Refinements)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-25 - Completed 35-03-PLAN.md
+Last activity: 2026-01-25 - Completed 34.2-01-PLAN.md
 
-Progress: ██████░░░░ 67%
+Progress: ██████░░░░ 68%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 114 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 14 in v0.7)
+- Total plans completed: 115 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 15 in v0.7)
 - Average duration: 16 min
-- Total execution time: 20.1 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 79m v0.7)
+- Total execution time: 20.4 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 97m v0.7)
 
 **By Milestone:**
 
@@ -149,6 +149,9 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 35-03         | MIN_REACTIONS_FOR_HOT = 2 for hot feed                | Low threshold for MVP, can increase as engagement grows                              |
 | 35-03         | Stories open to first unviewed photo                  | User-requested UX improvement for resume position                                    |
 | 35-03         | Mark all photos viewed on stories close               | Simpler UX - next open always starts fresh from beginning                            |
+| 34.2-01       | Story cards 88x130 rectangular with profile at bottom | User wanted bigger, more rectangular cards like Instagram stories                    |
+| 34.2-01       | Feed cards retain horizontal infoRow layout           | User preferred original format over overlapping profile design                       |
+| 34.2-01       | Flexbox centering for overlapping elements            | Percentage-based centering was off; flexbox (left:0, right:0) is more reliable       |
 
 ### Deferred Issues
 
@@ -182,5 +185,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 35-03-PLAN.md (hot highlights filter)
+Stopped at: Completed 34.2-01-PLAN.md (feed & stories UI refinements)
 Resume file: None
