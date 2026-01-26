@@ -59,7 +59,7 @@ export const styles = StyleSheet.create({
   },
   photoScrollView: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 12, // UAT-035 fix: sharper corners (was 24)
     overflow: 'hidden',
     marginHorizontal: 8,
     marginBottom: 8,
