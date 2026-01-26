@@ -19,6 +19,9 @@ import { getFriendUserIds } from '../services/firebase/friendshipService';
 import { useAuth } from '../context/AuthContext';
 import logger from '../utils/logger';
 
+// Minimum reactions for a photo to appear in "hot" feed
+const MIN_REACTIONS_FOR_HOT = 2;
+
 /**
  * Curate feed to show top N photos per friend, ranked by engagement
  * @param {Array} photos - Array of photo objects
@@ -67,15 +70,37 @@ const curateTopPhotosPerFriend = (photos, limit = 5) => {
 };
 
 /**
+ * Filter photos to only include high-engagement posts
+ * @param {Array} photos - Array of photo objects
+ * @param {boolean} hotOnly - Whether to filter for hot photos only
+ * @returns {Array} - Filtered array of photos
+ */
+const filterHotPhotos = (photos, hotOnly) => {
+  if (!hotOnly || !photos || photos.length === 0) return photos;
+
+  const filtered = photos.filter(photo => (photo.reactionCount || 0) >= MIN_REACTIONS_FOR_HOT);
+
+  logger.debug('useFeedPhotos: Filtered to hot photos', {
+    total: photos.length,
+    hot: filtered.length,
+    threshold: MIN_REACTIONS_FOR_HOT,
+  });
+
+  return filtered;
+};
+
+/**
  * Custom hook for managing feed photos
  * Handles initial load, pagination, real-time updates, and refresh
  * Week 9: Fetches friendships and filters feed to friends-only
  * Week 12.2: Curates feed to top 5 photos per friend by engagement
+ * Phase 35: Hot highlights filter for engagement-based curation
  *
  * @param {boolean} enableRealtime - Enable real-time listener (default: true)
+ * @param {boolean} hotOnly - Only show photos with high engagement (default: false)
  * @returns {object} - Feed state and control functions
  */
-const useFeedPhotos = (enableRealtime = true) => {
+const useFeedPhotos = (enableRealtime = true, hotOnly = false) => {
   const { user } = useAuth();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -125,10 +150,12 @@ const useFeedPhotos = (enableRealtime = true) => {
       if (result.success) {
         // Curate feed to top 5 photos per friend
         const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
-        setPhotos(curatedPhotos);
+        // Apply hot filter if enabled
+        const filteredPhotos = filterHotPhotos(curatedPhotos, hotOnly);
+        setPhotos(filteredPhotos);
         setLastDoc(result.lastDoc);
         // After curation, hasMore is based on curated set
-        setHasMore(result.hasMore && curatedPhotos.length >= 5);
+        setHasMore(result.hasMore && filteredPhotos.length >= 5);
       } else {
         setError(result.error);
       }
@@ -138,7 +165,7 @@ const useFeedPhotos = (enableRealtime = true) => {
     } finally {
       setLoading(false);
     }
-  }, [fetchFriendships, friendUserIds, user]);
+  }, [fetchFriendships, friendUserIds, user, hotOnly]);
 
   /**
    * Load more photos (pagination)
@@ -156,7 +183,9 @@ const useFeedPhotos = (enableRealtime = true) => {
         // Combine existing photos with new ones and re-curate
         setPhotos(prev => {
           const allPhotos = [...prev, ...result.photos];
-          return curateTopPhotosPerFriend(allPhotos, 5);
+          const curatedPhotos = curateTopPhotosPerFriend(allPhotos, 5);
+          // Apply hot filter if enabled
+          return filterHotPhotos(curatedPhotos, hotOnly);
         });
         setLastDoc(result.lastDoc);
         setHasMore(result.hasMore);
@@ -169,7 +198,7 @@ const useFeedPhotos = (enableRealtime = true) => {
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, lastDoc, friendUserIds, user]);
+  }, [loadingMore, hasMore, lastDoc, friendUserIds, user, hotOnly]);
 
   /**
    * Refresh feed (pull-to-refresh)
@@ -187,9 +216,11 @@ const useFeedPhotos = (enableRealtime = true) => {
       if (result.success) {
         // Curate feed to top 5 photos per friend
         const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
-        setPhotos(curatedPhotos);
+        // Apply hot filter if enabled
+        const filteredPhotos = filterHotPhotos(curatedPhotos, hotOnly);
+        setPhotos(filteredPhotos);
         setLastDoc(result.lastDoc);
-        setHasMore(result.hasMore && curatedPhotos.length >= 5);
+        setHasMore(result.hasMore && filteredPhotos.length >= 5);
       } else {
         setError(result.error);
       }
@@ -199,7 +230,7 @@ const useFeedPhotos = (enableRealtime = true) => {
     } finally {
       setRefreshing(false);
     }
-  }, [fetchFriendships, friendUserIds, user]);
+  }, [fetchFriendships, friendUserIds, user, hotOnly]);
 
   /**
    * Update a single photo in state (for optimistic UI updates)
@@ -247,7 +278,9 @@ const useFeedPhotos = (enableRealtime = true) => {
             if (!loadingMore) {
               // Curate feed to top 5 photos per friend
               const curatedPhotos = curateTopPhotosPerFriend(result.photos, 5);
-              setPhotos(curatedPhotos);
+              // Apply hot filter if enabled
+              const filteredPhotos = filterHotPhotos(curatedPhotos, hotOnly);
+              setPhotos(filteredPhotos);
             }
           } else {
             logger.error('Feed subscription error', { error: result.error });
@@ -263,7 +296,7 @@ const useFeedPhotos = (enableRealtime = true) => {
     return () => {
       unsubscribe();
     };
-  }, [enableRealtime, loadingMore, friendUserIds, user?.uid]);
+  }, [enableRealtime, loadingMore, friendUserIds, user?.uid, hotOnly]);
 
   return {
     photos,
