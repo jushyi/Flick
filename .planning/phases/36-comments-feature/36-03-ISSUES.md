@@ -6,9 +6,94 @@
 
 ## Open Issues
 
-None - all Round 4 issues resolved.
+### UAT-028: PhotoDetailModal swipe-to-close not responding (feed mode)
+
+**Discovered:** 2026-01-26 (Round 5)
+**Phase/Plan:** 36-03-FIX-4
+**Severity:** Blocker
+**Feature:** PhotoDetailModal gestures
+**Description:** Swiping down on the photo modal in feed mode does nothing at all
+**Expected:** Modal should close smoothly when swiping down
+**Actual:** No response to swipe gesture
+**Repro:**
+
+1. Go to Feed tab
+2. Tap a photo to open modal
+3. Swipe down on photo/modal area
+   **Note:** Fix attempted in FIX-4 (commit e65cda0) but still not working. Stories mode swipe-to-close DOES work, issue is feed mode specific.
+
+### UAT-031: Comment dot/timestamp too far right
+
+**Discovered:** 2026-01-26 (Round 5, updated Round 6)
+**Phase/Plan:** 36-03-FIX-4
+**Severity:** Cosmetic
+**Feature:** CommentRow layout
+**Description:** The dot separator and timestamp are positioned too far to the right
+**Expected:** Dot and timestamp closer to Reply button
+**Actual:** Excessive gap between Reply and dot/timestamp
+**Repro:**
+
+1. Open CommentsBottomSheet with comments
+2. Look at spacing between Reply text and dot/timestamp
+   **Note:** FIX-4 reduced marginHorizontal from 4 to 2, but user reports still too wide in Round 6
+
+### UAT-034: Stories modal user info and preview too low
+
+**Discovered:** 2026-01-26 (Round 6)
+**Phase/Plan:** 36-03-FIX-4
+**Severity:** Cosmetic
+**Feature:** PhotoDetailModal layout (stories mode)
+**Description:** The user info and comment preview content is positioned too low on stories photo modal
+**Expected:** User info and preview should be positioned higher
+**Actual:** Content is too low on the screen
+**Repro:**
+
+1. Open a story photo from stories row
+2. Observe user info and preview position - too low
+
+### UAT-035: Photo border radius too rounded
+
+**Discovered:** 2026-01-26 (Round 6)
+**Phase/Plan:** 36-03-FIX-4
+**Severity:** Cosmetic
+**Feature:** PhotoDetailModal styling
+**Description:** The photo view border radius is too large, needs to be sharper
+**Expected:** Sharper corners on photo view
+**Actual:** Border radius is too rounded
+**Repro:**
+
+1. Open any photo modal (feed or stories)
+2. Observe photo corners - too rounded
 
 ## Resolved Issues
+
+### UAT-029: Keyboard moves comment sheet too high
+
+**Discovered:** 2026-01-26 (Round 5)
+**Resolved:** 2026-01-26 (Round 6) - Fixed in 36-03-FIX-4
+**Commit:** 7322056
+**Fix:** Changed keyboard offset from 100% to 60% of keyboard height
+
+### UAT-030: CommentsBottomSheet swipe-to-close not responding
+
+**Discovered:** 2026-01-26 (Round 5)
+**Resolved:** 2026-01-26 (Round 6) - Fixed in 36-03-FIX-4
+**Commit:** f7863a2
+**Fix:** Changed onStartShouldSetPanResponder to return true for handle bar
+
+### UAT-032: Send button still smaller than input field
+
+**Discovered:** 2026-01-26 (Round 5)
+**Resolved:** 2026-01-26 (Round 6) - Fixed in 36-03-FIX-4
+**Commit:** d391d18
+**Fix:** Increased button dimensions from 40x40 to 44x44
+
+### UAT-033: Username position too low when no preview comments (story modal)
+
+**Discovered:** 2026-01-26 (Round 5)
+**Resolved:** 2026-01-26 (Round 6) - Fixed in 36-03-FIX-4
+**Commit:** 3931637
+**Fix:** Changed no-comments bottom position from 102 to 110
 
 ### UAT-020: CommentsBottomSheet swipe-to-close doesn't work
 
@@ -206,5 +291,6 @@ None - all Round 4 issues resolved.
 
 _Phase: 36-comments-feature_
 _Plan: 03_
-_Tested: 2026-01-26 (Round 1), 2026-01-26 (Round 2), 2026-01-26 (Round 3), 2026-01-26 (Round 4)_
-_Fixed: 2026-01-26 (via 36-03-FIX, 36-03-FIX-2)_
+_Tested: 2026-01-26 (Rounds 1-6)_
+_Fixed: 2026-01-26 (via 36-03-FIX, 36-03-FIX-2, 36-03-FIX-3, 36-03-FIX-4)_
+_Round 6: 4/6 FIX-4 items passed, 4 open issues (1 blocker, 3 cosmetic)_

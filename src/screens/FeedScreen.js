@@ -702,6 +702,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     backgroundColor: '#000000',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A2A',
   },
   headerTitle: {
     fontSize: 24,
@@ -796,7 +798,8 @@ const styles = StyleSheet.create({
   },
   // Stories row styles
   storiesContainer: {
-    paddingVertical: 12,
+    paddingTop: 20,
+    paddingBottom: 12,
     backgroundColor: '#000000',
   },
   storiesScrollContent: {

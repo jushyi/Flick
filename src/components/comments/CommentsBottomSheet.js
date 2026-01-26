@@ -112,7 +112,7 @@ const CommentsBottomSheet = ({
       // UAT-029 fix: Move up 87% of keyboard height - clears suggestions bar
       // 60% didn't clear suggestions, 80% still tight, 90% slightly high, 100% had excess gap
       Animated.timing(sheetTranslateY, {
-        toValue: -(keyboardHeight * 0.87),
+        toValue: -(keyboardHeight * 0.885),
         duration: 250,
         useNativeDriver: true,
       }).start();
