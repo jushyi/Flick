@@ -111,25 +111,8 @@ const PhotoDetailModal = ({
             },
           ]}
         >
-          {/* Progress bar - stories mode only */}
-          {showProgressBar && totalPhotos > 0 && (
-            <View style={styles.progressBarContainer}>
-              {Array.from({ length: totalPhotos }).map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.progressSegment,
-                    index <= currentIndex
-                      ? styles.progressSegmentActive
-                      : styles.progressSegmentInactive,
-                  ]}
-                />
-              ))}
-            </View>
-          )}
-
           {/* Header with close button */}
-          <View style={[styles.header, showProgressBar && styles.headerStoriesMode]}>
+          <View style={styles.header}>
             <View style={styles.headerSpacer} />
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>✕</Text>
@@ -167,6 +150,23 @@ const PhotoDetailModal = ({
             </Text>
             <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
           </View>
+
+          {/* Progress bar - stories mode only, positioned below user info */}
+          {showProgressBar && totalPhotos > 0 && (
+            <View style={styles.progressBarContainer}>
+              {Array.from({ length: totalPhotos }).map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.progressSegment,
+                    index <= currentIndex
+                      ? styles.progressSegmentActive
+                      : styles.progressSegmentInactive,
+                  ]}
+                />
+              ))}
+            </View>
+          )}
 
           {/* Footer - Tappable Emoji Pills */}
           <View style={styles.footer}>

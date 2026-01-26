@@ -16,11 +16,11 @@ export const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
   },
-  // Progress bar for stories mode
+  // Progress bar for stories mode - positioned above footer
   progressBarContainer: {
     flexDirection: 'row',
-    paddingTop: (StatusBar.currentHeight || 54) + 8,
-    paddingHorizontal: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 24,
     gap: 4,
   },
   progressSegment: {
@@ -41,10 +41,6 @@ export const styles = StyleSheet.create({
     paddingTop: (StatusBar.currentHeight || 44) + 10,
     paddingHorizontal: 16,
     backgroundColor: 'transparent',
-  },
-  // Reduced header padding in stories mode (progress bar has its own padding)
-  headerStoriesMode: {
-    paddingTop: 12,
   },
   headerSpacer: {
     flex: 1,
@@ -97,7 +93,7 @@ export const styles = StyleSheet.create({
   },
   userInfoOverlay: {
     position: 'absolute',
-    bottom: 108,
+    bottom: 140,
     left: 24,
     flexDirection: 'row',
     alignItems: 'center',
