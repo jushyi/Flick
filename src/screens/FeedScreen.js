@@ -21,6 +21,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import useFeedPhotos from '../hooks/useFeedPhotos';
+import { useViewedStories } from '../hooks/useViewedStories';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
 import PhotoDetailModal from '../components/PhotoDetailModal';
@@ -58,6 +59,9 @@ const FeedScreen = () => {
 
   // Notifications state - red dot indicator
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
+
+  // View tracking state
+  const { isViewed, markAsViewed } = useViewedStories();
 
   /**
    * Refresh feed and stories when screen comes into focus
@@ -155,9 +159,13 @@ const FeedScreen = () => {
 
   /**
    * Handle closing stories viewer
+   * Marks the friend as viewed when closing
    */
   const handleCloseStories = () => {
     logger.debug('FeedScreen: Closing stories viewer');
+    if (selectedFriend) {
+      markAsViewed(selectedFriend.userId);
+    }
     setStoriesModalVisible(false);
     setSelectedFriend(null);
   };
@@ -306,6 +314,7 @@ const FeedScreen = () => {
 
   /**
    * Render stories row
+   * Sorts friends by viewed state (unviewed first)
    */
   const renderStoriesRow = () => {
     // Don't show stories row if loading or no friends have photos
@@ -318,6 +327,14 @@ const FeedScreen = () => {
       return null;
     }
 
+    // Sort friends by viewed state - unviewed first
+    const sortedFriends = [...friendStories].sort((a, b) => {
+      const aViewed = isViewed(a.userId);
+      const bViewed = isViewed(b.userId);
+      if (aViewed === bViewed) return 0;
+      return aViewed ? 1 : -1; // Unviewed first
+    });
+
     return (
       <View style={styles.storiesContainer}>
         <ScrollView
@@ -325,12 +342,13 @@ const FeedScreen = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.storiesScrollContent}
         >
-          {friendStories.map((friend, index) => (
+          {sortedFriends.map((friend, index) => (
             <FriendStoryCard
               key={friend.userId}
               friend={friend}
               onPress={() => handleOpenStories(friend)}
               isFirst={index === 0}
+              isViewed={isViewed(friend.userId)}
             />
           ))}
         </ScrollView>
