@@ -156,7 +156,12 @@ const PhotoDetailModal = ({
 
           {/* Progress bar - stories mode only, positioned below user info */}
           {showProgressBar && totalPhotos > 0 && (
-            <View style={styles.progressBarContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.progressBarScrollView}
+              contentContainerStyle={styles.progressBarContainer}
+            >
               {Array.from({ length: totalPhotos }).map((_, index) => (
                 <View
                   key={index}
@@ -168,7 +173,7 @@ const PhotoDetailModal = ({
                   ]}
                 />
               ))}
-            </View>
+            </ScrollView>
           )}
 
           {/* Footer - Tappable Emoji Pills */}

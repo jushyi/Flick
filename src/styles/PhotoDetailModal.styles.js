@@ -17,6 +17,9 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   // Progress bar for stories mode - positioned above footer
+  progressBarScrollView: {
+    flexGrow: 0, // Prevent ScrollView from expanding
+  },
   progressBarContainer: {
     flexDirection: 'row',
     paddingBottom: 8,
@@ -25,6 +28,7 @@ export const styles = StyleSheet.create({
   },
   progressSegment: {
     flex: 1,
+    minWidth: 4, // Ensures segments remain visible even with many photos
     height: 3,
     borderRadius: 1.5,
   },
