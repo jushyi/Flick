@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
   progressBarContainer: {
     flexDirection: 'row',
     paddingBottom: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     gap: 2,
   },
   progressSegment: {
@@ -119,7 +119,7 @@ export const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   footer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingTop: 0,
     paddingBottom: 32,
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
