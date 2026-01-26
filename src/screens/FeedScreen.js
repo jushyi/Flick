@@ -69,7 +69,8 @@ const FeedScreen = () => {
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
   // View tracking state
-  const { isViewed, markAsViewed, markPhotosAsViewed, getFirstUnviewedIndex } = useViewedStories();
+  const { isViewed, markAsViewed, markPhotosAsViewed, getFirstUnviewedIndex, hasViewedAllPhotos } =
+    useViewedStories();
 
   // Track initial index for stories modal
   const [storiesInitialIndex, setStoriesInitialIndex] = useState(0);
@@ -435,10 +436,10 @@ const FeedScreen = () => {
       return null;
     }
 
-    // Sort friends by viewed state - unviewed first
+    // Sort friends by viewed state - unviewed first (based on ALL photos viewed)
     const sortedFriends = [...friendStories].sort((a, b) => {
-      const aViewed = isViewed(a.userId);
-      const bViewed = isViewed(b.userId);
+      const aViewed = hasViewedAllPhotos(a.topPhotos);
+      const bViewed = hasViewedAllPhotos(b.topPhotos);
       if (aViewed === bViewed) return 0;
       return aViewed ? 1 : -1; // Unviewed first
     });
@@ -456,7 +457,7 @@ const FeedScreen = () => {
               friend={friend}
               onPress={() => handleOpenStories(friend)}
               isFirst={index === 0}
-              isViewed={isViewed(friend.userId)}
+              isViewed={hasViewedAllPhotos(friend.topPhotos)}
             />
           ))}
         </ScrollView>

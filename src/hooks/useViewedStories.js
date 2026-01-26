@@ -155,5 +155,25 @@ export const useViewedStories = () => {
     [viewedFriends]
   );
 
-  return { isViewed, markAsViewed, markPhotosAsViewed, getFirstUnviewedIndex, loading };
+  /**
+   * Check if all photos in an array have been viewed
+   * @param {Array<object>} photos - Array of photo objects with id property
+   * @returns {boolean} True if ALL photos have been viewed
+   */
+  const hasViewedAllPhotos = useCallback(
+    photos => {
+      if (!photos || photos.length === 0) return false;
+      return photos.every(photo => viewedPhotos.has(photo.id));
+    },
+    [viewedPhotos]
+  );
+
+  return {
+    isViewed,
+    markAsViewed,
+    markPhotosAsViewed,
+    getFirstUnviewedIndex,
+    hasViewedAllPhotos,
+    loading,
+  };
 };
