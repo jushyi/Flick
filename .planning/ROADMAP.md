@@ -279,11 +279,11 @@ Plans:
 **Goal**: Friends button only (full Profile refactor deferred to later milestone)
 **Depends on**: Phase 36
 **Research**: Unlikely (simple addition)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
 
-- [ ] 37-01: TBD
+- [x] 37-01: Minimal placeholder with Friends and Sign Out buttons only
 
 #### Phase 37.1: Darkroom Visual Feedback (INSERTED)
 
@@ -361,7 +361,7 @@ Plans:
 | 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7      | 1/1 + FIX      | Complete    | 2026-01-26 |
 | 35.5 Feed Layout Polish (INSERTED)             | v0.7      | 1/1            | Complete    | 2026-01-26 |
 | 36. Comments Feature                           | v0.7      | 6/6 + 5 FIX    | Complete    | 2026-01-26 |
-| 37. Profile Placeholder                        | v0.7      | 0/?            | Not started | -          |
+| 37. Profile Placeholder                        | v0.7      | 1/1            | Complete    | 2026-01-26 |
 | 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7      | 0/?            | Not started | -          |
 | 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7      | 0/?            | Not started | -          |
 
