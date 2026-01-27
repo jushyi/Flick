@@ -22,6 +22,7 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
+  withDelay,
   runOnJS,
   cancelAnimation,
 } from 'react-native-reanimated';
@@ -171,14 +172,15 @@ const DraggableThumbnail = ({
         runOnJS(onHoverIndexChange)(null);
         runOnJS(onDragEnd)();
       } else if (didReorder) {
-        // Reset visual state - LayoutAnimation will handle the transition
-        translateX.value = 0;
-        translateY.value = 0;
+        // Reset visual state - delay transform reset to sync with LayoutAnimation
         scale.value = withTiming(1, { duration: 150 });
         zIndex.value = 0;
         runOnJS(onHoverIndexChange)(null);
         runOnJS(onReorder)(index, targetIndex);
         runOnJS(onDragEnd)();
+        // Delay reset slightly so LayoutAnimation has started before transform resets
+        translateX.value = withDelay(16, withTiming(0, { duration: 200 }));
+        translateY.value = withDelay(16, withTiming(0, { duration: 200 }));
       } else {
         // No reorder - snap back
         translateX.value = withTiming(0, { duration: 150 });
@@ -427,10 +429,26 @@ const SelectsScreen = ({ navigation }) => {
     if (!result.canceled && result.assets && result.assets.length > 0) {
       logger.info('SelectsScreen: Photos selected', { count: result.assets.length });
 
-      const newPhotos = result.assets.map(asset => ({
-        uri: asset.uri,
-        assetId: asset.assetId || asset.uri,
-      }));
+      // Filter out duplicates
+      const existingIds = new Set(selectedPhotos.map(p => p.assetId || p.uri));
+      const newPhotos = result.assets
+        .map(asset => ({
+          uri: asset.uri,
+          assetId: asset.assetId || asset.uri,
+        }))
+        .filter(photo => !existingIds.has(photo.assetId));
+
+      if (newPhotos.length === 0) {
+        Alert.alert('Already Added', 'All selected photos are already in your highlights');
+        return;
+      }
+
+      if (newPhotos.length < result.assets.length) {
+        logger.info('SelectsScreen: Filtered duplicates', {
+          selected: result.assets.length,
+          added: newPhotos.length,
+        });
+      }
 
       setSelectedPhotos(prev => {
         const combined = [...prev, ...newPhotos].slice(0, MAX_SELECTS);
@@ -466,11 +484,21 @@ const SelectsScreen = ({ navigation }) => {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
+      const photoId = asset.assetId || asset.uri;
+
+      // Check for duplicate
+      const isDuplicate = selectedPhotos.some(p => (p.assetId || p.uri) === photoId);
+
+      if (isDuplicate) {
+        Alert.alert('Already Added', 'This photo is already in your highlights');
+        return;
+      }
+
       logger.info('SelectsScreen: Photo selected', { uri: asset.uri });
 
       const newPhoto = {
         uri: asset.uri,
-        assetId: asset.assetId || asset.uri,
+        assetId: photoId,
       };
 
       setSelectedPhotos(prev => {
@@ -534,6 +562,7 @@ const SelectsScreen = ({ navigation }) => {
     index => {
       setIsDragging(true);
       setDraggingIndex(index);
+      setSelectedIndex(index); // Show dragged photo in preview
       // Auto-dismiss hint on first drag
       if (showDragHint) {
         dismissDragHint();
@@ -640,9 +669,10 @@ const SelectsScreen = ({ navigation }) => {
 
     if (hasPhoto) {
       const photo = selectedPhotos[index];
+      const photoKey = photo.assetId || photo.uri;
       return (
         <DraggableThumbnail
-          key={index}
+          key={photoKey}
           photo={photo}
           photoId={photo.assetId || photo.uri}
           index={index}
