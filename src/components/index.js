@@ -15,3 +15,4 @@ export { default as SwipeablePhotoCard } from './SwipeablePhotoCard';
 export { default as FriendStoryCard } from './FriendStoryCard';
 // StoriesViewerModal deprecated - use PhotoDetailModal with mode="stories" instead
 export { default as AnimatedSplash } from './AnimatedSplash';
+export { default as StepIndicator } from './StepIndicator';
