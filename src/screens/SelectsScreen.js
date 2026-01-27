@@ -51,6 +51,8 @@ const DraggableThumbnail = ({
   draggingIndex,
   totalPhotos,
   deleteZoneY,
+  hoverIndex,
+  onHoverIndexChange,
 }) => {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -75,6 +77,7 @@ const DraggableThumbnail = ({
       scale.value = withSpring(1.1);
       zIndex.value = 1000;
       runOnJS(onDragStart)(index);
+      runOnJS(onHoverIndexChange)(index);
     })
     .onUpdate(event => {
       translateX.value = event.translationX;
@@ -82,6 +85,13 @@ const DraggableThumbnail = ({
       // Check if over delete zone using absolute Y position
       const isOverDelete = deleteZoneY > 0 && event.absoluteY >= deleteZoneY;
       runOnJS(onDragMove)(isOverDelete);
+      // Update hover index (null when over delete zone to collapse gaps)
+      if (isOverDelete) {
+        runOnJS(onHoverIndexChange)(null);
+      } else {
+        const targetIndex = calculateTargetIndex(translateX.value);
+        runOnJS(onHoverIndexChange)(targetIndex);
+      }
     })
     .onEnd(event => {
       // Check if dropping on delete zone using absolute Y position
@@ -100,6 +110,7 @@ const DraggableThumbnail = ({
       translateY.value = withSpring(0);
       scale.value = withSpring(1);
       zIndex.value = 0;
+      runOnJS(onHoverIndexChange)(null);
       runOnJS(onDragEnd)();
     })
     .onFinalize(() => {
@@ -107,6 +118,7 @@ const DraggableThumbnail = ({
       translateY.value = withSpring(0);
       scale.value = withSpring(1);
       zIndex.value = 0;
+      runOnJS(onHoverIndexChange)(null);
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -252,6 +264,7 @@ const SelectsScreen = ({ navigation }) => {
   const [isOverDeleteZone, setIsOverDeleteZone] = useState(false);
   const [deleteZoneY, setDeleteZoneY] = useState(0);
   const [showDragHint, setShowDragHint] = useState(false);
+  const [hoverIndex, setHoverIndex] = useState(null);
 
   // Check if hint should be shown on mount
   useEffect(() => {
@@ -455,6 +468,10 @@ const SelectsScreen = ({ navigation }) => {
     setIsOverDeleteZone(isOverDelete);
   }, []);
 
+  const handleHoverIndexChange = useCallback(newHoverIndex => {
+    setHoverIndex(newHoverIndex);
+  }, []);
+
   const handleThumbnailPress = index => {
     if (index < selectedPhotos.length) {
       // Photo exists at this index - show in preview
@@ -554,6 +571,8 @@ const SelectsScreen = ({ navigation }) => {
           draggingIndex={draggingIndex}
           totalPhotos={selectedPhotos.length}
           deleteZoneY={deleteZoneY}
+          hoverIndex={hoverIndex}
+          onHoverIndexChange={handleHoverIndexChange}
         />
       );
     }
