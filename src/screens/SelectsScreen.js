@@ -555,6 +555,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginHorizontal: SCREEN_PADDING,
     zIndex: 1,
+    overflow: 'visible',
   },
   thumbnailScroll: {},
   thumbnailContainer: {
