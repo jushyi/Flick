@@ -60,6 +60,9 @@ const PhoneInputScreen = ({ navigation }) => {
   // Shake animation for error feedback
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
+  // Track previous digit count to detect backspace vs typing
+  const prevDigitCountRef = useRef(0);
+
   const triggerShake = () => {
     Animated.sequence([
       Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
@@ -135,15 +138,20 @@ const PhoneInputScreen = ({ navigation }) => {
   };
 
   const handlePhoneChange = text => {
-    // Remove any non-numeric characters except for formatting
-    const cleaned = text.replace(/[^0-9]/g, '');
-    setPhoneNumber(cleaned);
+    // Extract digits only
+    const digits = text.replace(/[^0-9]/g, '');
+    const newDigitCount = digits.length;
+    const isDeleting = newDigitCount < prevDigitCountRef.current;
 
-    // Update formatted display as user types
-    const formatted = formatAsUserTypes(cleaned, selectedCountry.country);
-    setFormattedPhone(formatted);
+    setPhoneNumber(digits);
 
-    if (error) setError(''); // Clear error on change
+    // When deleting through formatted characters (like parentheses), use raw digits
+    // to avoid getting stuck. When typing, format normally.
+    const formatted = formatAsUserTypes(digits, selectedCountry.country);
+    setFormattedPhone(isDeleting && digits.length <= 3 ? digits : formatted);
+
+    prevDigitCountRef.current = newDigitCount;
+    if (error) setError('');
   };
 
   const handleBack = () => {
@@ -200,7 +208,7 @@ const PhoneInputScreen = ({ navigation }) => {
                 <View style={styles.phoneInputWrapper}>
                   <Input
                     placeholder="(555) 555-5555"
-                    value={formattedPhone || phoneNumber}
+                    value={formattedPhone}
                     onChangeText={handlePhoneChange}
                     keyboardType="phone-pad"
                     autoCapitalize="none"
