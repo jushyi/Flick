@@ -26,7 +26,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Image } from 'expo-image';
 import CommentWithReplies from './CommentWithReplies';
 import CommentInput from './CommentInput';
 import useComments from '../../hooks/useComments';
@@ -43,7 +42,6 @@ import { styles, SHEET_HEIGHT, EXPANDED_HEIGHT } from '../../styles/CommentsBott
  * @param {string} photoOwnerId - Photo owner's user ID (for delete permissions)
  * @param {string} currentUserId - Current user's ID
  * @param {function} onCommentAdded - Callback after comment successfully added
- * @param {string} photoUrl - Photo URL for mini thumbnail when expanded (36.1-01)
  */
 const CommentsBottomSheet = ({
   visible,
@@ -52,13 +50,11 @@ const CommentsBottomSheet = ({
   photoOwnerId,
   currentUserId,
   onCommentAdded,
-  photoUrl,
 }) => {
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const sheetTranslateY = useRef(new Animated.Value(0)).current; // UAT-021 fix: sheet position for keyboard
   const swipeY = useRef(new Animated.Value(0)).current; // UAT-020 fix: swipe gesture tracking
   const sheetHeight = useRef(new Animated.Value(SHEET_HEIGHT)).current; // 36.1-01: animated height for expand/collapse
-  const headerOpacity = useRef(new Animated.Value(0)).current; // 36.1-01: mini photo header opacity
   const inputRef = useRef(null);
   const insets = useSafeAreaInsets(); // UAT-010 fix: safe area for bottom input
   const [keyboardVisible, setKeyboardVisible] = useState(false); // UAT-013 fix: keyboard state
@@ -92,21 +88,14 @@ const CommentsBottomSheet = ({
         // SWIPE UP: Expand sheet
         if (dy < -10) {
           if (!expanded && (fastSwipe || dy < -50)) {
-            // Expand to fullscreen with parallel animations
+            // Expand to fullscreen
             isExpandedRef.current = true; // Update ref immediately for next gesture
-            Animated.parallel([
-              Animated.spring(sheetHeight, {
-                toValue: EXPANDED_HEIGHT,
-                useNativeDriver: false, // height animation requires JS driver
-                damping: 20,
-                stiffness: 100,
-              }),
-              Animated.timing(headerOpacity, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-              }),
-            ]).start();
+            Animated.spring(sheetHeight, {
+              toValue: EXPANDED_HEIGHT,
+              useNativeDriver: false, // height animation requires JS driver
+              damping: 20,
+              stiffness: 100,
+            }).start();
             logger.debug('CommentsBottomSheet: Expanding to fullscreen');
           }
           return;
@@ -115,21 +104,14 @@ const CommentsBottomSheet = ({
         // SWIPE DOWN: Collapse or close
         if (dy > 10) {
           if (expanded && (fastSwipe || dy > 50)) {
-            // Collapse from fullscreen to normal with parallel animations
+            // Collapse from fullscreen to normal
             isExpandedRef.current = false; // Update ref immediately for next gesture
-            Animated.parallel([
-              Animated.spring(sheetHeight, {
-                toValue: SHEET_HEIGHT,
-                useNativeDriver: false,
-                damping: 20,
-                stiffness: 100,
-              }),
-              Animated.timing(headerOpacity, {
-                toValue: 0,
-                duration: 150,
-                useNativeDriver: true,
-              }),
-            ]).start();
+            Animated.spring(sheetHeight, {
+              toValue: SHEET_HEIGHT,
+              useNativeDriver: false,
+              damping: 20,
+              stiffness: 100,
+            }).start();
             logger.debug('CommentsBottomSheet: Collapsing to normal height');
           } else if (!expanded && (dy > SHEET_HEIGHT * 0.25 || fastSwipe)) {
             // Close sheet entirely (existing behavior)
@@ -239,10 +221,9 @@ const CommentsBottomSheet = ({
       translateY.setValue(SHEET_HEIGHT);
       // Reset expanded state for next open
       sheetHeight.setValue(SHEET_HEIGHT);
-      headerOpacity.setValue(0);
       isExpandedRef.current = false;
     }
-  }, [visible, translateY, photoId, sheetHeight, headerOpacity]);
+  }, [visible, translateY, photoId, sheetHeight]);
 
   /**
    * Handle backdrop press to close
@@ -455,17 +436,6 @@ const CommentsBottomSheet = ({
               <View style={styles.handleBarContainer} {...panResponder.panHandlers}>
                 <View style={styles.handleBar} />
               </View>
-
-              {/* Mini photo header - visible when expanded (36.1-01) */}
-              {photoUrl && (
-                <Animated.View style={[styles.expandedPhotoHeader, { opacity: headerOpacity }]}>
-                  <Image
-                    source={{ uri: photoUrl }}
-                    style={styles.miniPhotoThumbnail}
-                    contentFit="cover"
-                  />
-                </Animated.View>
-              )}
 
               {/* Header */}
               <View style={styles.header}>

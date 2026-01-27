@@ -419,7 +419,6 @@ const PhotoDetailModal = ({
         photoId={currentPhoto?.id}
         photoOwnerId={currentPhoto?.userId}
         currentUserId={currentUserId}
-        photoUrl={imageURL}
       />
     </Modal>
   );

@@ -14,7 +14,7 @@ import { colors } from '../constants/colors';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export const SHEET_HEIGHT = SCREEN_HEIGHT * 0.6;
-export const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.95; // Fullscreen expanded height
+export const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.85; // Expanded height (leaves room for notch)
 // Minimum height for empty state (UAT-008 fix) - ~50% screen
 export const MIN_SHEET_HEIGHT = SCREEN_HEIGHT * 0.5;
 
@@ -44,11 +44,11 @@ export const styles = StyleSheet.create({
     maxHeight: SHEET_HEIGHT,
     overflow: 'hidden',
   },
-  // Handle bar for visual affordance
+  // Handle bar for visual affordance - larger touch target (36.1-01)
   handleBarContainer: {
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
   handleBar: {
     width: 36,
@@ -158,20 +158,5 @@ export const styles = StyleSheet.create({
   // Individual reply item container
   replyItem: {
     marginTop: 4,
-  },
-  // 36.1-01: Expanded photo header (mini thumbnail when fullscreen)
-  expandedPhotoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  // 36.1-01: Mini photo thumbnail
-  miniPhotoThumbnail: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
 });
