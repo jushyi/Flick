@@ -17,7 +17,7 @@ None
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Auth Shared Components** - Dark theme foundation, shared styles and reusable components
+- [x] **Phase 1: Auth Shared Components** - Dark theme foundation, shared styles and reusable components
 - [ ] **Phase 2: Login Screen Refactor** - Full dark theme application, improved UX
 - [ ] **Phase 3: Signup Flow Refactor** - Multi-step signup with consistent dark styling
 - [ ] **Phase 4: Profile Creation Onboarding** - Extended setup flow with Selects and song
@@ -34,11 +34,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Goal**: Establish dark theme foundation with shared styles, colors, typography, and reusable components (buttons, inputs, headers) for all auth screens
 **Depends on**: Nothing (first phase)
 **Research**: Unlikely (existing dark theme patterns in Camera/Feed/Darkroom)
-**Plans**: TBD
+**Plans**: 1/1 complete
 
 Plans:
 
-- [ ] 01-01: TBD during planning
+- [x] 01-01: Dark theme Button/Input updates + AuthCodeInput component
 
 ### Phase 2: Login Screen Refactor
 
@@ -135,14 +135,14 @@ Plans:
 **Execution Order:**
 Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
 
-| Phase                          | Plans Complete | Status      | Completed |
-| ------------------------------ | -------------- | ----------- | --------- |
-| 1. Auth Shared Components      | 0/?            | Not started | -         |
-| 2. Login Screen Refactor       | 0/?            | Not started | -         |
-| 3. Signup Flow Refactor        | 0/?            | Not started | -         |
-| 4. Profile Creation Onboarding | 0/?            | Not started | -         |
-| 5. Profile Screen Layout       | 0/?            | Not started | -         |
-| 6. Selects Banner              | 0/?            | Not started | -         |
-| 7. Profile Song Scaffold       | 0/?            | Not started | -         |
-| 8. User Albums Display         | 0/?            | Not started | -         |
-| 9. Monthly Albums              | 0/?            | Not started | -         |
+| Phase                          | Plans Complete | Status      | Completed  |
+| ------------------------------ | -------------- | ----------- | ---------- |
+| 1. Auth Shared Components      | 1/1            | Complete    | 2026-01-27 |
+| 2. Login Screen Refactor       | 0/?            | Not started | -          |
+| 3. Signup Flow Refactor        | 0/?            | Not started | -          |
+| 4. Profile Creation Onboarding | 0/?            | Not started | -          |
+| 5. Profile Screen Layout       | 0/?            | Not started | -          |
+| 6. Selects Banner              | 0/?            | Not started | -          |
+| 7. Profile Song Scaffold       | 0/?            | Not started | -          |
+| 8. User Albums Display         | 0/?            | Not started | -          |
+| 9. Monthly Albums              | 0/?            | Not started | -          |
