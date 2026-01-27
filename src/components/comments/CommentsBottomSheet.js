@@ -19,6 +19,7 @@ import {
   FlatList,
   Platform,
   Animated,
+  Easing,
   ActivityIndicator,
   Keyboard,
   PanResponder,
@@ -56,9 +57,11 @@ const CommentsBottomSheet = ({
   const swipeY = useRef(new Animated.Value(0)).current; // UAT-020 fix: swipe gesture tracking
   const sheetHeight = useRef(new Animated.Value(SHEET_HEIGHT)).current; // 36.1-01: animated height for expand/collapse
   const inputRef = useRef(null);
+  const flatListRef = useRef(null);
   const insets = useSafeAreaInsets(); // UAT-010 fix: safe area for bottom input
   const [keyboardVisible, setKeyboardVisible] = useState(false); // UAT-013 fix: keyboard state
   const isExpandedRef = useRef(false); // 36.1-01: ref for PanResponder closure access
+  const isAtTopRef = useRef(true); // Track if FlatList is scrolled to top
 
   /**
    * PanResponder for bidirectional expand/collapse on handle bar (36.1-01)
@@ -393,6 +396,56 @@ const CommentsBottomSheet = ({
   // Key extractor for FlatList
   const keyExtractor = useCallback(item => item.id, []);
 
+  /**
+   * Track scroll position to detect when at top
+   */
+  const handleScroll = useCallback(event => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    isAtTopRef.current = offsetY <= 0;
+  }, []);
+
+  /**
+   * Handle scroll end drag - collapse/close if pulled down from top
+   * When user bounces past top of list (contentOffset.y < 0), trigger collapse/close
+   */
+  const handleScrollEndDrag = useCallback(
+    event => {
+      const { contentOffset } = event.nativeEvent;
+
+      // If bounced significantly past top (pulled down), collapse or close
+      if (contentOffset.y < -50) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+        if (isExpandedRef.current) {
+          // Collapse from fullscreen to normal
+          isExpandedRef.current = false;
+          Animated.spring(sheetHeight, {
+            toValue: SHEET_HEIGHT,
+            useNativeDriver: false,
+            damping: 20,
+            stiffness: 100,
+          }).start();
+          logger.debug('CommentsBottomSheet: Collapsing via scroll pull-down');
+        } else {
+          // Close sheet entirely - use timing with easing for clean close (no bounce)
+          if (onClose) {
+            Animated.timing(swipeY, {
+              toValue: SHEET_HEIGHT,
+              duration: 250,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }).start(() => {
+              swipeY.setValue(0);
+              onClose();
+            });
+            logger.debug('CommentsBottomSheet: Closing via scroll pull-down');
+          }
+        }
+      }
+    },
+    [sheetHeight, swipeY, onClose]
+  );
+
   // Comment count for header
   const totalCommentCount = threadedComments.reduce(
     (count, comment) => count + 1 + (comment.replies?.length || 0),
@@ -457,6 +510,7 @@ const CommentsBottomSheet = ({
                 renderError()
               ) : (
                 <FlatList
+                  ref={flatListRef}
                   style={styles.commentsList}
                   contentContainerStyle={styles.commentsListContent}
                   data={threadedComments}
@@ -466,6 +520,9 @@ const CommentsBottomSheet = ({
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   keyboardDismissMode="interactive"
+                  onScroll={handleScroll}
+                  onScrollEndDrag={handleScrollEndDrag}
+                  scrollEventThrottle={16}
                 />
               )}
 
