@@ -45,11 +45,11 @@ Plans:
 **Goal**: Apply dark theme to login screen, improve UX to match app aesthetic
 **Depends on**: Phase 1
 **Research**: Unlikely (internal UI using shared components)
-**Plans**: TBD
+**Plans**: 0/1 complete
 
 Plans:
 
-- [ ] 02-01: TBD during planning
+- [ ] 02-01: Integrate AuthCodeInput into VerificationScreen + dark theme consistency
 
 ### Phase 3: Signup Flow Refactor
 
@@ -138,7 +138,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase                          | Plans Complete | Status      | Completed  |
 | ------------------------------ | -------------- | ----------- | ---------- |
 | 1. Auth Shared Components      | 1/1            | Complete    | 2026-01-27 |
-| 2. Login Screen Refactor       | 0/?            | Not started | -          |
+| 2. Login Screen Refactor       | 0/1            | Planned     | -          |
 | 3. Signup Flow Refactor        | 0/?            | Not started | -          |
 | 4. Profile Creation Onboarding | 0/?            | Not started | -          |
 | 5. Profile Screen Layout       | 0/?            | Not started | -          |
