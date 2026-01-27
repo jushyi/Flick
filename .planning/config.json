@@ -1,15 +1,15 @@
 {
-  "mode": "yolo",
-  "depth": "standard",
+  "mode": "interactive",
+  "depth": "comprehensive",
   "gates": {
-    "confirm_project": false,
-    "confirm_phases": false,
-    "confirm_roadmap": false,
-    "confirm_breakdown": false,
-    "confirm_plan": false,
-    "execute_next_plan": false,
+    "confirm_project": true,
+    "confirm_phases": true,
+    "confirm_roadmap": true,
+    "confirm_breakdown": true,
+    "confirm_plan": true,
+    "execute_next_plan": true,
     "issues_review": true,
-    "confirm_transition": false
+    "confirm_transition": true
   },
   "safety": {
     "always_confirm_destructive": true,
