@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { Button, Input } from '../components';
+import { Button, Input, StepIndicator } from '../components';
 import { useAuth } from '../context/AuthContext';
 import { uploadProfilePhoto } from '../services/firebase/storageService';
 import {
@@ -236,8 +236,15 @@ const ProfileSetupScreen = ({ navigation }) => {
     }
   };
 
-  const handleCompleteSetup = async () => {
+  const handleNextStep = async () => {
     if (!validate()) {
+      Alert.alert('Required Fields', 'Please fill in all required fields before continuing.');
+      return;
+    }
+
+    // Check if username is still being validated
+    if (checkingUsername) {
+      Alert.alert('Please Wait', 'Still checking username availability...');
       return;
     }
 
@@ -293,76 +300,6 @@ const ProfileSetupScreen = ({ navigation }) => {
     }
   };
 
-  const validateRequired = () => {
-    const newErrors = {};
-
-    // Username is required
-    const usernameError = validateUsername(username.trim());
-    if (usernameError) {
-      newErrors.username = usernameError;
-    } else if (!usernameAvailable) {
-      newErrors.username = 'Username is already taken';
-    }
-
-    // Display name is required
-    const displayNameError = validateLength(displayName.trim(), 2, 50, 'Display name');
-    if (displayNameError) {
-      newErrors.displayName = displayNameError;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSkip = async () => {
-    // Validate required fields (username and display name)
-    if (!validateRequired()) {
-      Alert.alert(
-        'Required Fields',
-        'Please fill in your username and display name before continuing.'
-      );
-      return;
-    }
-
-    // Check if username is still being validated
-    if (checkingUsername) {
-      Alert.alert('Please Wait', 'Still checking username availability...');
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      // Skip with required fields only (no photo, no bio, no song)
-      const skipData = {
-        username: username.toLowerCase().trim(),
-        displayName: sanitizeDisplayName(displayName.trim()),
-        bio: '',
-        photoURL: null,
-        profileSong: null,
-        profileSetupCompleted: true,
-      };
-
-      const result = await updateUserDocumentNative(user.uid, skipData);
-
-      if (result.success) {
-        updateUserProfile({
-          ...userProfile,
-          ...skipData,
-        });
-
-        // Request notification permissions in background
-        requestNotificationPermissionsAsync();
-      } else {
-        Alert.alert('Error', 'Could not save profile. Please try again.');
-      }
-    } catch (error) {
-      Alert.alert('Error', error.message || 'An error occurred');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -374,6 +311,7 @@ const ProfileSetupScreen = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
+            <StepIndicator currentStep={1} totalSteps={2} style={styles.stepIndicator} />
             <Text style={styles.title}>Complete Your Profile</Text>
             <Text style={styles.subtitle}>Help your friends recognize you</Text>
 
@@ -461,16 +399,12 @@ const ProfileSetupScreen = ({ navigation }) => {
               </View>
 
               <Button
-                title="Complete Setup"
+                title="Next step"
                 variant="primary"
-                onPress={handleCompleteSetup}
+                onPress={handleNextStep}
                 loading={uploading}
-                style={styles.completeButton}
+                style={styles.nextButton}
               />
-
-              <Text style={styles.skipText} onPress={handleSkip}>
-                Skip for now
-              </Text>
             </View>
           </View>
         </ScrollView>
@@ -591,15 +525,11 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     marginTop: 2,
   },
-  completeButton: {
-    marginTop: 8,
+  stepIndicator: {
+    marginBottom: 16,
   },
-  skipText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    marginTop: 16,
-    textDecorationLine: 'underline',
+  nextButton: {
+    marginTop: 8,
   },
 });
 
