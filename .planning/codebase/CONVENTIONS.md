@@ -6,279 +6,198 @@
 
 **Files:**
 
-- PascalCase for React components: `FeedPhotoCard.js`, `AuthContext.js`
-- camelCase for services: `feedService.js`, `photoService.js`
-- camelCase for hooks: `useCamera.js`, `useFeedPhotos.js`
-- camelCase for utilities: `logger.js`, `timeUtils.js`
-- PascalCase.styles.js for style modules: `FeedPhotoCard.styles.js`
-- Test files: `{name}.test.js` in `__tests__/`
+- PascalCase for React components: `FeedScreen.js`, `PhotoDetailModal.js`
+- camelCase for utilities and services: `logger.js`, `photoService.js`
+- `.test.js` suffix for test files
+- `.styles.js` suffix for style modules
 
 **Functions:**
 
-- camelCase for all functions: `getFeedPhotos`, `handleCapture`
-- Async functions: No special prefix, just use async/await
-- Handlers: `handle{Action}` pattern: `handleReaction`, `handlePress`
-- Service functions: Descriptive verbs: `createPhoto`, `updatePhoto`, `deletePhoto`
+- camelCase for all functions: `uploadPhoto`, `getDevelopingPhotoCount`
+- No special prefix for async functions
+- handle\* for event handlers: `handleCapturePhoto`, `handleReaction`
 
 **Variables:**
 
-- camelCase for variables: `photoData`, `currentUser`
-- UPPER_SNAKE_CASE for constants: `REACTION_DEBOUNCE_MS`
+- camelCase for variables: `userProfile`, `darkroomCount`
+- UPPER_SNAKE_CASE for constants: `REACTION_DEBOUNCE_MS`, `GIPHY_API_KEY`
 - No underscore prefix for private members
 
-**Types (JSDoc):**
+**Types:**
 
-- PascalCase for JSDoc @typedef: `@typedef {Object} PhotoData`
-- Inline JSDoc for function parameters and returns
+- Not applicable (JavaScript, not TypeScript)
 
 ## Code Style
 
-**Formatting (Prettier):**
+**Formatting:**
 
-- Config: `.prettierrc`
-- Semicolons: required (`"semi": true`)
-- Quotes: single (`"singleQuote": true`)
-- Trailing commas: ES5 (`"trailingComma": "es5"`)
-- Tab width: 2 spaces (`"tabWidth": 2`)
-- Print width: 100 characters (`"printWidth": 100`)
-- Arrow parens: avoid when possible (`"arrowParens": "avoid"`)
-- Bracket spacing: true (`"bracketSpacing": true`)
+- Prettier with configuration in `eslint.config.js`
+- Single quotes for strings
+- Trailing commas in multiline
+- 2 space indentation
+- ~100 character line length (Prettier default)
 
-**Linting (ESLint):**
+**Linting:**
 
-- Config: `eslint.config.js` (flat config format)
-- Base: `eslint-config-expo`
-- Prettier integration: `eslint-plugin-prettier/recommended`
+- ESLint 9.x with flat config: `eslint.config.js`
+- Extends eslint-config-expo (React Native rules)
+- Prettier integration via eslint-plugin-prettier
 - Run: `npm run lint` or `npm run lint:fix`
 
-**Git Hooks (Husky):**
+**Pre-commit:**
 
-- Pre-commit: lint-staged runs eslint + prettier on staged files
-- Config: `.husky/` directory
+- Husky + lint-staged
+- Auto-runs ESLint and Prettier on staged files
 
 ## Import Organization
 
 **Order:**
 
-1. React/React Native core imports
-2. External packages (expo-_, @react-native-firebase/_, etc.)
-3. Internal modules (components, services, hooks, context)
-4. Relative imports (./utils, ../constants)
-5. Styles (if separate file)
+1. React and React Native imports
+2. External packages (expo-_, @react-navigation/_, etc.)
+3. Internal modules (context, services, components)
+4. Relative imports (./_, ../_)
+5. Constants and utils last
 
 **Grouping:**
 
-- Blank line between groups
+- Logical grouping with blank lines between categories
 - No strict alphabetical sorting enforced
 
 **Path Aliases:**
 
-- `@/` maps to `src/` (configured in `jest.config.js`, not used in source)
-- `@env` for environment variables via `react-native-dotenv`
-
-**Example:**
-
-```javascript
-import { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import { getFirestore, collection } from '@react-native-firebase/firestore';
-import { FeedPhotoCard, Button } from '../components';
-import { feedService } from '../services/firebase';
-import { useAuth } from '../context';
-import logger from '../utils/logger';
-import styles from '../styles/FeedScreen.styles';
-```
+- `@/` maps to `src/` (configured in jest.config.js for tests)
+- `@env` for environment variables via react-native-dotenv
 
 ## Error Handling
 
 **Patterns:**
 
-- Services return `{ success: boolean, data?: T, error?: string }`
-- Try/catch with structured logging in all async functions
-- Graceful degradation (return empty arrays, null values)
+- Services return `{ success: true, data }` or `{ success: false, error }` objects
+- Callers check `result.success` before using data
+- Try/catch in async functions, log errors via logger
 
 **Error Types:**
 
-- Throw errors in Cloud Functions for HTTP errors (`HttpsError`)
-- Return error objects in client services (don't throw)
-- Log all errors with context via `logger.error()`
+- Throw on unexpected errors (caught by ErrorBoundary)
+- Return error objects for expected failures
+- Log all errors with context: `logger.error('Context: Error message', { details })`
 
 **Example:**
 
 ```javascript
-export const getFeedPhotos = async (limitCount = 20) => {
-  try {
-    const snapshot = await getDocs(query);
-    return { success: true, photos: snapshot.docs };
-  } catch (error) {
-    logger.error('Error fetching feed photos', error);
-    return { success: false, error: error.message, photos: [] };
+try {
+  const result = await someService();
+  if (!result.success) {
+    logger.warn('Operation failed', { error: result.error });
+    return { success: false, error: result.error };
   }
-};
+  return { success: true, data: result.data };
+} catch (error) {
+  logger.error('Unexpected error', { error: error.message });
+  return { success: false, error: error.message };
+}
 ```
 
 ## Logging
 
 **Framework:**
 
-- Custom logger: `src/utils/logger.js`
+- Custom logger utility: `src/utils/logger.js`
 - Levels: debug, info, warn, error
-- Environment-aware (debug filtered in production)
 
 **Patterns:**
 
-- Service entry/exit: `logger.debug('ServiceName.functionName: Starting', { params })`
-- User actions: `logger.info('ScreenName: User action', { context })`
-- Errors: `logger.error('Description', { error: error.message, context })`
-- Warnings: `logger.warn('Condition', { context })`
-
-**What to Log:**
-
-- Service function calls (entry/exit)
-- Firebase operations (queries, updates)
-- User actions (captures, reactions, navigation)
-- State changes
-- All errors with context
+- Structured logging with context objects
+- Log at service boundaries and user actions
+- Automatic sensitive data sanitization
+- `logger.debug()` for development, `logger.info()` for important events
+- `logger.error()` always includes error details
 
 **Example:**
 
 ```javascript
-export const uploadPhoto = async (userId, photoUri) => {
-  logger.debug('PhotoService.uploadPhoto: Starting', { userId });
-  try {
-    const result = await storageUpload(photoUri);
-    logger.info('PhotoService.uploadPhoto: Success', { userId, photoId: result.id });
-    return { success: true, photoId: result.id };
-  } catch (error) {
-    logger.error('PhotoService.uploadPhoto: Failed', { userId, error: error.message });
-    return { success: false, error: error.message };
-  }
-};
+logger.info('PhotoService.uploadPhoto: Starting upload', { userId });
+logger.debug('PhotoService.uploadPhoto: Processing', { step: 'compress' });
+logger.error('PhotoService.uploadPhoto: Failed', { error: error.message });
 ```
 
 ## Comments
 
 **When to Comment:**
 
-- Explain "why", not "what"
-- Document business logic and non-obvious decisions
-- JSDoc for service function parameters and returns
-- Top-of-file docblock for services explaining purpose
+- Explain why, not what
+- Document business rules (e.g., reveal timing, triage flow)
+- Complex algorithms or workarounds
+- TODOs with issue context
 
 **JSDoc:**
 
-- Required for service functions (public API)
-- Include @param, @returns, @throws tags
-- Example types inline
+- Used in Cloud Functions for function documentation
+- Optional in app code (function names should be self-documenting)
 
 **TODO Comments:**
 
 - Format: `// TODO: description`
-- Reference phase if applicable: `// TODO: In Phase 10, send to Sentry`
-
-**Example:**
-
-```javascript
-/**
- * Feed Service
- *
- * Handles feed queries and reaction management. Fetches journaled photos
- * from friends, provides real-time subscriptions, and manages emoji reactions.
- */
-
-/**
- * Get feed photos (journaled photos from friends + current user)
- *
- * @param {number} limitCount - Number of photos to fetch (default: 20)
- * @param {object} lastDoc - Last document for pagination (optional)
- * @returns {Promise<{success: boolean, photos: Array, lastDoc: object, hasMore: boolean}>}
- */
-export const getFeedPhotos = async (limitCount = 20, lastDoc = null) => {
-  // ...
-};
-```
+- Include phase reference if applicable
+- Example: `// TODO: In Phase 10, send to Sentry`
 
 ## Function Design
 
 **Size:**
 
-- Keep under ~50 lines when reasonable
+- Keep functions focused on single responsibility
 - Extract helpers for complex logic
-- One responsibility per function
+- No strict line limit enforced
 
 **Parameters:**
 
-- Max 3-4 positional parameters
-- Use options object for many parameters
-- Default values for optional parameters
+- Destructure objects in parameters where appropriate
+- Use options object for functions with many parameters
 
 **Return Values:**
 
-- Consistent return shape: `{ success, data, error }`
+- Consistent `{ success, data/error }` pattern for services
 - Return early for guard clauses
-- No implicit returns (always explicit)
-
-**Example:**
-
-```javascript
-// Good: clear return shape, early returns
-export const getPhotoById = async photoId => {
-  if (!photoId) {
-    return { success: false, error: 'Photo ID required' };
-  }
-
-  try {
-    const doc = await getDoc(photoRef);
-    if (!doc.exists()) {
-      return { success: false, error: 'Photo not found' };
-    }
-    return { success: true, photo: { id: doc.id, ...doc.data() } };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-};
-```
+- Explicit returns (no implicit undefined)
 
 ## Module Design
 
 **Exports:**
 
-- Named exports for services: `export const getFeedPhotos = ...`
-- Default export for React components: `export default function FeedScreen() {}`
-- Barrel exports via `index.js` in each directory
+- Named exports preferred
+- Default exports for React components
+- Barrel files (`index.js`) for directory exports
 
-**Barrel Files:**
+**Services:**
 
-- Every directory has `index.js` for clean imports
-- Re-export all public modules
-- Example: `export { FeedPhotoCard, Button, Card } from './components';`
-
-**Service Pattern:**
-
-- One service per domain (photos, feed, friendships, etc.)
-- All functions exported individually
-- Consistent return shape across all services
-
-## React Patterns
+- Export individual functions, not classes
+- Functions are stateless (state in Firestore)
 
 **Components:**
 
-- Functional components only (no class components)
-- Destructure props in function signature
-- Default export for screen/component files
+- One component per file (main component)
+- Helper components can be in same file if small
+- Export default for main component
 
-**Hooks:**
+## React/React Native Patterns
 
-- Custom hooks start with `use` prefix
-- Return object with named properties: `{ data, loading, error, refresh }`
-- Use `useCallback` for stable function references
-- Use `useMemo` for expensive computations
+**State Management:**
 
-**Context:**
+- useState for local UI state
+- useContext for global state (auth, theme)
+- No external state library (Redux, MobX)
 
-- Provider wraps relevant subtree (usually at App.js level)
-- Custom hook for consuming: `useAuth()`, `useTheme()`
-- Keep context focused (auth, theme, etc.)
+**Effects:**
+
+- useEffect for side effects and subscriptions
+- Cleanup functions for listeners/intervals
+- Dependency arrays always specified
+
+**Navigation:**
+
+- React Navigation hooks: useNavigation, useRoute
+- navigationRef for programmatic navigation
 
 ---
 

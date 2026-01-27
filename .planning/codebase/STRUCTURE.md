@@ -6,290 +6,212 @@
 
 ```
 lapse-clone/
-├── .planning/              # GSD planning documents
-│   └── codebase/          # Codebase analysis documents
-├── __tests__/             # Jest test files
-│   ├── setup/             # Test configuration
-│   ├── services/          # Service unit tests
-│   └── integration/       # Integration tests
-├── assets/                # Static assets (images, fonts)
-├── coverage/              # Jest coverage reports (gitignored)
-├── docs/                  # Project documentation
-├── functions/             # Firebase Cloud Functions
-├── node_modules/          # npm dependencies (gitignored)
-├── patches/               # patch-package patches
-├── plugins/               # Expo config plugins
-├── scripts/               # Build/dev scripts
-├── src/                   # Application source code
-│   ├── components/        # Reusable UI components
-│   │   └── comments/      # Comment-related components
-│   ├── constants/         # App constants
-│   ├── context/           # React Context providers
-│   ├── hooks/             # Custom React hooks
-│   ├── navigation/        # React Navigation config
-│   ├── screens/           # Screen components
-│   ├── services/          # Service modules
-│   │   └── firebase/      # Firebase service wrappers
-│   ├── styles/            # Shared StyleSheet modules
-│   └── utils/             # Utility functions
-├── App.js                 # Root component
-├── index.js               # Entry point (registerRootComponent)
-├── app.json               # Expo static config
-├── app.config.js          # Expo dynamic config
-├── babel.config.js        # Babel configuration
-├── eslint.config.js       # ESLint flat config
-├── jest.config.js         # Jest configuration
-├── package.json           # Project manifest
-├── firebase.json          # Firebase CLI config
-├── firestore.rules        # Firestore security rules
-├── firestore.indexes.json # Firestore indexes
-├── storage.rules          # Storage security rules
-└── eas.json               # EAS Build config
+├── __tests__/          # Jest test files
+│   ├── __mocks__/     # Firebase SDK mocks
+│   ├── integration/   # Integration tests
+│   ├── services/      # Service unit tests
+│   └── setup/         # Jest setup and factories
+├── assets/             # Static assets (images, fonts)
+├── coverage/           # Jest coverage reports
+├── dist/               # Build output (gitignored)
+├── docs/               # Project documentation
+├── functions/          # Firebase Cloud Functions
+├── patches/            # patch-package patches
+├── plugins/            # Expo config plugins
+├── scripts/            # Build/deploy scripts
+├── src/                # Application source code
+│   ├── components/    # Reusable UI components
+│   ├── constants/     # App constants
+│   ├── context/       # React Context providers
+│   ├── hooks/         # Custom React hooks
+│   ├── navigation/    # Navigation configuration
+│   ├── screens/       # Screen components
+│   ├── services/      # Firebase services
+│   ├── styles/        # Component styles
+│   └── utils/         # Helper utilities
+├── App.js              # Root component
+├── index.js            # App entry point
+└── [config files]      # Configuration files
 ```
 
 ## Directory Purposes
 
-**src/components/**
-
-- Purpose: Reusable UI components shared across screens
-- Contains: Button, Card, Input, FeedPhotoCard, PhotoDetailModal, etc.
-- Key files:
-  - `index.js` - Barrel export for all components
-  - `FeedPhotoCard.js` - Photo card for feed display
-  - `PhotoDetailModal.js` - Full-screen photo viewer with reactions
-  - `SwipeablePhotoCard.js` - Darkroom triage card with gestures
-  - `ErrorBoundary.js` - React error boundary
-  - `AnimatedSplash.js` - App launch animation
-- Subdirectories: `comments/` for comment-related components
-
-**src/components/comments/**
-
-- Purpose: Comment system components
-- Contains: CommentRow, CommentInput, CommentsBottomSheet, GifPicker
-- Key files:
-  - `index.js` - Barrel export
-  - `CommentsBottomSheet.js` - Slide-up comment panel
-  - `GifPicker.js` - Giphy SDK integration
-  - `CommentInput.js` - Text/GIF input component
-
 **src/screens/**
 
-- Purpose: Top-level route components (one per screen)
-- Contains: FeedScreen, CameraScreen, DarkroomScreen, ProfileScreen, etc.
-- Key files:
-  - `index.js` - Barrel export
-  - `FeedScreen.js` - Main photo feed
-  - `CameraScreen.js` - Photo capture with darkroom integration
-  - `DarkroomScreen.js` - Photo reveal and triage
-  - `ProfileScreen.js` - User profile
-  - `FriendsListScreen.js` - Friends management
-  - `SettingsScreen.js` - App settings
+- Purpose: Full-screen UI components
+- Contains: `*Screen.js` files (FeedScreen, CameraScreen, DarkroomScreen, etc.)
+- Key files: `FeedScreen.js`, `CameraScreen.js`, `DarkroomScreen.js`, `ProfileScreen.js`
+- Subdirectories: None (flat structure)
+
+**src/components/**
+
+- Purpose: Reusable UI elements
+- Contains: Cards, modals, buttons, inputs
+- Key files: `PhotoDetailModal.js`, `FeedPhotoCard.js`, `SwipeablePhotoCard.js`
+- Subdirectories: `comments/` (CommentRow, CommentInput, CommentsBottomSheet, GifPicker)
 
 **src/services/firebase/**
 
-- Purpose: Firebase SDK wrappers with consistent return types
-- Contains: photoService, feedService, friendshipService, notificationService, etc.
-- Key files:
-  - `index.js` - Barrel export
-  - `photoService.js` - Photo CRUD, reveal operations
-  - `feedService.js` - Feed queries, reactions
-  - `friendshipService.js` - Friend requests, relationships
-  - `darkroomService.js` - Darkroom state management
-  - `notificationService.js` - Push notification handling
-  - `userService.js` - User profile operations
-  - `commentService.js` - Comment CRUD
-  - `storageService.js` - File upload/download
-
-**src/hooks/**
-
-- Purpose: Custom React hooks for stateful logic
-- Contains: useCamera, useDarkroom, useFeedPhotos, useComments, etc.
-- Key files:
-  - `useCamera.js` - Camera state and capture logic
-  - `useDarkroom.js` - Darkroom state and reveal status
-  - `useFeedPhotos.js` - Feed data fetching with pagination
-  - `useComments.js` - Comment data and operations
-  - `usePhotoDetailModal.js` - Modal state management
+- Purpose: Firebase SDK wrapper functions
+- Contains: Service modules for each Firebase feature
+- Key files: `photoService.js`, `darkroomService.js`, `feedService.js`, `friendshipService.js`, `notificationService.js`
+- Subdirectories: None
 
 **src/context/**
 
-- Purpose: React Context providers for global state
-- Contains: AuthContext, PhoneAuthContext, ThemeContext
-- Key files:
-  - `index.js` - Barrel export
-  - `AuthContext.js` - Auth state, user profile, sign in/out
-  - `PhoneAuthContext.js` - Phone verification flow state
-  - `ThemeContext.js` - Theme/styling context
+- Purpose: Global state management via React Context
+- Contains: Provider components and hooks
+- Key files: `AuthContext.js`, `PhoneAuthContext.js`, `ThemeContext.js`
+- Subdirectories: None
 
-**src/navigation/**
+**src/hooks/**
 
-- Purpose: React Navigation configuration
-- Contains: AppNavigator with all routes
-- Key files:
-  - `AppNavigator.js` - Stack/Tab navigator setup, deep linking config
+- Purpose: Custom React hooks for reusable logic
+- Contains: Stateful hooks that compose services and state
+- Key files: `useFeedPhotos.js`, `useDarkroom.js`, `useCamera.js`, `useComments.js`
+- Subdirectories: None
 
 **src/constants/**
 
-- Purpose: App-wide constants
-- Contains: colors, typography, spacing, animations, layout
-- Key files:
-  - `index.js` - Barrel export
-  - `colors.js` - Color palette
-  - `typography.js` - Font sizes, weights
-  - `spacing.js` - Margin/padding values
-  - `animations.js` - Animation durations, easings
+- Purpose: App-wide constants and configuration
+- Contains: Colors, spacing, typography, animations, legal content
+- Key files: `colors.js`, `spacing.js`, `typography.js`, `animations.js`
+- Subdirectories: None
 
 **src/styles/**
 
-- Purpose: Shared StyleSheet modules (co-located styles for complex components)
-- Contains: Component-specific stylesheets
-- Key files:
-  - `index.js` - Barrel export
-  - `CameraScreen.styles.js` - Camera screen styles
-  - `FeedPhotoCard.styles.js` - Feed card styles
-  - `PhotoDetailModal.styles.js` - Modal styles
+- Purpose: StyleSheet definitions for components/screens
+- Contains: `*.styles.js` files matching component names
+- Key files: `CameraScreen.styles.js`, `DarkroomScreen.styles.js`, `FeedPhotoCard.styles.js`
+- Subdirectories: None
 
 **src/utils/**
 
-- Purpose: Pure utility functions
-- Contains: logger, timeUtils, validation, haptics, etc.
-- Key files:
-  - `logger.js` - Environment-aware logging utility
-  - `timeUtils.js` - Date formatting (getTimeAgo, formatDate)
-  - `validation.js` - Input validation helpers
-  - `haptics.js` - Haptic feedback wrapper
-  - `phoneUtils.js` - Phone number formatting
-  - `soundUtils.js` - Audio playback utilities
+- Purpose: Helper functions and utilities
+- Contains: Logger, time utils, validation, haptics, sound
+- Key files: `logger.js`, `timeUtils.js`, `validation.js`, `haptics.js`
+- Subdirectories: None
+
+**src/navigation/**
+
+- Purpose: React Navigation setup
+- Contains: Navigator components and config
+- Key files: `AppNavigator.js`
+- Subdirectories: None
 
 **functions/**
 
-- Purpose: Firebase Cloud Functions (server-side)
-- Contains: Firestore triggers, scheduled functions, callable functions
-- Key files:
-  - `index.js` - All exported functions
-  - `logger.js` - Server-side logging
-  - `validation.js` - Zod schemas for request validation
-  - `package.json` - Functions dependencies
+- Purpose: Firebase Cloud Functions (Node.js)
+- Contains: Server-side logic, scheduled tasks
+- Key files: `index.js`, `logger.js`, `validation.js`
+- Subdirectories: `node_modules/` (separate from app)
 
 ****tests**/**
 
-- Purpose: Jest test files
-- Contains: Service tests, integration tests
-- Key files:
-  - `setup/jest.setup.js` - Test setup and mocks
-  - `services/*.test.js` - Unit tests for services
-  - `integration/*.test.js` - Integration test flows
+- Purpose: Jest test suite
+- Contains: Unit and integration tests
+- Key files: Service tests (`*.test.js`), integration tests
+- Subdirectories: `__mocks__/`, `setup/`, `services/`, `integration/`
 
 ## Key File Locations
 
 **Entry Points:**
 
-- `index.js` - Expo entry point
-- `App.js` - Root component with providers
+- `App.js` - Root component (providers, notification setup)
+- `index.js` - App registration
 - `src/navigation/AppNavigator.js` - Navigation root
 - `functions/index.js` - Cloud Functions entry
 
 **Configuration:**
 
-- `package.json` - Dependencies, scripts
-- `app.json` / `app.config.js` - Expo config
-- `babel.config.js` - Babel preset
-- `eslint.config.js` - Linting rules
-- `jest.config.js` - Test configuration
-- `.prettierrc` - Code formatting
-- `firebase.json` - Firebase CLI
-- `eas.json` - EAS Build profiles
+- `app.json` / `app.config.js` - Expo configuration
+- `babel.config.js` - Babel transpilation
+- `jest.config.js` - Jest test configuration
+- `eslint.config.js` - ESLint rules
+- `firebase.json` - Firebase project config
+- `firestore.rules` - Firestore security rules
+- `eas.json` - EAS Build configuration
 
 **Core Logic:**
 
-- `src/services/firebase/*.js` - Firebase operations
-- `src/hooks/*.js` - Stateful business logic
-- `src/context/AuthContext.js` - Auth state management
+- `src/services/firebase/` - All Firebase operations
+- `src/context/AuthContext.js` - Authentication state
+- `src/hooks/useFeedPhotos.js` - Feed data management
+- `src/hooks/useDarkroom.js` - Darkroom state
 
-**Security:**
+**Testing:**
 
-- `firestore.rules` - Database access rules
-- `storage.rules` - File storage access rules
+- `__tests__/services/` - Service unit tests
+- `__tests__/integration/` - Integration tests
+- `__tests__/setup/jest.setup.js` - Jest configuration
+- `__tests__/__mocks__/` - Firebase mocks
 
 **Documentation:**
 
-- `CLAUDE.md` - AI assistant instructions
 - `README.md` - Project overview
+- `CLAUDE.md` - Development instructions
 - `CONTRIBUTING.md` - Contribution guidelines
-- `docs/*.md` - Feature documentation, weekly summaries
+- `docs/` - Feature documentation
 
 ## Naming Conventions
 
 **Files:**
 
-- PascalCase: React components (`FeedPhotoCard.js`, `AuthContext.js`)
-- camelCase: Services, hooks, utils (`feedService.js`, `useCamera.js`)
-- kebab-case: Style files (`FeedPhotoCard.styles.js`)
-- lowercase: Config files (`babel.config.js`, `eslint.config.js`)
+- PascalCase for screens: `FeedScreen.js`, `CameraScreen.js`
+- PascalCase for components: `PhotoDetailModal.js`, `FeedPhotoCard.js`
+- camelCase for services: `photoService.js`, `darkroomService.js`
+- camelCase for hooks: `useFeedPhotos.js`, `useDarkroom.js`
+- camelCase for utils: `logger.js`, `timeUtils.js`
+- `.styles.js` suffix for style files: `CameraScreen.styles.js`
+- `.test.js` suffix for tests: `photoService.test.js`
 
 **Directories:**
 
-- lowercase: All directories (`components`, `services`, `hooks`)
-- Plural for collections (`screens`, `hooks`, `services`)
+- lowercase for all directories
+- Plural for collections: `components/`, `screens/`, `services/`
 
 **Special Patterns:**
 
-- `index.js` - Barrel exports in each directory
-- `*.test.js` - Test files in `__tests__/`
-- `*.styles.js` - Co-located style modules
+- `index.js` for barrel exports in directories
+- `__mocks__/` for Jest mocks (matching module paths)
 
 ## Where to Add New Code
 
-**New Feature:**
+**New Screen:**
 
-- Screen: `src/screens/{FeatureName}Screen.js`
-- Service: `src/services/firebase/{featureName}Service.js`
-- Hook: `src/hooks/use{FeatureName}.js`
-- Tests: `__tests__/services/{featureName}Service.test.js`
-- Styles (if complex): `src/styles/{FeatureName}Screen.styles.js`
+- Implementation: `src/screens/NewScreen.js`
+- Styles: `src/styles/NewScreen.styles.js`
+- Navigation: Add to `src/navigation/AppNavigator.js`
+- Export: Add to `src/screens/index.js`
 
 **New Component:**
 
-- Implementation: `src/components/{ComponentName}.js`
+- Implementation: `src/components/NewComponent.js`
+- Styles: `src/styles/NewComponent.styles.js` (if complex)
 - Export: Add to `src/components/index.js`
-- Styles (if complex): `src/styles/{ComponentName}.styles.js`
-- Tests: `__tests__/components/{ComponentName}.test.js` (if needed)
 
-**New Screen:**
+**New Firebase Service:**
 
-- Implementation: `src/screens/{Name}Screen.js`
-- Export: Add to `src/screens/index.js`
-- Navigation: Register in `src/navigation/AppNavigator.js`
-- Styles (if complex): `src/styles/{Name}Screen.styles.js`
-
-**New Service:**
-
-- Implementation: `src/services/firebase/{name}Service.js`
+- Implementation: `src/services/firebase/newService.js`
 - Export: Add to `src/services/firebase/index.js`
-- Tests: `__tests__/services/{name}Service.test.js`
+- Tests: `__tests__/services/newService.test.js`
 
 **New Hook:**
 
-- Implementation: `src/hooks/use{Name}.js`
-- Tests: `__tests__/hooks/use{Name}.test.js` (if needed)
+- Implementation: `src/hooks/useNewHook.js`
+- No barrel file (import directly)
 
 **New Cloud Function:**
 
 - Implementation: Add to `functions/index.js`
-- Document in `functions/README.md`
+- Export: `exports.newFunction = ...`
 
 **Utilities:**
 
-- Shared helpers: `src/utils/{name}.js`
-- Constants: `src/constants/{category}.js`
+- Shared helpers: `src/utils/newUtil.js`
+- Constants: `src/constants/newConstants.js`
 
 ## Special Directories
-
-**coverage/**
-
-- Purpose: Jest coverage reports
-- Source: Auto-generated by `npm run test:coverage`
-- Committed: No (gitignored)
 
 **node_modules/**
 
@@ -297,16 +219,28 @@ lapse-clone/
 - Source: `npm install`
 - Committed: No (gitignored)
 
-**.expo/**
+**functions/node_modules/**
 
-- Purpose: Expo cache and local config
-- Source: Expo CLI
+- Purpose: Cloud Functions dependencies (separate)
+- Source: `cd functions && npm install`
+- Committed: No (gitignored)
+
+**coverage/**
+
+- Purpose: Jest coverage reports
+- Source: `npm run test:coverage`
 - Committed: No (gitignored)
 
 **dist/**
 
-- Purpose: Build output (if any)
+- Purpose: Build output
 - Source: Build process
+- Committed: No (gitignored)
+
+**.expo/**
+
+- Purpose: Expo cache
+- Source: Expo CLI
 - Committed: No (gitignored)
 
 ---

@@ -6,53 +6,62 @@
 
 **Runner:**
 
-- Jest ~29.7.0 - Test runner
-- jest-expo ~54.0.16 - Expo-specific preset
+- Jest ~29.7.0
 - Config: `jest.config.js` in project root
+
+**Preset:**
+
+- jest-expo ~54.0.16 - Handles Expo/React Native transforms
 
 **Assertion Library:**
 
 - Jest built-in expect
-- Matchers: toBe, toEqual, toHaveBeenCalled, toHaveBeenCalledWith, etc.
+- Matchers: toBe, toEqual, toHaveBeenCalledWith, toMatchObject
 
 **Run Commands:**
 
 ```bash
 npm test                              # Run all tests
-npm run test:watch                    # Watch mode (re-run on changes)
-npm test -- path/to/file.test.js     # Run single file
-npm run test:coverage                 # Generate coverage report
+npm run test:watch                    # Watch mode
+npm test -- path/to/file.test.js     # Single file
+npm run test:coverage                 # Coverage report
 ```
 
 ## Test File Organization
 
 **Location:**
 
-- All tests in `__tests__/` directory (separate from source)
-- Subdirectories mirror source organization
+- `__tests__/` directory at project root (separate from source)
+- Not co-located with source files
 
 **Naming:**
 
-- Service tests: `{serviceName}Service.test.js`
-- Integration tests: `{flowName}.test.js`
-- Setup files: In `__tests__/setup/`
+- `*.test.js` for all test files
+- Mirrors source structure: `services/photoService.test.js`
 
 **Structure:**
 
 ```
 __tests__/
-├── setup/
-│   └── jest.setup.js           # Global setup, Firebase mocks
-├── services/
-│   ├── smoke.test.js           # Basic smoke tests
+├── __mocks__/                  # Mock modules
+│   └── @react-native-firebase/ # Firebase SDK mocks
+│       ├── app.js
+│       ├── auth.js
+│       ├── firestore.js
+│       └── storage.js
+├── integration/                # Integration tests
+│   ├── friendshipFlow.test.js
+│   └── photoLifecycle.test.js
+├── services/                   # Service unit tests
 │   ├── darkroomService.test.js
-│   ├── photoService.test.js
-│   ├── friendshipService.test.js
 │   ├── feedService.test.js
-│   └── phoneAuthService.test.js
-└── integration/
-    ├── photoLifecycle.test.js  # Capture → Reveal → Triage flow
-    └── friendshipFlow.test.js  # Send → Accept → Remove flow
+│   ├── friendshipService.test.js
+│   ├── phoneAuthService.test.js
+│   ├── photoService.test.js
+│   └── smoke.test.js
+└── setup/
+    ├── jest.setup.js           # Global setup
+    └── testFactories.js        # Test data factories
 ```
 
 ## Test Structure
@@ -60,38 +69,27 @@ __tests__/
 **Suite Organization:**
 
 ```javascript
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-
 describe('ServiceName', () => {
-  describe('functionName', () => {
-    beforeEach(() => {
-      // Reset mocks, setup test data
-      jest.clearAllMocks();
-    });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Reset mocks
+  });
 
+  describe('functionName', () => {
     it('should handle success case', async () => {
       // Arrange
-      const input = { userId: 'test-user' };
-      mockFirestore.mockResolvedValue({ exists: true, data: () => ({}) });
+      const mockData = createTestData();
 
       // Act
-      const result = await functionName(input);
+      const result = await functionName(mockData);
 
       // Assert
       expect(result.success).toBe(true);
-      expect(mockFirestore).toHaveBeenCalledWith('collection', 'doc-id');
+      expect(result.data).toEqual(expectedData);
     });
 
     it('should handle error case', async () => {
-      // Arrange
-      mockFirestore.mockRejectedValue(new Error('Network error'));
-
-      // Act
-      const result = await functionName({});
-
-      // Assert
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Network error');
+      // Test error handling
     });
   });
 });
@@ -99,110 +97,94 @@ describe('ServiceName', () => {
 
 **Patterns:**
 
-- Use `beforeEach` for per-test setup and mock clearing
-- Explicit Arrange/Act/Assert sections for complex tests
-- One logical assertion per test (multiple expects OK if related)
-- Descriptive test names: "should [expected behavior] when [condition]"
+- Use beforeEach for mock resets and shared setup
+- jest.clearAllMocks() to reset between tests
+- Arrange/Act/Assert structure
+- One assertion focus per test (multiple expects OK)
 
 ## Mocking
 
 **Framework:**
 
-- Jest built-in mocking (`jest.fn()`, `jest.mock()`)
-- firestore-jest-mock for Firestore mocking
+- Jest built-in mocking
+- Module mocking via `__mocks__/` directory
 
-**Setup (jest.setup.js):**
-
-```javascript
-// Mock Firebase modules
-jest.mock('@react-native-firebase/firestore', () => ({
-  getFirestore: jest.fn(() => ({})),
-  collection: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  getDocs: jest.fn(),
-  setDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  deleteDoc: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  orderBy: jest.fn(),
-  onSnapshot: jest.fn(),
-  serverTimestamp: jest.fn(() => ({ _seconds: Date.now() / 1000 })),
-}));
-
-jest.mock('@react-native-firebase/auth', () => ({
-  getAuth: jest.fn(() => ({ currentUser: null })),
-}));
-
-jest.mock('@react-native-firebase/storage', () => ({
-  getStorage: jest.fn(),
-}));
-```
-
-**In-Test Mocking:**
+**Firebase Mocks:**
+Located in `__tests__/__mocks__/@react-native-firebase/`:
 
 ```javascript
-import { getDoc, getDocs } from '@react-native-firebase/firestore';
+// __tests__/__mocks__/@react-native-firebase/firestore.js
+const mockCollection = jest.fn();
+const mockDoc = jest.fn();
+const mockGet = jest.fn();
+const mockSet = jest.fn();
+const mockUpdate = jest.fn();
+const mockDelete = jest.fn();
+const mockWhere = jest.fn();
+const mockOnSnapshot = jest.fn();
 
-beforeEach(() => {
-  // Setup mock return values
-  getDoc.mockResolvedValue({
-    exists: () => true,
-    data: () => ({ userId: 'test', status: 'developing' }),
-    id: 'photo-123',
-  });
+// Mock Firestore instance
+const mockFirestore = {
+  collection: mockCollection,
+  doc: mockDoc,
+  // ... etc
+};
 
-  getDocs.mockResolvedValue({
-    docs: [{ id: 'doc-1', data: () => ({ field: 'value' }) }],
-    size: 1,
-    empty: false,
-  });
-});
+module.exports = () => mockFirestore;
+module.exports.getFirestore = () => mockFirestore;
+// Export individual mocks for test assertions
+module.exports.__mocks__ = { mockCollection, mockDoc, ... };
 ```
 
 **What to Mock:**
 
-- Firebase SDK modules (firestore, auth, storage)
+- Firebase SDK (@react-native-firebase/\*)
+- External APIs (Expo notifications)
 - AsyncStorage
-- Expo modules (camera, notifications, haptics)
-- External API calls
+- Time/dates if needed
 
 **What NOT to Mock:**
 
-- Pure utility functions (timeUtils, validation)
-- Service function internals (test through public API)
-- Constants
+- Internal pure functions
+- Simple utilities
+- Test factories
 
 ## Fixtures and Factories
 
-**Test Data Factories:**
+**Test Data:**
+Located in `__tests__/setup/testFactories.js`:
 
 ```javascript
-// In test file or shared fixture
-const createTestPhoto = (overrides = {}) => ({
-  id: 'photo-123',
-  userId: 'user-123',
-  status: 'developing',
-  imageURL: 'https://example.com/photo.jpg',
-  capturedAt: { seconds: Date.now() / 1000 },
-  revealedAt: null,
+// Factory functions for test data
+export const createTestUser = (overrides = {}) => ({
+  uid: 'test-user-id',
+  email: 'test@example.com',
+  displayName: 'Test User',
   ...overrides,
 });
 
-const createTestUser = (overrides = {}) => ({
-  uid: 'user-123',
-  username: 'testuser',
-  displayName: 'Test User',
-  profilePhotoURL: null,
+export const createTestPhoto = (overrides = {}) => ({
+  id: 'test-photo-id',
+  userId: 'test-user-id',
+  status: 'developing',
+  imageURL: 'https://example.com/photo.jpg',
+  capturedAt: new Date(),
+  ...overrides,
+});
+
+export const createTestFriendship = (overrides = {}) => ({
+  id: 'user1_user2',
+  user1Id: 'user1',
+  user2Id: 'user2',
+  status: 'accepted',
   ...overrides,
 });
 ```
 
 **Location:**
 
-- Simple factories: Inline in test file
-- Shared fixtures: Could be in `__tests__/fixtures/` (not currently used)
+- Factory functions: `__tests__/setup/testFactories.js`
+- Mock data: Inline in tests or factories
 
 ## Coverage
 
@@ -210,47 +192,44 @@ const createTestUser = (overrides = {}) => ({
 
 - No enforced coverage threshold
 - Coverage tracked for awareness
-- Focus on service layer and critical paths
 
-**Configuration (jest.config.js):**
+**Configuration:**
 
-```javascript
-collectCoverageFrom: [
-  'src/**/*.{js,jsx}',
-  '!src/**/*.test.{js,jsx}',
-  '!**/node_modules/**'
-],
-coverageDirectory: 'coverage',
-```
+- Vitest/Jest coverage via built-in
+- Excludes: test files, node_modules
 
 **View Coverage:**
 
 ```bash
 npm run test:coverage
-# Open coverage/lcov-report/index.html in browser
+open coverage/index.html
 ```
+
+**Collect From:**
+
+- `src/**/*.{js,jsx}`
+- Excludes test files
 
 ## Test Types
 
 **Unit Tests:**
 
-- Scope: Single service function in isolation
-- Mocking: All Firebase dependencies mocked
+- Scope: Test single service function in isolation
+- Mocking: Mock all Firebase SDK calls
 - Location: `__tests__/services/*.test.js`
-- Speed: Fast (<100ms per test)
-- Examples: `photoService.test.js`, `friendshipService.test.js`
+- Examples: `photoService.test.js`, `darkroomService.test.js`
 
 **Integration Tests:**
 
-- Scope: Multi-step flows across services
-- Mocking: Firebase mocked but services interact
+- Scope: Test multiple services together
+- Mocking: Mock Firebase, test service interactions
 - Location: `__tests__/integration/*.test.js`
 - Examples: `photoLifecycle.test.js`, `friendshipFlow.test.js`
 
 **E2E Tests:**
 
 - Not currently implemented
-- Manual testing via Expo Go on physical device
+- Manual testing via Expo Go / TestFlight
 
 ## Common Patterns
 
@@ -258,87 +237,66 @@ npm run test:coverage
 
 ```javascript
 it('should handle async operation', async () => {
+  mockGet.mockResolvedValue({ data: () => testData });
+
   const result = await asyncFunction();
-  expect(result.success).toBe(true);
+
+  expect(result).toBe('expected');
 });
 ```
 
 **Error Testing:**
 
 ```javascript
-it('should handle errors gracefully', async () => {
-  getDoc.mockRejectedValue(new Error('Network error'));
+it('should handle error', async () => {
+  mockGet.mockRejectedValue(new Error('Network error'));
 
-  const result = await getPhotoById('invalid');
+  const result = await functionCall();
 
   expect(result.success).toBe(false);
-  expect(result.error).toBe('Network error');
+  expect(result.error).toContain('Network error');
 });
 ```
 
-**Mock Verification:**
+**Firestore Mocking:**
 
 ```javascript
-it('should call Firestore with correct params', async () => {
-  await createPhoto('user-123', photoData);
+it('should query Firestore', async () => {
+  const mockDocs = [{ id: '1', data: () => ({ name: 'Test' }) }];
+  mockGet.mockResolvedValue({ docs: mockDocs, empty: false });
 
-  expect(setDoc).toHaveBeenCalledWith(
-    expect.anything(),
-    expect.objectContaining({
-      userId: 'user-123',
-      status: 'developing',
-    })
-  );
+  const result = await getItems();
+
+  expect(mockCollection).toHaveBeenCalledWith('items');
+  expect(mockWhere).toHaveBeenCalledWith('status', '==', 'active');
+  expect(result).toHaveLength(1);
 });
 ```
 
 **Snapshot Testing:**
 
 - Not used in this codebase
-- Prefer explicit assertions for clarity
+- Prefer explicit assertions
 
-## Test Configuration
+## Jest Configuration
 
-**jest.config.js:**
+Key settings from `jest.config.js`:
 
 ```javascript
 module.exports = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup/jest.setup.js'],
-  testPathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/__tests__/setup/',
-    '<rootDir>/__tests__/__mocks__/',
-  ],
+  testPathIgnorePatterns: ['node_modules/', '__tests__/setup/', '__tests__/__mocks__/'],
   testMatch: ['**/__tests__/**/*.test.js'],
   clearMocks: true,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|...)',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(...react-native packages...))'],
+  collectCoverageFrom: ['src/**/*.{js,jsx}', '!src/**/*.test.{js,jsx}'],
   verbose: true,
 };
 ```
-
-## Adding New Tests
-
-**For a new service:**
-
-1. Create `__tests__/services/{serviceName}Service.test.js`
-2. Import service functions and mocked Firebase modules
-3. Write describe block per function
-4. Cover: success case, error case, edge cases
-5. Run: `npm test -- {serviceName}`
-
-**For a new integration flow:**
-
-1. Create `__tests__/integration/{flowName}.test.js`
-2. Import all involved services
-3. Setup mocks to simulate flow
-4. Test complete flow end-to-end
-5. Verify state at each step
 
 ---
 

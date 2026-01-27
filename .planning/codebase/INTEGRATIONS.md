@@ -6,130 +6,177 @@
 
 **Push Notifications:**
 
-- Expo Push Notification Service - Notification delivery
-  - SDK/Client: `expo-notifications` ~0.32.16
-  - Auth: Expo Push Token stored in Firestore `users/{userId}/fcmToken`
-  - Endpoint: `https://exp.host/--/api/v2/push/send` (called from Cloud Functions)
-  - Implementation: `src/services/firebase/notificationService.js`, `functions/index.js`
+- Expo Push Notification Service - Push notifications to devices
+  - SDK/Client: expo-notifications ~0.32.16
+  - Auth: Expo Push Tokens (ExponentPushToken[...])
+  - Endpoints: `https://exp.host/--/api/v2/push/send`
+  - Used in: `functions/index.js` (Cloud Functions send notifications)
+  - Client: `src/services/firebase/notificationService.js`
 
-**GIF Provider:**
+**GIF Integration:**
 
 - Giphy API - GIF picker for comments
-  - SDK/Client: `@giphy/react-native-sdk` ^5.0.1
-  - Auth: API key in `GIPHY_API_KEY` env var
-  - Implementation: `src/components/comments/GifPicker.js`
+  - SDK/Client: @giphy/react-native-sdk ^5.0.1
+  - Auth: GIPHY_API_KEY env var
+  - Usage: `src/components/comments/GifPicker.js`
+  - Initialize: `App.js` (initializeGiphy call)
 
 ## Data Storage
 
 **Databases:**
 
 - Cloud Firestore - Primary data store
-  - Connection: via `@react-native-firebase/firestore`
-  - Collections: `users`, `photos`, `darkrooms`, `friendships`, `notifications`
-  - Rules: `firestore.rules`
+  - Connection: @react-native-firebase/firestore ^23.8.2
+  - Collections: users, photos, darkrooms, friendships, notifications, photoViews
+  - Security: `firestore.rules` (comprehensive rules)
   - Indexes: `firestore.indexes.json`
 
 **File Storage:**
 
-- Firebase Cloud Storage - Photo storage
-  - SDK/Client: `@react-native-firebase/storage`
-  - Auth: Firebase Auth integration
-  - Rules: `storage.rules`
-  - Structure: `photos/{userId}/{photoId}` (inferred)
+- Firebase Cloud Storage - Photo uploads
+  - SDK/Client: @react-native-firebase/storage ^23.8.2
+  - Security: `storage.rules`
+  - Buckets: Default project bucket
+  - Usage: `src/services/firebase/storageService.js`
+  - Signed URLs: `functions/index.js` (getSignedPhotoUrl)
 
 **Local Storage:**
 
-- AsyncStorage - Non-sensitive local data
-  - SDK: `@react-native-async-storage/async-storage`
-- SecureStore - Sensitive data (credentials)
-  - SDK: `expo-secure-store`
-  - Implementation: `src/services/secureStorageService.js`
+- AsyncStorage - Auth state persistence
+  - SDK: @react-native-async-storage/async-storage 2.2.0
+  - Usage: `src/context/AuthContext.js`
+
+- Expo SecureStore - Sensitive data
+  - SDK: expo-secure-store ~15.0.8
+  - Usage: `src/services/secureStorageService.js`
+
+**Caching:**
+
+- None (direct Firestore queries)
+- Image caching via expo-image
 
 ## Authentication & Identity
 
 **Auth Provider:**
 
-- Firebase Authentication - Phone + Apple Sign-In
-  - SDK/Client: `@react-native-firebase/auth`
-  - Phone auth: `src/services/firebase/phoneAuthService.js`
+- Firebase Auth - Phone number authentication
+  - SDK: @react-native-firebase/auth ^23.8.2
+  - Implementation: `src/services/firebase/phoneAuthService.js`
   - Context: `src/context/AuthContext.js`, `src/context/PhoneAuthContext.js`
-  - Session: Managed by Firebase SDK, persisted automatically
+  - Token storage: Managed by Firebase SDK
+  - Session: Persisted via AsyncStorage
 
-**OAuth Integrations:**
+**Auth Flow:**
 
-- Apple Sign-In - Social login for iOS
-  - Configured via Firebase Console
-  - Native integration via Expo
+1. Phone number input → `sendVerificationCode()`
+2. SMS code verification → `verifyCode()`
+3. Profile setup (username, bio, photo)
+4. Auth state persisted, auto-login on app restart
 
 ## Monitoring & Observability
 
 **Error Tracking:**
 
 - Planned: Sentry (Phase 10)
-  - Current: Console logging via `src/utils/logger.js`
-  - TODOs reference Sentry integration
+  - Current: `src/utils/logger.js` logs to console
+  - TODOs in code for Sentry integration
+  - Files: `src/utils/logger.js:218`, `src/components/ErrorBoundary.js:63`
 
 **Analytics:**
 
-- Not currently implemented
+- None implemented
+- Planned: Phase 2+
 
 **Logs:**
 
-- Custom logger utility: `src/utils/logger.js`
-  - Environment-aware (debug/info/warn/error)
-  - Structured logging with context objects
+- Development: Console via logger utility
+- Production: Console (captured by Expo/device logs)
+- Cloud Functions: Firebase Functions logs (console-based)
 
 ## CI/CD & Deployment
 
-**Hosting:**
+**App Hosting:**
 
-- EAS Build - Expo Application Services
+- EAS Build - iOS app builds
   - Config: `eas.json`
-  - Project ID: `b7da185a-d3e1-441b-88f8-0d4379333590`
-  - Distribution: TestFlight (iOS)
+  - Project ID: b7da185a-d3e1-441b-88f8-0d4379333590
+  - Distribution: TestFlight (planned)
 
 **Cloud Functions:**
 
 - Firebase Cloud Functions - Server-side logic
-  - Location: `functions/` directory
-  - Runtime: Node.js (Firebase Functions v2)
+  - Location: `functions/`
+  - Runtime: Node.js 20
   - Deploy: `firebase deploy --only functions`
-  - Functions: `processDarkroomReveals`, `sendPhotoRevealNotification`, `sendFriendRequestNotification`, `sendReactionNotification`, `sendCommentNotification`, `getSignedPhotoUrl`, `deleteUserAccount`
+  - Region: us-central1
+
+**CI Pipeline:**
+
+- Not configured (local deployment)
+- Lint/test via npm scripts
 
 ## Environment Configuration
 
 **Development:**
 
-- Required env vars: `GIPHY_API_KEY` (optional for GIF feature)
-- Firebase config: `GoogleService-Info.plist` (iOS native file)
-- Secrets location: `.env` (gitignored), `.env.example` for template
+- Required env vars: GIPHY_API_KEY
+- Secrets location: `.env` (gitignored)
+- Firebase config: `GoogleService-Info.plist` (iOS)
+- Mock services: Expo Go for testing
+
+**Staging:**
+
+- Same Firebase project (no separate staging)
+- Test via Expo Go development builds
 
 **Production:**
 
-- EAS Secrets for build-time injection
-- `GOOGLE_SERVICES_PLIST` - Base64 encoded Firebase config
-- Firebase project configured via console
+- EAS Build for standalone iOS app
+- Secrets: EAS Secrets for GOOGLE_SERVICES_PLIST
+- Firebase: Production Firestore rules deployed
 
 ## Webhooks & Callbacks
 
 **Incoming:**
 
-- None (Firebase handles all server-to-server communication)
+- None (Firebase handles internally)
 
 **Outgoing:**
 
-- Expo Push API - Called from Cloud Functions for notifications
+- Expo Push API - Push notifications from Cloud Functions
   - Endpoint: `https://exp.host/--/api/v2/push/send`
-  - Implementation: `functions/index.js` → `sendPushNotification()`
+  - Triggered by: Firestore document changes
+  - Functions: sendPhotoRevealNotification, sendFriendRequestNotification, sendReactionNotification, sendCommentNotification
 
-## Scheduled Jobs
+## Cloud Functions Summary
 
-**Cloud Functions:**
+Located in `functions/index.js`:
 
-- `processDarkroomReveals` - Runs every 2 minutes
-  - Checks darkrooms with overdue `nextRevealAt`
-  - Reveals photos and schedules next reveal
-  - Triggers notification via Firestore update
+| Function                      | Trigger                             | Purpose                              |
+| ----------------------------- | ----------------------------------- | ------------------------------------ |
+| processDarkroomReveals        | Scheduled (every 2 min)             | Reveal overdue photos                |
+| sendPhotoRevealNotification   | darkrooms/{userId} onUpdate         | Notify user of revealed photos       |
+| sendFriendRequestNotification | friendships/{id} onCreate           | Notify of new friend request         |
+| sendReactionNotification      | photos/{id} onUpdate                | Notify of new reactions (debounced)  |
+| sendCommentNotification       | photos/{id}/comments/{cid} onCreate | Notify of new comments               |
+| getSignedPhotoUrl             | onCall                              | Generate signed URL for photo access |
+| deleteUserAccount             | onCall                              | Delete user and all associated data  |
+
+## Deep Linking
+
+**Configuration:**
+
+- Prefixes: `lapse://`, `com.lapseclone.app://`
+- Config: `src/navigation/AppNavigator.js`
+
+**Routes:**
+
+- `lapse://feed` → Feed tab
+- `lapse://camera` → Camera tab
+- `lapse://profile` → Profile tab
+- `lapse://darkroom` → Darkroom screen
+- `lapse://friends/requests` → Friend requests
+- `lapse://notifications` → Activity screen
 
 ---
 
