@@ -499,10 +499,12 @@ const styles = StyleSheet.create({
   gestureRoot: {
     flex: 1,
     backgroundColor: colors.background.primary,
+    overflow: 'visible',
   },
   container: {
     flex: 1,
     backgroundColor: colors.background.primary,
+    overflow: 'visible',
   },
   stepIndicator: {
     marginTop: 16,
@@ -557,10 +559,13 @@ const styles = StyleSheet.create({
     zIndex: 1,
     overflow: 'visible',
   },
-  thumbnailScroll: {},
+  thumbnailScroll: {
+    overflow: 'visible',
+  },
   thumbnailContainer: {
     flexDirection: 'row',
     gap: THUMBNAIL_GAP,
+    overflow: 'visible',
   },
   thumbnailSlot: {
     width: THUMBNAIL_SIZE,
@@ -597,6 +602,7 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
+    overflow: 'visible',
   },
   buttonContainer: {
     paddingHorizontal: SCREEN_PADDING,
