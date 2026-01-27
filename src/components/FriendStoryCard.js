@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
@@ -46,6 +47,7 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false, isViewed = false })
 
   /**
    * Render the photo thumbnail (blurred)
+   * Uses expo-image for persistent caching to prevent gray flash on modal dismiss
    */
   const renderPhotoContent = () => (
     <View style={styles.photoContainer}>
@@ -53,8 +55,10 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false, isViewed = false })
         <Image
           source={{ uri: thumbnailUrl }}
           style={styles.photoThumbnail}
+          contentFit="cover"
+          transition={0}
+          cachePolicy="memory-disk"
           blurRadius={20}
-          resizeMode="cover"
         />
       ) : (
         <View style={styles.photoPlaceholder}>
@@ -66,11 +70,12 @@ const FriendStoryCard = ({ friend, onPress, isFirst = false, isViewed = false })
 
   /**
    * Render profile photo at bottom of card
+   * Uses RNImage (small size, no flash issue)
    */
   const renderProfilePhoto = () => (
     <View style={styles.profileContainer}>
       {profilePhotoURL ? (
-        <Image source={{ uri: profilePhotoURL }} style={styles.profilePhoto} />
+        <RNImage source={{ uri: profilePhotoURL }} style={styles.profilePhoto} />
       ) : (
         <View style={styles.profilePlaceholder}>
           <Ionicons name="person" size={18} color={colors.text.secondary} />
