@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -32,6 +33,8 @@ const PREVIEW_ASPECT_RATIO = 4 / 5;
 const SCREEN_PADDING = 24;
 const DELETE_BAR_HEIGHT = 48;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const DRAG_HINT_STORAGE_KEY = '@selects_drag_hint_dismissed';
 
 // DraggableThumbnail component for drag-to-reorder
 const DraggableThumbnail = ({
@@ -172,6 +175,72 @@ const DeleteBar = ({ isVisible, isHovering }) => {
   );
 };
 
+// TutorialHint component for drag-to-reorder instruction
+const TutorialHint = ({ isVisible, onDismiss }) => {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.9);
+  const arrowTranslateX = useSharedValue(0);
+
+  useEffect(() => {
+    if (isVisible) {
+      opacity.value = withTiming(1, { duration: 300 });
+      scale.value = withSpring(1);
+      // Animate arrow left-right to indicate drag
+      const animateArrow = () => {
+        arrowTranslateX.value = withTiming(8, { duration: 500 }, () => {
+          arrowTranslateX.value = withTiming(-8, { duration: 500 }, () => {
+            arrowTranslateX.value = withTiming(0, { duration: 300 });
+          });
+        });
+      };
+      animateArrow();
+      const interval = setInterval(animateArrow, 2000);
+      return () => clearInterval(interval);
+    } else {
+      opacity.value = withTiming(0, { duration: 200 });
+      scale.value = withTiming(0.9, { duration: 200 });
+    }
+  }, [isVisible, opacity, scale, arrowTranslateX]);
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  const arrowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: arrowTranslateX.value }],
+  }));
+
+  if (!isVisible) return null;
+
+  return (
+    <Animated.View style={[styles.tutorialOverlay, overlayStyle]} pointerEvents="box-none">
+      <Animated.View style={[styles.tutorialContainer, containerStyle]}>
+        <View style={styles.tutorialIconRow}>
+          <Animated.View style={arrowStyle}>
+            <Ionicons name="hand-left-outline" size={32} color={colors.text.primary} />
+          </Animated.View>
+          <Ionicons
+            name="swap-horizontal"
+            size={24}
+            color={colors.text.secondary}
+            style={styles.tutorialSwapIcon}
+          />
+        </View>
+        <Text style={styles.tutorialTitle}>Drag to reorder</Text>
+        <Text style={styles.tutorialSubtitle}>Drag down to delete</Text>
+        <TouchableOpacity style={styles.tutorialButton} onPress={onDismiss} activeOpacity={0.7}>
+          <Text style={styles.tutorialButtonText}>Got it</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
+  );
+};
+
 const SelectsScreen = ({ navigation }) => {
   const { user, userProfile, updateUserProfile, updateUserDocumentNative } = useAuth();
 
@@ -182,6 +251,36 @@ const SelectsScreen = ({ navigation }) => {
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [isOverDeleteZone, setIsOverDeleteZone] = useState(false);
   const [deleteZoneY, setDeleteZoneY] = useState(0);
+  const [showDragHint, setShowDragHint] = useState(false);
+
+  // Check if hint should be shown on mount
+  useEffect(() => {
+    const checkHintDismissed = async () => {
+      try {
+        const dismissed = await AsyncStorage.getItem(DRAG_HINT_STORAGE_KEY);
+        if (dismissed !== 'true') {
+          // Show hint after 1 second delay (let screen load first)
+          const timer = setTimeout(() => {
+            setShowDragHint(true);
+          }, 1000);
+          return () => clearTimeout(timer);
+        }
+      } catch (error) {
+        logger.error('SelectsScreen: Failed to check hint state', { error: error.message });
+      }
+    };
+    checkHintDismissed();
+  }, []);
+
+  // Dismiss hint and save to AsyncStorage
+  const dismissDragHint = useCallback(async () => {
+    setShowDragHint(false);
+    try {
+      await AsyncStorage.setItem(DRAG_HINT_STORAGE_KEY, 'true');
+    } catch (error) {
+      logger.error('SelectsScreen: Failed to save hint state', { error: error.message });
+    }
+  }, []);
 
   const handleDeleteZoneLayout = useCallback(event => {
     const { y } = event.nativeEvent.layout;
@@ -319,10 +418,17 @@ const SelectsScreen = ({ navigation }) => {
     [selectedIndex]
   );
 
-  const handleDragStart = useCallback(index => {
-    setIsDragging(true);
-    setDraggingIndex(index);
-  }, []);
+  const handleDragStart = useCallback(
+    index => {
+      setIsDragging(true);
+      setDraggingIndex(index);
+      // Auto-dismiss hint on first drag
+      if (showDragHint) {
+        dismissDragHint();
+      }
+    },
+    [showDragHint, dismissDragHint]
+  );
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
@@ -473,6 +579,11 @@ const SelectsScreen = ({ navigation }) => {
             {Array.from({ length: MAX_SELECTS }).map((_, index) => renderThumbnailSlot(index))}
           </ScrollView>
         </View>
+
+        {/* Tutorial Hint - only show when there are photos to reorder */}
+        {selectedPhotos.length > 1 && (
+          <TutorialHint isVisible={showDragHint} onDismiss={dismissDragHint} />
+        )}
 
         {/* Spacer to push button to bottom */}
         <View style={styles.spacer} />
@@ -628,6 +739,57 @@ const styles = StyleSheet.create({
   deleteBarText: {
     color: colors.text.primary,
     fontSize: 14,
+    fontWeight: '600',
+  },
+  // Tutorial hint styles
+  tutorialOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  tutorialContainer: {
+    backgroundColor: colors.background.secondary,
+    borderRadius: 16,
+    padding: 24,
+    marginHorizontal: 40,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+  },
+  tutorialIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  tutorialSwapIcon: {
+    marginLeft: 8,
+  },
+  tutorialTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 4,
+  },
+  tutorialSubtitle: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginBottom: 20,
+  },
+  tutorialButton: {
+    backgroundColor: colors.brand.purple,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  tutorialButtonText: {
+    color: colors.text.primary,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
