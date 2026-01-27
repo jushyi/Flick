@@ -28,6 +28,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: User Albums Display** - Horizontal scroll album bar
 - [ ] **Phase 9: Monthly Albums** - Auto-generated albums by month
 - [ ] **Phase 10: Empty Feed State Change UI Change** - UI improvements for empty feed state transitions
+- [ ] **Phase 11: Feed Reaction Emoji Enhancements** - Randomized emoji selection per photo, custom emoji picker with "Add your own"
+- [ ] **Phase 12: Own Snaps in Stories Bar** - User's journaled snaps persist on left of stories bar, can comment but not react to own photos
 
 ## Phase Details
 
@@ -86,13 +88,13 @@ Plans:
 **Goal**: Polish profile onboarding with step indicators, redesigned SelectsScreen with preview/thumbnails, drag-to-reorder, and tutorial hints
 **Depends on**: Phase 3.1
 **Research**: Unlikely (extending existing ProfileSetupScreen patterns)
-**Plans**: 2/4
+**Plans**: 3/4
 
 Plans:
 
 - [x] 04-01: Step Indicator component + ProfileSetupScreen UX updates (step dots, single "Next step" button)
 - [x] 04-02: SelectsScreen layout redesign (large preview, 10 thumbnail slots, tap-to-preview)
-- [ ] 04-03: Drag-to-reorder implementation with delete bar
+- [x] 04-03: Drag-to-reorder implementation with delete bar
 - [ ] 04-04: Tutorial hint popup, skip confirmation, load existing selects
 
 ### Phase 5: Profile Screen Layout
@@ -167,10 +169,48 @@ Plans:
 
 [To be added during planning]
 
+### Phase 11: Feed Reaction Emoji Enhancements
+
+**Goal**: Enhance feed page reaction system with randomized emoji selection per photo (iOS emojis only), user custom emoji picker accessible via "Add your own" button at end of reaction picker
+**Depends on**: Phase 10
+**Research**: Likely (emoji picker libraries, random selection patterns)
+**Research topics**: React Native emoji picker libraries, iOS emoji rendering, random selection without repetition
+**Plans**: TBD
+
+Plans:
+
+- [ ] 11-01: TBD (run /gsd:plan-phase 11 to break down)
+
+**Details:**
+
+1. Randomize/rotate available reaction emojis for each photo (iOS emojis only)
+2. User can select their own custom emoji to react with
+3. Custom emoji gets added to the photo's reactions and can be updated
+4. "Add your own" button appears at end of reaction picker scroll
+5. Button opens emoji picker modal for selection
+
+### Phase 12: Own Snaps in Stories Bar
+
+**Goal**: Display user's own journaled snaps in stories bar (persists on left), allow comments on own photos but prevent self-reactions
+**Depends on**: Phase 11
+**Research**: Unlikely (extending existing stories bar patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 12-01: TBD (run /gsd:plan-phase 12 to break down)
+
+**Details:**
+
+1. User's own journaled snaps appear in stories bar
+2. Own snaps persist on the left side of the bar (always visible)
+3. Users can comment on their own photos
+4. Users cannot react to their own photos (disable reaction UI for self)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 5 → 6 → 7 → 8 → 9 → 10
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12
 
 | Phase                          | Plans Complete | Status      | Completed  |
 | ------------------------------ | -------------- | ----------- | ---------- |
@@ -178,10 +218,12 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 5 → 6 → 7 �
 | 2. Login Screen Refactor       | 1/1            | Complete    | 2026-01-27 |
 | 3. Signup Flow Refactor        | 2/2            | Complete    | 2026-01-27 |
 | 3.1 Auth Input Field Fixes     | 1/1            | Complete    | 2026-01-27 |
-| 4. Profile Creation Onboarding | 2/4            | In progress | -          |
+| 4. Profile Creation Onboarding | 3/4            | In progress | -          |
 | 5. Profile Screen Layout       | 0/?            | Not started | -          |
 | 6. Selects Banner              | 0/?            | Not started | -          |
 | 7. Profile Song Scaffold       | 0/?            | Not started | -          |
 | 8. User Albums Display         | 0/?            | Not started | -          |
 | 9. Monthly Albums              | 0/?            | Not started | -          |
 | 10. Empty Feed State UI Change | 0/?            | Not started | -          |
+| 11. Feed Reaction Emoji        | 0/?            | Not started | -          |
+| 12. Own Snaps in Stories Bar   | 0/?            | Not started | -          |
