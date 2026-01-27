@@ -20,6 +20,7 @@ import Animated, {
   withSpring,
   withTiming,
   runOnJS,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { Button, StepIndicator } from '../components';
 import { useAuth } from '../context/AuthContext';
@@ -39,6 +40,7 @@ const DRAG_HINT_STORAGE_KEY = '@selects_drag_hint_dismissed';
 // DraggableThumbnail component for drag-to-reorder
 const DraggableThumbnail = ({
   photo,
+  photoId,
   index,
   isSelected,
   onPress,
@@ -53,6 +55,7 @@ const DraggableThumbnail = ({
   deleteZoneY,
   hoverIndex,
   onHoverIndexChange,
+  isOverDeleteZone,
 }) => {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -60,11 +63,29 @@ const DraggableThumbnail = ({
   const zIndex = useSharedValue(0);
   const shiftX = useSharedValue(0);
 
+  // Reset position when the photo at this slot changes (after reorder)
+  // Cancel any running animations and reset instantly to avoid flash
+  useEffect(() => {
+    cancelAnimation(translateX);
+    cancelAnimation(translateY);
+    cancelAnimation(shiftX);
+    cancelAnimation(scale);
+    translateX.value = 0;
+    translateY.value = 0;
+    shiftX.value = 0;
+    scale.value = 1;
+  }, [photoId]);
+
   // Animate horizontal shift for non-dragged items based on hover position
   useEffect(() => {
-    // Only shift if something is being dragged (hoverIndex !== null)
-    // and this thumbnail is NOT the one being dragged
-    if (hoverIndex === null || draggingIndex === null || draggingIndex === index) {
+    // When drag ends, instantly snap to position (no animation) to avoid replay effect
+    if (draggingIndex === null) {
+      shiftX.value = 0;
+      return;
+    }
+
+    // Collapse gaps when over delete zone or this is the dragged item
+    if (isOverDeleteZone || hoverIndex === null || draggingIndex === index) {
       shiftX.value = withTiming(0, { duration: 200 });
       return;
     }
@@ -90,7 +111,7 @@ const DraggableThumbnail = ({
     } else {
       shiftX.value = withTiming(0, { duration: 200 });
     }
-  }, [hoverIndex, draggingIndex, index, shiftX]);
+  }, [isOverDeleteZone, hoverIndex, draggingIndex, index, shiftX]);
 
   const calculateTargetIndex = useCallback(
     currentX => {
@@ -129,29 +150,47 @@ const DraggableThumbnail = ({
     .onEnd(event => {
       // Check if dropping on delete zone using absolute Y position
       const isOverDelete = deleteZoneY > 0 && event.absoluteY >= deleteZoneY;
+      const targetIndex = calculateTargetIndex(translateX.value);
+      const didReorder = !isOverDelete && targetIndex !== index;
+
       if (isOverDelete) {
         // Delete the photo
+        translateX.value = 0;
+        translateY.value = 0;
+        scale.value = 1;
+        zIndex.value = 0;
         runOnJS(onDelete)(index);
+        runOnJS(onHoverIndexChange)(null);
+        runOnJS(onDragEnd)();
+      } else if (didReorder) {
+        // Animate to target position, then trigger reorder after animation completes
+        const targetOffset = (targetIndex - index) * (THUMBNAIL_SIZE + THUMBNAIL_GAP);
+        translateY.value = withTiming(0, { duration: 150 });
+        scale.value = withTiming(1, { duration: 150 });
+        zIndex.value = 0;
+        runOnJS(onHoverIndexChange)(null);
+
+        // Animate to target and reorder after animation completes
+        translateX.value = withTiming(targetOffset, { duration: 150 }, finished => {
+          'worklet';
+          if (finished) {
+            runOnJS(onReorder)(index, targetIndex);
+            runOnJS(onDragEnd)();
+          }
+        });
       } else {
-        // Reorder
-        const targetIndex = calculateTargetIndex(translateX.value);
-        if (targetIndex !== index) {
-          runOnJS(onReorder)(index, targetIndex);
-        }
+        // No reorder - snap back
+        translateX.value = withTiming(0, { duration: 150 });
+        translateY.value = withTiming(0, { duration: 150 });
+        scale.value = withTiming(1, { duration: 150 });
+        zIndex.value = 0;
+        runOnJS(onHoverIndexChange)(null);
+        runOnJS(onDragEnd)();
       }
-      translateX.value = withSpring(0);
-      translateY.value = withSpring(0);
-      scale.value = withSpring(1);
-      zIndex.value = 0;
-      runOnJS(onHoverIndexChange)(null);
-      runOnJS(onDragEnd)();
     })
     .onFinalize(() => {
-      translateX.value = withSpring(0);
-      translateY.value = withSpring(0);
-      scale.value = withSpring(1);
-      zIndex.value = 0;
-      runOnJS(onHoverIndexChange)(null);
+      // onEnd handles all resets - onFinalize only needed for edge cases
+      // Don't reset here as it can interrupt ongoing animations
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -591,10 +630,12 @@ const SelectsScreen = ({ navigation }) => {
     const isSelected = hasPhoto && index === selectedIndex;
 
     if (hasPhoto) {
+      const photo = selectedPhotos[index];
       return (
         <DraggableThumbnail
           key={index}
-          photo={selectedPhotos[index]}
+          photo={photo}
+          photoId={photo.assetId || photo.uri}
           index={index}
           isSelected={isSelected}
           onPress={() => handleThumbnailPress(index)}
@@ -609,6 +650,7 @@ const SelectsScreen = ({ navigation }) => {
           deleteZoneY={deleteZoneY}
           hoverIndex={hoverIndex}
           onHoverIndexChange={handleHoverIndexChange}
+          isOverDeleteZone={isOverDeleteZone}
         />
       );
     }
