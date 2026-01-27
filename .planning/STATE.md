@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 
 ## Current Position
 
-Phase: 36.1 of 39 (Comment Sheet Fullscreen Expand)
+Phase: 37.2 of 39 (Stories Flash & Feed Skeleton)
 Plan: 1 of 1 in current phase
 Status: Complete
-Last activity: 2026-01-27 - Completed 36.1-01-PLAN.md (expand/collapse gesture)
+Last activity: 2026-01-27 - Completed 37.2-01-PLAN.md (stories flash fix, skeleton update)
 
-Progress: █████████░ 88%
+Progress: █████████░ 95%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 133 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 33 in v0.7)
+- Total plans completed: 134 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 34 in v0.7)
 - Average duration: 16 min
-- Total execution time: 23.1 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 254m v0.7)
+- Total execution time: 23.3 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 262m v0.7)
 
 **By Milestone:**
 
@@ -184,6 +184,8 @@ All decisions documented in PROJECT.md Key Decisions table with outcomes.
 | 36.1-01       | 85% expanded height (not 95%)                         | User feedback: 95% went into notch, hard to grab handle                              |
 | 36.1-01       | Nested Animated.Views for driver separation           | JS driver (height) and native driver (transforms) can't mix on same view             |
 | 36.1-01       | isExpandedRef for PanResponder closure                | Ref provides synchronous state access inside PanResponder                            |
+| 37.2-01       | expo-image for story thumbnails                       | cachePolicy='memory-disk' prevents gray flash on modal dismiss                       |
+| 37.2-01       | Keep RNImage for profile photos                       | Small size, no flash issue - expo-image overhead unnecessary                         |
 
 ### Deferred Issues
 
@@ -225,5 +227,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 37.1-01-PLAN.md (gradient state indicators)
-Resume file: None - ready for Phase 37.2
+Stopped at: Completed 37.2-01-PLAN.md (stories flash fix, skeleton update)
+Resume file: None - v0.7 milestone nearly complete

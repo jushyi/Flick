@@ -312,70 +312,70 @@ Plans:
 **Goal**: Fix stories photo thumbnails flashing gray when swiping down on photo modal and returning; update feed loading skeleton to reflect current feed structure
 **Depends on**: Phase 37.1
 **Research**: Unlikely (bug fix + UI polish)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
 
-- [ ] 37.2-01: TBD
+- [x] 37.2-01: expo-image for story thumbnails, feed skeleton rewrite
 
 ## Progress
 
-| Phase                                          | Milestone | Plans Complete | Status      | Completed  |
-| ---------------------------------------------- | --------- | -------------- | ----------- | ---------- |
-| 1. Navigation Restructure                      | v0.1      | 1/1            | Complete    | 2026-01-12 |
-| 2. Darkroom Bottom Sheet                       | v0.1      | 2/2            | Complete    | 2026-01-12 |
-| 3. Swipe Gesture Triage                        | v0.1      | 2/2            | Complete    | 2026-01-12 |
-| 4. Success & Return Flow                       | v0.1      | 2/2            | Complete    | 2026-01-13 |
-| 5. Camera Icon Redesign                        | v0.1      | 1/1            | Complete    | 2026-01-13 |
-| 6. Phone Auth Implementation                   | v0.2      | 4/4            | Complete    | 2026-01-19 |
-| 7. Legacy Auth Removal & Cleanup               | v0.2      | 1/1            | Complete    | 2026-01-19 |
-| 8. Polish & Testing                            | v0.2      | 3/3            | Complete    | 2026-01-19 |
-| 9. Firestore Services Migration                | v0.3      | 2/2            | Complete    | 2026-01-19 |
-| 10. Storage Migration & Cleanup                | v0.3      | 2/2            | Complete    | 2026-01-19 |
-| 11. Firebase Modular API Migration             | v0.4      | 4/4            | Complete    | 2026-01-19 |
-| 12. Friendship Service Fix + Testing           | v0.4      | 1/1            | Complete    | 2026-01-19 |
-| 12.1 Friends List Screen Crash Fix             | v0.4      | 1/1            | Complete    | 2026-01-19 |
-| 12.2 Feed Stories Feature                      | v0.4      | 4/4            | Complete    | 2026-01-20 |
-| 13. Production Build & Branding                | v0.4      | 3/3            | Complete    | 2026-01-20 |
-| 13.1 Darkroom Reveal Timing Fix                | v0.4      | 1/1            | Complete    | 2026-01-20 |
-| 13.2 Darkroom Auto-Reveal Fix                  | v0.4      | 1/1            | Complete    | 2026-01-20 |
-| 14. Remote Notification Testing & Polish       | v0.4      | 1/1            | Complete    | 2026-01-20 |
-| 15. Background Photo Upload                    | v0.5      | 1/1            | Complete    | 2026-01-20 |
-| 15.1 Darkroom Notification Fix                 | v0.5      | 1/1            | Complete    | 2026-01-21 |
-| 15.2 Camera UI & Darkroom Animation Overhaul   | v0.5      | 3/3            | Complete    | 2026-01-21 |
-| 15.3 ISS-001 - Add True 0.5x Ultra-Wide Zoom   | v0.5      | 1/1            | Complete    | 2026-01-21 |
-| 16. Camera Capture Feedback                    | v0.5      | 1/1            | Complete    | 2026-01-21 |
-| 16.1 UI Overhaul for Darkroom Bottom Sheet     | v0.5      | 1/1            | Complete    | 2026-01-21 |
-| 16.2 Fix 0.5x Ultra-Wide Zoom                  | v0.5      | 1/1            | Complete    | 2026-01-21 |
-| 16.3 Fix React Native Firebase Warnings        | v0.5      | 1/1            | Complete    | 2026-01-21 |
-| 17. Darkroom UX Polish                         | v0.5      | 2/2            | Complete    | 2026-01-22 |
-| 17.1 Darkroom Animation Refinements            | v0.5      | 1/1            | Complete    | 2026-01-22 |
-| 17.2 Reveal Timing 0-5 Minutes                 | v0.5      | 1/1            | Complete    | 2026-01-22 |
-| 18. Reaction Notification Debouncing           | v0.5      | 2/2 + FIX      | Complete    | 2026-01-22 |
-| 18.1 Batched Darkroom Triage with Undo         | v0.5      | 2/2 + 6 FIX    | Complete    | 2026-01-23 |
-| 18.2 Success Sound Effect on Triage Completion | v0.5      | 1/1            | Complete    | 2026-01-23 |
-| 18.3 Triage Animation Z-Index & Delete Suction | v0.5      | 1/1            | Complete    | 2026-01-23 |
-| 18.4 Triage Animation Arc Adjustment           | v0.5      | 1/1            | Complete    | 2026-01-23 |
-| 18.5 Camera Default Launch Screen              | v0.5      | 1/1            | Complete    | 2026-01-23 |
-| 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete    | 2026-01-23 |
-| 30. Rewind Rebrand                             | v0.7      | 5/5            | Complete    | 2026-01-25 |
-| 31. Personalization Scaffolding                | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 32. Navigation Restructure                     | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 33. Feed Header & Notifications                | v0.7      | 2/2            | Complete    | 2026-01-25 |
-| 34. Feed Card Redesign                         | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 34.1 Instagram-Style Feed Cards (INSERTED)     | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 34.2 Feed & Stories UI Refinements (INSERTED)  | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 35. Stories Redesign                           | v0.7      | 3/3            | Complete    | 2026-01-25 |
-| 35.1 Unified Photo Modal (INSERTED)            | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 35.2 Feed Header & Bottom Padding (INSERTED)   | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 35.3 Stories Performance & View State Fix      | v0.7      | 1/1            | Complete    | 2026-01-25 |
-| 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7      | 1/1 + FIX      | Complete    | 2026-01-26 |
-| 35.5 Feed Layout Polish (INSERTED)             | v0.7      | 1/1            | Complete    | 2026-01-26 |
-| 36. Comments Feature                           | v0.7      | 6/6 + 5 FIX    | Complete    | 2026-01-26 |
-| 36.1 Comment Sheet Fullscreen (INSERTED)       | v0.7      | 1/1            | Complete    | 2026-01-27 |
-| 37. Profile Placeholder                        | v0.7      | 1/1            | Complete    | 2026-01-26 |
-| 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7      | 1/1            | Complete    | 2026-01-27 |
-| 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7      | 0/?            | Not started | -          |
+| Phase                                          | Milestone | Plans Complete | Status   | Completed  |
+| ---------------------------------------------- | --------- | -------------- | -------- | ---------- |
+| 1. Navigation Restructure                      | v0.1      | 1/1            | Complete | 2026-01-12 |
+| 2. Darkroom Bottom Sheet                       | v0.1      | 2/2            | Complete | 2026-01-12 |
+| 3. Swipe Gesture Triage                        | v0.1      | 2/2            | Complete | 2026-01-12 |
+| 4. Success & Return Flow                       | v0.1      | 2/2            | Complete | 2026-01-13 |
+| 5. Camera Icon Redesign                        | v0.1      | 1/1            | Complete | 2026-01-13 |
+| 6. Phone Auth Implementation                   | v0.2      | 4/4            | Complete | 2026-01-19 |
+| 7. Legacy Auth Removal & Cleanup               | v0.2      | 1/1            | Complete | 2026-01-19 |
+| 8. Polish & Testing                            | v0.2      | 3/3            | Complete | 2026-01-19 |
+| 9. Firestore Services Migration                | v0.3      | 2/2            | Complete | 2026-01-19 |
+| 10. Storage Migration & Cleanup                | v0.3      | 2/2            | Complete | 2026-01-19 |
+| 11. Firebase Modular API Migration             | v0.4      | 4/4            | Complete | 2026-01-19 |
+| 12. Friendship Service Fix + Testing           | v0.4      | 1/1            | Complete | 2026-01-19 |
+| 12.1 Friends List Screen Crash Fix             | v0.4      | 1/1            | Complete | 2026-01-19 |
+| 12.2 Feed Stories Feature                      | v0.4      | 4/4            | Complete | 2026-01-20 |
+| 13. Production Build & Branding                | v0.4      | 3/3            | Complete | 2026-01-20 |
+| 13.1 Darkroom Reveal Timing Fix                | v0.4      | 1/1            | Complete | 2026-01-20 |
+| 13.2 Darkroom Auto-Reveal Fix                  | v0.4      | 1/1            | Complete | 2026-01-20 |
+| 14. Remote Notification Testing & Polish       | v0.4      | 1/1            | Complete | 2026-01-20 |
+| 15. Background Photo Upload                    | v0.5      | 1/1            | Complete | 2026-01-20 |
+| 15.1 Darkroom Notification Fix                 | v0.5      | 1/1            | Complete | 2026-01-21 |
+| 15.2 Camera UI & Darkroom Animation Overhaul   | v0.5      | 3/3            | Complete | 2026-01-21 |
+| 15.3 ISS-001 - Add True 0.5x Ultra-Wide Zoom   | v0.5      | 1/1            | Complete | 2026-01-21 |
+| 16. Camera Capture Feedback                    | v0.5      | 1/1            | Complete | 2026-01-21 |
+| 16.1 UI Overhaul for Darkroom Bottom Sheet     | v0.5      | 1/1            | Complete | 2026-01-21 |
+| 16.2 Fix 0.5x Ultra-Wide Zoom                  | v0.5      | 1/1            | Complete | 2026-01-21 |
+| 16.3 Fix React Native Firebase Warnings        | v0.5      | 1/1            | Complete | 2026-01-21 |
+| 17. Darkroom UX Polish                         | v0.5      | 2/2            | Complete | 2026-01-22 |
+| 17.1 Darkroom Animation Refinements            | v0.5      | 1/1            | Complete | 2026-01-22 |
+| 17.2 Reveal Timing 0-5 Minutes                 | v0.5      | 1/1            | Complete | 2026-01-22 |
+| 18. Reaction Notification Debouncing           | v0.5      | 2/2 + FIX      | Complete | 2026-01-22 |
+| 18.1 Batched Darkroom Triage with Undo         | v0.5      | 2/2 + 6 FIX    | Complete | 2026-01-23 |
+| 18.2 Success Sound Effect on Triage Completion | v0.5      | 1/1            | Complete | 2026-01-23 |
+| 18.3 Triage Animation Z-Index & Delete Suction | v0.5      | 1/1            | Complete | 2026-01-23 |
+| 18.4 Triage Animation Arc Adjustment           | v0.5      | 1/1            | Complete | 2026-01-23 |
+| 18.5 Camera Default Launch Screen              | v0.5      | 1/1            | Complete | 2026-01-23 |
+| 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete | 2026-01-23 |
+| 30. Rewind Rebrand                             | v0.7      | 5/5            | Complete | 2026-01-25 |
+| 31. Personalization Scaffolding                | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 32. Navigation Restructure                     | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 33. Feed Header & Notifications                | v0.7      | 2/2            | Complete | 2026-01-25 |
+| 34. Feed Card Redesign                         | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 34.1 Instagram-Style Feed Cards (INSERTED)     | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 34.2 Feed & Stories UI Refinements (INSERTED)  | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 35. Stories Redesign                           | v0.7      | 3/3            | Complete | 2026-01-25 |
+| 35.1 Unified Photo Modal (INSERTED)            | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 35.2 Feed Header & Bottom Padding (INSERTED)   | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 35.3 Stories Performance & View State Fix      | v0.7      | 1/1            | Complete | 2026-01-25 |
+| 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7      | 1/1 + FIX      | Complete | 2026-01-26 |
+| 35.5 Feed Layout Polish (INSERTED)             | v0.7      | 1/1            | Complete | 2026-01-26 |
+| 36. Comments Feature                           | v0.7      | 6/6 + 5 FIX    | Complete | 2026-01-26 |
+| 36.1 Comment Sheet Fullscreen (INSERTED)       | v0.7      | 1/1            | Complete | 2026-01-27 |
+| 37. Profile Placeholder                        | v0.7      | 1/1            | Complete | 2026-01-26 |
+| 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7      | 1/1            | Complete | 2026-01-27 |
+| 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7      | 1/1            | Complete | 2026-01-27 |
 
 <details>
 <summary>✅ v0.6 Code Quality, Security & Documentation (Phases 19-29) - SHIPPED 2026-01-25</summary>
