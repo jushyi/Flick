@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors } from '../constants/colors';
 
 /**
- * Reusable Input Component
+ * Reusable Input Component with dark theme support
  * @param {string} label - Input label
  * @param {string} placeholder - Placeholder text
  * @param {string} value - Input value
@@ -40,7 +41,7 @@ const Input = ({
         <TextInput
           style={[styles.input, error && styles.inputError]}
           placeholder={placeholder}
-          placeholderTextColor="#999999"
+          placeholderTextColor={colors.text.tertiary}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   inputContainer: {
@@ -80,19 +81,19 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border.subtle,
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
-    backgroundColor: '#FFFFFF',
-    color: '#000000',
+    backgroundColor: colors.background.secondary,
+    color: colors.text.primary,
   },
   inputError: {
-    borderColor: '#FF4444',
+    borderColor: colors.status.danger,
   },
   errorText: {
     fontSize: 12,
-    color: '#FF4444',
+    color: colors.status.danger,
     marginTop: 4,
   },
   eyeIcon: {
