@@ -58,6 +58,39 @@ const DraggableThumbnail = ({
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const zIndex = useSharedValue(0);
+  const shiftX = useSharedValue(0);
+
+  // Animate horizontal shift for non-dragged items based on hover position
+  useEffect(() => {
+    // Only shift if something is being dragged (hoverIndex !== null)
+    // and this thumbnail is NOT the one being dragged
+    if (hoverIndex === null || draggingIndex === null || draggingIndex === index) {
+      shiftX.value = withTiming(0, { duration: 200 });
+      return;
+    }
+
+    const shiftAmount = THUMBNAIL_SIZE + THUMBNAIL_GAP;
+
+    // Determine if this item needs to shift
+    // Items between old position and new position need to move
+    if (draggingIndex < hoverIndex) {
+      // Dragging right: items in range (draggingIndex, hoverIndex] shift left
+      if (index > draggingIndex && index <= hoverIndex) {
+        shiftX.value = withTiming(-shiftAmount, { duration: 200 });
+      } else {
+        shiftX.value = withTiming(0, { duration: 200 });
+      }
+    } else if (draggingIndex > hoverIndex) {
+      // Dragging left: items in range [hoverIndex, draggingIndex) shift right
+      if (index >= hoverIndex && index < draggingIndex) {
+        shiftX.value = withTiming(shiftAmount, { duration: 200 });
+      } else {
+        shiftX.value = withTiming(0, { duration: 200 });
+      }
+    } else {
+      shiftX.value = withTiming(0, { duration: 200 });
+    }
+  }, [hoverIndex, draggingIndex, index, shiftX]);
 
   const calculateTargetIndex = useCallback(
     currentX => {
@@ -123,7 +156,10 @@ const DraggableThumbnail = ({
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: translateX.value },
+      // Combine gesture translation (for dragged item) with shift animation (for non-dragged items)
+      // Dragged item: translateX follows gesture, shiftX stays at 0
+      // Non-dragged items: translateX stays at 0, shiftX shifts based on hover position
+      { translateX: translateX.value + shiftX.value },
       { translateY: translateY.value },
       { scale: scale.value },
     ],
