@@ -282,6 +282,21 @@ const SelectsScreen = ({ navigation }) => {
     }
   }, []);
 
+  // Load existing selects when returning to edit
+  useEffect(() => {
+    if (userProfile?.selects?.length > 0) {
+      const existingPhotos = userProfile.selects.map((uri, index) => ({
+        uri,
+        assetId: `existing_${index}`,
+      }));
+      setSelectedPhotos(existingPhotos);
+      logger.debug('SelectsScreen: Loaded existing selects', { count: existingPhotos.length });
+    }
+  }, []); // Run once on mount
+
+  // Determine if editing existing selects
+  const isEditing = userProfile?.selectsCompleted === true;
+
   const handleDeleteZoneLayout = useCallback(event => {
     const { y } = event.nativeEvent.layout;
     // Measure relative to screen
@@ -450,14 +465,11 @@ const SelectsScreen = ({ navigation }) => {
     }
   };
 
-  const handleComplete = async () => {
-    logger.info('SelectsScreen: Completing with photos', { count: selectedPhotos.length });
+  const saveSelects = async selectsData => {
+    logger.info('SelectsScreen: Saving selects', { count: selectsData.length });
     setUploading(true);
 
     try {
-      // Store selected photo URIs to user profile
-      const selectsData = selectedPhotos.map(photo => photo.uri);
-
       const updateData = {
         selects: selectsData,
         selectsCompleted: true,
@@ -477,11 +489,30 @@ const SelectsScreen = ({ navigation }) => {
         Alert.alert('Error', 'Could not save your selects. Please try again.');
       }
     } catch (error) {
-      logger.error('SelectsScreen: Failed to complete', { error: error.message });
+      logger.error('SelectsScreen: Failed to save', { error: error.message });
       Alert.alert('Error', error.message || 'An error occurred');
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleComplete = () => {
+    // If no photos selected, show skip confirmation
+    if (selectedPhotos.length === 0) {
+      Alert.alert(
+        'Skip Highlights?',
+        'Are you sure you want to skip selecting highlights? You can always add them later from your profile.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Skip', onPress: () => saveSelects([]), style: 'destructive' },
+        ]
+      );
+      return;
+    }
+
+    // Has photos - save them
+    const selectsData = selectedPhotos.map(photo => photo.uri);
+    saveSelects(selectsData);
   };
 
   // Render empty preview placeholder
@@ -542,8 +573,18 @@ const SelectsScreen = ({ navigation }) => {
   return (
     <GestureHandlerRootView style={styles.gestureRoot}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        {/* Step Indicator */}
-        <StepIndicator currentStep={2} totalSteps={2} style={styles.stepIndicator} />
+        {/* Header with Back Button */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={28} color={colors.text.primary} />
+          </TouchableOpacity>
+          <StepIndicator currentStep={2} totalSteps={2} style={styles.headerStepIndicator} />
+          <View style={styles.headerSpacer} />
+        </View>
 
         {/* Title Section */}
         <View style={styles.titleSection}>
@@ -594,7 +635,7 @@ const SelectsScreen = ({ navigation }) => {
             <DeleteBar isVisible={isDragging} isHovering={isOverDeleteZone} />
           ) : (
             <Button
-              title="Complete Profile Setup"
+              title={isEditing ? 'Save Changes' : 'Complete Profile Setup'}
               variant="primary"
               onPress={handleComplete}
               loading={uploading}
@@ -617,8 +658,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
     overflow: 'visible',
   },
-  stepIndicator: {
-    marginTop: 16,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerStepIndicator: {
+    flex: 1,
+  },
+  headerSpacer: {
+    width: 44,
   },
   titleSection: {
     paddingHorizontal: SCREEN_PADDING,
