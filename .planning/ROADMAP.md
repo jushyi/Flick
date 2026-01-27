@@ -83,14 +83,17 @@ Plans:
 
 ### Phase 4: Profile Creation Onboarding
 
-**Goal**: Extend profile setup to capture full profile data (username, display name, photo, bio, Selects selection, song selection)
+**Goal**: Polish profile onboarding with step indicators, redesigned SelectsScreen with preview/thumbnails, drag-to-reorder, and tutorial hints
 **Depends on**: Phase 3.1
 **Research**: Unlikely (extending existing ProfileSetupScreen patterns)
-**Plans**: TBD
+**Plans**: 0/4
 
 Plans:
 
-- [ ] 04-01: TBD during planning
+- [ ] 04-01: Step Indicator component + ProfileSetupScreen UX updates (step dots, single "Next step" button)
+- [ ] 04-02: SelectsScreen layout redesign (large preview, 10 thumbnail slots, tap-to-preview)
+- [ ] 04-03: Drag-to-reorder implementation with delete bar
+- [ ] 04-04: Tutorial hint popup, skip confirmation, load existing selects
 
 ### Phase 5: Profile Screen Layout
 
@@ -175,7 +178,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 5 → 6 → 7 �
 | 2. Login Screen Refactor       | 1/1            | Complete    | 2026-01-27 |
 | 3. Signup Flow Refactor        | 2/2            | Complete    | 2026-01-27 |
 | 3.1 Auth Input Field Fixes     | 1/1            | Complete    | 2026-01-27 |
-| 4. Profile Creation Onboarding | 0/?            | Not started | -          |
+| 4. Profile Creation Onboarding | 0/4            | Not started | -          |
 | 5. Profile Screen Layout       | 0/?            | Not started | -          |
 | 6. Selects Banner              | 0/?            | Not started | -          |
 | 7. Profile Song Scaffold       | 0/?            | Not started | -          |
