@@ -1,139 +1,137 @@
 # External Integrations
 
-**Analysis Date:** 2026-01-12
+**Analysis Date:** 2026-01-26
 
 ## APIs & External Services
 
 **Push Notifications:**
-- Expo Push Notification API - Remote push notifications
-  - SDK/Client: expo-notifications 0.32.16
-  - Auth: Expo Push Tokens generated and stored in Firestore (`users/{userId}/fcmToken`)
-  - Delivery: Triggered by Firebase Cloud Functions, delivered via Expo API
+
+- Expo Push Notification Service - Notification delivery
+  - SDK/Client: `expo-notifications` ~0.32.16
+  - Auth: Expo Push Token stored in Firestore `users/{userId}/fcmToken`
+  - Endpoint: `https://exp.host/--/api/v2/push/send` (called from Cloud Functions)
+  - Implementation: `src/services/firebase/notificationService.js`, `functions/index.js`
+
+**GIF Provider:**
+
+- Giphy API - GIF picker for comments
+  - SDK/Client: `@giphy/react-native-sdk` ^5.0.1
+  - Auth: API key in `GIPHY_API_KEY` env var
+  - Implementation: `src/components/comments/GifPicker.js`
 
 ## Data Storage
 
 **Databases:**
-- Firebase Cloud Firestore - Primary NoSQL database
-  - Connection: Via firebase SDK (config in .env)
-  - Client: firebase 12.7.0 (modular SDK v9+)
-  - Collections: `users/`, `photos/`, `darkrooms/`, `friendships/`, `notifications/`, `photoViews/`
-  - Security: Firestore Security Rules enforce access control
+
+- Cloud Firestore - Primary data store
+  - Connection: via `@react-native-firebase/firestore`
+  - Collections: `users`, `photos`, `darkrooms`, `friendships`, `notifications`
+  - Rules: `firestore.rules`
+  - Indexes: `firestore.indexes.json`
 
 **File Storage:**
-- Firebase Cloud Storage - User-uploaded photos
-  - SDK/Client: firebase 12.7.0 (Storage module)
-  - Auth: Firebase Auth token (automatic with SDK)
-  - Buckets: Default Firebase Storage bucket for photo uploads
-  - Upload location: `lapse-clone-app/src/services/firebase/photoService.js`
 
-**Caching:**
-- AsyncStorage - Local client-side caching
-  - Client: @react-native-async-storage/async-storage 2.2.0
-  - Usage: Auth session persistence, user profile caching
-  - Location: `lapse-clone-app/src/context/AuthContext.js`
+- Firebase Cloud Storage - Photo storage
+  - SDK/Client: `@react-native-firebase/storage`
+  - Auth: Firebase Auth integration
+  - Rules: `storage.rules`
+  - Structure: `photos/{userId}/{photoId}` (inferred)
+
+**Local Storage:**
+
+- AsyncStorage - Non-sensitive local data
+  - SDK: `@react-native-async-storage/async-storage`
+- SecureStore - Sensitive data (credentials)
+  - SDK: `expo-secure-store`
+  - Implementation: `src/services/secureStorageService.js`
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Firebase Authentication - Email/password + Apple Sign-In
-  - Implementation: firebase SDK Auth module
-  - Token storage: AsyncStorage for session persistence
-  - Session management: Firebase Auth handles JWT refresh automatically
-  - Location: `lapse-clone-app/src/services/firebase/authService.js`
+
+- Firebase Authentication - Phone + Apple Sign-In
+  - SDK/Client: `@react-native-firebase/auth`
+  - Phone auth: `src/services/firebase/phoneAuthService.js`
+  - Context: `src/context/AuthContext.js`, `src/context/PhoneAuthContext.js`
+  - Session: Managed by Firebase SDK, persisted automatically
 
 **OAuth Integrations:**
-- Apple Sign-In - Social sign-in for iOS
-  - Credentials: Configured in Firebase Console
-  - Scopes: email, profile
-  - Implementation: Firebase Auth Apple provider
 
-## Cloud Functions
-
-**Firebase Cloud Functions:**
-- Serverless backend for notifications and scheduled tasks
-  - Runtime: Node.js 20 (deployed to us-central1 region)
-  - Triggers: Firestore document events (onCreate, onUpdate)
-  - Functions deployed:
-    - `sendPhotoRevealNotification` - Triggered on darkroom updates
-    - `sendFriendRequestNotification` - Triggered on friendship creation
-    - `sendReactionNotification` - Triggered on photo reaction updates
-  - Location: `lapse-clone-app/functions/index.js`
+- Apple Sign-In - Social login for iOS
+  - Configured via Firebase Console
+  - Native integration via Expo
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None currently (planned: Sentry or similar)
+
+- Planned: Sentry (Phase 10)
+  - Current: Console logging via `src/utils/logger.js`
+  - TODOs reference Sentry integration
 
 **Analytics:**
-- None currently (planned: Firebase Analytics or Mixpanel)
+
+- Not currently implemented
 
 **Logs:**
-- Firebase Functions logs - View via Firebase Console
-- Expo logs - Development console output
-- Custom logging: `lapse-clone-app/src/utils/logger.js` (environment-aware structured logging)
+
+- Custom logger utility: `src/utils/logger.js`
+  - Environment-aware (debug/info/warn/error)
+  - Structured logging with context objects
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Expo Application Services (EAS) - App builds and distribution
-  - Project ID: b7da185a-d3e1-441b-88f8-0d4379333590
-  - Owner: spoods
-  - Deployment: Manual builds via EAS CLI
-  - Target: iOS (TestFlight), Android (Google Play)
 
-**CI Pipeline:**
-- Not detected (no GitHub Actions, CircleCI, etc. configured)
-- Manual build and deployment workflow
+- EAS Build - Expo Application Services
+  - Config: `eas.json`
+  - Project ID: `b7da185a-d3e1-441b-88f8-0d4379333590`
+  - Distribution: TestFlight (iOS)
 
-**Firebase Functions Deployment:**
-- Manual deployment via `firebase deploy --only functions`
-- Deployed to us-central1 region
+**Cloud Functions:**
+
+- Firebase Cloud Functions - Server-side logic
+  - Location: `functions/` directory
+  - Runtime: Node.js (Firebase Functions v2)
+  - Deploy: `firebase deploy --only functions`
+  - Functions: `processDarkroomReveals`, `sendPhotoRevealNotification`, `sendFriendRequestNotification`, `sendReactionNotification`, `sendCommentNotification`, `getSignedPhotoUrl`, `deleteUserAccount`
 
 ## Environment Configuration
 
 **Development:**
-- Required env vars: Firebase config (API keys, project ID, etc.)
-- Secrets location: `.env` file (gitignored), referenced via react-native-dotenv
-- Mock/stub services: Firebase Emulators (optional, not currently configured)
-- Testing: Expo Go for rapid iteration, physical device for full features
 
-**Staging:**
-- Not detected (single Firebase project for dev/prod)
+- Required env vars: `GIPHY_API_KEY` (optional for GIF feature)
+- Firebase config: `GoogleService-Info.plist` (iOS native file)
+- Secrets location: `.env` (gitignored), `.env.example` for template
 
 **Production:**
-- Secrets management: `.env` for Firebase config (not committed)
-- Firebase project: Production Firestore, Auth, Storage, Functions
-- Distribution: EAS Build → TestFlight (iOS) / Google Play (Android)
+
+- EAS Secrets for build-time injection
+- `GOOGLE_SERVICES_PLIST` - Base64 encoded Firebase config
+- Firebase project configured via console
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None (no external webhook endpoints)
+
+- None (Firebase handles all server-to-server communication)
 
 **Outgoing:**
-- Firebase Cloud Functions → Expo Push Notification API
-  - Endpoint: Expo Push API (https://exp.host/--/api/v2/push/send)
-  - Trigger: Firestore document events (photo reveals, friend requests, reactions)
-  - Retry logic: Expo API handles retries
 
-## Deep Linking
+- Expo Push API - Called from Cloud Functions for notifications
+  - Endpoint: `https://exp.host/--/api/v2/push/send`
+  - Implementation: `functions/index.js` → `sendPushNotification()`
 
-**Scheme:**
-- lapse:// - Custom URL scheme for app navigation
-  - Configuration: `lapse-clone-app/src/navigation/AppNavigator.js`
-  - Routes:
-    - `lapse://darkroom` - Navigate to Darkroom tab (photo reveals)
-    - `lapse://friends/requests` - Navigate to Friend Requests screen
-    - `lapse://feed` - Navigate to Feed tab (reactions)
+## Scheduled Jobs
 
-## Secure Storage
+**Cloud Functions:**
 
-**Expo SecureStore:**
-- expo-secure-store ~15.0.8 - Encrypted local storage for sensitive data
-  - Platform: iOS Keychain, Android Keystore
-  - Usage: Potential future use for tokens (currently using AsyncStorage)
+- `processDarkroomReveals` - Runs every 2 minutes
+  - Checks darkrooms with overdue `nextRevealAt`
+  - Reveals photos and schedules next reveal
+  - Triggers notification via Firestore update
 
 ---
 
-*Integration audit: 2026-01-12*
-*Update when adding/removing external services*
+_Integration audit: 2026-01-26_
+_Update when adding/removing external services_

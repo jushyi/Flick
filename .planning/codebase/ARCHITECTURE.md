@@ -1,200 +1,227 @@
 # Architecture
 
-**Analysis Date:** 2026-01-12
+**Analysis Date:** 2026-01-26
 
 ## Pattern Overview
 
-**Overall:** Mobile Client + Backend-as-a-Service (Firebase)
+**Overall:** Mobile App with Firebase BaaS (Backend-as-a-Service)
 
 **Key Characteristics:**
-- React Native mobile app with Expo managed workflow
-- Firebase BaaS for backend (Auth, Firestore, Storage, Functions)
+
+- React Native single-page mobile application
+- Firebase for all backend services (auth, database, storage, functions)
 - Context API for global state management
-- React Navigation for screen navigation
-- Real-time data sync via Firestore listeners
+- Service layer abstraction over Firebase SDK
+- Cloud Functions for server-side logic and scheduled tasks
 
 ## Layers
 
-**Presentation Layer (Screens + Components):**
-- Purpose: UI rendering and user interaction
-- Contains: React Native screen components and reusable UI components
-- Location: `lapse-clone-app/src/screens/*.js`, `lapse-clone-app/src/components/*.js`
-- Depends on: Service layer, Context API, Navigation
-- Used by: Navigation system (entry points)
+**Presentation Layer (Screens):**
 
-**Navigation Layer:**
-- Purpose: Screen routing and navigation stack management
-- Contains: Stack navigators, tab navigators, deep linking configuration
-- Location: `lapse-clone-app/src/navigation/AppNavigator.js`
-- Depends on: Screen components, AuthContext
-- Used by: App.js (root component)
+- Purpose: UI rendering and user interaction handling
+- Contains: Screen components, navigation handling
+- Location: `src/screens/*.js`
+- Depends on: Components, Hooks, Context
+- Used by: Navigation (AppNavigator)
+
+**Component Layer:**
+
+- Purpose: Reusable UI building blocks
+- Contains: FeedPhotoCard, PhotoDetailModal, Button, Input, etc.
+- Location: `src/components/*.js`, `src/components/comments/*.js`
+- Depends on: Constants (colors, typography), Styles
+- Used by: Screens
+
+**Hook Layer:**
+
+- Purpose: Encapsulate stateful logic and side effects
+- Contains: useCamera, useDarkroom, useFeedPhotos, useComments
+- Location: `src/hooks/*.js`
+- Depends on: Services, Context
+- Used by: Screens, Components
+
+**Context Layer:**
+
+- Purpose: Global state management and cross-cutting concerns
+- Contains: AuthContext, PhoneAuthContext, ThemeContext
+- Location: `src/context/*.js`
+- Depends on: Services
+- Used by: Entire app via Provider tree
 
 **Service Layer:**
-- Purpose: Business logic and Firebase operations
-- Contains: Firebase service modules (auth, photos, darkroom, feed, friendships, notifications)
-- Location: `lapse-clone-app/src/services/firebase/*.js`
-- Depends on: Firebase SDK, utility functions
-- Used by: Screens, context providers, hooks
 
-**Context/State Layer:**
-- Purpose: Global state management for authentication and user profile
-- Contains: AuthContext provider
-- Location: `lapse-clone-app/src/context/AuthContext.js`
-- Depends on: authService, AsyncStorage
-- Used by: All screens requiring auth state
-
-**Hooks Layer:**
-- Purpose: Reusable stateful logic (custom React hooks)
-- Contains: useFeedPhotos hook for feed data management
-- Location: `lapse-clone-app/src/hooks/useFeedPhotos.js`
-- Depends on: Service layer, React hooks
-- Used by: Feed-related screens
+- Purpose: Firebase SDK abstraction, business logic
+- Contains: photoService, feedService, friendshipService, notificationService, etc.
+- Location: `src/services/firebase/*.js`
+- Depends on: Firebase SDK, Logger
+- Used by: Hooks, Context, Screens
 
 **Utility Layer:**
-- Purpose: Shared helper functions (logging, time formatting, haptics)
-- Contains: logger, timeUtils, haptics, debugFeed
-- Location: `lapse-clone-app/src/utils/*.js`
-- Depends on: React Native APIs
-- Used by: Services, screens, components
 
-**Backend Layer (Firebase):**
-- Purpose: Cloud-hosted backend services
-- Contains: Firestore database, Cloud Storage, Authentication, Cloud Functions
-- Location: `lapse-clone-app/functions/index.js` (Cloud Functions source)
-- Depends on: Firebase Admin SDK, Expo Push API
-- Used by: Service layer (from client), Cloud Functions (serverless)
+- Purpose: Shared helpers and utilities
+- Contains: logger, timeUtils, validation, haptics
+- Location: `src/utils/*.js`
+- Depends on: Nothing (leaf modules)
+- Used by: All layers
+
+**Cloud Functions Layer:**
+
+- Purpose: Server-side logic, scheduled tasks, push notifications
+- Contains: Firestore triggers, scheduled functions, callable functions
+- Location: `functions/index.js`
+- Depends on: Firebase Admin SDK
+- Used by: Triggered by Firestore events, Expo Push API
 
 ## Data Flow
 
-**User Authentication Flow:**
-
-1. User enters credentials in LoginScreen/SignUpScreen
-2. Screen calls AuthContext.login() or AuthContext.signup()
-3. AuthContext calls authService.signInWithEmail() or authService.signUpWithEmail()
-4. authService interacts with Firebase Auth API
-5. On success, Firebase returns user object
-6. AuthContext stores user in state and AsyncStorage
-7. AppNavigator re-renders, showing MainTabNavigator or ProfileSetupScreen
-
 **Photo Capture Flow:**
 
-1. User opens CameraScreen
-2. User taps capture button → CameraScreen.handleCapturePhoto()
-3. expo-camera captures photo, returns URI
-4. expo-image-manipulator compresses photo
-5. CameraScreen calls photoService.uploadPhoto(userId, photoUri)
-6. photoService uploads to Firebase Storage
-7. photoService creates Firestore document in `photos/` collection (status: 'developing')
-8. photoService updates darkroom badge count
-9. CameraScreen navigates to Darkroom tab with animation
+1. User opens Camera tab → `CameraScreen.js`
+2. User captures photo → `useCamera.js` handles camera interaction
+3. Photo compressed → `expo-image-manipulator`
+4. Photo uploaded → `storageService.js` → Firebase Storage
+5. Photo metadata saved → `photoService.js` → Firestore (status: 'developing')
+6. Darkroom badge updates → Real-time listener in `useDarkroom.js`
 
-**Feed Data Flow:**
+**Darkroom Reveal Flow:**
 
-1. FeedScreen mounts, calls useFeedPhotos hook
-2. useFeedPhotos calls feedService.subscribeFeedPhotos(friendIds)
-3. feedService sets up Firestore onSnapshot listener on `photos/` collection (where photoState == 'journal')
-4. Firestore pushes real-time updates to client
-5. useFeedPhotos updates state with new photos
-6. FeedScreen re-renders FlatList with FeedPhotoCard components
-7. User taps emoji → FeedScreen calls feedService.toggleReaction()
-8. feedService updates Firestore photo document (reactions field)
-9. Firestore listener triggers update, UI reflects new reaction count
+1. Cloud Function `processDarkroomReveals` runs every 2 minutes
+2. Checks darkrooms with overdue `nextRevealAt`
+3. Reveals all developing photos (batch update)
+4. Triggers `sendPhotoRevealNotification` via Firestore update
+5. User opens app → `DarkroomScreen.js` shows revealed photos
+6. User triages (Journal/Archive/Delete) → `photoService.js` updates status
 
-**Push Notification Flow:**
+**Feed Display Flow:**
 
-1. Firestore document event triggers (e.g., darkroom update, friendship created)
-2. Firebase Cloud Function executes (sendPhotoRevealNotification, sendFriendRequestNotification)
-3. Function fetches recipient's fcmToken from Firestore
-4. Function sends notification payload to Expo Push API
-5. Expo delivers notification to device
-6. User taps notification → App.js notification handler extracts deep link data
-7. navigationRef.navigate() routes to target screen
+1. User navigates to Feed tab → `FeedScreen.js`
+2. `useFeedPhotos.js` calls `feedService.getFeedPhotos()`
+3. Query: `photoState == 'journal'` (friends-only filter client-side)
+4. Results sorted client-side by `capturedAt` DESC
+5. Real-time subscription via `subscribeFeedPhotos()`
+
+**Reaction Flow:**
+
+1. User taps photo → `PhotoDetailModal.js` opens
+2. User taps emoji → `handleReaction()` in `FeedScreen.js`
+3. Optimistic UI update → Local state updated immediately
+4. Firebase update → `feedService.toggleReaction()`
+5. Cloud Function `sendReactionNotification` triggered
+6. Debounced notification sent to photo owner
 
 **State Management:**
-- Authentication state: Managed by AuthContext, persisted to AsyncStorage
-- Feed data: Managed by useFeedPhotos hook, real-time sync via Firestore listeners
-- Navigation state: Managed by React Navigation
-- Transient UI state: Local component state (useState)
+
+- Global auth state: `AuthContext` (Firebase Auth listener)
+- Local component state: React `useState` / `useReducer`
+- Async data: Custom hooks with loading/error states
+- Real-time updates: Firestore `onSnapshot` listeners
 
 ## Key Abstractions
 
 **Service:**
-- Purpose: Encapsulate Firebase operations for a domain
-- Examples: `authService.js`, `photoService.js`, `darkroomService.js`, `feedService.js`, `friendshipService.js`, `notificationService.js`
-- Pattern: Exported functions (module pattern), not classes
-- Location: `lapse-clone-app/src/services/firebase/*.js`
 
-**Context Provider:**
-- Purpose: Share authentication state globally
-- Examples: `AuthContext.js`
-- Pattern: React Context with Provider/Consumer
-- Location: `lapse-clone-app/src/context/AuthContext.js`
+- Purpose: Encapsulate Firebase operations with consistent return types
+- Examples: `feedService.js`, `photoService.js`, `friendshipService.js`
+- Pattern: `{ success: boolean, data?: T, error?: string }`
 
 **Custom Hook:**
-- Purpose: Reusable stateful logic for complex data management
-- Examples: `useFeedPhotos.js` (handles feed loading, pagination, real-time updates)
-- Pattern: React custom hook (returns state and functions)
-- Location: `lapse-clone-app/src/hooks/*.js`
 
-**Navigator:**
-- Purpose: Define screen hierarchies and routing
-- Examples: MainTabNavigator (bottom tabs), FriendsStackNavigator (nested stack)
-- Pattern: React Navigation declarative configuration
-- Location: `lapse-clone-app/src/navigation/AppNavigator.js`
+- Purpose: Manage async data fetching and local state
+- Examples: `useFeedPhotos.js`, `useDarkroom.js`, `useComments.js`
+- Pattern: Returns `{ data, loading, error, refresh }` style object
+
+**Context Provider:**
+
+- Purpose: Share global state across component tree
+- Examples: `AuthProvider`, `ThemeProvider`
+- Pattern: Wrap app in `App.js`, consumed via `useContext`
+
+**Screen:**
+
+- Purpose: Top-level route component
+- Examples: `FeedScreen.js`, `CameraScreen.js`, `DarkroomScreen.js`
+- Pattern: Compose hooks + components, handle navigation
 
 ## Entry Points
 
 **App Entry:**
-- Location: `lapse-clone-app/App.js`
-- Triggers: App launch
-- Responsibilities: Initialize AuthContext, setup notification listeners, render AppNavigator
 
-**Navigation Root:**
-- Location: `lapse-clone-app/src/navigation/AppNavigator.js`
-- Triggers: Rendered by App.js after AuthContext initialization
-- Responsibilities: Route to auth screens or main tabs based on auth state, configure deep linking
+- Location: `App.js`
+- Triggers: Expo app launch
+- Responsibilities:
+  - Initialize providers (SafeAreaProvider, ErrorBoundary, ThemeProvider, AuthProvider)
+  - Setup notification listeners
+  - Handle splash screen
+  - Check for pending reveals on foreground
+
+**Navigation Entry:**
+
+- Location: `src/navigation/AppNavigator.js`
+- Triggers: After auth state determined
+- Responsibilities:
+  - Route to Auth flow or Main tabs based on auth state
+  - Deep linking configuration
+  - Navigation ref export for programmatic navigation
 
 **Cloud Functions Entry:**
-- Location: `lapse-clone-app/functions/index.js`
-- Triggers: Firestore document events (onCreate, onUpdate)
-- Responsibilities: Send push notifications via Expo API
+
+- Location: `functions/index.js`
+- Triggers: Firestore events, scheduled (pub/sub), callable
+- Responsibilities:
+  - Photo reveals, push notifications, signed URLs, account deletion
 
 ## Error Handling
 
-**Strategy:** Service layer returns `{ success, error }` objects, screens handle errors with user feedback
+**Strategy:** Try/catch with structured logging, graceful degradation
 
 **Patterns:**
-- Services use try/catch, return error messages in result objects
-- Screens check result.success, display Alert on failure
-- AuthContext handles auth errors, sets error state
-- Cloud Functions log errors to Firebase Functions logs
+
+- Services return `{ success: false, error: message }` on failure
+- Hooks track `error` state for UI display
+- `ErrorBoundary` component catches React render errors
+- Logger utility records errors with context
+- Cloud Functions return `null` on non-critical errors, throw `HttpsError` on critical
+
+**Example:**
+
+```javascript
+// Service pattern
+try {
+  const result = await someOperation();
+  return { success: true, data: result };
+} catch (error) {
+  logger.error('Operation failed', { error: error.message });
+  return { success: false, error: error.message };
+}
+```
 
 ## Cross-Cutting Concerns
 
 **Logging:**
-- Framework: Custom logger utility (`lapse-clone-app/src/utils/logger.js`)
-- Levels: debug, info, warn, error
-- Pattern: Structured logging with context objects, automatic sensitive data sanitization
-- Environment-aware: DEBUG/INFO in development, WARN/ERROR in production
+
+- Custom logger: `src/utils/logger.js`
+- Environment-aware (debug filtered in prod)
+- Structured logging with context objects
+- Planned: Sentry integration (Phase 10)
 
 **Validation:**
-- Pattern: Manual validation in screens and services (no schema library)
-- Example: Email format checking, username uniqueness in authService
+
+- Cloud Functions: Zod schemas in `functions/validation.js`
+- Client: Manual validation in service functions
+- Firestore: Security rules for access control
 
 **Authentication:**
-- Pattern: AuthContext wraps app, provides user state to all screens
-- Protected routes: Conditional rendering in AppNavigator based on AuthContext.user
 
-**Real-time Sync:**
-- Pattern: Firestore onSnapshot listeners in service layer, unsubscribe on unmount
-- Example: feedService.subscribeFeedPhotos(), friendshipService.subscribeFriendships()
+- Firebase Auth with phone + Apple Sign-In
+- AuthContext provides global auth state
+- Protected routes via `AppNavigator.js` conditional rendering
 
 **Haptic Feedback:**
-- Pattern: Utility function wraps expo-haptics, called on key user actions
-- Location: `lapse-clone-app/src/utils/haptics.js`
-- Usage: Photo capture, reactions, friend requests
+
+- `src/utils/haptics.js` wraps `expo-haptics`
+- Used for reactions, captures, navigation
 
 ---
 
-*Architecture analysis: 2026-01-12*
-*Update when major patterns change*
+_Architecture analysis: 2026-01-26_
+_Update when major patterns change_
