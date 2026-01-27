@@ -2,27 +2,27 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-25)
+See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** Instant, delightful photo capture and reveal experience - photos capture without blocking, triage flows like flipping through a deck of cards, and every interaction feels responsive with haptic feedback.
-**Current focus:** v0.7 Rewind Rebrand & Feed Overhaul - transform identity to Rewind, overhaul feed experience
+**Current focus:** v0.7.1 complete - ready for profile redesign or TestFlight submission
 
 ## Current Position
 
-Phase: 37.2 of 39 (Stories Flash & Feed Skeleton)
-Plan: 1 of 1 in current phase
-Status: Complete
-Last activity: 2026-01-27 - Completed 37.2-01-PLAN.md (stories flash fix, skeleton update)
+Phase: 37.2 of 37.2 (Stories Flash & Feed Skeleton)
+Plan: Complete (v0.7.1 shipped)
+Status: Milestone complete
+Last activity: 2026-01-26 - Completed v0.7.1 milestone
 
-Progress: █████████░ 95%
+Progress: ██████████ 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 134 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 34 in v0.7)
+- Total plans completed: 134 (8 in v0.1 + 8 in v0.2 + 4 in v0.3 + 17 in v0.4 + 37 in v0.5 + 26 in v0.6 + 34 in v0.7.1)
 - Average duration: 16 min
-- Total execution time: 23.3 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 262m v0.7)
+- Total execution time: 23.3 hours (4.3h v0.1 + 2.1h v0.2 + 0.7h v0.3 + 1.4h v0.4 + 5.8h v0.5 + 4.6h v0.6 + 4.4h v0.7.1)
 
 **By Milestone:**
 
@@ -34,6 +34,7 @@ Progress: █████████░ 95%
 | v0.4      | 11-14   | 17    | 136 min        |
 | v0.5      | 15-18.6 | 37    | 390 min        |
 | v0.6      | 19-29   | 26    | 311 min        |
+| v0.7.1    | 30-37.2 | 34    | 262 min        |
 
 ## Accumulated Context
 
@@ -204,28 +205,19 @@ None.
 - **v0.4** Production Ready: 8 phases, 17 plans - shipped 2026-01-20
 - **v0.5** Camera Performance & UX Polish: 22 phases, 37 plans - shipped 2026-01-23
 - **v0.6** Code Quality, Security & Documentation: 15 phases, 26 plans - shipped 2026-01-25
+- **v0.7.1** Rewind Rebrand & Feed Overhaul: 19 phases, 34 plans - shipped 2026-01-26
 
-**Total:** 55 phases, 100 plans, 18.9 hours execution time across 6 milestones
+**Total:** 74 phases, 134 plans, 23.3 hours execution time across 7 milestones
 
 ### Roadmap Evolution
 
-- Milestone v0.6 complete: Code quality, security hardening, and documentation - shipped 2026-01-25
-- 4 phases inserted during v0.6: 21.1, 21.2, 21.3 (security/auth fixes), 28.1 (Firestore rules fix)
-- Version scheme changed from v1.x to v0.x (v1.0 reserved for TestFlight release)
-- Milestone v0.7 created: Rewind rebrand & feed overhaul, 8 phases (Phase 30-37)
-- Phase 34.1 inserted after Phase 34: Instagram-style full-width feed cards (URGENT) - replaces Polaroid design
-- Phase 34.2 inserted after Phase 34.1: Feed & Stories UI Refinements (URGENT) - stories scroll behavior, card redesign with profile overlay
-- Phase 35.1 inserted after Phase 35: Unified Photo Modal (URGENT) - identical appearance for stories/feed, story segments only in stories mode, feed photos don't trigger viewed
-- Phase 35.2 inserted after Phase 35.1: Feed Header & Bottom Padding (URGENT) - black header, scroll-hide behavior, bottom padding for tab bar
-- Phase 35.3 inserted after Phase 35.2: Stories Performance & View State Fix (URGENT) - clunky story navigation, incorrect view state tracking
-- Phase 35.4 inserted after Phase 35.3: Stories Feed Data & Resume Fix (URGENT) - missing journaled photos from friends, incorrect story ordering, resume tracking broken
-- Phase 35.5 inserted after Phase 35.4: Feed Layout Polish (URGENT) - align progress bar/emoji footer to photo width, remove "Feed" header for seamless transition
-- Phase 37.1 inserted after Phase 37: Darkroom Visual Feedback (URGENT) - gradient button indicator for readiness state, swipe-to-reveal gesture for bottom sheet
-- Phase 37.2 inserted after Phase 37.1: Stories Thumbnail Flash Fix & Feed Skeleton Update (URGENT) - fix stories thumbnails flashing gray on modal dismiss, update feed loading skeleton
-- Phase 36.1 inserted after Phase 36: Comment Sheet Fullscreen Expand (URGENT) - swipe up on comment sheet handle to expand to full screen
+- Milestone v0.7.1 complete: Rewind rebrand & feed overhaul - shipped 2026-01-26
+- 11 phases inserted during v0.7.1: 34.1, 34.2, 35.1-35.5, 36.1, 37.1, 37.2
+- Previous: v0.6 Code Quality, Security & Documentation - shipped 2026-01-25
+- Version scheme: v0.x series for pre-TestFlight development (v1.0 reserved for App Store)
 
 ## Session Continuity
 
-Last session: 2026-01-27
-Stopped at: Completed 37.2-01-PLAN.md (stories flash fix, skeleton update)
-Resume file: None - v0.7 milestone nearly complete
+Last session: 2026-01-26
+Stopped at: v0.7.1 milestone shipped
+Resume file: None - ready for next milestone planning

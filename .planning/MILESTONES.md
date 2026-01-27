@@ -1,5 +1,36 @@
 # Project Milestones: Lapse Clone
 
+## v0.7.1 Rewind Rebrand & Feed Overhaul (Shipped: 2026-01-26)
+
+**Delivered:** Complete app transformation to Rewind brand with Instagram-style feed, stories redesign with 3D cube transitions, full comments system with threading/media/notifications, and darkroom visual feedback.
+
+**Phases completed:** 30-37.2 (34 plans total, including 10 inserted phases: 34.1, 34.2, 35.1-35.5, 36.1, 37.1, 37.2)
+
+**Key accomplishments:**
+
+- Rewind rebrand: Cassette tape icon, purple/pink gradient palette, animated splash with blur-to-focus effect
+- Navigation restructure: 4 tabs → 3 tabs (Feed, Camera center, Profile) Instagram-style layout
+- Activity feed: Instagram-style notifications with friend requests, mark-as-read functionality
+- Feed overhaul: Edge-to-edge photos, stories row with scroll-hide, unified photo modal for stories/feed
+- Stories redesign: Gradient glow thumbnails, per-user Firestore viewed state, 3D cube transitions, resume tracking
+- Comments feature: Full CRUD with threading replies, likes, image/GIF support (Giphy SDK), notifications
+- Comment sheet: Bidirectional expand/collapse gesture with velocity-based snapping
+- Darkroom visual feedback: Gradient state indicators (purple→pink) on card button and hold button
+- Feed skeleton: Updated loading skeleton to match current feed structure
+
+**Stats:**
+
+- 175 files changed
+- +23,006 / -1,002 lines (net +22,004)
+- 19 phases (8 planned + 11 inserted), 34 plans
+- 262 min execution time (2 days elapsed: 2026-01-25 → 2026-01-26)
+
+**Git range:** `v0.6` → `176de9f` (docs 37.2-01)
+
+**What's next:** Profile redesign, TestFlight submission, App Store preparation
+
+---
+
 ## v0.6 Code Quality, Security & Documentation (Shipped: 2026-01-25)
 
 **Delivered:** Comprehensive codebase cleanup with linting, security hardening with Firestore rules and SecureStore, full test suite, component refactoring into hooks, and complete project documentation.

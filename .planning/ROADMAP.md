@@ -12,7 +12,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v0.4 Production Ready** - [archive](milestones/v0.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
 - ✅ **v0.5 Camera Performance & UX Polish** - [archive](milestones/v0.5-ROADMAP.md) (Phases 15-18.6, shipped 2026-01-23)
 - ✅ **v0.6 Code Quality, Security & Documentation** - [archive](milestones/v0.6-ROADMAP.md) (Phases 19-29, shipped 2026-01-25)
-- 🚧 **v0.7 Rewind Rebrand & Feed Overhaul** - Phases 30-37 (in progress)
+- ✅ **v0.7.1 Rewind Rebrand & Feed Overhaul** - [archive](milestones/v0.7.1-ROADMAP.md) (Phases 30-37.2, shipped 2026-01-26)
 
 ## Completed Milestones
 
@@ -97,227 +97,6 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 
 </details>
 
-### 🚧 v0.7 Rewind Rebrand & Feed Overhaul (In Progress)
-
-**Milestone Goal:** Transform app identity to Rewind while overhauling the feed experience with new navigation, notifications, stories, and comments
-
-#### Phase 30: Rewind Rebrand
-
-**Goal**: Complete identity overhaul - new name "Rewind", user's color palette, app icon, splash screen, all brand assets
-**Depends on**: Previous milestone complete
-**Research**: Unlikely (internal design work)
-**Plans**: 5
-
-Plans:
-
-- [x] 30-01: Design Tokens - Rewind brand palette with purple/pink gradients
-- [x] 30-02: Brand Assets - Cassette tape icon, splash screen, favicon
-- [x] 30-03: App Configuration - app.json identity, Oly references removed + FIX (ISS-002 deferred)
-- [x] 30-04: Animated Splash Rebrand - Purple blades on dark background with blur-to-focus effect
-- [x] 30-05: Darkroom Design Tokens - Purple→pink color storytelling for reveal animation
-- [x] 30-FIX: EAS ProjectId Mismatch Resolution - Reinitialize EAS for Rewind slug, dev build enabled
-
-#### Phase 31: Personalization Scaffolding
-
-**Goal**: Theme context/infrastructure for users to change color palettes (future feature prep)
-**Depends on**: Phase 30
-**Research**: Unlikely (React Context patterns)
-**Plans**: 1
-
-Plans:
-
-- [x] 31-01: ThemeContext infrastructure with preset palettes and AsyncStorage persistence
-
-#### Phase 32: Navigation Restructure
-
-**Goal**: 4 tabs → 3 tabs (Feed, Camera center, Profile) - Instagram-style layout
-**Depends on**: Phase 31
-**Research**: Unlikely (established patterns)
-**Plans**: 1
-
-Plans:
-
-- [x] 32-01: Restructure tabs and relocate Friends screens to root stack
-
-#### Phase 33: Feed Header & Notifications
-
-**Goal**: Logo + notifications bell header, activity feed + friend requests combined (Instagram-style activity)
-**Depends on**: Phase 32
-**Research**: Unlikely (internal patterns)
-**Plans**: 2
-
-Plans:
-
-- [x] 33-01: ActivityScreen with MaterialTopTabNavigator, navigation wiring from feed
-- [x] 33-02: NotificationsTab with pinned requests, FriendsTab with search/list, mark-as-read
-
-#### Phase 34: Feed Card Redesign
-
-**Goal**: Complete overhaul of card layout, interaction patterns, loading/transitions
-**Depends on**: Phase 33
-**Research**: Unlikely (internal patterns)
-**Plans**: 1
-
-Plans:
-
-- [x] 34-01: Polaroid frame styling - cream color, thick bottom border, user info
-
-#### Phase 34.1: Instagram-Style Full-Width Feed Cards (INSERTED)
-
-**Goal**: Replace Polaroid frame with Instagram-style full-width photos - uniform background, screen-width images, profile/stats at bottom
-**Depends on**: Phase 34
-**Research**: Unlikely (simplification of existing design)
-**Plans**: 1
-
-Plans:
-
-- [x] 34.1-01: Edge-to-edge feed cards with profile photo row
-
-#### Phase 34.2: Feed & Stories UI Refinements (INSERTED)
-
-**Goal**: Stories row hides on scroll (moves with feed), story cards show just photo (no Polaroid outline), profile photo overlaps bottom of card with name floating below
-**Depends on**: Phase 34.1
-**Research**: Unlikely (UI refinement)
-**Plans**: 1
-
-Plans:
-
-- [x] 34.2-01: Scrollable stories, rectangular story cards with profile photo, feed cards horizontal layout
-
-#### Phase 35: Stories Redesign
-
-**Goal**: Complete visual and interaction overhaul of stories row
-**Depends on**: Phase 34
-**Research**: Unlikely (internal patterns)
-**Plans**: 3
-
-Plans:
-
-- [x] 35-01: Polaroid story cards with blurred thumbnails and gradient glow
-- [x] 35-02: View state tracking and stories sorting (unviewed first)
-- [x] 35-03: Hot highlights feed filter (engagement-based curation)
-
-#### Phase 35.1: Unified Photo Modal (INSERTED)
-
-**Goal**: Combine stories modal and feed modal into single identical-looking component. Story segments only appear when viewing stories. Feed photos do NOT trigger viewed state.
-**Depends on**: Phase 35
-**Research**: Unlikely (refactoring existing components)
-**Plans**: 1
-
-Plans:
-
-- [x] 35.1-01: Merge PhotoDetailModal and stories viewer with conditional story segments (feed vs stories mode)
-
-#### Phase 35.2: Feed Header & Bottom Padding (INSERTED)
-
-**Goal**: Black header bar matching feed background, header hides on scroll, add bottom padding so nav bar doesn't clip last feed card's info section
-**Depends on**: Phase 35.1
-**Research**: Unlikely (UI polish)
-**Plans**: 1
-
-Plans:
-
-- [x] 35.2-01: Black header with scroll-hide behavior, bottom content inset for tab bar
-
-#### Phase 35.3: Stories Performance & View State Fix (INSERTED)
-
-**Goal**: Fix clunky story navigation (slow photo loading) and incorrect view state tracking (ring turns gray before all stories viewed)
-**Depends on**: Phase 35.2
-**Research**: Unlikely (debugging existing implementation)
-**Plans**: TBD
-
-Plans:
-
-- [x] 35.3-01: expo-image for instant loads, hasViewedAllPhotos for accurate ring color
-
-#### Phase 35.4: Stories Feed Data & Resume Fix (INSERTED)
-
-**Goal**: Fix stories not showing all journaled photos from friends, incorrect story ordering (newly journaled inserted in middle), and photo tracking for resume feature
-**Depends on**: Phase 35.3
-**Research**: Unlikely (debugging existing implementation)
-**Plans**: TBD
-
-Plans:
-
-- [x] 35.4-01: Fix stories to fetch all photos in chronological order, fix resume tracking
-- [x] 35.4-01-FIX: UAT fixes - progress bar visibility, Firestore viewed state, cube transitions
-
-#### Phase 35.5: Feed Layout Polish (INSERTED)
-
-**Goal**: Align progress bar and emoji footer widths to match photo view, remove "Feed" header for seamless stories→cards transition
-**Depends on**: Phase 35.4
-**Research**: Unlikely (UI polish)
-**Plans**: 1
-
-Plans:
-
-- [x] 35.5-01: Edge-to-edge progress bar/footer, remove Feed header and stories border
-
-#### Phase 36: Comments Feature
-
-**Goal**: Bottom sheet for photo comments (new social feature)
-**Depends on**: Phase 35
-**Research**: Unlikely (Firestore patterns established)
-**Plans**: 6
-
-Plans:
-
-- [x] 36-01: Comment service layer with CRUD operations and Firestore rules
-- [x] 36-02: Comments UI components (CommentRow, CommentInput, CommentsBottomSheet)
-- [x] 36-03: Comments bottom sheet integration with preview comments
-- [x] 36-03-FIX: UAT Round 2 fixes (sheet closing, keyboard, feed mode tap, alignment, rotation)
-- [x] 36-03-FIX-2: UAT Round 3 fixes (rotation timing, showViewAll, spacing, input alignment)
-- [x] 36-03-FIX-3: UAT Round 4 fixes (swipe gestures, keyboard sheet movement, spacing polish)
-- [x] 36-03-FIX-4: UAT Round 5 fixes (gesture detection, keyboard offset, UI spacing)
-- [x] 36-03-FIX-5: UAT Round 6 fixes (feed swipe-to-close, border radius, user info position, dot spacing)
-- [x] 36-04: Comment likes and delete functionality
-- [x] 36-05: Comment threading replies
-- [x] 36-06: Comment notifications & media comments (images, GIFs)
-
-#### Phase 36.1: Comment Sheet Fullscreen Expand (INSERTED)
-
-**Goal**: Swipe up on comment sheet handle to expand comments to full screen for viewing more comments
-**Depends on**: Phase 36
-**Research**: Unlikely (UI enhancement)
-**Plans**: 1
-
-Plans:
-
-- [x] 36.1-01: Bidirectional expand/collapse gesture with velocity-based snapping
-
-#### Phase 37: Profile Placeholder
-
-**Goal**: Friends button only (full Profile refactor deferred to later milestone)
-**Depends on**: Phase 36
-**Research**: Unlikely (simple addition)
-**Plans**: 1
-
-Plans:
-
-- [x] 37-01: Minimal placeholder with Friends and Sign Out buttons only
-
-#### Phase 37.1: Darkroom Visual Feedback (INSERTED)
-
-**Goal**: Color gradient on camera darkroom button indicating readiness state (purple-heavy developing, pink-heavy ready), gradient on hold-to-reveal button
-**Depends on**: Phase 37
-**Research**: Unlikely (UI enhancement)
-**Plans**: 1
-
-Plans:
-
-- [x] 37.1-01: Gradient state indicator on card button and hold button
-
-#### Phase 37.2: Stories Thumbnail Flash Fix & Feed Skeleton Update (INSERTED)
-
-**Goal**: Fix stories photo thumbnails flashing gray when swiping down on photo modal and returning; update feed loading skeleton to reflect current feed structure
-**Depends on**: Phase 37.1
-**Research**: Unlikely (bug fix + UI polish)
-**Plans**: 1
-
-Plans:
-
-- [x] 37.2-01: expo-image for story thumbnails, feed skeleton rewrite
-
 ## Progress
 
 | Phase                                          | Milestone | Plans Complete | Status   | Completed  |
@@ -358,24 +137,51 @@ Plans:
 | 18.4 Triage Animation Arc Adjustment           | v0.5      | 1/1            | Complete | 2026-01-23 |
 | 18.5 Camera Default Launch Screen              | v0.5      | 1/1            | Complete | 2026-01-23 |
 | 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete | 2026-01-23 |
-| 30. Rewind Rebrand                             | v0.7      | 5/5            | Complete | 2026-01-25 |
-| 31. Personalization Scaffolding                | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 32. Navigation Restructure                     | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 33. Feed Header & Notifications                | v0.7      | 2/2            | Complete | 2026-01-25 |
-| 34. Feed Card Redesign                         | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 34.1 Instagram-Style Feed Cards (INSERTED)     | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 34.2 Feed & Stories UI Refinements (INSERTED)  | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 35. Stories Redesign                           | v0.7      | 3/3            | Complete | 2026-01-25 |
-| 35.1 Unified Photo Modal (INSERTED)            | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 35.2 Feed Header & Bottom Padding (INSERTED)   | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 35.3 Stories Performance & View State Fix      | v0.7      | 1/1            | Complete | 2026-01-25 |
-| 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7      | 1/1 + FIX      | Complete | 2026-01-26 |
-| 35.5 Feed Layout Polish (INSERTED)             | v0.7      | 1/1            | Complete | 2026-01-26 |
-| 36. Comments Feature                           | v0.7      | 6/6 + 5 FIX    | Complete | 2026-01-26 |
-| 36.1 Comment Sheet Fullscreen (INSERTED)       | v0.7      | 1/1            | Complete | 2026-01-27 |
-| 37. Profile Placeholder                        | v0.7      | 1/1            | Complete | 2026-01-26 |
-| 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7      | 1/1            | Complete | 2026-01-27 |
-| 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7      | 1/1            | Complete | 2026-01-27 |
+| 30. Rewind Rebrand                             | v0.7.1    | 5/5            | Complete | 2026-01-25 |
+| 31. Personalization Scaffolding                | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 32. Navigation Restructure                     | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 33. Feed Header & Notifications                | v0.7.1    | 2/2            | Complete | 2026-01-25 |
+| 34. Feed Card Redesign                         | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 34.1 Instagram-Style Feed Cards (INSERTED)     | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 34.2 Feed & Stories UI Refinements (INSERTED)  | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35. Stories Redesign                           | v0.7.1    | 3/3            | Complete | 2026-01-25 |
+| 35.1 Unified Photo Modal (INSERTED)            | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35.2 Feed Header & Bottom Padding (INSERTED)   | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35.3 Stories Performance & View State Fix      | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7.1    | 1/1 + FIX      | Complete | 2026-01-26 |
+| 35.5 Feed Layout Polish (INSERTED)             | v0.7.1    | 1/1            | Complete | 2026-01-26 |
+| 36. Comments Feature                           | v0.7.1    | 6/6 + 5 FIX    | Complete | 2026-01-26 |
+| 36.1 Comment Sheet Fullscreen (INSERTED)       | v0.7.1    | 1/1            | Complete | 2026-01-27 |
+| 37. Profile Placeholder                        | v0.7.1    | 1/1            | Complete | 2026-01-26 |
+| 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7.1    | 1/1            | Complete | 2026-01-27 |
+| 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7.1    | 1/1            | Complete | 2026-01-27 |
+
+<details>
+<summary>✅ v0.7.1 Rewind Rebrand & Feed Overhaul (Phases 30-37.2) - SHIPPED 2026-01-26</summary>
+
+- [x] Phase 30: Rewind Rebrand (5/5 plans + 3 fixes) - completed 2026-01-25
+- [x] Phase 31: Personalization Scaffolding (1/1 plan) - completed 2026-01-25
+- [x] Phase 32: Navigation Restructure (1/1 plan) - completed 2026-01-25
+- [x] Phase 33: Feed Header & Notifications (2/2 plans) - completed 2026-01-25
+- [x] Phase 34: Feed Card Redesign (1/1 plan) - completed 2026-01-25
+- [x] Phase 34.1: Instagram-Style Feed Cards (1/1 plan) - completed 2026-01-25
+- [x] Phase 34.2: Feed & Stories UI Refinements (1/1 plan) - completed 2026-01-25
+- [x] Phase 35: Stories Redesign (3/3 plans) - completed 2026-01-25
+- [x] Phase 35.1: Unified Photo Modal (1/1 plan) - completed 2026-01-25
+- [x] Phase 35.2: Feed Header & Bottom Padding (1/1 plan) - completed 2026-01-25
+- [x] Phase 35.3: Stories Performance & View State Fix (1/1 plan) - completed 2026-01-25
+- [x] Phase 35.4: Stories Feed Data & Resume Fix (1/1 plan + 1 fix) - completed 2026-01-26
+- [x] Phase 35.5: Feed Layout Polish (1/1 plan) - completed 2026-01-26
+- [x] Phase 36: Comments Feature (6/6 plans + 5 fixes) - completed 2026-01-26
+- [x] Phase 36.1: Comment Sheet Fullscreen (1/1 plan) - completed 2026-01-27
+- [x] Phase 37: Profile Placeholder (1/1 plan) - completed 2026-01-26
+- [x] Phase 37.1: Darkroom Visual Feedback (1/1 plan + 1 fix) - completed 2026-01-27
+- [x] Phase 37.2: Stories Flash & Feed Skeleton (1/1 plan) - completed 2026-01-27
+
+**Stats:** 19 phases (8 planned + 11 inserted), 34 plans, 262 min execution time
+**See:** [Full archive](milestones/v0.7.1-ROADMAP.md)
+
+</details>
 
 <details>
 <summary>✅ v0.6 Code Quality, Security & Documentation (Phases 19-29) - SHIPPED 2026-01-25</summary>
