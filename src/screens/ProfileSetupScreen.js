@@ -31,6 +31,7 @@ const ProfileSetupScreen = ({ navigation }) => {
   const [bio, setBio] = useState(userProfile?.bio || '');
   const [photoUri, setPhotoUri] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedSong, setSelectedSong] = useState(null);
 
   const [errors, setErrors] = useState({});
 
@@ -79,6 +80,14 @@ const ProfileSetupScreen = ({ navigation }) => {
       { text: 'Choose from Library', onPress: pickImage },
       { text: 'Cancel', style: 'cancel' },
     ]);
+  };
+
+  const handleSongPress = () => {
+    Alert.alert(
+      'Profile Song',
+      "Music provider integration coming soon! You'll be able to search and select your favorite song.",
+      [{ text: 'OK' }]
+    );
   };
 
   const validate = () => {
@@ -156,6 +165,7 @@ const ProfileSetupScreen = ({ navigation }) => {
         displayName: sanitizeDisplayName(displayName.trim()),
         bio: sanitizeBio(bio.trim()),
         photoURL,
+        profileSong: selectedSong,
         profileSetupCompleted: true,
       };
 
@@ -260,6 +270,26 @@ const ProfileSetupScreen = ({ navigation }) => {
                 style={styles.bioInput}
               />
 
+              <View style={styles.songSection}>
+                <Text style={styles.songLabel}>Profile Song (Optional)</Text>
+                <TouchableOpacity style={styles.songContainer} onPress={handleSongPress}>
+                  {selectedSong ? (
+                    <View style={styles.selectedSong}>
+                      <Text style={styles.songIcon}>🎵</Text>
+                      <View style={styles.songInfo}>
+                        <Text style={styles.songTitle}>{selectedSong.title}</Text>
+                        <Text style={styles.songArtist}>{selectedSong.artist}</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.placeholderSong}>
+                      <Text style={styles.songIcon}>🎵</Text>
+                      <Text style={styles.placeholderSongText}>Add a Song</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+
               <Button
                 title="Complete Setup"
                 variant="primary"
@@ -346,6 +376,54 @@ const styles = StyleSheet.create({
   bioInput: {
     height: 80,
     textAlignVertical: 'top',
+  },
+  songSection: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  songLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.secondary,
+    marginBottom: 8,
+  },
+  songContainer: {
+    backgroundColor: colors.background.tertiary,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border.subtle,
+    borderStyle: 'dashed',
+    padding: 16,
+  },
+  placeholderSong: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  songIcon: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  placeholderSongText: {
+    fontSize: 16,
+    color: colors.text.secondary,
+  },
+  selectedSong: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  songInfo: {
+    flex: 1,
+  },
+  songTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  songArtist: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginTop: 2,
   },
   completeButton: {
     marginTop: 8,
