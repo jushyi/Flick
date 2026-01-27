@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 3.1 — Auth Input Field Fixes (INSERTED - urgent)
+**Current focus:** Phase 4 — Profile Creation Onboarding
 
 ## Current Position
 
-Phase: 3.1 of 10 (Auth Input Field Fixes)
-Plan: 0 of 1 in current phase
-Status: Planned, ready for execution
-Last activity: 2026-01-27 — Created Phase 3.1 plan (03.1-01-PLAN.md)
+Phase: 4 of 11 (Profile Creation Onboarding)
+Plan: 0 of ? in current phase
+Status: Not planned yet
+Last activity: 2026-01-27 — Completed Phase 3.1 (03.1-01-PLAN.md)
 
-Progress: ████░░░░░░ 44%
+Progress: █████░░░░░ 50%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 4
-- Average duration: 6.8 min
-- Total execution time: 27 min
+- Total plans completed: 5
+- Average duration: 6.4 min
+- Total execution time: 32 min
 
 **By Phase:**
 
@@ -31,11 +31,12 @@ Progress: ████░░░░░░ 44%
 | 1     | 1     | 2 min  | 2 min    |
 | 2     | 1     | 5 min  | 5 min    |
 | 3     | 2     | 20 min | 10 min   |
+| 3.1   | 1     | 5 min  | 5 min    |
 
 **Recent Trend:**
 
-- Last 5 plans: 2 min, 5 min, 12 min, 8 min
-- Trend: Stable (Phase 3 complete)
+- Last 5 plans: 5 min, 12 min, 8 min, 5 min
+- Trend: Stable (Phase 3.1 complete)
 
 ## Accumulated Context
 
@@ -55,6 +56,9 @@ Recent decisions affecting current work:
 | 3     | Require username/display name on skip         | Essential fields even when skipping optional ones             |
 | 3     | Conditional nav rendering over manual replace | Navigator branches auto-transition on auth state change       |
 | 3     | Store photo URIs directly in selects array    | Simpler MVP; future could upload to Firebase Storage          |
+| 3.1   | Text length comparison for deletion detection | Catches formatting char deletion, not just digits             |
+| 3.1   | Show raw digits when deleting                 | Prevents cursor trap on parentheses during phone correction   |
+| 3.1   | Detect defaults in ProfileSetupScreen         | Keep AuthContext defaults for DB uniqueness, detect in UI     |
 
 ### Deferred Issues
 
@@ -73,9 +77,11 @@ None yet.
   - Refactor Selects UI for improved user experience
   - Add drag-and-drop photo reordering functionality
   - Increase max selectable photos to 10
+- Phase 11 added: Empty Feed State Change UI Change
+  - UI improvements for empty feed state transitions
 
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Phase 3 complete (all 2 plans done)
+Stopped at: Phase 3.1 complete (auth input fixes done)
 Resume file: None
