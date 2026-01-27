@@ -3,14 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '../components';
+import { Button, AuthCodeInput } from '../components';
 import { verifyCode } from '../services/firebase/phoneAuthService';
 import { formatPhoneWithCountry } from '../utils/phoneUtils';
 import { usePhoneAuth } from '../context/PhoneAuthContext';
@@ -42,7 +41,6 @@ const VerificationScreen = ({ navigation, route }) => {
   const [resendTimer, setResendTimer] = useState(60);
   const [retryDelay, setRetryDelay] = useState(0); // Delay before allowing retry after error
 
-  const inputRef = useRef(null);
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   const triggerShake = () => {
@@ -54,19 +52,12 @@ const VerificationScreen = ({ navigation, route }) => {
     ]).start();
   };
 
-  // Auto-focus on mount
+  // Log mount
   useEffect(() => {
     logger.debug('VerificationScreen: Mounted', {
       hasConfirmation: !!confirmation,
       phoneNumber,
     });
-
-    // Focus the input after a brief delay for smooth animation
-    const focusTimeout = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 300);
-
-    return () => clearTimeout(focusTimeout);
   }, []);
 
   // Resend timer countdown
@@ -103,14 +94,6 @@ const VerificationScreen = ({ navigation, route }) => {
     return () => clearInterval(interval);
   }, [retryDelay]);
 
-  // Auto-submit when 6 digits entered (only if not in retry delay)
-  useEffect(() => {
-    if (code.length === 6 && retryDelay === 0) {
-      logger.debug('VerificationScreen: Auto-submitting code');
-      handleVerify();
-    }
-  }, [code, retryDelay]);
-
   const handleVerify = async () => {
     if (loading || retryDelay > 0) return;
 
@@ -146,8 +129,6 @@ const VerificationScreen = ({ navigation, route }) => {
         setCode(''); // Clear code on error
         triggerShake();
         setRetryDelay(3); // 3 second delay before allowing retry
-        // Refocus input after clearing
-        setTimeout(() => inputRef.current?.focus(), 100);
       }
     } catch (err) {
       logger.error('VerificationScreen: Unexpected error', { error: err.message });
@@ -155,7 +136,6 @@ const VerificationScreen = ({ navigation, route }) => {
       setCode('');
       triggerShake();
       setRetryDelay(3);
-      setTimeout(() => inputRef.current?.focus(), 100);
     } finally {
       setLoading(false);
     }
@@ -170,11 +150,10 @@ const VerificationScreen = ({ navigation, route }) => {
     navigation.goBack();
   };
 
-  const handleCodeChange = text => {
-    // Only allow digits, max 6 characters
-    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 6);
-    setCode(cleaned);
-    if (error) setError(''); // Clear error on change
+  // Handle code change - clear error when user types
+  const handleCodeChange = newCode => {
+    setCode(newCode);
+    if (error) setError('');
   };
 
   const handleBack = () => {
@@ -205,18 +184,13 @@ const VerificationScreen = ({ navigation, route }) => {
           <Animated.View
             style={[styles.codeInputContainer, { transform: [{ translateX: shakeAnim }] }]}
           >
-            <TextInput
-              ref={inputRef}
-              style={[styles.codeInput, error && styles.codeInputError]}
+            <AuthCodeInput
               value={code}
-              onChangeText={handleCodeChange}
-              keyboardType="number-pad"
-              maxLength={6}
-              textContentType="oneTimeCode"
-              autoComplete="sms-otp"
-              placeholder="000000"
-              placeholderTextColor={colors.text.tertiary}
-              editable={!loading && retryDelay === 0}
+              onChange={handleCodeChange}
+              onComplete={handleVerify}
+              error={!!error}
+              disabled={loading || retryDelay > 0}
+              autoFocus
             />
           </Animated.View>
 
@@ -308,29 +282,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  codeInput: {
-    width: '80%',
-    height: 72,
-    fontSize: 32,
-    fontWeight: '600',
-    letterSpacing: 16,
-    textAlign: 'center',
-    borderWidth: 2,
-    borderColor: colors.border.subtle,
-    borderRadius: 12,
-    backgroundColor: colors.background.secondary,
-    color: colors.text.primary,
-  },
-  codeInputError: {
-    borderColor: '#FF4444',
-  },
   errorContainer: {
     alignItems: 'center',
     marginBottom: 16,
   },
   errorText: {
     fontSize: 14,
-    color: '#FF4444',
+    color: colors.status.danger,
     textAlign: 'center',
     fontWeight: '600',
   },
