@@ -67,7 +67,8 @@ export const uploadProfilePhoto = async (userId, localUri) => {
     const filePath = uriToFilePath(compressedUri);
 
     // Create storage reference (modular API pattern)
-    const storageRef = ref(storageInstance, `profile_photos/${userId}.jpg`);
+    // Path: profile-photos/{userId}/{filename} - matches storage.rules
+    const storageRef = ref(storageInstance, `profile-photos/${userId}/profile.jpg`);
 
     // Upload file directly (no blob needed with RN Firebase)
     await storageRef.putFile(filePath);
@@ -127,7 +128,7 @@ export const deleteProfilePhoto = async userId => {
   try {
     logger.debug('StorageService.deleteProfilePhoto: Starting', { userId });
 
-    const storageRef = ref(storageInstance, `profile_photos/${userId}.jpg`);
+    const storageRef = ref(storageInstance, `profile-photos/${userId}/profile.jpg`);
     await storageRef.delete();
 
     logger.info('StorageService.deleteProfilePhoto: Deleted', { userId });
