@@ -457,6 +457,7 @@ const SelectsScreen = ({ navigation }) => {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.thumbnailScroll}
             contentContainerStyle={styles.thumbnailContainer}
           >
             {Array.from({ length: MAX_SELECTS }).map((_, index) => renderThumbnailSlot(index))}
@@ -543,10 +544,16 @@ const styles = StyleSheet.create({
   thumbnailSection: {
     paddingVertical: 16,
     paddingHorizontal: SCREEN_PADDING,
+    overflow: 'visible',
+    zIndex: 1,
+  },
+  thumbnailScroll: {
+    overflow: 'visible',
   },
   thumbnailContainer: {
     flexDirection: 'row',
     gap: THUMBNAIL_GAP,
+    overflow: 'visible',
   },
   thumbnailSlot: {
     width: THUMBNAIL_SIZE,
