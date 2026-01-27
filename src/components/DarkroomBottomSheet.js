@@ -10,7 +10,7 @@ import {
   Platform,
   Easing,
 } from 'react-native';
-// Note: Using solid colors for now. Gradients require expo-linear-gradient rebuild.
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 import { colors } from '../constants/colors';
@@ -444,8 +444,13 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
               onResponderRelease={handlePressOut}
               onResponderTerminate={handlePressOut}
             >
-              {/* Base purple button (solid color - gradients require rebuild) */}
-              <View style={styles.holdButtonBase}>
+              {/* Base gradient button - uses revealed gradient (pink-heavy) */}
+              <LinearGradient
+                colors={colors.brand.gradient.revealed}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.holdButtonBase}
+              >
                 {/* Fill overlay that animates left-to-right */}
                 <Animated.View
                   style={[
@@ -461,7 +466,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                     {isPressing ? 'Revealing...' : 'Hold to reveal photos'}
                   </Text>
                 </View>
-              </View>
+              </LinearGradient>
             </View>
           )}
 
@@ -561,7 +566,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    backgroundColor: COLORS.buttonBase, // Purple anticipation (#A855F7)
+    // backgroundColor provided by LinearGradient
   },
   fillOverlay: {
     position: 'absolute',
