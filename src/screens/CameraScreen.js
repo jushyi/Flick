@@ -8,8 +8,10 @@ import {
   Platform,
 } from 'react-native';
 import { CameraView } from 'expo-camera';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import Svg, { Path } from 'react-native-svg';
+import { colors } from '../constants/colors';
 
 import useCamera, {
   BASE_ROTATION_PER_CARD,
@@ -73,8 +75,13 @@ const FlipCameraIcon = ({ color = '#FFFFFF' }) => (
 );
 
 // DarkroomCardButton Component - photo card stack design with capture animation
-const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
+const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim, hasRevealedPhotos }) => {
   const isDisabled = count === 0;
+
+  // Get gradient colors based on state
+  const gradientColors = hasRevealedPhotos
+    ? colors.brand.gradient.revealed // Pink-heavy when ready
+    : colors.brand.gradient.developing; // Purple-heavy when developing
 
   // Determine number of cards to show (1-4 max)
   const cardCount = Math.min(Math.max(count, 1), 4);
@@ -112,7 +119,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
           <Animated.View
             key={i}
             style={[
-              styles.darkroomCard,
+              styles.darkroomCardWrapper,
               {
                 position: 'absolute',
                 transform: scaleAnim ? [{ scale: scaleAnim }] : [],
@@ -120,7 +127,14 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
               },
             ]}
           >
-            <Text style={styles.darkroomCardText}>{count > 99 ? '99+' : count}</Text>
+            <LinearGradient
+              colors={gradientColors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.darkroomCardGradient}
+            >
+              <Text style={styles.darkroomCardText}>{count > 99 ? '99+' : count}</Text>
+            </LinearGradient>
           </Animated.View>
         );
         continue;
@@ -154,7 +168,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
         <Animated.View
           key={i}
           style={[
-            styles.darkroomCard,
+            styles.darkroomCardWrapper,
             {
               position: 'absolute',
               transform: [
@@ -167,8 +181,15 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim }) => {
             },
           ]}
         >
-          {/* Only show count on top card */}
-          {isTopCard && <Text style={styles.darkroomCardText}>{count > 99 ? '99+' : count}</Text>}
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.darkroomCardGradient}
+          >
+            {/* Only show count on top card */}
+            {isTopCard && <Text style={styles.darkroomCardText}>{count > 99 ? '99+' : count}</Text>}
+          </LinearGradient>
         </Animated.View>
       );
     }
@@ -323,6 +344,7 @@ const CameraScreen = () => {
             onPress={openBottomSheet}
             scaleAnim={cardScale}
             fanSpreadAnim={cardFanSpread}
+            hasRevealedPhotos={darkroomCounts.revealedCount > 0}
           />
 
           {/* Capture Button (center) - 10% larger with spaced ring, two-stage haptic */}
