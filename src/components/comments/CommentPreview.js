@@ -74,6 +74,24 @@ const CommentPreview = ({
   const hasMoreComments = totalCount > comments.length;
   const currentComment = comments[currentIndex];
 
+  // Determine display text - handle media-only comments
+  const getCommentDisplayText = () => {
+    if (currentComment?.text) {
+      return currentComment.text;
+    }
+    // Media-only comment
+    if (currentComment?.mediaType === 'gif') {
+      return 'sent a GIF';
+    }
+    if (currentComment?.mediaType === 'image' || currentComment?.mediaUrl) {
+      return 'sent an image';
+    }
+    return '';
+  };
+
+  const displayText = getCommentDisplayText();
+  const isMediaOnly = !currentComment?.text && currentComment?.mediaUrl;
+
   return (
     <TouchableOpacity
       style={[styles.container, compact && styles.containerCompact]}
@@ -84,8 +102,11 @@ const CommentPreview = ({
       <Animated.View style={{ opacity: fadeAnim }}>
         <View style={styles.commentRow}>
           <Text style={styles.commentText} numberOfLines={compact ? 1 : 2}>
-            <Text style={styles.username}>{currentComment?.user?.displayName || 'User'} </Text>
-            <Text>{currentComment?.text}</Text>
+            <Text style={styles.username}>{currentComment?.user?.displayName || 'User'}</Text>
+            <Text style={[styles.commentContent, isMediaOnly && styles.mediaIndicator]}>
+              {' '}
+              {displayText}
+            </Text>
           </Text>
         </View>
       </Animated.View>
@@ -114,8 +135,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   username: {
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: colors.text.primary,
+  },
+  commentContent: {
+    fontWeight: '400',
+    color: colors.text.primary,
+  },
+  mediaIndicator: {
+    fontStyle: 'italic',
+    color: colors.text.secondary,
   },
   viewAllText: {
     fontSize: 13,

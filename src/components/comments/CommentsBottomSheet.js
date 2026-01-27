@@ -118,12 +118,12 @@ const CommentsBottomSheet = ({
             logger.debug('CommentsBottomSheet: Collapsing to normal height');
           } else if (!expanded && (dy > SHEET_HEIGHT * 0.25 || fastSwipe)) {
             // Close sheet entirely (existing behavior)
+            // Note: swipeY reset happens in useEffect when visible becomes false
             Animated.timing(swipeY, {
               toValue: SHEET_HEIGHT,
               duration: 200,
               useNativeDriver: true,
             }).start(() => {
-              swipeY.setValue(0);
               if (onClose) {
                 onClose();
               }
@@ -220,10 +220,10 @@ const CommentsBottomSheet = ({
 
       logger.info('CommentsBottomSheet: Opened', { photoId });
     } else {
-      // Slide down animation and reset state (36.1-01)
+      // Reset all animated values for next open (36.1-01)
       translateY.setValue(SHEET_HEIGHT);
-      // Reset expanded state for next open
       sheetHeight.setValue(SHEET_HEIGHT);
+      swipeY.setValue(0); // Reset swipe position here, not in animation callback
       isExpandedRef.current = false;
     }
   }, [visible, translateY, photoId, sheetHeight]);
@@ -428,6 +428,7 @@ const CommentsBottomSheet = ({
           logger.debug('CommentsBottomSheet: Collapsing via scroll pull-down');
         } else {
           // Close sheet entirely - use timing with easing for clean close (no bounce)
+          // Note: swipeY reset happens in useEffect when visible becomes false
           if (onClose) {
             Animated.timing(swipeY, {
               toValue: SHEET_HEIGHT,
@@ -435,7 +436,6 @@ const CommentsBottomSheet = ({
               easing: Easing.out(Easing.cubic),
               useNativeDriver: true,
             }).start(() => {
-              swipeY.setValue(0);
               onClose();
             });
             logger.debug('CommentsBottomSheet: Closing via scroll pull-down');
