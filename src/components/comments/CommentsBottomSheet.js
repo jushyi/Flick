@@ -26,12 +26,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import CommentWithReplies from './CommentWithReplies';
 import CommentInput from './CommentInput';
 import useComments from '../../hooks/useComments';
 import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
-import { styles, SHEET_HEIGHT } from '../../styles/CommentsBottomSheet.styles';
+import { styles, SHEET_HEIGHT, EXPANDED_HEIGHT } from '../../styles/CommentsBottomSheet.styles';
 
 /**
  * CommentsBottomSheet Component
@@ -42,6 +43,7 @@ import { styles, SHEET_HEIGHT } from '../../styles/CommentsBottomSheet.styles';
  * @param {string} photoOwnerId - Photo owner's user ID (for delete permissions)
  * @param {string} currentUserId - Current user's ID
  * @param {function} onCommentAdded - Callback after comment successfully added
+ * @param {string} photoUrl - Photo URL for mini thumbnail when expanded (36.1-01)
  */
 const CommentsBottomSheet = ({
   visible,
@@ -50,53 +52,113 @@ const CommentsBottomSheet = ({
   photoOwnerId,
   currentUserId,
   onCommentAdded,
+  photoUrl,
 }) => {
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const sheetTranslateY = useRef(new Animated.Value(0)).current; // UAT-021 fix: sheet position for keyboard
   const swipeY = useRef(new Animated.Value(0)).current; // UAT-020 fix: swipe gesture tracking
+  const sheetHeight = useRef(new Animated.Value(SHEET_HEIGHT)).current; // 36.1-01: animated height for expand/collapse
+  const headerOpacity = useRef(new Animated.Value(0)).current; // 36.1-01: mini photo header opacity
   const inputRef = useRef(null);
   const insets = useSafeAreaInsets(); // UAT-010 fix: safe area for bottom input
   const [keyboardVisible, setKeyboardVisible] = useState(false); // UAT-013 fix: keyboard state
+  const isExpandedRef = useRef(false); // 36.1-01: ref for PanResponder closure access
 
   /**
-   * PanResponder for swipe-to-close on handle bar (UAT-020 fix, UAT-030 fix)
-   * UAT-030: Changed onStartShouldSetPanResponder to true - we want to capture
-   * touches that start on the handle bar since the panResponder is scoped to it
+   * PanResponder for bidirectional expand/collapse on handle bar (36.1-01)
+   * - Swipe UP when collapsed: expand to fullscreen
+   * - Swipe DOWN when expanded: collapse to 60%
+   * - Swipe DOWN when collapsed: close sheet entirely
+   * Velocity-based snapping: fast swipes (vy > 0.5) snap immediately
    */
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true, // UAT-030 fix: capture touches on handle bar
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Respond to downward swipes
-        return gestureState.dy > 5;
+        // Respond to vertical swipes (up or down)
+        return Math.abs(gestureState.dy) > 5;
       },
       onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          // Update swipeY to follow finger
+        // Only track downward movement for swipeY (visual feedback for close gesture)
+        if (gestureState.dy > 0 && !isExpandedRef.current) {
           swipeY.setValue(gestureState.dy);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        // Close if dragged down >1/4 of sheet or fast swipe
-        if (gestureState.dy > SHEET_HEIGHT * 0.25 || gestureState.vy > 0.5) {
-          // Animate out and close
-          Animated.timing(swipeY, {
-            toValue: SHEET_HEIGHT,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => {
-            swipeY.setValue(0);
-            if (onClose) {
-              onClose();
-            }
-          });
-        } else {
-          // Spring back
-          Animated.spring(swipeY, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
+        const { dy, vy } = gestureState;
+        const fastSwipe = Math.abs(vy) > 0.5;
+        const expanded = isExpandedRef.current;
+
+        // SWIPE UP: Expand sheet
+        if (dy < -10) {
+          if (!expanded && (fastSwipe || dy < -50)) {
+            // Expand to fullscreen with parallel animations
+            isExpandedRef.current = true; // Update ref immediately for next gesture
+            Animated.parallel([
+              Animated.spring(sheetHeight, {
+                toValue: EXPANDED_HEIGHT,
+                useNativeDriver: false, // height animation requires JS driver
+                damping: 20,
+                stiffness: 100,
+              }),
+              Animated.timing(headerOpacity, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: true,
+              }),
+            ]).start();
+            logger.debug('CommentsBottomSheet: Expanding to fullscreen');
+          }
+          return;
         }
+
+        // SWIPE DOWN: Collapse or close
+        if (dy > 10) {
+          if (expanded && (fastSwipe || dy > 50)) {
+            // Collapse from fullscreen to normal with parallel animations
+            isExpandedRef.current = false; // Update ref immediately for next gesture
+            Animated.parallel([
+              Animated.spring(sheetHeight, {
+                toValue: SHEET_HEIGHT,
+                useNativeDriver: false,
+                damping: 20,
+                stiffness: 100,
+              }),
+              Animated.timing(headerOpacity, {
+                toValue: 0,
+                duration: 150,
+                useNativeDriver: true,
+              }),
+            ]).start();
+            logger.debug('CommentsBottomSheet: Collapsing to normal height');
+          } else if (!expanded && (dy > SHEET_HEIGHT * 0.25 || fastSwipe)) {
+            // Close sheet entirely (existing behavior)
+            Animated.timing(swipeY, {
+              toValue: SHEET_HEIGHT,
+              duration: 200,
+              useNativeDriver: true,
+            }).start(() => {
+              swipeY.setValue(0);
+              if (onClose) {
+                onClose();
+              }
+            });
+            logger.debug('CommentsBottomSheet: Closing sheet');
+          } else {
+            // Spring back (slow drag without threshold)
+            Animated.spring(swipeY, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          }
+          return;
+        }
+
+        // No significant gesture - spring back
+        Animated.spring(swipeY, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
       },
     })
   ).current;
@@ -173,10 +235,14 @@ const CommentsBottomSheet = ({
 
       logger.info('CommentsBottomSheet: Opened', { photoId });
     } else {
-      // Slide down animation
+      // Slide down animation and reset state (36.1-01)
       translateY.setValue(SHEET_HEIGHT);
+      // Reset expanded state for next open
+      sheetHeight.setValue(SHEET_HEIGHT);
+      headerOpacity.setValue(0);
+      isExpandedRef.current = false;
     }
-  }, [visible, translateY, photoId]);
+  }, [visible, translateY, photoId, sheetHeight, headerOpacity]);
 
   /**
    * Handle backdrop press to close
@@ -370,10 +436,13 @@ const CommentsBottomSheet = ({
         <View style={styles.keyboardAvoidContainer}>
           {/* Animated sheet (UAT-021 fix: moves UP when keyboard visible via sheetTranslateY) */}
           {/* UAT-020 fix: swipeY added for swipe-to-close gesture */}
+          {/* 36.1-01: sheetHeight for expand/collapse animation */}
           <Animated.View
             style={[
               styles.sheet,
               {
+                height: sheetHeight,
+                maxHeight: undefined, // Override fixed maxHeight for expansion
                 transform: [
                   { translateY },
                   { translateY: sheetTranslateY },
@@ -386,6 +455,17 @@ const CommentsBottomSheet = ({
             <View style={styles.handleBarContainer} {...panResponder.panHandlers}>
               <View style={styles.handleBar} />
             </View>
+
+            {/* Mini photo header - visible when expanded (36.1-01) */}
+            {photoUrl && (
+              <Animated.View style={[styles.expandedPhotoHeader, { opacity: headerOpacity }]}>
+                <Image
+                  source={{ uri: photoUrl }}
+                  style={styles.miniPhotoThumbnail}
+                  contentFit="cover"
+                />
+              </Animated.View>
+            )}
 
             {/* Header */}
             <View style={styles.header}>
