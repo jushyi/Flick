@@ -284,7 +284,7 @@ const ProfileSetupScreen = ({ navigation }) => {
       const updateResult = await updateUserDocumentNative(user.uid, updateData);
 
       if (updateResult.success) {
-        // Update local profile state - this will trigger navigation via AppNavigator
+        // Update local profile state
         updateUserProfile({
           ...userProfile,
           ...updateData,
@@ -294,7 +294,8 @@ const ProfileSetupScreen = ({ navigation }) => {
         // This runs in background, doesn't block navigation
         requestNotificationPermissionsAsync();
 
-        // Navigation will be handled automatically by AuthContext state change
+        // Navigate to Selects screen (now in same Onboarding stack)
+        navigation.navigate('Selects');
       } else {
         Alert.alert('Update Failed', 'Could not save profile information');
       }

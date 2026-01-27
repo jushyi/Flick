@@ -37,6 +37,33 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 /**
+ * Onboarding Stack Navigator (ProfileSetup -> Selects)
+ * Both screens are in the same stack so back navigation works correctly
+ */
+const OnboardingStackNavigator = ({ initialRouteName }) => {
+  return (
+    <Stack.Navigator
+      initialRouteName={initialRouteName}
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        gestureDirection: 'horizontal',
+      }}
+    >
+      <Stack.Screen
+        name="ProfileSetup"
+        component={ProfileSetupScreen}
+        options={({ route }) => ({
+          // Animate from left when coming back from Selects
+          animation: route.params?.fromSelects ? 'slide_from_left' : 'default',
+        })}
+      />
+      <Stack.Screen name="Selects" component={SelectsScreen} />
+    </Stack.Navigator>
+  );
+};
+
+/**
  * Profile Stack Navigator (Profile, Settings, PrivacyPolicy, TermsOfService, DeleteAccount)
  */
 const ProfileStackNavigator = () => {
@@ -248,8 +275,12 @@ const linking = {
       FriendRequests: 'friends/requests',
       PhoneInput: 'phone-input',
       Verification: 'verification',
-      ProfileSetup: 'profile-setup',
-      Selects: 'selects',
+      Onboarding: {
+        screens: {
+          ProfileSetup: 'profile-setup',
+          Selects: 'selects',
+        },
+      },
     },
   },
 };
@@ -307,6 +338,11 @@ const AppNavigator = () => {
     userProfile.profileSetupCompleted === true &&
     userProfile.selectsCompleted !== true;
 
+  // Determine if user needs onboarding (either profile setup or selects)
+  const needsOnboarding = needsProfileSetup || needsSelects;
+  // Start at Selects if profile is done but selects aren't
+  const onboardingInitialRoute = needsSelects ? 'Selects' : 'ProfileSetup';
+
   // Always wrap with PhoneAuthProvider to share confirmation ref
   // between PhoneInputScreen/VerificationScreen during auth, and for
   // DeleteAccountScreen re-authentication flow when already logged in
@@ -329,12 +365,11 @@ const AppNavigator = () => {
               <Stack.Screen name="PhoneInput" component={PhoneInputScreen} />
               <Stack.Screen name="Verification" component={VerificationScreen} />
             </>
-          ) : needsProfileSetup ? (
-            // Profile Setup - User logged in but needs to complete profile
-            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-          ) : needsSelects ? (
-            // Selects - User completed profile but needs to pick selects
-            <Stack.Screen name="Selects" component={SelectsScreen} />
+          ) : needsOnboarding ? (
+            // Onboarding Stack - ProfileSetup and Selects in same navigator for back navigation
+            <Stack.Screen name="Onboarding">
+              {() => <OnboardingStackNavigator initialRouteName={onboardingInitialRoute} />}
+            </Stack.Screen>
           ) : (
             // Main App - User fully authenticated and profile complete
             <>

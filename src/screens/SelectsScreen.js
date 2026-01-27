@@ -577,7 +577,7 @@ const SelectsScreen = ({ navigation }) => {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('ProfileSetup', { fromSelects: true })}
             activeOpacity={0.7}
           >
             <Ionicons name="chevron-back" size={28} color={colors.text.primary} />
