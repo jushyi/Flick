@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { getAuth } from '@react-native-firebase/auth';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, ThemeProvider } from './src/context';
 import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
 import { ErrorBoundary, AnimatedSplash } from './src/components';
 import {
@@ -21,11 +21,17 @@ import {
   scheduleNextReveal,
 } from './src/services/firebase/darkroomService';
 import { revealPhotos } from './src/services/firebase/photoService';
+import { initializeGiphy } from './src/components/comments/GifPicker';
 import logger from './src/utils/logger';
+import { GIPHY_API_KEY } from '@env';
 
 // Prevent the native splash screen from auto-hiding
 // This keeps it visible while our animated splash runs
 SplashScreen.preventAutoHideAsync();
+
+// Initialize Giphy SDK for GIF picker functionality
+// Get your free API key at https://developers.giphy.com/
+initializeGiphy(GIPHY_API_KEY);
 
 export default function App() {
   const notificationListener = useRef();
@@ -40,7 +46,7 @@ export default function App() {
     try {
       // Hide the native splash screen
       await SplashScreen.hideAsync();
-    } catch (e) {
+    } catch (_err) {
       // Ignore errors - splash may have already been hidden
     }
     // Remove the animated splash overlay
@@ -166,11 +172,13 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <AuthProvider>
-          <AppNavigator />
-          <StatusBar style="auto" />
-          {showAnimatedSplash && <AnimatedSplash onAnimationComplete={handleSplashComplete} />}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppNavigator />
+            <StatusBar style="auto" />
+            {showAnimatedSplash && <AnimatedSplash onAnimationComplete={handleSplashComplete} />}
+          </AuthProvider>
+        </ThemeProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

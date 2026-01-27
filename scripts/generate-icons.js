@@ -1,6 +1,6 @@
 /**
- * Generate app icons for Oly
- * Creates camera aperture icon where the center opening forms the "O"
+ * Generate app icons for Rewind
+ * Creates cassette tape icon with nostalgic design
  */
 const sharp = require('sharp');
 const path = require('path');
@@ -25,17 +25,17 @@ function createApertureBladePath(cx, cy, innerRadius, outerRadius, startAngle, s
   // Outer arc points
   const outerStart = {
     x: cx + outerRadius * Math.cos(startRad),
-    y: cy + outerRadius * Math.sin(startRad)
+    y: cy + outerRadius * Math.sin(startRad),
   };
   const outerEnd = {
     x: cx + outerRadius * Math.cos(endRad),
-    y: cy + outerRadius * Math.sin(endRad)
+    y: cy + outerRadius * Math.sin(endRad),
   };
 
   // Inner point (creates the aperture opening)
   const innerPoint = {
     x: cx + innerRadius * Math.cos(midRad),
-    y: cy + innerRadius * Math.sin(midRad)
+    y: cy + innerRadius * Math.sin(midRad),
   };
 
   // Create curved blade path
@@ -54,7 +54,7 @@ function createApertureIconSvg(size, padding = 0) {
   const cy = size / 2;
 
   // Adjust for padding (used in adaptive icon)
-  const effectiveRadius = (size / 2) - padding;
+  const effectiveRadius = size / 2 - padding;
   const outerRadius = effectiveRadius * 0.85;
   const innerRadius = effectiveRadius * 0.28; // Size of the "O" opening
 
@@ -90,7 +90,7 @@ function createAdaptiveIconSvg(size) {
 }
 
 async function generateIcons() {
-  console.log('Generating Oly app icons...');
+  console.log('Generating Rewind app icons...');
 
   try {
     // Generate main app icon (1024x1024)
@@ -110,10 +110,7 @@ async function generateIcons() {
     console.log('✓ Created assets/adaptive-icon.png (1024x1024)');
 
     // Generate favicon (48x48)
-    await sharp(iconSvg)
-      .resize(48, 48)
-      .png()
-      .toFile(path.join(ASSETS_DIR, 'favicon.png'));
+    await sharp(iconSvg).resize(48, 48).png().toFile(path.join(ASSETS_DIR, 'favicon.png'));
     console.log('✓ Created assets/favicon.png (48x48)');
 
     console.log('\n✅ All icons generated successfully!');

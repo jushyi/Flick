@@ -1,106 +1,120 @@
 /**
- * FeedPhotoCard styles
+ * FeedPhotoCard styles - Instagram-Style Design
  *
- * Styles for the feed photo card component that displays
- * a single photo in the feed with user info and reactions.
+ * Edge-to-edge photos with user info row below.
+ * Modern, clean aesthetic matching dark theme.
  */
-import { StyleSheet, Dimensions } from 'react-native';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_PADDING = 16;
-const PHOTO_SIZE = SCREEN_WIDTH - CARD_PADDING * 2;
+import { StyleSheet } from 'react-native';
+import { colors } from '../constants/colors';
 
 export const styles = StyleSheet.create({
+  // Card container - no margins, photos go edge-to-edge
   card: {
-    backgroundColor: '#FFFFFF',
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#000000', // Pure black to match stories section
+    marginBottom: 20,
   },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-  },
-  profilePicContainer: {
-    marginRight: 12,
-  },
-  profilePic: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  profilePicPlaceholder: {
-    backgroundColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profilePicText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666666',
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  displayName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 2,
-  },
-  username: {
-    fontSize: 12,
-    color: '#666666',
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#999999',
-    marginLeft: 8,
-  },
+
+  // Photo container - full screen width, square
   photoContainer: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: colors.background.tertiary,
   },
+
   photo: {
     width: '100%',
     height: '100%',
   },
-  reactionBar: {
+
+  // Info row below photo - profile pic + name + timestamp
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 40,
+    paddingVertical: 8,
   },
+
+  // Profile photo
+  profilePhoto: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+    backgroundColor: colors.background.tertiary,
+  },
+
+  // Fallback icon container
+  profilePhotoFallback: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+    backgroundColor: colors.background.tertiary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Text container for name and timestamp
+  textContainer: {
+    flex: 1,
+  },
+
+  // Display name
+  displayName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+
+  // Timestamp
+  timestamp: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+
+  // Reactions row
+  reactions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+
   reactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
+
   reactionEmoji: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  reactionCount: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
+    marginRight: 2,
   },
+
+  reactionCount: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.text.secondary,
+  },
+
   moreReactions: {
-    fontSize: 12,
-    color: '#666666',
-    marginLeft: 4,
+    fontSize: 11,
+    color: colors.text.secondary,
+    marginLeft: 2,
   },
+
   noReactions: {
-    fontSize: 12,
-    color: '#999999',
+    fontSize: 11,
+    color: colors.text.tertiary,
     fontStyle: 'italic',
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+
+  // Comment preview section
+  commentPreview: {
+    paddingHorizontal: 12,
+    paddingBottom: 12,
   },
 });

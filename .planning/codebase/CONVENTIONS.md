@@ -1,240 +1,205 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-01-12
+**Analysis Date:** 2026-01-26
 
 ## Naming Patterns
 
 **Files:**
-- PascalCase for React components: `FeedScreen.js`, `PhotoDetailModal.js`, `UserSearchCard.js`
-- camelCase for services and utilities: `authService.js`, `feedService.js`, `timeUtils.js`, `logger.js`
-- kebab-case for multi-word config: `firebase-config.js` (if present)
-- UPPERCASE for project docs: `README.md`, `CLAUDE.md`
+
+- PascalCase for React components: `FeedScreen.js`, `PhotoDetailModal.js`
+- camelCase for utilities and services: `logger.js`, `photoService.js`
+- `.test.js` suffix for test files
+- `.styles.js` suffix for style modules
 
 **Functions:**
-- camelCase for all functions: `uploadPhoto()`, `sendFriendRequest()`, `getTimeAgo()`
-- No special prefix for async functions (async keyword used)
-- Handle prefix for event handlers: `handleCapturePhoto`, `handleLogin`, `handleReaction`
+
+- camelCase for all functions: `uploadPhoto`, `getDevelopingPhotoCount`
+- No special prefix for async functions
+- handle\* for event handlers: `handleCapturePhoto`, `handleReaction`
 
 **Variables:**
-- camelCase for variables: `userId`, `photoId`, `friendshipId`
-- UPPER_SNAKE_CASE for constants: `PHOTO_STATES`, `DEFAULT_REVEAL_INTERVAL` (if used)
-- Descriptive names: `isCapturing`, `hasMore`, `currentUserId`
+
+- camelCase for variables: `userProfile`, `darkroomCount`
+- UPPER_SNAKE_CASE for constants: `REACTION_DEBOUNCE_MS`, `GIPHY_API_KEY`
+- No underscore prefix for private members
 
 **Types:**
-- Not applicable (JavaScript, no TypeScript)
-- JSDoc type comments may be used in services
+
+- Not applicable (JavaScript, not TypeScript)
 
 ## Code Style
 
 **Formatting:**
-- No explicit Prettier config detected (likely using default or none)
-- Indentation: 2 spaces (React Native convention)
-- Quotes: Single quotes for strings (inferred from React Native standard)
-- Semicolons: Optional/inconsistent (JavaScript allows omission)
-- Line length: Not enforced (no config detected)
+
+- Prettier with configuration in `eslint.config.js`
+- Single quotes for strings
+- Trailing commas in multiline
+- 2 space indentation
+- ~100 character line length (Prettier default)
 
 **Linting:**
-- No ESLint config detected in package.json
-- Likely relying on Expo/React Native defaults
 
-**Code Organization:**
-- Imports at top of file
-- Component definition
-- Styles at bottom (StyleSheet.create)
-- Exports at end
+- ESLint 9.x with flat config: `eslint.config.js`
+- Extends eslint-config-expo (React Native rules)
+- Prettier integration via eslint-plugin-prettier
+- Run: `npm run lint` or `npm run lint:fix`
+
+**Pre-commit:**
+
+- Husky + lint-staged
+- Auto-runs ESLint and Prettier on staged files
 
 ## Import Organization
 
 **Order:**
-(Inferred from React Native best practices)
-1. React and React Native core: `import React from 'react'`, `import { View, Text } from 'react-native'`
-2. Third-party packages: `import { collection, query } from 'firebase/firestore'`
-3. Navigation: `import { useNavigation } from '@react-navigation/native'`
-4. Internal modules: `import { feedService } from '../services/firebase/feedService'`
-5. Components: `import { FeedPhotoCard } from '../components'`
-6. Context: `import { useAuth } from '../context/AuthContext'`
-7. Utilities: `import { logger } from '../utils/logger'`
+
+1. React and React Native imports
+2. External packages (expo-_, @react-navigation/_, etc.)
+3. Internal modules (context, services, components)
+4. Relative imports (./_, ../_)
+5. Constants and utils last
 
 **Grouping:**
-- Blank lines between import groups (likely)
-- Alphabetical within groups (not enforced)
+
+- Logical grouping with blank lines between categories
+- No strict alphabetical sorting enforced
 
 **Path Aliases:**
-- No path aliases configured (uses relative imports: `../`, `./`)
+
+- `@/` maps to `src/` (configured in jest.config.js for tests)
+- `@env` for environment variables via react-native-dotenv
 
 ## Error Handling
 
 **Patterns:**
-- Services return `{ success: true/false, error: 'message' }` objects
-- Screens use try/catch for async operations
-- Errors logged via logger utility before returning
 
-**Example Pattern:**
-```javascript
-// Service layer
-export const uploadPhoto = async (userId, photoUri) => {
-  logger.debug('PhotoService.uploadPhoto: Starting', { userId });
-  try {
-    // ... upload logic
-    logger.info('PhotoService.uploadPhoto: Success', { photoId });
-    return { success: true, photoId };
-  } catch (error) {
-    logger.error('PhotoService.uploadPhoto: Failed', { error: error.message });
-    return { success: false, error: error.message };
-  }
-};
-
-// Screen usage
-const handleUpload = async () => {
-  const result = await photoService.uploadPhoto(userId, uri);
-  if (!result.success) {
-    Alert.alert('Error', result.error);
-  }
-};
-```
+- Services return `{ success: true, data }` or `{ success: false, error }` objects
+- Callers check `result.success` before using data
+- Try/catch in async functions, log errors via logger
 
 **Error Types:**
-- Services throw errors, caught internally and returned in result object
-- Screens display errors via Alert.alert() or UI error messages
-- No custom error classes (using Error constructor)
+
+- Throw on unexpected errors (caught by ErrorBoundary)
+- Return error objects for expected failures
+- Log all errors with context: `logger.error('Context: Error message', { details })`
+
+**Example:**
+
+```javascript
+try {
+  const result = await someService();
+  if (!result.success) {
+    logger.warn('Operation failed', { error: result.error });
+    return { success: false, error: result.error };
+  }
+  return { success: true, data: result.data };
+} catch (error) {
+  logger.error('Unexpected error', { error: error.message });
+  return { success: false, error: error.message };
+}
+```
 
 ## Logging
 
 **Framework:**
-- Custom logger utility: `lapse-clone-app/src/utils/logger.js`
+
+- Custom logger utility: `src/utils/logger.js`
 - Levels: debug, info, warn, error
 
 **Patterns:**
-- Structured logging with context objects: `logger.info('User action', { userId, action })`
-- Log at service boundaries (function entry/exit)
-- Log state transitions and external API calls
-- Automatic sensitive data sanitization (passwords, tokens)
-- Environment-aware: DEBUG/INFO in dev, WARN/ERROR in prod
-- No console.log in committed code (use logger instead)
+
+- Structured logging with context objects
+- Log at service boundaries and user actions
+- Automatic sensitive data sanitization
+- `logger.debug()` for development, `logger.info()` for important events
+- `logger.error()` always includes error details
 
 **Example:**
+
 ```javascript
-logger.debug('FeedService.subscribeFeedPhotos: Starting', { userId, friendIds });
-logger.info('FeedScreen: User pressed capture button');
-logger.error('PhotoService.uploadPhoto: Upload failed', { error: error.message });
+logger.info('PhotoService.uploadPhoto: Starting upload', { userId });
+logger.debug('PhotoService.uploadPhoto: Processing', { step: 'compress' });
+logger.error('PhotoService.uploadPhoto: Failed', { error: error.message });
 ```
 
 ## Comments
 
 **When to Comment:**
-- Explain why, not what: `// Retry 3 times because Firebase has transient failures`
-- Document business rules: `// Photos revealed in batches every 0-2 hours`
-- Explain non-obvious logic or workarounds
-- Avoid obvious comments: `// Set count to 0`
 
-**JSDoc/Documentation:**
-- Not consistently used (inferred from codebase)
-- Service functions may have JSDoc comments (optional)
+- Explain why, not what
+- Document business rules (e.g., reveal timing, triage flow)
+- Complex algorithms or workarounds
+- TODOs with issue context
+
+**JSDoc:**
+
+- Used in Cloud Functions for function documentation
+- Optional in app code (function names should be self-documenting)
 
 **TODO Comments:**
+
 - Format: `// TODO: description`
-- Example: `// TODO: Add pagination for large friend lists`
+- Include phase reference if applicable
+- Example: `// TODO: In Phase 10, send to Sentry`
 
 ## Function Design
 
 **Size:**
-- Keep under 50-100 lines where possible
+
+- Keep functions focused on single responsibility
 - Extract helpers for complex logic
-- Service functions are focused on single responsibility
+- No strict line limit enforced
 
 **Parameters:**
-- 1-3 parameters typical
-- Use options object for 4+ parameters (not commonly seen)
-- Destructure where helpful: `const { userId, photoId } = params`
+
+- Destructure objects in parameters where appropriate
+- Use options object for functions with many parameters
 
 **Return Values:**
-- Services return `{ success, data, error }` objects
-- Explicit return statements
-- Return early for guard clauses
 
-**Async Patterns:**
-- async/await preferred over Promise chains
-- try/catch for error handling
-- No .catch() chaining
+- Consistent `{ success, data/error }` pattern for services
+- Return early for guard clauses
+- Explicit returns (no implicit undefined)
 
 ## Module Design
 
 **Exports:**
-- Named exports preferred: `export const functionName = ...`
-- Default exports for React components: `export default ScreenName`
-- Service modules export multiple functions
 
-**File Organization:**
-- One primary component or service per file
-- Related utilities can be in same file if small
-- Barrel exports in `src/components/index.js`
+- Named exports preferred
+- Default exports for React components
+- Barrel files (`index.js`) for directory exports
 
-**React Component Pattern:**
-```javascript
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+**Services:**
 
-const ComponentName = ({ prop1, prop2 }) => {
-  const [state, setState] = useState(initialValue);
+- Export individual functions, not classes
+- Functions are stateless (state in Firestore)
 
-  useEffect(() => {
-    // effect logic
-  }, [dependencies]);
+**Components:**
 
-  const handleAction = () => {
-    // handler logic
-  };
+- One component per file (main component)
+- Helper components can be in same file if small
+- Export default for main component
 
-  return (
-    <View style={styles.container}>
-      {/* JSX */}
-    </View>
-  );
-};
+## React/React Native Patterns
 
-const styles = StyleSheet.create({
-  container: {
-    // styles
-  },
-});
+**State Management:**
 
-export default ComponentName;
-```
+- useState for local UI state
+- useContext for global state (auth, theme)
+- No external state library (Redux, MobX)
 
-**Service Module Pattern:**
-```javascript
-import { firestore } from './firebaseConfig';
-import { logger } from '../../utils/logger';
+**Effects:**
 
-export const functionName = async (param1, param2) => {
-  logger.debug('ServiceName.functionName: Starting', { param1, param2 });
-  try {
-    // logic
-    logger.info('ServiceName.functionName: Success');
-    return { success: true, data };
-  } catch (error) {
-    logger.error('ServiceName.functionName: Failed', { error: error.message });
-    return { success: false, error: error.message };
-  }
-};
-```
+- useEffect for side effects and subscriptions
+- Cleanup functions for listeners/intervals
+- Dependency arrays always specified
 
-## React Native Specific
+**Navigation:**
 
-**StyleSheet:**
-- Styles defined at bottom of file using StyleSheet.create()
-- Style objects named semantically: `container`, `title`, `button`
-
-**Component Structure:**
-- Functional components only (no class components)
-- Hooks for state management (useState, useEffect)
-- Custom hooks for complex logic (useFeedPhotos)
-
-**Platform-Specific Code:**
-- Not extensively used (Expo abstracts platform differences)
-- Platform.OS checks if needed: `Platform.OS === 'ios'`
+- React Navigation hooks: useNavigation, useRoute
+- navigationRef for programmatic navigation
 
 ---
 
-*Convention analysis: 2026-01-12*
-*Update when patterns change*
+_Convention analysis: 2026-01-26_
+_Update when patterns change_

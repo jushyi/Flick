@@ -1,17 +1,29 @@
-import React from 'react';
-import { View, StyleSheet, Dimensions, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Dimensions, Animated, ScrollView } from 'react-native';
+import { colors } from '../constants/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Story card dimensions (match FriendStoryCard)
+const STORY_PHOTO_WIDTH = 88;
+const STORY_PHOTO_HEIGHT = 130;
+const STORY_BORDER_WIDTH = 3;
+const STORY_PROFILE_SIZE = 32;
+
+// Feed card dimensions (match FeedPhotoCard.styles)
+const FEED_PROFILE_SIZE = 36;
+
 /**
- * Loading skeleton for feed photo cards
- * Displays animated placeholder while photos load
+ * Loading skeleton for feed
+ * Displays animated placeholder matching current feed structure:
+ * - Stories row at top (horizontal scroll)
+ * - Full-width feed cards below
  */
-const FeedLoadingSkeleton = ({ count = 3 }) => {
-  const animatedValue = new Animated.Value(0);
+const FeedLoadingSkeleton = () => {
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
   // Pulse animation for skeleton
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(animatedValue, {
@@ -33,31 +45,51 @@ const FeedLoadingSkeleton = ({ count = 3 }) => {
     outputRange: [0.3, 0.7],
   });
 
-  const renderSkeletonCard = index => (
-    <View key={index} style={styles.card}>
-      {/* Profile section */}
-      <View style={styles.profileSection}>
-        <Animated.View style={[styles.profilePic, { opacity }]} />
-        <View style={styles.profileInfo}>
-          <Animated.View style={[styles.username, { opacity }]} />
-          <Animated.View style={[styles.timestamp, { opacity }]} />
+  /**
+   * Render a single story card skeleton
+   */
+  const renderStoryCardSkeleton = index => (
+    <View key={index} style={styles.storyCardSkeleton}>
+      {/* Photo placeholder (rectangular) */}
+      <Animated.View style={[styles.storyPhoto, { opacity }]} />
+      {/* Profile photo placeholder (circle at bottom) */}
+      <Animated.View style={[styles.storyProfile, { opacity }]} />
+    </View>
+  );
+
+  /**
+   * Render a single feed card skeleton
+   */
+  const renderFeedCardSkeleton = index => (
+    <View key={index} style={styles.feedCard}>
+      {/* Photo placeholder (full-width square) */}
+      <Animated.View style={[styles.feedPhoto, { opacity }]} />
+
+      {/* Info row: profile + name/timestamp */}
+      <View style={styles.feedInfoRow}>
+        <Animated.View style={[styles.feedProfile, { opacity }]} />
+        <View style={styles.feedTextContainer}>
+          <Animated.View style={[styles.feedName, { opacity }]} />
+          <Animated.View style={[styles.feedTimestamp, { opacity }]} />
         </View>
-      </View>
-
-      {/* Photo placeholder */}
-      <Animated.View style={[styles.photo, { opacity }]} />
-
-      {/* Reaction bar */}
-      <View style={styles.reactionBar}>
-        <Animated.View style={[styles.reactionItem, { opacity }]} />
-        <Animated.View style={[styles.reactionItem, { opacity }]} />
       </View>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      {Array.from({ length: count }).map((_, index) => renderSkeletonCard(index))}
+      {/* Stories Row */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.storiesRow}
+        scrollEnabled={false}
+      >
+        {Array.from({ length: 4 }).map((_, i) => renderStoryCardSkeleton(i))}
+      </ScrollView>
+
+      {/* Feed Cards */}
+      {Array.from({ length: 2 }).map((_, i) => renderFeedCardSkeleton(i))}
     </View>
   );
 };
@@ -65,64 +97,84 @@ const FeedLoadingSkeleton = ({ count = 3 }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000000', // Pure black to match feed
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+
+  // Stories row
+  storiesRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
-  profileSection: {
+
+  // Individual story card skeleton
+  storyCardSkeleton: {
+    width: STORY_PHOTO_WIDTH + STORY_BORDER_WIDTH * 2 + 8,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+
+  storyPhoto: {
+    width: STORY_PHOTO_WIDTH + STORY_BORDER_WIDTH * 2,
+    height: STORY_PHOTO_HEIGHT + STORY_BORDER_WIDTH * 2,
+    borderRadius: 14,
+    backgroundColor: colors.background.tertiary,
+    marginBottom: STORY_PROFILE_SIZE / 2 + 4,
+  },
+
+  storyProfile: {
+    width: STORY_PROFILE_SIZE,
+    height: STORY_PROFILE_SIZE,
+    borderRadius: STORY_PROFILE_SIZE / 2,
+    backgroundColor: colors.background.tertiary,
+    position: 'absolute',
+    bottom: 0,
+  },
+
+  // Feed card skeleton
+  feedCard: {
+    backgroundColor: '#000000',
+    marginBottom: 20,
+  },
+
+  feedPhoto: {
+    width: SCREEN_WIDTH,
+    aspectRatio: 1,
+    backgroundColor: colors.background.tertiary,
+  },
+
+  feedInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  profilePic: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E0E0E0',
-    marginRight: 12,
+
+  feedProfile: {
+    width: FEED_PROFILE_SIZE,
+    height: FEED_PROFILE_SIZE,
+    borderRadius: FEED_PROFILE_SIZE / 2,
+    backgroundColor: colors.background.tertiary,
+    marginRight: 10,
   },
-  profileInfo: {
+
+  feedTextContainer: {
     flex: 1,
   },
-  username: {
+
+  feedName: {
     width: 120,
     height: 14,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: colors.background.tertiary,
     borderRadius: 4,
     marginBottom: 6,
   },
-  timestamp: {
+
+  feedTimestamp: {
     width: 60,
     height: 12,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: colors.background.tertiary,
     borderRadius: 4,
-  },
-  photo: {
-    width: SCREEN_WIDTH - 32,
-    height: SCREEN_WIDTH - 32,
-    backgroundColor: '#E0E0E0',
-    marginHorizontal: 16,
-    borderRadius: 8,
-  },
-  reactionBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-  },
-  reactionItem: {
-    width: 40,
-    height: 16,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 4,
-    marginRight: 12,
   },
 });
 

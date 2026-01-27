@@ -14,6 +14,7 @@ import { Button } from '../components';
 import { verifyCode } from '../services/firebase/phoneAuthService';
 import { formatPhoneWithCountry } from '../utils/phoneUtils';
 import { usePhoneAuth } from '../context/PhoneAuthContext';
+import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 /**
@@ -214,7 +215,7 @@ const VerificationScreen = ({ navigation, route }) => {
               textContentType="oneTimeCode"
               autoComplete="sms-otp"
               placeholder="000000"
-              placeholderTextColor="#CCCCCC"
+              placeholderTextColor={colors.text.tertiary}
               editable={!loading && retryDelay === 0}
             />
           </Animated.View>
@@ -267,7 +268,7 @@ const VerificationScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.background.primary,
   },
   keyboardAvoid: {
     flex: 1,
@@ -282,23 +283,24 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
+    color: colors.text.primary,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
   },
   phoneNumber: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     textAlign: 'center',
     marginBottom: 40,
   },
@@ -314,10 +316,10 @@ const styles = StyleSheet.create({
     letterSpacing: 16,
     textAlign: 'center',
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border.subtle,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    color: '#000000',
+    backgroundColor: colors.background.secondary,
+    color: colors.text.primary,
   },
   codeInputError: {
     borderColor: '#FF4444',
@@ -334,13 +336,13 @@ const styles = StyleSheet.create({
   },
   retryDelayText: {
     fontSize: 12,
-    color: '#999999',
+    color: colors.text.tertiary,
     textAlign: 'center',
     marginTop: 4,
   },
   loadingText: {
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
     marginTop: 16,
   },
@@ -353,11 +355,11 @@ const styles = StyleSheet.create({
   },
   resendTimerText: {
     fontSize: 14,
-    color: '#999999',
+    color: colors.text.tertiary,
   },
   resendButton: {
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
@@ -367,10 +369,10 @@ const styles = StyleSheet.create({
   },
   changeNumberText: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   changeNumberLink: {
-    color: '#000000',
+    color: colors.text.primary,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },

@@ -12,6 +12,7 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 - ✅ **v0.4 Production Ready** - [archive](milestones/v0.4-ROADMAP.md) (Phases 11-14, shipped 2026-01-20)
 - ✅ **v0.5 Camera Performance & UX Polish** - [archive](milestones/v0.5-ROADMAP.md) (Phases 15-18.6, shipped 2026-01-23)
 - ✅ **v0.6 Code Quality, Security & Documentation** - [archive](milestones/v0.6-ROADMAP.md) (Phases 19-29, shipped 2026-01-25)
+- ✅ **v0.7.1 Rewind Rebrand & Feed Overhaul** - [archive](milestones/v0.7.1-ROADMAP.md) (Phases 30-37.2, shipped 2026-01-26)
 
 ## Completed Milestones
 
@@ -136,6 +137,51 @@ This roadmap transforms the Camera and Darkroom experience from two separate tab
 | 18.4 Triage Animation Arc Adjustment           | v0.5      | 1/1            | Complete | 2026-01-23 |
 | 18.5 Camera Default Launch Screen              | v0.5      | 1/1            | Complete | 2026-01-23 |
 | 18.6 Triage Animation Timing Optimization      | v0.5      | 1/1            | Complete | 2026-01-23 |
+| 30. Rewind Rebrand                             | v0.7.1    | 5/5            | Complete | 2026-01-25 |
+| 31. Personalization Scaffolding                | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 32. Navigation Restructure                     | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 33. Feed Header & Notifications                | v0.7.1    | 2/2            | Complete | 2026-01-25 |
+| 34. Feed Card Redesign                         | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 34.1 Instagram-Style Feed Cards (INSERTED)     | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 34.2 Feed & Stories UI Refinements (INSERTED)  | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35. Stories Redesign                           | v0.7.1    | 3/3            | Complete | 2026-01-25 |
+| 35.1 Unified Photo Modal (INSERTED)            | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35.2 Feed Header & Bottom Padding (INSERTED)   | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35.3 Stories Performance & View State Fix      | v0.7.1    | 1/1            | Complete | 2026-01-25 |
+| 35.4 Stories Feed Data & Resume Fix (INSERTED) | v0.7.1    | 1/1 + FIX      | Complete | 2026-01-26 |
+| 35.5 Feed Layout Polish (INSERTED)             | v0.7.1    | 1/1            | Complete | 2026-01-26 |
+| 36. Comments Feature                           | v0.7.1    | 6/6 + 5 FIX    | Complete | 2026-01-26 |
+| 36.1 Comment Sheet Fullscreen (INSERTED)       | v0.7.1    | 1/1            | Complete | 2026-01-27 |
+| 37. Profile Placeholder                        | v0.7.1    | 1/1            | Complete | 2026-01-26 |
+| 37.1 Darkroom Visual Feedback (INSERTED)       | v0.7.1    | 1/1            | Complete | 2026-01-27 |
+| 37.2 Stories Flash & Feed Skeleton (INSERTED)  | v0.7.1    | 1/1            | Complete | 2026-01-27 |
+
+<details>
+<summary>✅ v0.7.1 Rewind Rebrand & Feed Overhaul (Phases 30-37.2) - SHIPPED 2026-01-26</summary>
+
+- [x] Phase 30: Rewind Rebrand (5/5 plans + 3 fixes) - completed 2026-01-25
+- [x] Phase 31: Personalization Scaffolding (1/1 plan) - completed 2026-01-25
+- [x] Phase 32: Navigation Restructure (1/1 plan) - completed 2026-01-25
+- [x] Phase 33: Feed Header & Notifications (2/2 plans) - completed 2026-01-25
+- [x] Phase 34: Feed Card Redesign (1/1 plan) - completed 2026-01-25
+- [x] Phase 34.1: Instagram-Style Feed Cards (1/1 plan) - completed 2026-01-25
+- [x] Phase 34.2: Feed & Stories UI Refinements (1/1 plan) - completed 2026-01-25
+- [x] Phase 35: Stories Redesign (3/3 plans) - completed 2026-01-25
+- [x] Phase 35.1: Unified Photo Modal (1/1 plan) - completed 2026-01-25
+- [x] Phase 35.2: Feed Header & Bottom Padding (1/1 plan) - completed 2026-01-25
+- [x] Phase 35.3: Stories Performance & View State Fix (1/1 plan) - completed 2026-01-25
+- [x] Phase 35.4: Stories Feed Data & Resume Fix (1/1 plan + 1 fix) - completed 2026-01-26
+- [x] Phase 35.5: Feed Layout Polish (1/1 plan) - completed 2026-01-26
+- [x] Phase 36: Comments Feature (6/6 plans + 5 fixes) - completed 2026-01-26
+- [x] Phase 36.1: Comment Sheet Fullscreen (1/1 plan) - completed 2026-01-27
+- [x] Phase 37: Profile Placeholder (1/1 plan) - completed 2026-01-26
+- [x] Phase 37.1: Darkroom Visual Feedback (1/1 plan + 1 fix) - completed 2026-01-27
+- [x] Phase 37.2: Stories Flash & Feed Skeleton (1/1 plan) - completed 2026-01-27
+
+**Stats:** 19 phases (8 planned + 11 inserted), 34 plans, 262 min execution time
+**See:** [Full archive](milestones/v0.7.1-ROADMAP.md)
+
+</details>
 
 <details>
 <summary>✅ v0.6 Code Quality, Security & Documentation (Phases 19-29) - SHIPPED 2026-01-25</summary>

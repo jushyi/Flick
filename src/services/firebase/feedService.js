@@ -428,7 +428,7 @@ export const getTopPhotosByEngagement = async (userId, limit = 5) => {
 
 /**
  * Get friend stories data for the Stories UI
- * Fetches all friends with their top photos ranked by engagement
+ * Fetches all friends with ALL their journal photos in chronological order
  *
  * @param {string} currentUserId - Current user's ID
  * @returns {Promise<{success: boolean, friendStories?: Array, error?: string}>}
@@ -461,42 +461,56 @@ export const getFriendStoriesData = async currentUserId => {
       return { success: true, friendStories: [] };
     }
 
-    // Step 2: Fetch user profile and photos for each friend in parallel
+    // Step 2: Fetch user profile and ALL photos for each friend in parallel
     const friendDataPromises = friendUserIds.map(async friendId => {
       // Fetch user profile
       const userDocRef = doc(db, 'users', friendId);
       const userDocSnap = await getDoc(userDocRef);
       const userData = userDocSnap.exists() ? userDocSnap.data() : {};
 
-      // Fetch top 5 photos by engagement
-      const photosResult = await getTopPhotosByEngagement(friendId, 5);
-      const topPhotos = photosResult.success ? photosResult.photos : [];
-
-      // Get total count of journal photos for this user
-      const totalPhotosQuery = query(
+      // Fetch ALL journal photos for this friend (not just top 5)
+      const photosQuery = query(
         collection(db, 'photos'),
         where('userId', '==', friendId),
         where('photoState', '==', 'journal')
       );
-      const totalPhotosSnapshot = await getDocs(totalPhotosQuery);
-      const totalPhotoCount = totalPhotosSnapshot.size;
+      const photosSnapshot = await getDocs(photosQuery);
 
-      // Find most recent photo for sorting
-      let mostRecentCapturedAt = null;
-      if (topPhotos.length > 0) {
-        // Photos are sorted by reactionCount, need to find most recent
-        mostRecentCapturedAt = topPhotos.reduce((latest, photo) => {
-          const photoTime = photo.capturedAt?.seconds || 0;
-          return photoTime > latest ? photoTime : latest;
-        }, 0);
-      }
+      // Map and sort photos by capturedAt ASCENDING (oldest first for timeline viewing)
+      const allPhotos = photosSnapshot.docs
+        .map(photoDoc => ({
+          id: photoDoc.id,
+          ...photoDoc.data(),
+        }))
+        .sort((a, b) => {
+          const aTime = a.capturedAt?.seconds || 0;
+          const bTime = b.capturedAt?.seconds || 0;
+          return aTime - bTime; // Ascending - oldest first
+        });
+
+      const totalPhotoCount = allPhotos.length;
+
+      // Thumbnail URL is the MOST RECENT photo (last in sorted array)
+      const thumbnailURL = allPhotos.length > 0 ? allPhotos[allPhotos.length - 1].imageURL : null;
+
+      // Most recent capturedAt for friend row sorting (newest friend first)
+      const mostRecentCapturedAt =
+        allPhotos.length > 0 ? allPhotos[allPhotos.length - 1].capturedAt?.seconds || 0 : 0;
+
+      logger.debug('feedService.getFriendStoriesData: Friend photos loaded', {
+        friendId,
+        photoCount: totalPhotoCount,
+        firstPhotoTime: allPhotos[0]?.capturedAt?.seconds,
+        lastPhotoTime: mostRecentCapturedAt,
+      });
 
       return {
         userId: friendId,
         username: userData.username || 'unknown',
         displayName: userData.displayName || 'Unknown User',
         profilePhotoURL: userData.profilePhotoURL || null,
-        topPhotos,
+        topPhotos: allPhotos, // All photos in chronological order (backwards compatible name)
+        thumbnailURL, // Most recent photo for story card preview
         totalPhotoCount,
         hasPhotos: totalPhotoCount > 0,
         mostRecentCapturedAt,
@@ -520,7 +534,7 @@ export const getFriendStoriesData = async currentUserId => {
       return bTime - aTime;
     });
 
-    // Clean up the sorting helper field
+    // Clean up the sorting helper field but keep thumbnailURL
     const friendStories = friendsWithPhotos.map(({ mostRecentCapturedAt, ...friend }) => friend);
 
     logger.info('feedService.getFriendStoriesData: Success', {

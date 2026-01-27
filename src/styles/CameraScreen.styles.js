@@ -159,22 +159,26 @@ export const styles = StyleSheet.create({
   darkroomCardDisabled: {
     opacity: 0.4,
   },
-  // Individual card in the stack
-  darkroomCard: {
+  // Wrapper for animated card positioning
+  darkroomCardWrapper: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     borderRadius: 8,
-    backgroundColor: '#2A2A2A',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
     // Card shadow for depth
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 3,
+  },
+  // Gradient background for the card (fills wrapper)
+  darkroomCardGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // Number displayed inside the top card
   darkroomCardText: {

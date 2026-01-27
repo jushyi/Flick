@@ -18,6 +18,7 @@ import {
   declineFriendRequest,
   subscribeFriendships,
 } from '../services/firebase/friendshipService';
+import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 import { mediumImpact } from '../utils/haptics';
 
@@ -246,7 +247,7 @@ const FriendRequestsScreen = () => {
       {/* Content */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#000000" />
+          <ActivityIndicator size="large" color={colors.text.primary} />
           <Text style={styles.loadingText}>Loading requests...</Text>
         </View>
       ) : (
@@ -258,7 +259,11 @@ const FriendRequestsScreen = () => {
           ListEmptyComponent={renderEmptyState}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000000" />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.text.primary}
+            />
           }
         />
       )}
@@ -269,25 +274,25 @@ const FriendRequestsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.background.primary,
   },
   header: {
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border.subtle,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.text.primary,
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border.subtle,
   },
   tab: {
     flex: 1,
@@ -297,20 +302,20 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabActive: {
-    borderBottomColor: '#000000',
+    borderBottomColor: colors.brand.purple,
   },
   tabText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666666',
+    color: colors.text.secondary,
   },
   tabTextActive: {
-    color: '#000000',
+    color: colors.text.primary,
   },
   badge: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FF9500',
+    color: colors.brand.pink,
   },
   errorBanner: {
     backgroundColor: '#FFEBEE',
@@ -335,7 +340,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   emptyContainer: {
     flex: 1,
@@ -351,12 +356,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
   },

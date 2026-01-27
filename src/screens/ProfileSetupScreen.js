@@ -21,6 +21,7 @@ import {
   storeNotificationToken,
 } from '../services/firebase/notificationService';
 import { validateLength, sanitizeDisplayName, sanitizeBio } from '../utils/validation';
+import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 const ProfileSetupScreen = ({ navigation }) => {
@@ -281,7 +282,7 @@ const ProfileSetupScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   keyboardAvoid: {
     flex: 1,
@@ -300,11 +301,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
+    color: colors.text.primary,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#666666',
+    color: colors.text.secondary,
     marginBottom: 32,
   },
   photoContainer: {
@@ -320,11 +322,11 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: colors.background.tertiary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border.subtle,
     borderStyle: 'dashed',
   },
   placeholderIcon: {
@@ -333,7 +335,7 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   form: {
     width: '100%',
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
     marginTop: 16,
     textDecorationLine: 'underline',

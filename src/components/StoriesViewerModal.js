@@ -27,14 +27,16 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  * - Tap left/right to navigate between photos
  * - Swipe down to close
  * - Friend info header with profile photo
+ * - Start at specified initial index (for resuming from last unviewed)
  *
  * @param {boolean} visible - Modal visibility state
  * @param {function} onClose - Callback to close modal
  * @param {object} friend - Friend object with userId, displayName, profilePhotoURL, topPhotos
  * @param {function} onPhotoChange - Optional callback when photo changes
+ * @param {number} initialIndex - Starting photo index (default: 0)
  */
-const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange, initialIndex = 0 }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   // Animated values for swipe gesture
   const translateY = useRef(new Animated.Value(0)).current;
@@ -52,6 +54,7 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
       logger.debug('StoriesViewer: Modal opened', {
         friendId: friend.userId,
         photoCount: topPhotos.length,
+        startingIndex: initialIndex,
       });
 
       // Defensive check: close modal if friend has no photos
@@ -63,11 +66,13 @@ const StoriesViewerModal = ({ visible, onClose, friend, onPhotoChange }) => {
         return;
       }
 
-      setCurrentIndex(0);
+      // Start at initialIndex (clamped to valid range)
+      const validIndex = Math.min(Math.max(0, initialIndex), topPhotos.length - 1);
+      setCurrentIndex(validIndex);
       translateY.setValue(0);
       opacity.setValue(1);
     }
-  }, [visible, friend?.userId, topPhotos.length, onClose]);
+  }, [visible, friend?.userId, topPhotos.length, initialIndex, onClose]);
 
   // Preload next image for smoother transitions
   useEffect(() => {

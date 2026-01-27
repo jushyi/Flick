@@ -16,6 +16,28 @@ export const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
   },
+  // Progress bar for stories mode - positioned above footer
+  // Matches photo marginHorizontal (8px) so edges align with photo
+  progressBarScrollView: {
+    flexGrow: 0, // Prevent ScrollView from expanding and pushing photo
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    paddingBottom: 8,
+    paddingHorizontal: 8,
+    gap: 2,
+  },
+  progressSegment: {
+    // Width is now calculated dynamically in component based on total photos
+    height: 3,
+    borderRadius: 1.5,
+  },
+  progressSegmentActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  progressSegmentInactive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -37,7 +59,7 @@ export const styles = StyleSheet.create({
   },
   photoScrollView: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 12, // UAT-035 fix: sharper corners (was 24)
     overflow: 'hidden',
     marginHorizontal: 8,
     marginBottom: 8,
@@ -53,7 +75,7 @@ export const styles = StyleSheet.create({
   profilePicContainer: {
     position: 'absolute',
     top: (StatusBar.currentHeight || 44) + 14,
-    left: 24,
+    left: 22, // UAT-027 fix: shifted 6px right (was 16)
     zIndex: 5,
   },
   profilePic: {
@@ -75,11 +97,11 @@ export const styles = StyleSheet.create({
   },
   userInfoOverlay: {
     position: 'absolute',
-    bottom: 108,
-    left: 24,
+    // bottom: dynamic via inline style (UAT-019 fix: 140 with comments, 100 without)
+    left: 22, // UAT-027 fix: shifted 6px right (was 16)
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   displayName: {
     fontSize: 16,
@@ -96,36 +118,70 @@ export const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  // Comment preview container - below user info (UAT-004 fix: absolute positioning)
+  // UAT-011 fix: removed paddingBottom for better alignment with username
+  // UAT-034 followup: moved up 15px to match userInfoOverlay (was 85)
+  commentPreviewContainer: {
+    position: 'absolute',
+    bottom: 100, // Below userInfoOverlay, above footer
+    left: 22, // UAT-027 fix: shifted 6px right (was 16)
+    right: 16,
+  },
   footer: {
-    paddingHorizontal: 16,
-    paddingTop: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingTop: 4,
     paddingBottom: 32,
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    gap: 8,
+  },
+  // Comment input trigger - left side of footer (UAT-001 fix: 50/50 split)
+  commentInputTrigger: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+  },
+  commentInputTriggerText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#888888',
+  },
+  // Emoji pills scroll view - right side of footer (UAT-001 fix: 50/50 split)
+  emojiPickerScrollView: {
+    flex: 1,
   },
   emojiPickerContainer: {
-    gap: 12,
+    gap: 8,
     paddingVertical: 4,
   },
   emojiPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#3A3A3A',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 6,
-    borderWidth: 1.5,
-    borderColor: '#555555',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#4A4A4A',
   },
   emojiPillSelected: {
     // No visual change for selected state
   },
   emojiPillEmoji: {
-    fontSize: 20,
+    fontSize: 16,
   },
   emojiPillCount: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

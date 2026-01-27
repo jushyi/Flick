@@ -8,13 +8,25 @@ A comprehensive UI/UX refactor of the Camera and Darkroom experience in the Laps
 
 Instant, delightful photo capture and reveal experience - photos capture without blocking, triage flows like flipping through a deck of cards, and every interaction feels responsive with haptic feedback.
 
-## Current State (v0.6 Shipped)
+## Current State (v0.7.1 Shipped)
 
-**Shipped:** 2026-01-25
-**Execution time:** 18.9 hours total (v0.1: 4.3h + v0.2: 2.1h + v0.3: 0.7h + v0.4: 1.4h + v0.5: 5.8h + v0.6: 4.6h)
-**Phases:** 55 phases, 100 plans across six milestones
+**Shipped:** 2026-01-26
+**Execution time:** 23.3 hours total (v0.1: 4.3h + v0.2: 2.1h + v0.3: 0.7h + v0.4: 1.4h + v0.5: 5.8h + v0.6: 4.6h + v0.7.1: 4.4h)
+**Phases:** 74 phases, 134 plans across seven milestones
 
-The Code Quality, Security & Documentation milestone is complete:
+The Rewind Rebrand & Feed Overhaul milestone is complete:
+
+- Complete rebrand to Rewind with cassette tape icon and purple/pink gradient palette
+- Instagram-style 3-tab navigation (Feed, Camera center, Profile)
+- Activity feed with notifications and friend requests (mark-as-read functionality)
+- Edge-to-edge feed cards replacing Polaroid design
+- Stories redesign with gradient glow, 3D cube transitions, per-user Firestore viewed state
+- Full comments system with threading, likes, image/GIF support, and push notifications
+- Comment sheet fullscreen expand with bidirectional gesture
+- Darkroom visual feedback with gradient state indicators
+- Feed loading skeleton updated for current design
+
+Previous v0.6 features remain:
 
 - ESLint 9 + Prettier + Husky pre-commit hooks for code quality
 - Security hardening (API key remediation, Firestore rules audit, Zod validation)
@@ -60,6 +72,29 @@ Previous v0.1 features remain:
 ## Requirements
 
 ### Validated
+
+**v0.7.1 Rewind Rebrand & Feed Overhaul:**
+
+- ✓ Rewind brand identity with cassette tape icon and purple/pink gradient — v0.7.1
+- ✓ Animated splash with blur-to-focus effect — v0.7.1
+- ✓ ThemeContext infrastructure for future personalization — v0.7.1
+- ✓ 3-tab navigation (Feed, Camera, Profile) Instagram-style — v0.7.1
+- ✓ Activity screen with notifications and friend requests tabs — v0.7.1
+- ✓ Mark-as-read functionality for notifications — v0.7.1
+- ✓ Edge-to-edge feed cards with black background — v0.7.1
+- ✓ Stories row with gradient glow thumbnails — v0.7.1
+- ✓ Per-user Firestore viewed state for stories — v0.7.1
+- ✓ 3D cube transitions between friend stories — v0.7.1
+- ✓ Unified PhotoDetailModal for stories and feed — v0.7.1
+- ✓ Header scroll-hide behavior — v0.7.1
+- ✓ Full comments system (CRUD, threading, likes) — v0.7.1
+- ✓ Comment image attachments with Firebase Storage — v0.7.1
+- ✓ Giphy SDK integration for GIF comments — v0.7.1
+- ✓ Comment notifications via Cloud Function — v0.7.1
+- ✓ Comment sheet fullscreen expand gesture — v0.7.1
+- ✓ Darkroom gradient state indicators — v0.7.1
+- ✓ expo-image for story thumbnails (no gray flash) — v0.7.1
+- ✓ Feed loading skeleton updated for current design — v0.7.1
 
 **v0.6 Code Quality, Security & Documentation:**
 
@@ -148,26 +183,26 @@ Previous v0.1 features remain:
 
 ### Active
 
-(None - v0.6 complete, ready for TestFlight submission)
+(None - v0.7.1 complete, ready for profile redesign or TestFlight submission)
 
 ### Out of Scope
 
 - No changes to photo capture logic (compression, upload, storage) - Only UI/UX updates
 - No changes to darkroom reveal timing system (batch scheduling, random intervals) - Backend logic stays the same
-- No changes to Feed, Friends, or Profile tabs - Strictly Camera/Darkroom + Auth refactor
+- Full profile redesign - Deferred to later milestone (current is minimal placeholder)
 - No changes to Firestore schema or photo lifecycle states - Keep existing data structure
 - Email/password authentication - Replaced with phone auth in v0.2
 - Apple Sign-In - Removed in v0.2 for simpler phone-only flow
 
 ## Context
 
-**Codebase State (v0.6):**
+**Codebase State (v0.7.1):**
 
 - React Native mobile app with Expo managed workflow (SDK ~54.0.30)
-- 196 files changed in v0.6 milestone (+38,154 / -7,940 lines)
-- Total codebase: ~45,000 lines JavaScript/TypeScript across 80+ source files
-- New infrastructure: ESLint, Prettier, Jest, SecureStore, Zod validation
-- New features: Settings screen, account deletion, legal screens
+- 175 files changed in v0.7.1 milestone (+23,006 / -1,002 lines)
+- Total codebase: ~68,000 lines JavaScript across 90+ source files
+- New features: Comments system, Activity feed, Stories redesign, Rewind rebrand
+- New tech: Giphy SDK (disabled for Expo Go), viewedStoriesService, commentService
 - iOS build available via EAS internal distribution
 
 **Tech Stack:**
@@ -264,4 +299,4 @@ Previous v0.1 features remain:
 
 ---
 
-_Last updated: 2026-01-25 after v0.6 milestone_
+_Last updated: 2026-01-26 after v0.7.1 milestone_

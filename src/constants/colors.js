@@ -1,11 +1,11 @@
 export const colors = {
   // Backgrounds
   background: {
-    primary: '#000000', // Main app background (black)
+    primary: '#0F0F0F', // Main app background (near-black)
     secondary: '#1A1A1A', // Sheet/card background (dark gray)
     tertiary: '#2A2A2A', // Nested card background
     white: '#FFFFFF', // Light backgrounds
-    offWhite: '#FAFAFA', // Subtle off-white
+    offWhite: '#0F0F0F', // Deprecated - use primary
   },
 
   // Text
@@ -25,15 +25,21 @@ export const colors = {
   // Status
   status: {
     ready: '#22C55E', // Green - ready state
-    developing: '#EF4444', // Red - developing state
+    developing: '#EF4444', // Red - developing state (status dot color)
     danger: '#FF4444', // Danger/delete actions
   },
 
-  // Brand
+  // Brand - Rewind palette
   brand: {
-    coral: '#FF6B6B', // Aperture/brand color
-    purple: {
-      gradient: ['#4C1D95', '#7C3AED'], // Purple gradient
+    coral: '#FF6B6B', // Legacy - keep for backwards compatibility
+    purple: '#8B5CF6', // Primary accent (Tailwind violet-500)
+    pink: '#EC4899', // Secondary accent (Tailwind pink-500)
+    teal: '#14B8A6', // Tertiary - minimal use (Tailwind teal-500)
+    lime: '#84CC16', // Accent - minimal use (Tailwind lime-500)
+    gradient: {
+      developing: ['#EC4899', '#7C3AED', '#EC4899'], // Pink edges → Purple center → Pink edges
+      revealed: ['#8B5CF6', '#DB2777', '#8B5CF6'], // Purple edges → Pink center → Purple edges
+      button: ['#4C1D95', '#7C3AED'], // Dark purple gradient
       fill: ['#6B21A8', '#A855F7'], // Purple fill gradient
     },
   },
@@ -48,5 +54,30 @@ export const colors = {
   overlay: {
     dark: 'rgba(0, 0, 0, 0.5)',
     light: 'rgba(255, 255, 255, 0.1)',
+  },
+
+  // Polaroid frame styling
+  polaroid: {
+    // Dark gray - blends with dark theme
+    dark: '#2A2A2A',
+    darkShadow: 'rgba(0, 0, 0, 0.3)',
+
+    // Text on dark Polaroid
+    textLight: '#FFFFFF',
+    textLightSecondary: '#A0A0A0',
+
+    // Legacy light options (kept for reference)
+    cream: '#FAF8F5',
+    warmGray: '#E8E4E0',
+    muted: '#D4D0CC',
+    text: '#2A2A2A',
+    textSecondary: '#5A5A5A',
+  },
+
+  // Story card styling (Polaroid mini-cards)
+  storyCard: {
+    frame: '#2A2A2A', // Dark gray frame (matches dark theme)
+    glowViewed: '#3A3A3A', // Subtle gray border when viewed
+    textName: '#FFFFFF', // Name text below card
   },
 };

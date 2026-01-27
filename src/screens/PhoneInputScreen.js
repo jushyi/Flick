@@ -16,6 +16,7 @@ import { Button, Input } from '../components';
 import { sendVerificationCode } from '../services/firebase/phoneAuthService';
 import { formatAsUserTypes } from '../utils/phoneUtils';
 import { usePhoneAuth } from '../context/PhoneAuthContext';
+import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 /**
@@ -265,7 +266,7 @@ const PhoneInputScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.background.primary,
   },
   keyboardAvoid: {
     flex: 1,
@@ -284,16 +285,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
+    color: colors.text.primary,
   },
   subtitle: {
     fontSize: 20,
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 8,
+    color: colors.text.primary,
   },
   description: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -303,7 +306,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   countrySelector: {
@@ -311,10 +314,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 52,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border.subtle,
     borderRadius: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     marginBottom: 16,
   },
   countrySelectorFlag: {
@@ -324,11 +327,11 @@ const styles = StyleSheet.create({
   countrySelectorText: {
     flex: 1,
     fontSize: 16,
-    color: '#000000',
+    color: colors.text.primary,
   },
   countrySelectorArrow: {
     fontSize: 12,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   phoneInputContainer: {
     flexDirection: 'row',
@@ -340,16 +343,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 12,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: colors.background.tertiary,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border.subtle,
     borderRadius: 8,
     marginRight: 8,
   },
   countryCodeText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
   },
   phoneInputWrapper: {
     flex: 1,
@@ -359,23 +362,23 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
     marginTop: 24,
   },
   loginLink: {
-    color: '#000000',
+    color: colors.text.primary,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
@@ -387,15 +390,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border.subtle,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: colors.text.primary,
   },
   modalClose: {
     fontSize: 20,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   countryList: {
     paddingHorizontal: 20,
@@ -405,7 +409,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.border.subtle,
   },
   countryFlag: {
     fontSize: 24,
@@ -414,11 +418,11 @@ const styles = StyleSheet.create({
   countryName: {
     flex: 1,
     fontSize: 16,
-    color: '#000000',
+    color: colors.text.primary,
   },
   countryCode: {
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.secondary,
   },
 });
 

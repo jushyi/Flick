@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import UserSearchCard from '../components/UserSearchCard';
 import { sendFriendRequest, checkFriendshipStatus } from '../services/firebase/friendshipService';
 import { mediumImpact } from '../utils/haptics';
+import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 // Initialize Firestore
@@ -191,7 +192,7 @@ const UserSearchScreen = ({ navigation }) => {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>🔍</Text>
           <Text style={styles.emptyTitle}>Search for friends</Text>
-          <Text style={styles.emptyText}>Enter a username to find friends on Lapse</Text>
+          <Text style={styles.emptyText}>Enter a username to find friends on Rewind</Text>
         </View>
       );
     }
@@ -213,7 +214,7 @@ const UserSearchScreen = ({ navigation }) => {
 
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#000000" />
+        <ActivityIndicator size="large" color={colors.text.primary} />
         <Text style={styles.loadingText}>Searching...</Text>
       </View>
     );
@@ -226,6 +227,7 @@ const UserSearchScreen = ({ navigation }) => {
         <TextInput
           style={styles.searchInput}
           placeholder="Search username..."
+          placeholderTextColor={colors.text.tertiary}
           value={searchTerm}
           onChangeText={setSearchTerm}
           autoCapitalize="none"
@@ -266,22 +268,22 @@ const UserSearchScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.background.primary,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border.subtle,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#000000',
-    backgroundColor: '#F5F5F5',
+    color: colors.text.primary,
+    backgroundColor: colors.background.tertiary,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     fontSize: 18,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   errorBanner: {
     backgroundColor: '#FFEBEE',
@@ -318,7 +320,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   emptyContainer: {
     flex: 1,
@@ -334,12 +336,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
   },

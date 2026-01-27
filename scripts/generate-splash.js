@@ -1,6 +1,6 @@
 /**
- * Generate splash screen for Oly
- * Creates "OLY" text centered on off-white background with coral accent
+ * Generate splash screen for Rewind
+ * Creates "REWIND" text centered on dark background with brand accent
  */
 const sharp = require('sharp');
 const path = require('path');
@@ -37,7 +37,7 @@ function createSplashSvg(width, height) {
 }
 
 async function generateSplash() {
-  console.log('Generating Oly splash screen...');
+  console.log('Generating Rewind splash screen...');
 
   try {
     const splashSvg = Buffer.from(createSplashSvg(SPLASH_WIDTH, SPLASH_HEIGHT));

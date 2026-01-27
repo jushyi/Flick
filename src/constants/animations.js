@@ -17,4 +17,12 @@ export const animations = {
     accelerate: 'ease-in',
     decelerate: 'ease-out',
   },
+
+  // Startup sequence timing (Plan 30-04: Animated Splash Rebrand)
+  STARTUP: {
+    SHUTTER_DURATION: 800, // ms - aperture opening animation
+    BLUR_DELAY: 200, // ms - pause after shutter opens
+    BLUR_DURATION: 600, // ms - blur-to-focus transition
+    FADE_OUT_DURATION: 300, // ms - final fade to main app
+  },
 };

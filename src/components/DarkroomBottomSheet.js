@@ -10,9 +10,27 @@ import {
   Platform,
   Easing,
 } from 'react-native';
-// Note: Using solid colors for now. Gradients require expo-linear-gradient rebuild.
+import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
+import { colors } from '../constants/colors';
+
+// Radial gradient background component for hold button
+const RadialGradientButton = ({ centerColor, edgeColor, width, height, children, style }) => (
+  <View style={[{ width, height, position: 'relative' }, style]}>
+    <Svg width={width} height={height} style={{ position: 'absolute' }}>
+      <Defs>
+        <RadialGradient id="holdButtonGrad" cx="50%" cy="50%" rx="95%" ry="95%">
+          <Stop offset="0%" stopColor={centerColor} />
+          <Stop offset="40%" stopColor={centerColor} />
+          <Stop offset="100%" stopColor={edgeColor} />
+        </RadialGradient>
+      </Defs>
+      <Rect x="0" y="0" width={width} height={height} rx="16" fill="url(#holdButtonGrad)" />
+    </Svg>
+    {children}
+  </View>
+);
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SHEET_HEIGHT = 320; // Increased height for new button design
@@ -44,20 +62,23 @@ const HAPTIC_CONFIG = {
   phase4: { style: Haptics.ImpactFeedbackStyle.Heavy, interval: 150 },
 };
 
-// Colors
+// Colors - using design tokens from constants/colors.js
 const COLORS = {
-  sheetBackground: '#1A1A1A',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#888888',
-  statusReady: '#22C55E',
-  statusDeveloping: '#EF4444',
-  cardBackground: '#2A2A2A',
-  cardBorder: 'rgba(255, 255, 255, 0.3)',
-  // Neon purple gradient colors
-  buttonGradientStart: '#4C1D95', // Dark purple
-  buttonGradientEnd: '#7C3AED', // Lighter purple
-  fillGradientStart: '#6B21A8', // Darker fill left
-  fillGradientEnd: '#A855F7', // Lighter fill right
+  sheetBackground: colors.background.secondary, // '#1A1A1A'
+  textPrimary: colors.text.primary, // '#FFFFFF'
+  textSecondary: colors.text.secondary, // '#888888'
+  statusReady: colors.status.ready, // '#22C55E'
+  statusDeveloping: colors.status.developing, // '#EF4444'
+  cardBackground: colors.background.tertiary, // '#2A2A2A'
+  cardBorder: 'rgba(255, 255, 255, 0.3)', // Keep as-is
+  // Gradient colors from design tokens
+  buttonGradientStart: colors.brand.gradient.button[0], // '#4C1D95'
+  buttonGradientEnd: colors.brand.gradient.button[1], // '#7C3AED'
+  fillGradientStart: colors.brand.gradient.fill[0], // '#6B21A8'
+  fillGradientEnd: colors.brand.gradient.fill[1], // '#A855F7'
+  // Hold button: purple anticipation → pink payoff
+  buttonBase: colors.brand.gradient.revealed[0], // '#A855F7' (lighter purple)
+  buttonFill: colors.brand.gradient.revealed[1], // '#F472B6' (pink)
 };
 
 // Spinner: 3/4 solid arc with gap, spins around static play triangle
@@ -440,13 +461,19 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
               onResponderRelease={handlePressOut}
               onResponderTerminate={handlePressOut}
             >
-              {/* Base purple button (solid color - gradients require rebuild) */}
-              <View style={styles.holdButtonBase}>
-                {/* Fill overlay that animates left-to-right */}
+              {/* Base radial gradient button - pink center, white edges */}
+              <RadialGradientButton
+                centerColor="#DB2777"
+                edgeColor="#FFFFFF"
+                width={SCREEN_WIDTH - 48}
+                height={64}
+                style={styles.holdButtonBase}
+              >
+                {/* Fill overlay that darkens the gradient left-to-right */}
                 <Animated.View
                   style={[
                     styles.fillOverlay,
-                    { width: progressWidth, backgroundColor: COLORS.fillGradientEnd },
+                    { width: progressWidth, backgroundColor: 'rgba(0, 0, 0, 0.35)' },
                   ]}
                 />
 
@@ -457,7 +484,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                     {isPressing ? 'Revealing...' : 'Hold to reveal photos'}
                   </Text>
                 </View>
-              </View>
+              </RadialGradientButton>
             </View>
           )}
 
@@ -557,7 +584,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    backgroundColor: COLORS.buttonGradientEnd, // Solid purple (#7C3AED)
+    // backgroundColor provided by LinearGradient
   },
   fillOverlay: {
     position: 'absolute',

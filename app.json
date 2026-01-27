@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Oly",
-    "slug": "Oly",
+    "name": "Rewind",
+    "slug": "Rewind",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FAFAFA"
+      "backgroundColor": "#0F0F0F"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.spoodsjs.oly",
+      "bundleIdentifier": "com.spoodsjs.rewind",
       "entitlements": {
         "aps-environment": "development"
       },
@@ -35,11 +35,11 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0F0F0F"
       },
       "edgeToEdgeEnabled": true,
       "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
-      "package": "com.oly.app"
+      "package": "com.spoodsjs.rewind"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,7 +50,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Oly to access your camera to take photos.",
+          "cameraPermission": "Allow Rewind to access your camera to capture moments.",
           "microphonePermission": false
         }
       ],
@@ -66,13 +66,14 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      "./plugins/withFirebaseFix"
+      "./plugins/withFirebaseFix",
+      "@giphy/react-native-sdk"
     ],
+    "owner": "spoodsjs",
     "extra": {
       "eas": {
-        "projectId": "5759a2de-eb70-4336-9e32-4f4bb33bfaf4"
+        "projectId": "d604ae31-6cc9-4459-9b96-cf3d84f85099"
       }
-    },
-    "owner": "spoodsjs"
+    }
   }
 }

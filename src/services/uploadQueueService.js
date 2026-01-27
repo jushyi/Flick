@@ -281,8 +281,9 @@ const uploadQueueItem = async item => {
     logger.debug('UploadQueueService.uploadQueueItem: Uploading to Storage', {
       id,
       photoId,
+      userId,
     });
-    const uploadResult = await uploadPhoto(photoId, photoUri);
+    const uploadResult = await uploadPhoto(userId, photoId, photoUri);
 
     if (!uploadResult.success) {
       throw new Error(uploadResult.error || 'Upload to storage failed');

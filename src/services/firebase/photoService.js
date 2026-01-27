@@ -62,8 +62,8 @@ export const createPhoto = async (userId, photoUri) => {
     logger.debug('PhotoService.createPhoto: Document created', { photoId });
 
     // Upload photo to Firebase Storage
-    logger.debug('PhotoService.createPhoto: Uploading to Storage', { photoId });
-    const uploadResult = await uploadPhoto(photoId, photoUri);
+    logger.debug('PhotoService.createPhoto: Uploading to Storage', { userId, photoId });
+    const uploadResult = await uploadPhoto(userId, photoId, photoUri);
 
     if (!uploadResult.success) {
       logger.warn('PhotoService.createPhoto: Upload failed, rolling back', {
@@ -348,8 +348,13 @@ export const triagePhoto = async (photoId, action) => {
     const photoRef = doc(db, 'photos', photoId);
 
     if (action === 'delete') {
-      // Delete photo from Storage
-      await deletePhoto(photoId);
+      // Get photo document to retrieve userId for storage path
+      const photoDoc = await getDoc(photoRef);
+      if (photoDoc.exists()) {
+        const { userId } = photoDoc.data();
+        // Delete photo from Storage (path: photos/{userId}/{photoId}.jpg)
+        await deletePhoto(userId, photoId);
+      }
       // Delete photo document
       await deleteDoc(photoRef);
       return { success: true };

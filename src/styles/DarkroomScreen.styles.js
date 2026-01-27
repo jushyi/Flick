@@ -6,11 +6,12 @@
  */
 
 import { StyleSheet } from 'react-native';
+import { colors } from '../constants/colors';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
   },
   // Transparent background for gesture handler so no second background shows during swipe
   gestureRootView: {
@@ -24,7 +25,7 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: colors.text.secondary,
     marginTop: 16,
   },
   emptyContainer: {
@@ -40,12 +41,12 @@ export const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -56,14 +57,14 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: colors.overlay.light,
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.overlay.light,
     borderRadius: 20,
   },
   downChevron: {
@@ -71,7 +72,7 @@ export const styles = StyleSheet.create({
     height: 12,
     borderBottomWidth: 2,
     borderRightWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.text.primary,
     transform: [{ rotate: '45deg' }],
     marginTop: -4,
   },
@@ -90,7 +91,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.overlay.light,
     borderRadius: 20,
   },
   undoButtonDisabled: {
@@ -102,7 +103,7 @@ export const styles = StyleSheet.create({
   undoText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   undoTextDisabled: {
     opacity: 0.5,
@@ -115,13 +116,13 @@ export const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 4,
     textAlign: 'center',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: colors.text.secondary,
     textAlign: 'center',
   },
   photoCardContainer: {
@@ -131,7 +132,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     marginTop: 16,
     marginBottom: 16,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
     zIndex: 1,
   },
   triageButtonBar: {
@@ -156,7 +157,7 @@ export const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.system.iosRed, // iOS red for delete
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -164,7 +165,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#34C759',
+    backgroundColor: colors.status.ready, // Green for journal/share
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -193,7 +194,7 @@ export const styles = StyleSheet.create({
   // Inline success state styles
   successContainer: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
   },
   successContentArea: {
     flex: 1,
@@ -209,11 +210,11 @@ export const styles = StyleSheet.create({
   successTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     textAlign: 'center',
   },
   doneButtonBottom: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.system.blue, // iOS blue
     paddingVertical: 16,
     paddingHorizontal: 48,
     borderRadius: 24,
@@ -223,6 +224,6 @@ export const styles = StyleSheet.create({
   doneButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
 });
