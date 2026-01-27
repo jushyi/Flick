@@ -18,7 +18,7 @@ None
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Auth Shared Components** - Dark theme foundation, shared styles and reusable components
-- [ ] **Phase 2: Login Screen Refactor** - Full dark theme application, improved UX
+- [x] **Phase 2: Login Screen Refactor** - Full dark theme application, improved UX
 - [ ] **Phase 3: Signup Flow Refactor** - Multi-step signup with consistent dark styling
 - [ ] **Phase 4: Profile Creation Onboarding** - Extended setup flow with Selects and song
 - [ ] **Phase 5: Profile Screen Layout** - Core layout and profile info display
@@ -45,11 +45,11 @@ Plans:
 **Goal**: Apply dark theme to login screen, improve UX to match app aesthetic
 **Depends on**: Phase 1
 **Research**: Unlikely (internal UI using shared components)
-**Plans**: 0/1 complete
+**Plans**: 1/1 complete
 
 Plans:
 
-- [ ] 02-01: Integrate AuthCodeInput into VerificationScreen + dark theme consistency
+- [x] 02-01: Integrate AuthCodeInput into VerificationScreen + dark theme consistency
 
 ### Phase 3: Signup Flow Refactor
 
@@ -138,7 +138,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase                          | Plans Complete | Status      | Completed  |
 | ------------------------------ | -------------- | ----------- | ---------- |
 | 1. Auth Shared Components      | 1/1            | Complete    | 2026-01-27 |
-| 2. Login Screen Refactor       | 0/1            | Planned     | -          |
+| 2. Login Screen Refactor       | 1/1            | Complete    | 2026-01-27 |
 | 3. Signup Flow Refactor        | 0/?            | Not started | -          |
 | 4. Profile Creation Onboarding | 0/?            | Not started | -          |
 | 5. Profile Screen Layout       | 0/?            | Not started | -          |
