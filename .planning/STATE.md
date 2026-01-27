@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 3 — Signup Flow Refactor (In Progress)
+**Current focus:** Phase 3 — Signup Flow Refactor (Complete)
 
 ## Current Position
 
 Phase: 3 of 9 (Signup Flow Refactor)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-27 — Completed 03-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-27 — Completed 03-02-PLAN.md
 
-Progress: ███░░░░░░░ 33%
+Progress: ████░░░░░░ 44%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 3
-- Average duration: 6.3 min
-- Total execution time: 19 min
+- Total plans completed: 4
+- Average duration: 6.8 min
+- Total execution time: 27 min
 
 **By Phase:**
 
@@ -30,12 +30,12 @@ Progress: ███░░░░░░░ 33%
 | ----- | ----- | ------ | -------- |
 | 1     | 1     | 2 min  | 2 min    |
 | 2     | 1     | 5 min  | 5 min    |
-| 3     | 1     | 12 min | 12 min   |
+| 3     | 2     | 20 min | 10 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 2 min, 5 min, 12 min
-- Trend: Increasing (more deviations handled)
+- Last 5 plans: 2 min, 5 min, 12 min, 8 min
+- Trend: Stable (Phase 3 complete)
 
 ## Accumulated Context
 
@@ -53,6 +53,8 @@ Recent decisions affecting current work:
 | 3     | Use Ionicons instead of emojis                | Consistency with other screens using Ionicons                 |
 | 3     | Debounce username check at 500ms              | Balance responsiveness with Firestore query efficiency        |
 | 3     | Require username/display name on skip         | Essential fields even when skipping optional ones             |
+| 3     | Conditional nav rendering over manual replace | Navigator branches auto-transition on auth state change       |
+| 3     | Store photo URIs directly in selects array    | Simpler MVP; future could upload to Firebase Storage          |
 
 ### Deferred Issues
 
@@ -65,5 +67,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 03-01-PLAN.md (1 of 2 plans in Phase 3)
+Stopped at: Phase 3 complete (all 2 plans done)
 Resume file: None
