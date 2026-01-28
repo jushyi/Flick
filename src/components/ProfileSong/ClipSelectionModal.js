@@ -74,18 +74,23 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
     }
   }, [visible, song]);
 
-  // Handle preview button - plays full 30s preview
+  // Handle preview button - plays from current position
   const handlePreview = useCallback(async () => {
     if (isPlaying) {
       await stopPreview();
       setIsPlaying(false);
-      setPlaybackPosition(0);
     } else {
       setIsPlaying(true);
+      // Start from current scrubbed position
+      const startPosition = playbackPosition;
       await playPreview(song.previewUrl, {
+        clipStart: startPosition,
+        clipEnd: PREVIEW_DURATION,
         onProgress: progress => {
-          // progress is 0-1, convert to seconds
-          setPlaybackPosition(progress * PREVIEW_DURATION);
+          // progress is 0-1 within the clip range (startPosition to end)
+          const clipDuration = PREVIEW_DURATION - startPosition;
+          const currentPos = startPosition + progress * clipDuration;
+          setPlaybackPosition(currentPos);
         },
         onComplete: () => {
           setIsPlaying(false);
@@ -93,7 +98,7 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
         },
       });
     }
-  }, [isPlaying, song]);
+  }, [isPlaying, song, playbackPosition]);
 
   // Handle drag-to-seek on waveform
   const handleSeek = useCallback(
