@@ -182,12 +182,7 @@ const SongSearchModal = ({ visible, onClose, onSelectSong }) => {
   const keyExtractor = useCallback(item => item.id, []);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={handleClose}
-    >
+    <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
       <KeyboardAvoidingView
         style={[styles.container, { paddingTop: insets.top }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

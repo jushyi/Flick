@@ -115,11 +115,11 @@ const ProfileScreen = () => {
     setShowSongMenu(true);
   };
 
-  // Handle song selection from search modal - opens clip selection
+  // Handle song selection from search modal - closes search, opens clip selection
   const handleSongSelected = song => {
     logger.info('ProfileScreen: Song selected for clip', { songId: song.id, title: song.title });
-    setShowSongSearch(false);
-    setSelectedSongForClip(song);
+    setShowSongSearch(false); // Close song search first
+    setSelectedSongForClip(song); // Then open clip selection
   };
 
   // Handle clip selection confirmation
@@ -133,10 +133,11 @@ const ProfileScreen = () => {
     handleSaveSong(songWithClip);
   };
 
-  // Handle clip selection cancel
+  // Handle clip selection cancel - re-opens song search
   const handleClipCancel = () => {
-    logger.info('ProfileScreen: Clip selection cancelled');
+    logger.info('ProfileScreen: Clip selection cancelled, returning to song search');
     setSelectedSongForClip(null);
+    setShowSongSearch(true); // Re-open song search so user can pick different song
   };
 
   // Save song to Firestore and update local state
