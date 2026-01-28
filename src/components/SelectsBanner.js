@@ -84,8 +84,9 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
   }, [onTap]);
 
   // Gestures
+  // LongPress for hold-to-pause (activates after 150ms hold)
   const longPressGesture = Gesture.LongPress()
-    .minDuration(0) // Activate immediately on press
+    .minDuration(150)
     .onStart(() => {
       'worklet';
       runOnJS(handlePauseStart)();
@@ -95,13 +96,14 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
       runOnJS(handlePauseEnd)();
     });
 
+  // Tap for quick taps (< 150ms)
   const tapGesture = Gesture.Tap().onEnd(() => {
     'worklet';
     runOnJS(handleTap)();
   });
 
-  // Compose gestures - allow both tap and long press
-  const composedGesture = Gesture.Simultaneous(longPressGesture, tapGesture);
+  // Exclusive: LongPress checked first, Tap wins if released before 150ms
+  const composedGesture = Gesture.Exclusive(longPressGesture, tapGesture);
 
   // Animated style for pause feedback
   const animatedStyle = useAnimatedStyle(() => ({
