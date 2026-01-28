@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -111,12 +111,14 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
   // Empty state - own profile
   if (selects.length === 0 && isOwnProfile) {
     return (
-      <GestureDetector gesture={tapGesture}>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="camera-outline" size={48} color={colors.text.secondary} />
-          <Text style={styles.emptyText}>Tap to add highlights</Text>
-        </View>
-      </GestureDetector>
+      <GestureHandlerRootView style={styles.gestureRoot}>
+        <GestureDetector gesture={tapGesture}>
+          <View style={styles.emptyContainer}>
+            <Ionicons name="camera-outline" size={48} color={colors.text.secondary} />
+            <Text style={styles.emptyText}>Tap to add highlights</Text>
+          </View>
+        </GestureDetector>
+      </GestureHandlerRootView>
     );
   }
 
@@ -132,15 +134,20 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
 
   // Photo slideshow
   return (
-    <GestureDetector gesture={composedGesture}>
-      <Animated.View style={[styles.container, animatedStyle]}>
-        <Image source={{ uri: selects[currentIndex] }} style={styles.image} resizeMode="cover" />
-      </Animated.View>
-    </GestureDetector>
+    <GestureHandlerRootView style={styles.gestureRoot}>
+      <GestureDetector gesture={composedGesture}>
+        <Animated.View style={[styles.container, animatedStyle]}>
+          <Image source={{ uri: selects[currentIndex] }} style={styles.image} resizeMode="cover" />
+        </Animated.View>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+  },
   container: {
     height: BANNER_HEIGHT,
     borderRadius: 8,
