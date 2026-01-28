@@ -98,8 +98,9 @@ const WaveformScrubber = ({
       // Position relative to clip start, within the selected range
       const relativePosition = (currentTime / (endSec - startSec)) * (endX.value - startX.value);
       // Use linear easing for smooth constant-speed movement matching audio playback
+      // Duration matches audioPlayer's 50ms progress update interval
       playbackX.value = withTiming(startX.value + relativePosition, {
-        duration: 100,
+        duration: 50,
         easing: Easing.linear,
       });
     } else {

@@ -66,8 +66,9 @@ const ProfileSongCard = ({ song, isOwnProfile, onPress, onLongPress }) => {
   useEffect(() => {
     if (progress > 0) {
       // Animate to new position with linear easing for smooth constant-speed movement
+      // Duration matches audioPlayer's 50ms progress update interval
       progressValue.value = withTiming(progress, {
-        duration: 100,
+        duration: 50,
         easing: Easing.linear,
       });
     } else {

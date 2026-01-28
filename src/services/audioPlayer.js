@@ -61,6 +61,9 @@ export const playPreview = async (previewUrl, options = {}) => {
       await sound.setPositionAsync(clipStart * 1000);
     }
 
+    // Set progress update interval for smooth animations (50ms = 20 updates/sec)
+    await sound.setProgressUpdateIntervalAsync(50);
+
     // Set up playback status update handler
     sound.setOnPlaybackStatusUpdate(status => {
       if (!status.isLoaded) return;
