@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CYCLE_INTERVAL_MS = 1500;
+const CYCLE_INTERVAL_MS = 750; // Faster cycling
 
 /**
  * FullscreenSelectsViewer - Fullscreen modal for viewing another user's selects

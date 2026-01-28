@@ -36,7 +36,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const MAX_SELECTS = 10;
 const THUMBNAIL_SIZE = 56;
 const THUMBNAIL_GAP = 8;
-const PREVIEW_ASPECT_RATIO = 4 / 5;
+const PREVIEW_ASPECT_RATIO = 3 / 4; // Taller preview (was 4/5)
 const SCREEN_PADDING = 24;
 const DELETE_BAR_HEIGHT = 48;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -623,6 +623,7 @@ const styles = StyleSheet.create({
   previewContainer: {
     alignItems: 'center',
     paddingHorizontal: SCREEN_PADDING,
+    marginTop: 24, // Space between header and preview
     marginBottom: 8,
   },
   previewEmpty: {
@@ -691,13 +692,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   spacer: {
-    flex: 1,
+    minHeight: 16,
     overflow: 'visible',
   },
   buttonContainer: {
     paddingHorizontal: SCREEN_PADDING,
     paddingBottom: 24,
-    paddingTop: 8,
+    paddingTop: 0,
   },
   saveButton: {
     height: 48,

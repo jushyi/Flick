@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 
 const BANNER_HEIGHT = 250;
-const CYCLE_INTERVAL_MS = 1500;
+const CYCLE_INTERVAL_MS = 750; // Faster cycling
 
 /**
  * SelectsBanner - Auto-playing slideshow of user's highlight photos
