@@ -7,7 +7,7 @@ import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 const HEADER_HEIGHT = 64;
-const PROFILE_PHOTO_SIZE = 80;
+const PROFILE_PHOTO_SIZE = 120;
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -107,7 +107,7 @@ const ProfileScreen = () => {
               <Image source={{ uri: profileData.photoURL }} style={styles.profilePhoto} />
             ) : (
               <View style={[styles.profilePhoto, styles.profilePhotoPlaceholder]}>
-                <Ionicons name="person" size={40} color={colors.text.secondary} />
+                <Ionicons name="person" size={60} color={colors.text.secondary} />
               </View>
             )}
           </View>
