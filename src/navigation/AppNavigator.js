@@ -20,6 +20,7 @@ import CameraScreen from '../screens/CameraScreen';
 import DarkroomScreen from '../screens/DarkroomScreen';
 import SuccessScreen from '../screens/SuccessScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import SongSearchScreen from '../screens/SongSearchScreen';
 import FriendsListScreen from '../screens/FriendsListScreen';
 import UserSearchScreen from '../screens/UserSearchScreen';
 import FriendRequestsScreen from '../screens/FriendRequestsScreen';
@@ -69,6 +70,14 @@ const ProfileStackNavigator = () => {
       }}
     >
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen
+        name="SongSearch"
+        component={SongSearchScreen}
+        options={{
+          presentation: 'card',
+          animation: 'slide_from_bottom',
+        }}
+      />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
@@ -277,6 +286,7 @@ const linking = {
           Profile: {
             screens: {
               ProfileMain: 'profile',
+              SongSearch: 'profile/song-search',
               Settings: 'profile/settings',
               PrivacyPolicy: 'profile/privacy',
               TermsOfService: 'profile/terms',
