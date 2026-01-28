@@ -149,12 +149,10 @@ None yet.
 - Phase 15 added: Friends Screen & Other Profiles
   - Friends screen refactor
   - Wire up ability to view other peoples profile
-- Phase 7.1 inserted after Phase 7: Full Song Music Integration
-  - Spotify + Apple Music API integration for full song access
-  - OAuth authentication flows for both services
-  - Scrollable waveform for full song duration clip selection
-  - Fallback to iTunes 30s preview for users without subscriptions
-- Phase 7.2 inserted after Phase 7.1: Song Modal Stacking Fix (UAT-007)
+- Phase 7.1 removed: Full Song Music Integration
+  - Research showed Spotify cannot stream in third-party mobile apps (SDK deprecated 2022)
+  - Keeping iTunes 30s previews as the approach
+- Phase 7.2 inserted after Phase 7: Song Modal Stacking Fix (UAT-007)
   - Convert SongSearchModal to screen for stacked navigation
   - ClipSelectionModal overlays SongSearchScreen instead of replacing it
   - Connected flow where user sees both modal layers

@@ -25,8 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4.1: Drag-Reorder Visual Feedback** - Animated thumbnail repositioning during drag (INSERTED)
 - [x] **Phase 5: Profile Screen Layout** - Core layout and profile info display
 - [x] **Phase 6: Selects Banner** - User-selected photos slideshow
-- [x] **Phase 7: Profile Song Scaffold** - Music preview feature (provider TBD)
-- [ ] **Phase 7.1: Full Song Music Integration** - Spotify + Apple Music for full song clip selection (INSERTED)
+- [x] **Phase 7: Profile Song Scaffold** - Music preview feature (iTunes 30s previews)
 - [ ] **Phase 7.2: Song Modal Stacking Fix** - Convert SongSearchModal to screen for stacked navigation (INSERTED)
 - [ ] **Phase 8: User Albums Display** - Horizontal scroll album bar
 - [ ] **Phase 9: Monthly Albums** - Auto-generated albums by month
@@ -161,33 +160,6 @@ Plans:
 - [x] 07-04-FIX: UX fixes (partial height modal, playback indicator, cancel flow)
 - [x] 07-04-FIX2: Silent mode audio + smooth animations
 - [x] 07-05: Full integration (setup screen, edit menu, navigation cleanup)
-
-### Phase 7.1: Full Song Music Integration (INSERTED)
-
-**Goal**: Integrate Spotify and Apple Music APIs to allow users to select any 30-second clip from full songs, not just iTunes 30-second previews
-**Depends on**: Phase 7
-**Research**: Likely (Spotify Web API, Apple MusicKit, OAuth flows)
-**Research topics**: Spotify Web API authentication, Apple MusicKit for React Native, streaming permissions, subscription requirements
-**Plans**: TBD
-
-Plans:
-
-- [ ] 07.1-01: TBD (run /gsd:plan-phase 7.1 to break down)
-
-**Details:**
-
-1. Spotify Integration:
-   - OAuth authentication flow (user connects Spotify account)
-   - Search API for finding songs
-   - Web Playback SDK or streaming for full song access
-   - Requires Spotify Premium for full playback
-2. Apple Music Integration:
-   - MusicKit authentication
-   - Search and streaming APIs
-   - Requires Apple Music subscription
-3. Settings screen for connecting/disconnecting music services
-4. Fallback to iTunes 30s preview for users without either service
-5. Update clip selection UI to handle full song duration with scrollable waveform
 
 ### Phase 7.2: Song Modal Stacking Fix (INSERTED)
 
@@ -339,7 +311,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.1 → 7.2 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -352,7 +324,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 5. Profile Screen Layout         | 2/2            | Complete    | 2026-01-27 |
 | 6. Selects Banner                | 2/2            | Complete    | 2026-01-28 |
 | 7. Profile Song Scaffold         | 5/5 + 2 FIX    | Complete    | 2026-01-28 |
-| 7.1 Full Song Music Integration  | 0/?            | Not started | -          |
 | 7.2 Song Modal Stacking Fix      | 0/?            | Not started | -          |
 | 8. User Albums Display           | 0/?            | Not started | -          |
 | 9. Monthly Albums                | 0/?            | Not started | -          |
