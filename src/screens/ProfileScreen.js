@@ -11,6 +11,7 @@ import {
   SelectsEditOverlay,
   ProfileSongCard,
   SongSearchModal,
+  ClipSelectionModal,
 } from '../components';
 import logger from '../utils/logger';
 
@@ -28,6 +29,7 @@ const ProfileScreen = () => {
   const [showEditOverlay, setShowEditOverlay] = useState(false);
   const [showSongSearch, setShowSongSearch] = useState(false);
   const [showSongMenu, setShowSongMenu] = useState(false);
+  const [selectedSongForClip, setSelectedSongForClip] = useState(null);
 
   // Get route params for viewing other users' profiles
   const { userId, username: routeUsername } = route.params || {};
@@ -113,18 +115,28 @@ const ProfileScreen = () => {
     setShowSongMenu(true);
   };
 
-  // Handle song selection from search modal
+  // Handle song selection from search modal - opens clip selection
   const handleSongSelected = song => {
-    logger.info('ProfileScreen: Song selected', { songId: song.id, title: song.title });
+    logger.info('ProfileScreen: Song selected for clip', { songId: song.id, title: song.title });
     setShowSongSearch(false);
-    // For now, directly save to profile (waveform scrubber in Plan 04)
-    // Default clip: 0-30 seconds
-    const profileSong = {
-      ...song,
-      clipStart: 0,
-      clipEnd: 30,
-    };
-    handleSaveSong(profileSong);
+    setSelectedSongForClip(song);
+  };
+
+  // Handle clip selection confirmation
+  const handleClipConfirm = songWithClip => {
+    logger.info('ProfileScreen: Clip confirmed', {
+      songId: songWithClip.id,
+      clipStart: songWithClip.clipStart,
+      clipEnd: songWithClip.clipEnd,
+    });
+    setSelectedSongForClip(null);
+    handleSaveSong(songWithClip);
+  };
+
+  // Handle clip selection cancel
+  const handleClipCancel = () => {
+    logger.info('ProfileScreen: Clip selection cancelled');
+    setSelectedSongForClip(null);
   };
 
   // Save song to Firestore and update local state
@@ -264,6 +276,14 @@ const ProfileScreen = () => {
         visible={showSongSearch}
         onClose={() => setShowSongSearch(false)}
         onSelectSong={handleSongSelected}
+      />
+
+      {/* Clip selection modal */}
+      <ClipSelectionModal
+        visible={selectedSongForClip !== null}
+        song={selectedSongForClip}
+        onConfirm={handleClipConfirm}
+        onCancel={handleClipCancel}
       />
     </View>
   );
