@@ -10,7 +10,15 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Dimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -100,84 +108,97 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
   if (!song) return null;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={handleCancel}
-    >
-      <GestureHandlerRootView style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={colors.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Select Your Clip</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleCancel}>
+      <View style={styles.backdrop}>
+        {/* Backdrop touchable - tap to dismiss back to song search */}
+        <TouchableWithoutFeedback onPress={handleCancel}>
+          <View style={styles.backdropTouchable} />
+        </TouchableWithoutFeedback>
 
-        {/* Song Info */}
-        <View style={styles.songInfo}>
-          <Image source={{ uri: song.albumArt }} style={styles.albumArt} contentFit="cover" />
-          <View style={styles.songDetails}>
-            <Text style={styles.songTitle} numberOfLines={2}>
-              {song.title}
-            </Text>
-            <Text style={styles.songArtist} numberOfLines={1}>
-              {song.artist}
-            </Text>
+        {/* Content container - partial height at bottom */}
+        <GestureHandlerRootView style={styles.contentContainer}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color={colors.text.primary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Select Your Clip</Text>
+            <View style={styles.headerSpacer} />
           </View>
-        </View>
 
-        {/* Waveform Section */}
-        <View style={styles.waveformSection}>
-          <WaveformScrubber
-            songId={song.id}
-            initialStart={clipStart}
-            initialEnd={clipEnd}
-            duration={PREVIEW_DURATION}
-            onRangeChange={handleRangeChange}
-            containerWidth={WAVEFORM_WIDTH}
-          />
-        </View>
+          {/* Song Info */}
+          <View style={styles.songInfo}>
+            <Image source={{ uri: song.albumArt }} style={styles.albumArt} contentFit="cover" />
+            <View style={styles.songDetails}>
+              <Text style={styles.songTitle} numberOfLines={2}>
+                {song.title}
+              </Text>
+              <Text style={styles.songArtist} numberOfLines={1}>
+                {song.artist}
+              </Text>
+            </View>
+          </View>
 
-        {/* Instructions */}
-        <Text style={styles.instructions}>
-          Drag the handles to select which part of the song plays on your profile
-        </Text>
-
-        {/* Action Buttons */}
-        <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 16 }]}>
-          {/* Preview Button */}
-          <TouchableOpacity
-            style={[styles.button, styles.previewButton, isPlaying && styles.previewButtonActive]}
-            onPress={handlePreview}
-          >
-            <Ionicons
-              name={isPlaying ? 'pause' : 'play'}
-              size={20}
-              color={isPlaying ? colors.brand.purple : colors.text.primary}
+          {/* Waveform Section */}
+          <View style={styles.waveformSection}>
+            <WaveformScrubber
+              songId={song.id}
+              initialStart={clipStart}
+              initialEnd={clipEnd}
+              duration={PREVIEW_DURATION}
+              onRangeChange={handleRangeChange}
+              containerWidth={WAVEFORM_WIDTH}
             />
-            <Text style={[styles.buttonText, isPlaying && styles.buttonTextActive]}>
-              {isPlaying ? 'Stop' : 'Preview'}
-            </Text>
-          </TouchableOpacity>
+          </View>
 
-          {/* Confirm Button */}
-          <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={handleConfirm}>
-            <Ionicons name="checkmark" size={20} color={colors.text.primary} />
-            <Text style={styles.buttonText}>Use This Clip</Text>
-          </TouchableOpacity>
-        </View>
-      </GestureHandlerRootView>
+          {/* Instructions */}
+          <Text style={styles.instructions}>
+            Drag the handles to select which part of the song plays on your profile
+          </Text>
+
+          {/* Action Buttons */}
+          <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 16 }]}>
+            {/* Preview Button */}
+            <TouchableOpacity
+              style={[styles.button, styles.previewButton, isPlaying && styles.previewButtonActive]}
+              onPress={handlePreview}
+            >
+              <Ionicons
+                name={isPlaying ? 'pause' : 'play'}
+                size={20}
+                color={isPlaying ? colors.brand.purple : colors.text.primary}
+              />
+              <Text style={[styles.buttonText, isPlaying && styles.buttonTextActive]}>
+                {isPlaying ? 'Stop' : 'Preview'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Confirm Button */}
+            <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={handleConfirm}>
+              <Ionicons name="checkmark" size={20} color={colors.text.primary} />
+              <Text style={styles.buttonText}>Use This Clip</Text>
+            </TouchableOpacity>
+          </View>
+        </GestureHandlerRootView>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  backdrop: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  backdropTouchable: {
+    flex: 1, // Takes up space above content
+  },
+  contentContainer: {
     backgroundColor: colors.background.primary,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
   },
   header: {
     flexDirection: 'row',
@@ -240,8 +261,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingTop: 24,
-    marginTop: 'auto',
+    paddingTop: 16,
     gap: 12,
   },
   button: {
