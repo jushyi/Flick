@@ -80,7 +80,7 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
   if (!song) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleCancel}>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={handleCancel}>
       <View style={styles.backdrop}>
         {/* Backdrop touchable - tap to dismiss back to song search */}
         <TouchableWithoutFeedback onPress={handleCancel}>
