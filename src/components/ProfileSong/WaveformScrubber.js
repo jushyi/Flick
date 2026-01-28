@@ -21,6 +21,7 @@ import Animated, {
   withSpring,
   withTiming,
   runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 import { colors } from '../../constants/colors';
 
@@ -96,8 +97,13 @@ const WaveformScrubber = ({
     if (currentTime > 0) {
       // Position relative to clip start, within the selected range
       const relativePosition = (currentTime / (endSec - startSec)) * (endX.value - startX.value);
-      playbackX.value = withTiming(startX.value + relativePosition, { duration: 100 });
+      // Use linear easing for smooth constant-speed movement matching audio playback
+      playbackX.value = withTiming(startX.value + relativePosition, {
+        duration: 100,
+        easing: Easing.linear,
+      });
     } else {
+      // Reset to start position without animation when stopping
       playbackX.value = startX.value;
     }
   }, [currentTime, startSec, endSec]);
