@@ -8,7 +8,7 @@
  * - Confirm button to save selection
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -29,6 +30,25 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
 
   // State
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Animation for content slide-up
+  const slideAnim = useRef(new Animated.Value(300)).current;
+
+  // Animate content slide when visibility changes
+  useEffect(() => {
+    if (visible) {
+      // Slide up when opening
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 11,
+      }).start();
+    } else {
+      // Reset to bottom position when closed
+      slideAnim.setValue(300);
+    }
+  }, [visible, slideAnim]);
 
   // Reset state when song changes or modal opens
   useEffect(() => {
@@ -87,8 +107,10 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
           <View style={styles.backdropTouchable} />
         </TouchableWithoutFeedback>
 
-        {/* Content container - partial height at bottom */}
-        <View style={styles.contentContainer}>
+        {/* Content container - partial height at bottom, slides up */}
+        <Animated.View
+          style={[styles.contentContainer, { transform: [{ translateY: slideAnim }] }]}
+        >
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
@@ -139,7 +161,7 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
               <Text style={styles.buttonText}>Use This Song</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
