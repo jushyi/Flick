@@ -12,6 +12,18 @@
 import { Audio } from 'expo-av';
 import logger from '../utils/logger';
 
+// Configure audio to play even in silent mode (like music apps)
+// This must be called before any sound is played
+Audio.setAudioModeAsync({
+  allowsRecordingIOS: false,
+  staysActiveInBackground: false, // Songs stop when navigating away
+  playsInSilentModeIOS: true, // Key setting: play through speakers regardless of silent switch
+  shouldDuckAndroid: true,
+  playThroughEarpieceAndroid: false,
+}).catch(error => {
+  logger.error('audioPlayer: Failed to set audio mode', { error: error?.message });
+});
+
 // Module-level state for single sound instance
 let currentSound = null;
 let fadeTimeout = null;
