@@ -44,6 +44,10 @@ const FeedScreen = () => {
 
   // Animated scroll value for header hide/show
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Track if refresh should be allowed (requires pulling past threshold)
+  const canRefresh = useRef(false);
+  const REFRESH_THRESHOLD = -70; // Must pull down 70+ pixels to trigger refresh
   const {
     photos,
     loading,
@@ -154,11 +158,28 @@ const FeedScreen = () => {
   /**
    * Handle pull-to-refresh
    * Refreshes both feed and stories
+   * Only triggers if user pulled past threshold
    */
   const handleRefresh = async () => {
+    if (!canRefresh.current) {
+      logger.debug('FeedScreen: Refresh blocked - threshold not met');
+      return;
+    }
     logger.debug('FeedScreen: Pull-to-refresh triggered');
+    canRefresh.current = false;
     // Refresh both in parallel
     await Promise.all([refreshFeed(), loadFriendStories()]);
+  };
+
+  /**
+   * Track scroll position to enable/disable refresh
+   */
+  const handleScroll = event => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    // Enable refresh only when pulled past threshold (negative = pulling down)
+    if (offsetY <= REFRESH_THRESHOLD) {
+      canRefresh.current = true;
+    }
   };
 
   /**
@@ -586,22 +607,32 @@ const FeedScreen = () => {
     extrapolate: 'clamp',
   });
 
+  // Header opacity - fades out faster than it slides up
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT * 0.4],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Status bar mask - hides header as it scrolls up */}
       <View style={[styles.statusBarMask, { height: insets.top }]} />
 
-      {/* Animated Header - hides on scroll */}
+      {/* Animated Header - hides on scroll with fade */}
       <Animated.View
         style={[
           styles.header,
           {
             top: insets.top,
             transform: [{ translateY: headerTranslateY }],
+            opacity: headerOpacity,
           },
         ]}
       >
+        {/* Centered title */}
         <Text style={styles.headerTitle}>Rewind</Text>
+        {/* Right-aligned notification button */}
         <TouchableOpacity
           onPress={() => navigation.navigate('Activity')}
           style={styles.notificationButton}
@@ -628,6 +659,7 @@ const FeedScreen = () => {
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
             useNativeDriver: true,
+            listener: handleScroll,
           })}
           scrollEventThrottle={16}
           refreshControl={
@@ -635,6 +667,7 @@ const FeedScreen = () => {
               refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor={colors.text.primary}
+              progressViewOffset={40}
             />
           }
           onEndReached={loadMorePhotos}
@@ -697,7 +730,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
@@ -712,7 +745,8 @@ const styles = StyleSheet.create({
   },
   notificationButton: {
     padding: 8,
-    position: 'relative',
+    position: 'absolute',
+    right: 24,
   },
   notificationDot: {
     position: 'absolute',
