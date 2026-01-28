@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,13 +16,22 @@ const SettingsScreen = () => {
   const navigation = useNavigation();
   const { signOut } = useAuth();
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     logger.info('SettingsScreen: Sign out pressed');
-    try {
-      await signOut();
-    } catch (error) {
-      logger.error('SettingsScreen: Sign out failed', { error: error.message });
-    }
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut();
+          } catch (error) {
+            logger.error('SettingsScreen: Sign out failed', { error: error.message });
+          }
+        },
+      },
+    ]);
   };
 
   const handleNavigate = screenName => {
