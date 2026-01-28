@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
@@ -11,8 +11,31 @@ const PROFILE_PHOTO_SIZE = 80;
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { userProfile } = useAuth();
+  const route = useRoute();
+  const { user, userProfile } = useAuth();
   const insets = useSafeAreaInsets();
+
+  // Get route params for viewing other users' profiles
+  const { userId, username: routeUsername } = route.params || {};
+
+  // Determine if viewing own profile vs another user's profile
+  const isOwnProfile = !userId || userId === user?.uid;
+
+  // TODO: Fetch other user's profile data from Firestore
+  // For now, use own profile for own view, placeholder for other users
+  const profileData = isOwnProfile
+    ? userProfile
+    : {
+        username: routeUsername || 'user',
+        displayName: routeUsername || 'User',
+        photoURL: null,
+        bio: null,
+      };
+
+  const handleBackPress = () => {
+    logger.info('ProfileScreen: Back button pressed');
+    navigation.goBack();
+  };
 
   const handleFriendsPress = () => {
     logger.info('ProfileScreen: Friends button pressed');
@@ -39,18 +62,30 @@ const ProfileScreen = () => {
     <View style={styles.container}>
       {/* Header - 3 column layout */}
       <View style={[styles.header, { top: insets.top }]}>
-        {/* Left: Friends icon */}
-        <TouchableOpacity onPress={handleFriendsPress} style={styles.headerButton}>
-          <Ionicons name="people-outline" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
+        {/* Left: Friends icon (own) or Back arrow (other user) */}
+        {isOwnProfile ? (
+          <TouchableOpacity onPress={handleFriendsPress} style={styles.headerButton}>
+            <Ionicons name="people-outline" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={handleBackPress} style={styles.headerButton}>
+            <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+        )}
 
         {/* Center: Username */}
-        <Text style={styles.headerTitle}>{userProfile?.username || 'Profile'}</Text>
+        <Text style={styles.headerTitle}>
+          {isOwnProfile ? userProfile?.username || 'Profile' : routeUsername || 'Profile'}
+        </Text>
 
-        {/* Right: Settings icon */}
-        <TouchableOpacity onPress={handleSettingsPress} style={styles.headerButton}>
-          <Ionicons name="settings-outline" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
+        {/* Right: Settings icon (own) or empty space (other user) */}
+        {isOwnProfile ? (
+          <TouchableOpacity onPress={handleSettingsPress} style={styles.headerButton}>
+            <Ionicons name="settings-outline" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerButton} />
+        )}
       </View>
 
       {/* Scrollable Content */}
@@ -68,8 +103,8 @@ const ProfileScreen = () => {
         <View style={styles.profileSection}>
           {/* Profile Photo (absolutely positioned, overlapping Selects) */}
           <View style={styles.profilePhotoContainer}>
-            {userProfile?.photoURL ? (
-              <Image source={{ uri: userProfile.photoURL }} style={styles.profilePhoto} />
+            {profileData?.photoURL ? (
+              <Image source={{ uri: profileData.photoURL }} style={styles.profilePhoto} />
             ) : (
               <View style={[styles.profilePhoto, styles.profilePhotoPlaceholder]}>
                 <Ionicons name="person" size={40} color={colors.text.secondary} />
@@ -79,10 +114,10 @@ const ProfileScreen = () => {
 
           {/* Profile Info Card - left half, best friends will go on right */}
           <View style={styles.profileInfoCard}>
-            <Text style={styles.displayName}>{userProfile?.displayName || 'New User'}</Text>
-            <Text style={styles.username}>@{userProfile?.username || 'username'}</Text>
-            <Text style={[styles.bio, !userProfile?.bio && styles.bioPlaceholder]}>
-              {userProfile?.bio || 'No bio yet'}
+            <Text style={styles.displayName}>{profileData?.displayName || 'New User'}</Text>
+            <Text style={styles.username}>@{profileData?.username || 'username'}</Text>
+            <Text style={[styles.bio, !profileData?.bio && styles.bioPlaceholder]}>
+              {profileData?.bio || 'No bio yet'}
             </Text>
           </View>
         </View>
