@@ -277,6 +277,9 @@ const DeleteBar = ({ isVisible, isHovering }) => {
  * @param {function} onSave - Callback with new selects array when saved
  * @param {function} onClose - Callback when overlay is closed without saving
  */
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SWIPE_THRESHOLD = 100; // Minimum swipe distance to trigger close
+
 const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
   // Get safe area insets for explicit positioning (fixes first-render issue with SafeAreaView edges)
   const insets = useSafeAreaInsets();
@@ -297,19 +300,35 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
   const [deleteZoneY, setDeleteZoneY] = useState(0);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [initialSelects, setInitialSelects] = useState([]);
+
+  // Swipe-to-dismiss animation
+  const translateY = useSharedValue(0);
 
   // Initialize photos when overlay opens
   useEffect(() => {
     if (visible) {
-      setSelectedPhotos(initializePhotos(selects));
+      const photos = initializePhotos(selects);
+      setSelectedPhotos(photos);
+      setInitialSelects(selects); // Store initial state for comparison
       setSelectedIndex(0);
       setIsDragging(false);
       setDraggingIndex(null);
       setIsOverDeleteZone(false);
       setHoverIndex(null);
       setSaving(false);
+      translateY.value = 0;
     }
-  }, [visible, selects, initializePhotos]);
+  }, [visible, selects, initializePhotos, translateY]);
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = useCallback(() => {
+    const currentUris = selectedPhotos.map(p => p.uri);
+    // Different length means changes
+    if (currentUris.length !== initialSelects.length) return true;
+    // Different order or content means changes
+    return currentUris.some((uri, index) => uri !== initialSelects[index]);
+  }, [selectedPhotos, initialSelects]);
 
   const handleDeleteZoneLayout = useCallback(event => {
     event.target.measureInWindow((x, windowY) => {
@@ -451,11 +470,84 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     }
   }, [selectedPhotos, onSave]);
 
-  const handleCancel = useCallback(() => {
-    if (onClose) {
-      onClose();
+  // Attempt to close - check for unsaved changes first
+  const attemptClose = useCallback(() => {
+    if (hasUnsavedChanges()) {
+      Alert.alert(
+        'Discard Changes?',
+        'You have unsaved changes. Are you sure you want to close without saving?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Discard',
+            style: 'destructive',
+            onPress: () => {
+              if (onClose) onClose();
+            },
+          },
+        ]
+      );
+    } else {
+      if (onClose) onClose();
     }
-  }, [onClose]);
+  }, [hasUnsavedChanges, onClose]);
+
+  // Handle swipe threshold reached - check changes and decide action
+  const handleSwipeThreshold = useCallback(() => {
+    if (hasUnsavedChanges()) {
+      // Bounce back first, then show alert
+      translateY.value = withSpring(0, { damping: 20, stiffness: 300 });
+      // Show confirmation after bounce back starts
+      setTimeout(() => {
+        Alert.alert(
+          'Discard Changes?',
+          'You have unsaved changes. Are you sure you want to close without saving?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Discard',
+              style: 'destructive',
+              onPress: () => {
+                if (onClose) onClose();
+              },
+            },
+          ]
+        );
+      }, 100);
+    } else {
+      // No changes - animate out and close
+      translateY.value = withTiming(SCREEN_HEIGHT, { duration: 200 }, () => {
+        runOnJS(onClose)();
+      });
+    }
+  }, [hasUnsavedChanges, translateY, onClose]);
+
+  // Swipe-to-dismiss gesture
+  const swipeGesture = Gesture.Pan()
+    .onUpdate(event => {
+      // Only allow downward swipe
+      if (event.translationY > 0) {
+        translateY.value = event.translationY;
+      }
+    })
+    .onEnd(event => {
+      if (event.translationY > SWIPE_THRESHOLD) {
+        // Swipe threshold reached - check for unsaved changes
+        runOnJS(handleSwipeThreshold)();
+      } else {
+        // Bounce back
+        translateY.value = withSpring(0, { damping: 20, stiffness: 300 });
+      }
+    });
+
+  // Animated style for swipe-to-dismiss
+  const swipeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const handleCancel = useCallback(() => {
+    attemptClose();
+  }, [attemptClose]);
 
   // Render empty preview placeholder
   const renderEmptyPreview = () => (
@@ -530,61 +622,65 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     <Modal visible={visible} animationType="fade" transparent onRequestClose={handleCancel}>
       <GestureHandlerRootView style={styles.gestureRoot}>
         <View style={styles.overlay}>
-          <View style={styles.container}>
-            {/* Header with Cancel button */}
-            <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCancel}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="close" size={28} color={colors.text.primary} />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>Edit Highlights</Text>
-              <View style={styles.headerSpacer} />
-            </View>
-
-            {/* Preview Area */}
-            <View style={styles.previewContainer}>
-              {selectedPhotos.length === 0 ? renderEmptyPreview() : renderPreviewPhoto()}
-            </View>
-
-            {/* Thumbnail Strip */}
-            <View style={styles.thumbnailSection}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.thumbnailScroll}
-                contentContainerStyle={styles.thumbnailContainer}
-              >
-                {Array.from({ length: MAX_SELECTS }).map((_, index) => renderThumbnailSlot(index))}
-              </ScrollView>
-            </View>
-
-            {/* Spacer to push button to bottom */}
-            <View style={styles.spacer} />
-
-            {/* Button Area / Delete Bar (swaps when dragging) */}
-            <View
-              style={[styles.buttonContainer, { paddingBottom: insets.bottom + 24 }]}
-              onLayout={handleDeleteZoneLayout}
-            >
-              {isDragging ? (
-                <DeleteBar isVisible={isDragging} isHovering={isOverDeleteZone} />
-              ) : (
+          <GestureDetector gesture={swipeGesture}>
+            <Animated.View style={[styles.container, swipeAnimatedStyle]}>
+              {/* Header with Cancel button */}
+              <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
                 <TouchableOpacity
-                  style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-                  onPress={handleSave}
-                  activeOpacity={0.8}
-                  disabled={saving}
+                  style={styles.cancelButton}
+                  onPress={handleCancel}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.saveButtonText}>
-                    {saving ? 'Saving...' : 'Save highlights'}
-                  </Text>
+                  <Ionicons name="close" size={28} color={colors.text.primary} />
                 </TouchableOpacity>
-              )}
-            </View>
-          </View>
+                <Text style={styles.headerTitle}>Edit Highlights</Text>
+                <View style={styles.headerSpacer} />
+              </View>
+
+              {/* Preview Area */}
+              <View style={styles.previewContainer}>
+                {selectedPhotos.length === 0 ? renderEmptyPreview() : renderPreviewPhoto()}
+              </View>
+
+              {/* Thumbnail Strip */}
+              <View style={styles.thumbnailSection}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.thumbnailScroll}
+                  contentContainerStyle={styles.thumbnailContainer}
+                >
+                  {Array.from({ length: MAX_SELECTS }).map((_, index) =>
+                    renderThumbnailSlot(index)
+                  )}
+                </ScrollView>
+              </View>
+
+              {/* Spacer to push button to bottom */}
+              <View style={styles.spacer} />
+
+              {/* Button Area / Delete Bar (swaps when dragging) */}
+              <View
+                style={[styles.buttonContainer, { paddingBottom: insets.bottom + 24 }]}
+                onLayout={handleDeleteZoneLayout}
+              >
+                {isDragging ? (
+                  <DeleteBar isVisible={isDragging} isHovering={isOverDeleteZone} />
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+                    onPress={handleSave}
+                    activeOpacity={0.8}
+                    disabled={saving}
+                  >
+                    <Text style={styles.saveButtonText}>
+                      {saving ? 'Saving...' : 'Save highlights'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </Animated.View>
+          </GestureDetector>
         </View>
       </GestureHandlerRootView>
     </Modal>
