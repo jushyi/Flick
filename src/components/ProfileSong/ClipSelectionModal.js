@@ -4,6 +4,7 @@
  * Modal for previewing a song before saving to profile.
  * Features:
  * - Song info display (album art, title, artist)
+ * - Waveform scrubber with tap-to-seek
  * - Preview button to hear 30-second clip
  * - Confirm button to save selection
  */
@@ -17,19 +18,27 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
-import { playPreview, stopPreview } from '../../services/audioPlayer';
+import { playPreview, stopPreview, seekTo } from '../../services/audioPlayer';
+import WaveformScrubber from './WaveformScrubber';
 import logger from '../../utils/logger';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const WAVEFORM_WIDTH = SCREEN_WIDTH - 64;
+const PREVIEW_DURATION = 30; // iTunes preview duration
 
 const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
   const insets = useSafeAreaInsets();
 
   // State
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackPosition, setPlaybackPosition] = useState(0); // Current position in seconds
 
   // Animation for content slide-up
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -54,12 +63,14 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
   useEffect(() => {
     if (visible && song) {
       setIsPlaying(false);
+      setPlaybackPosition(0);
     }
 
     // Cleanup on close
     if (!visible) {
       stopPreview();
       setIsPlaying(false);
+      setPlaybackPosition(0);
     }
   }, [visible, song]);
 
@@ -68,15 +79,32 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
     if (isPlaying) {
       await stopPreview();
       setIsPlaying(false);
+      setPlaybackPosition(0);
     } else {
       setIsPlaying(true);
       await playPreview(song.previewUrl, {
+        onProgress: progress => {
+          // progress is 0-1, convert to seconds
+          setPlaybackPosition(progress * PREVIEW_DURATION);
+        },
         onComplete: () => {
           setIsPlaying(false);
+          setPlaybackPosition(0);
         },
       });
     }
   }, [isPlaying, song]);
+
+  // Handle tap-to-seek on waveform
+  const handleSeek = useCallback(
+    async seconds => {
+      if (isPlaying) {
+        await seekTo(seconds);
+        setPlaybackPosition(seconds);
+      }
+    },
+    [isPlaying]
+  );
 
   // Handle confirm - passes song as-is (audioPlayer defaults to full 30s)
   const handleConfirm = useCallback(async () => {
@@ -111,56 +139,76 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
         <Animated.View
           style={[styles.contentContainer, { transform: [{ translateY: slideAnim }] }]}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={colors.text.primary} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Preview Clip</Text>
-            <View style={styles.headerSpacer} />
-          </View>
-
-          {/* Song Info */}
-          <View style={styles.songInfo}>
-            <Image source={{ uri: song.albumArt }} style={styles.albumArt} contentFit="cover" />
-            <View style={styles.songDetails}>
-              <Text style={styles.songTitle} numberOfLines={2}>
-                {song.title}
-              </Text>
-              <Text style={styles.songArtist} numberOfLines={1}>
-                {song.artist}
-              </Text>
+          <GestureHandlerRootView style={styles.gestureContainer}>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={colors.text.primary} />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Preview Clip</Text>
+              <View style={styles.headerSpacer} />
             </View>
-          </View>
 
-          {/* Instructions */}
-          <Text style={styles.instructions}>
-            Preview the 30-second clip that will play on your profile
-          </Text>
+            {/* Song Info */}
+            <View style={styles.songInfo}>
+              <Image source={{ uri: song.albumArt }} style={styles.albumArt} contentFit="cover" />
+              <View style={styles.songDetails}>
+                <Text style={styles.songTitle} numberOfLines={2}>
+                  {song.title}
+                </Text>
+                <Text style={styles.songArtist} numberOfLines={1}>
+                  {song.artist}
+                </Text>
+              </View>
+            </View>
 
-          {/* Action Buttons */}
-          <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 16 }]}>
-            {/* Preview Button */}
-            <TouchableOpacity
-              style={[styles.button, styles.previewButton, isPlaying && styles.previewButtonActive]}
-              onPress={handlePreview}
-            >
-              <Ionicons
-                name={isPlaying ? 'pause' : 'play'}
-                size={20}
-                color={isPlaying ? colors.brand.purple : colors.text.primary}
+            {/* Waveform Scrubber */}
+            <View style={styles.waveformSection}>
+              <WaveformScrubber
+                songId={song.id}
+                duration={PREVIEW_DURATION}
+                currentTime={playbackPosition}
+                onSeek={handleSeek}
+                containerWidth={WAVEFORM_WIDTH}
               />
-              <Text style={[styles.buttonText, isPlaying && styles.buttonTextActive]}>
-                {isPlaying ? 'Stop' : 'Preview'}
-              </Text>
-            </TouchableOpacity>
+            </View>
 
-            {/* Confirm Button */}
-            <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={handleConfirm}>
-              <Ionicons name="checkmark" size={20} color={colors.text.primary} />
-              <Text style={styles.buttonText}>Use This Song</Text>
-            </TouchableOpacity>
-          </View>
+            {/* Instructions */}
+            <Text style={styles.instructions}>
+              Tap the waveform to skip to any part of the 30-second preview
+            </Text>
+
+            {/* Action Buttons */}
+            <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 16 }]}>
+              {/* Preview Button */}
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.previewButton,
+                  isPlaying && styles.previewButtonActive,
+                ]}
+                onPress={handlePreview}
+              >
+                <Ionicons
+                  name={isPlaying ? 'pause' : 'play'}
+                  size={20}
+                  color={isPlaying ? colors.brand.purple : colors.text.primary}
+                />
+                <Text style={[styles.buttonText, isPlaying && styles.buttonTextActive]}>
+                  {isPlaying ? 'Stop' : 'Preview'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Confirm Button */}
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleConfirm}
+              >
+                <Ionicons name="checkmark" size={20} color={colors.text.primary} />
+                <Text style={styles.buttonText}>Use This Song</Text>
+              </TouchableOpacity>
+            </View>
+          </GestureHandlerRootView>
         </Animated.View>
       </View>
     </Modal>
@@ -181,6 +229,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 8,
+  },
+  gestureContainer: {
+    flex: 0,
   },
   header: {
     flexDirection: 'row',
@@ -226,6 +277,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.secondary,
     marginTop: 4,
+  },
+  waveformSection: {
+    marginHorizontal: 32,
+    marginTop: 16,
   },
   instructions: {
     fontSize: 13,
