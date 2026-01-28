@@ -13,7 +13,7 @@ import {
   UIManager,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -278,6 +278,9 @@ const DeleteBar = ({ isVisible, isHovering }) => {
  * @param {function} onClose - Callback when overlay is closed without saving
  */
 const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
+  // Get safe area insets for explicit positioning (fixes first-render issue with SafeAreaView edges)
+  const insets = useSafeAreaInsets();
+
   // Convert URI array to photo objects for state management
   const initializePhotos = useCallback(uris => {
     return uris.map((uri, index) => ({
@@ -527,9 +530,9 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     <Modal visible={visible} animationType="fade" transparent onRequestClose={handleCancel}>
       <GestureHandlerRootView style={styles.gestureRoot}>
         <View style={styles.overlay}>
-          <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+          <View style={styles.container}>
             {/* Header with Cancel button */}
-            <View style={styles.header}>
+            <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={handleCancel}
@@ -562,7 +565,10 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
             <View style={styles.spacer} />
 
             {/* Button Area / Delete Bar (swaps when dragging) */}
-            <View style={styles.buttonContainer} onLayout={handleDeleteZoneLayout}>
+            <View
+              style={[styles.buttonContainer, { paddingBottom: insets.bottom + 24 }]}
+              onLayout={handleDeleteZoneLayout}
+            >
               {isDragging ? (
                 <DeleteBar isVisible={isDragging} isHovering={isOverDeleteZone} />
               ) : (
@@ -578,7 +584,7 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
                 </TouchableOpacity>
               )}
             </View>
-          </SafeAreaView>
+          </View>
         </View>
       </GestureHandlerRootView>
     </Modal>
@@ -601,7 +607,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
-    paddingTop: 8,
     paddingBottom: 16,
   },
   cancelButton: {
@@ -697,7 +702,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     paddingHorizontal: SCREEN_PADDING,
-    paddingBottom: 24,
     paddingTop: 0,
   },
   saveButton: {
