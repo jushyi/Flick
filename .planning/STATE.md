@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 7 — Profile Song Scaffold
+**Current focus:** Phase 8 — User Albums Display
 
 ## Current Position
 
-Phase: 7 of 17 (Profile Song Scaffold)
-Plan: 5 of 5 in current phase (+ 2 FIX plans)
+Phase: 7.2 of 14 (Song Modal Stacking Fix)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-28 — Completed 07-05-PLAN.md
+Last activity: 2026-01-28 — Completed 07.2-01-PLAN.md
 
-Progress: ████████░░ 82%
+Progress: █████████░ 85%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 23 (including 4 FIX plans)
+- Total plans completed: 24 (including 4 FIX plans)
 - Average duration: 13 min
-- Total execution time: 288 min
+- Total execution time: 300 min
 
 **By Phase:**
 
@@ -37,11 +37,12 @@ Progress: ████████░░ 82%
 | 5     | 2     | 26 min | 13 min   |
 | 6     | 3     | 38 min | 13 min   |
 | 7     | 7     | 68 min | 10 min   |
+| 7.2   | 1     | 12 min | 12 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 3 min, 20 min, 10 min, 16 min, 8 min
-- Trend: Consistent pace, Phase 7 complete with profile song integration
+- Last 5 plans: 20 min, 10 min, 16 min, 8 min, 12 min
+- Trend: Consistent pace, Phase 7.2 complete with modal stacking fix
 
 ## Accumulated Context
 
@@ -114,6 +115,9 @@ Recent decisions affecting current work:
 | 7     | playsInSilentModeIOS: true for audio                  | Profile songs play through speakers regardless of silent switch        |
 | 7     | Alert.alert for edit menu pattern                     | Consistent with other menus in app, simple and reliable                |
 | 7     | useFocusEffect for navigation audio cleanup           | Component detects parent screen blur without prop drilling             |
+| 7.2   | Screen + Modal overlay pattern                        | iOS doesn't support stacked modals; screen + modal on top works        |
+| 7.2   | Cancel always stays on search                         | User can pick different song after previewing current clip             |
+| 7.2   | Combined Edit Song menu option                        | Single option opens clip first, cancel goes to search for different    |
 
 ### Deferred Issues
 
@@ -156,9 +160,13 @@ None yet.
   - Convert SongSearchModal to screen for stacked navigation
   - ClipSelectionModal overlays SongSearchScreen instead of replacing it
   - Connected flow where user sees both modal layers
+- Phase 7.3 inserted after Phase 7: Simplify Clip Selection Modal (URGENT)
+  - Remove waveform scrubber since iTunes clips are only 30 seconds
+  - Replace with simple preview + submit buttons
+  - Simplifies UX by removing unnecessary clip trimming
 
 ## Session Continuity
 
 Last session: 2026-01-28
-Stopped at: Completed 07-05-PLAN.md - Full profile song integration (Phase 7 complete)
+Stopped at: Completed 07.2-01-PLAN.md - Song modal stacking fix (Phase 7.2 complete)
 Resume file: None
