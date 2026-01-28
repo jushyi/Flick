@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
-import { SelectsBanner } from '../components';
+import { SelectsBanner, FullscreenSelectsViewer, SelectsEditOverlay } from '../components';
 import logger from '../utils/logger';
 
 const HEADER_HEIGHT = 64;
@@ -13,8 +14,12 @@ const PROFILE_PHOTO_SIZE = 120;
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, updateUserProfile, updateUserDocumentNative } = useAuth();
   const insets = useSafeAreaInsets();
+
+  // Modal states
+  const [showFullscreen, setShowFullscreen] = useState(false);
+  const [showEditOverlay, setShowEditOverlay] = useState(false);
 
   // Get route params for viewing other users' profiles
   const { userId, username: routeUsername } = route.params || {};
@@ -51,7 +56,37 @@ const ProfileScreen = () => {
 
   const handleSelectsTap = () => {
     logger.info('ProfileScreen: SelectsBanner tapped', { isOwnProfile });
-    // TODO: Plan 06-02 - Navigate to fullscreen (other profile) or edit mode (own profile)
+    if (isOwnProfile) {
+      // Own profile: open edit overlay
+      setShowEditOverlay(true);
+    } else {
+      // Other profile: open fullscreen viewer (only if they have selects)
+      if (profileData?.selects?.length > 0) {
+        setShowFullscreen(true);
+      }
+    }
+  };
+
+  // Handle saving selects from edit overlay
+  const handleSaveSelects = async newSelects => {
+    logger.info('ProfileScreen: Saving selects', { count: newSelects.length });
+    try {
+      const result = await updateUserDocumentNative(user.uid, { selects: newSelects });
+      if (result.success) {
+        // Update local profile state
+        updateUserProfile({
+          ...userProfile,
+          selects: newSelects,
+        });
+        logger.info('ProfileScreen: Selects saved successfully');
+        setShowEditOverlay(false);
+      } else {
+        Alert.alert('Error', 'Could not save your highlights. Please try again.');
+      }
+    } catch (error) {
+      logger.error('ProfileScreen: Failed to save selects', { error: error.message });
+      Alert.alert('Error', error.message || 'An error occurred');
+    }
   };
 
   // Handle loading state
@@ -148,6 +183,22 @@ const ProfileScreen = () => {
           <Text style={styles.placeholderText}>Monthly Albums</Text>
         </View>
       </ScrollView>
+
+      {/* Fullscreen viewer for other users' selects */}
+      <FullscreenSelectsViewer
+        visible={showFullscreen}
+        selects={profileData?.selects || []}
+        initialIndex={0}
+        onClose={() => setShowFullscreen(false)}
+      />
+
+      {/* Edit overlay for own profile selects */}
+      <SelectsEditOverlay
+        visible={showEditOverlay}
+        selects={userProfile?.selects || []}
+        onSave={handleSaveSelects}
+        onClose={() => setShowEditOverlay(false)}
+      />
     </View>
   );
 };
