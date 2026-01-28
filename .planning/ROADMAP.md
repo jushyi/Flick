@@ -167,11 +167,12 @@ Plans:
 **Goal**: Fix modal navigation so clip selection overlays song search instead of replacing it (UAT-007)
 **Depends on**: Phase 7
 **Research**: Unlikely (React Navigation screen conversion)
-**Plans**: 1/1 complete
+**Plans**: 1/1 complete (+ 1 FIX)
 
 Plans:
 
 - [x] 07.2-01: SongSearchScreen + ClipSelectionModal overlay
+- [x] 07.2-01-FIX: UAT fixes (onboarding navigation + modal animation)
 
 **Details:**
 
@@ -344,7 +345,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 5. Profile Screen Layout         | 2/2            | Complete    | 2026-01-27 |
 | 6. Selects Banner                | 2/2            | Complete    | 2026-01-28 |
 | 7. Profile Song Scaffold         | 5/5 + 2 FIX    | Complete    | 2026-01-28 |
-| 7.2 Song Modal Stacking Fix      | 1/1            | Complete    | 2026-01-28 |
+| 7.2 Song Modal Stacking Fix      | 1/1 + 1 FIX    | Complete    | 2026-01-28 |
 | 7.3 Simplify Clip Selection      | 0/?            | Not started | -          |
 | 8. User Albums Display           | 0/?            | Not started | -          |
 | 9. Monthly Albums                | 0/?            | Not started | -          |
