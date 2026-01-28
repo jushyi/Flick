@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
+import { SelectsBanner } from '../components';
 import logger from '../utils/logger';
 
 const HEADER_HEIGHT = 64;
@@ -30,6 +31,7 @@ const ProfileScreen = () => {
         displayName: routeUsername || 'User',
         photoURL: null,
         bio: null,
+        selects: [], // Placeholder - will be fetched from Firestore
       };
 
   const handleBackPress = () => {
@@ -45,6 +47,11 @@ const ProfileScreen = () => {
   const handleSettingsPress = () => {
     logger.info('ProfileScreen: Settings button pressed');
     navigation.navigate('Settings');
+  };
+
+  const handleSelectsTap = () => {
+    logger.info('ProfileScreen: SelectsBanner tapped', { isOwnProfile });
+    // TODO: Plan 06-02 - Navigate to fullscreen (other profile) or edit mode (own profile)
   };
 
   // Handle loading state
@@ -94,9 +101,15 @@ const ProfileScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* 1. Selects Banner Placeholder */}
-        <View style={[styles.selectsBanner, { marginTop: insets.top + HEADER_HEIGHT + 16 }]}>
-          <Text style={styles.selectsBannerText}>Selects</Text>
+        {/* 1. Selects Banner */}
+        <View
+          style={[styles.selectsBannerContainer, { marginTop: insets.top + HEADER_HEIGHT + 16 }]}
+        >
+          <SelectsBanner
+            selects={profileData?.selects || []}
+            isOwnProfile={isOwnProfile}
+            onTap={handleSelectsTap}
+          />
         </View>
 
         {/* 2. Profile Section - Photo overlaps onto Selects, info cards below */}
@@ -183,21 +196,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 120, // Tab bar clearance
   },
-  // Selects Banner
-  selectsBanner: {
+  // Selects Banner Container
+  selectsBannerContainer: {
     marginHorizontal: 16,
-    height: 250,
-    backgroundColor: colors.background.secondary,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.border.subtle,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  selectsBannerText: {
-    color: colors.text.secondary,
-    fontSize: 16,
   },
   // Profile Section
   profileSection: {
