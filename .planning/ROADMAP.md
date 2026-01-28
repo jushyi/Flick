@@ -133,13 +133,13 @@ Plans:
 
 **Goal**: Implement user-selected photos quick slideshow at top of profile
 **Depends on**: Phase 5
-**Research**: Likely (carousel/slideshow implementation)
-**Research topics**: React Native carousel libraries, auto-play slideshow patterns, gesture handling
-**Plans**: TBD
+**Research**: Unlikely (using existing gesture-handler and reanimated)
+**Plans**: 1/2 complete
 
 Plans:
 
-- [ ] 06-01: TBD during planning
+- [x] 06-01: SelectsBanner component with auto-play, hold-to-pause, tap callback
+- [ ] 06-02: Fullscreen view + edit mode navigation
 
 ### Phase 7: Profile Song Scaffold
 
@@ -260,7 +260,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 4. Profile Creation Onboarding   | 4/4            | Complete    | 2026-01-27 |
 | 4.1 Drag-Reorder Visual Feedback | 1/1            | Complete    | 2026-01-27 |
 | 5. Profile Screen Layout         | 2/2            | Complete    | 2026-01-27 |
-| 6. Selects Banner                | 0/?            | Not started | -          |
+| 6. Selects Banner                | 1/2            | In progress | -          |
 | 7. Profile Song Scaffold         | 0/?            | Not started | -          |
 | 8. User Albums Display           | 0/?            | Not started | -          |
 | 9. Monthly Albums                | 0/?            | Not started | -          |
