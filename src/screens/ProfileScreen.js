@@ -28,7 +28,6 @@ const ProfileScreen = () => {
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [showEditOverlay, setShowEditOverlay] = useState(false);
   const [showSongSearch, setShowSongSearch] = useState(false);
-  const [showSongMenu, setShowSongMenu] = useState(false);
   const [selectedSongForClip, setSelectedSongForClip] = useState(null);
 
   // Get route params for viewing other users' profiles
@@ -111,8 +110,49 @@ const ProfileScreen = () => {
 
   // Handle song card long press (edit menu)
   const handleSongLongPress = () => {
-    logger.info('ProfileScreen: Song long press');
-    setShowSongMenu(true);
+    if (!profileData?.profileSong) return;
+
+    logger.info('ProfileScreen: Song long press, showing menu');
+    Alert.alert(profileData.profileSong.title, profileData.profileSong.artist, [
+      {
+        text: 'Change Song',
+        onPress: () => {
+          setShowSongSearch(true);
+        },
+      },
+      {
+        text: 'Edit Clip',
+        onPress: () => {
+          setSelectedSongForClip(profileData.profileSong);
+        },
+      },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: handleRemoveSong,
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    ]);
+  };
+
+  // Remove song from profile
+  const handleRemoveSong = async () => {
+    logger.info('ProfileScreen: Removing profile song');
+    try {
+      const result = await updateUserDocumentNative(user.uid, { profileSong: null });
+      if (result.success) {
+        updateUserProfile({ ...userProfile, profileSong: null });
+        logger.info('ProfileScreen: Profile song removed');
+      } else {
+        Alert.alert('Error', 'Could not remove song. Please try again.');
+      }
+    } catch (error) {
+      logger.error('ProfileScreen: Failed to remove song', { error: error.message });
+      Alert.alert('Error', error.message || 'An error occurred');
+    }
   };
 
   // Handle song selection from search modal - closes search, opens clip selection
