@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '50%',
     marginLeft: -PROFILE_PHOTO_SIZE / 2,
-    top: -PROFILE_PHOTO_SIZE / 2 - 16, // Overlap onto Selects banner
+    top: -PROFILE_PHOTO_SIZE / 2, // Centered on gap between Selects and info card
     zIndex: 5,
   },
   profilePhoto: {
