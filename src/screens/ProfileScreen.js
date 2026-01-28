@@ -114,20 +114,11 @@ const ProfileScreen = () => {
     logger.info('ProfileScreen: Song long press, showing menu');
     Alert.alert(profileData.profileSong.title, profileData.profileSong.artist, [
       {
-        text: 'Change Song',
+        text: 'Edit Song',
         onPress: () => {
+          // Opens clip selection first, cancel goes to search for different song
           navigation.navigate('SongSearch', {
-            onSongSelected: songWithClip => {
-              handleSaveSong(songWithClip);
-            },
-          });
-        },
-      },
-      {
-        text: 'Edit Clip',
-        onPress: () => {
-          navigation.navigate('SongSearch', {
-            editSong: profileData.profileSong, // Pre-select for clip editing
+            editSong: profileData.profileSong,
             onSongSelected: songWithClip => {
               handleSaveSong(songWithClip);
             },

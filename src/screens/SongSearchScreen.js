@@ -151,17 +151,13 @@ const SongSearchScreen = () => {
     [onSongSelected, navigation]
   );
 
-  // Handle clip selection cancel
+  // Handle clip selection cancel - always stay on search to allow picking different song
   const handleClipCancel = useCallback(async () => {
-    logger.info('SongSearchScreen: Clip selection cancelled');
+    logger.info('SongSearchScreen: Clip selection cancelled, staying on search');
     await stopPreview();
     setSelectedSongForClip(null);
-    // If we came from edit flow (editSong was set) and have no search results, go back
-    if (editSong && results.length === 0) {
-      navigation.goBack();
-    }
-    // Otherwise stay on search screen
-  }, [editSong, results.length, navigation]);
+    // Always stay on search screen so user can pick a different song
+  }, []);
 
   // Handle close button
   const handleClose = useCallback(async () => {
