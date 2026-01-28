@@ -13,7 +13,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { Button, Input, StepIndicator } from '../components';
+import {
+  Button,
+  Input,
+  StepIndicator,
+  SongSearchModal,
+  ClipSelectionModal,
+  ProfileSongCard,
+} from '../components';
 import { useAuth } from '../context/AuthContext';
 import { uploadProfilePhoto } from '../services/firebase/storageService';
 import {
@@ -47,6 +54,8 @@ const ProfileSetupScreen = ({ navigation }) => {
   const [photoUri, setPhotoUri] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [selectedSong, setSelectedSong] = useState(null);
+  const [showSongSearch, setShowSongSearch] = useState(false);
+  const [selectedSongForClip, setSelectedSongForClip] = useState(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
 
@@ -174,11 +183,23 @@ const ProfileSetupScreen = ({ navigation }) => {
   };
 
   const handleSongPress = () => {
-    Alert.alert(
-      'Profile Song',
-      "Music provider integration coming soon! You'll be able to search and select your favorite song.",
-      [{ text: 'OK' }]
-    );
+    setShowSongSearch(true);
+  };
+
+  const handleSongSearchSelect = song => {
+    setShowSongSearch(false);
+    setSelectedSongForClip(song);
+  };
+
+  const handleClipConfirm = songWithClip => {
+    setSelectedSongForClip(null);
+    setSelectedSong(songWithClip);
+    logger.info('ProfileSetupScreen: Song selected', { songId: songWithClip.id });
+  };
+
+  const handleClipCancel = () => {
+    setSelectedSongForClip(null);
+    setShowSongSearch(true); // Re-open search so user can pick different song
   };
 
   const validate = () => {
@@ -376,32 +397,23 @@ const ProfileSetupScreen = ({ navigation }) => {
 
               <View style={styles.songSection}>
                 <Text style={styles.songLabel}>Profile Song (Optional)</Text>
-                <TouchableOpacity style={styles.songContainer} onPress={handleSongPress}>
-                  {selectedSong ? (
-                    <View style={styles.selectedSong}>
-                      <Ionicons
-                        name="musical-notes"
-                        size={24}
-                        color={colors.text.primary}
-                        style={styles.songIcon}
-                      />
-                      <View style={styles.songInfo}>
-                        <Text style={styles.songTitle}>{selectedSong.title}</Text>
-                        <Text style={styles.songArtist}>{selectedSong.artist}</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.placeholderSong}>
-                      <Ionicons
-                        name="musical-notes-outline"
-                        size={24}
-                        color={colors.text.secondary}
-                        style={styles.songIcon}
-                      />
-                      <Text style={styles.placeholderSongText}>Add a Song</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+                <ProfileSongCard
+                  song={selectedSong}
+                  isOwnProfile={true}
+                  onPress={handleSongPress}
+                  onLongPress={() => {
+                    if (selectedSong) {
+                      Alert.alert('Remove Song', 'Remove this song from your profile?', [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Remove',
+                          style: 'destructive',
+                          onPress: () => setSelectedSong(null),
+                        },
+                      ]);
+                    }
+                  }}
+                />
               </View>
 
               <Button
@@ -415,6 +427,19 @@ const ProfileSetupScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <SongSearchModal
+        visible={showSongSearch}
+        onClose={() => setShowSongSearch(false)}
+        onSelectSong={handleSongSearchSelect}
+      />
+
+      <ClipSelectionModal
+        visible={selectedSongForClip !== null}
+        song={selectedSongForClip}
+        onConfirm={handleClipConfirm}
+        onCancel={handleClipCancel}
+      />
     </SafeAreaView>
   );
 };
@@ -493,43 +518,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.secondary,
     marginBottom: 8,
-  },
-  songContainer: {
-    backgroundColor: colors.background.tertiary,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.border.subtle,
-    borderStyle: 'dashed',
-    padding: 16,
-  },
-  placeholderSong: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  songIcon: {
-    marginRight: 12,
-  },
-  placeholderSongText: {
-    fontSize: 16,
-    color: colors.text.secondary,
-  },
-  selectedSong: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  songInfo: {
-    flex: 1,
-  },
-  songTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-  },
-  songArtist: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    marginTop: 2,
   },
   stepIndicator: {
     marginBottom: 16,
