@@ -110,25 +110,21 @@ const ProfileScreen = () => {
   const runNewAlbumAnimation = useCallback(
     albumId => {
       // Wait for albums to be fetched, then run animation sequence
-      // Timing: scroll to albums (0ms), scroll FlatList (75ms), highlight (150ms), clear (750ms)
+      // Timing: scroll + highlight immediately, clear at 200ms
 
-      // Step 1: Scroll main ScrollView to show albums bar (approximately 450-500px)
+      // Step 1: Scroll main ScrollView to show albums bar
       scrollViewRef.current?.scrollTo({ y: 450, animated: true });
 
-      // Step 2: After 75ms, scroll the album FlatList to the new album
-      setTimeout(() => {
-        albumBarRef.current?.scrollToAlbum(albumId);
-      }, 75);
+      // Step 2: Scroll the album FlatList to the new album
+      albumBarRef.current?.scrollToAlbum(albumId);
 
-      // Step 3: After 150ms total, set highlightedAlbumId to trigger scale bounce
-      setTimeout(() => {
-        setHighlightedAlbumId(albumId);
-      }, 150);
+      // Step 3: Immediately trigger scale bounce
+      setHighlightedAlbumId(albumId);
 
-      // Step 4: After 750ms total, clear the highlight
+      // Step 4: After 200ms, clear the highlight
       setTimeout(() => {
         setHighlightedAlbumId(null);
-      }, 750);
+      }, 200);
     },
     [scrollViewRef, albumBarRef]
   );
