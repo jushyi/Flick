@@ -13,7 +13,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
-import { getAlbum, getPhotosByIds } from '../services/firebase';
+import {
+  getAlbum,
+  getPhotosByIds,
+  removePhotoFromAlbum,
+  setCoverPhoto,
+} from '../services/firebase';
+import { AlbumPhotoViewer } from '../components';
 import logger from '../utils/logger';
 
 const HEADER_HEIGHT = 64;
@@ -32,51 +38,56 @@ const AlbumGridScreen = () => {
   const [album, setAlbum] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
 
-  // Fetch album and photos on mount
-  useEffect(() => {
-    const fetchAlbumData = async () => {
-      if (!albumId) {
-        logger.error('AlbumGridScreen: No albumId provided');
+  // Fetch album and photos function
+  const fetchAlbumData = async () => {
+    if (!albumId) {
+      logger.error('AlbumGridScreen: No albumId provided');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch album document
+      const albumResult = await getAlbum(albumId);
+      if (!albumResult.success) {
+        logger.error('AlbumGridScreen: Failed to fetch album', { error: albumResult.error });
         setLoading(false);
         return;
       }
 
-      try {
-        // Fetch album document
-        const albumResult = await getAlbum(albumId);
-        if (!albumResult.success) {
-          logger.error('AlbumGridScreen: Failed to fetch album', { error: albumResult.error });
-          setLoading(false);
-          return;
-        }
+      setAlbum(albumResult.album);
+      logger.info('AlbumGridScreen: Fetched album', {
+        albumId,
+        name: albumResult.album.name,
+        photoCount: albumResult.album.photoIds?.length,
+      });
 
-        setAlbum(albumResult.album);
-        logger.info('AlbumGridScreen: Fetched album', {
-          albumId,
-          name: albumResult.album.name,
-          photoCount: albumResult.album.photoIds?.length,
-        });
-
-        // Fetch photo documents for photoIds
-        if (albumResult.album.photoIds?.length > 0) {
-          const photosResult = await getPhotosByIds(albumResult.album.photoIds);
-          if (photosResult.success) {
-            // Maintain album's photoIds order (newest first)
-            const orderedPhotos = albumResult.album.photoIds
-              .map(id => photosResult.photos.find(p => p.id === id))
-              .filter(p => p !== undefined);
-            setPhotos(orderedPhotos);
-            logger.info('AlbumGridScreen: Fetched photos', { count: orderedPhotos.length });
-          }
+      // Fetch photo documents for photoIds
+      if (albumResult.album.photoIds?.length > 0) {
+        const photosResult = await getPhotosByIds(albumResult.album.photoIds);
+        if (photosResult.success) {
+          // Maintain album's photoIds order (newest first)
+          const orderedPhotos = albumResult.album.photoIds
+            .map(id => photosResult.photos.find(p => p.id === id))
+            .filter(p => p !== undefined);
+          setPhotos(orderedPhotos);
+          logger.info('AlbumGridScreen: Fetched photos', { count: orderedPhotos.length });
         }
-      } catch (error) {
-        logger.error('AlbumGridScreen: Error fetching data', { error: error.message });
-      } finally {
-        setLoading(false);
+      } else {
+        setPhotos([]);
       }
-    };
+    } catch (error) {
+      logger.error('AlbumGridScreen: Error fetching data', { error: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Fetch album and photos on mount
+  useEffect(() => {
     fetchAlbumData();
   }, [albumId]);
 
@@ -119,7 +130,35 @@ const AlbumGridScreen = () => {
 
   const handlePhotoPress = (photo, index) => {
     logger.info('AlbumGridScreen: Photo pressed', { photoId: photo.id, index });
-    // TODO: 08-05 - Navigate to AlbumPhotoViewer
+    setViewerInitialIndex(index);
+    setViewerVisible(true);
+  };
+
+  // Handle remove photo from album
+  const handleRemovePhoto = async photoId => {
+    logger.info('AlbumGridScreen: Removing photo from album', { albumId, photoId });
+    const result = await removePhotoFromAlbum(albumId, photoId);
+    if (result.success) {
+      // Refresh album data
+      fetchAlbumData();
+    } else if (result.warning) {
+      // Last photo - album will be empty, need to delete album instead
+      Alert.alert('Cannot Remove', result.warning);
+    } else {
+      Alert.alert('Error', result.error || 'Could not remove photo');
+    }
+  };
+
+  // Handle set cover photo
+  const handleSetCover = async photoId => {
+    logger.info('AlbumGridScreen: Setting cover photo', { albumId, photoId });
+    const result = await setCoverPhoto(albumId, photoId);
+    if (result.success) {
+      fetchAlbumData(); // Refresh to update cover
+      Alert.alert('Success', 'Album cover updated');
+    } else {
+      Alert.alert('Error', result.error || 'Could not set cover photo');
+    }
   };
 
   const handleAddPhotosPress = () => {
@@ -223,6 +262,18 @@ const AlbumGridScreen = () => {
         contentContainerStyle={[styles.gridContent, { paddingTop: insets.top + HEADER_HEIGHT }]}
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={styles.columnWrapper}
+      />
+
+      {/* Photo Viewer Modal */}
+      <AlbumPhotoViewer
+        visible={viewerVisible}
+        photos={photos}
+        initialIndex={viewerInitialIndex}
+        albumName={album?.name}
+        isOwnProfile={isOwnProfile}
+        onClose={() => setViewerVisible(false)}
+        onRemovePhoto={handleRemovePhoto}
+        onSetCover={handleSetCover}
       />
     </View>
   );

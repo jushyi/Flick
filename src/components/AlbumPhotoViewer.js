@@ -56,11 +56,18 @@ const AlbumPhotoViewer = ({
     }
   }, [visible, initialIndex]);
 
-  // Handle scroll end to update current index
-  const handleMomentumScrollEnd = useCallback(event => {
-    const newIndex = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    setCurrentIndex(newIndex);
-  }, []);
+  // Handle scroll to update position indicator in real-time
+  const handleScroll = useCallback(
+    event => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const newIndex = Math.round(offsetX / SCREEN_WIDTH);
+      // Only update if index changed and is valid
+      if (newIndex !== currentIndex && newIndex >= 0 && newIndex < photos.length) {
+        setCurrentIndex(newIndex);
+      }
+    },
+    [currentIndex, photos.length]
+  );
 
   // Navigate to specific index
   const goToIndex = useCallback(
@@ -143,7 +150,7 @@ const AlbumPhotoViewer = ({
   const renderPhoto = useCallback(
     ({ item }) => (
       <TouchableOpacity activeOpacity={1} onPress={handleImagePress} style={styles.photoContainer}>
-        <Image source={{ uri: item.imageURL }} style={styles.photo} resizeMode="contain" />
+        <Image source={{ uri: item.imageURL }} style={styles.photo} resizeMode="cover" />
       </TouchableOpacity>
     ),
     [handleImagePress]
@@ -166,7 +173,31 @@ const AlbumPhotoViewer = ({
   return (
     <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={onClose}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Photo viewer - fills entire screen */}
+        <FlatList
+          ref={flatListRef}
+          data={photos}
+          renderItem={renderPhoto}
+          keyExtractor={item => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          getItemLayout={getItemLayout}
+          initialScrollIndex={initialIndex}
+          onScrollToIndexFailed={info => {
+            // Fallback if scrollToIndex fails
+            setTimeout(() => {
+              flatListRef.current?.scrollToIndex({
+                index: info.index,
+                animated: false,
+              });
+            }, 100);
+          }}
+        />
+
+        {/* Header overlay */}
         <View style={[styles.header, { paddingTop: insets.top }]}>
           {/* Close button */}
           <TouchableOpacity onPress={onClose} style={styles.headerButton} activeOpacity={0.7}>
@@ -193,29 +224,6 @@ const AlbumPhotoViewer = ({
             <View style={styles.headerButton} />
           )}
         </View>
-
-        {/* Photo viewer */}
-        <FlatList
-          ref={flatListRef}
-          data={photos}
-          renderItem={renderPhoto}
-          keyExtractor={item => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={handleMomentumScrollEnd}
-          getItemLayout={getItemLayout}
-          initialScrollIndex={initialIndex}
-          onScrollToIndexFailed={info => {
-            // Fallback if scrollToIndex fails
-            setTimeout(() => {
-              flatListRef.current?.scrollToIndex({
-                index: info.index,
-                animated: false,
-              });
-            }, 100);
-          }}
-        />
       </View>
     </Modal>
   );
