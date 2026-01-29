@@ -9,6 +9,7 @@ import {
   FlatList,
   Dimensions,
   Alert,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,7 +41,9 @@ const AlbumPhotoViewer = ({
 }) => {
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [toastVisible, setToastVisible] = useState(false);
   const flatListRef = useRef(null);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
 
   // Reset to initial index when modal opens
   React.useEffect(() => {
@@ -98,6 +101,24 @@ const AlbumPhotoViewer = ({
     [currentIndex, goToIndex]
   );
 
+  // Show toast notification
+  const showToast = useCallback(() => {
+    setToastVisible(true);
+    Animated.sequence([
+      Animated.timing(toastOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1600),
+      Animated.timing(toastOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToastVisible(false));
+  }, [toastOpacity]);
+
   // Handle 3-dot menu press
   const handleMenuPress = useCallback(() => {
     const currentPhoto = photos[currentIndex];
@@ -109,6 +130,7 @@ const AlbumPhotoViewer = ({
         onPress: () => {
           if (onSetCover) {
             onSetCover(currentPhoto.id);
+            showToast();
           }
         },
       },
@@ -144,7 +166,7 @@ const AlbumPhotoViewer = ({
       },
       { text: 'Cancel', style: 'cancel' },
     ]);
-  }, [photos, currentIndex, albumName, onSetCover, onRemovePhoto, onClose, goToIndex]);
+  }, [photos, currentIndex, albumName, onSetCover, onRemovePhoto, onClose, goToIndex, showToast]);
 
   // Render individual photo
   const renderPhoto = useCallback(
@@ -224,6 +246,16 @@ const AlbumPhotoViewer = ({
             <View style={styles.headerButton} />
           )}
         </View>
+
+        {/* Toast notification */}
+        {toastVisible && (
+          <Animated.View
+            style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 20 }]}
+          >
+            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+            <Text style={styles.toastText}>Cover set</Text>
+          </Animated.View>
+        )}
       </View>
     </Modal>
   );
@@ -273,6 +305,24 @@ const styles = StyleSheet.create({
   photo: {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
+  },
+  toast: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#333333',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
