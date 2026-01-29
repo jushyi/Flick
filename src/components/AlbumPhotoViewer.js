@@ -23,6 +23,7 @@ import ReanimatedModule, {
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import { deleteAlbum } from '../services/firebase';
+import DropdownMenu from './DropdownMenu';
 
 const ReanimatedView = ReanimatedModule.View;
 
@@ -56,6 +57,7 @@ const AlbumPhotoViewer = ({
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [toastVisible, setToastVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const flatListRef = useRef(null);
   const thumbnailListRef = useRef(null);
   const toastOpacity = useRef(new Animated.Value(0)).current;
@@ -192,79 +194,76 @@ const AlbumPhotoViewer = ({
     ]).start(() => setToastVisible(false));
   }, [toastOpacity]);
 
-  // Handle 3-dot menu press
-  const handleMenuPress = useCallback(() => {
+  // Handle set cover from menu
+  const handleSetCover = useCallback(() => {
     const currentPhoto = photos[currentIndex];
     if (!currentPhoto) return;
 
-    Alert.alert(albumName, 'Photo Options', [
-      {
-        text: 'Set as Album Cover',
-        onPress: () => {
-          if (onSetCover) {
-            onSetCover(currentPhoto.id);
-            showToast();
-          }
-        },
-      },
-      {
-        text: 'Remove from Album',
-        style: 'destructive',
-        onPress: () => {
-          // Check if this is the last photo - prompt to delete album instead
-          if (photos.length === 1) {
-            Alert.alert('Delete Album?', 'Removing the last photo will delete this album.', [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Delete Album',
-                style: 'destructive',
-                onPress: async () => {
-                  if (albumId) {
-                    await deleteAlbum(albumId);
-                    onClose?.();
-                    navigation.navigate('ProfileMain');
-                  }
-                },
-              },
-            ]);
-            return;
-          }
+    if (onSetCover) {
+      onSetCover(currentPhoto.id);
+      showToast();
+    }
+  }, [photos, currentIndex, onSetCover, showToast]);
 
-          // Show confirmation for non-last photo
-          Alert.alert(
-            'Remove Photo?',
-            'This photo will be removed from the album but will still be in your library.',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Remove',
-                style: 'destructive',
-                onPress: () => {
-                  if (onRemovePhoto) {
-                    onRemovePhoto(currentPhoto.id);
-                    // Close viewer and return to album grid
-                    onClose?.();
-                  }
-                },
-              },
-            ]
-          );
+  // Handle remove photo from menu
+  const handleRemovePhoto = useCallback(() => {
+    const currentPhoto = photos[currentIndex];
+    if (!currentPhoto) return;
+
+    // Check if this is the last photo - prompt to delete album instead
+    if (photos.length === 1) {
+      Alert.alert('Delete Album?', 'Removing the last photo will delete this album.', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Album',
+          style: 'destructive',
+          onPress: async () => {
+            if (albumId) {
+              await deleteAlbum(albumId);
+              onClose?.();
+              navigation.navigate('ProfileMain');
+            }
+          },
         },
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }, [
-    photos,
-    currentIndex,
-    albumId,
-    albumName,
-    navigation,
-    onSetCover,
-    onRemovePhoto,
-    onClose,
-    goToIndex,
-    showToast,
-  ]);
+      ]);
+      return;
+    }
+
+    // Show confirmation for non-last photo
+    Alert.alert(
+      'Remove Photo?',
+      'This photo will be removed from the album but will still be in your library.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            if (onRemovePhoto) {
+              onRemovePhoto(currentPhoto.id);
+              // Close viewer and return to album grid
+              onClose?.();
+            }
+          },
+        },
+      ]
+    );
+  }, [photos, currentIndex, albumId, navigation, onRemovePhoto, onClose]);
+
+  // Menu options for DropdownMenu
+  const menuOptions = [
+    {
+      label: 'Set as Album Cover',
+      icon: 'image-outline',
+      onPress: handleSetCover,
+    },
+    {
+      label: 'Remove from Album',
+      icon: 'trash-outline',
+      onPress: handleRemovePhoto,
+      destructive: true,
+    },
+  ];
 
   // Render individual photo
   const renderPhoto = useCallback(
@@ -363,7 +362,7 @@ const AlbumPhotoViewer = ({
               {/* 3-dot menu (only for own profile) */}
               {isOwnProfile ? (
                 <TouchableOpacity
-                  onPress={handleMenuPress}
+                  onPress={() => setMenuVisible(true)}
                   style={styles.headerButton}
                   activeOpacity={0.7}
                 >
@@ -400,6 +399,13 @@ const AlbumPhotoViewer = ({
                 <Text style={styles.toastText}>Cover set</Text>
               </Animated.View>
             )}
+
+            {/* Dropdown menu for photo options */}
+            <DropdownMenu
+              visible={menuVisible}
+              onClose={() => setMenuVisible(false)}
+              options={menuOptions}
+            />
           </ReanimatedView>
         </GestureDetector>
       </GestureHandlerRootView>
