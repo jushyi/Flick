@@ -27,3 +27,5 @@ export { default as AddToAlbumSheet } from './AddToAlbumSheet';
 export { default as DropdownMenu } from './DropdownMenu';
 export { default as RenameAlbumModal } from './RenameAlbumModal';
 export { default as MonthlyAlbumCard } from './MonthlyAlbumCard';
+export { default as YearSection } from './YearSection';
+export { default as MonthlyAlbumsSection } from './MonthlyAlbumsSection';
