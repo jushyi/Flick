@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { AlbumCard, AddAlbumCard } from './AlbumCard';
 import { colors } from '../constants/colors';
 
@@ -25,15 +25,14 @@ const AlbumBar = ({
     return null;
   }
 
-  // Empty state for own profile - show add card with helper text
+  // Empty state for own profile - full-width tappable prompt
   if (isOwnProfile && albums.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.header}>Albums</Text>
-        <View style={styles.emptyContainer}>
-          <AddAlbumCard onPress={onAddPress} />
-          <Text style={styles.emptyText}>Create your first album</Text>
-        </View>
+        <TouchableOpacity style={styles.emptyPrompt} onPress={onAddPress} activeOpacity={0.8}>
+          <Text style={styles.emptyPromptText}>Tap here to make your first album</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -94,15 +93,20 @@ const styles = StyleSheet.create({
   separator: {
     width: 12,
   },
-  emptyContainer: {
+  emptyPrompt: {
+    marginHorizontal: 16,
+    height: 100,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#555',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
   },
-  emptyText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: colors.text.secondary,
-    textAlign: 'center',
+  emptyPromptText: {
+    fontSize: 15,
+    color: '#888',
   },
 });
 
