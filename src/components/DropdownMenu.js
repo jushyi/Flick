@@ -8,10 +8,22 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 /**
  * DropdownMenu - Reusable dropdown menu component to replace Alert.alert menus
  *
+ * Design Note: Uses centered positioning (iOS action sheet pattern)
+ * ----------------------------------------------------------------
+ * The menu appears centered on screen with a semi-transparent backdrop.
+ * This is a standard iOS pattern for contextual actions and provides:
+ * - Consistent placement regardless of trigger location
+ * - Full-width tap target for dismissal
+ * - Clear visual hierarchy with backdrop
+ *
+ * Alternative: Anchored positioning would require callers to measure their
+ * trigger elements and pass coordinates. This adds complexity but provides
+ * more contextual feel. See anchorPosition prop (currently unused).
+ *
  * @param {boolean} visible - Whether the menu is visible
  * @param {function} onClose - Callback to close the menu
  * @param {Array} options - Array of menu options with { label, icon?, onPress, destructive? }
- * @param {Object} anchorPosition - Optional position { x, y } for anchored positioning
+ * @param {Object} anchorPosition - Reserved for future anchored positioning { x, y }
  */
 const DropdownMenu = ({ visible, onClose, options = [], anchorPosition }) => {
   if (!visible) return null;
