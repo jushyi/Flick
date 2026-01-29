@@ -11,6 +11,7 @@ import {
   SelectsEditOverlay,
   ProfileSongCard,
   AlbumBar,
+  DropdownMenu,
 } from '../components';
 import { getUserAlbums, getPhotosByIds, deleteAlbum } from '../services/firebase';
 import logger from '../utils/logger';
@@ -31,6 +32,10 @@ const ProfileScreen = () => {
   // Albums state
   const [albums, setAlbums] = useState([]);
   const [coverPhotoUrls, setCoverPhotoUrls] = useState({});
+
+  // Album menu state
+  const [albumMenuVisible, setAlbumMenuVisible] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
 
   // Get route params for viewing other users' profiles
   const { userId, username: routeUsername } = route.params || {};
@@ -252,27 +257,30 @@ const ProfileScreen = () => {
 
   const handleAlbumLongPress = album => {
     logger.info('ProfileScreen: Album long press', { albumId: album.id, name: album.name });
-
-    Alert.alert(album.name, '', [
-      {
-        text: 'Edit Album',
-        onPress: () =>
-          navigation.navigate('AlbumGrid', {
-            albumId: album.id,
-            isOwnProfile: true,
-          }),
-      },
-      {
-        text: 'Delete Album',
-        style: 'destructive',
-        onPress: () => confirmDeleteAlbum(album),
-      },
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-    ]);
+    setSelectedAlbum(album);
+    setAlbumMenuVisible(true);
   };
+
+  // Album menu options
+  const albumMenuOptions = selectedAlbum
+    ? [
+        {
+          label: 'Edit Album',
+          icon: 'pencil-outline',
+          onPress: () =>
+            navigation.navigate('AlbumGrid', {
+              albumId: selectedAlbum.id,
+              isOwnProfile: true,
+            }),
+        },
+        {
+          label: 'Delete Album',
+          icon: 'trash-outline',
+          onPress: () => confirmDeleteAlbum(selectedAlbum),
+          destructive: true,
+        },
+      ]
+    : [];
 
   const handleAddAlbumPress = () => {
     logger.info('ProfileScreen: Add album pressed');
@@ -399,6 +407,13 @@ const ProfileScreen = () => {
         selects={userProfile?.selects || []}
         onSave={handleSaveSelects}
         onClose={() => setShowEditOverlay(false)}
+      />
+
+      {/* Album long-press dropdown menu */}
+      <DropdownMenu
+        visible={albumMenuVisible}
+        onClose={() => setAlbumMenuVisible(false)}
+        options={albumMenuOptions}
       />
     </View>
   );
