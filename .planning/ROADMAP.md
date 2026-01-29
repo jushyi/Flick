@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7.2: Song Modal Stacking Fix** - Convert SongSearchModal to screen for stacked navigation (INSERTED)
 - [x] **Phase 7.3: Simplify Clip Selection Modal** - Simplified waveform with drag-to-seek, no range handles (INSERTED)
 - [x] **Phase 8: User Albums Display** - Horizontal scroll album bar
-- [ ] **Phase 8.1: Grid Header Safe Area Fix** - Fix grid views showing photos behind status bar when scrolling (INSERTED)
+- [x] **Phase 8.1: Grid Header Safe Area Fix** - Fix grid views showing photos behind status bar when scrolling (INSERTED)
 - [ ] **Phase 9: Monthly Albums** - Auto-generated albums by month
 - [ ] **Phase 10: Empty Feed State Change UI Change** - UI improvements for empty feed state transitions
 - [ ] **Phase 11: Feed Reaction Emoji Enhancements** - Randomized emoji selection per photo, custom emoji picker with "Add your own"
@@ -37,6 +37,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 13: Split Activity into Notifications & Friends** - Separate activity page into two screens: heart icon → notifications, new friend icon on header left → friends list
 - [ ] **Phase 14: Profile Field Character Limits** - Enforce max lengths: display name (16), username (16), bio (160)
 - [ ] **Phase 15: Friends Screen & Other Profiles** - Friends screen refactor and wiring up the ability to view other peoples profile
+- [ ] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
 
 ## Phase Details
 
@@ -232,11 +233,11 @@ Plans:
 **Goal**: Fix album grid view and photo picker showing photos behind status bar/notch when scrolling up - header should have black background extending to safe area
 **Depends on**: Phase 8
 **Research**: Unlikely (safe area styling fix)
-**Plans**: TBD
+**Plans**: 1/1 complete
 
 Plans:
 
-- [ ] 08.1-01: TBD (run /gsd:plan-phase 8.1 to break down)
+- [x] 08.1-01: Safe area background for AlbumGridScreen + header background for AlbumPhotoPickerScreen
 
 **Details:**
 
@@ -361,10 +362,30 @@ Plans:
 
 [To be added during planning]
 
+### Phase 16: Color Constants Standardization
+
+**Goal**: Standardize all colors throughout every screen, modal, and component to use constants from a centralized theme system. Eliminate all hardcoded color values to enable future theme/palette changes.
+**Depends on**: Phase 15
+**Research**: Unlikely (internal refactoring)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 16-01: TBD (run /gsd:plan-phase 16 to break down)
+
+**Details:**
+
+1. Audit all screens, modals, and components for hardcoded color values
+2. Establish single source of truth for color constants (background, text, accents, etc.)
+3. One consistent background color throughout (black for dark theme)
+4. Replace all hardcoded hex/rgb values with constant references
+5. Create documentation and guidelines for adding new screens/modals
+6. Ensure architecture supports future color palette/theme switching
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 9 → 10 → 11 → 12 → 13 → 14 → 15
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -380,7 +401,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 7.2 Song Modal Stacking Fix      | 1/1 + 1 FIX    | Complete    | 2026-01-28 |
 | 7.3 Simplify Clip Selection      | 1/1            | Complete    | 2026-01-29 |
 | 8. User Albums Display           | 6/6 + 7 FIX    | Complete    | 2026-01-29 |
-| 8.1 Grid Header Safe Area Fix    | 0/?            | Not started | -          |
+| 8.1 Grid Header Safe Area Fix    | 1/1            | Complete    | 2026-01-29 |
 | 9. Monthly Albums                | 0/?            | Not started | -          |
 | 10. Empty Feed State UI Change   | 0/?            | Not started | -          |
 | 11. Feed Reaction Emoji          | 0/?            | Not started | -          |
@@ -388,3 +409,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 13. Split Activity/Friends       | 0/?            | Not started | -          |
 | 14. Profile Field Limits         | 0/?            | Not started | -          |
 | 15. Friends Screen & Profiles    | 0/?            | Not started | -          |
+| 16. Color Constants              | 0/?            | Not started | -          |
