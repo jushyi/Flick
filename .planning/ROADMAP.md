@@ -30,6 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7.3: Simplify Clip Selection Modal** - Simplified waveform with drag-to-seek, no range handles (INSERTED)
 - [x] **Phase 8: User Albums Display** - Horizontal scroll album bar
 - [x] **Phase 8.1: Grid Header Safe Area Fix** - Fix grid views showing photos behind status bar when scrolling (INSERTED)
+- [ ] **Phase 8.2: Album Creation Animation** - Visual feedback when new album is created (INSERTED)
 - [ ] **Phase 9: Monthly Albums** - Auto-generated albums by month
 - [ ] **Phase 10: Empty Feed State Change UI Change** - UI improvements for empty feed state transitions
 - [ ] **Phase 11: Feed Reaction Emoji Enhancements** - Randomized emoji selection per photo, custom emoji picker with "Add your own"
@@ -246,6 +247,25 @@ Plans:
 3. Photos visible behind the notch/iOS status bar indicators
 4. Header background should extend to cover the entire safe area with black
 
+### Phase 8.2: Album Creation Animation (INSERTED)
+
+**Goal**: Add visual feedback animation when a new album is created - scroll album bar to new album and highlight it so user sees confirmation of their action
+**Depends on**: Phase 8.1
+**Research**: Unlikely (React Native animation patterns)
+**Plans**: 0/?
+
+Plans:
+
+- [ ] 08.2-01: TBD (run /gsd:plan-phase 8.2 to break down)
+
+**Details:**
+
+1. Currently after album creation, user is navigated to profile screen with no indication of success
+2. New album appears in album bar but user must scroll/look to find it
+3. Add animation to scroll album bar to the new album position
+4. Highlight/pulse the new album card to draw attention
+5. Provides clear visual confirmation that album was created successfully
+
 ### Phase 9: Monthly Albums
 
 **Goal**: Auto-generate and display monthly albums grouping all user photos by month
@@ -385,7 +405,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -402,6 +422,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 7.3 Simplify Clip Selection      | 1/1            | Complete    | 2026-01-29 |
 | 8. User Albums Display           | 6/6 + 7 FIX    | Complete    | 2026-01-29 |
 | 8.1 Grid Header Safe Area Fix    | 1/1            | Complete    | 2026-01-29 |
+| 8.2 Album Creation Animation     | 0/?            | Not started | -          |
 | 9. Monthly Albums                | 0/?            | Not started | -          |
 | 10. Empty Feed State UI Change   | 0/?            | Not started | -          |
 | 11. Feed Reaction Emoji          | 0/?            | Not started | -          |

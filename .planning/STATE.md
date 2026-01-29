@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 8.1 — Grid Header Safe Area Fix
+**Current focus:** Phase 8.2 — Album Creation Animation
 
 ## Current Position
 
-Phase: 8.1 of 16 (Grid Header Safe Area Fix)
-Plan: 1 of 1 complete
-Status: Phase complete
-Last activity: 2026-01-29 — Completed 08.1-01-PLAN.md
+Phase: 8.2 of 16 (Album Creation Animation)
+Plan: 0 of ? (not planned yet)
+Status: Not started
+Last activity: 2026-01-29 — Inserted Phase 8.2
 
 Progress: █████████░ 95%
 
@@ -201,6 +201,10 @@ None yet.
   - One consistent background color (black for dark theme)
   - Documentation for adding new screens/modals
   - Enable future theme/palette switching
+- Phase 8.2 inserted after Phase 8.1: Album Creation Animation (URGENT)
+  - No visual feedback when new album is created
+  - User navigated to profile but must look for the new album
+  - Add scroll-to and highlight animation for new album card
 
 ## Session Continuity
 
