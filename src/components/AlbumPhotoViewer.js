@@ -48,7 +48,13 @@ const AlbumPhotoViewer = ({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [toastVisible, setToastVisible] = useState(false);
   const flatListRef = useRef(null);
+  const thumbnailListRef = useRef(null);
   const toastOpacity = useRef(new Animated.Value(0)).current;
+
+  // Thumbnail dimensions (50x67 for 3:4 ratio)
+  const THUMBNAIL_WIDTH = 50;
+  const THUMBNAIL_HEIGHT = 67;
+  const THUMBNAIL_MARGIN = 4;
 
   // Reset to initial index when modal opens
   React.useEffect(() => {
@@ -60,9 +66,25 @@ const AlbumPhotoViewer = ({
           index: initialIndex,
           animated: false,
         });
+        thumbnailListRef.current?.scrollToIndex({
+          index: initialIndex,
+          animated: false,
+          viewPosition: 0.5,
+        });
       }, 50);
     }
   }, [visible, initialIndex]);
+
+  // Auto-scroll thumbnail bar when currentIndex changes
+  React.useEffect(() => {
+    if (visible && photos.length > 0) {
+      thumbnailListRef.current?.scrollToIndex({
+        index: currentIndex,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    }
+  }, [currentIndex, visible, photos.length]);
 
   // Handle scroll to update position indicator in real-time
   const handleScroll = useCallback(
@@ -221,6 +243,33 @@ const AlbumPhotoViewer = ({
     []
   );
 
+  // Get thumbnail layout for optimization
+  const getThumbnailLayout = useCallback(
+    (_, index) => ({
+      length: THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2,
+      offset: (THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2) * index,
+      index,
+    }),
+    [THUMBNAIL_WIDTH, THUMBNAIL_MARGIN]
+  );
+
+  // Render thumbnail item
+  const renderThumbnail = useCallback(
+    ({ item, index }) => (
+      <TouchableOpacity
+        onPress={() => goToIndex(index)}
+        activeOpacity={0.8}
+        style={styles.thumbnailWrapper}
+      >
+        <Image
+          source={{ uri: item.imageURL }}
+          style={[styles.thumbnail, index === currentIndex && styles.thumbnailActive]}
+        />
+      </TouchableOpacity>
+    ),
+    [currentIndex, goToIndex]
+  );
+
   if (!visible || photos.length === 0) {
     return null;
   }
@@ -280,10 +329,27 @@ const AlbumPhotoViewer = ({
           )}
         </View>
 
+        {/* Thumbnail navigation bar */}
+        <View style={[styles.thumbnailBar, { paddingBottom: insets.bottom + 8 }]}>
+          <FlatList
+            ref={thumbnailListRef}
+            data={photos}
+            renderItem={renderThumbnail}
+            keyExtractor={item => `thumb-${item.id}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            getItemLayout={getThumbnailLayout}
+            contentContainerStyle={styles.thumbnailContent}
+            onScrollToIndexFailed={() => {
+              // Silently handle scroll failure
+            }}
+          />
+        </View>
+
         {/* Toast notification */}
         {toastVisible && (
           <Animated.View
-            style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 20 }]}
+            style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 100 }]}
           >
             <Ionicons name="checkmark-circle" size={20} color="#4CD964" />
             <Text style={styles.toastText}>Cover set</Text>
@@ -355,6 +421,29 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
+  },
+  thumbnailBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingTop: 8,
+  },
+  thumbnailContent: {
+    paddingHorizontal: 8,
+  },
+  thumbnailWrapper: {
+    marginHorizontal: 4,
+  },
+  thumbnail: {
+    width: 50,
+    height: 67,
+    borderRadius: 4,
+  },
+  thumbnailActive: {
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
 
