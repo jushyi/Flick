@@ -12,6 +12,7 @@ import {
   ProfileSongCard,
   AlbumBar,
   DropdownMenu,
+  MonthlyAlbumsSection,
 } from '../components';
 import { getUserAlbums, getPhotosByIds, deleteAlbum } from '../services/firebase';
 import logger from '../utils/logger';
@@ -348,6 +349,15 @@ const ProfileScreen = () => {
     navigation.navigate('CreateAlbum');
   };
 
+  // Handle monthly album month press
+  const handleMonthPress = month => {
+    logger.info('ProfileScreen: Monthly album pressed', { month });
+    navigation.navigate('MonthlyAlbumGrid', {
+      month,
+      userId: isOwnProfile ? user?.uid : userId,
+    });
+  };
+
   // Handle loading state
   if (!userProfile) {
     return (
@@ -452,9 +462,11 @@ const ProfileScreen = () => {
           onAddPress={handleAddAlbumPress}
         />
 
-        <View style={[styles.featurePlaceholder, styles.featurePlaceholderLarge]}>
-          <Text style={styles.placeholderText}>Monthly Albums</Text>
-        </View>
+        {/* 6. Monthly Albums */}
+        <MonthlyAlbumsSection
+          userId={isOwnProfile ? user?.uid : userId}
+          onMonthPress={handleMonthPress}
+        />
       </ScrollView>
 
       {/* Fullscreen viewer for other users' selects */}
@@ -587,24 +599,6 @@ const styles = StyleSheet.create({
   songContainer: {
     marginHorizontal: 16,
     marginTop: 16,
-  },
-  // Feature Placeholders
-  featurePlaceholder: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 20,
-    height: 60,
-    backgroundColor: colors.background.tertiary,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  featurePlaceholderLarge: {
-    height: 80,
-  },
-  placeholderText: {
-    color: colors.text.secondary,
-    fontSize: 16,
   },
 });
 
