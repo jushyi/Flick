@@ -252,7 +252,7 @@ const AlbumPhotoViewer = ({
           <Animated.View
             style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 20 }]}
           >
-            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+            <Ionicons name="checkmark-circle" size={20} color="#4CD964" />
             <Text style={styles.toastText}>Cover set</Text>
           </Animated.View>
         )}
