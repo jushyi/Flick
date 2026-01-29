@@ -30,6 +30,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import DeleteAccountScreen from '../screens/DeleteAccountScreen';
+import CreateAlbumScreen from '../screens/CreateAlbumScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -90,6 +91,7 @@ const ProfileStackNavigator = () => {
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+      <Stack.Screen name="CreateAlbum" component={CreateAlbumScreen} />
     </Stack.Navigator>
   );
 };

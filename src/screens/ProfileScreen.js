@@ -210,7 +210,7 @@ const ProfileScreen = () => {
 
   const handleAddAlbumPress = () => {
     logger.info('ProfileScreen: Add album pressed');
-    // TODO: Navigate to album create screen (08-03)
+    navigation.navigate('CreateAlbum');
   };
 
   // Handle loading state
