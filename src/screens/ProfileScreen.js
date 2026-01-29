@@ -12,7 +12,7 @@ import {
   ProfileSongCard,
   AlbumBar,
 } from '../components';
-import { getUserAlbums } from '../services/firebase';
+import { getUserAlbums, getPhotosByIds } from '../services/firebase';
 import logger from '../utils/logger';
 
 const HEADER_HEIGHT = 64;
@@ -30,6 +30,7 @@ const ProfileScreen = () => {
 
   // Albums state
   const [albums, setAlbums] = useState([]);
+  const [coverPhotoUrls, setCoverPhotoUrls] = useState({});
 
   // Get route params for viewing other users' profiles
   const { userId, username: routeUsername } = route.params || {};
@@ -43,6 +44,7 @@ const ProfileScreen = () => {
       if (!isOwnProfile || !user?.uid) {
         // TODO: For other profiles, fetch albums with friendship check
         setAlbums([]);
+        setCoverPhotoUrls({});
         return;
       }
 
@@ -50,9 +52,27 @@ const ProfileScreen = () => {
       if (result.success) {
         setAlbums(result.albums);
         logger.info('ProfileScreen: Fetched albums', { count: result.albums.length });
+
+        // Fetch cover photo URLs
+        const coverPhotoIds = result.albums.map(album => album.coverPhotoId).filter(id => id);
+
+        if (coverPhotoIds.length > 0) {
+          const photosResult = await getPhotosByIds(coverPhotoIds);
+          if (photosResult.success) {
+            const urlMap = {};
+            photosResult.photos.forEach(photo => {
+              urlMap[photo.id] = photo.imageURL;
+            });
+            setCoverPhotoUrls(urlMap);
+            logger.info('ProfileScreen: Fetched cover photo URLs', {
+              count: Object.keys(urlMap).length,
+            });
+          }
+        }
       } else {
         logger.error('ProfileScreen: Failed to fetch albums', { error: result.error });
         setAlbums([]);
+        setCoverPhotoUrls({});
       }
     };
 
@@ -200,7 +220,10 @@ const ProfileScreen = () => {
   // Album handlers
   const handleAlbumPress = album => {
     logger.info('ProfileScreen: Album pressed', { albumId: album.id, name: album.name });
-    // TODO: Navigate to album grid view (08-04)
+    navigation.navigate('AlbumGrid', {
+      albumId: album.id,
+      isOwnProfile: isOwnProfile,
+    });
   };
 
   const handleAlbumLongPress = album => {
@@ -307,7 +330,7 @@ const ProfileScreen = () => {
         {/* 5. Albums Bar */}
         <AlbumBar
           albums={albums}
-          photoUrls={{}}
+          photoUrls={coverPhotoUrls}
           isOwnProfile={isOwnProfile}
           onAlbumPress={handleAlbumPress}
           onAlbumLongPress={handleAlbumLongPress}

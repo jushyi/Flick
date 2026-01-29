@@ -163,14 +163,6 @@ const AlbumGridScreen = () => {
     );
   };
 
-  const renderHeader = () => (
-    <View style={styles.listHeader}>
-      <Text style={styles.photoCount}>
-        {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
-      </Text>
-    </View>
-  );
-
   if (loading) {
     return (
       <View style={styles.container}>
@@ -205,9 +197,14 @@ const AlbumGridScreen = () => {
         <TouchableOpacity onPress={handleBackPress} style={styles.headerButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {album.name}
-        </Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {album.name}
+          </Text>
+          <Text style={styles.photoCount}>
+            {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
+          </Text>
+        </View>
         {isOwnProfile ? (
           <TouchableOpacity onPress={handleMenuPress} style={styles.headerButton}>
             <Ionicons name="ellipsis-horizontal" size={24} color={colors.text.primary} />
@@ -224,7 +221,6 @@ const AlbumGridScreen = () => {
         keyExtractor={(item, index) => (item.type === 'addButton' ? 'add-button' : item.photo.id)}
         numColumns={NUM_COLUMNS}
         contentContainerStyle={[styles.gridContent, { paddingTop: insets.top + HEADER_HEIGHT }]}
-        ListHeaderComponent={renderHeader}
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={styles.columnWrapper}
       />
@@ -267,21 +263,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
+  headerCenter: {
     flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 8,
+  },
+  headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.text.primary,
     textAlign: 'center',
-    marginHorizontal: 8,
-  },
-  listHeader: {
-    paddingHorizontal: 4,
-    paddingVertical: 12,
   },
   photoCount: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.text.secondary,
+    marginTop: 2,
   },
   gridContent: {
     paddingBottom: 100, // Tab bar clearance
