@@ -3,7 +3,7 @@ import { colors } from '../constants/colors';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = SCREEN_WIDTH - 32; // 16px margins on each side
-const CARD_HEIGHT = 180;
+const CARD_HEIGHT = CARD_WIDTH; // Square aspect ratio
 
 /**
  * Convert YYYY-MM format to display name (e.g., "January")

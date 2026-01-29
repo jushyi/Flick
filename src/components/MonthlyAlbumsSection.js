@@ -37,7 +37,7 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }) => {
             year,
             months: result.monthlyData[year].map(monthData => ({
               month: monthData.month,
-              coverPhotoUrl: monthData.coverPhoto?.downloadUrl || null,
+              coverPhotoUrl: monthData.coverPhoto?.imageURL || null,
               photoCount: monthData.photoCount,
             })),
           }));
