@@ -17,7 +17,7 @@ export const AlbumCard = ({ album, coverPhotoUrl, onPress, onLongPress }) => {
     <TouchableOpacity
       style={styles.container}
       onPress={onPress}
-      onLongPress={onLongPress}
+      onLongPress={event => onLongPress?.(event)}
       activeOpacity={0.8}
     >
       <View style={styles.imageContainer}>

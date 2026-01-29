@@ -58,8 +58,10 @@ const AlbumPhotoViewer = ({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [toastVisible, setToastVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState(null);
   const flatListRef = useRef(null);
   const thumbnailListRef = useRef(null);
+  const menuButtonRef = useRef(null);
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
   // Thumbnail dimensions (50x67 for 3:4 ratio)
@@ -250,6 +252,18 @@ const AlbumPhotoViewer = ({
     );
   }, [photos, currentIndex, albumId, navigation, onRemovePhoto, onClose]);
 
+  // Open menu with anchor position
+  const handleOpenMenu = () => {
+    if (menuButtonRef.current) {
+      menuButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setMenuAnchor({ x: pageX, y: pageY, width, height });
+        setMenuVisible(true);
+      });
+    } else {
+      setMenuVisible(true);
+    }
+  };
+
   // Menu options for DropdownMenu
   const menuOptions = [
     {
@@ -362,7 +376,8 @@ const AlbumPhotoViewer = ({
               {/* 3-dot menu (only for own profile) */}
               {isOwnProfile ? (
                 <TouchableOpacity
-                  onPress={() => setMenuVisible(true)}
+                  ref={menuButtonRef}
+                  onPress={handleOpenMenu}
                   style={styles.headerButton}
                   activeOpacity={0.7}
                 >
@@ -405,6 +420,7 @@ const AlbumPhotoViewer = ({
               visible={menuVisible}
               onClose={() => setMenuVisible(false)}
               options={menuOptions}
+              anchorPosition={menuAnchor}
             />
           </ReanimatedView>
         </GestureDetector>

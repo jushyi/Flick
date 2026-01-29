@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -52,6 +52,9 @@ const AlbumGridScreen = () => {
   const [photoMenuVisible, setPhotoMenuVisible] = useState(false);
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [headerMenuAnchor, setHeaderMenuAnchor] = useState(null);
+  const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
+  const headerMenuButtonRef = useRef(null);
 
   // Fetch album and photos function
   const fetchAlbumData = async () => {
@@ -108,6 +111,18 @@ const AlbumGridScreen = () => {
     navigation.goBack();
   };
 
+  // Open header menu with anchor position
+  const handleOpenHeaderMenu = useCallback(() => {
+    if (headerMenuButtonRef.current) {
+      headerMenuButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setHeaderMenuAnchor({ x: pageX, y: pageY, width, height });
+        setHeaderMenuVisible(true);
+      });
+    } else {
+      setHeaderMenuVisible(true);
+    }
+  }, []);
+
   // Rename album handler - save new name
   const handleRenameAlbum = async newName => {
     logger.info('AlbumGridScreen: Renaming album', { albumId, newName });
@@ -163,11 +178,17 @@ const AlbumGridScreen = () => {
   };
 
   // Handle long-press on grid photo to show set cover option
-  const handlePhotoLongPress = photo => {
+  const handlePhotoLongPress = (photo, event) => {
     if (!isOwnProfile) return;
 
     logger.info('AlbumGridScreen: Photo long pressed', { photoId: photo.id });
     setSelectedPhoto(photo);
+
+    // Capture touch position for anchored menu
+    if (event?.nativeEvent) {
+      const { pageX, pageY } = event.nativeEvent;
+      setPhotoMenuAnchor({ x: pageX, y: pageY, width: 0, height: 0 });
+    }
     setPhotoMenuVisible(true);
   };
 
@@ -261,7 +282,7 @@ const AlbumGridScreen = () => {
       <TouchableOpacity
         style={styles.photoCell}
         onPress={() => handlePhotoPress(item.photo, index)}
-        onLongPress={() => handlePhotoLongPress(item.photo)}
+        onLongPress={event => handlePhotoLongPress(item.photo, event)}
         activeOpacity={0.8}
       >
         <Image source={{ uri: item.photo.imageURL }} style={styles.photoImage} />
@@ -312,7 +333,11 @@ const AlbumGridScreen = () => {
           </Text>
         </View>
         {isOwnProfile ? (
-          <TouchableOpacity onPress={() => setHeaderMenuVisible(true)} style={styles.headerButton}>
+          <TouchableOpacity
+            ref={headerMenuButtonRef}
+            onPress={handleOpenHeaderMenu}
+            style={styles.headerButton}
+          >
             <Ionicons name="ellipsis-horizontal" size={24} color={colors.text.primary} />
           </TouchableOpacity>
         ) : (
@@ -359,6 +384,7 @@ const AlbumGridScreen = () => {
         visible={headerMenuVisible}
         onClose={() => setHeaderMenuVisible(false)}
         options={headerMenuOptions}
+        anchorPosition={headerMenuAnchor}
       />
 
       {/* Photo long-press dropdown menu */}
@@ -366,6 +392,7 @@ const AlbumGridScreen = () => {
         visible={photoMenuVisible}
         onClose={() => setPhotoMenuVisible(false)}
         options={photoMenuOptions}
+        anchorPosition={photoMenuAnchor}
       />
 
       {/* Rename album modal */}

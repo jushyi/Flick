@@ -36,6 +36,7 @@ const ProfileScreen = () => {
   // Album menu state
   const [albumMenuVisible, setAlbumMenuVisible] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [albumMenuAnchor, setAlbumMenuAnchor] = useState(null);
 
   // Get route params for viewing other users' profiles
   const { userId, username: routeUsername } = route.params || {};
@@ -255,9 +256,15 @@ const ProfileScreen = () => {
     ]);
   };
 
-  const handleAlbumLongPress = album => {
+  const handleAlbumLongPress = (album, event) => {
     logger.info('ProfileScreen: Album long press', { albumId: album.id, name: album.name });
     setSelectedAlbum(album);
+
+    // Capture touch position for anchored menu
+    if (event?.nativeEvent) {
+      const { pageX, pageY } = event.nativeEvent;
+      setAlbumMenuAnchor({ x: pageX, y: pageY, width: 0, height: 0 });
+    }
     setAlbumMenuVisible(true);
   };
 
@@ -414,6 +421,7 @@ const ProfileScreen = () => {
         visible={albumMenuVisible}
         onClose={() => setAlbumMenuVisible(false)}
         options={albumMenuOptions}
+        anchorPosition={albumMenuAnchor}
       />
     </View>
   );

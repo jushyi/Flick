@@ -54,7 +54,7 @@ const AlbumBar = ({
         album={item}
         coverPhotoUrl={coverUrl}
         onPress={() => onAlbumPress?.(item)}
-        onLongPress={() => onAlbumLongPress?.(item)}
+        onLongPress={event => onAlbumLongPress?.(item, event)}
       />
     );
   };
