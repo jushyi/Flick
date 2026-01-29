@@ -66,16 +66,6 @@
 **Expected:** Navigate back to AlbumGridScreen after removal
 **Actual:** Navigates to ProfileScreen
 
-### UAT-007: Replace Alert.alert menus with dropdown menus
-
-**Discovered:** 2026-01-29
-**Phase/Plan:** 08-04, 08-05, 08-06
-**Severity:** Minor
-**Feature:** 3-dot menus and long-press menus
-**Description:** All menus (3-dot header menu, long-press menus) use Alert.alert popups. User wants dropdown-style menus for better UI/UX.
-**Expected:** Dropdown menus that appear near the tap location
-**Actual:** System Alert.alert popup dialogs
-
 ### UAT-008: Delete last photo should offer album deletion
 
 **Discovered:** 2026-01-29
@@ -85,16 +75,6 @@
 **Description:** When removing the last photo from an album, instead of showing an error dialog, prompt the user with "Deleting last photo will delete album. Are you sure you want to proceed?" with Cancel and Delete Album options.
 **Expected:** Confirmation prompt offering to delete album when removing last photo
 **Actual:** Error dialog saying album must have at least one photo
-
-### UAT-009: Rename album should use half-screen modal
-
-**Discovered:** 2026-01-29
-**Phase/Plan:** 08-06
-**Severity:** Minor
-**Feature:** Album rename
-**Description:** Rename uses Alert.prompt which is a small system dialog. User wants a half-screen modal with proper input field styling.
-**Expected:** Half-screen modal with styled input field for renaming
-**Actual:** Small Alert.prompt system dialog
 
 ### UAT-010: Add thumbnail navigation bar to photo viewer
 
@@ -117,6 +97,26 @@
 **Actual:** Only back button closes viewer
 
 ## Resolved Issues
+
+### UAT-007: Replace Alert.alert menus with dropdown menus
+
+**Discovered:** 2026-01-29
+**Resolved:** 2026-01-29 (08-FIX5)
+**Phase/Plan:** 08-04, 08-05, 08-06
+**Severity:** Minor
+**Feature:** 3-dot menus and long-press menus
+**Description:** All menus (3-dot header menu, long-press menus) use Alert.alert popups. User wants dropdown-style menus for better UI/UX.
+**Resolution:** Created reusable DropdownMenu component and replaced all Alert.alert menus in AlbumPhotoViewer, AlbumGridScreen, and ProfileScreen.
+
+### UAT-009: Rename album should use half-screen modal
+
+**Discovered:** 2026-01-29
+**Resolved:** 2026-01-29 (08-FIX5)
+**Phase/Plan:** 08-06
+**Severity:** Minor
+**Feature:** Album rename
+**Description:** Rename uses Alert.prompt which is a small system dialog. User wants a half-screen modal with proper input field styling.
+**Resolution:** Created RenameAlbumModal component with styled input field, character count, and slide-up animation.
 
 ### UAT-012: Redesign empty album state
 

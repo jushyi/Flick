@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 8 of 15 (User Albums Display)
-Plan: FIX4 complete (6/6 plans + 4 FIX plans)
-Status: Phase complete (FIX plans in progress)
-Last activity: 2026-01-29 — Completed 08-FIX4-PLAN.md
+Plan: FIX5 complete (6/6 plans + 5 FIX plans)
+Status: Phase complete (FIX plans complete)
+Last activity: 2026-01-29 — Completed 08-FIX5-PLAN.md
 
 Progress: █████████░ 95%
 
@@ -20,9 +20,9 @@ Progress: █████████░ 95%
 
 **Velocity:**
 
-- Total plans completed: 34 (including 7 FIX plans)
+- Total plans completed: 35 (including 8 FIX plans)
 - Average duration: 12 min
-- Total execution time: 395 min
+- Total execution time: 410 min
 
 **By Phase:**
 
@@ -43,8 +43,8 @@ Progress: █████████░ 95%
 
 **Recent Trend:**
 
-- Last 5 plans: 19 min, 9 min, 12 min, 15 min, 2 min
-- Trend: Phase 8 FIX plans - photo grid aspect ratio fixes
+- Last 5 plans: 9 min, 12 min, 15 min, 2 min, 15 min
+- Trend: Phase 8 FIX plans complete - menu system overhaul
 
 ## Accumulated Context
 
@@ -141,6 +141,8 @@ Recent decisions affecting current work:
 | 8     | 50x67 thumbnail bar at viewer bottom                  | 3:4 ratio matching album grid, 2px white border for active             |
 | 8     | Swipe dismiss: 150px or 500px/s threshold             | Standard gesture threshold for natural dismissal feel                  |
 | 8     | Last photo removal prompts album deletion             | Cascading deletion prevents orphaned empty albums                      |
+| 8     | DropdownMenu for option menus, not Alert.alert        | Better UX, modal-based dropdown with icons and dark theme              |
+| 8     | RenameAlbumModal for text input, not Alert.prompt     | Half-screen modal with styled input, character count                   |
 
 ### Deferred Issues
 
@@ -192,5 +194,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 08-FIX4-PLAN.md - Photo viewer enhancements (UAT-006, UAT-008, UAT-010, UAT-011)
+Stopped at: Completed 08-FIX5-PLAN.md - Menu system overhaul (UAT-007, UAT-009)
 Resume file: None
