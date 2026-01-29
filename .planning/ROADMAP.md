@@ -207,11 +207,12 @@ Plans:
 **Goal**: Implement horizontal scroll bar for user-created albums (Instagram highlights style)
 **Depends on**: Phase 5
 **Research**: Unlikely (standard horizontal FlatList pattern)
-**Plans**: 1/? in progress
+**Plans**: 2/6 in progress
 
 Plans:
 
 - [x] 08-01: Album data layer (albumService.js with CRUD operations)
+- [x] 08-02: Album display components (AlbumCard, AlbumBar, ProfileScreen integration)
 
 ### Phase 9: Monthly Albums
 
@@ -347,7 +348,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 7. Profile Song Scaffold         | 5/5 + 2 FIX    | Complete    | 2026-01-28 |
 | 7.2 Song Modal Stacking Fix      | 1/1 + 1 FIX    | Complete    | 2026-01-28 |
 | 7.3 Simplify Clip Selection      | 1/1            | Complete    | 2026-01-29 |
-| 8. User Albums Display           | 1/?            | In progress | -          |
+| 8. User Albums Display           | 2/6            | In progress | -          |
 | 9. Monthly Albums                | 0/?            | Not started | -          |
 | 10. Empty Feed State UI Change   | 0/?            | Not started | -          |
 | 11. Feed Reaction Emoji          | 0/?            | Not started | -          |
