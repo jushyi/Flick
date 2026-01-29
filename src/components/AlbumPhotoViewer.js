@@ -13,9 +13,19 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import ReanimatedModule, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedGestureHandler,
+  withSpring,
+  runOnJS,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import { deleteAlbum } from '../services/firebase';
+
+const ReanimatedView = ReanimatedModule.View;
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -55,6 +65,42 @@ const AlbumPhotoViewer = ({
   const THUMBNAIL_WIDTH = 50;
   const THUMBNAIL_HEIGHT = 67;
   const THUMBNAIL_MARGIN = 4;
+
+  // Swipe down to close gesture
+  const translateY = useSharedValue(0);
+
+  const handleDismiss = useCallback(() => {
+    onClose?.();
+  }, [onClose]);
+
+  const gestureHandler = useAnimatedGestureHandler({
+    onActive: event => {
+      // Only track downward movement
+      if (event.translationY > 0) {
+        translateY.value = event.translationY;
+      }
+    },
+    onEnd: event => {
+      // Dismiss if dragged far enough or fast enough
+      if (event.translationY > 150 || event.velocityY > 500) {
+        runOnJS(handleDismiss)();
+      } else {
+        // Spring back to original position
+        translateY.value = withSpring(0, { damping: 20, stiffness: 300 });
+      }
+    },
+  });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  // Reset translateY when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      translateY.value = 0;
+    }
+  }, [visible, translateY]);
 
   // Reset to initial index when modal opens
   React.useEffect(() => {
@@ -276,86 +322,88 @@ const AlbumPhotoViewer = ({
 
   return (
     <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={onClose}>
-      <View style={styles.container}>
-        {/* Photo viewer - fills entire screen */}
-        <FlatList
-          ref={flatListRef}
-          data={photos}
-          renderItem={renderPhoto}
-          keyExtractor={item => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          getItemLayout={getItemLayout}
-          initialScrollIndex={initialIndex}
-          onScrollToIndexFailed={info => {
-            // Fallback if scrollToIndex fails
-            setTimeout(() => {
-              flatListRef.current?.scrollToIndex({
-                index: info.index,
-                animated: false,
-              });
-            }, 100);
-          }}
-        />
-
-        {/* Header overlay */}
-        <View style={[styles.header, { paddingTop: insets.top }]}>
-          {/* Close button */}
-          <TouchableOpacity onPress={onClose} style={styles.headerButton} activeOpacity={0.7}>
-            <Ionicons name="close" size={28} color={colors.text.primary} />
-          </TouchableOpacity>
-
-          {/* Album name + position */}
-          <View style={styles.headerCenter}>
-            <Text style={styles.albumNameText} numberOfLines={1}>
-              {albumName} • {currentIndex + 1} of {photos.length}
-            </Text>
-          </View>
-
-          {/* 3-dot menu (only for own profile) */}
-          {isOwnProfile ? (
-            <TouchableOpacity
-              onPress={handleMenuPress}
-              style={styles.headerButton}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="ellipsis-horizontal" size={24} color={colors.text.primary} />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.headerButton} />
-          )}
-        </View>
-
-        {/* Thumbnail navigation bar */}
-        <View style={[styles.thumbnailBar, { paddingBottom: insets.bottom + 8 }]}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <ReanimatedView style={[styles.container, animatedStyle]}>
+          {/* Photo viewer - fills entire screen */}
           <FlatList
-            ref={thumbnailListRef}
+            ref={flatListRef}
             data={photos}
-            renderItem={renderThumbnail}
-            keyExtractor={item => `thumb-${item.id}`}
+            renderItem={renderPhoto}
+            keyExtractor={item => item.id}
             horizontal
+            pagingEnabled
             showsHorizontalScrollIndicator={false}
-            getItemLayout={getThumbnailLayout}
-            contentContainerStyle={styles.thumbnailContent}
-            onScrollToIndexFailed={() => {
-              // Silently handle scroll failure
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            getItemLayout={getItemLayout}
+            initialScrollIndex={initialIndex}
+            onScrollToIndexFailed={info => {
+              // Fallback if scrollToIndex fails
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: false,
+                });
+              }, 100);
             }}
           />
-        </View>
 
-        {/* Toast notification */}
-        {toastVisible && (
-          <Animated.View
-            style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 100 }]}
-          >
-            <Ionicons name="checkmark-circle" size={20} color="#4CD964" />
-            <Text style={styles.toastText}>Cover set</Text>
-          </Animated.View>
-        )}
-      </View>
+          {/* Header overlay */}
+          <View style={[styles.header, { paddingTop: insets.top }]}>
+            {/* Close button */}
+            <TouchableOpacity onPress={onClose} style={styles.headerButton} activeOpacity={0.7}>
+              <Ionicons name="close" size={28} color={colors.text.primary} />
+            </TouchableOpacity>
+
+            {/* Album name + position */}
+            <View style={styles.headerCenter}>
+              <Text style={styles.albumNameText} numberOfLines={1}>
+                {albumName} • {currentIndex + 1} of {photos.length}
+              </Text>
+            </View>
+
+            {/* 3-dot menu (only for own profile) */}
+            {isOwnProfile ? (
+              <TouchableOpacity
+                onPress={handleMenuPress}
+                style={styles.headerButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="ellipsis-horizontal" size={24} color={colors.text.primary} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.headerButton} />
+            )}
+          </View>
+
+          {/* Thumbnail navigation bar */}
+          <View style={[styles.thumbnailBar, { paddingBottom: insets.bottom + 8 }]}>
+            <FlatList
+              ref={thumbnailListRef}
+              data={photos}
+              renderItem={renderThumbnail}
+              keyExtractor={item => `thumb-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              getItemLayout={getThumbnailLayout}
+              contentContainerStyle={styles.thumbnailContent}
+              onScrollToIndexFailed={() => {
+                // Silently handle scroll failure
+              }}
+            />
+          </View>
+
+          {/* Toast notification */}
+          {toastVisible && (
+            <Animated.View
+              style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 100 }]}
+            >
+              <Ionicons name="checkmark-circle" size={20} color="#4CD964" />
+              <Text style={styles.toastText}>Cover set</Text>
+            </Animated.View>
+          )}
+        </ReanimatedView>
+      </PanGestureHandler>
     </Modal>
   );
 };
