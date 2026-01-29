@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   stackContainer: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    paddingTop: 8,
+    paddingTop: 12,
     overflow: 'visible',
   },
   stackCard: {
@@ -97,12 +97,12 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   stackCardBack: {
-    transform: [{ scale: 0.94 }, { translateY: -4 }],
+    transform: [{ scale: 0.94 }, { translateY: 0 }],
     opacity: 0.35,
     zIndex: 1,
   },
   stackCardMiddle: {
-    transform: [{ scale: 0.97 }, { translateY: -2 }],
+    transform: [{ scale: 0.97 }, { translateY: 6 }],
     opacity: 0.45,
     zIndex: 2,
   },
