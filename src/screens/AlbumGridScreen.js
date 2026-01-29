@@ -29,7 +29,8 @@ const HEADER_HEIGHT = 64;
 const GRID_GAP = 2;
 const NUM_COLUMNS = 3;
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CELL_SIZE = (SCREEN_WIDTH - GRID_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+const CELL_WIDTH = (SCREEN_WIDTH - GRID_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+const CELL_HEIGHT = CELL_WIDTH * (4 / 3); // 3:4 portrait ratio
 
 const AlbumGridScreen = () => {
   const navigation = useNavigation();
@@ -432,8 +433,8 @@ const styles = StyleSheet.create({
     marginBottom: GRID_GAP,
   },
   photoCell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
+    width: CELL_WIDTH,
+    height: CELL_HEIGHT,
   },
   photoImage: {
     width: '100%',
@@ -441,8 +442,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
   },
   addButtonCell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
+    width: CELL_WIDTH,
+    height: CELL_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
