@@ -23,10 +23,13 @@ export const AlbumCard = ({ album, coverPhotoUrl, onPress, onLongPress }) => {
       activeOpacity={0.8}
     >
       <View style={styles.stackContainer}>
-        {/* Back card (furthest) - only show if album has photos */}
+        {/* Furthest card (3rd back) - only show if album has photos */}
+        {hasPhotos && <View style={[styles.stackCard, styles.stackCardFurthest]} />}
+
+        {/* Back card (2nd back) - only show if album has photos */}
         {hasPhotos && <View style={[styles.stackCard, styles.stackCardBack]} />}
 
-        {/* Middle card - only show if album has photos */}
+        {/* Middle card (1st back) - only show if album has photos */}
         {hasPhotos && <View style={[styles.stackCard, styles.stackCardMiddle]} />}
 
         {/* Front card (cover) */}
@@ -70,7 +73,7 @@ const styles = StyleSheet.create({
   stackContainer: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    paddingTop: 8,
+    paddingTop: 6,
   },
   stackCard: {
     position: 'absolute',
@@ -81,15 +84,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  stackCardBack: {
-    transform: [{ scale: 0.92 }, { translateY: -8 }],
-    opacity: 0.7,
+  stackCardFurthest: {
+    transform: [{ scale: 0.9 }, { translateY: -6 }],
+    opacity: 0.5,
     zIndex: 1,
   },
-  stackCardMiddle: {
-    transform: [{ scale: 0.96 }, { translateY: -4 }],
-    opacity: 0.85,
+  stackCardBack: {
+    transform: [{ scale: 0.94 }, { translateY: -4 }],
+    opacity: 0.65,
     zIndex: 2,
+  },
+  stackCardMiddle: {
+    transform: [{ scale: 0.97 }, { translateY: -2 }],
+    opacity: 0.8,
+    zIndex: 3,
   },
   imageContainer: {
     width: CARD_SIZE,
@@ -97,7 +105,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: colors.background.tertiary,
-    zIndex: 3,
+    zIndex: 4,
   },
   coverImage: {
     width: '100%',
