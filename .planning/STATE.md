@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 8 of 15 (User Albums Display)
-Plan: FIX5 complete (6/6 plans + 5 FIX plans)
+Plan: FIX6 complete (6/6 plans + 6 FIX plans)
 Status: Phase complete (FIX plans complete)
-Last activity: 2026-01-29 — Completed 08-FIX5-PLAN.md
+Last activity: 2026-01-29 — Completed 08-FIX6-PLAN.md
 
 Progress: █████████░ 95%
 
@@ -20,9 +20,9 @@ Progress: █████████░ 95%
 
 **Velocity:**
 
-- Total plans completed: 35 (including 8 FIX plans)
+- Total plans completed: 36 (including 9 FIX plans)
 - Average duration: 12 min
-- Total execution time: 410 min
+- Total execution time: 428 min
 
 **By Phase:**
 
@@ -143,6 +143,7 @@ Recent decisions affecting current work:
 | 8     | Last photo removal prompts album deletion             | Cascading deletion prevents orphaned empty albums                      |
 | 8     | DropdownMenu for option menus, not Alert.alert        | Better UX, modal-based dropdown with icons and dark theme              |
 | 8     | RenameAlbumModal for text input, not Alert.prompt     | Half-screen modal with styled input, character count                   |
+| 8     | Anchored positioning for DropdownMenu                 | User preference for contextual feel over centered iOS action sheet     |
 
 ### Deferred Issues
 
@@ -194,5 +195,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 08-FIX5-PLAN.md - Menu system overhaul (UAT-007, UAT-009)
+Stopped at: Completed 08-FIX6-PLAN.md - Modal/menu UX polish (UAT-013, UAT-014, UAT-018)
 Resume file: None
