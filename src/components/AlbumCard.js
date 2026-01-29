@@ -13,6 +13,8 @@ const CARD_SIZE = 150;
  * @param {function} onLongPress - Optional callback for long press (edit menu)
  */
 export const AlbumCard = ({ album, coverPhotoUrl, onPress, onLongPress }) => {
+  const hasPhotos = album.photoIds && album.photoIds.length > 0;
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -20,14 +22,23 @@ export const AlbumCard = ({ album, coverPhotoUrl, onPress, onLongPress }) => {
       onLongPress={event => onLongPress?.(event)}
       activeOpacity={0.8}
     >
-      <View style={styles.imageContainer}>
-        {coverPhotoUrl ? (
-          <Image source={{ uri: coverPhotoUrl }} style={styles.coverImage} />
-        ) : (
-          <View style={styles.placeholder}>
-            <Ionicons name="images-outline" size={40} color={colors.text.secondary} />
-          </View>
-        )}
+      <View style={styles.stackContainer}>
+        {/* Back card (furthest) - only show if album has photos */}
+        {hasPhotos && <View style={[styles.stackCard, styles.stackCardBack]} />}
+
+        {/* Middle card - only show if album has photos */}
+        {hasPhotos && <View style={[styles.stackCard, styles.stackCardMiddle]} />}
+
+        {/* Front card (cover) */}
+        <View style={styles.imageContainer}>
+          {coverPhotoUrl ? (
+            <Image source={{ uri: coverPhotoUrl }} style={styles.coverImage} />
+          ) : (
+            <View style={styles.placeholder}>
+              <Ionicons name="images-outline" size={40} color={colors.text.secondary} />
+            </View>
+          )}
+        </View>
       </View>
       <Text style={styles.title} numberOfLines={2}>
         {album.name}
@@ -56,12 +67,37 @@ const styles = StyleSheet.create({
     width: CARD_SIZE,
     alignItems: 'center',
   },
+  stackContainer: {
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    paddingTop: 8,
+  },
+  stackCard: {
+    position: 'absolute',
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  stackCardBack: {
+    transform: [{ scale: 0.92 }, { translateY: -8 }],
+    opacity: 0.7,
+    zIndex: 1,
+  },
+  stackCardMiddle: {
+    transform: [{ scale: 0.96 }, { translateY: -4 }],
+    opacity: 0.85,
+    zIndex: 2,
+  },
   imageContainer: {
     width: CARD_SIZE,
     height: CARD_SIZE,
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: colors.background.tertiary,
+    zIndex: 3,
   },
   coverImage: {
     width: '100%',
