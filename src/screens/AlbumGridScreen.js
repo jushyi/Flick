@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -42,6 +43,8 @@ const AlbumGridScreen = () => {
   const [loading, setLoading] = useState(true);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
 
   // Fetch album and photos function
   const fetchAlbumData = async () => {
@@ -211,12 +214,31 @@ const AlbumGridScreen = () => {
     }
   };
 
+  // Show toast notification
+  const showToast = () => {
+    setToastVisible(true);
+    Animated.sequence([
+      Animated.timing(toastOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1600),
+      Animated.timing(toastOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToastVisible(false));
+  };
+
   // Handle set cover photo
   const handleSetCover = async photoId => {
     logger.info('AlbumGridScreen: Setting cover photo', { albumId, photoId });
     const result = await setCoverPhoto(albumId, photoId);
     if (result.success) {
       fetchAlbumData(); // Refresh to update cover
+      showToast(); // Show confirmation toast
     } else {
       Alert.alert('Error', result.error || 'Could not set cover photo');
     }
@@ -337,6 +359,16 @@ const AlbumGridScreen = () => {
         onRemovePhoto={handleRemovePhoto}
         onSetCover={handleSetCover}
       />
+
+      {/* Toast notification */}
+      {toastVisible && (
+        <Animated.View
+          style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 20 }]}
+        >
+          <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+          <Text style={styles.toastText}>Cover set</Text>
+        </Animated.View>
+      )}
     </View>
   );
 };
@@ -422,6 +454,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.text.secondary,
     marginTop: 4,
+  },
+  toast: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#333333',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
