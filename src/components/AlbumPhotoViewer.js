@@ -241,12 +241,9 @@ const AlbumPhotoViewer = ({
                 style: 'destructive',
                 onPress: () => {
                   if (onRemovePhoto) {
-                    // If removing last photo in list, go to previous index first
-                    if (currentIndex === photos.length - 1 && currentIndex > 0) {
-                      goToIndex(currentIndex - 1);
-                    }
-                    // Remove the photo (parent will refresh data)
                     onRemovePhoto(currentPhoto.id);
+                    // Close viewer and return to album grid
+                    onClose?.();
                   }
                 },
               },
