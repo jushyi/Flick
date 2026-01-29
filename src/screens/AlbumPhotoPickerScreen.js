@@ -152,11 +152,17 @@ const AlbumPhotoPickerScreen = () => {
           <View style={[styles.selectionOverlay, isInAlbum && styles.disabledOverlay]}>
             <View style={[styles.checkmark, isInAlbum && styles.checkmarkDisabled]}>
               <Ionicons
-                name="checkmark"
-                size={16}
+                name={isInAlbum ? 'checkmark-done-circle' : 'checkmark'}
+                size={isInAlbum ? 20 : 16}
                 color={isInAlbum ? colors.text.tertiary : colors.text.inverse}
               />
             </View>
+            {/* In Album badge */}
+            {isInAlbum && (
+              <View style={styles.inAlbumBadge}>
+                <Text style={styles.inAlbumText}>In Album</Text>
+              </View>
+            )}
           </View>
         )}
       </TouchableOpacity>
@@ -298,12 +304,27 @@ const styles = StyleSheet.create({
   selectionOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'flex-end',
     padding: 6,
   },
   disabledOverlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  inAlbumBadge: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
+    right: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 4,
+    paddingVertical: 4,
+  },
+  inAlbumText: {
+    fontSize: 10,
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   checkmark: {
     width: 24,
