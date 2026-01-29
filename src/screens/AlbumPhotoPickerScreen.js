@@ -112,8 +112,14 @@ const AlbumPhotoPickerScreen = () => {
           isAddingToExisting,
           albumId: result.album?.id || existingAlbumId,
         });
-        // Navigate back to profile (pop both CreateAlbum and AlbumPhotoPicker)
-        navigation.navigate('ProfileMain');
+
+        if (isAddingToExisting) {
+          // Return to album grid
+          navigation.goBack();
+        } else {
+          // Pop both CreateAlbum and AlbumPhotoPicker screens
+          navigation.navigate('ProfileMain');
+        }
       } else {
         Alert.alert('Error', result.error || 'Could not save album');
       }
