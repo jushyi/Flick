@@ -32,6 +32,7 @@ import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import DeleteAccountScreen from '../screens/DeleteAccountScreen';
 import CreateAlbumScreen from '../screens/CreateAlbumScreen';
 import AlbumPhotoPickerScreen from '../screens/AlbumPhotoPickerScreen';
+import AlbumGridScreen from '../screens/AlbumGridScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -94,6 +95,7 @@ const ProfileStackNavigator = () => {
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <Stack.Screen name="CreateAlbum" component={CreateAlbumScreen} />
       <Stack.Screen name="AlbumPhotoPicker" component={AlbumPhotoPickerScreen} />
+      <Stack.Screen name="AlbumGrid" component={AlbumGridScreen} />
     </Stack.Navigator>
   );
 };

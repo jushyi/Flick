@@ -52,3 +52,6 @@ export {
   removePhotoFromAlbum,
   setCoverPhoto,
 } from './albumService';
+
+// Export Photo service functions
+export { getPhotosByIds } from './photoService';

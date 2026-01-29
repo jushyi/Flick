@@ -437,6 +437,46 @@ export const removeReaction = async (photoId, userId) => {
 };
 
 /**
+ * Get photos by their IDs
+ * @param {string[]} photoIds - Array of photo document IDs
+ * @returns {Promise<{success: boolean, photos?: object[], error?: string}>}
+ */
+export const getPhotosByIds = async photoIds => {
+  logger.debug('PhotoService.getPhotosByIds: Starting', { count: photoIds?.length });
+
+  try {
+    if (!photoIds || !Array.isArray(photoIds) || photoIds.length === 0) {
+      return { success: true, photos: [] };
+    }
+
+    // Fetch each photo document
+    const photoPromises = photoIds.map(async photoId => {
+      const photoRef = doc(db, 'photos', photoId);
+      const photoDoc = await getDoc(photoRef);
+      if (photoDoc.exists()) {
+        return {
+          id: photoDoc.id,
+          ...photoDoc.data(),
+        };
+      }
+      return null;
+    });
+
+    const photos = (await Promise.all(photoPromises)).filter(p => p !== null);
+
+    logger.info('PhotoService.getPhotosByIds: Retrieved photos', {
+      requested: photoIds.length,
+      found: photos.length,
+    });
+
+    return { success: true, photos };
+  } catch (error) {
+    logger.error('PhotoService.getPhotosByIds: Failed', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Batch triage multiple photos at once
  * Used by darkroom when user taps Done to save all decisions
  * @param {Array} decisions - Array of { photoId, action } objects
