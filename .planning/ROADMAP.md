@@ -31,8 +31,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: User Albums Display** - Horizontal scroll album bar
 - [x] **Phase 8.1: Grid Header Safe Area Fix** - Fix grid views showing photos behind status bar when scrolling (INSERTED)
 - [x] **Phase 8.2: Album Creation Animation** - Visual feedback when new album is created (INSERTED)
-- [ ] **Phase 9: Monthly Albums** - Auto-generated albums by month
-- [ ] **Phase 10: Empty Feed State Change UI Change** - UI improvements for empty feed state transitions
+- [x] **Phase 9: Monthly Albums** - Auto-generated albums by month
+- [ ] **Phase 10: Empty Feed State UI Change** - Contextual empty states for new users and established users
 - [ ] **Phase 11: Feed Reaction Emoji Enhancements** - Randomized emoji selection per photo, custom emoji picker with "Add your own"
 - [ ] **Phase 12: Own Snaps in Stories Bar** - User's journaled snaps persist on left of stories bar, can comment but not react to own photos
 - [ ] **Phase 13: Split Activity into Notifications & Friends** - Separate activity page into two screens: heart icon → notifications, new friend icon on header left → friends list
@@ -279,20 +279,30 @@ Plans:
 - [x] 09-02: YearSection + MonthlyAlbumsSection with animations
 - [x] 09-03: Grid view + ProfileScreen integration
 
-### Phase 10: Empty Feed State Change UI Change
+### Phase 10: Empty Feed State UI Change
 
-**Goal**: Implement UI improvements for empty feed state transitions
+**Goal**: Implement contextual empty states that guide users toward meaningful actions
 **Depends on**: Phase 9
 **Research**: Unlikely (internal UI patterns)
-**Plans**: TBD
+**Plans**: 0/1
 
 Plans:
 
-- [ ] 10-01: TBD (run /gsd:plan-phase 10 to break down)
+- [ ] 10-01: Data layer + empty state components + FeedScreen integration
 
 **Details:**
 
-[To be added during planning]
+Two distinct empty states based on user state:
+
+1. **New user** (no friends): Stories bar shows "Add friends" prompt (taps to FriendsList), feed shows "Take your first photo" card (taps to Camera)
+2. **Established user** (has friends but no posts): Sad emoji with "Nothing yet, tell your friends to post"
+
+Changes:
+
+- feedService.getFriendStoriesData returns totalFriendCount
+- AddFriendsPromptCard component (matches FriendStoryCard styling)
+- TakeFirstPhotoCard component (matches FeedPhotoCard styling)
+- FeedScreen conditional rendering based on friend count and photo availability
 
 ### Phase 11: Feed Reaction Emoji Enhancements
 
