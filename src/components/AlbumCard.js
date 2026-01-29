@@ -25,13 +25,6 @@ export const AlbumCard = ({ album, coverPhotoUrl, stackPhotoUrls = [], onPress, 
       activeOpacity={0.8}
     >
       <View style={styles.stackContainer}>
-        {/* Furthest card (3rd back) - only show if we have 3+ stack photos */}
-        {stackCount >= 3 && (
-          <View style={[styles.stackCard, styles.stackCardFurthest]}>
-            <Image source={{ uri: stackPhotoUrls[2] }} style={styles.stackImage} />
-          </View>
-        )}
-
         {/* Back card (2nd back) - only show if we have 2+ stack photos */}
         {stackCount >= 2 && (
           <View style={[styles.stackCard, styles.stackCardBack]}>
@@ -87,7 +80,7 @@ const styles = StyleSheet.create({
   stackContainer: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    paddingTop: 12,
+    paddingTop: 8,
     overflow: 'visible',
   },
   stackCard: {
@@ -103,20 +96,15 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  stackCardFurthest: {
-    transform: [{ scale: 0.88 }, { translateY: -12 }],
-    opacity: 0.3,
+  stackCardBack: {
+    transform: [{ scale: 0.94 }, { translateY: -4 }],
+    opacity: 0.35,
     zIndex: 1,
   },
-  stackCardBack: {
-    transform: [{ scale: 0.92 }, { translateY: -8 }],
-    opacity: 0.4,
-    zIndex: 2,
-  },
   stackCardMiddle: {
-    transform: [{ scale: 0.96 }, { translateY: -4 }],
-    opacity: 0.5,
-    zIndex: 3,
+    transform: [{ scale: 0.97 }, { translateY: -2 }],
+    opacity: 0.45,
+    zIndex: 2,
   },
   imageContainer: {
     width: CARD_SIZE,
@@ -124,7 +112,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: colors.background.tertiary,
-    zIndex: 4,
+    zIndex: 3,
   },
   coverImage: {
     width: '100%',
