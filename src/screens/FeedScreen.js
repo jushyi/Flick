@@ -26,6 +26,8 @@ import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
 import PhotoDetailModal from '../components/PhotoDetailModal';
 import { FriendStoryCard } from '../components';
+import AddFriendsPromptCard from '../components/AddFriendsPromptCard';
+import TakeFirstPhotoCard from '../components/TakeFirstPhotoCard';
 import { toggleReaction, getFriendStoriesData } from '../services/firebase/feedService';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
@@ -66,6 +68,7 @@ const FeedScreen = () => {
 
   // Stories state
   const [friendStories, setFriendStories] = useState([]);
+  const [totalFriendCount, setTotalFriendCount] = useState(0);
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [storiesModalVisible, setStoriesModalVisible] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -114,10 +117,15 @@ const FeedScreen = () => {
     setStoriesLoading(true);
     const result = await getFriendStoriesData(user.uid);
     if (result.success) {
-      logger.info('FeedScreen: Friend stories loaded', { count: result.friendStories.length });
+      logger.info('FeedScreen: Friend stories loaded', {
+        count: result.friendStories.length,
+        totalFriendCount: result.totalFriendCount,
+      });
       setFriendStories(result.friendStories);
+      setTotalFriendCount(result.totalFriendCount || 0);
     } else {
       logger.warn('FeedScreen: Failed to load friend stories', { error: result.error });
+      setTotalFriendCount(0);
     }
     setStoriesLoading(false);
   };
@@ -511,19 +519,29 @@ const FeedScreen = () => {
   };
 
   /**
-   * Render empty state for hot highlights
+   * Render empty state for feed
+   * Shows contextual content based on friend count:
+   * - No friends: TakeFirstPhotoCard (new user)
+   * - Has friends but no posts: Sad emoji with encouraging message
    */
   const renderEmptyState = () => {
     if (loading) return null;
 
+    // New user state: no friends - show prompt to take first photo
+    if (totalFriendCount === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <TakeFirstPhotoCard onPress={() => navigation.navigate('Camera')} />
+        </View>
+      );
+    }
+
+    // Established user state: has friends but no posts in feed
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyIcon}>🔥</Text>
-        <Text style={styles.emptyTitle}>No hot photos yet</Text>
-        <Text style={styles.emptyText}>
-          Popular photos from your friends will appear here.{'\n'}
-          Tap the stories above to see all their photos!
-        </Text>
+        <Ionicons name="sad-outline" size={64} color={colors.text.secondary} />
+        <Text style={styles.emptyTitle}>Nothing yet</Text>
+        <Text style={styles.emptyText}>Tell your friends to post!</Text>
       </View>
     );
   };
@@ -564,6 +582,7 @@ const FeedScreen = () => {
    * Render stories row
    * Sorts friends by viewed state (unviewed first)
    * Waits for both stories data AND viewed state to load to prevent race conditions
+   * Shows AddFriendsPromptCard when user has no friends
    */
   const renderStoriesRow = () => {
     // Wait for both stories data AND viewed state to load
@@ -572,7 +591,25 @@ const FeedScreen = () => {
       return <View style={styles.storiesContainer}>{renderStoriesLoadingSkeleton()}</View>;
     }
 
-    // Hide stories row if no friends have photos
+    // Show AddFriendsPromptCard when user has no friends
+    if (totalFriendCount === 0) {
+      return (
+        <View style={styles.storiesContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.storiesScrollContent}
+          >
+            <AddFriendsPromptCard
+              onPress={() => navigation.navigate('FriendsList')}
+              isFirst={true}
+            />
+          </ScrollView>
+        </View>
+      );
+    }
+
+    // Hide stories row if friends exist but none have photos
     if (friendStories.length === 0) {
       return null;
     }
