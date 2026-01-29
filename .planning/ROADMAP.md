@@ -207,7 +207,7 @@ Plans:
 **Goal**: Implement horizontal scroll bar for user-created albums (Instagram highlights style)
 **Depends on**: Phase 5
 **Research**: Unlikely (standard horizontal FlatList pattern)
-**Plans**: 6/6 complete (+ 6 FIX plans)
+**Plans**: 6/6 complete (+ 7 FIX plans)
 
 Plans:
 
@@ -223,6 +223,7 @@ Plans:
 - [x] 08-FIX4: Photo viewer enhancements (UAT-006, UAT-008, UAT-010, UAT-011)
 - [x] 08-FIX5: Menu system overhaul (UAT-007, UAT-009)
 - [x] 08-FIX6: Modal/menu UX polish (UAT-013, UAT-014, UAT-018)
+- [x] 08-FIX7: Photo picker/viewer fixes (UAT-015, UAT-016, UAT-017)
 
 ### Phase 9: Monthly Albums
 
@@ -358,7 +359,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 7. Profile Song Scaffold         | 5/5 + 2 FIX    | Complete    | 2026-01-28 |
 | 7.2 Song Modal Stacking Fix      | 1/1 + 1 FIX    | Complete    | 2026-01-28 |
 | 7.3 Simplify Clip Selection      | 1/1            | Complete    | 2026-01-29 |
-| 8. User Albums Display           | 6/6            | Complete    | 2026-01-29 |
+| 8. User Albums Display           | 6/6 + 7 FIX    | Complete    | 2026-01-29 |
 | 9. Monthly Albums                | 0/?            | Not started | -          |
 | 10. Empty Feed State UI Change   | 0/?            | Not started | -          |
 | 11. Feed Reaction Emoji          | 0/?            | Not started | -          |
