@@ -38,12 +38,12 @@ export const AlbumCard = ({
   // Trigger scale bounce when isHighlighted becomes true
   useEffect(() => {
     if (isHighlighted) {
-      // Small delay to allow scroll to complete visually, then spring bounce
+      // Quick bounce - spring up then back down
       scale.value = withDelay(
-        100,
-        withSpring(1.08, { damping: 8, stiffness: 300 }, () => {
+        50,
+        withSpring(1.08, { damping: 10, stiffness: 400 }, () => {
           // Bounce back to normal
-          scale.value = withSpring(1, { damping: 10, stiffness: 300 });
+          scale.value = withSpring(1, { damping: 12, stiffness: 400 });
         })
       );
     }
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    marginTop: 8,
+    marginTop: 14,
     fontSize: 14,
     color: colors.text.primary,
     textAlign: 'center',
