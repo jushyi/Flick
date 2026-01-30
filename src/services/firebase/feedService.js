@@ -427,6 +427,78 @@ export const getTopPhotosByEngagement = async (userId, limit = 5) => {
 };
 
 /**
+ * Get current user's own stories data for the Stories UI
+ * Fetches all journaled photos for the current user in chronological order
+ *
+ * @param {string} userId - User's ID
+ * @returns {Promise<{success: boolean, userStory?: Object, error?: string}>}
+ */
+export const getUserStoriesData = async userId => {
+  logger.debug('feedService.getUserStoriesData: Starting', { userId });
+
+  try {
+    if (!userId) {
+      logger.warn('feedService.getUserStoriesData: Missing userId');
+      return { success: false, error: 'Invalid user ID' };
+    }
+
+    // Fetch user profile data
+    const userDocRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userDocRef);
+    const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+
+    // Query photos where userId matches AND photoState == 'journal'
+    const photosQuery = query(
+      collection(db, 'photos'),
+      where('userId', '==', userId),
+      where('photoState', '==', 'journal')
+    );
+    const photosSnapshot = await getDocs(photosQuery);
+
+    // Map and sort photos by capturedAt ASCENDING (oldest first for timeline viewing)
+    const allPhotos = photosSnapshot.docs
+      .map(photoDoc => ({
+        id: photoDoc.id,
+        ...photoDoc.data(),
+      }))
+      .sort((a, b) => {
+        const aTime = a.capturedAt?.seconds || 0;
+        const bTime = b.capturedAt?.seconds || 0;
+        return aTime - bTime; // Ascending - oldest first
+      });
+
+    const totalPhotoCount = allPhotos.length;
+
+    // Thumbnail URL is the MOST RECENT photo (last in sorted array)
+    const thumbnailURL = allPhotos.length > 0 ? allPhotos[allPhotos.length - 1].imageURL : null;
+
+    logger.info('feedService.getUserStoriesData: Success', {
+      userId,
+      photoCount: totalPhotoCount,
+    });
+
+    return {
+      success: true,
+      userStory: {
+        userId,
+        displayName: 'Me',
+        profilePhotoURL: userData.profilePhotoURL || null,
+        topPhotos: allPhotos, // All photos in chronological order
+        thumbnailURL, // Most recent photo for story card preview
+        totalPhotoCount,
+        hasPhotos: totalPhotoCount > 0,
+      },
+    };
+  } catch (error) {
+    logger.error('feedService.getUserStoriesData: Failed', {
+      userId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Get friend stories data for the Stories UI
  * Fetches all friends with ALL their journal photos in chronological order
  *
