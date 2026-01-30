@@ -26,9 +26,14 @@ import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
 import PhotoDetailModal from '../components/PhotoDetailModal';
 import { FriendStoryCard } from '../components';
+import { MeStoryCard } from '../components/MeStoryCard';
 import AddFriendsPromptCard from '../components/AddFriendsPromptCard';
 import TakeFirstPhotoCard from '../components/TakeFirstPhotoCard';
-import { toggleReaction, getFriendStoriesData } from '../services/firebase/feedService';
+import {
+  toggleReaction,
+  getFriendStoriesData,
+  getUserStoriesData,
+} from '../services/firebase/feedService';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
@@ -74,6 +79,11 @@ const FeedScreen = () => {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [selectedFriendIndex, setSelectedFriendIndex] = useState(0); // Track position in friendStories for navigation
 
+  // Own stories state
+  const [myStories, setMyStories] = useState(null);
+  const [myStoriesLoading, setMyStoriesLoading] = useState(true);
+  const [myStoriesModalVisible, setMyStoriesModalVisible] = useState(false);
+
   // Notifications state - red dot indicator
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
@@ -101,6 +111,7 @@ const FeedScreen = () => {
       logger.debug('Feed screen focused - refreshing feed and stories');
       refreshFeed();
       loadFriendStories();
+      loadMyStories();
     });
 
     return unsubscribe;
@@ -131,11 +142,34 @@ const FeedScreen = () => {
   };
 
   /**
+   * Load user's own stories data
+   * Reusable function for initial load and refresh
+   */
+  const loadMyStories = async () => {
+    if (!user?.uid) return;
+
+    logger.debug('FeedScreen: Loading own stories data');
+    setMyStoriesLoading(true);
+    const result = await getUserStoriesData(user.uid);
+    if (result.success) {
+      logger.info('FeedScreen: Own stories loaded', {
+        photoCount: result.userStory?.totalPhotoCount || 0,
+      });
+      setMyStories(result.userStory);
+    } else {
+      logger.warn('FeedScreen: Failed to load own stories', { error: result.error });
+      setMyStories(null);
+    }
+    setMyStoriesLoading(false);
+  };
+
+  /**
    * Load friend stories data on mount
    */
   useEffect(() => {
     if (user?.uid) {
       loadFriendStories();
+      loadMyStories();
     }
   }, [user?.uid]);
 
@@ -227,6 +261,57 @@ const FeedScreen = () => {
     setSelectedFriend(friend);
     setSelectedFriendIndex(friendIdx);
     setStoriesModalVisible(true);
+  };
+
+  /**
+   * Handle opening own stories
+   * Starts at the first unviewed photo, or beginning if all viewed
+   */
+  const handleOpenMyStories = () => {
+    if (!myStories?.hasPhotos) {
+      logger.debug('FeedScreen: No own photos to show');
+      return;
+    }
+
+    const startIndex = getFirstUnviewedIndex(myStories.topPhotos || []);
+
+    logger.info('FeedScreen: Opening own stories viewer', {
+      startIndex,
+      photoCount: myStories.topPhotos?.length || 0,
+    });
+
+    setStoriesInitialIndex(startIndex);
+    setStoriesCurrentIndex(startIndex);
+    setMyStoriesModalVisible(true);
+  };
+
+  /**
+   * Handle closing own stories viewer
+   * Marks photos as viewed
+   */
+  const handleCloseMyStories = () => {
+    logger.debug('FeedScreen: Closing own stories viewer');
+    if (myStories) {
+      const allPhotos = myStories.topPhotos || [];
+      const isAtEnd = storiesCurrentIndex >= allPhotos.length - 1;
+
+      if (isAtEnd) {
+        // User viewed all photos - mark all as viewed
+        markAsViewed(myStories.userId);
+        const photoIds = allPhotos.map(p => p.id);
+        if (photoIds.length > 0) {
+          markPhotosAsViewed(photoIds);
+        }
+      } else {
+        // User closed mid-story - only mark photos up to current index as viewed
+        const viewedPhotoIds = allPhotos.slice(0, storiesCurrentIndex + 1).map(p => p.id);
+        if (viewedPhotoIds.length > 0) {
+          markPhotosAsViewed(viewedPhotoIds);
+        }
+      }
+    }
+    setMyStoriesModalVisible(false);
+    setStoriesInitialIndex(0);
   };
 
   /**
@@ -580,38 +665,15 @@ const FeedScreen = () => {
 
   /**
    * Render stories row
-   * Sorts friends by viewed state (unviewed first)
+   * Shows MeStoryCard first, then friend cards sorted by viewed state (unviewed first)
    * Waits for both stories data AND viewed state to load to prevent race conditions
-   * Shows AddFriendsPromptCard when user has no friends
+   * Shows AddFriendsPromptCard when user has no friends (after MeStoryCard)
    */
   const renderStoriesRow = () => {
     // Wait for both stories data AND viewed state to load
     // This prevents showing all stories as unviewed while Firestore data is loading
-    if (storiesLoading || viewedStoriesLoading) {
+    if (storiesLoading || myStoriesLoading || viewedStoriesLoading) {
       return <View style={styles.storiesContainer}>{renderStoriesLoadingSkeleton()}</View>;
-    }
-
-    // Show AddFriendsPromptCard when user has no friends
-    if (totalFriendCount === 0) {
-      return (
-        <View style={styles.storiesContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.storiesScrollContent}
-          >
-            <AddFriendsPromptCard
-              onPress={() => navigation.navigate('FriendsList')}
-              isFirst={true}
-            />
-          </ScrollView>
-        </View>
-      );
-    }
-
-    // Hide stories row if friends exist but none have photos
-    if (friendStories.length === 0) {
-      return null;
     }
 
     // Sort friends by viewed state - unviewed first (based on ALL photos viewed)
@@ -622,6 +684,57 @@ const FeedScreen = () => {
       return aViewed ? 1 : -1; // Unviewed first
     });
 
+    // Show AddFriendsPromptCard when user has no friends (but always show MeStoryCard first)
+    if (totalFriendCount === 0) {
+      return (
+        <View style={styles.storiesContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.storiesScrollContent}
+          >
+            {/* MeStoryCard always first - shows even without friends */}
+            {myStories && (
+              <MeStoryCard
+                friend={myStories}
+                onPress={handleOpenMyStories}
+                isFirst={true}
+                isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+              />
+            )}
+            <AddFriendsPromptCard
+              onPress={() => navigation.navigate('FriendsList')}
+              isFirst={!myStories}
+            />
+          </ScrollView>
+        </View>
+      );
+    }
+
+    // Hide stories row if friends exist but none have photos AND user has no photos
+    if (friendStories.length === 0 && !myStories?.hasPhotos) {
+      // Still show MeStoryCard if user has stories data (even empty)
+      if (myStories) {
+        return (
+          <View style={styles.storiesContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.storiesScrollContent}
+            >
+              <MeStoryCard
+                friend={myStories}
+                onPress={handleOpenMyStories}
+                isFirst={true}
+                isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+              />
+            </ScrollView>
+          </View>
+        );
+      }
+      return null;
+    }
+
     return (
       <View style={styles.storiesContainer}>
         <ScrollView
@@ -629,12 +742,22 @@ const FeedScreen = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.storiesScrollContent}
         >
+          {/* MeStoryCard always first */}
+          {myStories && (
+            <MeStoryCard
+              friend={myStories}
+              onPress={handleOpenMyStories}
+              isFirst={true}
+              isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+            />
+          )}
+          {/* Friend cards after MeStoryCard */}
           {sortedFriends.map((friend, index) => (
             <FriendStoryCard
               key={friend.userId}
               friend={friend}
               onPress={() => handleOpenStories(friend)}
-              isFirst={index === 0}
+              isFirst={false}
               isViewed={hasViewedAllPhotos(friend.topPhotos)}
             />
           ))}
@@ -736,7 +859,7 @@ const FeedScreen = () => {
         />
       )}
 
-      {/* Photo Detail Modal - Stories Mode */}
+      {/* Photo Detail Modal - Stories Mode (Friends) */}
       {selectedFriend && (
         <PhotoDetailModal
           mode="stories"
@@ -749,6 +872,20 @@ const FeedScreen = () => {
           currentUserId={user?.uid}
           onRequestNextFriend={handleRequestNextFriend}
           hasNextFriend={hasNextFriend()}
+        />
+      )}
+
+      {/* Photo Detail Modal - Stories Mode (Own Stories) */}
+      {myStories && (
+        <PhotoDetailModal
+          mode="stories"
+          visible={myStoriesModalVisible}
+          photos={myStories.topPhotos || []}
+          initialIndex={storiesInitialIndex}
+          onPhotoChange={handleStoriesPhotoChange}
+          onClose={handleCloseMyStories}
+          currentUserId={user?.uid}
+          isOwnStory={true}
         />
       )}
     </SafeAreaView>
