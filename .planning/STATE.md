@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 12 — Own Snaps in Stories Bar
+**Current focus:** Phase 13 — Split Activity into Notifications & Friends
 
 ## Current Position
 
-Phase: 11 of 16 (Feed Reaction Emoji Enhancements) - COMPLETE
-Plan: 1 of 1 in current phase (+ 1 FIX plan)
-Status: Phase complete (with fixes)
-Last activity: 2026-01-30 — Completed 11-01-FIX.md
+Phase: 12 of 18 (Own Snaps in Stories Bar) - COMPLETE
+Plan: 1 of 1 in current phase
+Status: Phase complete
+Last activity: 2026-01-30 — Completed 12-01-PLAN.md
 
-Progress: ██████████ 100% (Phase 11)
+Progress: ████████░░░░░░░░░░ 67% (12 of 18 phases)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 45 (including 11 FIX plans)
+- Total plans completed: 46 (including 11 FIX plans)
 - Average duration: 11 min
-- Total execution time: 506 min
+- Total execution time: 524 min
 
 **By Phase:**
 
@@ -45,11 +45,12 @@ Progress: ██████████ 100% (Phase 11)
 | 9     | 3     | 15 min | 5 min    |
 | 10    | 1     | 8 min  | 8 min    |
 | 11    | 2     | 32 min | 16 min   |
+| 12    | 1     | 18 min | 18 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 4 min, 8 min, 8 min, 12 min, 20 min
-- Trend: Phase 11 FIX complete - Dark theme + emoji persistence + highlight animation
+- Last 5 plans: 8 min, 8 min, 12 min, 20 min, 18 min
+- Trend: Phase 12 complete - Own snaps in stories bar with disabled self-reactions
 
 ## Accumulated Context
 
@@ -166,6 +167,11 @@ Recent decisions affecting current work:
 | 11    | Prime multiplier (31) for pool distribution           | Better spread across categories for varied curated emoji selection     |
 | 11    | Immediate selection for custom emoji (no confirm)     | User feedback: faster UX, emoji appears at front with highlight        |
 | 11    | Purple highlight with 1s fade for all emoji taps      | Visual feedback for reactions, applies to both curated and custom      |
+| 12    | MeStoryCard always first in stories bar (leftmost)    | User's own content most relevant, consistent with Instagram pattern    |
+| 12    | Empty state shows "M" initial placeholder             | Card should always be visible even without photos                      |
+| 12    | isOwnStory prop for reaction disabling                | Pattern for differentiating own vs friend content in modals            |
+| 12    | Reactions visible but grayed out (opacity 0.4)        | Users can see friend reactions but can't react to themselves           |
+| 12    | Comments remain functional for own stories            | Users may want to add self-notes/captions to their photos              |
 
 ### Deferred Issues
 
@@ -226,9 +232,17 @@ None yet.
   - No visual feedback when new album is created
   - User navigated to profile but must look for the new album
   - Add scroll-to and highlight animation for new album card
+- Phase 17 added: Nested Reply Comments
+  - Reply to replies with @mention tagging (Instagram-style)
+  - All replies stay inline, no nested threading
+  - @mention at front of comment when replying to a reply
+- Phase 18 added: Content Visibility Duration
+  - Define how long stories stay visible in stories bar
+  - Define how long feed pictures remain visible in feed tab
+  - Clarify visibility rules for friends' content
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed Phase 11 FIX - Dark theme, emoji persistence, highlight animation
+Stopped at: Completed Phase 12 - Own snaps in stories bar with disabled self-reactions
 Resume file: None

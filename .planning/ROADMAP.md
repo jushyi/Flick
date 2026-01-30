@@ -34,11 +34,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Monthly Albums** - Auto-generated albums by month
 - [x] **Phase 10: Empty Feed State UI Change** - Contextual empty states for new users and established users
 - [x] **Phase 11: Feed Reaction Emoji Enhancements** - Curated 5-emoji rotation per photo, custom emoji picker with rn-emoji-keyboard
-- [ ] **Phase 12: Own Snaps in Stories Bar** - User's journaled snaps persist on left of stories bar, can comment but not react to own photos
+- [x] **Phase 12: Own Snaps in Stories Bar** - User's journaled snaps persist on left of stories bar, can comment but not react to own photos
 - [ ] **Phase 13: Split Activity into Notifications & Friends** - Separate activity page into two screens: heart icon → notifications, new friend icon on header left → friends list
 - [ ] **Phase 14: Profile Field Character Limits** - Enforce max lengths: display name (16), username (16), bio (160)
 - [ ] **Phase 15: Friends Screen & Other Profiles** - Friends screen refactor and wiring up the ability to view other peoples profile
 - [ ] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
+- [ ] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
+- [ ] **Phase 18: Content Visibility Duration** - Define how long stories and feed pictures stay visible for friends
 
 ## Phase Details
 
@@ -327,11 +329,11 @@ Plans:
 **Goal**: Display user's own journaled snaps in stories bar (persists on left), allow comments on own photos but prevent self-reactions
 **Depends on**: Phase 11
 **Research**: Unlikely (extending existing stories bar patterns)
-**Plans**: TBD
+**Plans**: 1/1 complete
 
 Plans:
 
-- [ ] 12-01: TBD (run /gsd:plan-phase 12 to break down)
+- [x] 12-01: MeStoryCard component, getUserStoriesData service, FeedScreen integration, disabled self-reactions
 
 **Details:**
 
@@ -412,10 +414,49 @@ Plans:
 5. Create documentation and guidelines for adding new screens/modals
 6. Ensure architecture supports future color palette/theme switching
 
+### Phase 17: Nested Reply Comments
+
+**Goal**: Enable users to reply to existing replies with Instagram-style inline threading - all replies stay flat/inline, but replying to someone's reply adds @mention tag at the front of the comment
+**Depends on**: Phase 16
+**Research**: Unlikely (extending existing comment system)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 17-01: TBD (run /gsd:plan-phase 17 to break down)
+
+**Details:**
+
+1. Replying to a reply tags the original commenter at the front (e.g., "@username your comment")
+2. All replies remain inline (no nested/indented threading)
+3. @mention is tappable to highlight or scroll to referenced comment
+4. Instagram-style UX - simple, flat comment list with contextual @mentions
+
+### Phase 18: Content Visibility Duration
+
+**Goal**: Define and implement visibility duration rules for stories and feed pictures - clarify how long content stays visible in the stories bar and feed tab for friends
+**Depends on**: Phase 17
+**Research**: Likely (clarify desired behavior with user before planning)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 18-01: TBD (run /gsd:plan-phase 18 to break down)
+
+**Details:**
+
+[To be clarified during planning - key questions:]
+
+1. How long should stories stay visible in the stories bar? (e.g., 24 hours like Instagram/Snapchat?)
+2. How long should feed pictures remain visible in the feed tab?
+3. Should content disappear entirely or just move to a different view (e.g., archive)?
+4. Different rules for own content vs friends' content?
+5. Visual indicators for content expiration?
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -436,8 +477,10 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 9. Monthly Albums                | 3/3            | Complete    | 2026-01-29 |
 | 10. Empty Feed State UI Change   | 1/1            | Complete    | 2026-01-29 |
 | 11. Feed Reaction Emoji          | 1/1            | Complete    | 2026-01-30 |
-| 12. Own Snaps in Stories Bar     | 0/?            | Not started | -          |
+| 12. Own Snaps in Stories Bar     | 1/1            | Complete    | 2026-01-30 |
 | 13. Split Activity/Friends       | 0/?            | Not started | -          |
 | 14. Profile Field Limits         | 0/?            | Not started | -          |
 | 15. Friends Screen & Profiles    | 0/?            | Not started | -          |
 | 16. Color Constants              | 0/?            | Not started | -          |
+| 17. Nested Reply Comments        | 0/?            | Not started | -          |
+| 18. Content Visibility Duration  | 0/?            | Not started | -          |
