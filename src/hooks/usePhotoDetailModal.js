@@ -210,12 +210,31 @@ export const usePhotoDetailModal = ({
 
   /**
    * Handle emoji selection from picker
-   * Sets the custom emoji for preview (not yet committed)
+   * Immediately adds emoji to front of row, reacts, and shows highlight for 2 seconds
    */
-  const handleEmojiPickerSelect = useCallback(emojiObject => {
-    setCustomEmoji(emojiObject.emoji);
-    setShowEmojiPicker(false);
-  }, []);
+  const handleEmojiPickerSelect = useCallback(
+    emojiObject => {
+      const selectedEmoji = emojiObject.emoji;
+      setShowEmojiPicker(false);
+
+      // Immediately react with the selected emoji
+      reactionHaptic();
+      const currentCount = getUserReactionCount(selectedEmoji);
+      onReactionToggle(selectedEmoji, currentCount);
+
+      // Add to FRONT of activeCustomEmojis if not already there (and not in curated list)
+      if (!activeCustomEmojis.includes(selectedEmoji) && !curatedEmojis.includes(selectedEmoji)) {
+        setActiveCustomEmojis(prev => [selectedEmoji, ...prev]);
+      }
+
+      // Set for highlight animation (purple border for 2 seconds)
+      setNewlyAddedEmoji(selectedEmoji);
+      setTimeout(() => {
+        setNewlyAddedEmoji(null);
+      }, 2000);
+    },
+    [getUserReactionCount, onReactionToggle, activeCustomEmojis, curatedEmojis]
+  );
 
   /**
    * Confirm and commit the custom emoji reaction
