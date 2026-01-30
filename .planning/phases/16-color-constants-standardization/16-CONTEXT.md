@@ -71,6 +71,12 @@ This phase expanded from "Color Constants" to include styling standardization (b
 
 The goal is maintainability and cohesion, not new features. After this phase, adding a new screen should be straightforward: import the constants, follow the quick reference, and everything matches.
 
+**Verification requirement:** Include a dedicated human verification plan with full walkthrough of every screen and modal in the app. Testing must cover:
+
+- White flash/edges during navigation transitions
+- Color consistency (backgrounds, cards, text, accents all match constants)
+- Full navigation paths to catch any missed screens or edge cases
+
 </notes>
 
 ---
