@@ -13,13 +13,9 @@ import { Animated, PanResponder, Dimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { reactionHaptic } from '../utils/haptics';
 import logger from '../utils/logger';
+import { getCuratedEmojis } from '../utils/emojiRotation';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-/**
- * Available reaction emojis (8 options)
- */
-const REACTION_EMOJIS = ['😂', '❤️', '🔥', '😍', '👏', '😮', '😢', '💯'];
 
 /**
  * Custom hook for PhotoDetailModal logic
@@ -54,6 +50,10 @@ export const usePhotoDetailModal = ({
   const [frozenOrder, setFrozenOrder] = useState(null);
   const sortTimerRef = useRef(null);
 
+  // Custom emoji picker state
+  const [customEmoji, setCustomEmoji] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   // Minimum display time tracking for rapid taps (ensures each photo is briefly visible)
   const lastTapTimeRef = useRef(0);
   const MIN_DISPLAY_TIME = 80; // ms - minimum time each photo is displayed
@@ -83,6 +83,11 @@ export const usePhotoDetailModal = ({
     }
     return photo;
   }, [mode, photo, photos, currentIndex]);
+
+  // Get curated emojis based on current photo ID (deterministic per photo)
+  const curatedEmojis = useMemo(() => {
+    return getCuratedEmojis(currentPhoto?.id, 5);
+  }, [currentPhoto?.id]);
 
   // Extract photo data from currentPhoto
   const { imageURL, capturedAt, reactions = {}, user = {} } = currentPhoto || {};
@@ -119,7 +124,7 @@ export const usePhotoDetailModal = ({
   );
 
   /**
-   * Handle emoji button press
+   * Handle emoji button press (curated or custom emoji)
    */
   const handleEmojiPress = useCallback(
     emoji => {
@@ -129,7 +134,7 @@ export const usePhotoDetailModal = ({
 
       // If not frozen yet, freeze the current sorted order
       if (!frozenOrder) {
-        const emojiData = REACTION_EMOJIS.map(e => ({
+        const emojiData = curatedEmojis.map(e => ({
           emoji: e,
           totalCount: groupedReactions[e] || 0,
         }));
@@ -149,23 +154,52 @@ export const usePhotoDetailModal = ({
         setFrozenOrder(null);
       }, 1500);
     },
-    [getUserReactionCount, onReactionToggle, frozenOrder, groupedReactions]
+    [getUserReactionCount, onReactionToggle, frozenOrder, groupedReactions, curatedEmojis]
   );
 
   /**
    * Get ordered emoji list (frozen or sorted by count)
+   * Uses curated emojis based on photo ID
    */
   const orderedEmojis = useMemo(() => {
     if (frozenOrder) {
       return frozenOrder;
     }
     // Sort by count (highest to lowest)
-    const emojiData = REACTION_EMOJIS.map(emoji => ({
+    const emojiData = curatedEmojis.map(emoji => ({
       emoji,
       totalCount: groupedReactions[emoji] || 0,
     }));
     return [...emojiData].sort((a, b) => b.totalCount - a.totalCount).map(item => item.emoji);
-  }, [frozenOrder, groupedReactions]);
+  }, [frozenOrder, groupedReactions, curatedEmojis]);
+
+  /**
+   * Open the custom emoji picker
+   */
+  const handleOpenEmojiPicker = useCallback(() => {
+    setShowEmojiPicker(true);
+  }, []);
+
+  /**
+   * Handle emoji selection from picker
+   * Sets the custom emoji for preview (not yet committed)
+   */
+  const handleEmojiPickerSelect = useCallback(emojiObject => {
+    setCustomEmoji(emojiObject.emoji);
+    setShowEmojiPicker(false);
+  }, []);
+
+  /**
+   * Confirm and commit the custom emoji reaction
+   */
+  const handleCustomEmojiConfirm = useCallback(() => {
+    if (customEmoji) {
+      reactionHaptic();
+      const currentCount = getUserReactionCount(customEmoji);
+      onReactionToggle(customEmoji, currentCount);
+      setCustomEmoji(null);
+    }
+  }, [customEmoji, getUserReactionCount, onReactionToggle]);
 
   /**
    * Navigate to previous photo in stories mode
@@ -412,12 +446,20 @@ export const usePhotoDetailModal = ({
     // Reactions
     groupedReactions,
     orderedEmojis,
+    curatedEmojis,
     getUserReactionCount,
     handleEmojiPress,
+
+    // Custom emoji picker
+    customEmoji,
+    setCustomEmoji,
+    showEmojiPicker,
+    setShowEmojiPicker,
+    handleOpenEmojiPicker,
+    handleEmojiPickerSelect,
+    handleCustomEmojiConfirm,
 
     // Close handler
     handleClose: onClose,
   };
 };
-
-export { REACTION_EMOJIS };
