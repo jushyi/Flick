@@ -55,6 +55,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
  * @param {string} currentUserId - Current user's ID
  * @param {function} onRequestNextFriend - Callback for friend-to-friend transition (stories mode)
  * @param {boolean} hasNextFriend - Whether there's another friend's stories after this
+ * @param {boolean} isOwnStory - Whether viewing user's own story (disables reactions)
  */
 const PhotoDetailModal = ({
   mode = 'feed',
@@ -69,6 +70,7 @@ const PhotoDetailModal = ({
   onRequestNextFriend,
   hasNextFriend = false,
   initialShowComments = false,
+  isOwnStory = false,
 }) => {
   // Cube transition animation for friend-to-friend
   const cubeRotation = useRef(new Animated.Value(0)).current;
@@ -416,18 +418,31 @@ const PhotoDetailModal = ({
             </TouchableOpacity>
 
             {/* Emoji pills - right side (custom + curated emojis + add button) */}
+            {/* When isOwnStory, show reactions as read-only with reduced opacity */}
             <ScrollView
               ref={emojiScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.emojiPickerContainer}
-              style={styles.emojiPickerScrollView}
+              style={[styles.emojiPickerScrollView, isOwnStory && styles.disabledEmojiRow]}
             >
               {orderedEmojis.map(emoji => {
                 const totalCount = groupedReactions[emoji] || 0;
                 const userCount = getUserReactionCount(emoji);
                 const isSelected = userCount > 0;
                 const isNewlyAdded = emoji === newlyAddedEmoji;
+
+                // For own stories, render as non-interactive View
+                if (isOwnStory) {
+                  return (
+                    <View key={emoji} style={{ position: 'relative' }}>
+                      <View style={[styles.emojiPill, isSelected && styles.emojiPillSelected]}>
+                        <Text style={styles.emojiPillEmoji}>{emoji}</Text>
+                        {totalCount > 0 && <Text style={styles.emojiPillCount}>{totalCount}</Text>}
+                      </View>
+                    </View>
+                  );
+                }
 
                 return (
                   <View key={emoji} style={{ position: 'relative' }}>
@@ -450,14 +465,16 @@ const PhotoDetailModal = ({
                 );
               })}
 
-              {/* Add custom emoji button - always shows "+" */}
-              <TouchableOpacity
-                style={[styles.emojiPill, styles.addEmojiButton]}
-                onPress={handleOpenEmojiPicker}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.addEmojiText}>+</Text>
-              </TouchableOpacity>
+              {/* Add custom emoji button - hidden for own stories */}
+              {!isOwnStory && (
+                <TouchableOpacity
+                  style={[styles.emojiPill, styles.addEmojiButton]}
+                  onPress={handleOpenEmojiPicker}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.addEmojiText}>+</Text>
+                </TouchableOpacity>
+              )}
             </ScrollView>
           </View>
         </Animated.View>

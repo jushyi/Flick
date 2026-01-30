@@ -158,6 +158,10 @@ export const styles = StyleSheet.create({
   emojiPickerScrollView: {
     flex: 1,
   },
+  // Disabled emoji row for own stories - reactions visible but grayed out
+  disabledEmojiRow: {
+    opacity: 0.4,
+  },
   emojiPickerContainer: {
     gap: 8,
     paddingVertical: 4,
