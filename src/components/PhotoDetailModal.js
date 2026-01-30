@@ -84,6 +84,9 @@ const PhotoDetailModal = ({
   // Emoji scroll ref for auto-scrolling when new emoji added
   const emojiScrollRef = useRef(null);
 
+  // Highlight fade animation for newly added emoji (1 second fade)
+  const highlightOpacity = useRef(new Animated.Value(1)).current;
+
   // Track previous visibility for initialShowComments logic (UAT-009 fix)
   const wasVisible = useRef(false);
 
@@ -220,13 +223,23 @@ const PhotoDetailModal = ({
     return { segmentWidth: calculatedWidth, needsScroll: false };
   }, [totalPhotos]);
 
-  // Auto-scroll emoji row to start when new emoji is added
+  // Auto-scroll emoji row to start and fade highlight when new emoji is added
   useEffect(() => {
-    if (newlyAddedEmoji && emojiScrollRef.current) {
+    if (newlyAddedEmoji) {
       // Scroll to start to show the new emoji
-      emojiScrollRef.current.scrollTo({ x: 0, animated: true });
+      if (emojiScrollRef.current) {
+        emojiScrollRef.current.scrollTo({ x: 0, animated: true });
+      }
+
+      // Start fade animation: fully visible, then fade to 0 over 1 second
+      highlightOpacity.setValue(1);
+      Animated.timing(highlightOpacity, {
+        toValue: 0,
+        duration: 1000,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [newlyAddedEmoji]);
+  }, [newlyAddedEmoji, highlightOpacity]);
 
   // Auto-scroll progress bar to keep current segment visible
   useEffect(() => {
@@ -417,19 +430,23 @@ const PhotoDetailModal = ({
                 const isNewlyAdded = emoji === newlyAddedEmoji;
 
                 return (
-                  <TouchableOpacity
-                    key={emoji}
-                    style={[
-                      styles.emojiPill,
-                      isSelected && styles.emojiPillSelected,
-                      isNewlyAdded && styles.previewEmojiButton, // Purple border highlight
-                    ]}
-                    onPress={() => handleEmojiPress(emoji)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.emojiPillEmoji}>{emoji}</Text>
-                    {totalCount > 0 && <Text style={styles.emojiPillCount}>{totalCount}</Text>}
-                  </TouchableOpacity>
+                  <View key={emoji} style={{ position: 'relative' }}>
+                    <TouchableOpacity
+                      style={[styles.emojiPill, isSelected && styles.emojiPillSelected]}
+                      onPress={() => handleEmojiPress(emoji)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.emojiPillEmoji}>{emoji}</Text>
+                      {totalCount > 0 && <Text style={styles.emojiPillCount}>{totalCount}</Text>}
+                    </TouchableOpacity>
+                    {/* Purple highlight overlay that fades out */}
+                    {isNewlyAdded && (
+                      <Animated.View
+                        pointerEvents="none"
+                        style={[styles.emojiHighlightOverlay, { opacity: highlightOpacity }]}
+                      />
+                    )}
+                  </View>
                 );
               })}
 

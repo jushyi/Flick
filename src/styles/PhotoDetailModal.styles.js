@@ -184,11 +184,17 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  // Preview emoji button - distinct styling to indicate "tap to confirm"
-  previewEmojiButton: {
-    borderColor: '#9370DB', // Purple border to indicate pending confirmation
+  // Purple highlight overlay for newly added emoji (fades out over 1 second)
+  emojiHighlightOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
     borderWidth: 2,
-    backgroundColor: '#4A3A5A', // Slightly purple-tinted background
+    borderColor: '#9370DB', // Purple border
+    backgroundColor: 'rgba(147, 112, 219, 0.15)', // Subtle purple tint
   },
   // Add emoji button - same size and styling as emojiPill for equal visual presence
   addEmojiButton: {
