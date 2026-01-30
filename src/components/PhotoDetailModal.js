@@ -450,6 +450,28 @@ const PhotoDetailModal = ({
         onClose={() => setShowEmojiPicker(false)}
         enableRecentlyUsed={false}
         enableSearchBar={true}
+        theme={{
+          backdrop: '#00000080',
+          knob: colors.text.secondary,
+          container: '#1a1a1a',
+          header: colors.text.primary,
+          skinTonesContainer: '#1a1a1a',
+          category: {
+            icon: colors.text.secondary,
+            iconActive: colors.text.primary,
+            container: '#1a1a1a',
+            containerActive: colors.brand.purple,
+          },
+          search: {
+            text: colors.text.primary,
+            placeholder: colors.text.secondary,
+            icon: colors.text.secondary,
+            background: '#2a2a2a',
+          },
+          emoji: {
+            selected: colors.brand.purple,
+          },
+        }}
       />
     </Modal>
   );
