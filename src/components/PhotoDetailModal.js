@@ -24,6 +24,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import EmojiPicker from 'rn-emoji-keyboard';
 import { getTimeAgo } from '../utils/timeUtils';
 import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { styles } from '../styles/PhotoDetailModal.styles';
@@ -153,6 +154,14 @@ const PhotoDetailModal = ({
     orderedEmojis,
     getUserReactionCount,
     handleEmojiPress,
+
+    // Custom emoji picker
+    customEmoji,
+    showEmojiPicker,
+    setShowEmojiPicker,
+    handleOpenEmojiPicker,
+    handleEmojiPickerSelect,
+    handleCustomEmojiConfirm,
   } = usePhotoDetailModal({
     mode,
     photo,
@@ -383,7 +392,7 @@ const PhotoDetailModal = ({
               </Text>
             </TouchableOpacity>
 
-            {/* Emoji pills - right side */}
+            {/* Emoji pills - right side (5 curated emojis + add button) */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -407,6 +416,19 @@ const PhotoDetailModal = ({
                   </TouchableOpacity>
                 );
               })}
+
+              {/* Add custom emoji button */}
+              <TouchableOpacity
+                style={[styles.emojiPill, styles.addEmojiButton]}
+                onPress={customEmoji ? handleCustomEmojiConfirm : handleOpenEmojiPicker}
+                activeOpacity={0.7}
+              >
+                {customEmoji ? (
+                  <Text style={styles.emojiPillEmoji}>{customEmoji}</Text>
+                ) : (
+                  <Text style={styles.addEmojiText}>+</Text>
+                )}
+              </TouchableOpacity>
             </ScrollView>
           </View>
         </Animated.View>
@@ -419,6 +441,15 @@ const PhotoDetailModal = ({
         photoId={currentPhoto?.id}
         photoOwnerId={currentPhoto?.userId}
         currentUserId={currentUserId}
+      />
+
+      {/* Custom Emoji Picker */}
+      <EmojiPicker
+        onEmojiSelected={handleEmojiPickerSelect}
+        open={showEmojiPicker}
+        onClose={() => setShowEmojiPicker(false)}
+        enableRecentlyUsed={false}
+        enableSearchBar={true}
       />
     </Modal>
   );

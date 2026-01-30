@@ -184,4 +184,13 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  // Add emoji button - same size and styling as emojiPill for equal visual presence
+  addEmojiButton: {
+    justifyContent: 'center',
+  },
+  addEmojiText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
 });
