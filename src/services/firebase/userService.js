@@ -174,3 +174,51 @@ export const checkDailyLimit = async userId => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Get a user's public profile data
+ * Fetches only public fields, excluding sensitive data like email and phone
+ *
+ * @param {string} userId - User ID to fetch
+ * @returns {Promise<{success: boolean, profile?: object, error?: string}>}
+ */
+export const getUserProfile = async userId => {
+  try {
+    if (!userId) {
+      return { success: false, error: 'Invalid user ID' };
+    }
+
+    const userRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userRef);
+
+    if (!userDocSnap.exists()) {
+      return { success: false, error: 'User not found' };
+    }
+
+    const userData = userDocSnap.data();
+
+    // Return only public profile fields
+    // DO NOT return sensitive data (email, phone, etc.)
+    const profile = {
+      userId: userDocSnap.id,
+      displayName: userData.displayName || null,
+      username: userData.username || null,
+      bio: userData.bio || null,
+      photoURL: userData.photoURL || null,
+      profilePhotoURL: userData.profilePhotoURL || null,
+      selects: userData.selects || [],
+      profileSong: userData.profileSong || null,
+    };
+
+    logger.info('UserService.getUserProfile: Fetched profile', {
+      userId,
+      hasDisplayName: !!profile.displayName,
+      hasUsername: !!profile.username,
+    });
+
+    return { success: true, profile };
+  } catch (error) {
+    logger.error('UserService.getUserProfile: Error', error);
+    return { success: false, error: error.message };
+  }
+};

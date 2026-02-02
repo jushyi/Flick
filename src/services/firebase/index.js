@@ -58,3 +58,15 @@ export { getPhotosByIds } from './photoService';
 
 // Export Monthly Album service functions (auto-generated monthly albums)
 export { getUserPhotosByMonth, getMonthPhotos } from './monthlyAlbumService';
+
+// Export User service functions
+export { getUserProfile } from './userService';
+
+// Export Friendship service functions
+export {
+  checkFriendshipStatus,
+  sendFriendRequest,
+  acceptFriendRequest,
+  declineFriendRequest,
+  generateFriendshipId,
+} from './friendshipService';
