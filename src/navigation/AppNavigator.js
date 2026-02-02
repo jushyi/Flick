@@ -469,9 +469,11 @@ const AppNavigator = () => {
                 name="OtherUserProfile"
                 component={ProfileScreen}
                 options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
+                  presentation: 'fullScreenModal', // Modal overlay - doesn't dismiss underlying content
+                  animation: 'slide_from_right', // Keep existing right-slide animation
                   headerShown: false,
+                  gestureEnabled: true, // Allow swipe from edge to go back
+                  gestureDirection: 'horizontal', // Horizontal swipe (from left edge) to dismiss
                 }}
               />
               <Stack.Screen
