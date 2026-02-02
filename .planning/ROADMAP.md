@@ -39,7 +39,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 14: Profile Field Character Limits** - Enforce max lengths: display name (24), username (24), bio (240)
 - [x] **Phase 15: Friends Screen & Other Profiles** - Friends screen refactor and wiring up the ability to view other peoples profile
 - [x] **Phase 15.1: Profile Setup Cancel Flow** - Cancel profile setup with verification, return to phone input, delete partial profile (INSERTED)
-- [ ] **Phase 15.2: Modal State Preservation** - Return to story/comment modal after viewing profile instead of feed (INSERTED)
+- [x] **Phase 15.2: Modal State Preservation** - Return to story/comment modal after viewing profile instead of feed (INSERTED)
 - [ ] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
 - [ ] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
 - [ ] **Phase 18: Content Visibility Duration** - Define how long stories and feed pictures stay visible for friends
@@ -434,12 +434,12 @@ Plans:
 
 **Goal**: Preserve modal state when navigating to profiles from story/comment modals - back navigation returns users to the modal they were viewing instead of the feed
 **Depends on**: Phase 15
-**Research**: Likely (React Navigation state persistence patterns)
-**Plans**: TBD
+**Research**: Complete (useFocusEffect + deferred navigation pattern)
+**Plans**: 1/1 complete
 
 Plans:
 
-- [ ] 15.2-01: TBD (run /gsd:plan-phase 15.2 to break down)
+- [x] 15.2-01: Modal state preservation infrastructure + deferred navigation
 
 **Details:**
 
@@ -636,7 +636,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 14. Profile Field Limits         | 1/1            | Complete    | 2026-02-02 |
 | 15. Friends Screen & Profiles    | 3/3            | Complete    | 2026-02-02 |
 | 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
-| 15.2 Modal State Preservation    | 0/?            | Not started | -          |
+| 15.2 Modal State Preservation    | 1/1            | Complete    | 2026-02-02 |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |

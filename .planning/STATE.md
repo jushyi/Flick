@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 15 — Friends Screen & Other Profiles
+**Current focus:** Phase 16 — Color Constants Standardization
 
 ## Current Position
 
-Phase: 15 of 25 (Friends Screen & Other Profiles)
-Plan: 3 of 3 in current phase (phase complete)
+Phase: 15.2 of 25 (Modal State Preservation)
+Plan: 1 of 1 in current phase (phase complete)
 Status: Phase complete
-Last activity: 2026-02-02 — Completed 15-03-PLAN.md (updated roadmap only - summary already existed)
+Last activity: 2026-02-02 — Completed 15.2-01-PLAN.md
 
-Progress: █████░░░░░░░░░░░░░ 62% (Phase 15 complete, ready for Phase 15.2)
+Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2 complete, ready for Phase 16)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 54 (including 13 FIX plans)
+- Total plans completed: 55 (including 13 FIX plans)
 - Average duration: 11 min
-- Total execution time: 609 min
+- Total execution time: 627 min
 
 **By Phase:**
 
@@ -50,11 +50,12 @@ Progress: █████░░░░░░░░░░░░░ 62% (Phase 15 c
 | 14    | 1     | 8 min  | 8 min    |
 | 15    | 4     | 54 min | 13.5 min |
 | 15.1  | 1     | 9 min  | 9 min    |
+| 15.2  | 1     | 18 min | 18 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 9 min, 18 min, 18 min, 9 min, 9 min
-- Trend: Phase 15.1 complete - profile setup cancel flow added
+- Last 5 plans: 18 min, 18 min, 9 min, 9 min, 18 min
+- Trend: Phase 15.2 complete - modal state preservation for profile peek
 
 ## Accumulated Context
 
@@ -187,6 +188,9 @@ Recent decisions affecting current work:
 | 15    | Unified FriendCard for all relationship states        | One component with props instead of separate components                |
 | 15    | 500ms debounce for user search in Requests tab        | Balance UX responsiveness with Firestore query efficiency              |
 | 15    | Long press to remove friend                           | Consistent with other list interaction patterns in app                 |
+| 15.2  | Deferred navigation via returned function             | Allows PhotoDetailModal to control timing (close first, then navigate) |
+| 15.2  | Skip feed refresh on profile peek return              | Prevents visible flash before modal restoration                        |
+| 15.2  | Close sequence: comments → modal → navigate           | Prevents frozen UI from overlapping modal animations                   |
 
 ### Deferred Issues
 
@@ -284,5 +288,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 15-03-PLAN.md - Universal avatar navigation (Phase 15 complete)
+Stopped at: Completed 15.2-01-PLAN.md - Modal state preservation (Phase 15.2 complete)
 Resume file: None
