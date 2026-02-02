@@ -459,6 +459,15 @@ const AppNavigator = () => {
                   animation: 'slide_from_right',
                 }}
               />
+              <Stack.Screen
+                name="OtherUserProfile"
+                component={ProfileScreen}
+                options={{
+                  presentation: 'card',
+                  animation: 'slide_from_right',
+                  headerShown: false,
+                }}
+              />
             </>
           )}
         </Stack.Navigator>
