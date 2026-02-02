@@ -39,6 +39,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 14: Profile Field Character Limits** - Enforce max lengths: display name (24), username (24), bio (240)
 - [ ] **Phase 15: Friends Screen & Other Profiles** - Friends screen refactor and wiring up the ability to view other peoples profile
 - [ ] **Phase 15.1: Profile Setup Cancel Flow** - Cancel profile setup with verification, return to phone input, delete partial profile (INSERTED)
+- [ ] **Phase 15.2: Modal State Preservation** - Return to story/comment modal after viewing profile instead of feed (INSERTED)
 - [ ] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
 - [ ] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
 - [ ] **Phase 18: Content Visibility Duration** - Define how long stories and feed pictures stay visible for friends
@@ -429,10 +430,34 @@ Plans:
 4. Navigate back to phone number input screen
 5. Handle edge cases (network errors during cleanup, etc.)
 
+### Phase 15.2: Modal State Preservation (INSERTED)
+
+**Goal**: Preserve modal state when navigating to profiles from story/comment modals - back navigation returns users to the modal they were viewing instead of the feed
+**Depends on**: Phase 15
+**Research**: Likely (React Navigation state persistence patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 15.2-01: TBD (run /gsd:plan-phase 15.2 to break down)
+
+**Details:**
+
+1. When tapping avatar in story viewer or comments sheet, navigate to profile
+2. Back navigation should return to the story/comment modal that was open
+3. Current behavior: back goes to feed with refresh (feels disconnected)
+4. Technical options:
+   - Keep modals in background during profile navigation
+   - Store modal state and reopen on back navigation
+   - Use navigation state to track origin
+5. Handle nested modals (comments sheet inside photo modal)
+
+**Source:** Enhancement request from 15-03 UAT testing
+
 ### Phase 16: Color Constants Standardization
 
 **Goal**: Standardize all colors throughout every screen, modal, and component to use constants from a centralized theme system. Eliminate all hardcoded color values to enable future theme/palette changes.
-**Depends on**: Phase 15
+**Depends on**: Phase 15.2
 **Research**: Unlikely (internal refactoring)
 **Plans**: TBD
 
@@ -585,7 +610,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -611,6 +636,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 14. Profile Field Limits         | 1/1            | Complete    | 2026-02-02 |
 | 15. Friends Screen & Profiles    | 2/3            | In progress | -          |
 | 15.1 Profile Setup Cancel        | 0/?            | Not started | -          |
+| 15.2 Modal State Preservation    | 0/?            | Not started | -          |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |

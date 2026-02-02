@@ -9,7 +9,7 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 15 of 24 (Friends Screen & Other Profiles)
+Phase: 15 of 25 (Friends Screen & Other Profiles)
 Plan: 2 of 3 in current phase (+ 2 FIX plans done)
 Status: In progress
 Last activity: 2026-02-02 — Completed 15-02-FIX2.md
@@ -275,6 +275,10 @@ None yet.
   - Allow users to cancel profile setup and return to phone number input
   - Show confirmation dialog before canceling
   - Delete partial profile data from database on cancel
+- Phase 15.2 inserted after Phase 15.1: Modal State Preservation
+  - Return to story/comment modal after viewing profile instead of feed
+  - Preserve modal state during profile navigation
+  - Source: Enhancement from 15-03 UAT testing
 
 ## Session Continuity
 
