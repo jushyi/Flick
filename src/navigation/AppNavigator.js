@@ -412,7 +412,13 @@ const AppNavigator = () => {
             // PhoneAuthProvider wraps NavigationContainer (see below) to share
             // confirmation ref between screens without serialization crash
             <>
-              <Stack.Screen name="PhoneInput" component={PhoneInputScreen} />
+              <Stack.Screen
+                name="PhoneInput"
+                component={PhoneInputScreen}
+                options={{
+                  animation: 'slide_from_left',
+                }}
+              />
               <Stack.Screen name="Verification" component={VerificationScreen} />
             </>
           ) : needsOnboarding ? (
