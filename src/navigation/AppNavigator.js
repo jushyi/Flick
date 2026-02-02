@@ -468,6 +468,24 @@ const AppNavigator = () => {
                   headerShown: false,
                 }}
               />
+              <Stack.Screen
+                name="AlbumGrid"
+                component={AlbumGridScreen}
+                options={{
+                  presentation: 'card',
+                  animation: 'slide_from_right',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="MonthlyAlbumGrid"
+                component={MonthlyAlbumGridScreen}
+                options={{
+                  presentation: 'card',
+                  animation: 'slide_from_right',
+                  headerShown: false,
+                }}
+              />
             </>
           )}
         </Stack.Navigator>
