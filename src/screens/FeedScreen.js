@@ -124,6 +124,31 @@ const FeedScreen = () => {
   }, [navigation, refreshFeed]);
 
   /**
+   * Restore modal state when returning from profile peek navigation
+   * Uses useFocusEffect to detect when screen regains focus after back navigation
+   */
+  useFocusEffect(
+    useCallback(() => {
+      // Check if returning from a profile peek (avatar tap from modal)
+      if (isProfilePeekRef.current && savedModalStateRef.current) {
+        logger.debug('FeedScreen: Detected return from profile peek, will restore modal', {
+          modalType: savedModalStateRef.current.type,
+        });
+        // Small delay to let navigation complete and screen fully render
+        const timer = setTimeout(() => {
+          restoreModalState();
+        }, 100);
+        return () => clearTimeout(timer);
+      } else if (isProfilePeekRef.current && !savedModalStateRef.current) {
+        // Edge case: User navigated elsewhere from profile (not back)
+        // Clear the peek flag without restoring
+        logger.debug('FeedScreen: Profile peek flag set but no saved state - clearing flag');
+        isProfilePeekRef.current = false;
+      }
+    }, [])
+  );
+
+  /**
    * Load friend stories data
    * Reusable function for initial load and refresh
    */
