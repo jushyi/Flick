@@ -41,6 +41,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 15.1: Profile Setup Cancel Flow** - Cancel profile setup with verification, return to phone input, delete partial profile (INSERTED)
 - [x] **Phase 15.2: Modal State Preservation** - Return to story/comment modal after viewing profile instead of feed (INSERTED)
 - [ ] **Phase 15.3: Modal Architecture Fix** - Fix comment avatar navigation and modal stacking architecture (INSERTED)
+- [ ] **Phase 15.4: Story Viewed State Fix** - Restore story viewed tracking broken by 15.3 navigation changes (INSERTED)
 - [ ] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
 - [ ] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
 - [ ] **Phase 18: Content Visibility Duration** - Define how long stories and feed pictures stay visible for friends
@@ -462,12 +463,12 @@ Plans:
 **Goal**: Fix modal stacking architecture so underlying interfaces remain visible when navigating to profiles from PhotoDetailModal or Stories. Also fix comment avatar navigation (ISS-002).
 **Depends on**: Phase 15.2
 **Research**: Complete (Instagram/TikTok patterns researched)
-**Plans**: 1/2 complete
+**Plans**: 2/2 complete
 
 Plans:
 
 - [x] 15.3-01: PhotoDetail navigation screen infrastructure (context, screen, navigator)
-- [ ] 15.3-02: FeedScreen integration with PhotoDetailScreen
+- [x] 15.3-02: FeedScreen integration with PhotoDetailScreen
 
 **Details:**
 
@@ -482,6 +483,26 @@ Plans:
 4. Research shows Instagram/TikTok likely use navigation screens, not Modal components
 
 **Source:** ISS-002, ISS-003 from 15.2-01-FIX2 verification
+
+### Phase 15.4: Story Viewed State Fix (INSERTED)
+
+**Goal**: Restore story viewed tracking functionality broken by Phase 15.3 navigation changes - ensure viewed stories are properly tracked and feed screen updates appropriately
+**Depends on**: Phase 15.3
+**Research**: Unlikely (regression fix of existing functionality)
+**Plans**: 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd:plan-phase 15.4 to break down)
+
+**Details:**
+
+1. Story viewed state not properly tracked after 15.3 changes
+2. Feed screen not updating to reflect which stories have been viewed
+3. Likely regression from PhotoDetailScreen/navigation architecture changes
+4. Need to restore proper viewed state persistence and UI updates
+
+**Source:** Regression discovered during 15.3 work
 
 ### Phase 16: Color Constants Standardization
 
@@ -639,7 +660,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -666,7 +687,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15. Friends Screen & Profiles    | 3/3            | Complete    | 2026-02-02 |
 | 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
 | 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
-| 15.3 Modal Architecture Fix      | 1/2            | In progress | -          |
+| 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
+| 15.4 Story Viewed State Fix      | 0/?            | Not started | -          |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
