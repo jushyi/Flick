@@ -28,6 +28,7 @@ import { styles } from '../../styles/CommentRow.styles';
  * @param {function} onLike - Callback when heart pressed (Plan 04)
  * @param {function} onDelete - Callback when delete confirmed
  * @param {function} onAvatarPress - Callback when avatar pressed (userId, displayName) -> navigate to profile
+ * @param {string} currentUserId - Current user's ID (to disable tap on own avatar)
  * @param {boolean} isOwnerComment - Whether this is photo owner's comment (show Author badge)
  * @param {boolean} canDelete - Whether current user can delete this comment
  * @param {boolean} isLiked - Whether current user liked this comment (Plan 04)
@@ -40,6 +41,7 @@ const CommentRow = ({
   onLike,
   onDelete,
   onAvatarPress,
+  currentUserId,
   isOwnerComment = false,
   canDelete = false,
   isLiked = false,
@@ -75,16 +77,22 @@ const CommentRow = ({
     }
   }, [comment, isLiked, onLike]);
 
+  // Check if this is the current user's own comment
+  const isOwnComment = comment?.userId === currentUserId;
+
   /**
    * Handle avatar press - navigate to user's profile
+   * Disabled for own comments (comment.userId === currentUserId)
    */
   const handleAvatarPress = useCallback(() => {
+    // Don't allow tap on own avatar
+    if (isOwnComment) return;
     logger.info('CommentRow: Avatar pressed', { commentId: comment?.id, userId: comment?.userId });
     if (onAvatarPress && comment?.userId) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onAvatarPress(comment.userId, user?.displayName);
     }
-  }, [comment?.id, comment?.userId, user?.displayName, onAvatarPress]);
+  }, [comment?.id, comment?.userId, user?.displayName, onAvatarPress, isOwnComment]);
 
   /**
    * Handle long press for delete
@@ -137,11 +145,12 @@ const CommentRow = ({
       onLongPress={handleLongPress}
       delayLongPress={500}
     >
-      {/* Profile Photo - tappable to navigate to user's profile */}
+      {/* Profile Photo - tappable to navigate to user's profile (disabled for own comments) */}
       <TouchableOpacity
         style={styles.profilePhotoContainer}
         onPress={handleAvatarPress}
-        activeOpacity={0.7}
+        activeOpacity={isOwnComment ? 1 : 0.7}
+        disabled={isOwnComment}
       >
         {profilePhotoURL ? (
           <Image

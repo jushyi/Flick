@@ -21,6 +21,7 @@ import { styles } from '../../styles/CommentsBottomSheet.styles';
  * @param {function} onLike - Callback when heart pressed
  * @param {function} onDelete - Callback when delete confirmed
  * @param {function} onAvatarPress - Callback when avatar pressed (userId, displayName) -> navigate to profile
+ * @param {string} currentUserId - Current user's ID (to disable tap on own avatar)
  * @param {function} isOwnerComment - Function to check if comment is from photo owner
  * @param {function} canDeleteComment - Function to check if user can delete comment
  * @param {function} isLikedByUser - Function to check if user liked comment
@@ -31,6 +32,7 @@ const CommentWithReplies = ({
   onLike,
   onDelete,
   onAvatarPress,
+  currentUserId,
   isOwnerComment,
   canDeleteComment,
   isLikedByUser,
@@ -67,6 +69,7 @@ const CommentWithReplies = ({
         onLike={onLike}
         onDelete={onDelete}
         onAvatarPress={onAvatarPress}
+        currentUserId={currentUserId}
         isOwnerComment={isOwner}
         canDelete={canDelete}
         isLiked={isLikedByUser(comment.id)}
@@ -101,6 +104,7 @@ const CommentWithReplies = ({
                   onLike={onLike}
                   onDelete={onDelete}
                   onAvatarPress={onAvatarPress}
+                  currentUserId={currentUserId}
                   isOwnerComment={isOwnerComment(reply)}
                   canDelete={canDeleteComment(reply)}
                   isLiked={isLikedByUser(reply.id)}

@@ -353,6 +353,7 @@ const CommentsBottomSheet = ({
           onLike={handleLike}
           onDelete={handleDelete}
           onAvatarPress={onAvatarPress}
+          currentUserId={currentUserId}
           isOwnerComment={isOwnerComment}
           canDeleteComment={canDeleteComment}
           isLikedByUser={isLikedByUser}
@@ -364,6 +365,7 @@ const CommentsBottomSheet = ({
       handleLike,
       handleDelete,
       onAvatarPress,
+      currentUserId,
       isOwnerComment,
       canDeleteComment,
       isLikedByUser,

@@ -139,10 +139,16 @@ const PhotoDetailModal = ({
     return true;
   }, [hasNextFriend, onRequestNextFriend, cubeRotation, isTransitioning]);
 
+  // Check if viewing own photo (disable avatar tap)
+  const isOwnPhoto = currentPhoto?.userId === currentUserId;
+
   /**
    * Handle avatar press - close modal and navigate to profile
+   * Disabled for own photos (currentPhoto.userId === currentUserId)
    */
   const handleAvatarPress = useCallback(() => {
+    // Don't allow tap on own avatar
+    if (isOwnPhoto) return;
     if (onAvatarPress && currentPhoto) {
       onClose();
       // Use setTimeout to ensure modal closes before navigation
@@ -150,7 +156,7 @@ const PhotoDetailModal = ({
         onAvatarPress(currentPhoto.userId, displayName);
       }, 100);
     }
-  }, [onAvatarPress, onClose, currentPhoto, displayName]);
+  }, [onAvatarPress, onClose, currentPhoto, displayName, isOwnPhoto]);
 
   /**
    * Handle avatar press from comments - close comments sheet, then modal, then navigate
@@ -359,11 +365,12 @@ const PhotoDetailModal = ({
             </View>
           </TouchableWithoutFeedback>
 
-          {/* Profile photo - overlapping top left of photo, tappable to navigate to profile */}
+          {/* Profile photo - overlapping top left of photo, tappable to navigate to profile (disabled for own photos) */}
           <TouchableOpacity
             style={styles.profilePicContainer}
             onPress={handleAvatarPress}
-            activeOpacity={0.7}
+            activeOpacity={isOwnPhoto ? 1 : 0.7}
+            disabled={isOwnPhoto}
           >
             {profilePhotoURL ? (
               <Image

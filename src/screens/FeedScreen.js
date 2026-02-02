@@ -604,6 +604,7 @@ const FeedScreen = () => {
       onPress={() => handlePhotoPress(item)}
       onCommentPress={() => handleCommentPress(item)}
       onAvatarPress={handleAvatarPress}
+      currentUserId={user?.uid}
     />
   );
 
@@ -716,7 +717,6 @@ const FeedScreen = () => {
               <MeStoryCard
                 friend={myStories}
                 onPress={handleOpenMyStories}
-                onAvatarPress={handleOwnAvatarPress}
                 isFirst={true}
                 isViewed={hasViewedAllPhotos(myStories.topPhotos)}
               />
@@ -744,7 +744,6 @@ const FeedScreen = () => {
               <MeStoryCard
                 friend={myStories}
                 onPress={handleOpenMyStories}
-                onAvatarPress={handleOwnAvatarPress}
                 isFirst={true}
                 isViewed={hasViewedAllPhotos(myStories.topPhotos)}
               />

@@ -21,17 +21,10 @@ import logger from '../utils/logger';
  * @param {Array} friend.topPhotos - User's photos
  * @param {boolean} friend.hasPhotos - Whether user has any photos
  * @param {function} onPress - Callback when card is tapped
- * @param {function} onAvatarPress - Callback when avatar is tapped (navigates to profile)
  * @param {boolean} isFirst - Whether this is the first card (for left margin)
  * @param {boolean} isViewed - Whether all stories have been viewed (default false)
  */
-export const MeStoryCard = ({
-  friend,
-  onPress,
-  onAvatarPress,
-  isFirst = false,
-  isViewed = false,
-}) => {
+export const MeStoryCard = ({ friend, onPress, isFirst = false, isViewed = false }) => {
   const { userId, profilePhotoURL, topPhotos, thumbnailURL, hasPhotos } = friend || {};
 
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array
@@ -44,16 +37,6 @@ export const MeStoryCard = ({
     logger.debug('MeStoryCard: Card pressed', { userId });
     if (onPress) {
       onPress();
-    }
-  };
-
-  /**
-   * Handle avatar press - navigates to own profile
-   */
-  const handleAvatarPress = () => {
-    logger.debug('MeStoryCard: Avatar pressed', { userId });
-    if (onAvatarPress) {
-      onAvatarPress();
     }
   };
 
@@ -83,14 +66,10 @@ export const MeStoryCard = ({
   /**
    * Render profile photo at bottom of card
    * Uses RNImage (small size, no flash issue)
-   * Tappable to navigate to own profile
+   * Not tappable - own profile avatar should not navigate anywhere
    */
   const renderProfilePhoto = () => (
-    <TouchableOpacity
-      style={styles.profileContainer}
-      onPress={handleAvatarPress}
-      activeOpacity={0.7}
-    >
+    <View style={styles.profileContainer}>
       {profilePhotoURL ? (
         <RNImage source={{ uri: profilePhotoURL }} style={styles.profilePhoto} />
       ) : (
@@ -98,7 +77,7 @@ export const MeStoryCard = ({
           <Ionicons name="person" size={18} color={colors.text.secondary} />
         </View>
       )}
-    </TouchableOpacity>
+    </View>
   );
 
   return (
