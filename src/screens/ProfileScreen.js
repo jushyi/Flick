@@ -516,14 +516,14 @@ const ProfileScreen = () => {
   if (!isOwnProfile && otherUserError) {
     return (
       <View style={styles.container}>
-        <View style={[styles.header, { top: insets.top }]}>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           <TouchableOpacity onPress={handleBackPress} style={styles.headerButton}>
             <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={styles.headerButton} />
         </View>
-        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
+        <View style={[styles.loadingContainer, { paddingTop: insets.top + HEADER_HEIGHT }]}>
           <Text style={styles.loadingText}>{otherUserError}</Text>
         </View>
       </View>
@@ -532,8 +532,8 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header - 3 column layout */}
-      <View style={[styles.header, { top: insets.top }]}>
+      {/* Header - 3 column layout with safe area coverage */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         {/* Left: Friends icon (own) or Back arrow (other user) */}
         {isOwnProfile ? (
           <TouchableOpacity onPress={handleFriendsPress} style={styles.headerButton}>
@@ -601,15 +601,17 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* 4. Profile Song */}
-        <View style={styles.songContainer}>
-          <ProfileSongCard
-            song={profileData?.profileSong || null}
-            isOwnProfile={isOwnProfile}
-            onPress={handleSongPress}
-            onLongPress={handleSongLongPress}
-          />
-        </View>
+        {/* 4. Profile Song - hide empty state for other users */}
+        {(isOwnProfile || profileData?.profileSong) && (
+          <View style={styles.songContainer}>
+            <ProfileSongCard
+              song={profileData?.profileSong || null}
+              isOwnProfile={isOwnProfile}
+              onPress={handleSongPress}
+              onLongPress={handleSongLongPress}
+            />
+          </View>
+        )}
 
         {/* 5. Albums Section - Friends only for other profiles */}
         {!isOwnProfile && !isFriend ? (
@@ -721,12 +723,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-    height: HEADER_HEIGHT,
+    minHeight: HEADER_HEIGHT,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
@@ -774,13 +776,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Profile Info Card - left half
+  // Profile Info Card - full width
   profileInfoCard: {
     flex: 1,
-    maxWidth: '48%',
     backgroundColor: colors.background.tertiary,
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    paddingTop: 70, // Space for profile photo overlay
   },
   displayName: {
     fontSize: 22,
