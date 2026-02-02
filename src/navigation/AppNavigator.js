@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
 import { PhoneAuthProvider } from '../context/PhoneAuthContext';
+import { PhotoDetailProvider } from '../context/PhotoDetailContext';
 import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 
@@ -32,6 +33,7 @@ import CreateAlbumScreen from '../screens/CreateAlbumScreen';
 import AlbumPhotoPickerScreen from '../screens/AlbumPhotoPickerScreen';
 import AlbumGridScreen from '../screens/AlbumGridScreen';
 import MonthlyAlbumGridScreen from '../screens/MonthlyAlbumGridScreen';
+import PhotoDetailScreen from '../screens/PhotoDetailScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -397,106 +399,120 @@ const AppNavigator = () => {
   };
 
   return (
-    <PhoneAuthProvider>
-      <NavigationContainer ref={navigationRef} linking={linking} theme={darkTheme}>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            gestureEnabled: true,
-            gestureDirection: 'horizontal',
-            contentStyle: { backgroundColor: '#000000' },
-          }}
-        >
-          {!isAuthenticated ? (
-            // Auth Stack - Phone-only authentication
-            // PhoneAuthProvider wraps NavigationContainer (see below) to share
-            // confirmation ref between screens without serialization crash
-            <>
-              <Stack.Screen
-                name="PhoneInput"
-                component={PhoneInputScreen}
-                options={{
-                  animation: 'slide_from_left',
-                }}
-              />
-              <Stack.Screen name="Verification" component={VerificationScreen} />
-            </>
-          ) : needsOnboarding ? (
-            // Onboarding Stack - ProfileSetup and Selects in same navigator for back navigation
-            <Stack.Screen name="Onboarding">
-              {() => <OnboardingStackNavigator initialRouteName={onboardingInitialRoute} />}
-            </Stack.Screen>
-          ) : (
-            // Main App - User fully authenticated and profile complete
-            <>
-              <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-              <Stack.Screen
-                name="Darkroom"
-                component={DarkroomScreen}
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_bottom',
-                  gestureEnabled: false, // Disable back swipe to prevent accidental exit
-                }}
-              />
-              <Stack.Screen
-                name="Success"
-                component={SuccessScreen}
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                  gestureEnabled: false, // Prevent accidental back swipe
-                }}
-              />
-              <Stack.Screen
-                name="Activity"
-                component={ActivityScreen}
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen
-                name="FriendsList"
-                component={FriendsScreen}
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                }}
-              />
-              <Stack.Screen
-                name="OtherUserProfile"
-                component={ProfileScreen}
-                options={{
-                  presentation: 'fullScreenModal', // Modal overlay - keeps parent mounted
-                  headerShown: false,
-                  gestureEnabled: true,
-                }}
-              />
-              <Stack.Screen
-                name="AlbumGrid"
-                component={AlbumGridScreen}
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen
-                name="MonthlyAlbumGrid"
-                component={MonthlyAlbumGridScreen}
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                  headerShown: false,
-                }}
-              />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </PhoneAuthProvider>
+    <PhotoDetailProvider>
+      <PhoneAuthProvider>
+        <NavigationContainer ref={navigationRef} linking={linking} theme={darkTheme}>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              contentStyle: { backgroundColor: '#000000' },
+            }}
+          >
+            {!isAuthenticated ? (
+              // Auth Stack - Phone-only authentication
+              // PhoneAuthProvider wraps NavigationContainer (see below) to share
+              // confirmation ref between screens without serialization crash
+              <>
+                <Stack.Screen
+                  name="PhoneInput"
+                  component={PhoneInputScreen}
+                  options={{
+                    animation: 'slide_from_left',
+                  }}
+                />
+                <Stack.Screen name="Verification" component={VerificationScreen} />
+              </>
+            ) : needsOnboarding ? (
+              // Onboarding Stack - ProfileSetup and Selects in same navigator for back navigation
+              <Stack.Screen name="Onboarding">
+                {() => <OnboardingStackNavigator initialRouteName={onboardingInitialRoute} />}
+              </Stack.Screen>
+            ) : (
+              // Main App - User fully authenticated and profile complete
+              <>
+                <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+                <Stack.Screen
+                  name="PhotoDetail"
+                  component={PhotoDetailScreen}
+                  options={{
+                    presentation: 'transparentModal',
+                    headerShown: false,
+                    animation: 'fade',
+                    gestureEnabled: true,
+                    gestureDirection: 'vertical',
+                    contentStyle: { backgroundColor: 'transparent' },
+                  }}
+                />
+                <Stack.Screen
+                  name="Darkroom"
+                  component={DarkroomScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_bottom',
+                    gestureEnabled: false, // Disable back swipe to prevent accidental exit
+                  }}
+                />
+                <Stack.Screen
+                  name="Success"
+                  component={SuccessScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                    gestureEnabled: false, // Prevent accidental back swipe
+                  }}
+                />
+                <Stack.Screen
+                  name="Activity"
+                  component={ActivityScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="FriendsList"
+                  component={FriendsScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                  }}
+                />
+                <Stack.Screen
+                  name="OtherUserProfile"
+                  component={ProfileScreen}
+                  options={{
+                    presentation: 'fullScreenModal', // Modal overlay - keeps parent mounted
+                    headerShown: false,
+                    gestureEnabled: true,
+                  }}
+                />
+                <Stack.Screen
+                  name="AlbumGrid"
+                  component={AlbumGridScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="MonthlyAlbumGrid"
+                  component={MonthlyAlbumGridScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                    headerShown: false,
+                  }}
+                />
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PhoneAuthProvider>
+    </PhotoDetailProvider>
   );
 };
 
