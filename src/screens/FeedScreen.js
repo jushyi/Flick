@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
   getFirestore,
   collection,
@@ -101,6 +101,12 @@ const FeedScreen = () => {
   const [storiesInitialIndex, setStoriesInitialIndex] = useState(0);
   // Track current index in stories modal (updated via onPhotoChange)
   const [storiesCurrentIndex, setStoriesCurrentIndex] = useState(0);
+
+  // Modal state preservation refs for "profile peek" navigation
+  // Shape: { type: 'photoDetail' | 'stories', selectedPhoto, selectedFriend, initialShowComments, storiesInitialIndex }
+  const savedModalStateRef = useRef(null);
+  // Track if we navigated from a modal avatar tap (for restoration on back)
+  const isProfilePeekRef = useRef(false);
 
   /**
    * Refresh feed and stories when screen comes into focus
@@ -231,11 +237,88 @@ const FeedScreen = () => {
   };
 
   /**
+   * Save current modal state before navigating to profile
+   * Enables restoration when user navigates back
+   * @param {string} type - Modal type: 'photoDetail' or 'stories'
+   */
+  const saveModalState = type => {
+    if (type === 'photoDetail') {
+      savedModalStateRef.current = {
+        type: 'photoDetail',
+        selectedPhoto,
+        initialShowComments,
+        selectedFriend: null,
+        storiesInitialIndex: 0,
+      };
+      logger.debug('FeedScreen: Saved photoDetail modal state', {
+        photoId: selectedPhoto?.id,
+        initialShowComments,
+      });
+    } else if (type === 'stories') {
+      savedModalStateRef.current = {
+        type: 'stories',
+        selectedPhoto: null,
+        initialShowComments: false,
+        selectedFriend,
+        storiesInitialIndex: storiesCurrentIndex,
+      };
+      logger.debug('FeedScreen: Saved stories modal state', {
+        friendId: selectedFriend?.userId,
+        storiesInitialIndex: storiesCurrentIndex,
+      });
+    }
+  };
+
+  /**
+   * Restore modal state after returning from profile
+   * Called by useFocusEffect when returning from profile peek
+   */
+  const restoreModalState = () => {
+    const saved = savedModalStateRef.current;
+    if (!saved) {
+      logger.debug('FeedScreen: No saved modal state to restore');
+      return;
+    }
+
+    logger.debug('FeedScreen: Restoring modal state', { type: saved.type });
+
+    if (saved.type === 'photoDetail' && saved.selectedPhoto) {
+      setSelectedPhoto(saved.selectedPhoto);
+      setInitialShowComments(saved.initialShowComments);
+      setShowPhotoModal(true);
+      logger.debug('FeedScreen: Restored photoDetail modal', {
+        photoId: saved.selectedPhoto?.id,
+        initialShowComments: saved.initialShowComments,
+      });
+    } else if (saved.type === 'stories' && saved.selectedFriend) {
+      setSelectedFriend(saved.selectedFriend);
+      setStoriesInitialIndex(saved.storiesInitialIndex);
+      setStoriesCurrentIndex(saved.storiesInitialIndex);
+      setStoriesModalVisible(true);
+      logger.debug('FeedScreen: Restored stories modal', {
+        friendId: saved.selectedFriend?.userId,
+        storiesInitialIndex: saved.storiesInitialIndex,
+      });
+    }
+
+    // Clear refs after restoration
+    savedModalStateRef.current = null;
+    isProfilePeekRef.current = false;
+  };
+
+  /**
    * Handle avatar press - navigate to user's profile
    * Uses OtherUserProfile screen in root stack for viewing other users
+   * @param {string} userId - User ID to navigate to
+   * @param {string} username - Username for display
+   * @param {string|null} modalType - Optional modal type for state preservation ('photoDetail' or 'stories')
    */
-  const handleAvatarPress = (userId, username) => {
-    logger.debug('FeedScreen: Avatar pressed', { userId, username });
+  const handleAvatarPress = (userId, username, modalType = null) => {
+    logger.debug('FeedScreen: Avatar pressed', { userId, username, modalType });
+    if (modalType) {
+      saveModalState(modalType);
+      isProfilePeekRef.current = true;
+    }
     navigation.navigate('OtherUserProfile', { userId, username });
   };
 
