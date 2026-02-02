@@ -139,47 +139,6 @@ const PhotoDetailModal = ({
     return true;
   }, [hasNextFriend, onRequestNextFriend, cubeRotation, isTransitioning]);
 
-  // Check if viewing own photo (disable avatar tap)
-  const isOwnPhoto = currentPhoto?.userId === currentUserId;
-
-  /**
-   * Handle avatar press - close modal and navigate to profile
-   * Disabled for own photos (currentPhoto.userId === currentUserId)
-   */
-  const handleAvatarPress = useCallback(() => {
-    // Don't allow tap on own avatar
-    if (isOwnPhoto) return;
-    if (onAvatarPress && currentPhoto) {
-      onClose();
-      // Use setTimeout to ensure modal closes before navigation
-      setTimeout(() => {
-        onAvatarPress(currentPhoto.userId, displayName);
-      }, 100);
-    }
-  }, [onAvatarPress, onClose, currentPhoto, displayName, isOwnPhoto]);
-
-  /**
-   * Handle avatar press from comments - close comments sheet, then modal, then navigate
-   * Properly sequence the closing to avoid frozen UI from overlapping modal animations
-   */
-  const handleCommentAvatarPress = useCallback(
-    (userId, userName) => {
-      if (onAvatarPress) {
-        // Step 1: Close comments sheet first
-        setShowComments(false);
-        // Step 2: Wait for comments sheet animation, then close main modal
-        setTimeout(() => {
-          onClose();
-          // Step 3: Wait for modal animation, then navigate
-          setTimeout(() => {
-            onAvatarPress(userId, userName);
-          }, 300);
-        }, 200);
-      }
-    },
-    [onAvatarPress, onClose]
-  );
-
   const {
     // Mode
     showProgressBar,
@@ -225,6 +184,48 @@ const PhotoDetailModal = ({
     currentUserId,
     onFriendTransition: hasNextFriend ? handleFriendTransition : null,
   });
+
+  // Check if viewing own photo (disable avatar tap)
+  // Must be after hook call since currentPhoto comes from the hook
+  const isOwnPhoto = currentPhoto?.userId === currentUserId;
+
+  /**
+   * Handle avatar press - close modal and navigate to profile
+   * Disabled for own photos (currentPhoto.userId === currentUserId)
+   */
+  const handleAvatarPress = useCallback(() => {
+    // Don't allow tap on own avatar
+    if (isOwnPhoto) return;
+    if (onAvatarPress && currentPhoto) {
+      onClose();
+      // Use setTimeout to ensure modal closes before navigation
+      setTimeout(() => {
+        onAvatarPress(currentPhoto.userId, displayName);
+      }, 100);
+    }
+  }, [onAvatarPress, onClose, currentPhoto, displayName, isOwnPhoto]);
+
+  /**
+   * Handle avatar press from comments - close comments sheet, then modal, then navigate
+   * Properly sequence the closing to avoid frozen UI from overlapping modal animations
+   */
+  const handleCommentAvatarPress = useCallback(
+    (userId, userName) => {
+      if (onAvatarPress) {
+        // Step 1: Close comments sheet first
+        setShowComments(false);
+        // Step 2: Wait for comments sheet animation, then close main modal
+        setTimeout(() => {
+          onClose();
+          // Step 3: Wait for modal animation, then navigate
+          setTimeout(() => {
+            onAvatarPress(userId, userName);
+          }, 300);
+        }, 200);
+      }
+    },
+    [onAvatarPress, onClose]
+  );
 
   // Fetch preview comments when photo changes
   useEffect(() => {
