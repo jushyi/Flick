@@ -14,7 +14,17 @@ import {
   DropdownMenu,
   MonthlyAlbumsSection,
 } from '../components';
-import { getUserAlbums, getPhotosByIds, deleteAlbum } from '../services/firebase';
+import {
+  getUserAlbums,
+  getPhotosByIds,
+  deleteAlbum,
+  getUserProfile,
+  checkFriendshipStatus,
+  sendFriendRequest,
+  acceptFriendRequest,
+  declineFriendRequest,
+  generateFriendshipId,
+} from '../services/firebase';
 import logger from '../utils/logger';
 
 const HEADER_HEIGHT = 64;
@@ -44,11 +54,71 @@ const ProfileScreen = () => {
   const scrollViewRef = useRef(null);
   const albumBarRef = useRef(null);
 
+  // Other user profile state (when viewing someone else's profile)
+  const [otherUserProfile, setOtherUserProfile] = useState(null);
+  const [otherUserLoading, setOtherUserLoading] = useState(false);
+  const [otherUserError, setOtherUserError] = useState(null);
+
+  // Friendship state
+  const [friendshipStatus, setFriendshipStatus] = useState('none'); // 'none' | 'friends' | 'pending_sent' | 'pending_received'
+  const [friendshipId, setFriendshipId] = useState(null);
+  const [friendshipLoading, setFriendshipLoading] = useState(false);
+
   // Get route params for viewing other users' profiles
   const { userId, username: routeUsername } = route.params || {};
 
   // Determine if viewing own profile vs another user's profile
   const isOwnProfile = !userId || userId === user?.uid;
+
+  // Fetch other user's profile data
+  const fetchOtherUserProfile = useCallback(async () => {
+    if (isOwnProfile || !userId) return;
+
+    setOtherUserLoading(true);
+    setOtherUserError(null);
+
+    try {
+      const result = await getUserProfile(userId);
+      if (result.success) {
+        setOtherUserProfile(result.profile);
+        logger.info('ProfileScreen: Fetched other user profile', { userId });
+      } else {
+        setOtherUserError(result.error || 'Failed to load profile');
+        logger.error('ProfileScreen: Failed to fetch other user profile', { error: result.error });
+      }
+    } catch (error) {
+      setOtherUserError(error.message);
+      logger.error('ProfileScreen: Error fetching other user profile', { error: error.message });
+    } finally {
+      setOtherUserLoading(false);
+    }
+  }, [isOwnProfile, userId]);
+
+  // Fetch friendship status between current user and profile user
+  const fetchFriendshipStatus = useCallback(async () => {
+    if (isOwnProfile || !userId || !user?.uid) return;
+
+    try {
+      const result = await checkFriendshipStatus(user.uid, userId);
+      if (result.success) {
+        setFriendshipStatus(result.status);
+        setFriendshipId(result.friendshipId);
+        logger.info('ProfileScreen: Fetched friendship status', { status: result.status });
+      }
+    } catch (error) {
+      logger.error('ProfileScreen: Error fetching friendship status', { error: error.message });
+    }
+  }, [isOwnProfile, userId, user?.uid]);
+
+  // Fetch other user data and friendship status on mount/focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!isOwnProfile) {
+        fetchOtherUserProfile();
+        fetchFriendshipStatus();
+      }
+    }, [isOwnProfile, fetchOtherUserProfile, fetchFriendshipStatus])
+  );
 
   // Fetch albums function (reusable for refresh after operations)
   const fetchAlbums = async () => {
@@ -143,17 +213,9 @@ const ProfileScreen = () => {
     }
   }, [route.params, albums, navigation, runNewAlbumAnimation]);
 
-  // TODO: Fetch other user's profile data from Firestore
-  // For now, use own profile for own view, placeholder for other users
-  const profileData = isOwnProfile
-    ? userProfile
-    : {
-        username: routeUsername || 'user',
-        displayName: routeUsername || 'User',
-        photoURL: null,
-        bio: null,
-        selects: [], // Placeholder - will be fetched from Firestore
-      };
+  // Resolve profile data based on own vs other user
+  const profileData = isOwnProfile ? userProfile : otherUserProfile;
+  const isFriend = friendshipStatus === 'friends';
 
   const handleBackPress = () => {
     logger.info('ProfileScreen: Back button pressed');
@@ -168,6 +230,71 @@ const ProfileScreen = () => {
   const handleSettingsPress = () => {
     logger.info('ProfileScreen: Settings button pressed');
     navigation.navigate('Settings');
+  };
+
+  // Friendship action handlers
+  const handleAddFriend = async () => {
+    if (!user?.uid || !userId) return;
+
+    setFriendshipLoading(true);
+    try {
+      const result = await sendFriendRequest(user.uid, userId);
+      if (result.success) {
+        setFriendshipStatus('pending_sent');
+        setFriendshipId(result.friendshipId);
+        logger.info('ProfileScreen: Friend request sent', { userId });
+      } else {
+        Alert.alert('Error', result.error || 'Could not send friend request');
+      }
+    } catch (error) {
+      logger.error('ProfileScreen: Error sending friend request', { error: error.message });
+      Alert.alert('Error', 'Could not send friend request');
+    } finally {
+      setFriendshipLoading(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!friendshipId || !user?.uid) return;
+
+    setFriendshipLoading(true);
+    try {
+      const result = await declineFriendRequest(friendshipId, user.uid);
+      if (result.success) {
+        setFriendshipStatus('none');
+        setFriendshipId(generateFriendshipId(user.uid, userId));
+        logger.info('ProfileScreen: Friend request cancelled', { userId });
+      } else {
+        Alert.alert('Error', result.error || 'Could not cancel request');
+      }
+    } catch (error) {
+      logger.error('ProfileScreen: Error cancelling request', { error: error.message });
+      Alert.alert('Error', 'Could not cancel request');
+    } finally {
+      setFriendshipLoading(false);
+    }
+  };
+
+  const handleAcceptRequest = async () => {
+    if (!friendshipId || !user?.uid) return;
+
+    setFriendshipLoading(true);
+    try {
+      const result = await acceptFriendRequest(friendshipId, user.uid);
+      if (result.success) {
+        setFriendshipStatus('friends');
+        logger.info('ProfileScreen: Friend request accepted', { userId });
+        // Refresh albums now that we're friends
+        fetchAlbums();
+      } else {
+        Alert.alert('Error', result.error || 'Could not accept request');
+      }
+    } catch (error) {
+      logger.error('ProfileScreen: Error accepting request', { error: error.message });
+      Alert.alert('Error', 'Could not accept request');
+    } finally {
+      setFriendshipLoading(false);
+    }
   };
 
   const handleSelectsTap = () => {
@@ -358,12 +485,41 @@ const ProfileScreen = () => {
     });
   };
 
-  // Handle loading state
-  if (!userProfile) {
+  // Handle loading state for own profile
+  if (isOwnProfile && !userProfile) {
     return (
       <View style={styles.container}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Handle loading state for other user's profile
+  if (!isOwnProfile && otherUserLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Handle error state for other user's profile
+  if (!isOwnProfile && otherUserError) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { top: insets.top }]}>
+          <TouchableOpacity onPress={handleBackPress} style={styles.headerButton}>
+            <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.headerButton} />
+        </View>
+        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
+          <Text style={styles.loadingText}>{otherUserError}</Text>
         </View>
       </View>
     );
