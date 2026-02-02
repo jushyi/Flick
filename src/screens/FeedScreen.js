@@ -111,9 +111,15 @@ const FeedScreen = () => {
   /**
    * Refresh feed and stories when screen comes into focus
    * This ensures feed reflects current friendship state after adding/removing friends
+   * Skips refresh when returning from profile peek (modal will be restored instead)
    */
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
+      // Skip refresh if returning from profile peek - modal will be restored
+      if (isProfilePeekRef.current) {
+        logger.debug('Feed screen focused - skipping refresh (returning from profile peek)');
+        return;
+      }
       logger.debug('Feed screen focused - refreshing feed and stories');
       refreshFeed();
       loadFriendStories();
@@ -337,14 +343,23 @@ const FeedScreen = () => {
    * @param {string} userId - User ID to navigate to
    * @param {string} username - Username for display
    * @param {string|null} modalType - Optional modal type for state preservation ('photoDetail' or 'stories')
+   * @returns {function|null} - Returns navigation function if modalType provided (for deferred navigation), null otherwise
    */
   const handleAvatarPress = (userId, username, modalType = null) => {
     logger.debug('FeedScreen: Avatar pressed', { userId, username, modalType });
     if (modalType) {
+      // Save state and set flag, but don't navigate yet
+      // Return a function that caller can use to navigate after closing modals
       saveModalState(modalType);
       isProfilePeekRef.current = true;
+      return () => {
+        logger.debug('FeedScreen: Deferred navigation to profile', { userId, username });
+        navigation.navigate('OtherUserProfile', { userId, username });
+      };
     }
+    // No modal type - navigate immediately (direct calls from feed cards, etc.)
     navigation.navigate('OtherUserProfile', { userId, username });
+    return null;
   };
 
   /**

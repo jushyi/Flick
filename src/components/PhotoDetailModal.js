@@ -193,6 +193,7 @@ const PhotoDetailModal = ({
    * Handle avatar press - close modal and navigate to profile
    * Disabled for own photos (currentPhoto.userId === currentUserId)
    * Passes modal type ('feed' or 'stories') as third param for state preservation
+   * Uses deferred navigation pattern: save state first, close modal, then navigate
    */
   const handleAvatarPress = useCallback(() => {
     // Don't allow tap on own avatar
@@ -200,33 +201,42 @@ const PhotoDetailModal = ({
     if (onAvatarPress && currentPhoto) {
       // Determine modal type for state preservation
       const modalType = mode === 'feed' ? 'photoDetail' : 'stories';
-      // Save state BEFORE close by passing modalType - FeedScreen saves state when it sees modalType
-      // First signal to FeedScreen that this is a profile peek navigation
-      onAvatarPress(currentPhoto.userId, displayName, modalType);
-      // Then close the modal after a small delay to let state save happen
-      setTimeout(() => {
-        onClose();
-      }, 50);
+      // Save state and get navigation function (deferred navigation)
+      const navigate = onAvatarPress(currentPhoto.userId, displayName, modalType);
+      // Close the modal
+      onClose();
+      // Navigate after modal close animation completes
+      if (navigate) {
+        setTimeout(() => {
+          navigate();
+        }, 100);
+      }
     }
   }, [onAvatarPress, onClose, currentPhoto, displayName, isOwnPhoto, mode]);
 
   /**
    * Handle avatar press from comments - close comments sheet, then modal, then navigate
    * Properly sequence the closing to avoid frozen UI from overlapping modal animations
-   * Passes modal type for state preservation
+   * Uses deferred navigation pattern: save state first, close everything, then navigate
    */
   const handleCommentAvatarPress = useCallback(
     (userId, userName) => {
       if (onAvatarPress) {
         // Determine modal type for state preservation
         const modalType = mode === 'feed' ? 'photoDetail' : 'stories';
-        // Signal to FeedScreen first - this saves state BEFORE closing
-        onAvatarPress(userId, userName, modalType);
+        // Save state and get navigation function (deferred navigation)
+        const navigate = onAvatarPress(userId, userName, modalType);
         // Step 1: Close comments sheet
         setShowComments(false);
         // Step 2: Wait for comments sheet animation, then close main modal
         setTimeout(() => {
           onClose();
+          // Step 3: Wait for modal animation, then navigate
+          if (navigate) {
+            setTimeout(() => {
+              navigate();
+            }, 100);
+          }
         }, 200);
       }
     },
