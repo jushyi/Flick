@@ -517,9 +517,15 @@ const FriendsScreen = ({ navigation }) => {
                 showFriendsSince={true}
                 friendsSince={item.acceptedAt}
                 onPress={() => {
-                  navigation.navigate('ProfileMain', {
-                    userId: item.userId,
-                    username: item.username,
+                  navigation.navigate('MainTabs', {
+                    screen: 'Profile',
+                    params: {
+                      screen: 'ProfileMain',
+                      params: {
+                        userId: item.userId,
+                        username: item.username,
+                      },
+                    },
                   });
                 }}
               />
@@ -653,9 +659,15 @@ const FriendsScreen = ({ navigation }) => {
                     onDeny={handleDenyRequest}
                     loading={actionLoading[item.data.id]}
                     onPress={() => {
-                      navigation.navigate('ProfileMain', {
-                        userId: item.data.userId,
-                        username: item.data.username,
+                      navigation.navigate('MainTabs', {
+                        screen: 'Profile',
+                        params: {
+                          screen: 'ProfileMain',
+                          params: {
+                            userId: item.data.userId,
+                            username: item.data.username,
+                          },
+                        },
                       });
                     }}
                   />
@@ -670,9 +682,15 @@ const FriendsScreen = ({ navigation }) => {
                     onAction={handleCancelRequest}
                     loading={actionLoading[item.data.id]}
                     onPress={() => {
-                      navigation.navigate('ProfileMain', {
-                        userId: item.data.userId,
-                        username: item.data.username,
+                      navigation.navigate('MainTabs', {
+                        screen: 'Profile',
+                        params: {
+                          screen: 'ProfileMain',
+                          params: {
+                            userId: item.data.userId,
+                            username: item.data.username,
+                          },
+                        },
                       });
                     }}
                   />
