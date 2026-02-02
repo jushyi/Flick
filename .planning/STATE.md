@@ -20,9 +20,9 @@ Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2
 
 **Velocity:**
 
-- Total plans completed: 55 (including 13 FIX plans)
+- Total plans completed: 56 (including 14 FIX plans)
 - Average duration: 11 min
-- Total execution time: 627 min
+- Total execution time: 645 min
 
 **By Phase:**
 
@@ -50,12 +50,12 @@ Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2
 | 14    | 1     | 8 min  | 8 min    |
 | 15    | 4     | 54 min | 13.5 min |
 | 15.1  | 1     | 9 min  | 9 min    |
-| 15.2  | 1     | 18 min | 18 min   |
+| 15.2  | 2     | 36 min | 18 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 18 min, 18 min, 9 min, 9 min, 18 min
-- Trend: Phase 15.2 complete - modal state preservation for profile peek
+- Last 5 plans: 18 min, 9 min, 9 min, 18 min, 18 min
+- Trend: Phase 15.2 FIX complete - OtherUserProfile fullScreenModal presentation
 
 ## Accumulated Context
 
@@ -191,6 +191,7 @@ Recent decisions affecting current work:
 | 15.2  | Deferred navigation via returned function             | Allows PhotoDetailModal to control timing (close first, then navigate) |
 | 15.2  | Skip feed refresh on profile peek return              | Prevents visible flash before modal restoration                        |
 | 15.2  | Close sequence: comments → modal → navigate           | Prevents frozen UI from overlapping modal animations                   |
+| 15.2  | fullScreenModal for OtherUserProfile                  | Keeps parent (feed+modals) mounted; accept bottom slide (iOS limit)    |
 
 ### Deferred Issues
 
@@ -288,5 +289,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 15.2-01-PLAN.md - Modal state preservation (Phase 15.2 complete)
+Stopped at: Completed 15.2-01-FIX.md - OtherUserProfile fullScreenModal presentation
 Resume file: None

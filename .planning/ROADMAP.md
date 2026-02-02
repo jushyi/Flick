@@ -435,11 +435,12 @@ Plans:
 **Goal**: Preserve modal state when navigating to profiles from story/comment modals - back navigation returns users to the modal they were viewing instead of the feed
 **Depends on**: Phase 15
 **Research**: Complete (useFocusEffect + deferred navigation pattern)
-**Plans**: 1/1 complete
+**Plans**: 1/1 complete (+ 1 FIX plan)
 
 Plans:
 
 - [x] 15.2-01: Modal state preservation infrastructure + deferred navigation
+- [x] 15.2-01-FIX: OtherUserProfile fullScreenModal presentation (layered architecture)
 
 **Details:**
 
