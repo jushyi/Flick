@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 15.3 of 26 (Modal Architecture Fix)
-Plan: 0 of ? in current phase (needs planning)
-Status: Ready to plan
-Last activity: 2026-02-02 — Completed 15.2-01-FIX2.md
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-02 — Completed 15.3-01-PLAN.md
 
-Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2 complete, ready for Phase 15.3)
+Progress: █████░░░░░░░░░░░░░ 65% (Phase 15.3 plan 1 of 2 complete)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 57 (including 15 FIX plans)
+- Total plans completed: 58 (including 15 FIX plans)
 - Average duration: 11 min
-- Total execution time: 655 min
+- Total execution time: 667 min
 
 **By Phase:**
 
@@ -51,11 +51,12 @@ Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2
 | 15    | 4     | 54 min | 13.5 min |
 | 15.1  | 1     | 9 min  | 9 min    |
 | 15.2  | 3     | 46 min | 15 min   |
+| 15.3  | 1     | 12 min | 12 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 9 min, 9 min, 18 min, 18 min, 10 min
-- Trend: Phase 15.2 FIX2 complete - code cleanup, issues logged for 15.3
+- Last 5 plans: 9 min, 18 min, 18 min, 10 min, 12 min
+- Trend: Phase 15.3 plan 1 - PhotoDetail screen infrastructure created
 
 ## Accumulated Context
 
@@ -64,135 +65,138 @@ Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-| Phase | Decision                                              | Rationale                                                              |
-| ----- | ----------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1     | Use colors.js constants throughout components         | Ensures consistency and maintainability for dark theme                 |
-| 1     | AuthCodeInput uses hidden TextInput pattern           | Better UX while maintaining keyboard support and iOS autofill          |
-| 2     | Use AuthCodeInput's onComplete callback               | Eliminates need for manual auto-submit useEffect                       |
-| 2     | Updated branding from LAPSE to REWIND                 | Matches current app identity                                           |
-| 3     | Use Ionicons instead of emojis                        | Consistency with other screens using Ionicons                          |
-| 3     | Debounce username check at 500ms                      | Balance responsiveness with Firestore query efficiency                 |
-| 3     | Require username/display name on skip                 | Essential fields even when skipping optional ones                      |
-| 3     | Conditional nav rendering over manual replace         | Navigator branches auto-transition on auth state change                |
-| 3     | Store photo URIs directly in selects array            | Simpler MVP; future could upload to Firebase Storage                   |
-| 3.1   | Text length comparison for deletion detection         | Catches formatting char deletion, not just digits                      |
-| 3.1   | Show raw digits when deleting                         | Prevents cursor trap on parentheses during phone correction            |
-| 3.1   | Detect defaults in ProfileSetupScreen                 | Keep AuthContext defaults for DB uniqueness, detect in UI              |
-| 4     | Single "Next step" button replaces Complete + Skip    | Cleaner UX, users must complete required fields                        |
-| 4     | Step indicator with dots and "Step X of Y" text       | Clear progress indication for multi-screen onboarding                  |
-| 4     | Preview tap: multi-select when empty, disabled after  | Users add via thumbnails once photos exist for granular control        |
-| 4     | 4:5 aspect ratio for preview area                     | Matches Instagram portrait style                                       |
-| 4     | Skip confirmation from Complete button                | Single button, shows alert if no photos selected                       |
-| 4     | Tutorial hint shows only with 2+ photos               | Need multiple photos to demonstrate reorder feature                    |
-| 4     | AsyncStorage for hint dismissal persistence           | Hint state persists across sessions                                    |
-| 4.1   | Animate dragged item to target before array update    | Prevents visual flash by completing animation before React re-render   |
-| 4.1   | Use photoId tracking to detect slot content changes   | Allows clean animation reset when photo at slot changes                |
-| 4.1   | withTiming callback for post-animation state updates  | Sequences visual animation completion before triggering reorder        |
-| 4.1   | LayoutAnimation for array state transitions           | Smooth visual transitions when reordering/deleting photos              |
-| 4.1   | photoId as React key instead of index                 | Stable component identity prevents content flash during reorder        |
-| 4.1   | withDelay(16ms) + withTiming(200ms) for reset         | Syncs transform reset with LayoutAnimation timing                      |
-| 4.1   | Duplicate photo validation in pickers                 | Prevents React key collision from same photo selected twice            |
-| 4.1   | Select dragged photo in preview during drag           | User sees which photo they're manipulating                             |
-| 5     | Left-align profile info for best friends feature      | Reserve right half of section for future best friends feature          |
-| 5     | Profile info in gray card (left half)                 | Visual separation and prepares for split layout                        |
-| 5     | Remove edit button from profile                       | Editing via profile photo tap or Settings navigation (future)          |
-| 5     | useSafeAreaInsets for header positioning              | Better control than SafeAreaView for absolute positioned headers       |
-| 5     | Circular tab thumbnail 28x28 with 2px focused border  | Matches Instagram-style profile icon in tab bar                        |
-| 5     | ProfileIcon SVG fallback when no photoURL             | Graceful degradation for users without profile photos                  |
-| 5     | isOwnProfile pattern with route params                | Clean conditional rendering for own vs other user views                |
-| 5     | Placeholder data for other users (TODO: Firestore)    | Layout scaffolding now, data fetching deferred                         |
-| 6     | 150ms threshold for tap vs hold detection             | Quick taps trigger onTap, holds pause cycling                          |
-| 6     | Gesture.Exclusive pattern for tap/hold                | LongPress wins if held, Tap wins if quick release                      |
-| 6     | GestureHandlerRootView wrapper for gesture components | Required for gesture recognition in component context                  |
-| 6     | Copy DraggableThumbnail into SelectsEditOverlay       | Simpler than extracting to shared, avoids breaking existing code       |
-| 6     | 750ms cycle interval for slideshow                    | Faster cycling for snappier highlight experience                       |
-| 6     | 3:4 aspect ratio for edit overlay preview             | Taller preview with better visual centering                            |
-| 6     | useSafeAreaInsets for modal safe area handling        | SafeAreaView edges prop unreliable on first render after app launch    |
-| 7     | No debounce in iTunes service                         | UI layer handles debounce for better UX control                        |
-| 7     | No caching in iTunes service                          | Simple API calls sufficient for MVP, avoids stale data                 |
-| 7     | No background audio mode for profile songs            | Songs should stop when navigating away from profile (desired)          |
-| 7     | 300x300 album art from iTunes                         | Higher quality display by replacing 100x100 in API response            |
-| 7     | Component manages own audio state (not global)        | Simpler for MVP, component self-contained                              |
-| 7     | Empty state uses dashed border pattern                | Consistent with other add prompts in app                               |
-| 7     | Glow uses brand purple color                          | Consistency with app accent color                                      |
-| 7     | 500ms search debounce in SongSearchModal              | Balance UX responsiveness with API call efficiency                     |
-| 7     | WYSIWYG result cards match ProfileSongCard layout     | Users see exactly what their selected song will look like              |
-| 7     | Separate tap targets for preview vs selection         | Clear distinction between previewing and selecting a song              |
-| 7     | Simulated waveform over native library                | Native waveform library had Metro bundling issues; visual bars work    |
-| 7     | Worklet directive + runOnJS for gesture state         | Prevents crash when updating React state from gesture callbacks        |
-| 7     | 5-second minimum clip gap                             | Ensures meaningful clip selection, prevents degenerate ranges          |
-| 7     | Sequential modal flow for song/clip selection         | iOS React Native doesn't support stacked modals; cancel reopens search |
-| 7     | 50ms progress update interval for audio               | 20 updates/sec provides smooth playback indicator animation            |
-| 7     | Linear easing with matching animation duration        | Constant speed movement for audio playback (not spring/ease-in-out)    |
-| 7     | Immediate audio cut on stop (no fade out)             | User preference for clean cut over gradual fade                        |
-| 7     | playsInSilentModeIOS: true for audio                  | Profile songs play through speakers regardless of silent switch        |
-| 7     | Alert.alert for edit menu pattern                     | Consistent with other menus in app, simple and reliable                |
-| 7     | useFocusEffect for navigation audio cleanup           | Component detects parent screen blur without prop drilling             |
-| 7.2   | Screen + Modal overlay pattern                        | iOS doesn't support stacked modals; screen + modal on top works        |
-| 7.2   | Cancel always stays on search                         | User can pick different song after previewing current clip             |
-| 7.2   | Combined Edit Song menu option                        | Single option opens clip first, cancel goes to search for different    |
-| 7.2   | Backdrop fades + content slides animation pattern     | Modal animationType='fade' for backdrop, Animated.spring for content   |
-| 7.3   | Keep waveform with drag-to-seek (no range handles)    | User preference for scrubbing through preview; visual feedback helpful |
-| 7.3   | Dual state tracking (shared value + JS ref)           | Shared values for worklet, JS ref for useEffect reactivity             |
-| 8     | First photo becomes cover on album creation           | Simplest UX - user's first selected photo is the default cover         |
-| 8     | Photos added to beginning of array (newest first)     | Matches expected behavior where new additions appear first             |
-| 8     | Auto-update cover when current cover removed          | Prevents broken cover state; falls back to first remaining photo       |
-| 8     | 150x150 card size for album display                   | Matches visual spec, good balance of size and scroll density           |
-| 8     | Dashed border pattern for add album button            | Consistent with other add prompts in app (SelectsScreen)               |
-| 8     | Empty photoUrls map for now                           | Cover URL resolution deferred to later plan                            |
-| 8     | Two-screen album creation flow (name → photos)        | Cleaner UX separating naming from photo selection                      |
-| 8     | 3-column grid for photo picker                        | Matches common photo picker patterns in iOS apps                       |
-| 8     | Navigate to ProfileMain on album create success       | Pops both CreateAlbum and PhotoPicker screens cleanly                  |
-| 8     | resizeMode cover for full-screen photo viewer         | Photos fill entire screen, may crop edges for non-matching aspect      |
-| 8     | onScroll with 16ms throttle for position indicator    | Smooth real-time updates during fast swipes                            |
-| 8     | Header overlay pattern for photo viewer               | Controls float over photo with semi-transparent background             |
-| 8     | Silent cover update (no success dialog)               | Cleaner UX, visual feedback from cover change is sufficient            |
-| 8     | useFocusEffect for ProfileScreen album refresh        | Ensures data consistency when returning from nested edits              |
-| 8     | AddToAlbumSheet deferred integration                  | Component ready, wiring to photo menus in future phase                 |
-| 8     | 50x67 thumbnail bar at viewer bottom                  | 3:4 ratio matching album grid, 2px white border for active             |
-| 8     | Swipe dismiss: 150px or 500px/s threshold             | Standard gesture threshold for natural dismissal feel                  |
-| 8     | Last photo removal prompts album deletion             | Cascading deletion prevents orphaned empty albums                      |
-| 8     | DropdownMenu for option menus, not Alert.alert        | Better UX, modal-based dropdown with icons and dark theme              |
-| 8     | RenameAlbumModal for text input, not Alert.prompt     | Half-screen modal with styled input, character count                   |
-| 8     | Anchored positioning for DropdownMenu                 | User preference for contextual feel over centered iOS action sheet     |
-| 8.2   | Spring animation (damping 8, stiffness 300)           | iOS-native feel for scale bounce animation                             |
-| 8.2   | Animation timing: 0/300/500ms staggered sequence      | Predictable visual flow for scroll + highlight                         |
-| 8.2   | forwardRef + useImperativeHandle for FlatList scroll  | Exposes scrollToAlbum method to parent component                       |
-| 9     | LayoutAnimation.configureNext for expand/collapse     | Smooth height transitions when toggling year sections                  |
-| 9     | Animated.Value interpolation for chevron rotation     | 0-180deg rotation for collapsible indicator                            |
-| 9     | Empty state renders nothing (section disappears)      | Cleaner UI when no monthly data exists                                 |
-| 9     | Row-based FlatList for mixed day headers and photos   | SectionList doesn't support numColumns; row grouping works             |
-| 9     | isOwnProfile=false for read-only AlbumPhotoViewer     | Hides edit options (remove, set cover) in monthly album viewer         |
-| 9     | Square aspect ratio for month cards                   | User preference for visual balance in monthly albums section           |
-| 10    | Dashed border styling for prompt cards                | Consistent with existing patterns (SelectsScreen, ProfileSongCard)     |
-| 10    | totalFriendCount in feedService return                | Enables distinguishing "no friends" vs "friends but no posts"          |
-| 10    | Sad emoji (Ionicons) for established user empty state | Clean icon-based approach consistent with other screens                |
-| 11    | 8 emoji categories with 10 emojis each                | Provides enough variety for curated rotation while keeping manageable  |
-| 11    | Deterministic hash selection for emoji rotation       | Same photo always shows same emojis, prevents UI flickering            |
-| 11    | Prime multiplier (31) for pool distribution           | Better spread across categories for varied curated emoji selection     |
-| 11    | Immediate selection for custom emoji (no confirm)     | User feedback: faster UX, emoji appears at front with highlight        |
-| 11    | Purple highlight with 1s fade for all emoji taps      | Visual feedback for reactions, applies to both curated and custom      |
-| 12    | MeStoryCard always first in stories bar (leftmost)    | User's own content most relevant, consistent with Instagram pattern    |
-| 12    | Empty state shows "M" initial placeholder             | Card should always be visible even without photos                      |
-| 12    | isOwnStory prop for reaction disabling                | Pattern for differentiating own vs friend content in modals            |
-| 12    | Reactions visible but grayed out (opacity 0.4)        | Users can see friend reactions but can't react to themselves           |
-| 12    | Comments remain functional for own stories            | Users may want to add self-notes/captions to their photos              |
-| 13    | Mirror notification button positioning for friends    | Absolute left: 24 matches right: 24 pattern for visual symmetry        |
-| 13    | Chevron-back icon for FriendsListScreen back nav      | Consistent with iOS navigation patterns and other screens              |
-| 13    | Inline NotificationsTab into ActivityScreen           | Simpler structure for single-purpose notifications screen              |
-| 13    | Remove TabNavigator from ActivityScreen               | No tabs needed when screen has single purpose                          |
-| 14    | 24/24/240 character limits for profile fields         | More breathing room than original 16/16/160 while keeping fields tight |
-| 14    | Character counter visible only on focus               | Keeps UI clean, shows feedback when user needs it                      |
-| 14    | 200ms shake animation (4px amplitude) for limit       | Tactile feedback without being intrusive or annoying                   |
-| 15    | State-based tabs over material-top-tabs               | Simpler implementation using useState                                  |
-| 15    | Unified FriendCard for all relationship states        | One component with props instead of separate components                |
-| 15    | 500ms debounce for user search in Requests tab        | Balance UX responsiveness with Firestore query efficiency              |
-| 15    | Long press to remove friend                           | Consistent with other list interaction patterns in app                 |
-| 15.2  | Deferred navigation via returned function             | Allows PhotoDetailModal to control timing (close first, then navigate) |
-| 15.2  | Skip feed refresh on profile peek return              | Prevents visible flash before modal restoration                        |
-| 15.2  | Close sequence: comments → modal → navigate           | Prevents frozen UI from overlapping modal animations                   |
-| 15.2  | fullScreenModal for OtherUserProfile                  | Keeps parent (feed+modals) mounted; accept bottom slide (iOS limit)    |
-| 15.2  | Direct navigation for avatar presses                  | Removed deferred pattern; profile is modal overlay                     |
+| Phase | Decision                                              | Rationale                                                               |
+| ----- | ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1     | Use colors.js constants throughout components         | Ensures consistency and maintainability for dark theme                  |
+| 1     | AuthCodeInput uses hidden TextInput pattern           | Better UX while maintaining keyboard support and iOS autofill           |
+| 2     | Use AuthCodeInput's onComplete callback               | Eliminates need for manual auto-submit useEffect                        |
+| 2     | Updated branding from LAPSE to REWIND                 | Matches current app identity                                            |
+| 3     | Use Ionicons instead of emojis                        | Consistency with other screens using Ionicons                           |
+| 3     | Debounce username check at 500ms                      | Balance responsiveness with Firestore query efficiency                  |
+| 3     | Require username/display name on skip                 | Essential fields even when skipping optional ones                       |
+| 3     | Conditional nav rendering over manual replace         | Navigator branches auto-transition on auth state change                 |
+| 3     | Store photo URIs directly in selects array            | Simpler MVP; future could upload to Firebase Storage                    |
+| 3.1   | Text length comparison for deletion detection         | Catches formatting char deletion, not just digits                       |
+| 3.1   | Show raw digits when deleting                         | Prevents cursor trap on parentheses during phone correction             |
+| 3.1   | Detect defaults in ProfileSetupScreen                 | Keep AuthContext defaults for DB uniqueness, detect in UI               |
+| 4     | Single "Next step" button replaces Complete + Skip    | Cleaner UX, users must complete required fields                         |
+| 4     | Step indicator with dots and "Step X of Y" text       | Clear progress indication for multi-screen onboarding                   |
+| 4     | Preview tap: multi-select when empty, disabled after  | Users add via thumbnails once photos exist for granular control         |
+| 4     | 4:5 aspect ratio for preview area                     | Matches Instagram portrait style                                        |
+| 4     | Skip confirmation from Complete button                | Single button, shows alert if no photos selected                        |
+| 4     | Tutorial hint shows only with 2+ photos               | Need multiple photos to demonstrate reorder feature                     |
+| 4     | AsyncStorage for hint dismissal persistence           | Hint state persists across sessions                                     |
+| 4.1   | Animate dragged item to target before array update    | Prevents visual flash by completing animation before React re-render    |
+| 4.1   | Use photoId tracking to detect slot content changes   | Allows clean animation reset when photo at slot changes                 |
+| 4.1   | withTiming callback for post-animation state updates  | Sequences visual animation completion before triggering reorder         |
+| 4.1   | LayoutAnimation for array state transitions           | Smooth visual transitions when reordering/deleting photos               |
+| 4.1   | photoId as React key instead of index                 | Stable component identity prevents content flash during reorder         |
+| 4.1   | withDelay(16ms) + withTiming(200ms) for reset         | Syncs transform reset with LayoutAnimation timing                       |
+| 4.1   | Duplicate photo validation in pickers                 | Prevents React key collision from same photo selected twice             |
+| 4.1   | Select dragged photo in preview during drag           | User sees which photo they're manipulating                              |
+| 5     | Left-align profile info for best friends feature      | Reserve right half of section for future best friends feature           |
+| 5     | Profile info in gray card (left half)                 | Visual separation and prepares for split layout                         |
+| 5     | Remove edit button from profile                       | Editing via profile photo tap or Settings navigation (future)           |
+| 5     | useSafeAreaInsets for header positioning              | Better control than SafeAreaView for absolute positioned headers        |
+| 5     | Circular tab thumbnail 28x28 with 2px focused border  | Matches Instagram-style profile icon in tab bar                         |
+| 5     | ProfileIcon SVG fallback when no photoURL             | Graceful degradation for users without profile photos                   |
+| 5     | isOwnProfile pattern with route params                | Clean conditional rendering for own vs other user views                 |
+| 5     | Placeholder data for other users (TODO: Firestore)    | Layout scaffolding now, data fetching deferred                          |
+| 6     | 150ms threshold for tap vs hold detection             | Quick taps trigger onTap, holds pause cycling                           |
+| 6     | Gesture.Exclusive pattern for tap/hold                | LongPress wins if held, Tap wins if quick release                       |
+| 6     | GestureHandlerRootView wrapper for gesture components | Required for gesture recognition in component context                   |
+| 6     | Copy DraggableThumbnail into SelectsEditOverlay       | Simpler than extracting to shared, avoids breaking existing code        |
+| 6     | 750ms cycle interval for slideshow                    | Faster cycling for snappier highlight experience                        |
+| 6     | 3:4 aspect ratio for edit overlay preview             | Taller preview with better visual centering                             |
+| 6     | useSafeAreaInsets for modal safe area handling        | SafeAreaView edges prop unreliable on first render after app launch     |
+| 7     | No debounce in iTunes service                         | UI layer handles debounce for better UX control                         |
+| 7     | No caching in iTunes service                          | Simple API calls sufficient for MVP, avoids stale data                  |
+| 7     | No background audio mode for profile songs            | Songs should stop when navigating away from profile (desired)           |
+| 7     | 300x300 album art from iTunes                         | Higher quality display by replacing 100x100 in API response             |
+| 7     | Component manages own audio state (not global)        | Simpler for MVP, component self-contained                               |
+| 7     | Empty state uses dashed border pattern                | Consistent with other add prompts in app                                |
+| 7     | Glow uses brand purple color                          | Consistency with app accent color                                       |
+| 7     | 500ms search debounce in SongSearchModal              | Balance UX responsiveness with API call efficiency                      |
+| 7     | WYSIWYG result cards match ProfileSongCard layout     | Users see exactly what their selected song will look like               |
+| 7     | Separate tap targets for preview vs selection         | Clear distinction between previewing and selecting a song               |
+| 7     | Simulated waveform over native library                | Native waveform library had Metro bundling issues; visual bars work     |
+| 7     | Worklet directive + runOnJS for gesture state         | Prevents crash when updating React state from gesture callbacks         |
+| 7     | 5-second minimum clip gap                             | Ensures meaningful clip selection, prevents degenerate ranges           |
+| 7     | Sequential modal flow for song/clip selection         | iOS React Native doesn't support stacked modals; cancel reopens search  |
+| 7     | 50ms progress update interval for audio               | 20 updates/sec provides smooth playback indicator animation             |
+| 7     | Linear easing with matching animation duration        | Constant speed movement for audio playback (not spring/ease-in-out)     |
+| 7     | Immediate audio cut on stop (no fade out)             | User preference for clean cut over gradual fade                         |
+| 7     | playsInSilentModeIOS: true for audio                  | Profile songs play through speakers regardless of silent switch         |
+| 7     | Alert.alert for edit menu pattern                     | Consistent with other menus in app, simple and reliable                 |
+| 7     | useFocusEffect for navigation audio cleanup           | Component detects parent screen blur without prop drilling              |
+| 7.2   | Screen + Modal overlay pattern                        | iOS doesn't support stacked modals; screen + modal on top works         |
+| 7.2   | Cancel always stays on search                         | User can pick different song after previewing current clip              |
+| 7.2   | Combined Edit Song menu option                        | Single option opens clip first, cancel goes to search for different     |
+| 7.2   | Backdrop fades + content slides animation pattern     | Modal animationType='fade' for backdrop, Animated.spring for content    |
+| 7.3   | Keep waveform with drag-to-seek (no range handles)    | User preference for scrubbing through preview; visual feedback helpful  |
+| 7.3   | Dual state tracking (shared value + JS ref)           | Shared values for worklet, JS ref for useEffect reactivity              |
+| 8     | First photo becomes cover on album creation           | Simplest UX - user's first selected photo is the default cover          |
+| 8     | Photos added to beginning of array (newest first)     | Matches expected behavior where new additions appear first              |
+| 8     | Auto-update cover when current cover removed          | Prevents broken cover state; falls back to first remaining photo        |
+| 8     | 150x150 card size for album display                   | Matches visual spec, good balance of size and scroll density            |
+| 8     | Dashed border pattern for add album button            | Consistent with other add prompts in app (SelectsScreen)                |
+| 8     | Empty photoUrls map for now                           | Cover URL resolution deferred to later plan                             |
+| 8     | Two-screen album creation flow (name → photos)        | Cleaner UX separating naming from photo selection                       |
+| 8     | 3-column grid for photo picker                        | Matches common photo picker patterns in iOS apps                        |
+| 8     | Navigate to ProfileMain on album create success       | Pops both CreateAlbum and PhotoPicker screens cleanly                   |
+| 8     | resizeMode cover for full-screen photo viewer         | Photos fill entire screen, may crop edges for non-matching aspect       |
+| 8     | onScroll with 16ms throttle for position indicator    | Smooth real-time updates during fast swipes                             |
+| 8     | Header overlay pattern for photo viewer               | Controls float over photo with semi-transparent background              |
+| 8     | Silent cover update (no success dialog)               | Cleaner UX, visual feedback from cover change is sufficient             |
+| 8     | useFocusEffect for ProfileScreen album refresh        | Ensures data consistency when returning from nested edits               |
+| 8     | AddToAlbumSheet deferred integration                  | Component ready, wiring to photo menus in future phase                  |
+| 8     | 50x67 thumbnail bar at viewer bottom                  | 3:4 ratio matching album grid, 2px white border for active              |
+| 8     | Swipe dismiss: 150px or 500px/s threshold             | Standard gesture threshold for natural dismissal feel                   |
+| 8     | Last photo removal prompts album deletion             | Cascading deletion prevents orphaned empty albums                       |
+| 8     | DropdownMenu for option menus, not Alert.alert        | Better UX, modal-based dropdown with icons and dark theme               |
+| 8     | RenameAlbumModal for text input, not Alert.prompt     | Half-screen modal with styled input, character count                    |
+| 8     | Anchored positioning for DropdownMenu                 | User preference for contextual feel over centered iOS action sheet      |
+| 8.2   | Spring animation (damping 8, stiffness 300)           | iOS-native feel for scale bounce animation                              |
+| 8.2   | Animation timing: 0/300/500ms staggered sequence      | Predictable visual flow for scroll + highlight                          |
+| 8.2   | forwardRef + useImperativeHandle for FlatList scroll  | Exposes scrollToAlbum method to parent component                        |
+| 9     | LayoutAnimation.configureNext for expand/collapse     | Smooth height transitions when toggling year sections                   |
+| 9     | Animated.Value interpolation for chevron rotation     | 0-180deg rotation for collapsible indicator                             |
+| 9     | Empty state renders nothing (section disappears)      | Cleaner UI when no monthly data exists                                  |
+| 9     | Row-based FlatList for mixed day headers and photos   | SectionList doesn't support numColumns; row grouping works              |
+| 9     | isOwnProfile=false for read-only AlbumPhotoViewer     | Hides edit options (remove, set cover) in monthly album viewer          |
+| 9     | Square aspect ratio for month cards                   | User preference for visual balance in monthly albums section            |
+| 10    | Dashed border styling for prompt cards                | Consistent with existing patterns (SelectsScreen, ProfileSongCard)      |
+| 10    | totalFriendCount in feedService return                | Enables distinguishing "no friends" vs "friends but no posts"           |
+| 10    | Sad emoji (Ionicons) for established user empty state | Clean icon-based approach consistent with other screens                 |
+| 11    | 8 emoji categories with 10 emojis each                | Provides enough variety for curated rotation while keeping manageable   |
+| 11    | Deterministic hash selection for emoji rotation       | Same photo always shows same emojis, prevents UI flickering             |
+| 11    | Prime multiplier (31) for pool distribution           | Better spread across categories for varied curated emoji selection      |
+| 11    | Immediate selection for custom emoji (no confirm)     | User feedback: faster UX, emoji appears at front with highlight         |
+| 11    | Purple highlight with 1s fade for all emoji taps      | Visual feedback for reactions, applies to both curated and custom       |
+| 12    | MeStoryCard always first in stories bar (leftmost)    | User's own content most relevant, consistent with Instagram pattern     |
+| 12    | Empty state shows "M" initial placeholder             | Card should always be visible even without photos                       |
+| 12    | isOwnStory prop for reaction disabling                | Pattern for differentiating own vs friend content in modals             |
+| 12    | Reactions visible but grayed out (opacity 0.4)        | Users can see friend reactions but can't react to themselves            |
+| 12    | Comments remain functional for own stories            | Users may want to add self-notes/captions to their photos               |
+| 13    | Mirror notification button positioning for friends    | Absolute left: 24 matches right: 24 pattern for visual symmetry         |
+| 13    | Chevron-back icon for FriendsListScreen back nav      | Consistent with iOS navigation patterns and other screens               |
+| 13    | Inline NotificationsTab into ActivityScreen           | Simpler structure for single-purpose notifications screen               |
+| 13    | Remove TabNavigator from ActivityScreen               | No tabs needed when screen has single purpose                           |
+| 14    | 24/24/240 character limits for profile fields         | More breathing room than original 16/16/160 while keeping fields tight  |
+| 14    | Character counter visible only on focus               | Keeps UI clean, shows feedback when user needs it                       |
+| 14    | 200ms shake animation (4px amplitude) for limit       | Tactile feedback without being intrusive or annoying                    |
+| 15    | State-based tabs over material-top-tabs               | Simpler implementation using useState                                   |
+| 15    | Unified FriendCard for all relationship states        | One component with props instead of separate components                 |
+| 15    | 500ms debounce for user search in Requests tab        | Balance UX responsiveness with Firestore query efficiency               |
+| 15    | Long press to remove friend                           | Consistent with other list interaction patterns in app                  |
+| 15.2  | Deferred navigation via returned function             | Allows PhotoDetailModal to control timing (close first, then navigate)  |
+| 15.2  | Skip feed refresh on profile peek return              | Prevents visible flash before modal restoration                         |
+| 15.2  | Close sequence: comments → modal → navigate           | Prevents frozen UI from overlapping modal animations                    |
+| 15.2  | fullScreenModal for OtherUserProfile                  | Keeps parent (feed+modals) mounted; accept bottom slide (iOS limit)     |
+| 15.2  | Direct navigation for avatar presses                  | Removed deferred pattern; profile is modal overlay                      |
+| 15.3  | Context + refs pattern for callbacks                  | Store callbacks in refs to avoid re-renders when callbacks change       |
+| 15.3  | transparentModal for PhotoDetail                      | Keeps previous screen visible underneath, enables proper modal stacking |
+| 15.3  | PhotoDetailProvider wraps entire app                  | Context available throughout navigation hierarchy for photo detail      |
 
 ### Deferred Issues
 
@@ -297,5 +301,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 15.2-01-FIX2.md - code cleanup, Phase 15.3 created
+Stopped at: Completed 15.3-01-PLAN.md - PhotoDetail screen infrastructure
 Resume file: None

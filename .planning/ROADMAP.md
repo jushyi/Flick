@@ -462,11 +462,12 @@ Plans:
 **Goal**: Fix modal stacking architecture so underlying interfaces remain visible when navigating to profiles from PhotoDetailModal or Stories. Also fix comment avatar navigation (ISS-002).
 **Depends on**: Phase 15.2
 **Research**: Complete (Instagram/TikTok patterns researched)
-**Plans**: TBD
+**Plans**: 1/2 complete
 
 Plans:
 
-- [ ] 15.3-01: TBD (run /gsd:plan-phase 15.3 to break down)
+- [x] 15.3-01: PhotoDetail navigation screen infrastructure (context, screen, navigator)
+- [ ] 15.3-02: FeedScreen integration with PhotoDetailScreen
 
 **Details:**
 
@@ -665,7 +666,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15. Friends Screen & Profiles    | 3/3            | Complete    | 2026-02-02 |
 | 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
 | 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
-| 15.3 Modal Architecture Fix      | 0/?            | Not started | -          |
+| 15.3 Modal Architecture Fix      | 1/2            | In progress | -          |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
