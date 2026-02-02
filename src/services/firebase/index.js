@@ -60,7 +60,7 @@ export { getPhotosByIds } from './photoService';
 export { getUserPhotosByMonth, getMonthPhotos } from './monthlyAlbumService';
 
 // Export User service functions
-export { getUserProfile } from './userService';
+export { getUserProfile, cancelProfileSetup } from './userService';
 
 // Export Friendship service functions
 export {

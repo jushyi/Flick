@@ -15,6 +15,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
@@ -219,6 +220,32 @@ export const getUserProfile = async userId => {
     return { success: true, profile };
   } catch (error) {
     logger.error('UserService.getUserProfile: Error', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Cancel profile setup by deleting the user document
+ * Called when user wants to abort profile setup and start over
+ *
+ * @param {string} userId - User ID to delete
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const cancelProfileSetup = async userId => {
+  try {
+    if (!userId) {
+      return { success: false, error: 'Invalid user ID' };
+    }
+
+    logger.info('UserService.cancelProfileSetup: Starting', { userId });
+
+    const userRef = doc(db, 'users', userId);
+    await deleteDoc(userRef);
+
+    logger.info('UserService.cancelProfileSetup: Success', { userId });
+    return { success: true };
+  } catch (error) {
+    logger.error('UserService.cancelProfileSetup: Error', error);
     return { success: false, error: error.message };
   }
 };
