@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 16 — Color Constants Standardization
+**Current focus:** Phase 15.3 — Modal Architecture Fix
 
 ## Current Position
 
-Phase: 15.2 of 25 (Modal State Preservation)
-Plan: 1 of 1 in current phase (phase complete)
-Status: Phase complete
-Last activity: 2026-02-02 — Completed 15.2-01-PLAN.md
+Phase: 15.3 of 26 (Modal Architecture Fix)
+Plan: 0 of ? in current phase (needs planning)
+Status: Ready to plan
+Last activity: 2026-02-02 — Completed 15.2-01-FIX2.md
 
-Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2 complete, ready for Phase 16)
+Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2 complete, ready for Phase 15.3)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 56 (including 14 FIX plans)
+- Total plans completed: 57 (including 15 FIX plans)
 - Average duration: 11 min
-- Total execution time: 645 min
+- Total execution time: 655 min
 
 **By Phase:**
 
@@ -50,12 +50,12 @@ Progress: █████░░░░░░░░░░░░░ 64% (Phase 15.2
 | 14    | 1     | 8 min  | 8 min    |
 | 15    | 4     | 54 min | 13.5 min |
 | 15.1  | 1     | 9 min  | 9 min    |
-| 15.2  | 2     | 36 min | 18 min   |
+| 15.2  | 3     | 46 min | 15 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 18 min, 9 min, 9 min, 18 min, 18 min
-- Trend: Phase 15.2 FIX complete - OtherUserProfile fullScreenModal presentation
+- Last 5 plans: 9 min, 9 min, 18 min, 18 min, 10 min
+- Trend: Phase 15.2 FIX2 complete - code cleanup, issues logged for 15.3
 
 ## Accumulated Context
 
@@ -192,10 +192,13 @@ Recent decisions affecting current work:
 | 15.2  | Skip feed refresh on profile peek return              | Prevents visible flash before modal restoration                        |
 | 15.2  | Close sequence: comments → modal → navigate           | Prevents frozen UI from overlapping modal animations                   |
 | 15.2  | fullScreenModal for OtherUserProfile                  | Keeps parent (feed+modals) mounted; accept bottom slide (iOS limit)    |
+| 15.2  | Direct navigation for avatar presses                  | Removed deferred pattern; profile is modal overlay                     |
 
 ### Deferred Issues
 
 - ISS-001: Optimize photo capture for full-screen display
+- ISS-002: Comment avatar profile navigation not working
+- ISS-003: Modal stacking architecture - underlying modals hidden on profile navigation
 
 ### Blockers/Concerns
 
@@ -285,9 +288,14 @@ None yet.
   - Return to story/comment modal after viewing profile instead of feed
   - Preserve modal state during profile navigation
   - Source: Enhancement from 15-03 UAT testing
+- Phase 15.3 inserted after Phase 15.2: Modal Architecture Fix (ISS-002, ISS-003)
+  - Fix comment avatar profile navigation (ISS-002)
+  - Convert PhotoDetailModal from Modal component to navigation screen
+  - Keep underlying interfaces visible when navigating to profiles
+  - Research: Instagram/TikTok use transparentModal or navigation screens
 
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 15.2-01-FIX.md - OtherUserProfile fullScreenModal presentation
+Stopped at: Completed 15.2-01-FIX2.md - code cleanup, Phase 15.3 created
 Resume file: None

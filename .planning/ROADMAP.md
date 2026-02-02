@@ -40,6 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 15: Friends Screen & Other Profiles** - Friends screen refactor and wiring up the ability to view other peoples profile
 - [x] **Phase 15.1: Profile Setup Cancel Flow** - Cancel profile setup with verification, return to phone input, delete partial profile (INSERTED)
 - [x] **Phase 15.2: Modal State Preservation** - Return to story/comment modal after viewing profile instead of feed (INSERTED)
+- [ ] **Phase 15.3: Modal Architecture Fix** - Fix comment avatar navigation and modal stacking architecture (INSERTED)
 - [ ] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
 - [ ] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
 - [ ] **Phase 18: Content Visibility Duration** - Define how long stories and feed pictures stay visible for friends
@@ -435,12 +436,13 @@ Plans:
 **Goal**: Preserve modal state when navigating to profiles from story/comment modals - back navigation returns users to the modal they were viewing instead of the feed
 **Depends on**: Phase 15
 **Research**: Complete (useFocusEffect + deferred navigation pattern)
-**Plans**: 1/1 complete (+ 1 FIX plan)
+**Plans**: 1/1 complete (+ 2 FIX plans)
 
 Plans:
 
 - [x] 15.2-01: Modal state preservation infrastructure + deferred navigation
 - [x] 15.2-01-FIX: OtherUserProfile fullScreenModal presentation (layered architecture)
+- [x] 15.2-01-FIX2: Code cleanup, issues logged for 15.3
 
 **Details:**
 
@@ -455,10 +457,35 @@ Plans:
 
 **Source:** Enhancement request from 15-03 UAT testing
 
+### Phase 15.3: Modal Architecture Fix (INSERTED)
+
+**Goal**: Fix modal stacking architecture so underlying interfaces remain visible when navigating to profiles from PhotoDetailModal or Stories. Also fix comment avatar navigation (ISS-002).
+**Depends on**: Phase 15.2
+**Research**: Complete (Instagram/TikTok patterns researched)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 15.3-01: TBD (run /gsd:plan-phase 15.3 to break down)
+
+**Details:**
+
+1. Fix ISS-002: Comment avatar profile navigation not working
+2. Fix ISS-003: Modal stacking architecture issue
+   - `fullScreenModal` hides parent screen, underlying modals hidden
+   - Options researched:
+     a. Use `transparentModal` or `containedTransparentModal` presentation
+     b. Convert PhotoDetailModal from Modal component to navigation screen
+     c. Use portal-based approach (react-native-portal)
+3. Goal: Profile navigation keeps photo/stories viewer visible underneath
+4. Research shows Instagram/TikTok likely use navigation screens, not Modal components
+
+**Source:** ISS-002, ISS-003 from 15.2-01-FIX2 verification
+
 ### Phase 16: Color Constants Standardization
 
 **Goal**: Standardize all colors throughout every screen, modal, and component to use constants from a centralized theme system. Eliminate all hardcoded color values to enable future theme/palette changes.
-**Depends on**: Phase 15.2
+**Depends on**: Phase 15.3
 **Research**: Unlikely (internal refactoring)
 **Plans**: TBD
 
@@ -611,7 +638,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -637,7 +664,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 14. Profile Field Limits         | 1/1            | Complete    | 2026-02-02 |
 | 15. Friends Screen & Profiles    | 3/3            | Complete    | 2026-02-02 |
 | 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
-| 15.2 Modal State Preservation    | 1/1            | Complete    | 2026-02-02 |
+| 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
+| 15.3 Modal Architecture Fix      | 0/?            | Not started | -          |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
