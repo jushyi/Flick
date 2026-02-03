@@ -10,6 +10,7 @@ import {
 import { CameraView } from 'expo-camera';
 
 import Svg, { Path, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import { colors } from '../constants/colors';
 
 import useCamera, {
   BASE_ROTATION_PER_CARD,
@@ -23,7 +24,7 @@ import { lightImpact } from '../utils/haptics';
 import logger from '../utils/logger';
 
 // Flash icon SVG component - matches bottom nav design system
-const FlashIcon = ({ color = '#FFFFFF', mode = 'off' }) => (
+const FlashIcon = ({ color = colors.icon.primary, mode = 'off' }) => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
     <Path
       d="M13 2L4.09 12.35a1 1 0 0 0 .77 1.65H11v6a1 1 0 0 0 1.84.54l8.91-10.35a1 1 0 0 0-.77-1.65H13V2z"
@@ -37,7 +38,7 @@ const FlashIcon = ({ color = '#FFFFFF', mode = 'off' }) => (
 );
 
 // Flip camera icon SVG component - clean rotation arrows design
-const FlipCameraIcon = ({ color = '#FFFFFF' }) => (
+const FlipCameraIcon = ({ color = colors.icon.primary }) => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
     {/* Top arrow - curves right and down */}
     <Path
@@ -125,8 +126,8 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim, hasRevea
 
   // Get card color based on state
   const cardColor = hasRevealedPhotos
-    ? '#7C3AED' // Purple (ready)
-    : '#DB2777'; // Pink (developing)
+    ? colors.interactive.primaryPressed // Purple (ready)
+    : colors.brand.pink; // Pink (developing)
 
   // Determine number of cards to show (1-4 max)
   const cardCount = Math.min(Math.max(count, 1), 4);
@@ -289,7 +290,7 @@ const CameraScreen = () => {
   if (!permission) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color={colors.icon.primary} />
       </View>
     );
   }
@@ -327,7 +328,7 @@ const CameraScreen = () => {
       <View style={styles.floatingControls}>
         {/* Flash Button (far left) */}
         <TouchableOpacity style={styles.floatingButton} onPress={toggleFlash}>
-          <FlashIcon color="#FFFFFF" mode={flash} />
+          <FlashIcon color={colors.icon.primary} mode={flash} />
           {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
         </TouchableOpacity>
 
@@ -365,7 +366,7 @@ const CameraScreen = () => {
 
         {/* Flip Camera Button (far right) */}
         <TouchableOpacity style={styles.floatingButton} onPress={toggleCameraFacing}>
-          <FlipCameraIcon color="#FFFFFF" />
+          <FlipCameraIcon color={colors.icon.primary} />
         </TouchableOpacity>
       </View>
 
