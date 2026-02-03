@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 15.3 — Modal Architecture Fix
+**Current focus:** Phase 15.4 — Story Viewed State Fix
 
 ## Current Position
 
-Phase: 15.3 of 26 (Modal Architecture Fix)
-Plan: 2 of 2 in current phase
+Phase: 15.4 of 26 (Story Viewed State Fix)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-02-02 — Completed 15.3-02-PLAN.md
+Last activity: 2026-02-03 — Completed 15.4-01-PLAN.md
 
-Progress: █████░░░░░░░░░░░░░ 66% (Phase 15.3 complete)
+Progress: █████░░░░░░░░░░░░░ 67% (Phase 15.4 complete)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 59 (including 15 FIX plans)
+- Total plans completed: 60 (including 15 FIX plans)
 - Average duration: 11 min
-- Total execution time: 682 min
+- Total execution time: 694 min
 
 **By Phase:**
 
@@ -52,11 +52,12 @@ Progress: █████░░░░░░░░░░░░░ 66% (Phase 15.3
 | 15.1  | 1     | 9 min  | 9 min    |
 | 15.2  | 3     | 46 min | 15 min   |
 | 15.3  | 2     | 27 min | 13.5 min |
+| 15.4  | 1     | 12 min | 12 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 18 min, 18 min, 10 min, 12 min, 15 min
-- Trend: Phase 15.3 complete - modal architecture fixed, ISS-002 and ISS-003 resolved
+- Last 5 plans: 18 min, 10 min, 12 min, 15 min, 12 min
+- Trend: Phase 15.4 complete - story viewed state and real-time reactions fixed
 
 ## Accumulated Context
 
@@ -197,14 +198,16 @@ Recent decisions affecting current work:
 | 15.3  | Context + refs pattern for callbacks                  | Store callbacks in refs to avoid re-renders when callbacks change       |
 | 15.3  | transparentModal for PhotoDetail                      | Keeps previous screen visible underneath, enables proper modal stacking |
 | 15.3  | PhotoDetailProvider wraps entire app                  | Context available throughout navigation hierarchy for photo detail      |
+| 15.4  | useRef for storiesCurrentIndex (not useState)         | Refs read at call-time, fixing closure capture in callbacks             |
+| 15.4  | updatePhotoAtIndex context method for reactions       | Updates context state so PhotoDetailScreen re-renders with new data     |
 
 ### Deferred Issues
 
 - ISS-001: Optimize photo capture for full-screen display
-- ~~ISS-002: Comment avatar profile navigation not working~~ (FIXED in 15.3-02)
-- ~~ISS-003: Modal stacking architecture - underlying modals hidden on profile navigation~~ (FIXED in 15.3-02)
-- ISS-004: Comments sheet closes when navigating to profile (logged in 15.3)
-- ISS-005: Swipe up on photo to open comments (enhancement logged in 15.3)
+- ISS-004: Comments sheet closes when navigating to profile (suggested: Phase 16)
+- ISS-005: Swipe up on photo to open comments (suggested: Phase 16)
+
+**Closed (2026-02-03):** ISS-002, ISS-003
 
 ### Blockers/Concerns
 
@@ -306,6 +309,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: Completed 15.3-02-PLAN.md - Phase 15.3 complete
+Last session: 2026-02-03
+Stopped at: Completed 15.4-01-PLAN.md - Phase 15.4 complete
 Resume file: None

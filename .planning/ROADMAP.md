@@ -40,8 +40,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 15: Friends Screen & Other Profiles** - Friends screen refactor and wiring up the ability to view other peoples profile
 - [x] **Phase 15.1: Profile Setup Cancel Flow** - Cancel profile setup with verification, return to phone input, delete partial profile (INSERTED)
 - [x] **Phase 15.2: Modal State Preservation** - Return to story/comment modal after viewing profile instead of feed (INSERTED)
-- [ ] **Phase 15.3: Modal Architecture Fix** - Fix comment avatar navigation and modal stacking architecture (INSERTED)
-- [ ] **Phase 15.4: Story Viewed State Fix** - Restore story viewed tracking broken by 15.3 navigation changes (INSERTED)
+- [x] **Phase 15.3: Modal Architecture Fix** - Fix comment avatar navigation and modal stacking architecture (INSERTED)
+- [x] **Phase 15.4: Story Viewed State Fix** - Restore story viewed tracking broken by 15.3 navigation changes (INSERTED)
 - [ ] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
 - [ ] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
 - [ ] **Phase 18: Content Visibility Duration** - Define how long stories and feed pictures stay visible for friends
@@ -489,18 +489,18 @@ Plans:
 **Goal**: Restore story viewed tracking functionality broken by Phase 15.3 navigation changes - ensure viewed stories are properly tracked and feed screen updates appropriately
 **Depends on**: Phase 15.3
 **Research**: Unlikely (regression fix of existing functionality)
-**Plans**: 0 plans
+**Plans**: 1/1 complete
 
 Plans:
 
-- [ ] TBD (run /gsd:plan-phase 15.4 to break down)
+- [x] 15.4-01: Fix closure capture bug and real-time reactions
 
 **Details:**
 
-1. Story viewed state not properly tracked after 15.3 changes
-2. Feed screen not updating to reflect which stories have been viewed
-3. Likely regression from PhotoDetailScreen/navigation architecture changes
-4. Need to restore proper viewed state persistence and UI updates
+1. Fixed storiesCurrentIndex closure capture by converting from useState to useRef
+2. Added updatePhotoAtIndex to PhotoDetailContext for real-time reaction updates
+3. Story viewed state now tracks correctly, ring indicators update properly
+4. Reaction counts now update in real-time during story viewing
 
 **Source:** Regression discovered during 15.3 work
 
@@ -688,7 +688,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
 | 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
 | 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
-| 15.4 Story Viewed State Fix      | 0/?            | Not started | -          |
+| 15.4 Story Viewed State Fix      | 1/1            | Complete    | 2026-02-03 |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
