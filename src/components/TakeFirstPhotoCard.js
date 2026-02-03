@@ -27,7 +27,7 @@ const TakeFirstPhotoCard = ({ onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
     marginBottom: 20,
     marginHorizontal: 16,
   },

@@ -71,7 +71,7 @@ const FriendCard = ({
     if (loading) {
       return (
         <View style={styles.addButton}>
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <ActivityIndicator size="small" color={colors.text.primary} />
         </View>
       );
     }

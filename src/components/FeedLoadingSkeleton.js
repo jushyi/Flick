@@ -97,7 +97,7 @@ const FeedLoadingSkeleton = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000', // Pure black to match feed
+    backgroundColor: colors.background.primary, // Pure black to match feed
   },
 
   // Stories row
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
 
   // Feed card skeleton
   feedCard: {
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
     marginBottom: 20,
   },
 
