@@ -20,6 +20,7 @@ import { deleteUserAccount } from '../services/firebase/accountService';
 import { formatPhoneWithCountry } from '../utils/phoneUtils';
 import { usePhoneAuth } from '../context/PhoneAuthContext';
 import { Button } from '../components';
+import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 /**
@@ -235,7 +236,7 @@ const DeleteAccountScreen = () => {
   const renderWarningStep = () => (
     <View style={styles.content}>
       <View style={styles.warningIconContainer}>
-        <Ionicons name="warning-outline" size={64} color="#FF3B30" />
+        <Ionicons name="warning-outline" size={64} color={colors.status.danger} />
       </View>
 
       <Text style={styles.title}>Delete Account</Text>
@@ -314,7 +315,7 @@ const DeleteAccountScreen = () => {
             textContentType="oneTimeCode"
             autoComplete="sms-otp"
             placeholder="000000"
-            placeholderTextColor="#666666"
+            placeholderTextColor={colors.text.tertiary}
             editable={!loading && retryDelay === 0}
           />
         </Animated.View>
@@ -338,7 +339,7 @@ const DeleteAccountScreen = () => {
   // Render deleting step
   const renderDeletingStep = () => (
     <View style={styles.contentCentered}>
-      <ActivityIndicator size="large" color="#FF3B30" />
+      <ActivityIndicator size="large" color={colors.status.danger} />
       <Text style={styles.deletingText}>Deleting account...</Text>
       <Text style={styles.deletingSubtext}>Please wait while we remove your data</Text>
     </View>
@@ -350,7 +351,7 @@ const DeleteAccountScreen = () => {
       {step !== 'deleting' && (
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
+            <Ionicons name="chevron-back" size={28} color={colors.icon.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Delete Account</Text>
           <View style={styles.headerSpacer} />
@@ -369,7 +370,7 @@ const DeleteAccountScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
   },
   keyboardAvoid: {
     flex: 1,
@@ -381,7 +382,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: colors.border.subtle,
   },
   backButton: {
     padding: 4,
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   headerSpacer: {
     width: 36,
@@ -412,25 +413,25 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#999999',
+    color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: 8,
   },
   phoneNumber: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     textAlign: 'center',
     marginBottom: 32,
   },
   warningBox: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: colors.background.secondary,
     borderRadius: 12,
     padding: 20,
     marginTop: 24,
@@ -438,12 +439,12 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 16,
   },
   warningTextBold: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.status.danger,
     fontWeight: '600',
     marginTop: 16,
   },
@@ -452,7 +453,7 @@ const styles = StyleSheet.create({
   },
   bulletItem: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: colors.text.secondary,
     marginBottom: 8,
     paddingLeft: 8,
   },
@@ -462,7 +463,7 @@ const styles = StyleSheet.create({
   },
   dangerButton: {
     borderWidth: 2,
-    borderColor: '#FF3B30',
+    borderColor: colors.status.danger,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -471,7 +472,7 @@ const styles = StyleSheet.create({
   dangerButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FF3B30',
+    color: colors.status.danger,
   },
   cancelButton: {
     paddingVertical: 16,
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 16,
-    color: '#999999',
+    color: colors.text.secondary,
   },
   primaryButton: {
     marginBottom: 16,
@@ -496,13 +497,13 @@ const styles = StyleSheet.create({
     letterSpacing: 16,
     textAlign: 'center',
     borderWidth: 2,
-    borderColor: '#333333',
+    borderColor: colors.border.subtle,
     borderRadius: 12,
-    backgroundColor: '#1A1A1A',
-    color: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
+    color: colors.text.primary,
   },
   codeInputError: {
-    borderColor: '#FF3B30',
+    borderColor: colors.status.danger,
   },
   errorContainer: {
     alignItems: 'center',
@@ -510,31 +511,31 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: '#FF3B30',
+    color: colors.status.danger,
     textAlign: 'center',
     fontWeight: '600',
   },
   retryDelayText: {
     fontSize: 12,
-    color: '#666666',
+    color: colors.text.tertiary,
     textAlign: 'center',
     marginTop: 4,
   },
   loadingText: {
     fontSize: 16,
-    color: '#999999',
+    color: colors.text.secondary,
     textAlign: 'center',
     marginTop: 16,
   },
   deletingText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginTop: 24,
   },
   deletingSubtext: {
     fontSize: 14,
-    color: '#999999',
+    color: colors.text.secondary,
     marginTop: 8,
   },
 });

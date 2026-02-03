@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 /**
@@ -83,7 +84,7 @@ const SettingsScreen = () => {
           }}
           style={styles.backButton}
         >
-          <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={28} color={colors.icon.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={styles.headerSpacer} />
@@ -99,12 +100,16 @@ const SettingsScreen = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <Ionicons name={item.icon} size={22} color={item.danger ? '#FF3B30' : '#FFFFFF'} />
+              <Ionicons
+                name={item.icon}
+                size={22}
+                color={item.danger ? colors.status.danger : colors.icon.primary}
+              />
               <Text style={[styles.menuItemLabel, item.danger && styles.menuItemLabelDanger]}>
                 {item.label}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#666666" />
+            <Ionicons name="chevron-forward" size={20} color={colors.icon.tertiary} />
           </TouchableOpacity>
         ))}
       </View>
@@ -115,7 +120,7 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
   },
   header: {
     flexDirection: 'row',
@@ -124,7 +129,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: colors.border.subtle,
   },
   backButton: {
     padding: 4,
@@ -132,7 +137,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   headerSpacer: {
     width: 36, // Balance the back button width
@@ -147,7 +152,7 @@ const styles = StyleSheet.create({
     height: 56,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: colors.border.subtle,
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -155,11 +160,11 @@ const styles = StyleSheet.create({
   },
   menuItemLabel: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginLeft: 16,
   },
   menuItemLabelDanger: {
-    color: '#FF3B30',
+    color: colors.status.danger,
   },
 });
 
