@@ -43,7 +43,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 15.3: Modal Architecture Fix** - Fix comment avatar navigation and modal stacking architecture (INSERTED)
 - [x] **Phase 15.4: Story Viewed State Fix** - Restore story viewed tracking broken by 15.3 navigation changes (INSERTED)
 - [x] **Phase 16: Color Constants Standardization** - Standardize all colors to use constants, eliminate hardcoded values, enable future theming
-- [ ] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
+- [x] **Phase 17: Nested Reply Comments** - Reply to replies with @mention tagging, Instagram-style inline threading
 - [ ] **Phase 18: Content Visibility Duration** - Define how long stories and feed pictures stay visible for friends
 - [ ] **Phase 19: Delete Account Fallback** - Ensure delete account function works properly with proper fallback
 - [ ] **Phase 20: Friend Suggestions via Contacts Sync** - Suggest friends based on synced phone contacts
@@ -542,12 +542,12 @@ Plans:
 **Goal**: Enable users to reply to existing replies with Instagram-style inline threading - all replies stay flat/inline, but replying to someone's reply adds @mention tag at the front of the comment
 **Depends on**: Phase 16
 **Research**: Unlikely (extending existing comment system)
-**Plans**: 1/2
+**Plans**: 2/2 complete
 
 Plans:
 
 - [x] 17-01: Reply infrastructure (service update + auto @mention insertion)
-- [ ] 17-02: @Mention rendering and scroll-to-comment navigation
+- [x] 17-02: @Mention rendering and scroll-to-comment navigation
 
 **Details:**
 
@@ -704,7 +704,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
 | 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | Complete    | 2026-02-03 |
 | 16. Color Constants              | 10/10          | Complete    | 2026-02-03 |
-| 17. Nested Reply Comments        | 1/2            | In progress | -          |
+| 17. Nested Reply Comments        | 2/2            | Complete    | 2026-02-03 |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
 | 19. Delete Account Fallback      | 0/?            | Not started | -          |
 | 20. Friend Suggestions Contacts  | 0/?            | Not started | -          |

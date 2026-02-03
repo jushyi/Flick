@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 17 of 26 (Nested Reply Comments)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-03 — Completed 17-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-03 — Completed 17-02-PLAN.md
 
-Progress: ██████████░░░░░░░░ 50% (Phase 17 in progress)
+Progress: ██████████░░░░░░░░ 65% (Phase 17 complete)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 72 (including 17 FIX plans)
+- Total plans completed: 73 (including 17 FIX plans)
 - Average duration: 11 min
-- Total execution time: 785 min
+- Total execution time: 794 min
 
 **By Phase:**
 
@@ -54,12 +54,12 @@ Progress: ██████████░░░░░░░░ 50% (Phase 17 i
 | 15.3  | 2     | 27 min | 13.5 min |
 | 15.4  | 3     | 28 min | 9 min    |
 | 16    | 10    | 68 min | 7 min    |
-| 17    | 1     | 12 min | 12 min   |
+| 17    | 2     | 21 min | 10.5 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 5 min, 5 min, 8 min, 10 min, 12 min
-- Trend: Phase 17 started - reply-to-reply infrastructure complete
+- Last 5 plans: 5 min, 8 min, 10 min, 12 min, 9 min
+- Trend: Phase 17 complete - nested reply comments fully functional
 
 ## Accumulated Context
 
@@ -210,6 +210,10 @@ Recent decisions affecting current work:
 | 17    | mentionedCommentId tracks specific reply target       | Enables scroll-to and @mention highlighting in Plan 02                  |
 | 17    | Reply button shown on all comments                    | Changed from isTopLevel to onReply callback presence                    |
 | 17    | initialMention flows through component hierarchy      | useComments → CommentsBottomSheet → CommentInput for auto @mention      |
+| 17    | Regex /@(\w+)/g for @mention parsing                  | Word characters only, matches standard username patterns                |
+| 17    | First @mention gets mentionedCommentId                | Only auto-inserted @mentions get linked comment, manual get null        |
+| 17    | Purple highlight 20% opacity for 1.5s animation       | Subtle visual feedback without being intrusive                          |
+| 17    | Auto-expand collapsed replies when target inside      | User sees target comment without manual expansion                       |
 
 ### Deferred Issues
 
@@ -320,5 +324,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 17-01-PLAN.md - Reply infrastructure done
+Stopped at: Completed 17-02-PLAN.md - Phase 17 complete
 Resume file: None
