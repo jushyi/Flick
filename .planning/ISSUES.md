@@ -44,40 +44,6 @@ Enhancements discovered during execution. Not critical - address in future phase
 - **Effort:** Low (simple gesture addition)
 - **Suggested phase:** Phase 16 (touches same PhotoDetailScreen gesture handling)
 
-### ISS-006: Own story ring indicator doesn't update after viewing
-
-- **Discovered:** Phase 15.4 FIX verification (2026-02-03)
-- **Type:** Bug
-- **Description:** After viewing own story photos and closing, the MeStoryCard purple ring doesn't change to gray. The viewedPhotoCount dependency fix was attempted but ring still doesn't update properly.
-- **Root cause:** TBD - viewedPhotoCount approach may not be triggering re-render as expected, or the hasViewedAllPhotos check for own photos has a different issue
-- **Impact:** High (visual feedback broken for own content)
-- **Effort:** Medium (needs debugging of re-render flow)
-- **Related:** 15.4-01-FIX Task 2 attempted fix
-- **Suggested phase:** 15.4 (needs immediate follow-up FIX)
-
-### ISS-007: Own story doesn't resume at correct position
-
-- **Discovered:** Phase 15.4 FIX verification (2026-02-03)
-- **Type:** Bug
-- **Description:** When reopening own story after partial viewing, it always starts from the beginning instead of resuming at the first unviewed photo. Friends' stories resume correctly but own stories don't.
-- **Root cause:** TBD - getFirstUnviewedIndex may not be called correctly for own stories, or the viewedPhotosRef isn't updated in time for own story flow
-- **Impact:** High (UX broken for own content viewing)
-- **Effort:** Medium (needs debugging of own story flow vs friend story flow)
-- **Related:** ISS-006 (likely same root cause)
-- **Suggested phase:** 15.4 (needs immediate follow-up FIX)
-
-### ISS-008: Reactions not sorting by count (highest left)
-
-- **Discovered:** Phase 15.4 FIX verification (2026-02-03)
-- **Type:** Bug (Regression)
-- **Description:** Emoji reactions on photos should be sorted by count with highest count on the left. This was working before but is no longer sorting correctly.
-- **Expected:** Reactions displayed left-to-right in descending order by count
-- **Actual:** Reactions appear in arbitrary order
-- **Root cause:** TBD - need to check ReactionBar or similar component for sorting logic
-- **Impact:** Medium (visual consistency issue)
-- **Effort:** Low (likely simple sort fix)
-- **Suggested phase:** 15.4 (needs immediate follow-up FIX)
-
 ## Closed Enhancements
 
 ### ISS-002: Comment avatar profile navigation not working
@@ -94,3 +60,24 @@ Enhancements discovered during execution. Not critical - address in future phase
 - **Closed:** 2026-02-03
 - **Type:** Architecture
 - **Resolution:** Fixed in Phase 15.3-02 by converting PhotoDetailModal from Modal component to navigation screen using `transparentModal` presentation. Previous screens now stay visible underneath when navigating to profiles.
+
+### ISS-006: Own story ring indicator doesn't update after viewing
+
+- **Discovered:** Phase 15.4 FIX verification (2026-02-03)
+- **Closed:** 2026-02-03
+- **Type:** Bug
+- **Resolution:** Fixed in Phase 15.4-02-FIX by using refs for close handlers. Root cause was stale closure - the `setCallbacks` useEffect captured an old version of `handleCloseMyStories` that had null `myStories` state. Fix: Added `handleCloseMyStoriesRef` and `handleCloseStoriesRef` refs, update them on each render, and call via refs in the callback.
+
+### ISS-007: Own story doesn't resume at correct position
+
+- **Discovered:** Phase 15.4 FIX verification (2026-02-03)
+- **Closed:** 2026-02-03
+- **Type:** Bug
+- **Resolution:** Fixed in Phase 15.4-02-FIX (same fix as ISS-006). The stale closure meant `markPhotosAsViewed` was never called with valid photo IDs, so `getFirstUnviewedIndex` didn't see any photos as viewed. With the ref-based handlers, photos are now correctly marked as viewed.
+
+### ISS-008: Reactions not sorting by count (highest left)
+
+- **Discovered:** Phase 15.4 FIX verification (2026-02-03)
+- **Closed:** 2026-02-03
+- **Type:** Bug (Regression)
+- **Resolution:** Fixed in Phase 15.4-02-FIX by resetting `frozenOrder` state when photo changes. Root cause was that `frozenOrder` (which freezes emoji order briefly after tapping) persisted across photo changes. Added `setFrozenOrder(null)` to the existing photo change useEffect in `usePhotoDetailModal.js`.

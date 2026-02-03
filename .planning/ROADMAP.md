@@ -495,7 +495,7 @@ Plans:
 
 - [x] 15.4-01: Fix closure capture bug and real-time reactions
 - [x] 15.4-01-FIX: UAT fixes (reaction persistence, ring indicator updates)
-- [ ] 15.4-02-FIX: UAT fixes (own story viewed state, reaction sorting)
+- [x] 15.4-02-FIX: UAT fixes (own story viewed state, reaction sorting)
 
 **Details:**
 
@@ -692,7 +692,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
 | 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
 | 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
-| 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | In progress | 2026-02-03 |
+| 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | Complete    | 2026-02-03 |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
