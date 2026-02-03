@@ -9,10 +9,11 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0F0F0F"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
+      "backgroundColor": "#000000",
       "bundleIdentifier": "com.spoodsjs.rewind",
       "entitlements": {
         "aps-environment": "development"
@@ -35,7 +36,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0F0F0F"
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
