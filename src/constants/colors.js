@@ -91,7 +91,23 @@ export const colors = {
   // Overlays
   overlay: {
     dark: 'rgba(0, 0, 0, 0.5)',
+    darker: 'rgba(0, 0, 0, 0.9)', // Heavy overlay for modals
     light: 'rgba(255, 255, 255, 0.1)',
+    lightMedium: 'rgba(255, 255, 255, 0.3)', // Progress bars, inactive states
+    lightBorder: 'rgba(255, 255, 255, 0.34)', // Semi-transparent white borders
+    purpleTint: 'rgba(147, 112, 219, 0.15)', // Purple highlight tint for reactions
+  },
+
+  // Interactive element backgrounds (pills, chips, input backgrounds)
+  pill: {
+    background: '#3A3A3A', // Emoji pills, interactive elements
+    border: '#4A4A4A', // Borders on pills and chips
+  },
+
+  // System colors (iOS HIG)
+  systemColors: {
+    gray: '#8E8E93', // iOS system gray (archive)
+    green: '#34C759', // iOS system green (journal/confirm)
   },
 
   // Polaroid frame styling

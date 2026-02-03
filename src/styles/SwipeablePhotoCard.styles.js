@@ -6,6 +6,7 @@
  */
 
 import { StyleSheet, Dimensions } from 'react-native';
+import { colors } from '../constants/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -18,11 +19,11 @@ export const styles = StyleSheet.create({
     // UAT-014: Reduced border radius from 24 to 6 for subtler rounded corners
     borderRadius: 6,
     // UAT-012: Black background matches screen, prevents gray flash during cascade
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
     overflow: 'hidden',
     // UAT-007: Black border removed per user request
     // iOS-style shadow for depth
-    shadowColor: '#000',
+    shadowColor: colors.background.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -33,7 +34,7 @@ export const styles = StyleSheet.create({
     aspectRatio: 4 / 5,
     // Black background matches screen, prevents any flash
     // during cascade animation if image needs brief moment to render
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -43,13 +44,13 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
   },
   archiveOverlay: {
-    backgroundColor: '#8E8E93', // iOS system gray
+    backgroundColor: colors.systemColors.gray,
   },
   journalOverlay: {
-    backgroundColor: '#34C759', // iOS system green
+    backgroundColor: colors.systemColors.green,
   },
   deleteOverlay: {
-    backgroundColor: '#FF3B30', // iOS system red
+    backgroundColor: colors.status.danger,
   },
   iconContainer: {
     width: 60,
@@ -63,7 +64,7 @@ export const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: colors.text.primary,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -71,7 +72,7 @@ export const styles = StyleSheet.create({
   boxIconInner: {
     width: 24,
     height: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.text.primary,
     borderRadius: 2,
     marginTop: -12,
   },
@@ -80,7 +81,7 @@ export const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: colors.text.primary,
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
@@ -88,7 +89,7 @@ export const styles = StyleSheet.create({
   checkmarkText: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   // X icon for Delete
   xIcon: {
@@ -101,7 +102,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     width: 40,
     height: 4,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.text.primary,
     borderRadius: 2,
   },
   xLine1: {
@@ -113,7 +114,7 @@ export const styles = StyleSheet.create({
   overlayText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },

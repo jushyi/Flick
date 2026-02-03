@@ -65,7 +65,7 @@ export const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   // Pending button (gray)
   pendingButton: {
@@ -83,7 +83,7 @@ export const styles = StyleSheet.create({
   },
   // Accept button (green)
   acceptButton: {
-    backgroundColor: '#22C55E',
+    backgroundColor: colors.status.ready,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
@@ -93,7 +93,7 @@ export const styles = StyleSheet.create({
   acceptButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   // Deny button (red/pink)
   denyButton: {
@@ -107,7 +107,7 @@ export const styles = StyleSheet.create({
   denyButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   // Cancel button (for sent requests)
   cancelButton: {

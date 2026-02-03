@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   tabContent: {
     flexDirection: 'row',

@@ -5,6 +5,7 @@
  * Based on PhotoDetailModal.styles.js with adjustments for navigation screen.
  */
 import { StyleSheet, Dimensions, StatusBar } from 'react-native';
+import { colors } from '../constants/colors';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -34,10 +35,10 @@ export const styles = StyleSheet.create({
     borderRadius: 1.5,
   },
   progressSegmentActive: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.text.primary,
   },
   progressSegmentInactive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: colors.overlay.lightMedium,
   },
   header: {
     flexDirection: 'row',
@@ -55,7 +56,7 @@ export const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 24,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontWeight: '600',
   },
   photoScrollView: {
@@ -84,17 +85,17 @@ export const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 0.5,
-    borderColor: '#ffffff57',
+    borderColor: colors.overlay.lightBorder,
   },
   profilePicPlaceholder: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profilePicText: {
     fontSize: 32,
     fontWeight: '600',
-    color: '#CCCCCC',
+    color: colors.text.secondary,
   },
   userInfoOverlay: {
     position: 'absolute',
@@ -106,14 +107,14 @@ export const styles = StyleSheet.create({
   displayName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
   timestamp: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -130,25 +131,25 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingTop: 4,
     paddingBottom: 32,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: colors.overlay.darker,
     gap: 8,
   },
   commentInputTrigger: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: colors.background.tertiary,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 20,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#3A3A3A',
+    borderColor: colors.pill.background,
   },
   commentInputTriggerText: {
     flex: 1,
     fontSize: 13,
-    color: '#888888',
+    color: colors.text.secondary,
   },
   emojiPickerScrollView: {
     flex: 1,
@@ -163,13 +164,13 @@ export const styles = StyleSheet.create({
   emojiPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3A3A3A',
+    backgroundColor: colors.pill.background,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 16,
     gap: 4,
     borderWidth: 1,
-    borderColor: '#4A4A4A',
+    borderColor: colors.pill.border,
   },
   emojiPillSelected: {
     // No visual change for selected state
@@ -180,7 +181,7 @@ export const styles = StyleSheet.create({
   emojiPillCount: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   emojiHighlightOverlay: {
     position: 'absolute',
@@ -190,15 +191,15 @@ export const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#9370DB',
-    backgroundColor: 'rgba(147, 112, 219, 0.15)',
+    borderColor: colors.brand.purple,
+    backgroundColor: colors.overlay.purpleTint,
   },
   addEmojiButton: {
     justifyContent: 'center',
   },
   addEmojiText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontWeight: '600',
   },
 });

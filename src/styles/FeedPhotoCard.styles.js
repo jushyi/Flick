@@ -10,7 +10,7 @@ import { colors } from '../constants/colors';
 export const styles = StyleSheet.create({
   // Card container - no margins, photos go edge-to-edge
   card: {
-    backgroundColor: '#000000', // Pure black to match stories section
+    backgroundColor: colors.background.primary,
     marginBottom: 20,
   },
 
