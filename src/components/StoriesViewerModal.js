@@ -15,6 +15,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { getTimeAgo } from '../utils/timeUtils';
 import logger from '../utils/logger';
+import { colors } from '../constants/colors';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -309,7 +310,7 @@ const StoriesViewerModal = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
   },
   contentWrapper: {
     flex: 1,
@@ -326,10 +327,10 @@ const styles = StyleSheet.create({
     borderRadius: 1.5,
   },
   progressSegmentActive: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.text.primary,
   },
   progressSegmentInactive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: colors.overlay.light,
   },
   header: {
     flexDirection: 'row',
@@ -348,17 +349,17 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: colors.overlay.light,
   },
   profilePicPlaceholder: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profilePicText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#CCCCCC',
+    color: colors.text.secondary,
   },
   friendTextContainer: {
     marginLeft: 10,
@@ -367,11 +368,11 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   timestamp: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: colors.text.secondary,
     marginTop: 1,
   },
   closeButton: {
@@ -380,7 +381,7 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 20,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontWeight: '600',
   },
   photoContainer: {
