@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     left: 12,
   },
   monthText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 20,
     fontWeight: 'bold',
     textShadowColor: 'rgba(0,0,0,0.7)',

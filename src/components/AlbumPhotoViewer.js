@@ -408,7 +408,7 @@ const AlbumPhotoViewer = ({
               <Animated.View
                 style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 100 }]}
               >
-                <Ionicons name="checkmark-circle" size={20} color="#4CD964" />
+                <Ionicons name="checkmark-circle" size={20} color={colors.status.ready} />
                 <Text style={styles.toastText}>Cover set</Text>
               </Animated.View>
             )}
@@ -430,7 +430,7 @@ const AlbumPhotoViewer = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.primary,
   },
   header: {
     position: 'absolute',
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingBottom: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
   },
   headerButton: {
     width: 44,
@@ -478,14 +478,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.tertiary,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
     gap: 8,
   },
   toastText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
     paddingTop: 8,
   },
   thumbnailContent: {
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   },
   thumbnailActive: {
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.text.primary,
   },
 });
 

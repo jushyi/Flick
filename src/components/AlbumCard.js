@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: CARD_SIZE,
     height: CARD_SIZE,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: colors.background.tertiary,
     borderRadius: 12,
     overflow: 'hidden',
   },

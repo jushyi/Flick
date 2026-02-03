@@ -55,7 +55,12 @@ const AlbumBar = forwardRef(
         <View style={styles.container}>
           <Text style={styles.header}>Albums</Text>
           <TouchableOpacity style={styles.emptyPrompt} onPress={onAddPress} activeOpacity={0.8}>
-            <Ionicons name="albums-outline" size={28} color="#888" style={styles.emptyPromptIcon} />
+            <Ionicons
+              name="albums-outline"
+              size={28}
+              color={colors.text.secondary}
+              style={styles.emptyPromptIcon}
+            />
             <Text style={styles.emptyPromptText}>Tap here to make your first album</Text>
           </TouchableOpacity>
         </View>
@@ -143,7 +148,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: '#555',
+    borderColor: colors.border.subtle,
     borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
     justifyContent: 'center',
@@ -154,7 +159,7 @@ const styles = StyleSheet.create({
   },
   emptyPromptText: {
     fontSize: 15,
-    color: '#888',
+    color: colors.text.secondary,
   },
 });
 
