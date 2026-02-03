@@ -514,22 +514,22 @@ const PhotoDetailScreen = () => {
         enableRecentlyUsed={false}
         enableSearchBar={true}
         theme={{
-          backdrop: '#00000080',
+          backdrop: colors.overlay.dark,
           knob: colors.text.secondary,
-          container: '#1a1a1a',
+          container: colors.background.secondary,
           header: colors.text.primary,
-          skinTonesContainer: '#1a1a1a',
+          skinTonesContainer: colors.background.secondary,
           category: {
             icon: colors.text.secondary,
             iconActive: colors.text.primary,
-            container: '#1a1a1a',
+            container: colors.background.secondary,
             containerActive: colors.brand.purple,
           },
           search: {
             text: colors.text.primary,
             placeholder: colors.text.secondary,
             icon: colors.text.secondary,
-            background: '#2a2a2a',
+            background: colors.background.tertiary,
           },
           emoji: {
             selected: colors.brand.purple,
