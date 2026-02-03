@@ -128,13 +128,14 @@ const HAPTIC_CONFIG = {
 
 // Colors - using design tokens from constants/colors.js
 const COLORS = {
-  sheetBackground: colors.background.secondary, // '#1A1A1A'
+  sheetBackground: colors.background.secondary, // '#111111'
   textPrimary: colors.text.primary, // '#FFFFFF'
   textSecondary: colors.text.secondary, // '#888888'
   statusReady: colors.status.ready, // '#22C55E'
   statusDeveloping: colors.status.developing, // '#EF4444'
   cardBackground: colors.background.tertiary, // '#2A2A2A'
-  cardBorder: 'rgba(255, 255, 255, 0.3)', // Keep as-is
+  cardBorder: colors.overlay.light, // rgba(255, 255, 255, 0.1)
+  overlayDark: colors.overlay.dark, // rgba(0, 0, 0, 0.5)
   // Gradient colors from design tokens
   buttonGradientStart: colors.brand.gradient.button[0], // '#4C1D95'
   buttonGradientEnd: colors.brand.gradient.button[1], // '#7C3AED'
@@ -534,7 +535,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
             >
               {/* Purple button with gradient border */}
               <GradientButton
-                centerColor="#7C3AED"
+                centerColor={COLORS.buttonGradientEnd}
                 width={SCREEN_WIDTH - 48}
                 height={64}
                 borderRadius={16}
@@ -544,7 +545,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
                 <Animated.View
                   style={[
                     styles.fillOverlay,
-                    { width: progressWidth, backgroundColor: 'rgba(0, 0, 0, 0.35)' },
+                    { width: progressWidth, backgroundColor: COLORS.overlayDark },
                   ]}
                 />
 
@@ -574,7 +575,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: COLORS.overlayDark,
   },
   sheet: {
     backgroundColor: COLORS.sheetBackground,

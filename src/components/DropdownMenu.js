@@ -87,7 +87,7 @@ const DropdownMenu = ({ visible, onClose, options = [], anchorPosition }) => {
                   <Ionicons
                     name={option.icon}
                     size={20}
-                    color={option.destructive ? '#ff4444' : colors.text.primary}
+                    color={option.destructive ? colors.status.danger : colors.text.primary}
                     style={styles.menuIcon}
                   />
                 )}
@@ -112,7 +112,7 @@ const DropdownMenu = ({ visible, onClose, options = [], anchorPosition }) => {
                     <Ionicons
                       name={option.icon}
                       size={20}
-                      color={option.destructive ? '#ff4444' : colors.text.primary}
+                      color={option.destructive ? colors.status.danger : colors.text.primary}
                       style={styles.menuIcon}
                     />
                   )}
@@ -132,7 +132,7 @@ const DropdownMenu = ({ visible, onClose, options = [], anchorPosition }) => {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -145,18 +145,18 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
   menu: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.background.secondary,
     borderRadius: 12,
     overflow: 'hidden',
   },
   menuAnchored: {
     position: 'absolute',
     width: MENU_WIDTH,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.background.secondary,
     borderRadius: 12,
     overflow: 'hidden',
     // Shadow for depth
-    shadowColor: '#000',
+    shadowColor: colors.background.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   menuItemBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: colors.overlay.light,
   },
   menuIcon: {
     marginRight: 12,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   destructiveText: {
-    color: '#ff4444',
+    color: colors.status.danger,
   },
 });
 

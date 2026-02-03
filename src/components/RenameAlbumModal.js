@@ -90,12 +90,12 @@ const RenameAlbumModal = ({ visible, currentName = '', onClose, onSave }) => {
                 value={name}
                 onChangeText={setName}
                 placeholder="Album name"
-                placeholderTextColor="#666"
+                placeholderTextColor={colors.text.tertiary}
                 autoFocus
                 maxLength={MAX_ALBUM_NAME_LENGTH}
                 returnKeyType="done"
                 onSubmitEditing={handleSave}
-                selectionColor={colors.brand?.primary || '#8B5CF6'}
+                selectionColor={colors.brand.purple}
               />
 
               <Text style={styles.charCount}>
@@ -133,14 +133,14 @@ const RenameAlbumModal = ({ visible, currentName = '', onClose, onSave }) => {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
     justifyContent: 'flex-end',
   },
   keyboardAvoid: {
     width: '100%',
   },
   modalContent: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.background.secondary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 12,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#444',
+    backgroundColor: colors.icon.inactive,
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 20,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   input: {
-    backgroundColor: '#333',
+    backgroundColor: colors.background.tertiary,
     color: colors.text.primary,
     fontSize: 16,
     paddingVertical: 14,
@@ -193,10 +193,10 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   saveButton: {
-    backgroundColor: colors.brand?.primary || '#8B5CF6',
+    backgroundColor: colors.brand.purple,
   },
   saveButtonDisabled: {
-    backgroundColor: '#444',
+    backgroundColor: colors.icon.inactive,
   },
   saveText: {
     fontSize: 16,
