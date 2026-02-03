@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 13,
-    color: '#888888',
+    color: colors.text.secondary,
     marginTop: 2,
   },
   actionButtonText: {
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   inAlbumText: {
     fontSize: 10,
-    color: '#fff',
+    color: colors.text.primary,
     textAlign: 'center',
     fontWeight: '500',
   },

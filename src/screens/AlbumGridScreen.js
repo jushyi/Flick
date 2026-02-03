@@ -380,7 +380,7 @@ const AlbumGridScreen = () => {
         <Animated.View
           style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 20 }]}
         >
-          <Ionicons name="checkmark-circle" size={20} color="#4CD964" />
+          <Ionicons name="checkmark-circle" size={20} color={colors.status.ready} />
           <Text style={styles.toastText}>Cover set</Text>
         </Animated.View>
       )}
@@ -508,14 +508,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.tertiary,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
     gap: 8,
   },
   toastText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
     fontWeight: '500',
   },
