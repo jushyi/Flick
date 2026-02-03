@@ -513,11 +513,20 @@ Plans:
 **Goal**: Standardize all colors throughout every screen, modal, and component to use constants from a centralized theme system. Eliminate all hardcoded color values to enable future theme/palette changes.
 **Depends on**: Phase 15.3
 **Research**: Unlikely (internal refactoring)
-**Plans**: TBD
+**Plans**: 0/10 complete
 
 Plans:
 
-- [ ] 16-01: TBD (run /gsd:plan-phase 16 to break down)
+- [ ] 16-01: Color System Foundation (colors.js + AppNavigator)
+- [ ] 16-02: Core Feed Screens (FeedScreen, PhotoDetailScreen)
+- [ ] 16-03: Profile & Activity Screens
+- [ ] 16-04: Media Capture Screens (Camera, Darkroom)
+- [ ] 16-05: Album Screens (AlbumGrid, AlbumPhotoPicker, Selects)
+- [ ] 16-06: Settings & Auth Screens
+- [ ] 16-07: Modal Components
+- [ ] 16-08: Card Components
+- [ ] 16-09: Style Files & Remaining
+- [ ] 16-10: Documentation & Verification
 
 **Details:**
 
