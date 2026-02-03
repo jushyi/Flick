@@ -660,7 +660,7 @@ const ProfileScreen = () => {
                     : 'person-add-outline'
                 }
                 size={24}
-                color="#FFF"
+                color={colors.text.primary}
               />
               <Text style={styles.addFriendText}>
                 {friendshipStatus === 'pending_sent'
@@ -856,7 +856,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   addFriendText: {
-    color: '#FFF',
+    color: colors.text.primary,
     fontSize: 18,
     fontWeight: '600',
   },

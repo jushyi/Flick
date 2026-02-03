@@ -223,7 +223,7 @@ const ActivityScreen = () => {
         </View>
         <View style={styles.requestActions}>
           <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(item.id)}>
-            <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+            <Ionicons name="checkmark" size={18} color={colors.icon.primary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.declineButton} onPress={() => handleDecline(item.id)}>
             <Ionicons name="close" size={18} color={colors.text.secondary} />
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   sectionBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   requestItem: {
     flexDirection: 'row',
