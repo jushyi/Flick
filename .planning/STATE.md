@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 16 — Color Constants Standardization
+**Current focus:** Phase 17 — Nested Reply Comments
 
 ## Current Position
 
-Phase: 16 of 26 (Color Constants Standardization)
-Plan: 10 of 10 in current phase
-Status: Phase complete
-Last activity: 2026-02-03 — Completed 16-10-PLAN.md
+Phase: 17 of 26 (Nested Reply Comments)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-03 — Completed 17-01-PLAN.md
 
-Progress: ██████████░░░░░░░░ 100% (Phase 16 complete)
+Progress: ██████████░░░░░░░░ 50% (Phase 17 in progress)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 71 (including 17 FIX plans)
+- Total plans completed: 72 (including 17 FIX plans)
 - Average duration: 11 min
-- Total execution time: 773 min
+- Total execution time: 785 min
 
 **By Phase:**
 
@@ -54,11 +54,12 @@ Progress: ██████████░░░░░░░░ 100% (Phase 16 
 | 15.3  | 2     | 27 min | 13.5 min |
 | 15.4  | 3     | 28 min | 9 min    |
 | 16    | 10    | 68 min | 7 min    |
+| 17    | 1     | 12 min | 12 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 8 min, 5 min, 5 min, 8 min, 10 min
-- Trend: Phase 16 complete - color system standardized with documentation
+- Last 5 plans: 5 min, 5 min, 8 min, 10 min, 12 min
+- Trend: Phase 17 started - reply-to-reply infrastructure complete
 
 ## Accumulated Context
 
@@ -205,6 +206,10 @@ Recent decisions affecting current work:
 | 16    | #111111 for cards (barely visible lift)               | Very subtle separation from pure black creates content hierarchy        |
 | 16    | Icons stay white/gray (not purple)                    | Purple reserved for interactive elements and highlights only            |
 | 16    | border.subtle updated to #222222                      | Subtler on pure black than previous #333333                             |
+| 17    | Flat thread structure for reply-to-reply              | All replies use original thread's parentId for visual flatness          |
+| 17    | mentionedCommentId tracks specific reply target       | Enables scroll-to and @mention highlighting in Plan 02                  |
+| 17    | Reply button shown on all comments                    | Changed from isTopLevel to onReply callback presence                    |
+| 17    | initialMention flows through component hierarchy      | useComments → CommentsBottomSheet → CommentInput for auto @mention      |
 
 ### Deferred Issues
 
@@ -315,5 +320,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 16-10-PLAN.md - Phase 16 complete
+Stopped at: Completed 17-01-PLAN.md - Reply infrastructure done
 Resume file: None

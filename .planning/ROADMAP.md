@@ -542,11 +542,11 @@ Plans:
 **Goal**: Enable users to reply to existing replies with Instagram-style inline threading - all replies stay flat/inline, but replying to someone's reply adds @mention tag at the front of the comment
 **Depends on**: Phase 16
 **Research**: Unlikely (extending existing comment system)
-**Plans**: 0/2
+**Plans**: 1/2
 
 Plans:
 
-- [ ] 17-01: Reply infrastructure (service update + auto @mention insertion)
+- [x] 17-01: Reply infrastructure (service update + auto @mention insertion)
 - [ ] 17-02: @Mention rendering and scroll-to-comment navigation
 
 **Details:**
@@ -704,7 +704,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
 | 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | Complete    | 2026-02-03 |
 | 16. Color Constants              | 10/10          | Complete    | 2026-02-03 |
-| 17. Nested Reply Comments        | 0/?            | Not started | -          |
+| 17. Nested Reply Comments        | 1/2            | In progress | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
 | 19. Delete Account Fallback      | 0/?            | Not started | -          |
 | 20. Friend Suggestions Contacts  | 0/?            | Not started | -          |
