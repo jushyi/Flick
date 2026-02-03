@@ -96,19 +96,26 @@ export const usePhotoDetailModal = ({
   // Reset emoji state when photo changes
   // - Reset frozenOrder so emojis sort correctly by count for new photo (ISS-008 fix)
   // - Initialize activeCustomEmojis with any custom emojis already in the photo's reactions
+  // ISS-009 fix: Read reactions directly from currentPhoto to avoid stale closure issue
   useEffect(() => {
     if (currentPhoto?.id) {
       // Reset frozen order so new photo shows emojis sorted by count
       setFrozenOrder(null);
 
       // Find custom emojis already in reactions (emojis that are NOT in curated list)
-      const existingEmojis = Object.keys(groupedReactions).filter(
-        emoji => !curatedEmojis.includes(emoji)
-      );
+      // Read directly from currentPhoto to get fresh data
+      const photoReactions = currentPhoto?.reactions || {};
+      const reactionEmojis = new Set();
+      Object.values(photoReactions).forEach(userReactions => {
+        if (typeof userReactions === 'object') {
+          Object.keys(userReactions).forEach(emoji => reactionEmojis.add(emoji));
+        }
+      });
+      const existingEmojis = [...reactionEmojis].filter(emoji => !curatedEmojis.includes(emoji));
       setActiveCustomEmojis(existingEmojis);
       setCustomEmoji(null);
     }
-  }, [currentPhoto?.id]); // Only re-run when photo ID changes
+  }, [currentPhoto?.id, currentPhoto?.reactions, curatedEmojis]); // Include reactions to ensure fresh data
 
   // Extract photo data from currentPhoto
   const { imageURL, capturedAt, reactions = {}, user = {} } = currentPhoto || {};
@@ -116,10 +123,16 @@ export const usePhotoDetailModal = ({
 
   /**
    * Get grouped reactions (emoji -> count)
+   * ISS-009 fix: Read reactions directly from currentPhoto inside useMemo
+   * and depend on currentPhoto instead of destructured reactions variable.
+   * This ensures recalculation when photo changes, as React's dependency
+   * comparison on the destructured variable was unreliable.
    */
   const groupedReactions = useMemo(() => {
+    // Read reactions directly from currentPhoto to ensure fresh data
+    const photoReactions = currentPhoto?.reactions || {};
     const grouped = {};
-    Object.entries(reactions).forEach(([userId, userReactions]) => {
+    Object.entries(photoReactions).forEach(([userId, userReactions]) => {
       // userReactions is now an object: { '😂': 2, '❤️': 1 }
       if (typeof userReactions === 'object') {
         Object.entries(userReactions).forEach(([emoji, count]) => {
@@ -131,17 +144,19 @@ export const usePhotoDetailModal = ({
       }
     });
     return grouped;
-  }, [reactions]);
+  }, [currentPhoto]);
 
   /**
    * Get current user's reaction count for a specific emoji
+   * ISS-009 fix: Read from currentPhoto?.reactions directly for consistency
    */
   const getUserReactionCount = useCallback(
     emoji => {
-      if (!currentUserId || !reactions[currentUserId]) return 0;
-      return reactions[currentUserId][emoji] || 0;
+      const photoReactions = currentPhoto?.reactions || {};
+      if (!currentUserId || !photoReactions[currentUserId]) return 0;
+      return photoReactions[currentUserId][emoji] || 0;
     },
-    [currentUserId, reactions]
+    [currentUserId, currentPhoto]
   );
 
   /**
@@ -154,13 +169,15 @@ export const usePhotoDetailModal = ({
       const currentCount = getUserReactionCount(emoji);
       onReactionToggle(emoji, currentCount);
 
-      // If not frozen yet, freeze the current sorted order
+      // If not frozen yet, freeze the current sorted order (all emojis, not just curated)
       if (!frozenOrder) {
-        const emojiData = curatedEmojis.map(e => ({
+        const customToAdd = activeCustomEmojis.filter(e => !curatedEmojis.includes(e));
+        const allEmojis = [...customToAdd, ...curatedEmojis];
+        const allEmojiData = allEmojis.map(e => ({
           emoji: e,
           totalCount: groupedReactions[e] || 0,
         }));
-        const currentSortedOrder = [...emojiData]
+        const currentSortedOrder = [...allEmojiData]
           .sort((a, b) => b.totalCount - a.totalCount)
           .map(item => item.emoji);
         setFrozenOrder(currentSortedOrder);
@@ -182,34 +199,46 @@ export const usePhotoDetailModal = ({
         setNewlyAddedEmoji(null);
       }, 2000);
     },
-    [getUserReactionCount, onReactionToggle, frozenOrder, groupedReactions, curatedEmojis]
+    [
+      getUserReactionCount,
+      onReactionToggle,
+      frozenOrder,
+      groupedReactions,
+      curatedEmojis,
+      activeCustomEmojis,
+    ]
   );
 
   /**
    * Get ordered emoji list (frozen or sorted by count)
-   * Custom emojis appear at the FRONT, followed by curated emojis
+   * ALL emojis (custom + curated) are sorted by total count (highest first)
    */
   const orderedEmojis = useMemo(() => {
-    // Sort curated emojis by count
-    const curatedData = curatedEmojis.map(emoji => ({
+    // Get custom emojis that aren't in curated list
+    const customToAdd = activeCustomEmojis.filter(e => !curatedEmojis.includes(e));
+
+    // Combine all emojis and map to count data
+    const allEmojis = [...customToAdd, ...curatedEmojis];
+    const allEmojiData = allEmojis.map(emoji => ({
       emoji,
       totalCount: groupedReactions[emoji] || 0,
     }));
-    const sortedCurated = [...curatedData]
+
+    // Sort all emojis by count (highest first)
+    const sortedAll = [...allEmojiData]
       .sort((a, b) => b.totalCount - a.totalCount)
       .map(item => item.emoji);
 
-    // Custom emojis go at the FRONT (newest first since we prepend)
-    // Filter out any that might overlap with curated (shouldn't happen but safety check)
-    const customToAdd = activeCustomEmojis.filter(e => !curatedEmojis.includes(e));
-
     if (frozenOrder) {
-      // When frozen, keep curated in frozen order, but still include custom emojis at front
-      const frozenCurated = frozenOrder.filter(e => curatedEmojis.includes(e));
-      return [...customToAdd, ...frozenCurated];
+      // When frozen, keep emojis in frozen order
+      // Only include emojis that are in current set (in case emoji was removed)
+      const validFrozen = frozenOrder.filter(e => allEmojis.includes(e));
+      // Add any new emojis that weren't in frozen order (at the end, sorted by count)
+      const newEmojis = sortedAll.filter(e => !frozenOrder.includes(e));
+      return [...validFrozen, ...newEmojis];
     }
 
-    return [...customToAdd, ...sortedCurated];
+    return sortedAll;
   }, [frozenOrder, groupedReactions, curatedEmojis, activeCustomEmojis]);
 
   /**

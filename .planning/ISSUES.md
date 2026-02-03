@@ -44,28 +44,6 @@ Enhancements discovered during execution. Not critical - address in future phase
 - **Effort:** Low (simple gesture addition)
 - **Suggested phase:** Phase 16 (touches same PhotoDetailScreen gesture handling)
 
-### ISS-009: Reactions still not sorting by count (highest left)
-
-- **Discovered:** Phase 15.4-02-FIX verification (2026-02-03)
-- **Type:** Bug
-- **Description:** Despite the frozenOrder reset fix in 15.4-02-FIX, reactions are still not displaying sorted by count (highest count should be leftmost). The sorting logic in `orderedEmojis` memo appears correct but isn't producing the expected result.
-- **Current sorting code in usePhotoDetailModal.js:**
-  ```javascript
-  const sortedCurated = [...curatedData]
-    .sort((a, b) => b.totalCount - a.totalCount)
-    .map(item => item.emoji);
-  ```
-- **Possible causes to investigate:**
-  1. `groupedReactions` not returning correct counts
-  2. `orderedEmojis` memo not recalculating when reactions change
-  3. UI component not using `orderedEmojis` correctly
-  4. Reactions data structure issue (reactions[userId][emoji] = count)
-- **Debug approach:** Add logging to trace groupedReactions counts and orderedEmojis output
-- **Impact:** Medium (visual consistency issue)
-- **Effort:** Medium (needs debugging of data flow)
-- **Related:** ISS-008 was marked closed prematurely
-- **Suggested phase:** 15.4 (needs immediate follow-up FIX)
-
 ## Closed Enhancements
 
 ### ISS-002: Comment avatar profile navigation not working
@@ -104,3 +82,14 @@ Enhancements discovered during execution. Not critical - address in future phase
 - **Reopened as:** ISS-009
 - **Type:** Bug (Regression)
 - **Resolution:** Attempted fix in Phase 15.4-02-FIX by resetting `frozenOrder` state when photo changes. However, verification showed reactions still not sorting correctly. Issue reopened as ISS-009 for further investigation.
+
+### ISS-009: Reactions still not sorting by count (highest left)
+
+- **Discovered:** Phase 15.4-02-FIX verification (2026-02-03)
+- **Closed:** 2026-02-03
+- **Type:** Bug
+- **Resolution:** Fixed in Phase 15.4-03-FIX with two root causes identified:
+  1. **Stale data in useMemo**: The `groupedReactions` useMemo depended on a destructured `reactions` variable, but React's dependency comparison wasn't detecting changes when photos loaded from Firestore. Fix: Read directly from `currentPhoto?.reactions` inside the memo and depend on `currentPhoto`.
+  2. **Custom emojis not sorted**: The `orderedEmojis` logic only sorted curated emojis by count - custom emojis (added via emoji picker) were prepended without sorting. Fix: Changed to sort ALL emojis (custom + curated) together by total count.
+- **Files modified:** `src/hooks/usePhotoDetailModal.js`
+- **Pattern:** Always read from source object inside useMemo/useCallback rather than relying on destructured variables for React dependency comparison.
