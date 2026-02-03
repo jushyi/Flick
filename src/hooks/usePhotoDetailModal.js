@@ -93,10 +93,14 @@ export const usePhotoDetailModal = ({
     return getCuratedEmojis(currentPhoto?.id, 5);
   }, [currentPhoto?.id]);
 
-  // Reset activeCustomEmojis when photo changes
-  // Also initialize with any custom emojis that already exist in the photo's reactions
+  // Reset emoji state when photo changes
+  // - Reset frozenOrder so emojis sort correctly by count for new photo (ISS-008 fix)
+  // - Initialize activeCustomEmojis with any custom emojis already in the photo's reactions
   useEffect(() => {
     if (currentPhoto?.id) {
+      // Reset frozen order so new photo shows emojis sorted by count
+      setFrozenOrder(null);
+
       // Find custom emojis already in reactions (emojis that are NOT in curated list)
       const existingEmojis = Object.keys(groupedReactions).filter(
         emoji => !curatedEmojis.includes(emoji)
