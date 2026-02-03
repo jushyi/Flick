@@ -21,6 +21,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { colors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
 import { getTimeAgo } from '../utils/timeUtils';
 import logger from '../utils/logger';
@@ -116,7 +117,7 @@ const NotificationsScreen = () => {
             <Image source={{ uri: item.senderProfilePhotoURL }} style={styles.profilePhoto} />
           ) : (
             <View style={styles.profilePhotoPlaceholder}>
-              <Ionicons name="person" size={24} color="#888888" />
+              <Ionicons name="person" size={24} color={colors.text.secondary} />
             </View>
           )}
         </View>
@@ -144,7 +145,7 @@ const NotificationsScreen = () => {
 
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="heart-outline" size={64} color="#CCCCCC" />
+        <Ionicons name="heart-outline" size={64} color={colors.text.tertiary} />
         <Text style={styles.emptyTitle}>No notifications yet</Text>
         <Text style={styles.emptyText}>
           When friends react to your photos, you&apos;ll see it here
@@ -165,12 +166,12 @@ const NotificationsScreen = () => {
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="chevron-back" size={28} color="#000000" />
+            <Ionicons name="chevron-back" size={28} color={colors.text.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Notifications</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#000000" />
+          <ActivityIndicator size="large" color={colors.text.primary} />
         </View>
       </SafeAreaView>
     );
@@ -185,7 +186,7 @@ const NotificationsScreen = () => {
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="chevron-back" size={28} color="#000000" />
+          <Ionicons name="chevron-back" size={28} color={colors.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
       </View>
@@ -198,7 +199,11 @@ const NotificationsScreen = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000000" />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.text.primary}
+          />
         }
         ListEmptyComponent={renderEmptyState}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -210,16 +215,16 @@ const NotificationsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.background.primary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border.subtle,
   },
   backButton: {
     marginRight: 8,
@@ -227,7 +232,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.text.primary,
   },
   loadingContainer: {
     flex: 1,
@@ -243,7 +248,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
   },
   profilePhotoContainer: {
     marginRight: 12,
@@ -257,7 +262,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -267,16 +272,16 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
     lineHeight: 20,
   },
   timestamp: {
     fontSize: 12,
-    color: '#888888',
+    color: colors.text.secondary,
   },
   separator: {
     height: 1,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: colors.border.subtle,
     marginLeft: 78, // Profile photo width + margin
   },
   emptyContainer: {
@@ -288,13 +293,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
   },
