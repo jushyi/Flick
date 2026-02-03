@@ -513,7 +513,7 @@ Plans:
 **Goal**: Standardize all colors throughout every screen, modal, and component to use constants from a centralized theme system. Eliminate all hardcoded color values to enable future theme/palette changes.
 **Depends on**: Phase 15.3
 **Research**: Unlikely (internal refactoring)
-**Plans**: 5/10 complete
+**Plans**: 6/10 complete
 
 Plans:
 
@@ -522,7 +522,7 @@ Plans:
 - [x] 16-03: Profile & Activity Screens
 - [x] 16-04: Media Capture Screens (Camera, Darkroom)
 - [x] 16-05: Album Screens (AlbumGrid, AlbumPhotoPicker, Selects)
-- [ ] 16-06: Settings & Auth Screens
+- [x] 16-06: Settings & Auth Screens
 - [ ] 16-07: Modal Components
 - [ ] 16-08: Card Components
 - [ ] 16-09: Style Files & Remaining
@@ -702,7 +702,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
 | 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
 | 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | Complete    | 2026-02-03 |
-| 16. Color Constants              | 5/10           | In progress | -          |
+| 16. Color Constants              | 6/10           | In progress | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
 | 19. Delete Account Fallback      | 0/?            | Not started | -          |
