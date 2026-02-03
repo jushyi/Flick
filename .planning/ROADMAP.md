@@ -489,11 +489,12 @@ Plans:
 **Goal**: Restore story viewed tracking functionality broken by Phase 15.3 navigation changes - ensure viewed stories are properly tracked and feed screen updates appropriately
 **Depends on**: Phase 15.3
 **Research**: Unlikely (regression fix of existing functionality)
-**Plans**: 1/1 complete
+**Plans**: 1/1 complete (+ 1 FIX plan)
 
 Plans:
 
 - [x] 15.4-01: Fix closure capture bug and real-time reactions
+- [x] 15.4-01-FIX: UAT fixes (reaction persistence, ring indicator updates)
 
 **Details:**
 
@@ -501,6 +502,8 @@ Plans:
 2. Added updatePhotoAtIndex to PhotoDetailContext for real-time reaction updates
 3. Story viewed state now tracks correctly, ring indicators update properly
 4. Reaction counts now update in real-time during story viewing
+5. FIX: Added friendStories state update for reaction persistence after close/reopen
+6. FIX: Added viewedPhotoCount to useViewedStories for proper re-render triggers
 
 **Source:** Regression discovered during 15.3 work
 
@@ -688,7 +691,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
 | 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
 | 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
-| 15.4 Story Viewed State Fix      | 1/1            | Complete    | 2026-02-03 |
+| 15.4 Story Viewed State Fix      | 1/1 + 1 FIX    | Complete    | 2026-02-03 |
 | 16. Color Constants              | 0/?            | Not started | -          |
 | 17. Nested Reply Comments        | 0/?            | Not started | -          |
 | 18. Content Visibility Duration  | 0/?            | Not started | -          |
