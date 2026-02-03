@@ -8,6 +8,7 @@ import { PhoneAuthProvider } from '../context/PhoneAuthContext';
 import { PhotoDetailProvider } from '../context/PhotoDetailContext';
 import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { colors } from '../constants/colors';
 
 // Import auth screens (phone-only authentication)
 import PhoneInputScreen from '../screens/PhoneInputScreen';
@@ -53,7 +54,7 @@ const OnboardingStackNavigator = ({ initialRouteName }) => {
         headerShown: false,
         gestureEnabled: true,
         gestureDirection: 'horizontal',
-        contentStyle: { backgroundColor: '#000000' },
+        contentStyle: { backgroundColor: colors.background.primary },
       }}
     >
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
@@ -78,7 +79,7 @@ const ProfileStackNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#000000' },
+        contentStyle: { backgroundColor: colors.background.primary },
       }}
     >
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
@@ -132,17 +133,17 @@ const MainTabNavigator = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#000000',
+          backgroundColor: colors.background.primary,
           borderTopWidth: 0,
           height: Platform.OS === 'ios' ? 85 : 65,
           paddingBottom: Platform.OS === 'ios' ? 28 : 8,
           paddingTop: 12,
           position: 'absolute',
         },
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: '#666666',
+        tabBarActiveTintColor: colors.icon.primary,
+        tabBarInactiveTintColor: colors.icon.inactive,
         tabBarShowLabel: false,
-        sceneContainerStyle: { backgroundColor: '#000000' },
+        sceneContainerStyle: { backgroundColor: colors.background.primary },
       }}
     >
       <Tab.Screen
@@ -239,7 +240,7 @@ const DarkroomIcon = ({ color, count }) => (
           position: 'absolute',
           top: -6,
           right: -8,
-          backgroundColor: '#FF3B30',
+          backgroundColor: colors.status.danger,
           borderRadius: 10,
           minWidth: 18,
           height: 18,
@@ -248,7 +249,7 @@ const DarkroomIcon = ({ color, count }) => (
           paddingHorizontal: 4,
         }}
       >
-        <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>
+        <Text style={{ color: colors.text.primary, fontSize: 10, fontWeight: 'bold' }}>
           {count > 99 ? '99+' : count}
         </Text>
       </View>
@@ -340,10 +341,10 @@ const AppNavigator = () => {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: '#000000',
+          backgroundColor: colors.background.primary,
         }}
       >
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color={colors.text.primary} />
       </View>
     );
   }
@@ -359,10 +360,10 @@ const AppNavigator = () => {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: '#000000',
+          backgroundColor: colors.background.primary,
         }}
       >
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color={colors.text.primary} />
       </View>
     );
   }
@@ -388,26 +389,30 @@ const AppNavigator = () => {
   // between PhoneInputScreen/VerificationScreen during auth, and for
   // DeleteAccountScreen re-authentication flow when already logged in
 
-  // Dark theme to prevent white bleeding through during screen transitions
-  const darkTheme = {
+  // Navigation theme using color constants - prevents white bleeding during transitions
+  const navTheme = {
     ...DarkTheme,
     colors: {
       ...DarkTheme.colors,
-      background: '#000000',
-      card: '#000000',
+      primary: colors.brand.purple,
+      background: colors.background.primary,
+      card: colors.background.secondary,
+      text: colors.text.primary,
+      border: colors.border.subtle,
+      notification: colors.status.danger,
     },
   };
 
   return (
     <PhotoDetailProvider>
       <PhoneAuthProvider>
-        <NavigationContainer ref={navigationRef} linking={linking} theme={darkTheme}>
+        <NavigationContainer ref={navigationRef} linking={linking} theme={navTheme}>
           <Stack.Navigator
             screenOptions={{
               headerShown: false,
               gestureEnabled: true,
               gestureDirection: 'horizontal',
-              contentStyle: { backgroundColor: '#000000' },
+              contentStyle: { backgroundColor: colors.background.primary },
             }}
           >
             {!isAuthenticated ? (
