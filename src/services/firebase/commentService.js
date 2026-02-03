@@ -5,7 +5,8 @@
  * a subcollection under each photo document for scalability.
  *
  * Key features:
- * - Threaded comments (single-level replies via parentId)
+ * - Threaded comments with flat structure (all replies use top-level parentId)
+ * - Reply-to-reply support via mentionedCommentId (tracks which comment was replied to)
  * - User data joining for comment display
  * - Real-time comment subscriptions
  * - Preview comments with owner prioritization (caption behavior)
@@ -18,7 +19,8 @@
  *   text: string,
  *   mediaUrl: string | null,
  *   mediaType: 'image' | 'gif' | null,
- *   parentId: string | null,  // null = top-level, id = reply
+ *   parentId: string | null,  // null = top-level, id = original thread parent (flat structure)
+ *   mentionedCommentId: string | null,  // ID of specific comment being replied to (for @mention and scroll-to)
  *   likeCount: number,
  *   createdAt: serverTimestamp(),
  * }
@@ -50,12 +52,17 @@ const db = getFirestore();
  * Add a comment to a photo
  * Creates comment in subcollection and increments photo's commentCount
  *
+ * Supports reply-to-reply with flat thread structure:
+ * - Replying to top-level: parentId = top-level ID, mentionedCommentId = top-level ID
+ * - Replying to reply: parentId = reply's parentId (original thread), mentionedCommentId = reply's ID
+ *
  * @param {string} photoId - Photo document ID
  * @param {string} userId - User ID of commenter
  * @param {string} text - Comment text
  * @param {string|null} mediaUrl - URL of attached image/GIF (optional)
  * @param {string|null} mediaType - Type of media: 'image' | 'gif' | null
- * @param {string|null} parentId - Parent comment ID for replies (null = top-level)
+ * @param {string|null} parentId - Comment ID being replied to (null = top-level). Service resolves to original thread parent.
+ * @param {string|null} mentionedCommentId - ID of specific comment being replied to (for @mention tracking)
  * @returns {Promise<{success: boolean, commentId?: string, error?: string}>}
  */
 export const addComment = async (
@@ -64,7 +71,8 @@ export const addComment = async (
   text,
   mediaUrl = null,
   mediaType = null,
-  parentId = null
+  parentId = null,
+  mentionedCommentId = null
 ) => {
   logger.debug('commentService.addComment: Starting', {
     photoId,
@@ -73,6 +81,7 @@ export const addComment = async (
     hasMedia: !!mediaUrl,
     mediaType,
     isReply: !!parentId,
+    mentionedCommentId,
   });
 
   try {
@@ -96,21 +105,38 @@ export const addComment = async (
       return { success: false, error: 'Photo not found' };
     }
 
-    // If this is a reply, verify parent comment exists
-    if (parentId) {
-      const parentCommentRef = doc(db, 'photos', photoId, 'comments', parentId);
-      const parentCommentSnap = await getDoc(parentCommentRef);
+    // Track the resolved parentId (for flat thread structure) and mentionedCommentId
+    let resolvedParentId = parentId;
+    let resolvedMentionedCommentId = mentionedCommentId;
 
-      if (!parentCommentSnap.exists()) {
-        logger.warn('commentService.addComment: Parent comment not found', { parentId });
-        return { success: false, error: 'Parent comment not found' };
+    // If this is a reply, verify target comment exists and resolve thread structure
+    if (parentId) {
+      const targetCommentRef = doc(db, 'photos', photoId, 'comments', parentId);
+      const targetCommentSnap = await getDoc(targetCommentRef);
+
+      if (!targetCommentSnap.exists()) {
+        logger.warn('commentService.addComment: Target comment not found', { parentId });
+        return { success: false, error: 'Target comment not found' };
       }
 
-      // Prevent nested replies (replies to replies)
-      const parentData = parentCommentSnap.data();
-      if (parentData.parentId) {
-        logger.warn('commentService.addComment: Cannot reply to a reply', { parentId });
-        return { success: false, error: 'Cannot reply to a reply' };
+      const targetData = targetCommentSnap.data();
+
+      // Check if target is a reply (has parentId) - if so, use its parent for flat structure
+      if (targetData.parentId) {
+        // Replying to a reply: use the original thread's parentId
+        resolvedParentId = targetData.parentId;
+        // Track the specific comment being replied to (the reply itself)
+        resolvedMentionedCommentId = mentionedCommentId || parentId;
+        logger.debug('commentService.addComment: Reply to reply - using original parent', {
+          originalParentId: parentId,
+          resolvedParentId,
+          resolvedMentionedCommentId,
+        });
+      } else {
+        // Replying to top-level: parentId stays the same
+        resolvedParentId = parentId;
+        // Track the top-level comment as the mentioned comment
+        resolvedMentionedCommentId = mentionedCommentId || parentId;
       }
     }
 
@@ -121,7 +147,8 @@ export const addComment = async (
       text: text || '',
       mediaUrl,
       mediaType,
-      parentId,
+      parentId: resolvedParentId,
+      mentionedCommentId: resolvedMentionedCommentId,
       likeCount: 0,
       createdAt: serverTimestamp(),
     };
@@ -140,7 +167,9 @@ export const addComment = async (
       commentId,
       photoId,
       userId,
-      isReply: !!parentId,
+      isReply: !!resolvedParentId,
+      parentId: resolvedParentId,
+      mentionedCommentId: resolvedMentionedCommentId,
     });
 
     return { success: true, commentId };
