@@ -370,7 +370,9 @@ const FriendsScreen = ({ navigation }) => {
       if (!result.success) {
         Alert.alert('Error', result.error || 'Failed to send friend request');
       } else {
-        // Update local state optimistically
+        // Remove from suggestions if present
+        setSuggestions(prev => prev.filter(s => s.id !== userId));
+        // Update local state for search results
         setFriendshipStatuses(prev => ({
           ...prev,
           [userId]: { status: 'pending_sent', friendshipId: result.friendshipId },
@@ -381,6 +383,75 @@ const FriendsScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to send friend request');
     } finally {
       setActionLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  /**
+   * Handle dismiss suggestion
+   */
+  const handleDismissSuggestion = async userId => {
+    try {
+      mediumImpact();
+
+      // Optimistic update
+      setSuggestions(prev => prev.filter(s => s.id !== userId));
+
+      // Persist dismissal
+      await dismissSuggestion(user.uid, userId);
+    } catch (err) {
+      logger.error('Error dismissing suggestion', err);
+      // Refresh suggestions on error
+      fetchSuggestions();
+    }
+  };
+
+  /**
+   * Handle sync contacts from Requests tab
+   */
+  const handleSyncContacts = async () => {
+    try {
+      setSuggestionsLoading(true);
+      mediumImpact();
+
+      const result = await syncContactsAndFindSuggestions(user.uid, userProfile?.phoneNumber);
+
+      if (!result.success) {
+        if (
+          result.error === 'permission_denied' ||
+          result.error === 'permission_denied_permanent'
+        ) {
+          // Permission handling is done in the service
+          setSuggestionsLoading(false);
+          return;
+        }
+        Alert.alert('Error', 'Failed to sync contacts. Please try again.');
+        setSuggestionsLoading(false);
+        return;
+      }
+
+      // Mark sync as completed
+      await markContactsSyncCompleted(user.uid, true);
+      setHasSyncedContacts(true);
+
+      // Update suggestions
+      const dismissedIds = await getDismissedSuggestionIds(user.uid);
+      const filteredSuggestions = filterDismissedSuggestions(
+        result.suggestions || [],
+        dismissedIds
+      );
+      setSuggestions(filteredSuggestions);
+
+      if (filteredSuggestions.length === 0) {
+        Alert.alert(
+          'No Friends Found',
+          'None of your contacts are on REWIND yet. Invite them to join!'
+        );
+      }
+    } catch (err) {
+      logger.error('Error syncing contacts', err);
+      Alert.alert('Error', 'Failed to sync contacts');
+    } finally {
+      setSuggestionsLoading(false);
     }
   };
 
