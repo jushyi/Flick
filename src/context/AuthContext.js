@@ -312,6 +312,29 @@ export const AuthProvider = ({ children }) => {
     setUserProfile(updatedProfile);
   };
 
+  const refreshUserProfile = async () => {
+    if (!user?.uid) {
+      logger.warn('refreshUserProfile: No user to refresh');
+      return { success: false, error: 'No user' };
+    }
+    try {
+      logger.debug('refreshUserProfile: Fetching latest user profile', { userId: user.uid });
+      const profileResult = await getUserDocumentNative(user.uid);
+      if (profileResult.success) {
+        logger.info('refreshUserProfile: Profile refreshed', {
+          contactsSyncCompleted: profileResult.data?.contactsSyncCompleted,
+        });
+        setUserProfile(profileResult.data);
+        return { success: true, data: profileResult.data };
+      }
+      logger.error('refreshUserProfile: Failed to fetch', { error: profileResult.error });
+      return profileResult;
+    } catch (error) {
+      logger.error('refreshUserProfile: Error', { error: error.message });
+      return { success: false, error: error.message };
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -322,6 +345,7 @@ export const AuthProvider = ({ children }) => {
     signOut,
     cancelDeletion,
     updateUserProfile,
+    refreshUserProfile,
     // Native Firestore operations (required for phone auth users)
     updateUserDocumentNative,
   };
