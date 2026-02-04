@@ -24,6 +24,8 @@ import {
   acceptFriendRequest,
   declineFriendRequest,
   generateFriendshipId,
+  removeFriend,
+  blockUser,
 } from '../services/firebase';
 import logger from '../utils/logger';
 
@@ -53,6 +55,11 @@ const ProfileScreen = () => {
   const [highlightedAlbumId, setHighlightedAlbumId] = useState(null);
   const scrollViewRef = useRef(null);
   const albumBarRef = useRef(null);
+
+  // Profile menu state (for other user profiles)
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
+  const profileMenuButtonRef = useRef(null);
 
   // Other user profile state (when viewing someone else's profile)
   const [otherUserProfile, setOtherUserProfile] = useState(null);
@@ -328,6 +335,109 @@ const ProfileScreen = () => {
     }
   };
 
+  // Profile menu handlers (for other user profiles)
+  const handleProfileMenuPress = () => {
+    profileMenuButtonRef.current?.measureInWindow((x, y, width, height) => {
+      setProfileMenuAnchor({ x, y, width, height });
+      setProfileMenuVisible(true);
+    });
+  };
+
+  const handleRemoveFriendFromProfile = () => {
+    Alert.alert(
+      'Remove Friend',
+      `Remove ${profileData?.displayName || profileData?.username} from your friends?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await removeFriend(user.uid, userId);
+              if (result.success) {
+                setFriendshipStatus('none');
+                setFriendshipId(generateFriendshipId(user.uid, userId));
+                logger.info('ProfileScreen: Friend removed', { userId });
+              } else {
+                Alert.alert('Error', result.error || 'Could not remove friend');
+              }
+            } catch (error) {
+              logger.error('ProfileScreen: Error removing friend', { error: error.message });
+              Alert.alert('Error', 'Could not remove friend');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleBlockUserFromProfile = () => {
+    Alert.alert(
+      'Block User',
+      `Block ${profileData?.displayName || profileData?.username}? They won't be able to see your profile or contact you.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await blockUser(user.uid, userId);
+              if (result.success) {
+                logger.info('ProfileScreen: User blocked, navigating back', { userId });
+                navigation.goBack();
+              } else {
+                Alert.alert('Error', result.error || 'Could not block user');
+              }
+            } catch (error) {
+              logger.error('ProfileScreen: Error blocking user', { error: error.message });
+              Alert.alert('Error', 'Could not block user');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReportUserFromProfile = () => {
+    navigation.navigate('ReportUser', {
+      userId,
+      username: profileData?.username,
+      displayName: profileData?.displayName,
+      profilePhotoURL: profileData?.photoURL,
+    });
+  };
+
+  const getProfileMenuOptions = () => {
+    const options = [];
+
+    // Only show Remove Friend if they are friends
+    if (friendshipStatus === 'friends') {
+      options.push({
+        label: 'Remove Friend',
+        icon: 'person-remove-outline',
+        onPress: handleRemoveFriendFromProfile,
+      });
+    }
+
+    // Block and Report always available for other users
+    options.push({
+      label: 'Block User',
+      icon: 'ban-outline',
+      onPress: handleBlockUserFromProfile,
+    });
+
+    options.push({
+      label: 'Report User',
+      icon: 'flag-outline',
+      onPress: handleReportUserFromProfile,
+      destructive: true,
+    });
+
+    return options;
+  };
+
   const handleSelectsTap = () => {
     logger.info('ProfileScreen: SelectsBanner tapped', { isOwnProfile });
     if (isOwnProfile) {
@@ -576,13 +686,19 @@ const ProfileScreen = () => {
           {isOwnProfile ? userProfile?.username || 'Profile' : routeUsername || 'Profile'}
         </Text>
 
-        {/* Right: Settings icon (own) or empty space (other user) */}
+        {/* Right: Settings icon (own) or three-dot menu (other user) */}
         {isOwnProfile ? (
           <TouchableOpacity onPress={handleSettingsPress} style={styles.headerButton}>
             <Ionicons name="settings-outline" size={24} color={colors.text.primary} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.headerButton} />
+          <TouchableOpacity
+            ref={profileMenuButtonRef}
+            onPress={handleProfileMenuPress}
+            style={styles.headerButton}
+          >
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
         )}
       </View>
 
@@ -726,6 +842,16 @@ const ProfileScreen = () => {
         options={albumMenuOptions}
         anchorPosition={albumMenuAnchor}
       />
+
+      {/* Profile menu for other users (Remove, Block, Report) */}
+      {!isOwnProfile && (
+        <DropdownMenu
+          visible={profileMenuVisible}
+          onClose={() => setProfileMenuVisible(false)}
+          options={getProfileMenuOptions()}
+          anchorPosition={profileMenuAnchor}
+        />
+      )}
     </View>
   );
 };
