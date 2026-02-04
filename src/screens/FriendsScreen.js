@@ -372,12 +372,30 @@ const FriendsScreen = ({ navigation }) => {
       setActionLoading(prev => ({ ...prev, [userId]: true }));
       mediumImpact();
 
+      // Find suggestion data before removing (for adding to sent requests)
+      const suggestion = suggestions.find(s => s.id === userId);
+
       const result = await sendFriendRequest(user.uid, userId);
       if (!result.success) {
         Alert.alert('Error', result.error || 'Failed to send friend request');
       } else {
         // Remove from suggestions if present
         setSuggestions(prev => prev.filter(s => s.id !== userId));
+
+        // Add to sent requests if we had the user data from suggestions
+        if (suggestion) {
+          setSentRequests(prev => [
+            ...prev,
+            {
+              id: result.friendshipId, // Use 'id' to match server data shape
+              userId: suggestion.id,
+              displayName: suggestion.displayName,
+              username: suggestion.username,
+              profilePhotoURL: suggestion.profilePhotoURL || suggestion.photoURL,
+            },
+          ]);
+        }
+
         // Update local state for search results
         setFriendshipStatuses(prev => ({
           ...prev,
@@ -510,9 +528,30 @@ const FriendsScreen = ({ navigation }) => {
     if (actionType === 'cancel') {
       try {
         mediumImpact();
+
+        // Find the sent request data before removing (to add back to suggestions if applicable)
+        const sentRequest = sentRequests.find(r => r.id === friendshipId);
+
         const result = await declineFriendRequest(friendshipId, user.uid);
         if (!result.success) {
           Alert.alert('Error', result.error || 'Failed to cancel friend request');
+        } else {
+          // Remove from sent requests state
+          setSentRequests(prev => prev.filter(r => r.id !== friendshipId));
+
+          // If this was someone from contacts sync, add back to suggestions
+          // (The subscription will also refresh, but this gives immediate feedback)
+          if (sentRequest && hasSyncedContacts) {
+            setSuggestions(prev => [
+              ...prev,
+              {
+                id: sentRequest.userId,
+                displayName: sentRequest.displayName,
+                username: sentRequest.username,
+                profilePhotoURL: sentRequest.profilePhotoURL,
+              },
+            ]);
+          }
         }
       } catch (err) {
         logger.error('Error canceling friend request', err);
