@@ -605,11 +605,13 @@ Plans:
 **Goal**: Suggest potential friends to users based on phone contacts synced from their device
 **Depends on**: Phase 19
 **Research**: Likely (permissions handling, contact matching algorithms)
-**Plans**: TBD
+**Plans**: 1/3 complete
 
 Plans:
 
-- [ ] 20-01: TBD (run /gsd:plan-phase 20 to break down)
+- [x] 20-01: Contact sync data layer (contactSyncService.js)
+- [ ] 20-02: ContactsSyncScreen + Onboarding integration
+- [ ] 20-03: Suggestions UI in Requests tab
 
 **Details:**
 
@@ -740,7 +742,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 17. Nested Reply Comments        | 2/2            | Complete    | 2026-02-03 |
 | 18. Content Visibility Duration  | 1/1 + 1 FIX    | Complete    | 2026-02-04 |
 | 19. Delete Account Fallback      | 5/5            | Complete    | 2026-02-04 |
-| 20. Friend Suggestions Contacts  | 0/?            | Not started | -          |
+| 20. Friend Suggestions Contacts  | 1/3            | In progress | -          |
 | 21. Remove/Block Friends         | 0/?            | Not started | -          |
 | 22. Ability to Edit Profile      | 0/?            | Not started | -          |
 | 23. Photo Deletion & Archiving   | 0/?            | Not started | -          |

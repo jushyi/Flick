@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 19 of 26 (Delete Account Fallback)
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-02-04 — Completed 19-05-PLAN.md
+Phase: 20 of 26 (Friend Suggestions via Contacts Sync)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-04 — Completed 20-01-PLAN.md
 
 Progress: ██████████████████ 100%
 
@@ -20,9 +20,9 @@ Progress: ██████████████████ 100%
 
 **Velocity:**
 
-- Total plans completed: 85 (including 18 FIX plans)
+- Total plans completed: 86 (including 18 FIX plans)
 - Average duration: 10 min
-- Total execution time: 871 min
+- Total execution time: 875 min
 
 **By Phase:**
 
@@ -57,12 +57,13 @@ Progress: ██████████████████ 100%
 | 17    | 2     | 21 min | 10.5 min |
 | 18    | 2     | 12 min | 6 min    |
 | 19    | 5     | 50 min | 10 min   |
+| 20    | 1     | 4 min  | 4 min    |
 | 25    | 5     | 15 min | 3 min    |
 
 **Recent Trend:**
 
-- Last 5 plans: 3 min, 8 min, 6 min, 12 min, 12 min
-- Trend: Phase 19 Delete Account Fallback complete
+- Last 5 plans: 8 min, 6 min, 12 min, 12 min, 4 min
+- Trend: Phase 20 Friend Suggestions started
 
 ## Accumulated Context
 
@@ -220,6 +221,8 @@ Recent decisions affecting current work:
 | 18    | Feed shows friends only (no own posts)                | Feed is 100% friend activity, own posts on profile/stories              |
 | 18    | Stories 7-day, feed 1-day visibility                  | Stories get more time to be seen, feed stays fresh with recent activity |
 | 18    | Profile views unaffected by visibility rules          | Albums and monthly albums show all photos regardless of age             |
+| 20    | Batch size 30 for Firestore IN queries                | Documented Firestore limit, chunks contact lookups into batches         |
+| 20    | Contact pagination at 100 items per page              | Balances memory and performance for large contact lists                 |
 
 ### Deferred Issues
 
@@ -335,5 +338,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Completed 19-05-PLAN.md - Phase 19 complete (deletion reminder + deleted user handling)
+Stopped at: Completed 20-01-PLAN.md - Contact sync data layer complete
 Resume file: None
