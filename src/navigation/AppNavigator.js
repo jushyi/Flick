@@ -37,6 +37,7 @@ import AlbumPhotoPickerScreen from '../screens/AlbumPhotoPickerScreen';
 import AlbumGridScreen from '../screens/AlbumGridScreen';
 import MonthlyAlbumGridScreen from '../screens/MonthlyAlbumGridScreen';
 import PhotoDetailScreen from '../screens/PhotoDetailScreen';
+import ReportUserScreen from '../screens/ReportUserScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -548,6 +549,15 @@ const AppNavigator = () => {
                   options={{
                     presentation: 'card',
                     animation: 'slide_from_right',
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.background.primary },
+                  }}
+                />
+                <Stack.Screen
+                  name="ReportUser"
+                  component={ReportUserScreen}
+                  options={{
+                    presentation: 'modal',
                     headerShown: false,
                     contentStyle: { backgroundColor: colors.background.primary },
                   }}
