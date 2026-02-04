@@ -33,7 +33,9 @@ import {
   toggleReaction,
   getFriendStoriesData,
   getUserStoriesData,
+  getRandomFriendPhotos,
 } from '../services/firebase/feedService';
+import { getFriendUserIds } from '../services/firebase/friendshipService';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
@@ -82,6 +84,10 @@ const FeedScreen = () => {
   // Own stories state
   const [myStories, setMyStories] = useState(null);
   const [myStoriesLoading, setMyStoriesLoading] = useState(true);
+
+  // Archive photos fallback state (when recent feed is empty)
+  const [archivePhotos, setArchivePhotos] = useState([]);
+  const [archivePhotosLoading, setArchivePhotosLoading] = useState(false);
 
   // Track whether currently in stories mode (for callbacks)
   const isInStoriesModeRef = useRef(false);
@@ -163,6 +169,43 @@ const FeedScreen = () => {
       loadMyStories();
     }
   }, [user?.uid]);
+
+  /**
+   * Load archive photos as fallback when recent feed is empty
+   * Only loads if user has friends but no recent posts
+   */
+  useEffect(() => {
+    const loadArchivePhotosFallback = async () => {
+      // Only load if: not loading, no recent photos, user has friends
+      if (loading || photos.length > 0 || totalFriendCount === 0 || !user?.uid) {
+        // Clear archive photos if we now have recent photos
+        if (photos.length > 0 && archivePhotos.length > 0) {
+          setArchivePhotos([]);
+        }
+        return;
+      }
+
+      logger.debug('FeedScreen: Loading archive photos fallback');
+      setArchivePhotosLoading(true);
+
+      // Get friend user IDs
+      const friendsResult = await getFriendUserIds(user.uid);
+      if (!friendsResult.success || friendsResult.friendUserIds.length === 0) {
+        setArchivePhotosLoading(false);
+        return;
+      }
+
+      // Load random historical photos from friends
+      const result = await getRandomFriendPhotos(friendsResult.friendUserIds, 10);
+      if (result.success) {
+        logger.info('FeedScreen: Archive photos loaded', { count: result.photos.length });
+        setArchivePhotos(result.photos);
+      }
+      setArchivePhotosLoading(false);
+    };
+
+    loadArchivePhotosFallback();
+  }, [loading, photos.length, totalFriendCount, user?.uid]);
 
   /**
    * Subscribe to unread notifications for red dot indicator
@@ -929,7 +972,7 @@ const FeedScreen = () => {
         renderErrorState()
       ) : (
         <Animated.FlatList
-          data={photos}
+          data={photos.length > 0 ? photos : archivePhotos}
           renderItem={renderFeedItem}
           keyExtractor={item => item.id}
           contentContainerStyle={[styles.feedList, { paddingTop: HEADER_HEIGHT }]}
@@ -947,11 +990,11 @@ const FeedScreen = () => {
               progressViewOffset={40}
             />
           }
-          onEndReached={loadMorePhotos}
+          onEndReached={photos.length > 0 ? loadMorePhotos : null}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={renderStoriesRow}
           ListFooterComponent={renderFooter}
-          ListEmptyComponent={renderEmptyState}
+          ListEmptyComponent={archivePhotosLoading ? null : renderEmptyState}
         />
       )}
     </SafeAreaView>

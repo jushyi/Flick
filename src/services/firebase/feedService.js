@@ -677,3 +677,75 @@ export const getFriendStoriesData = async currentUserId => {
     return { success: false, error: error.message, totalFriendCount: 0 };
   }
 };
+
+/**
+ * Get random friend photos for empty feed fallback
+ * Returns historical photos from friends when no recent posts exist
+ * No time filter - gets all journaled photos from friends
+ *
+ * @param {Array<string>} friendUserIds - Array of friend user IDs
+ * @param {number} limitCount - Maximum number of photos to return (default: 10)
+ * @returns {Promise<{success: boolean, photos?: Array, error?: string}>}
+ */
+export const getRandomFriendPhotos = async (friendUserIds, limitCount = 10) => {
+  logger.debug('feedService.getRandomFriendPhotos: Starting', {
+    friendCount: friendUserIds?.length,
+    limitCount,
+  });
+
+  try {
+    if (!friendUserIds || friendUserIds.length === 0) {
+      return { success: true, photos: [] };
+    }
+
+    // Query all journaled photos (no time filter)
+    const q = query(collection(db, 'photos'), where('photoState', '==', 'journal'));
+    const snapshot = await getDocs(q);
+
+    // Filter to only friend photos
+    const friendPhotos = await Promise.all(
+      snapshot.docs
+        .filter(photoDoc => friendUserIds.includes(photoDoc.data().userId))
+        .map(async photoDoc => {
+          const photoData = photoDoc.data();
+
+          // Fetch user data for each photo
+          const userDocRef = doc(db, 'users', photoData.userId);
+          const userDocSnap = await getDoc(userDocRef);
+          const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+
+          return {
+            id: photoDoc.id,
+            ...photoData,
+            user: {
+              uid: photoData.userId,
+              username: userData.username || 'unknown',
+              displayName: userData.displayName || 'Unknown User',
+              profilePhotoURL: userData.profilePhotoURL || null,
+            },
+            isArchivePhoto: true, // Mark as historical/archive photo for UI indicator
+          };
+        })
+    );
+
+    // Shuffle randomly using Fisher-Yates algorithm
+    const shuffled = [...friendPhotos];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Return limited count
+    const result = shuffled.slice(0, limitCount);
+
+    logger.info('feedService.getRandomFriendPhotos: Success', {
+      totalFriendPhotos: friendPhotos.length,
+      returned: result.length,
+    });
+
+    return { success: true, photos: result };
+  } catch (error) {
+    logger.error('feedService.getRandomFriendPhotos: Failed', { error: error.message });
+    return { success: false, error: error.message, photos: [] };
+  }
+};
