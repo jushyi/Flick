@@ -44,24 +44,21 @@ We recommend [VS Code](https://code.visualstudio.com/) with these extensions:
 - Prettier - Code formatter
 - ESLint
 
-### 4. iOS Simulator (macOS only)
+### 4. Expo Go App (on your device)
 
-1. Install Xcode from the App Store
-2. Open Xcode, accept the license agreement
-3. Go to Xcode → Preferences → Locations → Command Line Tools (select the latest)
-4. Run in terminal:
-   ```bash
-   xcode-select --install
-   ```
+You'll run the app on your physical device, not a simulator.
 
-### 5. Android Emulator (Windows/macOS/Linux)
+**iOS:**
 
-1. Download [Android Studio](https://developer.android.com/studio)
-2. During installation, ensure "Android Virtual Device" is checked
-3. After installation:
-   - Open Android Studio
-   - Go to Tools → Device Manager
-   - Create a new virtual device (Pixel 6, API 33 recommended)
+1. Download "Expo Go" from the App Store
+2. Sign in with your Expo account (or create one)
+
+**Android:**
+
+1. Download "Expo Go" from the Google Play Store
+2. Sign in with your Expo account (or create one)
+
+> **Note:** Your device must be registered with the project's Expo build. Contact the project owner to add your device if you haven't already.
 
 ## Project Setup
 
@@ -87,10 +84,15 @@ This may take a few minutes. You should see no errors at the end.
 npx expo start
 ```
 
-You'll see a QR code and menu options:
+You'll see a QR code in the terminal.
 
-- Press `i` to open iOS Simulator
-- Press `a` to open Android Emulator
+**To run on your device:**
+
+1. Make sure your phone is on the same WiFi network as your computer
+2. Open the Expo Go app on your device
+3. Scan the QR code:
+   - **iOS:** Use the Camera app, then tap the Expo notification
+   - **Android:** Use the scanner built into Expo Go
 
 ### Verify It Works
 
@@ -102,12 +104,13 @@ You should see the Rewind app load with:
 
 **Troubleshooting:**
 
-| Issue                        | Solution                                          |
-| ---------------------------- | ------------------------------------------------- |
-| "command not found: npx"     | Reinstall Node.js                                 |
-| iOS Simulator won't open     | Ensure Xcode Command Line Tools are installed     |
-| Android emulator won't start | Check Android Studio → Device Manager             |
-| Metro bundler crashes        | Delete `node_modules` and run `npm install` again |
+| Issue                         | Solution                                                   |
+| ----------------------------- | ---------------------------------------------------------- |
+| "command not found: npx"      | Reinstall Node.js                                          |
+| QR code won't scan            | Ensure phone and computer are on the same WiFi network     |
+| "Unable to connect" on device | Try running `npx expo start --tunnel`                      |
+| App crashes on open           | Your device may need to be added to the Expo build profile |
+| Metro bundler crashes         | Delete `node_modules` and run `npm install` again          |
 
 ## Development Workflow
 
