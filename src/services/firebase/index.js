@@ -96,3 +96,6 @@ export {
   getBlockedByUserIds,
   getBlockedUserIds,
 } from './blockService';
+
+// Export Report service functions (user reporting)
+export { submitReport, REPORT_REASONS } from './reportService';
