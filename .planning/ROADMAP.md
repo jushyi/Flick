@@ -622,12 +622,12 @@ Plans:
 **Goal**: Add ability to remove or block friends, with user reporting functionality
 **Depends on**: Phase 20
 **Research**: Unlikely (internal UI patterns)
-**Plans**: 1/4
+**Plans**: 2/4
 
 Plans:
 
 - [x] 21-01: Block & Report Data Layer (blockService.js, reportService.js)
-- [ ] 21-02: Menu Integration & Actions (three-dot menus in FriendCard and ProfileScreen)
+- [x] 21-02: Menu Integration & Actions (three-dot menus in FriendCard and ProfileScreen)
 - [ ] 21-03: Report User Screen (full-screen reason picker with details field)
 - [ ] 21-04: Block Enforcement (filter blocked users from feed, stories, search, profiles)
 
