@@ -622,13 +622,13 @@ Plans:
 **Goal**: Add ability to remove or block friends, with user reporting functionality
 **Depends on**: Phase 20
 **Research**: Unlikely (internal UI patterns)
-**Plans**: 2/4
+**Plans**: 3/4
 
 Plans:
 
 - [x] 21-01: Block & Report Data Layer (blockService.js, reportService.js)
 - [x] 21-02: Menu Integration & Actions (three-dot menus in FriendCard and ProfileScreen)
-- [ ] 21-03: Report User Screen (full-screen reason picker with details field)
+- [x] 21-03: Report User Screen (full-screen reason picker with details field)
 - [ ] 21-04: Block Enforcement (filter blocked users from feed, stories, search, profiles)
 
 **Details:**
@@ -758,7 +758,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 18. Content Visibility Duration  | 1/1 + 1 FIX    | Complete    | 2026-02-04 |
 | 19. Delete Account Fallback      | 5/5            | Complete    | 2026-02-04 |
 | 20. Friend Suggestions Contacts  | 3/3            | Complete    | 2026-02-04 |
-| 21. Remove/Block Friends         | 1/4            | In progress | -          |
+| 21. Remove/Block Friends         | 3/4            | In progress | -          |
 | 22. Ability to Edit Profile      | 0/?            | Not started | -          |
 | 23. Photo Deletion & Archiving   | 0/?            | Not started | -          |
 | 24. Social Media Feature Audit   | 0/?            | Not started | -          |
