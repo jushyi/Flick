@@ -82,4 +82,8 @@ export {
   syncContactsAndFindSuggestions,
   getDismissedSuggestionIds,
   filterDismissedSuggestions,
+  dismissSuggestion,
+  markContactsSyncCompleted,
+  hasUserSyncedContacts,
+  clearDismissedSuggestions,
 } from './contactSyncService';

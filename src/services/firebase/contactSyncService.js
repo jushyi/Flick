@@ -20,8 +20,11 @@ import {
   doc,
   getDoc,
   getDocs,
+  updateDoc,
   query,
   where,
+  arrayUnion,
+  serverTimestamp,
 } from '@react-native-firebase/firestore';
 import * as Contacts from 'expo-contacts';
 import { Alert, Linking } from 'react-native';
@@ -375,4 +378,126 @@ export const getDismissedSuggestionIds = async userId => {
 export const filterDismissedSuggestions = (suggestions, dismissedIds = []) => {
   const dismissedSet = new Set(dismissedIds);
   return suggestions.filter(s => !dismissedSet.has(s.id));
+};
+
+// =============================================================================
+// USER DOCUMENT UPDATES (SYNC STATE & DISMISSALS)
+// =============================================================================
+
+/**
+ * Dismiss a friend suggestion
+ * Adds the dismissed user ID to the current user's dismissedSuggestions array
+ *
+ * @param {string} userId - Current user's ID
+ * @param {string} dismissedUserId - User ID to dismiss
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const dismissSuggestion = async (userId, dismissedUserId) => {
+  try {
+    if (!userId || !dismissedUserId) {
+      return { success: false, error: 'Invalid user IDs' };
+    }
+
+    logger.debug('contactSyncService.dismissSuggestion: Dismissing', {
+      userId,
+      dismissedUserId,
+    });
+
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      dismissedSuggestions: arrayUnion(dismissedUserId),
+    });
+
+    logger.info('contactSyncService.dismissSuggestion: Success');
+    return { success: true };
+  } catch (error) {
+    logger.error('contactSyncService.dismissSuggestion: Error', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Mark contacts sync as completed for a user
+ * Sets contactsSyncCompleted flag and timestamp
+ *
+ * @param {string} userId - User ID
+ * @param {boolean} completed - Whether sync is completed (default: true)
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const markContactsSyncCompleted = async (userId, completed = true) => {
+  try {
+    if (!userId) {
+      return { success: false, error: 'Invalid user ID' };
+    }
+
+    logger.debug('contactSyncService.markContactsSyncCompleted', {
+      userId,
+      completed,
+    });
+
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      contactsSyncCompleted: completed,
+      contactsSyncedAt: completed ? serverTimestamp() : null,
+    });
+
+    logger.info('contactSyncService.markContactsSyncCompleted: Success');
+    return { success: true };
+  } catch (error) {
+    logger.error('contactSyncService.markContactsSyncCompleted: Error', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Check if user has already synced contacts
+ *
+ * @param {string} userId - User ID
+ * @returns {Promise<boolean>} True if user has synced contacts
+ */
+export const hasUserSyncedContacts = async userId => {
+  try {
+    if (!userId) {
+      return false;
+    }
+
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      return userDoc.data().contactsSyncCompleted === true;
+    }
+    return false;
+  } catch (error) {
+    logger.error('contactSyncService.hasUserSyncedContacts: Error', error);
+    return false;
+  }
+};
+
+/**
+ * Clear all dismissed suggestions for a user
+ * Useful for allowing a fresh re-sync
+ *
+ * @param {string} userId - User ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const clearDismissedSuggestions = async userId => {
+  try {
+    if (!userId) {
+      return { success: false, error: 'Invalid user ID' };
+    }
+
+    logger.debug('contactSyncService.clearDismissedSuggestions', { userId });
+
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      dismissedSuggestions: [],
+    });
+
+    logger.info('contactSyncService.clearDismissedSuggestions: Success');
+    return { success: true };
+  } catch (error) {
+    logger.error('contactSyncService.clearDismissedSuggestions: Error', error);
+    return { success: false, error: error.message };
+  }
 };
