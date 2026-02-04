@@ -562,11 +562,12 @@ Plans:
 **Goal**: Implement visibility duration rules for stories (7 days) and feed posts (1 day), with own posts excluded from feed
 **Depends on**: Phase 17
 **Research**: Complete (user clarified during discuss-phase)
-**Plans**: 1/1 complete
+**Plans**: 1/1 complete + 1 FIX
 
 Plans:
 
 - [x] 18-01: Server-side Firestore filtering for visibility duration
+- [x] 18-01-FIX: UAT fixes (triagedAt visibility, migration, refresh, archive fallback)
 
 **Details:**
 
@@ -726,7 +727,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | Complete    | 2026-02-03 |
 | 16. Color Constants              | 10/10          | Complete    | 2026-02-03 |
 | 17. Nested Reply Comments        | 2/2            | Complete    | 2026-02-03 |
-| 18. Content Visibility Duration  | 1/1            | Complete    | 2026-02-04 |
+| 18. Content Visibility Duration  | 1/1 + 1 FIX    | Complete    | 2026-02-04 |
 | 19. Delete Account Fallback      | 0/?            | Not started | -          |
 | 20. Friend Suggestions Contacts  | 0/?            | Not started | -          |
 | 21. Remove/Block Friends         | 0/?            | Not started | -          |
