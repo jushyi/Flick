@@ -42,6 +42,7 @@ import {
   dismissSuggestion,
   markContactsSyncCompleted,
 } from '../services/firebase/contactSyncService';
+import { blockUser } from '../services/firebase/blockService';
 import { mediumImpact } from '../utils/haptics';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/FriendsScreen.styles';
@@ -546,6 +547,63 @@ const FriendsScreen = ({ navigation }) => {
   };
 
   /**
+   * Handle remove friend from menu (confirmation already shown in FriendCard)
+   */
+  const handleRemoveFriendFromMenu = async userId => {
+    try {
+      mediumImpact();
+      const result = await removeFriend(user.uid, userId);
+      if (result.success) {
+        // Optimistic update - remove from list
+        setFriends(prev => prev.filter(f => f.userId !== userId));
+        setFilteredFriends(prev => prev.filter(f => f.userId !== userId));
+        logger.info('FriendsScreen: Friend removed via menu', { userId });
+      } else {
+        Alert.alert('Error', result.error || 'Could not remove friend');
+      }
+    } catch (err) {
+      logger.error('FriendsScreen: Error removing friend via menu', { error: err.message });
+      Alert.alert('Error', 'Could not remove friend');
+    }
+  };
+
+  /**
+   * Handle block user from menu (confirmation already shown in FriendCard)
+   */
+  const handleBlockUser = async userId => {
+    try {
+      mediumImpact();
+      const result = await blockUser(user.uid, userId);
+      if (result.success) {
+        // Remove from all lists
+        setFriends(prev => prev.filter(f => f.userId !== userId));
+        setFilteredFriends(prev => prev.filter(f => f.userId !== userId));
+        setSuggestions(prev => prev.filter(s => s.id !== userId));
+        logger.info('FriendsScreen: User blocked via menu', { userId });
+      } else {
+        Alert.alert('Error', result.error || 'Could not block user');
+      }
+    } catch (err) {
+      logger.error('FriendsScreen: Error blocking user via menu', { error: err.message });
+      Alert.alert('Error', 'Could not block user');
+    }
+  };
+
+  /**
+   * Handle report user - navigate to report screen
+   */
+  const handleReportUser = userId => {
+    // Find the friend data to pass to report screen
+    const friend = friends.find(f => f.userId === userId);
+    navigation.navigate('ReportUser', {
+      userId,
+      username: friend?.username,
+      displayName: friend?.displayName,
+      profilePhotoURL: friend?.profilePhotoURL,
+    });
+  };
+
+  /**
    * Handle friend card action from search results
    */
   const handleSearchAction = async (userId, actionType) => {
@@ -697,6 +755,9 @@ const FriendsScreen = ({ navigation }) => {
                     username: item.username,
                   });
                 }}
+                onRemove={handleRemoveFriendFromMenu}
+                onBlock={handleBlockUser}
+                onReport={handleReportUser}
               />
             </TouchableOpacity>
           )}
