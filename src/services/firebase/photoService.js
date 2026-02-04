@@ -26,6 +26,8 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  writeBatch,
+  Timestamp,
 } from '@react-native-firebase/firestore';
 import { uploadPhoto, deletePhoto } from './storageService';
 import { ensureDarkroomInitialized } from './darkroomService';
@@ -517,6 +519,82 @@ export const batchTriagePhotos = async decisions => {
     return { success: true };
   } catch (error) {
     logger.error('PhotoService.batchTriagePhotos: Failed', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Migrate older photos that have photoState: null
+ * One-time migration to fix photos triaged before photoState was added
+ * Sets photoState to 'journal' and ensures triagedAt is set
+ *
+ * @returns {Promise<{success: boolean, migratedCount?: number, error?: string}>}
+ */
+export const migratePhotoStateField = async () => {
+  logger.info('PhotoService.migratePhotoStateField: Starting migration');
+
+  try {
+    // Query all triaged photos
+    const q = query(collection(db, 'photos'), where('status', '==', 'triaged'));
+    const snapshot = await getDocs(q);
+
+    logger.info('PhotoService.migratePhotoStateField: Found triaged photos', {
+      totalCount: snapshot.size,
+    });
+
+    // Filter client-side for photos where photoState is null or undefined
+    const photosToMigrate = snapshot.docs.filter(photoDoc => {
+      const data = photoDoc.data();
+      return data.photoState === null || data.photoState === undefined;
+    });
+
+    logger.info('PhotoService.migratePhotoStateField: Photos needing migration', {
+      count: photosToMigrate.length,
+    });
+
+    if (photosToMigrate.length === 0) {
+      return { success: true, migratedCount: 0 };
+    }
+
+    // Batch writes for efficiency (max 500 per batch)
+    const BATCH_SIZE = 500;
+    let migratedCount = 0;
+
+    for (let i = 0; i < photosToMigrate.length; i += BATCH_SIZE) {
+      const batch = writeBatch(db);
+      const batchPhotos = photosToMigrate.slice(i, i + BATCH_SIZE);
+
+      for (const photoDoc of batchPhotos) {
+        const data = photoDoc.data();
+        const photoRef = doc(db, 'photos', photoDoc.id);
+
+        // Set photoState to 'journal' as default (matches existing behavior)
+        // Set triagedAt to updatedAt or capturedAt if missing
+        const triagedAt = data.triagedAt || data.updatedAt || data.capturedAt || Timestamp.now();
+
+        batch.update(photoRef, {
+          photoState: 'journal',
+          triagedAt: triagedAt,
+        });
+      }
+
+      await batch.commit();
+      migratedCount += batchPhotos.length;
+
+      logger.debug('PhotoService.migratePhotoStateField: Batch committed', {
+        batchNumber: Math.floor(i / BATCH_SIZE) + 1,
+        photosInBatch: batchPhotos.length,
+        totalMigrated: migratedCount,
+      });
+    }
+
+    logger.info('PhotoService.migratePhotoStateField: Migration complete', {
+      migratedCount,
+    });
+
+    return { success: true, migratedCount };
+  } catch (error) {
+    logger.error('PhotoService.migratePhotoStateField: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
 };
