@@ -360,7 +360,7 @@ const DeleteAccountScreen = () => {
             <Ionicons
               name="download-outline"
               size={20}
-              color={colors.brand.primary}
+              color={colors.brand.purple}
               style={styles.downloadIcon}
             />
             <Text style={styles.downloadButtonText}>Download All Photos</Text>
@@ -545,6 +545,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContentContainer: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 40,
@@ -666,7 +667,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.brand.primary,
+    borderColor: colors.brand.purple,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -677,7 +678,7 @@ const styles = StyleSheet.create({
   downloadButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.brand.primary,
+    color: colors.brand.purple,
   },
   cancelButton: {
     paddingVertical: 16,

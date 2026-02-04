@@ -6,7 +6,7 @@
  */
 
 import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { getUserPhotos } from './firebase/photoService';
 import logger from '../utils/logger';
 
