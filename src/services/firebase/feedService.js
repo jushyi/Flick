@@ -36,8 +36,9 @@ const FEED_VISIBILITY_DAYS = 1; // Feed posts visible for 1 day
 
 /**
  * Get a Firestore Timestamp for the cutoff date
+ * Used for visibility windows based on triage time (when user chose to share photo)
  * @param {number} days - Number of days back from now
- * @returns {Timestamp} - Firestore Timestamp for use in queries
+ * @returns {Timestamp} - Firestore Timestamp for use in triagedAt queries
  */
 const getCutoffTimestamp = days => {
   const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -62,12 +63,13 @@ export const getFeedPhotos = async (
   currentUserId = null
 ) => {
   try {
-    // Query: photoState = 'journal' AND capturedAt >= cutoff (server-side time filter)
+    // Query: photoState = 'journal' AND triagedAt >= cutoff (server-side time filter)
+    // Uses triagedAt so visibility window starts from when user shared the photo, not when it was captured
     const cutoff = getCutoffTimestamp(FEED_VISIBILITY_DAYS);
     const q = query(
       collection(db, 'photos'),
       where('photoState', '==', 'journal'),
-      where('capturedAt', '>=', cutoff)
+      where('triagedAt', '>=', cutoff)
     );
     const snapshot = await getDocs(q);
 
@@ -146,11 +148,12 @@ export const subscribeFeedPhotos = (
 ) => {
   try {
     // Set up real-time listener with server-side time filter
+    // Uses triagedAt so visibility window starts from when user shared the photo
     const cutoff = getCutoffTimestamp(FEED_VISIBILITY_DAYS);
     const q = query(
       collection(db, 'photos'),
       where('photoState', '==', 'journal'),
-      where('capturedAt', '>=', cutoff)
+      where('triagedAt', '>=', cutoff)
     );
     const unsubscribe = onSnapshot(
       q,
@@ -471,12 +474,13 @@ export const getUserStoriesData = async userId => {
     const userData = userDocSnap.exists() ? userDocSnap.data() : {};
 
     // Query photos where userId matches AND photoState == 'journal' AND within visibility window
+    // Uses triagedAt so visibility window starts from when user shared the photo
     const cutoff = getCutoffTimestamp(STORIES_VISIBILITY_DAYS);
     const photosQuery = query(
       collection(db, 'photos'),
       where('userId', '==', userId),
       where('photoState', '==', 'journal'),
-      where('capturedAt', '>=', cutoff)
+      where('triagedAt', '>=', cutoff)
     );
     const photosSnapshot = await getDocs(photosQuery);
 
@@ -579,11 +583,12 @@ export const getFriendStoriesData = async currentUserId => {
       const userData = userDocSnap.exists() ? userDocSnap.data() : {};
 
       // Fetch journal photos from last 7 days for this friend
+      // Uses triagedAt so visibility window starts from when user shared the photo
       const photosQuery = query(
         collection(db, 'photos'),
         where('userId', '==', friendId),
         where('photoState', '==', 'journal'),
-        where('capturedAt', '>=', cutoff)
+        where('triagedAt', '>=', cutoff)
       );
       const photosSnapshot = await getDocs(photosQuery);
 

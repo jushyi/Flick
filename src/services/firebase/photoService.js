@@ -118,6 +118,21 @@ const getCurrentMonth = () => {
 };
 
 /**
+ * Get month in YYYY-MM format from a Firestore timestamp
+ * @param {Object} timestamp - Firestore Timestamp object
+ * @returns {string} - Month in YYYY-MM format
+ */
+const getMonthFromTimestamp = timestamp => {
+  if (!timestamp) return getCurrentMonth();
+
+  // Handle Firestore Timestamp object (has toDate method or seconds property)
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp.seconds * 1000);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+/**
  * Get user's photos
  * @param {string} userId - User ID
  * @returns {Promise} - Array of photo documents
@@ -360,10 +375,18 @@ export const triagePhoto = async (photoId, action) => {
       return { success: true };
     }
 
-    // Update photo state
+    // Get photo document to retrieve capturedAt for correct month assignment
+    // ISS-010 fix: Old photos need month derived from capturedAt, not creation time
+    const photoDoc = await getDoc(photoRef);
+    const photoData = photoDoc.exists() ? photoDoc.data() : {};
+    const correctMonth = getMonthFromTimestamp(photoData.capturedAt);
+
+    // Update photo state with correct month and triage timestamp
     await updateDoc(photoRef, {
       status: 'triaged',
       photoState: action, // 'journal' or 'archive'
+      month: correctMonth, // ISS-010: Ensure month matches capturedAt
+      triagedAt: serverTimestamp(), // UAT-004: Track when photo was triaged for visibility windows
     });
 
     return { success: true };
