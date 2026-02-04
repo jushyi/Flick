@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import logger from '../utils/logger';
 import { clearLocalNotificationToken } from '../services/firebase/notificationService';
 import { secureStorage } from '../services/secureStorageService';
+import { cancelAccountDeletion } from '../services/firebase/accountService';
 
 // Initialize Firestore
 const db = getFirestore();
@@ -100,6 +101,8 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [pendingDeletion, setPendingDeletion] = useState(null);
+  // { isScheduled: boolean, scheduledDate: Date } or null
 
   // Listen to React Native Firebase auth state changes
   useEffect(() => {
@@ -138,6 +141,23 @@ export const AuthProvider = ({ children }) => {
               profileResult.data?.selectsCompleted !== true,
           });
           setUserProfile(profileResult.data);
+
+          // Check for pending deletion
+          if (profileResult.data?.scheduledForDeletionAt) {
+            const scheduledDate = profileResult.data.scheduledForDeletionAt.toDate
+              ? profileResult.data.scheduledForDeletionAt.toDate()
+              : new Date(profileResult.data.scheduledForDeletionAt);
+
+            setPendingDeletion({
+              isScheduled: true,
+              scheduledDate: scheduledDate,
+            });
+            logger.info('AuthContext: User has pending deletion', {
+              scheduledDate: scheduledDate.toISOString(),
+            });
+          } else {
+            setPendingDeletion(null);
+          }
         } else {
           // New user via phone auth - create profile using native Firestore
           logger.debug('AuthContext: No user profile found, creating for new user');
@@ -268,6 +288,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const cancelDeletion = async () => {
+    try {
+      const result = await cancelAccountDeletion();
+      if (result.success) {
+        setPendingDeletion(null);
+        // Refresh user profile to clear the field
+        const refreshedProfile = await getUserDocumentNative(user.uid);
+        if (refreshedProfile.success) {
+          setUserProfile(refreshedProfile.data);
+        }
+        logger.info('AuthContext: Deletion canceled');
+        return { success: true };
+      }
+      return result;
+    } catch (error) {
+      logger.error('AuthContext: Failed to cancel deletion', { error: error.message });
+      return { success: false, error: error.message };
+    }
+  };
+
   const updateUserProfile = updatedProfile => {
     setUserProfile(updatedProfile);
   };
@@ -277,8 +317,10 @@ export const AuthProvider = ({ children }) => {
     userProfile,
     loading,
     initializing,
+    pendingDeletion,
     // Phone-only auth
     signOut,
+    cancelDeletion,
     updateUserProfile,
     // Native Firestore operations (required for phone auth users)
     updateUserDocumentNative,
