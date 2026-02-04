@@ -1,5 +1,5 @@
 import { useState, useEffect, createRef } from 'react';
-import { Text, ActivityIndicator, View, Platform, Image } from 'react-native';
+import { Text, ActivityIndicator, View, Platform, Image, Alert } from 'react-native';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,6 +9,7 @@ import { PhotoDetailProvider } from '../context/PhotoDetailContext';
 import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../constants/colors';
+import DeletionRecoveryModal from '../components/DeletionRecoveryModal';
 
 // Import auth screens (phone-only authentication)
 import PhoneInputScreen from '../screens/PhoneInputScreen';
@@ -331,7 +332,20 @@ const linking = {
  * Root Stack Navigator (handles auth flow)
  */
 const AppNavigator = () => {
-  const { user, userProfile, initializing } = useAuth();
+  const { user, userProfile, initializing, pendingDeletion, cancelDeletion, signOut } = useAuth();
+
+  const handleCancelDeletion = async () => {
+    const result = await cancelDeletion();
+    if (!result.success) {
+      Alert.alert('Error', 'Failed to cancel deletion. Please try again.');
+    }
+    // Modal auto-hides when pendingDeletion becomes null
+  };
+
+  const handleProceedWithDeletion = () => {
+    signOut();
+    // User is signed out, returns to login screen
+  };
 
   // Show loading screen while checking auth state
   if (initializing) {
@@ -523,6 +537,12 @@ const AppNavigator = () => {
             )}
           </Stack.Navigator>
         </NavigationContainer>
+        <DeletionRecoveryModal
+          visible={isAuthenticated && !!pendingDeletion?.isScheduled}
+          scheduledDate={pendingDeletion?.scheduledDate}
+          onCancel={handleCancelDeletion}
+          onProceed={handleProceedWithDeletion}
+        />
       </PhoneAuthProvider>
     </PhotoDetailProvider>
   );
