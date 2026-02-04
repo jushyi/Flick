@@ -70,3 +70,12 @@ export {
   declineFriendRequest,
   generateFriendshipId,
 } from './friendshipService';
+
+// Export Contact Sync service functions (friend suggestions via contacts)
+export {
+  normalizeToE164,
+  requestContactsPermission,
+  checkContactsPermission,
+  getAllContactPhoneNumbers,
+  findUsersByPhoneNumbers,
+} from './contactSyncService';
