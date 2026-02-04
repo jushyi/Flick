@@ -16,6 +16,7 @@ import PhoneInputScreen from '../screens/PhoneInputScreen';
 import VerificationScreen from '../screens/VerificationScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import SelectsScreen from '../screens/SelectsScreen';
+import ContactsSyncScreen from '../screens/ContactsSyncScreen';
 
 // Import main app screens
 import FeedScreen from '../screens/FeedScreen';
@@ -44,8 +45,8 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 /**
- * Onboarding Stack Navigator (ProfileSetup -> Selects)
- * Both screens are in the same stack so back navigation works correctly
+ * Onboarding Stack Navigator (ProfileSetup -> Selects -> ContactsSync)
+ * All screens are in the same stack so back navigation works correctly
  */
 const OnboardingStackNavigator = ({ initialRouteName }) => {
   return (
@@ -60,6 +61,7 @@ const OnboardingStackNavigator = ({ initialRouteName }) => {
     >
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <Stack.Screen name="Selects" component={SelectsScreen} />
+      <Stack.Screen name="ContactsSync" component={ContactsSyncScreen} />
       <Stack.Screen
         name="SongSearch"
         component={SongSearchScreen}
@@ -322,6 +324,7 @@ const linking = {
         screens: {
           ProfileSetup: 'profile-setup',
           Selects: 'selects',
+          ContactsSync: 'contacts-sync',
         },
       },
     },
@@ -394,10 +397,26 @@ const AppNavigator = () => {
     userProfile.profileSetupCompleted === true &&
     userProfile.selectsCompleted !== true;
 
-  // Determine if user needs onboarding (either profile setup or selects)
-  const needsOnboarding = needsProfileSetup || needsSelects;
-  // Start at Selects if profile is done but selects aren't
-  const onboardingInitialRoute = needsSelects ? 'Selects' : 'ProfileSetup';
+  // Show ContactsSync if user completed selects but hasn't synced contacts
+  // Note: contactsSyncCompleted can be true (synced) or false (skipped) - both mean done
+  // Only show if contactsSyncCompleted is undefined (never prompted)
+  const needsContactsSync =
+    isAuthenticated &&
+    userProfile &&
+    userProfile.profileSetupCompleted === true &&
+    userProfile.selectsCompleted === true &&
+    userProfile.contactsSyncCompleted === undefined;
+
+  // Determine if user needs onboarding (profile setup, selects, or contacts sync)
+  const needsOnboarding = needsProfileSetup || needsSelects || needsContactsSync;
+
+  // Start at appropriate screen
+  let onboardingInitialRoute = 'ProfileSetup';
+  if (needsContactsSync) {
+    onboardingInitialRoute = 'ContactsSync';
+  } else if (needsSelects) {
+    onboardingInitialRoute = 'Selects';
+  }
 
   // Always wrap with PhoneAuthProvider to share confirmation ref
   // between PhoneInputScreen/VerificationScreen during auth, and for
