@@ -935,3 +935,213 @@ exports.deleteUserAccount = onCall({ cors: true }, async request => {
     throw new HttpsError('internal', 'Account deletion failed: ' + error.message);
   }
 });
+
+/**
+ * Schedule user account for deletion after 30-day grace period
+ * Sets scheduledForDeletionAt to 30 days from now
+ * User is logged out after scheduling - if they log back in, they can cancel
+ */
+exports.scheduleUserAccountDeletion = onCall({ cors: true }, async request => {
+  // Require authentication
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be authenticated to schedule deletion');
+  }
+
+  const userId = request.auth.uid;
+  logger.info('scheduleUserAccountDeletion: Scheduling deletion', { userId });
+
+  try {
+    const db = admin.firestore();
+
+    // Calculate deletion date: 30 days from now
+    const now = new Date();
+    const scheduledForDeletionAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    // Update user document with scheduled deletion info
+    await db
+      .collection('users')
+      .doc(userId)
+      .update({
+        scheduledForDeletionAt: admin.firestore.Timestamp.fromDate(scheduledForDeletionAt),
+        deletionScheduledAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    logger.info('scheduleUserAccountDeletion: User scheduled for deletion', {
+      userId,
+      scheduledForDeletionAt: scheduledForDeletionAt.toISOString(),
+    });
+
+    return {
+      success: true,
+      scheduledDate: scheduledForDeletionAt.toISOString(),
+    };
+  } catch (error) {
+    logger.error('scheduleUserAccountDeletion: Failed', { userId, error: error.message });
+    throw new HttpsError('internal', 'Failed to schedule deletion: ' + error.message);
+  }
+});
+
+/**
+ * Cancel a scheduled account deletion
+ * Clears scheduledForDeletionAt and deletionScheduledAt fields
+ * Called when user logs back in during grace period and chooses to keep account
+ */
+exports.cancelUserAccountDeletion = onCall({ cors: true }, async request => {
+  // Require authentication
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be authenticated to cancel deletion');
+  }
+
+  const userId = request.auth.uid;
+  logger.info('cancelUserAccountDeletion: Canceling scheduled deletion', { userId });
+
+  try {
+    const db = admin.firestore();
+
+    // Clear deletion schedule fields
+    await db.collection('users').doc(userId).update({
+      scheduledForDeletionAt: admin.firestore.FieldValue.delete(),
+      deletionScheduledAt: admin.firestore.FieldValue.delete(),
+    });
+
+    logger.info('cancelUserAccountDeletion: Scheduled deletion canceled', { userId });
+
+    return { success: true };
+  } catch (error) {
+    logger.error('cancelUserAccountDeletion: Failed', { userId, error: error.message });
+    throw new HttpsError('internal', 'Failed to cancel deletion: ' + error.message);
+  }
+});
+
+/**
+ * Process scheduled account deletions
+ * Runs daily at 3 AM UTC to find and delete accounts past their scheduled date
+ * Uses the same deletion cascade as deleteUserAccount
+ */
+exports.processScheduledDeletions = functions.pubsub
+  .schedule('0 3 * * *') // 3 AM UTC daily
+  .onRun(async context => {
+    const db = admin.firestore();
+    const bucket = getStorage().bucket();
+    const now = admin.firestore.Timestamp.now();
+
+    logger.info('processScheduledDeletions: Starting scheduled deletion check', {
+      checkTime: now.toDate(),
+    });
+
+    try {
+      // Query users where scheduledForDeletionAt has passed
+      const usersSnapshot = await db
+        .collection('users')
+        .where('scheduledForDeletionAt', '<=', now)
+        .get();
+
+      if (usersSnapshot.empty) {
+        logger.info('processScheduledDeletions: No users scheduled for deletion');
+        return { processed: 0, deleted: 0, failed: 0 };
+      }
+
+      logger.info('processScheduledDeletions: Found users to delete', {
+        count: usersSnapshot.size,
+      });
+
+      let deleted = 0;
+      let failed = 0;
+
+      // Process each user
+      for (const userDoc of usersSnapshot.docs) {
+        const userId = userDoc.id;
+        logger.info('processScheduledDeletions: Processing user', { userId });
+
+        try {
+          // Step 1: Delete Storage files (photos)
+          const photosSnapshot = await db.collection('photos').where('userId', '==', userId).get();
+          logger.debug('processScheduledDeletions: Found photos to delete', {
+            userId,
+            count: photosSnapshot.size,
+          });
+
+          for (const doc of photosSnapshot.docs) {
+            const photoData = doc.data();
+            if (photoData.imageURL) {
+              try {
+                const decodedUrl = decodeURIComponent(photoData.imageURL);
+                const pathMatch = decodedUrl.match(/\/o\/(.+?)\?/);
+                if (pathMatch) {
+                  await bucket.file(pathMatch[1]).delete();
+                }
+              } catch (storageError) {
+                logger.warn('processScheduledDeletions: Storage file deletion failed', {
+                  userId,
+                  error: storageError.message,
+                });
+              }
+            }
+          }
+
+          // Step 2: Delete photos from Firestore
+          const photoBatch = db.batch();
+          photosSnapshot.docs.forEach(doc => photoBatch.delete(doc.ref));
+          if (photosSnapshot.size > 0) {
+            await photoBatch.commit();
+          }
+
+          // Step 3: Delete friendships (user1Id)
+          const friendships1 = await db
+            .collection('friendships')
+            .where('user1Id', '==', userId)
+            .get();
+          const friendship1Batch = db.batch();
+          friendships1.docs.forEach(doc => friendship1Batch.delete(doc.ref));
+          if (friendships1.size > 0) {
+            await friendship1Batch.commit();
+          }
+
+          // Step 4: Delete friendships (user2Id)
+          const friendships2 = await db
+            .collection('friendships')
+            .where('user2Id', '==', userId)
+            .get();
+          const friendship2Batch = db.batch();
+          friendships2.docs.forEach(doc => friendship2Batch.delete(doc.ref));
+          if (friendships2.size > 0) {
+            await friendship2Batch.commit();
+          }
+
+          // Step 5: Delete darkroom document
+          const darkroomRef = db.doc(`darkrooms/${userId}`);
+          const darkroomDoc = await darkroomRef.get();
+          if (darkroomDoc.exists) {
+            await darkroomRef.delete();
+          }
+
+          // Step 6: Delete user document
+          await db.doc(`users/${userId}`).delete();
+
+          // Step 7: Delete Firebase Auth user
+          await admin.auth().deleteUser(userId);
+
+          logger.info('processScheduledDeletions: Account permanently deleted', { userId });
+          deleted++;
+        } catch (userError) {
+          logger.error('processScheduledDeletions: Failed to delete user', {
+            userId,
+            error: userError.message,
+          });
+          failed++;
+          // Continue to next user - don't let one failure stop others
+        }
+      }
+
+      logger.info('processScheduledDeletions: Completed', {
+        processed: usersSnapshot.size,
+        deleted,
+        failed,
+      });
+
+      return { processed: usersSnapshot.size, deleted, failed };
+    } catch (error) {
+      logger.error('processScheduledDeletions: Fatal error', { error: error.message });
+      return null;
+    }
+  });
