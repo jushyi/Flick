@@ -583,13 +583,14 @@ Plans:
 **Goal**: Ensure delete account function works properly with proper fallback handling for errors and edge cases
 **Depends on**: Phase 18
 **Research**: Unlikely (internal account management)
-**Plans**: 3/5 complete
+**Plans**: 4/5 complete
 
 Plans:
 
 - [x] 19-01: Scheduled deletion infrastructure (accountService + Cloud Functions)
 - [x] 19-02: Download all photos feature (downloadPhotosService + DownloadProgress)
 - [x] 19-03: Redesigned DeleteAccountScreen with 30-day scheduling
+- [x] 19-04: Grace period recovery (DeletionRecoveryModal on login)
 
 **Details:**
 
@@ -737,7 +738,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 16. Color Constants              | 10/10          | Complete    | 2026-02-03 |
 | 17. Nested Reply Comments        | 2/2            | Complete    | 2026-02-03 |
 | 18. Content Visibility Duration  | 1/1 + 1 FIX    | Complete    | 2026-02-04 |
-| 19. Delete Account Fallback      | 2/5            | In progress | -          |
+| 19. Delete Account Fallback      | 4/5            | In progress | -          |
 | 20. Friend Suggestions Contacts  | 0/?            | Not started | -          |
 | 21. Remove/Block Friends         | 0/?            | Not started | -          |
 | 22. Ability to Edit Profile      | 0/?            | Not started | -          |
