@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Application from 'expo-application';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -142,6 +143,13 @@ const SettingsScreen = () => {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* App Version */}
+      <View style={styles.versionContainer}>
+        <Text style={styles.versionText}>
+          Version {Application.nativeApplicationVersion || '0.1.0'}
+        </Text>
+      </View>
     </SafeAreaView>
   );
 };
@@ -194,6 +202,15 @@ const styles = StyleSheet.create({
   },
   menuItemLabelDanger: {
     color: colors.status.danger,
+  },
+  versionContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  versionText: {
+    fontSize: 14,
+    color: colors.text.tertiary,
   },
 });
 
