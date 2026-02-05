@@ -10,10 +10,10 @@
 
 - **Features Verified:** 95 (T1: 31, T2: 45, T3: 19)
 - **T4 Features:** Skipped per plan (out of scope)
-- **Present:** 75
+- **Present:** 77
 - **Missing:** 12
-- **Partial:** 8
-- **Coverage Rate:** 79% present, 8% partial, 13% missing
+- **Partial:** 6
+- **Coverage Rate:** 81% present, 6% partial, 13% missing
 
 ---
 
@@ -110,7 +110,7 @@
 | Own stories display      | T2   | ✅     | `MeStoryCard.js`, `getUserStoriesData` (Phase 12)   |
 | Story viewed indicator   | T2   | ✅     | `useViewedStories` hook, ring indicator on cards    |
 | Story expiration         | T2   | ✅     | 7-day visibility (STORIES_VISIBILITY_DAYS)          |
-| Story progress indicator | T3   | ⚠️     | Basic via photo counter, no visual bar              |
+| Story progress indicator | T3   | ✅     | Visual progress bar in story viewer                 |
 | Tap to advance           | T2   | ✅     | `PhotoDetailScreen` navigation                      |
 
 ### REACTIONS & ENGAGEMENT
@@ -173,7 +173,7 @@
 | Download photos            | T2   | ✅     | `downloadPhotosService.js` (Phase 19)                   |
 | Set photo as cover         | T2   | ✅     | Album cover in album service                            |
 | Cascade deletion           | T2   | ✅     | `cascadeDeletePhoto` removes from albums, comments      |
-| Photo details (date, time) | T3   | ⚠️     | `capturedAt` stored but no detail view UI               |
+| Photo details (date, time) | T3   | ✅     | Shown in fullscreen photo viewer                        |
 
 ### SETTINGS
 
