@@ -31,6 +31,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { uploadPhoto, deletePhoto } from './storageService';
 import { ensureDarkroomInitialized } from './darkroomService';
+import { getUserAlbums, removePhotoFromAlbum, deleteAlbum } from './albumService';
 import logger from '../../utils/logger';
 
 const db = getFirestore();
@@ -605,6 +606,138 @@ export const migratePhotoStateField = async userId => {
     return { success: true, migratedCount };
   } catch (error) {
     logger.error('PhotoService.migratePhotoStateField: Failed', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Permanently delete a photo with full cascade cleanup
+ * Removes from albums, deletes comments, deletes from storage, then deletes document
+ *
+ * @param {string} photoId - Photo document ID
+ * @param {string} userId - User ID (for ownership verification)
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const deletePhotoCompletely = async (photoId, userId) => {
+  logger.info('PhotoService.deletePhotoCompletely: Starting cascade delete', { photoId, userId });
+
+  try {
+    // Step 1: Get photo document and verify ownership
+    const photoRef = doc(db, 'photos', photoId);
+    const photoDoc = await getDoc(photoRef);
+
+    if (!photoDoc.exists()) {
+      logger.warn('PhotoService.deletePhotoCompletely: Photo not found', { photoId });
+      return { success: false, error: 'Photo not found' };
+    }
+
+    const photoData = photoDoc.data();
+
+    if (photoData.userId !== userId) {
+      logger.warn('PhotoService.deletePhotoCompletely: Unauthorized - user does not own photo', {
+        photoId,
+        photoOwnerId: photoData.userId,
+        requestingUserId: userId,
+      });
+      return { success: false, error: 'Unauthorized: You do not own this photo' };
+    }
+
+    logger.debug('PhotoService.deletePhotoCompletely: Ownership verified', { photoId, userId });
+
+    // Step 2: Remove from all albums containing this photo
+    logger.debug('PhotoService.deletePhotoCompletely: Removing from albums', { photoId });
+    const albumsResult = await getUserAlbums(userId);
+
+    if (albumsResult.success && albumsResult.albums) {
+      for (const album of albumsResult.albums) {
+        if (album.photoIds && album.photoIds.includes(photoId)) {
+          // Check if this is the last photo in the album
+          if (album.photoIds.length === 1) {
+            // Delete the album entirely since it would be empty
+            logger.debug('PhotoService.deletePhotoCompletely: Deleting album (last photo)', {
+              albumId: album.id,
+              albumName: album.name,
+            });
+            const deleteAlbumResult = await deleteAlbum(album.id);
+            if (!deleteAlbumResult.success) {
+              logger.warn('PhotoService.deletePhotoCompletely: Failed to delete album', {
+                albumId: album.id,
+                error: deleteAlbumResult.error,
+              });
+            }
+          } else {
+            // Remove photo from album
+            logger.debug('PhotoService.deletePhotoCompletely: Removing from album', {
+              albumId: album.id,
+              albumName: album.name,
+            });
+            const removeResult = await removePhotoFromAlbum(album.id, photoId);
+            if (!removeResult.success) {
+              logger.warn('PhotoService.deletePhotoCompletely: Failed to remove from album', {
+                albumId: album.id,
+                error: removeResult.error,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Step 3: Delete all comments in the photo's subcollection
+    logger.debug('PhotoService.deletePhotoCompletely: Deleting comments', { photoId });
+    const commentsRef = collection(db, 'photos', photoId, 'comments');
+    const commentsSnapshot = await getDocs(commentsRef);
+
+    if (!commentsSnapshot.empty) {
+      logger.debug('PhotoService.deletePhotoCompletely: Found comments to delete', {
+        photoId,
+        commentCount: commentsSnapshot.size,
+      });
+
+      // Delete each comment and its likes subcollection
+      for (const commentDoc of commentsSnapshot.docs) {
+        // Delete likes subcollection for this comment
+        const likesRef = collection(db, 'photos', photoId, 'comments', commentDoc.id, 'likes');
+        const likesSnapshot = await getDocs(likesRef);
+
+        for (const likeDoc of likesSnapshot.docs) {
+          await deleteDoc(likeDoc.ref);
+        }
+
+        // Delete the comment itself
+        await deleteDoc(commentDoc.ref);
+      }
+
+      logger.debug('PhotoService.deletePhotoCompletely: Comments deleted', {
+        photoId,
+        deletedCount: commentsSnapshot.size,
+      });
+    }
+
+    // Step 4: Delete photo from Firebase Storage
+    logger.debug('PhotoService.deletePhotoCompletely: Deleting from storage', { photoId, userId });
+    const storageResult = await deletePhoto(userId, photoId);
+
+    if (!storageResult.success) {
+      // Log warning but continue - storage file might not exist
+      logger.warn('PhotoService.deletePhotoCompletely: Storage delete failed (continuing)', {
+        photoId,
+        error: storageResult.error,
+      });
+    }
+
+    // Step 5: Delete photo document from Firestore
+    logger.debug('PhotoService.deletePhotoCompletely: Deleting document', { photoId });
+    await deleteDoc(photoRef);
+
+    logger.info('PhotoService.deletePhotoCompletely: Cascade delete complete', { photoId, userId });
+    return { success: true };
+  } catch (error) {
+    logger.error('PhotoService.deletePhotoCompletely: Failed', {
+      photoId,
+      userId,
+      error: error.message,
+    });
     return { success: false, error: error.message };
   }
 };
