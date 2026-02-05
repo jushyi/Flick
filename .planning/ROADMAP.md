@@ -50,10 +50,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 21: Remove/Block Friends** - Add ability to remove or block friends
 - [x] **Phase 22: Ability to Edit Profile** - Edit profile screen for updating user info
 - [x] **Phase 23: Photo Deletion & Archiving** - Delete photos or remove from journal (archive) - 2/2 plans
-- [ ] **Phase 23.1: Recently Deleted Photos** - 30-day grace period with Settings recovery screen (INSERTED)
+- [x] **Phase 23.1: Recently Deleted Photos** - 30-day grace period with Settings recovery screen (INSERTED)
 - [ ] **Phase 24: Social Media Feature Audit** - Full audit to ensure all expected social media app features are present
 - [x] **Phase 25: Color Palette Selection & Customization** - Theme selection and customization using color constants system
 - [ ] **Phase 26: Feed Pull-to-Refresh & Loading Skeleton** - Pulldown to refresh feed behavior and loading skeleton update
+- [ ] **Phase 27: Color Constants Convention Documentation** - Document color constants requirement in CONVENTIONS.md
 
 ## Phase Details
 
@@ -689,12 +690,12 @@ Plans:
 **Goal**: Add 30-day grace period for photo deletion with a recovery screen in Settings to view and restore recently deleted photos
 **Depends on**: Phase 23
 **Research**: Unlikely (extending existing deletion patterns from Phase 19)
-**Plans**: 1/2 plans
+**Plans**: 2/2 complete
 
 Plans:
 
 - [x] 23.1-01: Soft Delete Infrastructure (photoService + Cloud Function)
-- [ ] 23.1-02: Recently Deleted UI (grid view + Settings integration)
+- [x] 23.1-02: Recently Deleted UI (grid view + Settings integration)
 
 **Details:**
 
@@ -761,10 +762,31 @@ Plans:
 
 [To be added during planning]
 
+### Phase 27: Color Constants Convention Documentation
+
+**Goal**: Document the color constants requirement in CONVENTIONS.md to ensure all new screens, modals, and components use centralized color constants instead of hardcoded values
+**Depends on**: Phase 26
+**Research**: Unlikely (documentation task)
+**Plans**: 0/? plans
+
+Plans:
+
+- [ ] 27-01: TBD (run /gsd:plan-phase 27 to break down)
+
+**Details:**
+
+[To be added during planning]
+
+1. Update CONVENTIONS.md with color usage guidelines
+2. Document the colors.js constants system from Phase 16
+3. Provide examples of correct color constant usage
+4. Add checklist for new screen/modal/component creation
+5. Reference existing color standardization patterns
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 23.1 → 24 → 25 → 26
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 23.1 → 24 → 25 → 26 → 27
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -801,7 +823,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 21. Remove/Block Friends         | 4/4            | Complete    | 2026-02-04 |
 | 22. Ability to Edit Profile      | 2/2            | Complete    | 2026-02-05 |
 | 23. Photo Deletion & Archiving   | 2/2            | Complete    | 2026-02-05 |
-| 23.1 Recently Deleted Photos     | 1/2            | In progress | -          |
+| 23.1 Recently Deleted Photos     | 2/2            | Complete    | 2026-02-05 |
 | 24. Social Media Feature Audit   | 0/?            | Not started | -          |
 | 25. Color Palette Selection      | 5/5            | Complete    | 2026-02-04 |
 | 26. Feed Pull-to-Refresh         | 0/?            | Not started | -          |
+| 27. Color Constants Convention   | 0/?            | Not started | -          |

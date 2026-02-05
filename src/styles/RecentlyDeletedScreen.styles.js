@@ -11,6 +11,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.primary,
   },
+  safeHeader: {
+    backgroundColor: colors.background.primary,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -89,7 +92,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 4,
     left: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: colors.overlay.dark,
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -101,7 +104,7 @@ export const styles = StyleSheet.create({
   },
   selectionOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: colors.overlay.dark,
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
     padding: 6,
@@ -122,7 +125,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingTop: 16,
     backgroundColor: colors.background.secondary,
     borderTopWidth: 1,
     borderTopColor: colors.border.subtle,
@@ -162,7 +165,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
   },
   viewerCloseButton: {
     width: 44,
@@ -175,7 +178,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewerDaysBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.overlay.light,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -190,9 +193,20 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  viewerPhotoContainer: {
+    width: SCREEN_WIDTH,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   viewerImage: {
     width: '100%',
     height: '100%',
+  },
+  viewerPositionText: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginTop: 4,
   },
   viewerFooter: {
     position: 'absolute',
@@ -203,7 +217,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingVertical: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
   },
   viewerButton: {
     flexDirection: 'row',
