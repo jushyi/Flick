@@ -57,7 +57,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 27: Color Constants Convention Documentation** - Document color constants requirement in CONVENTIONS.md
 - [x] **Phase 28: Blocked Users Management** - Blocked users list UI (from audit)
 - [x] **Phase 29: Settings & Help Enhancements** - Help link, app version (from audit)
-- [x] **Phase 30: Optimization and Performance Enhancements** - App-wide performance improvements
+- [ ] **Phase 30: Optimization and Performance Enhancements** - App-wide performance improvements (1/5 plans)
 
 ## Phase Details
 
@@ -834,61 +834,65 @@ Plans:
 **Goal**: Improve app-wide performance through optimizations, reducing load times, memory usage, and improving rendering efficiency
 **Depends on**: Phase 29
 **Research**: Complete
-**Plans**: 1/1 complete
+**Plans**: 1/5 complete
 
 Plans:
 
 - [x] 30-01: MonthlyAlbumGridScreen expo-image migration + FlatList optimization
+- [ ] 30-02: AlbumPhotoViewer expo-image migration (fullscreen + thumbnails)
+- [ ] 30-03: AlbumGridScreen + AlbumPhotoPickerScreen expo-image migration
+- [ ] 30-04: RecentlyDeletedScreen, SelectsScreen, SelectsBanner expo-image migration
+- [ ] 30-05: Performance verification and documentation
 
 **Details:**
 
-[To be added during planning]
+Systematic expo-image migration for all screens using React Native Image, plus performance documentation.
 
 ## Progress
 
 **Execution Order:**
 Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 23.1 → 24 → 25 → 26 → 27 → 28 → 29 → 30
 
-| Phase                            | Plans Complete | Status   | Completed  |
-| -------------------------------- | -------------- | -------- | ---------- |
-| 1. Auth Shared Components        | 1/1            | Complete | 2026-01-27 |
-| 2. Login Screen Refactor         | 1/1            | Complete | 2026-01-27 |
-| 3. Signup Flow Refactor          | 2/2            | Complete | 2026-01-27 |
-| 3.1 Auth Input Field Fixes       | 1/1            | Complete | 2026-01-27 |
-| 4. Profile Creation Onboarding   | 4/4            | Complete | 2026-01-27 |
-| 4.1 Drag-Reorder Visual Feedback | 1/1            | Complete | 2026-01-27 |
-| 5. Profile Screen Layout         | 2/2            | Complete | 2026-01-27 |
-| 6. Selects Banner                | 2/2            | Complete | 2026-01-28 |
-| 7. Profile Song Scaffold         | 5/5 + 2 FIX    | Complete | 2026-01-28 |
-| 7.2 Song Modal Stacking Fix      | 1/1 + 1 FIX    | Complete | 2026-01-28 |
-| 7.3 Simplify Clip Selection      | 1/1            | Complete | 2026-01-29 |
-| 8. User Albums Display           | 6/6 + 7 FIX    | Complete | 2026-01-29 |
-| 8.1 Grid Header Safe Area Fix    | 1/1            | Complete | 2026-01-29 |
-| 8.2 Album Creation Animation     | 1/1            | Complete | 2026-01-29 |
-| 9. Monthly Albums                | 3/3            | Complete | 2026-01-29 |
-| 10. Empty Feed State UI Change   | 1/1            | Complete | 2026-01-29 |
-| 11. Feed Reaction Emoji          | 1/1            | Complete | 2026-01-30 |
-| 12. Own Snaps in Stories Bar     | 1/1            | Complete | 2026-01-30 |
-| 13. Split Activity/Friends       | 2/2            | Complete | 2026-01-30 |
-| 14. Profile Field Limits         | 1/1            | Complete | 2026-02-02 |
-| 15. Friends Screen & Profiles    | 3/3            | Complete | 2026-02-02 |
-| 15.1 Profile Setup Cancel        | 1/1            | Complete | 2026-02-02 |
-| 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete | 2026-02-02 |
-| 15.3 Modal Architecture Fix      | 2/2            | Complete | 2026-02-02 |
-| 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | Complete | 2026-02-03 |
-| 16. Color Constants              | 10/10          | Complete | 2026-02-03 |
-| 17. Nested Reply Comments        | 2/2            | Complete | 2026-02-03 |
-| 18. Content Visibility Duration  | 1/1 + 1 FIX    | Complete | 2026-02-04 |
-| 19. Delete Account Fallback      | 5/5            | Complete | 2026-02-04 |
-| 20. Friend Suggestions Contacts  | 3/3            | Complete | 2026-02-04 |
-| 21. Remove/Block Friends         | 4/4            | Complete | 2026-02-04 |
-| 22. Ability to Edit Profile      | 2/2            | Complete | 2026-02-05 |
-| 23. Photo Deletion & Archiving   | 2/2            | Complete | 2026-02-05 |
-| 23.1 Recently Deleted Photos     | 2/2            | Complete | 2026-02-05 |
-| 24. Social Media Feature Audit   | 1/1            | Complete | 2026-02-05 |
-| 25. Color Palette Selection      | 5/5            | Complete | 2026-02-04 |
-| 26. Feed Pull-to-Refresh         | 1/1            | Complete | 2026-02-05 |
-| 27. Color Constants Convention   | 1/1            | Complete | 2026-02-05 |
-| 28. Blocked Users Management     | 1/1            | Complete | 2026-02-05 |
-| 29. Settings & Help              | 1/1            | Complete | 2026-02-05 |
-| 30. Optimization & Performance   | 1/1            | Complete | 2026-02-05 |
+| Phase                            | Plans Complete | Status      | Completed  |
+| -------------------------------- | -------------- | ----------- | ---------- |
+| 1. Auth Shared Components        | 1/1            | Complete    | 2026-01-27 |
+| 2. Login Screen Refactor         | 1/1            | Complete    | 2026-01-27 |
+| 3. Signup Flow Refactor          | 2/2            | Complete    | 2026-01-27 |
+| 3.1 Auth Input Field Fixes       | 1/1            | Complete    | 2026-01-27 |
+| 4. Profile Creation Onboarding   | 4/4            | Complete    | 2026-01-27 |
+| 4.1 Drag-Reorder Visual Feedback | 1/1            | Complete    | 2026-01-27 |
+| 5. Profile Screen Layout         | 2/2            | Complete    | 2026-01-27 |
+| 6. Selects Banner                | 2/2            | Complete    | 2026-01-28 |
+| 7. Profile Song Scaffold         | 5/5 + 2 FIX    | Complete    | 2026-01-28 |
+| 7.2 Song Modal Stacking Fix      | 1/1 + 1 FIX    | Complete    | 2026-01-28 |
+| 7.3 Simplify Clip Selection      | 1/1            | Complete    | 2026-01-29 |
+| 8. User Albums Display           | 6/6 + 7 FIX    | Complete    | 2026-01-29 |
+| 8.1 Grid Header Safe Area Fix    | 1/1            | Complete    | 2026-01-29 |
+| 8.2 Album Creation Animation     | 1/1            | Complete    | 2026-01-29 |
+| 9. Monthly Albums                | 3/3            | Complete    | 2026-01-29 |
+| 10. Empty Feed State UI Change   | 1/1            | Complete    | 2026-01-29 |
+| 11. Feed Reaction Emoji          | 1/1            | Complete    | 2026-01-30 |
+| 12. Own Snaps in Stories Bar     | 1/1            | Complete    | 2026-01-30 |
+| 13. Split Activity/Friends       | 2/2            | Complete    | 2026-01-30 |
+| 14. Profile Field Limits         | 1/1            | Complete    | 2026-02-02 |
+| 15. Friends Screen & Profiles    | 3/3            | Complete    | 2026-02-02 |
+| 15.1 Profile Setup Cancel        | 1/1            | Complete    | 2026-02-02 |
+| 15.2 Modal State Preservation    | 1/1 + 2 FIX    | Complete    | 2026-02-02 |
+| 15.3 Modal Architecture Fix      | 2/2            | Complete    | 2026-02-02 |
+| 15.4 Story Viewed State Fix      | 1/1 + 2 FIX    | Complete    | 2026-02-03 |
+| 16. Color Constants              | 10/10          | Complete    | 2026-02-03 |
+| 17. Nested Reply Comments        | 2/2            | Complete    | 2026-02-03 |
+| 18. Content Visibility Duration  | 1/1 + 1 FIX    | Complete    | 2026-02-04 |
+| 19. Delete Account Fallback      | 5/5            | Complete    | 2026-02-04 |
+| 20. Friend Suggestions Contacts  | 3/3            | Complete    | 2026-02-04 |
+| 21. Remove/Block Friends         | 4/4            | Complete    | 2026-02-04 |
+| 22. Ability to Edit Profile      | 2/2            | Complete    | 2026-02-05 |
+| 23. Photo Deletion & Archiving   | 2/2            | Complete    | 2026-02-05 |
+| 23.1 Recently Deleted Photos     | 2/2            | Complete    | 2026-02-05 |
+| 24. Social Media Feature Audit   | 1/1            | Complete    | 2026-02-05 |
+| 25. Color Palette Selection      | 5/5            | Complete    | 2026-02-04 |
+| 26. Feed Pull-to-Refresh         | 1/1            | Complete    | 2026-02-05 |
+| 27. Color Constants Convention   | 1/1            | Complete    | 2026-02-05 |
+| 28. Blocked Users Management     | 1/1            | Complete    | 2026-02-05 |
+| 29. Settings & Help              | 1/1            | Complete    | 2026-02-05 |
+| 30. Optimization & Performance   | 1/5            | In progress | -          |
