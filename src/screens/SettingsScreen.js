@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,6 +45,11 @@ const SettingsScreen = () => {
     navigation.navigate('DeleteAccount');
   };
 
+  const handleHelpSupport = () => {
+    logger.debug('SettingsScreen: Help & Support pressed');
+    Linking.openURL('mailto:support@rewind.app?subject=Rewind%20Support%20Request');
+  };
+
   const menuItems = [
     {
       id: 'editProfile',
@@ -75,6 +80,12 @@ const SettingsScreen = () => {
       label: 'Blocked Users',
       icon: 'ban-outline',
       onPress: () => handleNavigate('BlockedUsers'),
+    },
+    {
+      id: 'helpSupport',
+      label: 'Help & Support',
+      icon: 'help-circle-outline',
+      onPress: handleHelpSupport,
     },
     {
       id: 'signout',
