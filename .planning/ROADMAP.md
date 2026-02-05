@@ -689,11 +689,11 @@ Plans:
 **Goal**: Add 30-day grace period for photo deletion with a recovery screen in Settings to view and restore recently deleted photos
 **Depends on**: Phase 23
 **Research**: Unlikely (extending existing deletion patterns from Phase 19)
-**Plans**: 0/2 plans
+**Plans**: 1/2 plans
 
 Plans:
 
-- [ ] 23.1-01: Soft Delete Infrastructure (photoService + Cloud Function)
+- [x] 23.1-01: Soft Delete Infrastructure (photoService + Cloud Function)
 - [ ] 23.1-02: Recently Deleted UI (grid view + Settings integration)
 
 **Details:**
@@ -801,7 +801,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 21. Remove/Block Friends         | 4/4            | Complete    | 2026-02-04 |
 | 22. Ability to Edit Profile      | 2/2            | Complete    | 2026-02-05 |
 | 23. Photo Deletion & Archiving   | 2/2            | Complete    | 2026-02-05 |
-| 23.1 Recently Deleted Photos     | 0/2            | Not started | -          |
+| 23.1 Recently Deleted Photos     | 1/2            | In progress | -          |
 | 24. Social Media Feature Audit   | 0/?            | Not started | -          |
 | 25. Color Palette Selection      | 5/5            | Complete    | 2026-02-04 |
 | 26. Feed Pull-to-Refresh         | 0/?            | Not started | -          |
