@@ -38,6 +38,7 @@ import AlbumGridScreen from '../screens/AlbumGridScreen';
 import MonthlyAlbumGridScreen from '../screens/MonthlyAlbumGridScreen';
 import PhotoDetailScreen from '../screens/PhotoDetailScreen';
 import ReportUserScreen from '../screens/ReportUserScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -96,6 +97,7 @@ const ProfileStackNavigator = () => {
         }}
       />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />

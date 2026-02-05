@@ -47,6 +47,12 @@ const SettingsScreen = () => {
 
   const menuItems = [
     {
+      id: 'editProfile',
+      label: 'Edit Profile',
+      icon: 'person-outline',
+      onPress: () => handleNavigate('EditProfile'),
+    },
+    {
       id: 'privacy',
       label: 'Privacy Policy',
       icon: 'document-text-outline',
