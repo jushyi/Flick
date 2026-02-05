@@ -45,12 +45,12 @@ const ShimmerHighlight = ({ shimmerPosition, width = '100%', height = '100%' }) 
 const FeedLoadingSkeleton = () => {
   const shimmerPosition = useRef(new Animated.Value(-SHIMMER_WIDTH)).current;
 
-  // Shimmer animation - sweeps left to right
+  // Shimmer animation - sweeps left to right (fast 800ms)
   useEffect(() => {
     Animated.loop(
       Animated.timing(shimmerPosition, {
         toValue: SCREEN_WIDTH,
-        duration: 1200,
+        duration: 800,
         useNativeDriver: true,
       })
     ).start();

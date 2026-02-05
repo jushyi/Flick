@@ -62,7 +62,7 @@ Each task was committed atomically:
 1. **Task 1: Add Help/Support email link** - `a5044f6` (feat)
 2. **Task 2: Add app version display** - `abfab8a` (feat)
 
-**Plan metadata:** TBD (docs: complete plan)
+**Plan metadata:** `eae603e` (docs: complete plan)
 
 ## Files Created/Modified
 

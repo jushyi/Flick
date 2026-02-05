@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -40,6 +41,9 @@ import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SHIMMER_WIDTH = 80;
+
 const db = getFirestore();
 
 // Layout constants
@@ -64,9 +68,10 @@ const FeedScreen = () => {
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const wasLoading = useRef(true);
 
-  // Track if refresh should be allowed (requires pulling past threshold)
-  const canRefresh = useRef(false);
-  const REFRESH_THRESHOLD = -70; // Must pull down 70+ pixels to trigger refresh
+  // Shimmer animation for skeleton
+  const shimmerPosition = useRef(new Animated.Value(-SHIMMER_WIDTH)).current;
+  const shimmerAnimation = useRef(null);
+
   const {
     photos,
     loading,
@@ -176,22 +181,53 @@ const FeedScreen = () => {
 
   /**
    * Fade-in animation when loading completes
-   * Detects loading -> loaded transition and animates opacity 0 -> 1
+   * Detects loading/refreshing -> loaded transition and animates opacity 0 -> 1
    */
+  const isLoadingOrRefreshing = loading || refreshing;
   useEffect(() => {
-    if (wasLoading.current && !loading) {
-      // Loading just finished - animate content fade in
+    if (wasLoading.current && !isLoadingOrRefreshing) {
+      // Loading/refreshing just finished - animate content fade in
       Animated.timing(contentOpacity, {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
       }).start();
-    } else if (loading && !wasLoading.current) {
-      // Starting to load again (e.g., pull-to-refresh) - reset opacity
+    } else if (isLoadingOrRefreshing && !wasLoading.current) {
+      // Starting to load/refresh - reset opacity
       contentOpacity.setValue(0);
     }
-    wasLoading.current = loading;
-  }, [loading, contentOpacity]);
+    wasLoading.current = isLoadingOrRefreshing;
+  }, [isLoadingOrRefreshing, contentOpacity]);
+
+  /**
+   * Shimmer animation for skeleton loaders
+   * Fast sweep (800ms) left-to-right, loops while loading
+   */
+  useEffect(() => {
+    if (isLoadingOrRefreshing || storiesLoading) {
+      // Start shimmer animation
+      shimmerPosition.setValue(-SHIMMER_WIDTH);
+      shimmerAnimation.current = Animated.loop(
+        Animated.timing(shimmerPosition, {
+          toValue: SCREEN_WIDTH,
+          duration: 800, // Faster than original 1200ms
+          useNativeDriver: true,
+        })
+      );
+      shimmerAnimation.current.start();
+    } else {
+      // Stop shimmer animation
+      if (shimmerAnimation.current) {
+        shimmerAnimation.current.stop();
+        shimmerAnimation.current = null;
+      }
+    }
+    return () => {
+      if (shimmerAnimation.current) {
+        shimmerAnimation.current.stop();
+      }
+    };
+  }, [isLoadingOrRefreshing, storiesLoading, shimmerPosition]);
 
   /**
    * Load archive photos as fallback when recent feed is empty
@@ -312,28 +348,11 @@ const FeedScreen = () => {
   /**
    * Handle pull-to-refresh
    * Refreshes both feed and stories
-   * Only triggers if user pulled past threshold
    */
   const handleRefresh = async () => {
-    if (!canRefresh.current) {
-      logger.debug('FeedScreen: Refresh blocked - threshold not met');
-      return;
-    }
     logger.debug('FeedScreen: Pull-to-refresh triggered');
-    canRefresh.current = false;
     // Refresh all data sources in parallel
     await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories()]);
-  };
-
-  /**
-   * Track scroll position to enable/disable refresh
-   */
-  const handleScroll = event => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    // Enable refresh only when pulled past threshold (negative = pulling down)
-    if (offsetY <= REFRESH_THRESHOLD) {
-      canRefresh.current = true;
-    }
   };
 
   /**
@@ -821,14 +840,25 @@ const FeedScreen = () => {
 
   /**
    * Render stories loading skeleton
+   * Uses rectangular cards matching FriendStoryCard shape with name placeholders
    */
   const renderStoriesLoadingSkeleton = () => {
     return (
       <View style={styles.storiesSkeletonContainer}>
-        {[1, 2, 3, 4, 5].map(i => (
+        {[1, 2, 3, 4].map(i => (
           <View key={i} style={styles.storySkeletonItem}>
-            <View style={styles.storySkeletonCircle} />
-            <View style={styles.storySkeletonText} />
+            {/* Rectangular photo placeholder with shimmer */}
+            <View style={styles.storySkeletonPhoto}>
+              <Animated.View
+                style={[styles.shimmerHighlight, { transform: [{ translateX: shimmerPosition }] }]}
+              />
+            </View>
+            {/* Name text placeholder with shimmer */}
+            <View style={styles.storySkeletonName}>
+              <Animated.View
+                style={[styles.shimmerHighlight, { transform: [{ translateX: shimmerPosition }] }]}
+              />
+            </View>
           </View>
         ))}
       </View>
@@ -992,7 +1022,7 @@ const FeedScreen = () => {
       </Animated.View>
 
       {/* Content */}
-      {loading ? (
+      {loading || refreshing ? (
         <>
           {renderStoriesRow()}
           <FeedLoadingSkeleton count={3} />
@@ -1009,7 +1039,6 @@ const FeedScreen = () => {
             showsVerticalScrollIndicator={false}
             onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
               useNativeDriver: true,
-              listener: handleScroll,
             })}
             scrollEventThrottle={16}
             refreshControl={
@@ -1169,28 +1198,39 @@ const styles = StyleSheet.create({
   storiesScrollContent: {
     paddingHorizontal: 12,
   },
-  // Stories loading skeleton styles
+  // Stories loading skeleton styles (match FriendStoryCard dimensions)
   storiesSkeletonContainer: {
     flexDirection: 'row',
     paddingHorizontal: 12,
   },
   storySkeletonItem: {
-    width: 75,
+    width: 94 + 8, // STORY_PHOTO_WIDTH (88) + STORY_BORDER_WIDTH*2 (6) + padding (8)
     alignItems: 'center',
-    paddingHorizontal: 4,
+    marginRight: 10,
   },
-  storySkeletonCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  storySkeletonPhoto: {
+    width: 94, // 88 + 6 border
+    height: 136, // 130 + 6 border
+    borderRadius: 14,
     backgroundColor: colors.background.tertiary,
-    marginBottom: 6,
+    marginBottom: 8,
+    overflow: 'hidden', // Contain shimmer
   },
-  storySkeletonText: {
+  storySkeletonName: {
     width: 50,
     height: 10,
     borderRadius: 5,
     backgroundColor: colors.background.tertiary,
+    overflow: 'hidden', // Contain shimmer
+  },
+  // Shimmer highlight bar that sweeps across skeleton elements
+  shimmerHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SHIMMER_WIDTH,
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Semi-transparent white highlight
   },
 });
 
