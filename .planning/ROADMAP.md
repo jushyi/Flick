@@ -56,7 +56,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 26: Feed Pull-to-Refresh & Loading Skeleton** - Pulldown to refresh feed behavior and loading skeleton update
 - [x] **Phase 27: Color Constants Convention Documentation** - Document color constants requirement in CONVENTIONS.md
 - [x] **Phase 28: Blocked Users Management** - Blocked users list UI (from audit)
-- [ ] **Phase 29: Settings & Help Enhancements** - Notification preferences, help link, app version (from audit)
+- [x] **Phase 29: Settings & Help Enhancements** - Help link, app version (from audit)
 - [ ] **Phase 30: Optimization and Performance Enhancements** - App-wide performance improvements
 
 ## Phase Details
@@ -812,23 +812,22 @@ Plans:
 
 ### Phase 29: Settings & Help Enhancements
 
-**Goal:** Complete settings screen with notification preferences, help/support, and app info
+**Goal:** Add help/support link and app version display to Settings screen
 **Depends on**: Phase 28
 **Research**: Unlikely
-**Plans**: 0/? plans
+**Plans**: 1/1 complete
 
 Plans:
 
-- [ ] 29-01: TBD (run /gsd:plan-phase 29 to break down)
+- [x] 29-01: Help/Support email link + app version display
 
 **Details:**
 
-1. Notification preferences screen (granular control)
-2. Help/Support link (external URL or email)
-3. App version display in Settings
-4. Clear cache option
+1. Help/Support link (mailto: opens native email compose)
+2. App version display at bottom of Settings
+3. Uses expo-application for native version info
 
-**Source:** Phase 24 Social Media Feature Audit - T2 gaps + T3
+**Source:** Phase 24 Social Media Feature Audit - T2 gaps
 
 ### Phase 30: Optimization and Performance Enhancements
 
@@ -891,5 +890,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 26. Feed Pull-to-Refresh         | 1/1            | Complete    | 2026-02-05 |
 | 27. Color Constants Convention   | 1/1            | Complete    | 2026-02-05 |
 | 28. Blocked Users Management     | 1/1            | Complete    | 2026-02-05 |
-| 29. Settings & Help              | 0/?            | Not started | -          |
+| 29. Settings & Help              | 1/1            | Complete    | 2026-02-05 |
 | 30. Optimization & Performance   | 0/?            | Not started | -          |
