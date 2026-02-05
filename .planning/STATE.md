@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** Phase 23 — Photo Deletion & Archiving
+**Current focus:** Phase 23.1 — Recently Deleted Photos
 
 ## Current Position
 
-Phase: 23 of 26 (Photo Deletion & Archiving)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-05 — Completed 23-01-PLAN.md
+Phase: 23.1 of 27 (Recently Deleted Photos)
+Plan: 0 of ? in current phase
+Status: Not started
+Last activity: 2026-02-05 — Completed Phase 23 (Photo Deletion & Archiving)
 
 Progress: ██████████████████ 100%
 
@@ -20,9 +20,9 @@ Progress: ██████████████████ 100%
 
 **Velocity:**
 
-- Total plans completed: 95 (including 18 FIX plans)
+- Total plans completed: 96 (including 18 FIX plans)
 - Average duration: 10 min
-- Total execution time: 952 min
+- Total execution time: 967 min
 
 **By Phase:**
 
@@ -60,13 +60,13 @@ Progress: ██████████████████ 100%
 | 20    | 3     | 20 min | 7 min    |
 | 21    | 4     | 33 min | 8 min    |
 | 22    | 2     | 20 min | 10 min   |
-| 23    | 1     | 8 min  | 8 min    |
+| 23    | 2     | 23 min | 11.5 min |
 | 25    | 5     | 15 min | 3 min    |
 
 **Recent Trend:**
 
-- Last 5 plans: 8 min, 5 min, 8 min, 12 min, 8 min
-- Trend: Phase 23 Photo Deletion data layer complete
+- Last 5 plans: 5 min, 8 min, 12 min, 8 min, 15 min
+- Trend: Phase 23 Photo Deletion & Archiving complete
 
 ## Accumulated Context
 
@@ -342,9 +342,16 @@ None yet.
   - Build on Phase 16's centralized color constants foundation
   - Predefined palettes (dark, light, custom themes)
   - Real-time theme switching across all screens
+- Phase 23.1 inserted after Phase 23: Recently Deleted Photos (URGENT)
+  - 30-day grace period before permanent photo deletion (soft delete)
+  - Recently Deleted screen in Settings to view and restore photos
+  - Similar pattern to Phase 19 account deletion grace period
+- Phase 26 added: Feed Pull-to-Refresh & Loading Skeleton
+  - Pulldown to refresh feed behavior
+  - Loading skeleton state updates
 
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 23-01-PLAN.md
+Stopped at: Completed Phase 23 (Photo Deletion & Archiving)
 Resume file: None

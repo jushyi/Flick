@@ -49,9 +49,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 20: Friend Suggestions via Contacts Sync** - Suggest friends based on synced phone contacts
 - [x] **Phase 21: Remove/Block Friends** - Add ability to remove or block friends
 - [x] **Phase 22: Ability to Edit Profile** - Edit profile screen for updating user info
-- [ ] **Phase 23: Photo Deletion & Archiving** - Delete photos or remove from journal (archive) - 1/2 plans
+- [x] **Phase 23: Photo Deletion & Archiving** - Delete photos or remove from journal (archive) - 2/2 plans
+- [ ] **Phase 23.1: Recently Deleted Photos** - 30-day grace period with Settings recovery screen (INSERTED)
 - [ ] **Phase 24: Social Media Feature Audit** - Full audit to ensure all expected social media app features are present
 - [x] **Phase 25: Color Palette Selection & Customization** - Theme selection and customization using color constants system
+- [ ] **Phase 26: Feed Pull-to-Refresh & Loading Skeleton** - Pulldown to refresh feed behavior and loading skeleton update
 
 ## Phase Details
 
@@ -682,6 +684,27 @@ Plans:
 4. Confirmation dialogs for destructive actions
 5. Cascade handling for photos in albums, selects, reactions, comments
 
+### Phase 23.1: Recently Deleted Photos (INSERTED)
+
+**Goal**: Add 30-day grace period for photo deletion with a recovery screen in Settings to view and restore recently deleted photos
+**Depends on**: Phase 23
+**Research**: Unlikely (extending existing deletion patterns from Phase 19)
+**Plans**: 0/? plans
+
+Plans:
+
+- [ ] 23.1-01: TBD (run /gsd:plan-phase 23.1 to break down)
+
+**Details:**
+
+1. Soft delete: Mark photos for deletion instead of immediate removal
+2. 30-day grace period before permanent deletion
+3. Recently Deleted screen accessible from Settings
+4. View deleted photos with deletion date and days remaining
+5. Restore individual photos back to journal
+6. Permanent delete option to bypass grace period
+7. Auto-cleanup via scheduled function (similar to Phase 19 account deletion)
+
 ### Phase 24: Social Media Feature Audit
 
 **Goal**: Full audit to ensure all expected social media app features are present and identify any gaps
@@ -722,10 +745,25 @@ Plans:
 4. User preference persistence
 5. Real-time theme switching across all screens
 
+### Phase 26: Feed Pull-to-Refresh & Loading Skeleton
+
+**Goal**: Implement pulldown to refresh behavior on feed and update loading skeleton states
+**Depends on**: Phase 25
+**Research**: Unlikely (standard React Native patterns)
+**Plans**: 0/? plans
+
+Plans:
+
+- [ ] 26-01: TBD (run /gsd:plan-phase 26 to break down)
+
+**Details:**
+
+[To be added during planning]
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 23.1 → 24 → 25 → 26
 
 | Phase                            | Plans Complete | Status      | Completed  |
 | -------------------------------- | -------------- | ----------- | ---------- |
@@ -761,6 +799,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 20. Friend Suggestions Contacts  | 3/3            | Complete    | 2026-02-04 |
 | 21. Remove/Block Friends         | 4/4            | Complete    | 2026-02-04 |
 | 22. Ability to Edit Profile      | 2/2            | Complete    | 2026-02-05 |
-| 23. Photo Deletion & Archiving   | 1/2            | In progress | -          |
+| 23. Photo Deletion & Archiving   | 2/2            | Complete    | 2026-02-05 |
+| 23.1 Recently Deleted Photos     | 0/?            | Not started | -          |
 | 24. Social Media Feature Audit   | 0/?            | Not started | -          |
 | 25. Color Palette Selection      | 5/5            | Complete    | 2026-02-04 |
+| 26. Feed Pull-to-Refresh         | 0/?            | Not started | -          |
