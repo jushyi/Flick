@@ -58,6 +58,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 28: Blocked Users Management** - Blocked users list UI (from audit)
 - [x] **Phase 29: Settings & Help Enhancements** - Help link, app version (from audit)
 - [x] **Phase 30: Optimization and Performance Enhancements** - App-wide performance improvements (5/5 plans)
+- [x] **Phase 31: Settings Section Headers** - Add section headers to organize Settings page
 
 ## Phase Details
 
@@ -848,10 +849,28 @@ Plans:
 
 Systematic expo-image migration for all screens using React Native Image, plus performance documentation.
 
+### Phase 31: Settings Section Headers
+
+**Goal**: Add section headers to the Settings page to visually organize and separate different setting categories
+**Depends on**: Phase 30
+**Research**: Unlikely (internal UI patterns)
+**Plans**: 1/1 complete
+
+Plans:
+
+- [x] 31-01: Add section headers to SettingsScreen (Account, Privacy, Legal, Support)
+
+**Details:**
+
+1. Restructured flat menuItems array into sections array with 4 categories
+2. Created separate actionItems array for Sign Out and Delete Account (no header)
+3. Added sectionHeader and sectionHeaderText styles matching FriendsScreen pattern
+4. Section headers display above grouped menu items
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 23.1 → 24 → 25 → 26 → 27 → 28 → 29 → 30
+Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6 → 7 → 7.2 → 7.3 → 8 → 8.1 → 8.2 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 15.1 → 15.2 → 15.3 → 15.4 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 23.1 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31
 
 | Phase                            | Plans Complete | Status   | Completed  |
 | -------------------------------- | -------------- | -------- | ---------- |
@@ -896,3 +915,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.1 → 4 → 4.1 → 5 → 6
 | 28. Blocked Users Management     | 1/1            | Complete | 2026-02-05 |
 | 29. Settings & Help              | 1/1            | Complete | 2026-02-05 |
 | 30. Optimization & Performance   | 5/5            | Complete | 2026-02-05 |
+| 31. Settings Section Headers     | 1/1            | Complete | 2026-02-05 |
