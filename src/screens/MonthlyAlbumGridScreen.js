@@ -17,6 +17,10 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const CELL_WIDTH = (SCREEN_WIDTH - GRID_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 const CELL_HEIGHT = CELL_WIDTH * (4 / 3); // 3:4 portrait ratio
 
+// Row heights for getItemLayout optimization
+const DAY_HEADER_HEIGHT = 38; // paddingVertical 12 * 2 + fontSize 14
+const PHOTO_ROW_HEIGHT = CELL_HEIGHT + GRID_GAP;
+
 /**
  * MonthlyAlbumGridScreen - Read-only grid view for monthly album photos
  *
@@ -238,39 +242,54 @@ const MonthlyAlbumGridScreen = () => {
     return result;
   }, [gridData]);
 
-  const renderRowItem = ({ item }) => {
-    if (item.type === 'dayHeader') {
+  // getItemLayout for FlatList scroll optimization
+  // Note: This is an approximation since rows vary (header vs photo row)
+  // Using photo row height as default since majority are photo rows
+  const getItemLayout = useCallback(
+    (data, index) => ({
+      length: PHOTO_ROW_HEIGHT,
+      offset: PHOTO_ROW_HEIGHT * index,
+      index,
+    }),
+    []
+  );
+
+  const renderRowItem = useCallback(
+    ({ item }) => {
+      if (item.type === 'dayHeader') {
+        return (
+          <View style={styles.dayHeaderContainer}>
+            <Text style={styles.dayHeaderText}>{item.title}</Text>
+          </View>
+        );
+      }
+
+      // Photo row
       return (
-        <View style={styles.dayHeaderContainer}>
-          <Text style={styles.dayHeaderText}>{item.title}</Text>
+        <View style={styles.photoRow}>
+          {item.photos.map(photoItem => (
+            <TouchableOpacity
+              key={photoItem.key}
+              style={styles.photoCell}
+              onPress={() => handlePhotoPress(photoItem.photoIndex)}
+              activeOpacity={0.8}
+            >
+              <Image
+                source={{ uri: photoItem.photo.imageURL }}
+                style={styles.photoImage}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                priority="normal"
+                recyclingKey={photoItem.key}
+                transition={150}
+              />
+            </TouchableOpacity>
+          ))}
         </View>
       );
-    }
-
-    // Photo row
-    return (
-      <View style={styles.photoRow}>
-        {item.photos.map(photoItem => (
-          <TouchableOpacity
-            key={photoItem.key}
-            style={styles.photoCell}
-            onPress={() => handlePhotoPress(photoItem.photoIndex)}
-            activeOpacity={0.8}
-          >
-            <Image
-              source={{ uri: photoItem.photo.imageURL }}
-              style={styles.photoImage}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-              priority="normal"
-              recyclingKey={photoItem.key}
-              transition={150}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
+    },
+    [handlePhotoPress]
+  );
 
   if (loading) {
     return (
@@ -316,6 +335,11 @@ const MonthlyAlbumGridScreen = () => {
           keyExtractor={item => item.key}
           contentContainerStyle={[styles.gridContent, { paddingTop: insets.top + HEADER_HEIGHT }]}
           showsVerticalScrollIndicator={false}
+          getItemLayout={getItemLayout}
+          initialNumToRender={6}
+          maxToRenderPerBatch={4}
+          windowSize={5}
+          removeClippedSubviews={true}
         />
       )}
 
