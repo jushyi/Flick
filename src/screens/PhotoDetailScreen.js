@@ -23,6 +23,7 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +36,12 @@ import { styles } from '../styles/PhotoDetailScreen.styles';
 import CommentsBottomSheet from '../components/comments/CommentsBottomSheet';
 import CommentPreview from '../components/comments/CommentPreview';
 import { getPreviewComments } from '../services/firebase/commentService';
+import {
+  deletePhotoCompletely,
+  archivePhoto,
+  restorePhoto,
+} from '../services/firebase/photoService';
+import DropdownMenu from '../components/DropdownMenu';
 import { colors } from '../constants/colors';
 
 // Progress bar constants - matches photo marginHorizontal (8px)
@@ -87,6 +94,10 @@ const PhotoDetailScreen = () => {
 
   // Highlight fade animation for newly added emoji (1 second fade)
   const highlightOpacity = useRef(new Animated.Value(1)).current;
+
+  // Photo menu state (for owner actions: delete, archive, restore)
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState(null);
 
   // Reset cube rotation when screen mounts
   useEffect(() => {
@@ -208,6 +219,111 @@ const PhotoDetailScreen = () => {
     },
     [contextAvatarPress]
   );
+
+  /**
+   * Handle archive - show confirmation and archive photo
+   */
+  const handleArchive = useCallback(() => {
+    setShowPhotoMenu(false);
+    Alert.alert(
+      'Remove from Journal',
+      'This photo will be hidden from your stories and feed but remain in your albums. You can restore it anytime.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          onPress: async () => {
+            const result = await archivePhoto(currentPhoto.id, contextUserId);
+            if (result.success) {
+              handleClose(); // Close viewer - photo is now hidden
+            } else {
+              Alert.alert('Error', result.error || 'Failed to archive photo');
+            }
+          },
+        },
+      ]
+    );
+  }, [currentPhoto?.id, contextUserId, handleClose]);
+
+  /**
+   * Handle restore - no confirmation needed for non-destructive action
+   */
+  const handleRestore = useCallback(async () => {
+    setShowPhotoMenu(false);
+    const result = await restorePhoto(currentPhoto.id, contextUserId);
+    if (result.success) {
+      // Show success message - photo will now appear in feed/stories again
+      Alert.alert('Restored', 'Photo has been restored to your journal.');
+    } else {
+      Alert.alert('Error', result.error || 'Failed to restore photo');
+    }
+  }, [currentPhoto?.id, contextUserId]);
+
+  /**
+   * Handle delete - show serious confirmation before permanent deletion
+   */
+  const handleDeleteConfirm = useCallback(() => {
+    setShowPhotoMenu(false);
+    Alert.alert(
+      'Delete Forever',
+      'This will permanently delete this photo from your account, including all albums, comments, and reactions. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await deletePhotoCompletely(currentPhoto.id, contextUserId);
+            if (result.success) {
+              handleClose(); // Close viewer - photo is deleted
+            } else {
+              Alert.alert('Error', result.error || 'Failed to delete photo');
+            }
+          },
+        },
+      ]
+    );
+  }, [currentPhoto?.id, contextUserId, handleClose]);
+
+  /**
+   * Build menu options based on photo state
+   */
+  const menuOptions = useMemo(() => {
+    if (!isOwnPhoto) return [];
+
+    const options = [];
+
+    if (currentPhoto?.photoState === 'journal') {
+      options.push({
+        label: 'Remove from Journal',
+        icon: 'archive-outline',
+        onPress: handleArchive,
+      });
+    } else if (currentPhoto?.photoState === 'archive') {
+      options.push({
+        label: 'Restore to Journal',
+        icon: 'refresh-outline',
+        onPress: handleRestore,
+      });
+    }
+
+    options.push({
+      label: 'Delete Forever',
+      icon: 'trash-outline',
+      onPress: handleDeleteConfirm,
+      destructive: true,
+    });
+
+    return options;
+  }, [isOwnPhoto, currentPhoto?.photoState, handleArchive, handleRestore, handleDeleteConfirm]);
+
+  /**
+   * Handle menu button press - capture position for anchored menu
+   */
+  const handleMenuButtonLayout = useCallback(event => {
+    const { x, y, width, height } = event.nativeEvent.layout;
+    setMenuAnchor({ x, y, width, height });
+  }, []);
 
   // Fetch preview comments when photo changes
   useEffect(() => {
@@ -394,6 +510,18 @@ const PhotoDetailScreen = () => {
           </View>
         )}
 
+        {/* Photo menu button - only for own photos */}
+        {isOwnPhoto && menuOptions.length > 0 && (
+          <TouchableOpacity
+            style={styles.photoMenuButton}
+            onPress={() => setShowPhotoMenu(true)}
+            onLayout={handleMenuButtonLayout}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color={colors.text.primary} />
+          </TouchableOpacity>
+        )}
+
         {/* Progress bar - stories mode only */}
         {showProgressBar && totalPhotos > 0 && (
           <ScrollView
@@ -535,6 +663,14 @@ const PhotoDetailScreen = () => {
             selected: colors.brand.purple,
           },
         }}
+      />
+
+      {/* Photo Menu Dropdown (for owner actions) */}
+      <DropdownMenu
+        visible={showPhotoMenu}
+        onClose={() => setShowPhotoMenu(false)}
+        options={menuOptions}
+        anchorPosition={menuAnchor}
       />
     </Animated.View>
   );
