@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Image,
   Dimensions,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -134,40 +134,61 @@ const AlbumPhotoPickerScreen = () => {
   const isCreateDisabled = selectedIds.length === 0 || saving;
   const actionButtonText = isAddingToExisting ? 'Add' : 'Create';
 
-  const renderPhoto = ({ item }) => {
-    const isSelected = selectedIds.includes(item.id);
-    const isInAlbum = existingPhotoIds.includes(item.id);
+  // FlatList optimization: pre-calculate item layout for faster scrolling
+  const getItemLayout = useCallback(
+    (data, index) => ({
+      length: CELL_HEIGHT + GAP,
+      offset: (CELL_HEIGHT + GAP) * Math.floor(index / NUM_COLUMNS),
+      index,
+    }),
+    []
+  );
 
-    return (
-      <TouchableOpacity
-        style={styles.photoCell}
-        onPress={() => handlePhotoPress(item.id)}
-        disabled={isInAlbum}
-        activeOpacity={0.7}
-      >
-        <Image source={{ uri: item.imageURL }} style={styles.photoImage} />
+  const renderPhoto = useCallback(
+    ({ item }) => {
+      const isSelected = selectedIds.includes(item.id);
+      const isInAlbum = existingPhotoIds.includes(item.id);
 
-        {/* Selection overlay */}
-        {(isSelected || isInAlbum) && (
-          <View style={[styles.selectionOverlay, isInAlbum && styles.disabledOverlay]}>
-            <View style={[styles.checkmark, isInAlbum && styles.checkmarkDisabled]}>
-              <Ionicons
-                name={isInAlbum ? 'checkmark-done-circle' : 'checkmark'}
-                size={isInAlbum ? 20 : 16}
-                color={isInAlbum ? colors.text.tertiary : colors.text.inverse}
-              />
-            </View>
-            {/* In Album badge */}
-            {isInAlbum && (
-              <View style={styles.inAlbumBadge}>
-                <Text style={styles.inAlbumText}>In Album</Text>
+      return (
+        <TouchableOpacity
+          style={styles.photoCell}
+          onPress={() => handlePhotoPress(item.id)}
+          disabled={isInAlbum}
+          activeOpacity={0.7}
+        >
+          <Image
+            source={{ uri: item.imageURL }}
+            style={styles.photoImage}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            priority="normal"
+            recyclingKey={item.id}
+            transition={150}
+          />
+
+          {/* Selection overlay */}
+          {(isSelected || isInAlbum) && (
+            <View style={[styles.selectionOverlay, isInAlbum && styles.disabledOverlay]}>
+              <View style={[styles.checkmark, isInAlbum && styles.checkmarkDisabled]}>
+                <Ionicons
+                  name={isInAlbum ? 'checkmark-done-circle' : 'checkmark'}
+                  size={isInAlbum ? 20 : 16}
+                  color={isInAlbum ? colors.text.tertiary : colors.text.inverse}
+                />
               </View>
-            )}
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
+              {/* In Album badge */}
+              {isInAlbum && (
+                <View style={styles.inAlbumBadge}>
+                  <Text style={styles.inAlbumText}>In Album</Text>
+                </View>
+              )}
+            </View>
+          )}
+        </TouchableOpacity>
+      );
+    },
+    [selectedIds, existingPhotoIds, handlePhotoPress]
+  );
 
   return (
     <View style={styles.container}>
@@ -216,6 +237,10 @@ const AlbumPhotoPickerScreen = () => {
           numColumns={NUM_COLUMNS}
           contentContainerStyle={[styles.gridContent, { paddingBottom: insets.bottom + 20 }]}
           showsVerticalScrollIndicator={false}
+          getItemLayout={getItemLayout}
+          initialNumToRender={12}
+          maxToRenderPerBatch={6}
+          windowSize={5}
         />
       )}
     </View>
