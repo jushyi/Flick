@@ -10,10 +10,10 @@
 
 - **Features Verified:** 95 (T1: 31, T2: 45, T3: 19)
 - **T4 Features:** Skipped per plan (out of scope)
-- **Present:** 74
-- **Missing:** 13
+- **Present:** 75
+- **Missing:** 12
 - **Partial:** 8
-- **Coverage Rate:** 78% present, 8% partial, 14% missing
+- **Coverage Rate:** 79% present, 8% partial, 13% missing
 
 ---
 
@@ -42,7 +42,7 @@
 | Bio/about                        | T2   | ✅     | `ProfileSetupScreen.js`, 240 char limit (Phase 14) |
 | Edit profile                     | T1   | ✅     | `src/screens/EditProfileScreen.js` (Phase 22)      |
 | View other profiles              | T1   | ✅     | `ProfileScreen.js` with friend/non-friend modes    |
-| Profile privacy (public/private) | T2   | ❌     | Not implemented - no privacy toggle                |
+| Profile privacy (public/private) | T2   | ✅     | By design - friends-only app (inherently private)  |
 | Username change restriction      | T3   | ✅     | 14-day cooldown in `userService.canChangeUsername` |
 | Profile link sharing             | T3   | ❌     | Not implemented (deep link sharing)                |
 
@@ -221,12 +221,11 @@ None. All T1 features are present.
 
 ### Expected Gaps (T2 Missing)
 
-| Gap                    | Priority | Notes                                       |
-| ---------------------- | -------- | ------------------------------------------- |
-| Profile privacy toggle | HIGH     | Users cannot make profile private           |
-| Notification settings  | HIGH     | No granular control over notification types |
-| Privacy settings       | MEDIUM   | No privacy controls screen                  |
-| Help/Support link      | MEDIUM   | No way to contact support                   |
+| Gap                   | Priority | Notes                                       |
+| --------------------- | -------- | ------------------------------------------- |
+| Notification settings | HIGH     | No granular control over notification types |
+| Privacy settings      | MEDIUM   | No privacy controls screen                  |
+| Help/Support link     | MEDIUM   | No way to contact support                   |
 
 ### Partial Features (T2)
 
@@ -265,20 +264,20 @@ None. All T1 features are present.
 
 Based on gap analysis, the following phases are recommended:
 
-### Phase 28: Profile Privacy & Blocked Users Management
+### Phase 28: Blocked Users Management
 
-**Goal:** Add profile privacy toggle and blocked users management UI
+**Goal:** Add blocked users management UI
 
 **Features:**
 
-- Profile privacy toggle (public/private) in Edit Profile
-- Blocked users list screen (view and unblock)
-- Privacy controls in Settings
+- Blocked users list screen (view all blocked users)
+- Unblock functionality from the list
+- Navigation from Settings
 
-**Priority:** HIGH (T2 gaps)
+**Priority:** HIGH (T2 partial gap)
 **Depends on:** Phase 27
 **Research:** Unlikely (internal UI patterns)
-**Estimated plans:** 2
+**Estimated plans:** 1
 
 ### Phase 29: Settings & Help Enhancements
 
@@ -324,7 +323,7 @@ Based on gap analysis, the following phases are recommended:
 
 ### Areas for Improvement
 
-- Privacy controls needed (profile visibility, notification preferences)
+- Notification preferences needed (granular control)
 - Blocked users management UI missing
 - Help/Support not accessible
 - Some T3 features could enhance UX (social login, app version, mutual friends)
@@ -336,7 +335,7 @@ Based on gap analysis, the following phases are recommended:
 
 ### New Phases Recommended
 
-- **Phase 28:** Profile Privacy & Blocked Users Management (HIGH)
+- **Phase 28:** Blocked Users Management (HIGH)
 - **Phase 29:** Settings & Help Enhancements (MEDIUM)
 - **Phase 30:** Social Login Options (BACKLOG - LOW)
 
