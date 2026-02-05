@@ -51,43 +51,66 @@ const SettingsScreen = () => {
     Linking.openURL('mailto:support@rewind.app?subject=Rewind%20Support%20Request');
   };
 
-  const menuItems = [
+  const sections = [
     {
-      id: 'editProfile',
-      label: 'Edit Profile',
-      icon: 'person-outline',
-      onPress: () => handleNavigate('EditProfile'),
+      title: 'Account',
+      items: [
+        {
+          id: 'editProfile',
+          label: 'Edit Profile',
+          icon: 'person-outline',
+          onPress: () => handleNavigate('EditProfile'),
+        },
+      ],
     },
     {
-      id: 'privacy',
-      label: 'Privacy Policy',
-      icon: 'document-text-outline',
-      onPress: () => handleNavigate('PrivacyPolicy'),
+      title: 'Privacy',
+      items: [
+        {
+          id: 'blockedUsers',
+          label: 'Blocked Users',
+          icon: 'ban-outline',
+          onPress: () => handleNavigate('BlockedUsers'),
+        },
+        {
+          id: 'recentlyDeleted',
+          label: 'Recently Deleted',
+          icon: 'trash-outline',
+          onPress: () => handleNavigate('RecentlyDeleted'),
+        },
+      ],
     },
     {
-      id: 'terms',
-      label: 'Terms of Service',
-      icon: 'document-outline',
-      onPress: () => handleNavigate('TermsOfService'),
+      title: 'Legal',
+      items: [
+        {
+          id: 'privacy',
+          label: 'Privacy Policy',
+          icon: 'document-text-outline',
+          onPress: () => handleNavigate('PrivacyPolicy'),
+        },
+        {
+          id: 'terms',
+          label: 'Terms of Service',
+          icon: 'document-outline',
+          onPress: () => handleNavigate('TermsOfService'),
+        },
+      ],
     },
     {
-      id: 'recentlyDeleted',
-      label: 'Recently Deleted',
-      icon: 'trash-outline',
-      onPress: () => handleNavigate('RecentlyDeleted'),
+      title: 'Support',
+      items: [
+        {
+          id: 'helpSupport',
+          label: 'Help & Support',
+          icon: 'help-circle-outline',
+          onPress: handleHelpSupport,
+        },
+      ],
     },
-    {
-      id: 'blockedUsers',
-      label: 'Blocked Users',
-      icon: 'ban-outline',
-      onPress: () => handleNavigate('BlockedUsers'),
-    },
-    {
-      id: 'helpSupport',
-      label: 'Help & Support',
-      icon: 'help-circle-outline',
-      onPress: handleHelpSupport,
-    },
+  ];
+
+  const actionItems = [
     {
       id: 'signout',
       label: 'Sign Out',
@@ -120,9 +143,38 @@ const SettingsScreen = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Menu Items */}
+      {/* Sectioned Menu Items */}
       <View style={styles.menuContainer}>
-        {menuItems.map(item => (
+        {sections.map(section => (
+          <View key={section.title}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>{section.title}</Text>
+            </View>
+            {section.items.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.menuItem}
+                onPress={item.onPress}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuItemLeft}>
+                  <Ionicons
+                    name={item.icon}
+                    size={22}
+                    color={item.danger ? colors.status.danger : colors.icon.primary}
+                  />
+                  <Text style={[styles.menuItemLabel, item.danger && styles.menuItemLabelDanger]}>
+                    {item.label}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.icon.tertiary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+
+        {/* Action Items (Sign Out, Delete Account) - no header */}
+        {actionItems.map(item => (
           <TouchableOpacity
             key={item.id}
             style={styles.menuItem}
@@ -181,6 +233,20 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     marginTop: 24,
+  },
+  sectionHeader: {
+    backgroundColor: colors.background.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.subtle,
+  },
+  sectionHeaderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   menuItem: {
     flexDirection: 'row',
