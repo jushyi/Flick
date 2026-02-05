@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
@@ -272,6 +272,25 @@ const ProfileScreen = () => {
       runNewAlbumAnimation(newAlbumId);
     }
   }, [route.params, albums, navigation, runNewAlbumAnimation]);
+
+  // Scroll to top when profile tab icon is pressed while already on profile
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (!isOwnProfile) return; // Only for own profile (tab navigation)
+
+    // Get the parent tab navigator
+    const tabNavigator = navigation.getParent();
+    if (!tabNavigator) return;
+
+    const unsubscribe = tabNavigator.addListener('tabPress', e => {
+      // Only scroll to top if we're already focused on the profile tab
+      if (isFocused) {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, isFocused, isOwnProfile]);
 
   // Resolve profile data based on own vs other user
   const profileData = isOwnProfile ? userProfile : otherUserProfile;
