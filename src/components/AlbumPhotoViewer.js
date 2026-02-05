@@ -442,6 +442,11 @@ const AlbumPhotoViewer = ({
         <Image
           source={{ uri: item.imageURL }}
           style={[styles.thumbnail, index === currentIndex && styles.thumbnailActive]}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="low"
+          recyclingKey={`thumb-${item.id}`}
+          transition={100}
         />
       </TouchableOpacity>
     ),
@@ -520,6 +525,9 @@ const AlbumPhotoViewer = ({
                 showsHorizontalScrollIndicator={false}
                 getItemLayout={getThumbnailLayout}
                 contentContainerStyle={styles.thumbnailContent}
+                initialNumToRender={10}
+                maxToRenderPerBatch={5}
+                windowSize={7}
                 onScrollToIndexFailed={() => {
                   // Silently handle scroll failure
                 }}
