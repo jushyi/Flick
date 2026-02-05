@@ -23,6 +23,11 @@ import ReanimatedModule, {
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import { deleteAlbum } from '../services/firebase';
+import {
+  deletePhotoCompletely,
+  archivePhoto,
+  restorePhoto,
+} from '../services/firebase/photoService';
 import DropdownMenu from './DropdownMenu';
 
 const ReanimatedView = ReanimatedModule.View;
@@ -33,14 +38,16 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  * AlbumPhotoViewer - Full-screen photo viewer for browsing album photos
  *
  * @param {boolean} visible - Whether modal is visible
- * @param {Array} photos - Array of photo objects with { id, imageURL }
+ * @param {Array} photos - Array of photo objects with { id, imageURL, photoState?, userId? }
  * @param {number} initialIndex - Starting photo index
- * @param {string} albumId - Album ID for deletion
+ * @param {string} albumId - Album ID for deletion (empty for monthly albums)
  * @param {string} albumName - Album name for header
  * @param {boolean} isOwnProfile - Show edit options only for own albums
+ * @param {string} currentUserId - Current user's ID for ownership checks
  * @param {function} onClose - Callback to close viewer
  * @param {function} onRemovePhoto - Callback(photoId) when photo removed
  * @param {function} onSetCover - Callback(photoId) when set as cover
+ * @param {function} onPhotoStateChanged - Callback when photo archived/deleted/restored
  */
 const AlbumPhotoViewer = ({
   visible,
@@ -49,9 +56,11 @@ const AlbumPhotoViewer = ({
   albumId = '',
   albumName = '',
   isOwnProfile = false,
+  currentUserId = '',
   onClose,
   onRemovePhoto,
   onSetCover,
+  onPhotoStateChanged,
 }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -263,20 +272,132 @@ const AlbumPhotoViewer = ({
     }
   };
 
-  // Menu options for DropdownMenu
-  const menuOptions = [
-    {
-      label: 'Set as Album Cover',
-      icon: 'image-outline',
-      onPress: handleSetCover,
-    },
-    {
-      label: 'Remove from Album',
-      icon: 'trash-outline',
-      onPress: handleRemovePhoto,
-      destructive: true,
-    },
-  ];
+  // Handle archive photo
+  const handleArchive = useCallback(() => {
+    const currentPhoto = photos[currentIndex];
+    if (!currentPhoto) return;
+
+    setMenuVisible(false);
+    Alert.alert(
+      'Remove from Journal',
+      'This photo will be hidden from your stories and feed but remain in your albums. You can restore it anytime.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          onPress: async () => {
+            const result = await archivePhoto(currentPhoto.id, currentUserId);
+            if (result.success) {
+              onPhotoStateChanged?.();
+              onClose?.();
+            } else {
+              Alert.alert('Error', result.error || 'Failed to archive photo');
+            }
+          },
+        },
+      ]
+    );
+  }, [photos, currentIndex, currentUserId, onPhotoStateChanged, onClose]);
+
+  // Handle restore photo
+  const handleRestore = useCallback(async () => {
+    const currentPhoto = photos[currentIndex];
+    if (!currentPhoto) return;
+
+    setMenuVisible(false);
+    const result = await restorePhoto(currentPhoto.id, currentUserId);
+    if (result.success) {
+      onPhotoStateChanged?.();
+      Alert.alert('Restored', 'Photo has been restored to your journal.');
+    } else {
+      Alert.alert('Error', result.error || 'Failed to restore photo');
+    }
+  }, [photos, currentIndex, currentUserId, onPhotoStateChanged]);
+
+  // Handle delete photo permanently
+  const handleDeleteForever = useCallback(() => {
+    const currentPhoto = photos[currentIndex];
+    if (!currentPhoto) return;
+
+    setMenuVisible(false);
+    Alert.alert(
+      'Delete Forever',
+      'This will permanently delete this photo from your account, including all albums, comments, and reactions. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await deletePhotoCompletely(currentPhoto.id, currentUserId);
+            if (result.success) {
+              onPhotoStateChanged?.();
+              onClose?.();
+            } else {
+              Alert.alert('Error', result.error || 'Failed to delete photo');
+            }
+          },
+        },
+      ]
+    );
+  }, [photos, currentIndex, currentUserId, onPhotoStateChanged, onClose]);
+
+  // Build menu options based on context
+  const menuOptions = React.useMemo(() => {
+    const currentPhoto = photos[currentIndex];
+    const options = [];
+
+    // Album-specific options (only if albumId exists - not for monthly albums)
+    if (albumId) {
+      options.push({
+        label: 'Set as Album Cover',
+        icon: 'image-outline',
+        onPress: handleSetCover,
+      });
+      options.push({
+        label: 'Remove from Album',
+        icon: 'close-circle-outline',
+        onPress: handleRemovePhoto,
+      });
+    }
+
+    // Photo state options (for own photos)
+    if (currentPhoto && isOwnProfile && currentUserId) {
+      if (currentPhoto.photoState === 'journal') {
+        options.push({
+          label: 'Remove from Journal',
+          icon: 'archive-outline',
+          onPress: handleArchive,
+        });
+      } else if (currentPhoto.photoState === 'archive') {
+        options.push({
+          label: 'Restore to Journal',
+          icon: 'refresh-outline',
+          onPress: handleRestore,
+        });
+      }
+
+      options.push({
+        label: 'Delete Forever',
+        icon: 'trash-outline',
+        onPress: handleDeleteForever,
+        destructive: true,
+      });
+    }
+
+    return options;
+  }, [
+    photos,
+    currentIndex,
+    albumId,
+    isOwnProfile,
+    currentUserId,
+    handleSetCover,
+    handleRemovePhoto,
+    handleArchive,
+    handleRestore,
+    handleDeleteForever,
+  ]);
 
   // Render individual photo
   const renderPhoto = useCallback(

@@ -205,12 +205,10 @@ export const styles = StyleSheet.create({
   // Photo menu button for owner actions (delete, archive, restore)
   photoMenuButton: {
     position: 'absolute',
-    bottom: 100, // Above the footer
-    right: 22,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Semi-transparent for visibility over photo
+    bottom: 102, // Above the footer
+    right: 8,
+    width: 44,
+    height: 46,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,

@@ -77,6 +77,7 @@ const PhotoDetailScreen = () => {
     handleRequestNextFriend,
     handleAvatarPress: contextAvatarPress,
     handleClose: contextClose,
+    handlePhotoStateChanged,
   } = usePhotoDetail();
 
   // Cube transition animation for friend-to-friend
@@ -235,6 +236,7 @@ const PhotoDetailScreen = () => {
           onPress: async () => {
             const result = await archivePhoto(currentPhoto.id, contextUserId);
             if (result.success) {
+              handlePhotoStateChanged?.(); // Refresh feed/stories
               handleClose(); // Close viewer - photo is now hidden
             } else {
               Alert.alert('Error', result.error || 'Failed to archive photo');
@@ -243,7 +245,7 @@ const PhotoDetailScreen = () => {
         },
       ]
     );
-  }, [currentPhoto?.id, contextUserId, handleClose]);
+  }, [currentPhoto?.id, contextUserId, handleClose, handlePhotoStateChanged]);
 
   /**
    * Handle restore - no confirmation needed for non-destructive action
@@ -252,12 +254,13 @@ const PhotoDetailScreen = () => {
     setShowPhotoMenu(false);
     const result = await restorePhoto(currentPhoto.id, contextUserId);
     if (result.success) {
+      handlePhotoStateChanged?.(); // Refresh feed/stories
       // Show success message - photo will now appear in feed/stories again
       Alert.alert('Restored', 'Photo has been restored to your journal.');
     } else {
       Alert.alert('Error', result.error || 'Failed to restore photo');
     }
-  }, [currentPhoto?.id, contextUserId]);
+  }, [currentPhoto?.id, contextUserId, handlePhotoStateChanged]);
 
   /**
    * Handle delete - show serious confirmation before permanent deletion
@@ -275,6 +278,7 @@ const PhotoDetailScreen = () => {
           onPress: async () => {
             const result = await deletePhotoCompletely(currentPhoto.id, contextUserId);
             if (result.success) {
+              handlePhotoStateChanged?.(); // Refresh feed/stories
               handleClose(); // Close viewer - photo is deleted
             } else {
               Alert.alert('Error', result.error || 'Failed to delete photo');
@@ -283,7 +287,7 @@ const PhotoDetailScreen = () => {
         },
       ]
     );
-  }, [currentPhoto?.id, contextUserId, handleClose]);
+  }, [currentPhoto?.id, contextUserId, handleClose, handlePhotoStateChanged]);
 
   /**
    * Build menu options based on photo state
@@ -518,7 +522,7 @@ const PhotoDetailScreen = () => {
             onLayout={handleMenuButtonLayout}
             activeOpacity={0.7}
           >
-            <Ionicons name="ellipsis-horizontal" size={20} color={colors.text.primary} />
+            <Ionicons name="ellipsis-vertical" size={28} color={colors.text.primary} />
           </TouchableOpacity>
         )}
 

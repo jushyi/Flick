@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
+import { useAuth } from '../context/AuthContext';
 import { getMonthPhotos } from '../services/firebase/monthlyAlbumService';
 import { AlbumPhotoViewer } from '../components';
 import logger from '../utils/logger';
@@ -37,8 +38,12 @@ const MonthlyAlbumGridScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const { month, userId } = route.params || {};
+
+  // Determine if viewing own profile
+  const isOwnProfile = user?.uid === userId;
 
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,35 +58,42 @@ const MonthlyAlbumGridScreen = () => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }, [month]);
 
+  // Fetch photos function (can be called for refresh)
+  const fetchPhotos = useCallback(async () => {
+    if (!month || !userId) {
+      logger.error('MonthlyAlbumGridScreen: Missing month or userId', { month, userId });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const result = await getMonthPhotos(userId, month);
+      if (result.success) {
+        setPhotos(result.photos);
+        logger.info('MonthlyAlbumGridScreen: Fetched photos', {
+          month,
+          count: result.photos.length,
+        });
+      } else {
+        logger.error('MonthlyAlbumGridScreen: Failed to fetch photos', { error: result.error });
+      }
+    } catch (error) {
+      logger.error('MonthlyAlbumGridScreen: Error fetching photos', { error: error.message });
+    } finally {
+      setLoading(false);
+    }
+  }, [month, userId]);
+
   // Fetch photos on mount
   useEffect(() => {
-    const fetchPhotos = async () => {
-      if (!month || !userId) {
-        logger.error('MonthlyAlbumGridScreen: Missing month or userId', { month, userId });
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const result = await getMonthPhotos(userId, month);
-        if (result.success) {
-          setPhotos(result.photos);
-          logger.info('MonthlyAlbumGridScreen: Fetched photos', {
-            month,
-            count: result.photos.length,
-          });
-        } else {
-          logger.error('MonthlyAlbumGridScreen: Failed to fetch photos', { error: result.error });
-        }
-      } catch (error) {
-        logger.error('MonthlyAlbumGridScreen: Error fetching photos', { error: error.message });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPhotos();
-  }, [month, userId]);
+  }, [fetchPhotos]);
+
+  // Handle photo state change (archive/restore/delete) - refresh the album
+  const handlePhotoStateChanged = useCallback(() => {
+    logger.info('MonthlyAlbumGridScreen: Photo state changed, refreshing');
+    fetchPhotos();
+  }, [fetchPhotos]);
 
   // Format day header: "Monday, January 15"
   const formatDayHeader = capturedAt => {
@@ -290,15 +302,17 @@ const MonthlyAlbumGridScreen = () => {
         />
       )}
 
-      {/* Photo Viewer Modal - read-only (isOwnProfile=false hides edit options) */}
+      {/* Photo Viewer Modal */}
       <AlbumPhotoViewer
         visible={viewerVisible}
         photos={photos}
         initialIndex={viewerInitialIndex}
         albumId=""
         albumName={formattedMonthTitle}
-        isOwnProfile={false}
+        isOwnProfile={isOwnProfile}
+        currentUserId={user?.uid}
         onClose={() => setViewerVisible(false)}
+        onPhotoStateChanged={handlePhotoStateChanged}
       />
     </View>
   );

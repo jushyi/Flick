@@ -57,6 +57,7 @@ export const PhotoDetailProvider = ({ children }) => {
     onRequestNextFriend: null,
     onClose: null,
     onAvatarPress: null,
+    onPhotoStateChanged: null, // Called when photo is archived/deleted/restored
   });
 
   /**
@@ -230,6 +231,17 @@ export const PhotoDetailProvider = ({ children }) => {
     }
   }, []);
 
+  /**
+   * Call onPhotoStateChanged callback - when photo is archived/deleted/restored
+   * FeedScreen uses this to refresh feed and stories data
+   */
+  const handlePhotoStateChanged = useCallback(() => {
+    const callbacks = callbacksRef.current;
+    if (callbacks.onPhotoStateChanged) {
+      callbacks.onPhotoStateChanged();
+    }
+  }, []);
+
   const value = {
     // State
     currentPhoto,
@@ -259,6 +271,7 @@ export const PhotoDetailProvider = ({ children }) => {
     handleRequestNextFriend,
     handleClose,
     handleAvatarPress,
+    handlePhotoStateChanged,
   };
 
   return <PhotoDetailContext.Provider value={value}>{children}</PhotoDetailContext.Provider>;

@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
+import { useAuth } from '../context/AuthContext';
 import {
   getAlbum,
   getPhotosByIds,
@@ -36,6 +37,7 @@ const AlbumGridScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const { albumId, isOwnProfile } = route.params || {};
 
@@ -112,6 +114,12 @@ const AlbumGridScreen = () => {
     logger.info('AlbumGridScreen: Back pressed');
     navigation.goBack();
   };
+
+  // Handle photo state change (archive/restore/delete) - refresh album data
+  const handlePhotoStateChanged = useCallback(() => {
+    logger.info('AlbumGridScreen: Photo state changed, refreshing');
+    fetchAlbumData();
+  }, []);
 
   // Open header menu with anchor position
   const handleOpenHeaderMenu = useCallback(() => {
@@ -370,9 +378,11 @@ const AlbumGridScreen = () => {
         albumId={albumId}
         albumName={album?.name}
         isOwnProfile={isOwnProfile}
+        currentUserId={user?.uid}
         onClose={() => setViewerVisible(false)}
         onRemovePhoto={handleRemovePhoto}
         onSetCover={handleSetCover}
+        onPhotoStateChanged={handlePhotoStateChanged}
       />
 
       {/* Toast notification */}

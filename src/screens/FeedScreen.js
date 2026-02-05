@@ -277,6 +277,12 @@ const FeedScreen = () => {
           handleAvatarPress(userId, username);
         }
       },
+      onPhotoStateChanged: () => {
+        // Photo was archived/deleted/restored - refresh feed and stories
+        refreshFeed();
+        loadFriendStories();
+        loadMyStories();
+      },
     });
   }, [setCallbacks, user?.uid]);
 

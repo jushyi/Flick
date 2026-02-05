@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const MENU_WIDTH = 200;
+const MENU_WIDTH = 220;
 const EDGE_PADDING = 16;
 
 /**
@@ -166,7 +166,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingLeft: 20,
+    paddingRight: 24,
   },
   menuItemBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
