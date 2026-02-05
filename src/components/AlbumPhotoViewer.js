@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   Modal,
   TouchableOpacity,
   FlatList,
@@ -11,6 +10,7 @@ import {
   Alert,
   Animated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -399,7 +399,13 @@ const AlbumPhotoViewer = ({
   const renderPhoto = useCallback(
     ({ item }) => (
       <TouchableOpacity activeOpacity={1} onPress={handleImagePress} style={styles.photoContainer}>
-        <Image source={{ uri: item.imageURL }} style={styles.photo} resizeMode="cover" />
+        <Image
+          source={{ uri: item.imageURL }}
+          style={styles.photo}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="high"
+        />
       </TouchableOpacity>
     ),
     [handleImagePress]
