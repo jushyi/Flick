@@ -4,13 +4,13 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  Image,
   Alert,
   ActivityIndicator,
   Modal,
   RefreshControl,
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -334,7 +334,15 @@ const RecentlyDeletedScreen = () => {
         onPress={() => handlePhotoPress(item, index)}
         activeOpacity={0.7}
       >
-        <Image source={{ uri: item.imageURL }} style={styles.photoImage} />
+        <Image
+          source={{ uri: item.imageURL }}
+          style={styles.photoImage}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="normal"
+          recyclingKey={item.id}
+          transition={150}
+        />
 
         {/* Countdown overlay */}
         <View style={styles.countdownOverlay}>
@@ -395,7 +403,15 @@ const RecentlyDeletedScreen = () => {
   const renderViewerPhoto = useCallback(
     ({ item }) => (
       <View style={styles.viewerPhotoContainer}>
-        <Image source={{ uri: item.imageURL }} style={styles.viewerImage} resizeMode="contain" />
+        <Image
+          source={{ uri: item.imageURL }}
+          style={styles.viewerImage}
+          contentFit="contain"
+          cachePolicy="memory-disk"
+          priority="high"
+          recyclingKey={`viewer-${item.id}`}
+          transition={150}
+        />
       </View>
     ),
     []
@@ -564,6 +580,9 @@ const RecentlyDeletedScreen = () => {
             },
           ]}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={9}
+          maxToRenderPerBatch={6}
+          windowSize={5}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

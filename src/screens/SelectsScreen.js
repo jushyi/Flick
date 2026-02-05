@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Alert,
   Dimensions,
   ScrollView,
@@ -12,6 +11,7 @@ import {
   Platform,
   UIManager,
 } from 'react-native';
+import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -265,7 +265,15 @@ const DraggableThumbnail = ({
         ]}
       >
         <TouchableOpacity style={styles.thumbnailTouchable} onPress={onPress} activeOpacity={0.7}>
-          <Image source={{ uri: photo.uri }} style={styles.thumbnailImage} />
+          <Image
+            source={{ uri: photo.uri }}
+            style={styles.thumbnailImage}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            priority="low"
+            recyclingKey={photo.assetId || photo.uri}
+            transition={100}
+          />
         </TouchableOpacity>
       </Animated.View>
     </GestureDetector>
@@ -705,7 +713,10 @@ const SelectsScreen = ({ navigation }) => {
     <Image
       source={{ uri: selectedPhotos[selectedIndex]?.uri }}
       style={[styles.previewImage, { width: previewWidth, height: previewHeight }]}
-      resizeMode="cover"
+      contentFit="cover"
+      cachePolicy="memory-disk"
+      priority="high"
+      transition={150}
     />
   );
 
