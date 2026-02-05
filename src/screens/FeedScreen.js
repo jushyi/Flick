@@ -60,6 +60,10 @@ const FeedScreen = () => {
   // Animated scroll value for header hide/show
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  // Animated value for content fade-in when loading completes
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const wasLoading = useRef(true);
+
   // Track if refresh should be allowed (requires pulling past threshold)
   const canRefresh = useRef(false);
   const REFRESH_THRESHOLD = -70; // Must pull down 70+ pixels to trigger refresh
@@ -169,6 +173,25 @@ const FeedScreen = () => {
       loadMyStories();
     }
   }, [user?.uid]);
+
+  /**
+   * Fade-in animation when loading completes
+   * Detects loading -> loaded transition and animates opacity 0 -> 1
+   */
+  useEffect(() => {
+    if (wasLoading.current && !loading) {
+      // Loading just finished - animate content fade in
+      Animated.timing(contentOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else if (loading && !wasLoading.current) {
+      // Starting to load again (e.g., pull-to-refresh) - reset opacity
+      contentOpacity.setValue(0);
+    }
+    wasLoading.current = loading;
+  }, [loading, contentOpacity]);
 
   /**
    * Load archive photos as fallback when recent feed is empty
@@ -977,31 +1000,33 @@ const FeedScreen = () => {
       ) : error ? (
         renderErrorState()
       ) : (
-        <Animated.FlatList
-          data={photos.length > 0 ? photos : archivePhotos}
-          renderItem={renderFeedItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={[styles.feedList, { paddingTop: HEADER_HEIGHT }]}
-          showsVerticalScrollIndicator={false}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-            useNativeDriver: true,
-            listener: handleScroll,
-          })}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={colors.text.primary}
-              progressViewOffset={40}
-            />
-          }
-          onEndReached={photos.length > 0 ? loadMorePhotos : null}
-          onEndReachedThreshold={0.5}
-          ListHeaderComponent={renderStoriesRow}
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={archivePhotosLoading ? null : renderEmptyState}
-        />
+        <Animated.View style={[styles.contentContainer, { opacity: contentOpacity }]}>
+          <Animated.FlatList
+            data={photos.length > 0 ? photos : archivePhotos}
+            renderItem={renderFeedItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={[styles.feedList, { paddingTop: HEADER_HEIGHT }]}
+            showsVerticalScrollIndicator={false}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+              useNativeDriver: true,
+              listener: handleScroll,
+            })}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.text.primary}
+                progressViewOffset={40}
+              />
+            }
+            onEndReached={photos.length > 0 ? loadMorePhotos : null}
+            onEndReachedThreshold={0.5}
+            ListHeaderComponent={renderStoriesRow}
+            ListFooterComponent={renderFooter}
+            ListEmptyComponent={archivePhotosLoading ? null : renderEmptyState}
+          />
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -1011,6 +1036,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.primary,
+  },
+  contentContainer: {
+    flex: 1,
   },
   statusBarMask: {
     position: 'absolute',
