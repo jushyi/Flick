@@ -4,6 +4,9 @@ import { colors } from '../constants/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Shimmer highlight width (the moving bar)
+const SHIMMER_WIDTH = 100;
+
 // Story card dimensions (match FriendStoryCard)
 const STORY_PHOTO_WIDTH = 88;
 const STORY_PHOTO_HEIGHT = 130;
@@ -14,36 +17,44 @@ const STORY_PROFILE_SIZE = 32;
 const FEED_PROFILE_SIZE = 36;
 
 /**
+ * Shimmer highlight component
+ * A semi-transparent bar that sweeps across skeleton elements
+ */
+const ShimmerHighlight = ({ shimmerPosition, width = '100%', height = '100%' }) => {
+  return (
+    <Animated.View
+      style={[
+        styles.shimmerHighlight,
+        {
+          width: SHIMMER_WIDTH,
+          height,
+          transform: [{ translateX: shimmerPosition }],
+        },
+      ]}
+    />
+  );
+};
+
+/**
  * Loading skeleton for feed
  * Displays animated placeholder matching current feed structure:
  * - Stories row at top (horizontal scroll)
  * - Full-width feed cards below
+ * Uses Instagram-style shimmer animation (left-to-right sweep)
  */
 const FeedLoadingSkeleton = () => {
-  const animatedValue = useRef(new Animated.Value(0)).current;
+  const shimmerPosition = useRef(new Animated.Value(-SHIMMER_WIDTH)).current;
 
-  // Pulse animation for skeleton
+  // Shimmer animation - sweeps left to right
   useEffect(() => {
     Animated.loop(
-      Animated.sequence([
-        Animated.timing(animatedValue, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animatedValue, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
+      Animated.timing(shimmerPosition, {
+        toValue: SCREEN_WIDTH,
+        duration: 1200,
+        useNativeDriver: true,
+      })
     ).start();
-  }, [animatedValue]);
-
-  const opacity = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
+  }, [shimmerPosition]);
 
   /**
    * Render a single story card skeleton
@@ -51,9 +62,13 @@ const FeedLoadingSkeleton = () => {
   const renderStoryCardSkeleton = index => (
     <View key={index} style={styles.storyCardSkeleton}>
       {/* Photo placeholder (rectangular) */}
-      <Animated.View style={[styles.storyPhoto, { opacity }]} />
+      <View style={styles.storyPhoto}>
+        <ShimmerHighlight shimmerPosition={shimmerPosition} />
+      </View>
       {/* Profile photo placeholder (circle at bottom) */}
-      <Animated.View style={[styles.storyProfile, { opacity }]} />
+      <View style={styles.storyProfile}>
+        <ShimmerHighlight shimmerPosition={shimmerPosition} />
+      </View>
     </View>
   );
 
@@ -63,14 +78,22 @@ const FeedLoadingSkeleton = () => {
   const renderFeedCardSkeleton = index => (
     <View key={index} style={styles.feedCard}>
       {/* Photo placeholder (full-width square) */}
-      <Animated.View style={[styles.feedPhoto, { opacity }]} />
+      <View style={styles.feedPhoto}>
+        <ShimmerHighlight shimmerPosition={shimmerPosition} />
+      </View>
 
       {/* Info row: profile + name/timestamp */}
       <View style={styles.feedInfoRow}>
-        <Animated.View style={[styles.feedProfile, { opacity }]} />
+        <View style={styles.feedProfile}>
+          <ShimmerHighlight shimmerPosition={shimmerPosition} />
+        </View>
         <View style={styles.feedTextContainer}>
-          <Animated.View style={[styles.feedName, { opacity }]} />
-          <Animated.View style={[styles.feedTimestamp, { opacity }]} />
+          <View style={styles.feedName}>
+            <ShimmerHighlight shimmerPosition={shimmerPosition} />
+          </View>
+          <View style={styles.feedTimestamp}>
+            <ShimmerHighlight shimmerPosition={shimmerPosition} />
+          </View>
         </View>
       </View>
     </View>
@@ -120,6 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: colors.background.tertiary,
     marginBottom: STORY_PROFILE_SIZE / 2 + 4,
+    overflow: 'hidden',
   },
 
   storyProfile: {
@@ -129,6 +153,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
     position: 'absolute',
     bottom: 0,
+    overflow: 'hidden',
   },
 
   // Feed card skeleton
@@ -141,6 +166,7 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     aspectRatio: 1,
     backgroundColor: colors.background.tertiary,
+    overflow: 'hidden',
   },
 
   feedInfoRow: {
@@ -156,6 +182,7 @@ const styles = StyleSheet.create({
     borderRadius: FEED_PROFILE_SIZE / 2,
     backgroundColor: colors.background.tertiary,
     marginRight: 10,
+    overflow: 'hidden',
   },
 
   feedTextContainer: {
@@ -168,6 +195,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
     borderRadius: 4,
     marginBottom: 6,
+    overflow: 'hidden',
   },
 
   feedTimestamp: {
@@ -175,6 +203,16 @@ const styles = StyleSheet.create({
     height: 12,
     backgroundColor: colors.background.tertiary,
     borderRadius: 4,
+    overflow: 'hidden',
+  },
+
+  // Shimmer highlight - the moving semi-transparent bar
+  shimmerHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Semi-transparent white highlight
   },
 });
 
