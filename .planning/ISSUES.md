@@ -21,27 +21,6 @@ Enhancements discovered during execution. Not critical - address in future phase
 - **Effort:** Medium-High (may require CommentsBottomSheet refactor)
 - **Suggested phase:** Phase 16 (natural fit with modal/navigation architecture work)
 
-### ISS-011: Custom profile photo crop UI with circular preview and edit capability
-
-- **Discovered:** Phase 22 Task 2 (2026-02-05)
-- **Type:** Enhancement
-- **Description:** Profile photo editing has two limitations due to expo-image-picker constraints:
-  1. **Circular crop preview:** expo-image-picker only supports square crop masks. Users expect a circular crop preview that matches how the photo will be displayed.
-  2. **Edit existing photo:** expo-image-picker can't open a specific image for re-cropping - it only opens the system photo library. Users want to edit/re-crop their current profile photo.
-- **Affected screens:**
-  1. EditProfileScreen - profile photo selection and editing
-  2. ProfileSetupScreen - initial profile photo selection
-- **Implementation approach:**
-  1. Build custom crop screen using expo-image-manipulator
-  2. Display image with circular mask overlay for preview
-  3. Support pinch-to-zoom and pan gestures for positioning
-  4. For "Edit" option: download current photo, open in custom crop screen
-  5. Apply crop transformation and upload result
-- **Alternative:** Eject to bare workflow and use react-native-image-crop-picker (has cropperCircleOverlay option)
-- **Impact:** Medium (missing expected "Edit" functionality, visual polish)
-- **Effort:** High (full custom crop UI needed)
-- **Suggested phase:** Future (after Phase 24 audit)
-
 ### ISS-005: Swipe up on photo to open comments
 
 - **Discovered:** Phase 15.3 Plan 02 verification (2026-02-02)
@@ -122,3 +101,18 @@ Enhancements discovered during execution. Not critical - address in future phase
   2. **Custom emojis not sorted**: The `orderedEmojis` logic only sorted curated emojis by count - custom emojis (added via emoji picker) were prepended without sorting. Fix: Changed to sort ALL emojis (custom + curated) together by total count.
 - **Files modified:** `src/hooks/usePhotoDetailModal.js`
 - **Pattern:** Always read from source object inside useMemo/useCallback rather than relying on destructured variables for React dependency comparison.
+
+### ISS-011: Custom profile photo crop UI with circular preview
+
+- **Discovered:** Phase 22 Task 2 (2026-02-05)
+- **Closed:** 2026-02-06
+- **Type:** Enhancement
+- **Resolution:** Fixed in Phase 32-02 by creating custom ProfilePhotoCropScreen with:
+  1. SVG-based circular mask overlay (transparent circle, 70% dimmed outside)
+  2. Pinch-to-zoom and pan gestures using react-native-gesture-handler + react-native-reanimated
+  3. expo-image-manipulator for cropping to square 1:1 output
+  4. Direct gesture response (no bouncy animations)
+  5. Zoom limits: minimum fills circle, maximum 4x
+- **Files created:** `src/screens/ProfilePhotoCropScreen.js`
+- **Files modified:** `src/screens/EditProfileScreen.js`, `src/screens/ProfileSetupScreen.js`, `src/navigation/AppNavigator.js`
+- **Note:** "Edit existing photo" capability (re-cropping uploaded photo) not included in this fix - would require downloading current photo from Firebase Storage first.

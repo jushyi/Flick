@@ -88,7 +88,7 @@ _v1.6 phases complete. See [v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md) for arc
 Plans:
 
 - [x] 32-01: Photo display fix (AlbumPhotoViewer contentFit=contain)
-- [ ] 32-02: Profile photo crop UI
+- [x] 32-02: Profile photo crop UI
 
 #### Phase 33: Navigation Issues Fix
 
