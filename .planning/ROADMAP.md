@@ -95,11 +95,11 @@ Plans:
 **Goal**: Fix ISS-004 (comments sheet navigation) and ISS-005 (swipe up for comments)
 **Depends on**: Phase 32
 **Research**: Unlikely (internal patterns)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
 
-- [ ] 33-01: TBD
+- [x] 33-01: Comments sheet persistence and swipe-up gesture
 
 #### Phase 34: Push Infrastructure
 
@@ -203,17 +203,17 @@ Plans:
 
 **v1.7 Engagement & Polish — In Progress**
 
-| Phase                      | Milestone | Plans | Status      | Completed |
-| -------------------------- | --------- | ----- | ----------- | --------- |
-| 32. Photo Issues Fix       | v1.7      | 1/2   | In progress | -         |
-| 33. Navigation Issues Fix  | v1.7      | 0/?   | Not started | -         |
-| 34. Push Infrastructure    | v1.7      | 0/?   | Not started | -         |
-| 35. Social Notifications   | v1.7      | 0/?   | Not started | -         |
-| 36. Photo Notifications    | v1.7      | 0/?   | Not started | -         |
-| 37. Darkroom Notifications | v1.7      | 0/?   | Not started | -         |
-| 38. Notification UI Polish | v1.7      | 0/?   | Not started | -         |
-| 39. Darkroom Tagging       | v1.7      | 0/?   | Not started | -         |
-| 40. Feed Tagging           | v1.7      | 0/?   | Not started | -         |
-| 41. Tag Integration        | v1.7      | 0/?   | Not started | -         |
+| Phase                      | Milestone | Plans | Status      | Completed  |
+| -------------------------- | --------- | ----- | ----------- | ---------- |
+| 32. Photo Issues Fix       | v1.7      | 2/2   | Complete    | 2026-02-06 |
+| 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete    | 2026-02-06 |
+| 34. Push Infrastructure    | v1.7      | 0/?   | Not started | -          |
+| 35. Social Notifications   | v1.7      | 0/?   | Not started | -          |
+| 36. Photo Notifications    | v1.7      | 0/?   | Not started | -          |
+| 37. Darkroom Notifications | v1.7      | 0/?   | Not started | -          |
+| 38. Notification UI Polish | v1.7      | 0/?   | Not started | -          |
+| 39. Darkroom Tagging       | v1.7      | 0/?   | Not started | -          |
+| 40. Feed Tagging           | v1.7      | 0/?   | Not started | -          |
+| 41. Tag Integration        | v1.7      | 0/?   | Not started | -          |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.

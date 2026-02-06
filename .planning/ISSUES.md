@@ -4,38 +4,25 @@ Enhancements discovered during execution. Not critical - address in future phase
 
 ## Open Enhancements
 
+None - all issues closed.
+
+## Closed Enhancements
+
 ### ISS-004: Comments sheet closes when navigating to profile
 
 - **Discovered:** Phase 15.3 Plan 02 verification (2026-02-02)
+- **Closed:** 2026-02-06
 - **Type:** Bug
-- **Description:** When tapping a commenter's avatar to view their profile, the comments sheet closes. When returning from the profile, comments should still be open but they reset to closed state. This happens despite storing `showComments` in PhotoDetailContext - the underlying CommentsBottomSheet Modal component seems to be dismissed by the system when OtherUserProfile (fullScreenModal) is pushed.
-- **Root cause:** React Native Modal component inside a transparentModal navigation screen gets dismissed when another modal screen stacks on top. The context state is preserved but the Modal's internal visibility state is reset.
-- **Attempted fixes:**
-  1. Moved `showComments` state from local to context - state preserved but Modal still closes
-  2. Removed the `setShowComments(false)` call before navigation - no effect
-- **Potential solutions:**
-  1. Replace Modal-based CommentsBottomSheet with an Animated.View that's always rendered
-  2. Use a portal-based approach to render comments outside navigation hierarchy
-  3. Change OtherUserProfile from fullScreenModal to card presentation
-- **Impact:** Medium (users lose their place in comments thread)
-- **Effort:** Medium-High (may require CommentsBottomSheet refactor)
-- **Suggested phase:** Phase 16 (natural fit with modal/navigation architecture work)
+- **Resolution:** Fixed in Phase 33-01 by converting CommentsBottomSheet from Modal to Animated.View. The Modal component was getting dismissed by React Native when OtherUserProfile (fullScreenModal) pushed on top. Animated.View with pointerEvents and backdropOpacity stays in render tree and survives navigation.
+- **Files modified:** `src/components/comments/CommentsBottomSheet.js`, `src/styles/CommentsBottomSheet.styles.js`
 
 ### ISS-005: Swipe up on photo to open comments
 
 - **Discovered:** Phase 15.3 Plan 02 verification (2026-02-02)
+- **Closed:** 2026-02-06
 - **Type:** Enhancement
-- **Description:** Add gesture support to swipe up on the photo in PhotoDetailScreen to open the comments sheet. This is a common pattern in social apps (Instagram, TikTok) for quick access to comments.
-- **Implementation notes:**
-  1. Add PanResponder or gesture handler on photo area
-  2. Detect upward swipe gesture (dy < -threshold)
-  3. Call `setShowComments(true)` on swipe up
-  4. Already have swipe down to dismiss - this complements it
-- **Impact:** Low (UX enhancement, not blocking functionality)
-- **Effort:** Low (simple gesture addition)
-- **Suggested phase:** Phase 16 (touches same PhotoDetailScreen gesture handling)
-
-## Closed Enhancements
+- **Resolution:** Fixed in Phase 33-01 by adding upward swipe detection to usePhotoDetailModal hook. PanResponder now detects swipe-up gestures (dy < -50 or vy < -0.5) and triggers onSwipeUp callback. PhotoDetailScreen connects this to setShowComments(true).
+- **Files modified:** `src/hooks/usePhotoDetailModal.js`, `src/screens/PhotoDetailScreen.js`
 
 ### ISS-001: Optimize photo display for full viewing in albums
 
