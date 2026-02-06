@@ -6,7 +6,8 @@ Transform Lapse Clone's authentication experience and profile system from incons
 
 ## Milestones
 
-- [v1.6 Auth & Profile Refactor](milestones/v1.6-ROADMAP.md) (Phases 1-31) — SHIPPED 2026-02-06
+- ✅ [v1.6 Auth & Profile Refactor](milestones/v1.6-ROADMAP.md) (Phases 1-31) — SHIPPED 2026-02-06
+- 🚧 **v1.7 Engagement & Polish** — Phases 32-41 (in progress)
 
 ## Completed Milestones
 
@@ -69,7 +70,127 @@ Transform Lapse Clone's authentication experience and profile system from incons
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-_All phases from v1.6 are complete. See [v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md) for full details._
+_v1.6 phases complete. See [v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md) for archive._
+
+---
+
+### 🚧 v1.7 Engagement & Polish (In Progress)
+
+**Milestone Goal:** Clean up technical debt, build robust push notifications with iOS Live Activities, and add friend tagging in photos.
+
+#### Phase 32: Photo Issues Fix
+
+**Goal**: Fix ISS-001 (photo capture optimization) and ISS-011 (custom profile photo crop UI)
+**Depends on**: v1.6 complete
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 32-01: TBD (run /gsd:plan-phase 32 to break down)
+
+#### Phase 33: Navigation Issues Fix
+
+**Goal**: Fix ISS-004 (comments sheet navigation) and ISS-005 (swipe up for comments)
+**Depends on**: Phase 32
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 33-01: TBD
+
+#### Phase 34: Push Infrastructure
+
+**Goal**: Complete push notification foundation — audit existing code, fix gaps, ensure reliable delivery
+**Depends on**: Phase 33
+**Research**: Likely (Expo Push API, notification services)
+**Research topics**: Expo push notification setup, APNs/FCM configuration, notification tokens
+**Plans**: TBD
+
+Plans:
+
+- [ ] 34-01: TBD
+
+#### Phase 35: Social Notification Events
+
+**Goal**: Add notification triggers for likes, comments, follows, and friend requests
+**Depends on**: Phase 34
+**Research**: Unlikely (building on infrastructure)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 35-01: TBD
+
+#### Phase 36: Photo Notification Events
+
+**Goal**: Add notifications for tagged in photo and new story events
+**Depends on**: Phase 35
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 36-01: TBD
+
+#### Phase 37: iOS Live Activities
+
+**Goal**: Show darkroom status on Lock Screen and Dynamic Island with photo count and processing status
+**Depends on**: Phase 34
+**Research**: Likely (ActivityKit, iOS 16+ API)
+**Research topics**: ActivityKit setup, Live Activity lifecycle, Dynamic Island presentation
+**Plans**: TBD
+
+Plans:
+
+- [ ] 37-01: TBD
+
+#### Phase 38: Notification UI Polish
+
+**Goal**: Polish in-app notification presentation and user experience
+**Depends on**: Phase 35, Phase 36
+**Research**: Unlikely (internal UI patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 38-01: TBD
+
+#### Phase 39: Darkroom Photo Tagging
+
+**Goal**: Add UI to tag friends during darkroom photo triage (button on photo card)
+**Depends on**: Phase 38
+**Research**: Unlikely (internal UI patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 39-01: TBD
+
+#### Phase 40: Feed Photo Tagging
+
+**Goal**: Allow tagging on existing feed photos via three-dots menu
+**Depends on**: Phase 39
+**Research**: Unlikely (internal UI patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 40-01: TBD
+
+#### Phase 41: Tagged Notification Integration
+
+**Goal**: Connect photo tagging to notification system — notify tagged users
+**Depends on**: Phase 40
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+
+- [ ] 41-01: TBD
+
+---
 
 ## Progress
 
@@ -79,6 +200,19 @@ _All phases from v1.6 are complete. See [v1.6-ROADMAP.md](milestones/v1.6-ROADMA
 | --------- | ------------------- | ----- | -------- | ---------- |
 | v1.6      | 1-31 (+ 14 decimal) | 108   | Complete | 2026-02-06 |
 
-See [MILESTONES.md](MILESTONES.md) for details.
+**v1.7 Engagement & Polish — In Progress**
 
-Full phase progress table archived in [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md).
+| Phase                      | Milestone | Plans | Status      | Completed |
+| -------------------------- | --------- | ----- | ----------- | --------- |
+| 32. Photo Issues Fix       | v1.7      | 0/?   | Not started | -         |
+| 33. Navigation Issues Fix  | v1.7      | 0/?   | Not started | -         |
+| 34. Push Infrastructure    | v1.7      | 0/?   | Not started | -         |
+| 35. Social Notifications   | v1.7      | 0/?   | Not started | -         |
+| 36. Photo Notifications    | v1.7      | 0/?   | Not started | -         |
+| 37. iOS Live Activities    | v1.7      | 0/?   | Not started | -         |
+| 38. Notification UI Polish | v1.7      | 0/?   | Not started | -         |
+| 39. Darkroom Tagging       | v1.7      | 0/?   | Not started | -         |
+| 40. Feed Tagging           | v1.7      | 0/?   | Not started | -         |
+| 41. Tag Integration        | v1.7      | 0/?   | Not started | -         |
+
+See [MILESTONES.md](MILESTONES.md) for milestone history.

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** v1.6 shipped — planning next features
+**Current focus:** v1.7 Engagement & Polish — fixes, push notifications, photo tagging
 
 ## Current Position
 
-Phase: v1.6 complete
-Plan: All plans complete
-Status: Milestone shipped
-Last activity: 2026-02-06 — v1.6 milestone complete
+Phase: 32 of 41 (Photo Issues Fix)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-02-06 — Milestone v1.7 created
 
-Progress: v1.6 ████████████████████████████ SHIPPED
+Progress: ░░░░░░░░░░ 0%
 
 ## Performance Metrics
 
@@ -36,10 +36,10 @@ See PROJECT.md Key Decisions table for full history.
 
 ### Deferred Issues
 
-- ISS-001: Optimize photo capture for full-screen display
-- ISS-004: Comments sheet closes when navigating to profile
-- ISS-005: Swipe up on photo to open comments
-- ISS-011: Custom profile photo crop UI
+- ISS-001: Optimize photo capture for full-screen display → **Scheduled: Phase 32**
+- ISS-004: Comments sheet closes when navigating to profile → **Scheduled: Phase 33**
+- ISS-005: Swipe up on photo to open comments → **Scheduled: Phase 33**
+- ISS-011: Custom profile photo crop UI → **Scheduled: Phase 32**
 
 **Closed:** ISS-002, ISS-003, ISS-006, ISS-007, ISS-008
 
@@ -47,13 +47,18 @@ See PROJECT.md Key Decisions table for full history.
 
 None.
 
+### Roadmap Evolution
+
+- Milestone v1.7 created: Engagement & Polish, 10 phases (Phase 32-41)
+
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: v1.6 milestone complete
+Stopped at: Milestone v1.7 initialization
 Resume file: None
 
 ## Next Steps
 
-- `/gsd:discuss-milestone` — Plan v1.7 features
-- `/gsd:new-milestone` — Create v1.7 roadmap directly
+- `/gsd:plan-phase 32` — Plan first phase (Photo Issues Fix)
+- `/gsd:discuss-phase 32` — Gather context first
+- `/gsd:research-phase 34` — Research push notifications
