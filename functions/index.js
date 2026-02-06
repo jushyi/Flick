@@ -430,8 +430,6 @@ exports.sendPhotoRevealNotification = functions.firestore
         body,
         {
           type: 'photo_reveal',
-          revealedCount: String(photosRevealed),
-          revealAll: 'true',
         },
         userId
       );

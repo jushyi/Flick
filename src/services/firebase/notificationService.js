@@ -235,14 +235,12 @@ export const handleNotificationReceived = notification => {
 export const handleNotificationTapped = notification => {
   try {
     const { data } = notification.request.content;
-    const { type, photoId, friendshipId, revealAll, revealedCount, userId, taggerId } = data || {};
+    const { type, photoId, friendshipId, userId, taggerId } = data || {};
 
     logger.debug('Notification tapped', {
       type,
       photoId,
       friendshipId,
-      revealAll,
-      revealedCount,
       userId,
       taggerId,
     });
@@ -251,8 +249,7 @@ export const handleNotificationTapped = notification => {
     // The actual navigation will be handled by App.js using this data
     switch (type) {
       case 'photo_reveal':
-        // Include revealAll and revealedCount for auto-reveal behavior
-        // Values come as strings from push notification data, convert to proper types
+        // Opens darkroom via Camera tab - simple deep link to view ready photos
         return {
           success: true,
           data: {
@@ -260,8 +257,6 @@ export const handleNotificationTapped = notification => {
             screen: 'Camera',
             params: {
               openDarkroom: true,
-              revealAll: revealAll === 'true' || revealAll === true,
-              revealedCount: parseInt(revealedCount, 10) || 0,
             },
           },
         };
