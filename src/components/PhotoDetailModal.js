@@ -347,7 +347,7 @@ const PhotoDetailModal = ({
               <Image
                 source={{ uri: imageURL }}
                 style={styles.photo}
-                contentFit="contain"
+                contentFit="cover"
                 transition={0}
               />
             </View>
