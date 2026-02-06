@@ -235,9 +235,16 @@ export const handleNotificationReceived = notification => {
 export const handleNotificationTapped = notification => {
   try {
     const { data } = notification.request.content;
-    const { type, photoId, friendshipId, revealAll, revealedCount } = data || {};
+    const { type, photoId, friendshipId, revealAll, revealedCount, userId } = data || {};
 
-    logger.debug('Notification tapped', { type, photoId, friendshipId, revealAll, revealedCount });
+    logger.debug('Notification tapped', {
+      type,
+      photoId,
+      friendshipId,
+      revealAll,
+      revealedCount,
+      userId,
+    });
 
     // Return navigation data based on notification type
     // The actual navigation will be handled by App.js using this data
@@ -275,6 +282,20 @@ export const handleNotificationTapped = notification => {
             type: 'reaction',
             screen: 'Feed',
             params: { photoId },
+          },
+        };
+
+      case 'story':
+        // Navigate to Feed with params to highlight the poster's story
+        return {
+          success: true,
+          data: {
+            type: 'story',
+            screen: 'Feed',
+            params: {
+              highlightUserId: userId, // User whose story to show
+              openStory: true, // Signal to auto-open their story
+            },
           },
         };
 

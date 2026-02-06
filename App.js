@@ -125,8 +125,14 @@ export default function App() {
               params: params,
             });
           }, 100);
-        } else if (screen === 'Feed' || screen === 'Profile') {
-          // Navigate to tab screen
+        } else if (screen === 'Feed') {
+          // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
+          navigationRef.current.navigate('MainTabs', {
+            screen: 'Feed',
+            params: params,
+          });
+        } else if (screen === 'Profile') {
+          // Navigate to Profile tab
           navigationRef.current.navigate('MainTabs', { screen });
         } else if (screen === 'FriendRequests') {
           // Navigate to Friends tab, then to FriendRequests screen
