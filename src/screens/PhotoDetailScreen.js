@@ -142,6 +142,16 @@ const PhotoDetailScreen = () => {
     return true;
   }, [contextHasNextFriend, handleRequestNextFriend, cubeRotation, isTransitioning]);
 
+  /**
+   * ISS-005: Handle swipe-up gesture to open comments
+   * Only opens if comments are currently closed
+   */
+  const handleSwipeUpToOpenComments = useCallback(() => {
+    if (!showComments) {
+      setShowComments(true);
+    }
+  }, [showComments, setShowComments]);
+
   const {
     // Mode
     showProgressBar,
@@ -186,6 +196,7 @@ const PhotoDetailScreen = () => {
     onReactionToggle: handleReactionToggle,
     currentUserId: contextUserId,
     onFriendTransition: contextHasNextFriend ? handleFriendTransition : null,
+    onSwipeUp: handleSwipeUpToOpenComments, // ISS-005: swipe up to open comments
   });
 
   // Check if viewing own photo (disable avatar tap)

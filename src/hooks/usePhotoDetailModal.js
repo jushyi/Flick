@@ -30,6 +30,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  * @param {function} params.onClose - Callback to close modal
  * @param {function} params.onReactionToggle - Callback when emoji is toggled
  * @param {string} params.currentUserId - Current user's ID
+ * @param {function} params.onSwipeUp - Callback when user swipes up on photo (ISS-005)
  * @returns {object} Modal state and handlers
  */
 export const usePhotoDetailModal = ({
@@ -43,6 +44,7 @@ export const usePhotoDetailModal = ({
   onReactionToggle,
   currentUserId,
   onFriendTransition, // Callback for friend-to-friend transition with cube animation
+  onSwipeUp, // ISS-005: Callback when user swipes up to open comments
 }) => {
   // Stories mode: current photo index
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -452,10 +454,17 @@ export const usePhotoDetailModal = ({
     ]).start();
   }, [translateY, opacity]);
 
+  // ISS-005: Store onSwipeUp in ref for panResponder access
+  const onSwipeUpRef = useRef(onSwipeUp);
+  useEffect(() => {
+    onSwipeUpRef.current = onSwipeUp;
+  }, [onSwipeUp]);
+
   /**
-   * Pan responder for swipe-down-to-close gesture.
+   * Pan responder for swipe gestures:
+   * - Swipe DOWN: dismiss photo detail (existing behavior)
+   * - Swipe UP: open comments (ISS-005)
    * Excludes footer area (bottom 100px) to allow emoji taps.
-   * Dismisses modal when swiped 1/3 of screen height or with velocity > 0.5.
    * UAT-028 fix: Better gesture detection - check vertical vs horizontal movement
    */
   const panResponder = useRef(
@@ -474,10 +483,12 @@ export const usePhotoDetailModal = ({
         const footerThreshold = SCREEN_HEIGHT - 100;
         if (touchY >= footerThreshold) return false;
 
-        // UAT-028 fix: Check for vertical swipe (dy > dx) and downward movement
+        // UAT-028 fix: Check for vertical swipe (dy > dx)
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        // ISS-005: Respond to both downward (close) and upward (open comments) swipes
         const isDownward = gestureState.dy > 5;
-        return isVerticalSwipe && isDownward;
+        const isUpward = gestureState.dy < -10; // Slightly higher threshold for upward
+        return isVerticalSwipe && (isDownward || isUpward);
       },
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
         // Don't capture if touch is in footer area
@@ -487,11 +498,14 @@ export const usePhotoDetailModal = ({
 
         // UAT-028 fix: Capture gesture when vertical swipe is detected
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        // ISS-005: Capture both downward and upward swipes
         const isDownward = gestureState.dy > 5;
-        return isVerticalSwipe && isDownward;
+        const isUpward = gestureState.dy < -10;
+        return isVerticalSwipe && (isDownward || isUpward);
       },
       onPanResponderMove: (_, gestureState) => {
-        // Only allow downward swipes
+        // Only animate for downward swipes (visual feedback for close gesture)
+        // Upward swipes don't need visual feedback - just detect and callback
         if (gestureState.dy > 0) {
           translateY.setValue(gestureState.dy);
           // Fade out as user swipes down
@@ -500,9 +514,21 @@ export const usePhotoDetailModal = ({
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        // If swiped down more than 1/3 of screen or fast swipe (velocity), close the modal
+        const { dy, vy } = gestureState;
+
+        // ISS-005: SWIPE UP - open comments
+        if (dy < -50 || vy < -0.5) {
+          // Significant upward swipe detected
+          if (onSwipeUpRef.current) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onSwipeUpRef.current();
+          }
+          return;
+        }
+
+        // SWIPE DOWN - close modal (existing behavior)
         const dismissThreshold = SCREEN_HEIGHT / 3;
-        if (gestureState.dy > dismissThreshold || gestureState.vy > 0.5) {
+        if (dy > dismissThreshold || vy > 0.5) {
           closeWithAnimation();
         } else {
           springBack();
