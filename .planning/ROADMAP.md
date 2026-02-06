@@ -135,7 +135,7 @@ Plans:
 
 Plans:
 
-- [ ] 36-01: Story notifications (triage completion tracking, Cloud Function, deep linking)
+- [x] 36-01: Story notifications (triage completion tracking, Cloud Function, deep linking)
 - [ ] 36-02: Tagged photo notifications (Cloud Function infrastructure, deep linking, schema docs)
 
 #### Phase 37: Darkroom Ready Notifications
@@ -211,7 +211,7 @@ Plans:
 | 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete    | 2026-02-06 |
 | 34. Push Infrastructure    | v1.7      | 2/2   | Complete    | 2026-02-06 |
 | 35. Social Notifications   | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 36. Photo Notifications    | v1.7      | 0/?   | Not started | -          |
+| 36. Photo Notifications    | v1.7      | 1/2   | In progress | -          |
 | 37. Darkroom Notifications | v1.7      | 0/?   | Not started | -          |
 | 38. Notification UI Polish | v1.7      | 0/?   | Not started | -          |
 | 39. Darkroom Tagging       | v1.7      | 0/?   | Not started | -          |
