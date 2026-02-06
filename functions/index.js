@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const logger = require('./logger');
+const { sendPushNotification } = require('./notifications/sender');
 const {
   validateOrNull,
   DarkroomDocSchema,
@@ -153,55 +154,6 @@ exports.processDarkroomReveals = functions.pubsub
       return null;
     }
   });
-
-/**
- * Send push notification to a user via Expo Push Token
- * @param {string} fcmToken - User's Expo Push Token
- * @param {string} title - Notification title
- * @param {string} body - Notification body
- * @param {object} data - Additional data payload for deep linking
- * @returns {Promise<object>} - Result of notification send
- */
-async function sendPushNotification(fcmToken, title, body, data = {}) {
-  try {
-    // Expo push tokens start with "ExponentPushToken["
-    if (!fcmToken || !fcmToken.startsWith('ExponentPushToken[')) {
-      logger.error('sendPushNotification: Invalid Expo Push Token:', fcmToken);
-      return { success: false, error: 'Invalid token format' };
-    }
-
-    // For Expo push tokens, we use the Expo Push Notification service
-    // The token is already in the correct format
-    const message = {
-      to: fcmToken,
-      sound: 'default',
-      title: title,
-      body: body,
-      data: data,
-      priority: 'high',
-      channelId: 'default',
-    };
-
-    // Send notification via Expo's push notification service
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Accept-Encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(message),
-    });
-
-    const responseData = await response.json();
-    logger.debug('sendPushNotification: Expo push notification sent:', responseData);
-
-    return { success: true, data: responseData };
-  } catch (error) {
-    logger.error('sendPushNotification: Error sending push notification:', error);
-    return { success: false, error: error.message };
-  }
-}
 
 /**
  * Cloud Function: Send notification when photos are revealed in darkroom
