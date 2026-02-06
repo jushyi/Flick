@@ -417,12 +417,10 @@ exports.sendPhotoRevealNotification = functions.firestore
         return null;
       }
 
-      // Send notification with reveal data
+      // Send notification with simple, direct messaging
       const title = '📸 Photos Ready!';
       const body =
-        photosRevealed === 1
-          ? 'Your photo is ready to view in the darkroom'
-          : `${photosRevealed} photos are ready to view in the darkroom`;
+        photosRevealed === 1 ? 'Your photo is ready!' : `Your ${photosRevealed} photos are ready!`;
 
       const result = await sendPushNotification(
         fcmToken,
