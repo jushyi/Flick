@@ -37,6 +37,7 @@ initializeGiphy(GIPHY_API_KEY);
 export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
+  const tokenRefreshListener = useRef();
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
 
   /**
@@ -82,6 +83,21 @@ export default function App() {
 
     // Small delay to ensure auth state is ready
     const timeoutId = setTimeout(requestPermissionsAndToken, 1000);
+
+    // Listener for token refresh (handles token changes on app reinstall)
+    tokenRefreshListener.current = Notifications.addPushTokenListener(async ({ data }) => {
+      const currentUser = getAuth().currentUser;
+      if (currentUser && data) {
+        try {
+          await storeNotificationToken(currentUser.uid, data);
+          logger.info('App: Token refreshed and stored', {
+            userId: currentUser.uid,
+          });
+        } catch (error) {
+          logger.error('App: Failed to store refreshed token', { error: error.message });
+        }
+      }
+    });
 
     // Listener for notifications received while app is in foreground
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
@@ -130,6 +146,9 @@ export default function App() {
       }
       if (responseListener.current) {
         responseListener.current.remove();
+      }
+      if (tokenRefreshListener.current) {
+        tokenRefreshListener.current.remove();
       }
     };
   }, []);
