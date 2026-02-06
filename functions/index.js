@@ -24,6 +24,28 @@ admin.initializeApp();
 // Track pending reactions for debouncing: { "photoId_reactorId": { timeout, reactions, photoOwnerId, fcmToken, reactorName, reactorProfilePhotoURL } }
 const pendingReactions = {};
 
+/**
+ * Varied notification templates for story posts
+ * Makes notifications feel human and not robotic
+ */
+const STORY_NOTIFICATION_TEMPLATES = [
+  '{name} just journaled some snaps',
+  '{name} shared new moments',
+  'New photos from {name}',
+  '{name} posted to their story',
+  'See what {name} captured today',
+];
+
+/**
+ * Pick a random template from an array
+ * @param {string[]} templates - Array of template strings
+ * @returns {string} - Random template
+ */
+function getRandomTemplate(templates) {
+  const index = Math.floor(Math.random() * templates.length);
+  return templates[index];
+}
+
 // Debounce window in milliseconds (10 seconds)
 const REACTION_DEBOUNCE_MS = 10000;
 
@@ -642,6 +664,207 @@ exports.sendFriendAcceptedNotification = functions.firestore
       return result;
     } catch (error) {
       logger.error('sendFriendAcceptedNotification: Error:', error);
+      return null;
+    }
+  });
+
+/**
+ * Cloud Function: Send notification to friends when user posts to their story
+ * Triggered when darkroom document is updated with new lastTriageCompletedAt timestamp
+ *
+ * This notifies all friends that the user has new content available.
+ * Uses varied templates to feel human and not robotic.
+ */
+exports.sendStoryNotification = functions.firestore
+  .document('darkrooms/{userId}')
+  .onUpdate(async (change, context) => {
+    try {
+      const userId = context.params.userId;
+      const before = change.before.data();
+      const after = change.after.data();
+
+      // Guard: validate document data exists
+      if (!after || typeof after !== 'object') {
+        logger.warn('sendStoryNotification: Invalid after data', { userId });
+        return null;
+      }
+      if (!before || typeof before !== 'object') {
+        logger.warn('sendStoryNotification: Invalid before data', { userId });
+        return null;
+      }
+
+      // Check if this is a triage completion event (lastTriageCompletedAt changed)
+      const lastTriageCompletedAtBefore = before.lastTriageCompletedAt?.toMillis() || 0;
+      const lastTriageCompletedAtAfter = after.lastTriageCompletedAt?.toMillis() || 0;
+      const wasTriageCompleted = lastTriageCompletedAtAfter > lastTriageCompletedAtBefore;
+
+      if (!wasTriageCompleted) {
+        logger.debug('sendStoryNotification: No new triage completion, skipping');
+        return null;
+      }
+
+      // Check if any photos were journaled (posted to story)
+      const journaledCount = after.lastJournaledCount || 0;
+      if (journaledCount === 0) {
+        logger.debug('sendStoryNotification: No photos journaled, skipping notification');
+        return null;
+      }
+
+      // Check for duplicate notifications using lastStoryNotifiedAt
+      const lastStoryNotifiedAt = after.lastStoryNotifiedAt?.toMillis() || 0;
+      if (lastStoryNotifiedAt >= lastTriageCompletedAtAfter) {
+        logger.debug('sendStoryNotification: Already notified for this triage, skipping');
+        return null;
+      }
+
+      logger.info('sendStoryNotification: Processing story notification', {
+        userId,
+        journaledCount,
+      });
+
+      // Get user's info for notification
+      const userDoc = await admin.firestore().collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        logger.error('sendStoryNotification: User not found:', userId);
+        return null;
+      }
+
+      const userData = userDoc.data();
+      const displayName = userData.displayName || userData.username || 'Someone';
+      const profilePhotoURL = userData.profilePhotoURL || null;
+
+      // Query friendships where this user is involved and status is 'accepted'
+      // Need to query both user1Id and user2Id since user could be in either position
+      const [friendships1Snapshot, friendships2Snapshot] = await Promise.all([
+        admin
+          .firestore()
+          .collection('friendships')
+          .where('user1Id', '==', userId)
+          .where('status', '==', 'accepted')
+          .get(),
+        admin
+          .firestore()
+          .collection('friendships')
+          .where('user2Id', '==', userId)
+          .where('status', '==', 'accepted')
+          .get(),
+      ]);
+
+      // Collect unique friend IDs
+      const friendIds = new Set();
+      friendships1Snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.user2Id && data.user2Id !== userId) {
+          friendIds.add(data.user2Id);
+        }
+      });
+      friendships2Snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.user1Id && data.user1Id !== userId) {
+          friendIds.add(data.user1Id);
+        }
+      });
+
+      if (friendIds.size === 0) {
+        logger.info('sendStoryNotification: User has no friends, skipping', { userId });
+        // Still update lastStoryNotifiedAt to prevent reprocessing
+        await admin.firestore().collection('darkrooms').doc(userId).update({
+          lastStoryNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return null;
+      }
+
+      logger.info('sendStoryNotification: Sending to friends', {
+        userId,
+        friendCount: friendIds.size,
+      });
+
+      // Get all friends' user data in parallel for FCM tokens
+      const friendDocsPromises = Array.from(friendIds).map(friendId =>
+        admin.firestore().collection('users').doc(friendId).get()
+      );
+      const friendDocs = await Promise.all(friendDocsPromises);
+
+      // Send notifications to each friend
+      let sentCount = 0;
+      const notificationPromises = [];
+
+      for (const friendDoc of friendDocs) {
+        if (!friendDoc.exists) continue;
+
+        const friendData = friendDoc.data();
+        const friendId = friendDoc.id;
+        const fcmToken = friendData.fcmToken;
+
+        if (!fcmToken) {
+          logger.debug('sendStoryNotification: Friend has no FCM token', { friendId });
+          continue;
+        }
+
+        // Check notification preferences
+        const prefs = friendData.notificationPreferences || {};
+        const masterEnabled = prefs.enabled !== false;
+        // Story notifications fall under 'follows' category (friend activity)
+        const followsEnabled = prefs.follows !== false;
+
+        if (!masterEnabled || !followsEnabled) {
+          logger.debug('sendStoryNotification: Notifications disabled by preferences', {
+            friendId,
+            masterEnabled,
+            followsEnabled,
+          });
+          continue;
+        }
+
+        // Pick random template and substitute name
+        const template = getRandomTemplate(STORY_NOTIFICATION_TEMPLATES);
+        const message = template.replace('{name}', displayName);
+
+        // Send push notification
+        const pushPromise = sendPushNotification(
+          fcmToken,
+          '📷 New Story',
+          message,
+          {
+            type: 'story',
+            userId: userId,
+          },
+          friendId
+        );
+
+        // Write to notifications collection for in-app display
+        const notificationPromise = admin.firestore().collection('notifications').add({
+          recipientId: friendId,
+          type: 'story',
+          senderId: userId,
+          senderName: displayName,
+          senderProfilePhotoURL: profilePhotoURL,
+          message: message,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          read: false,
+        });
+
+        notificationPromises.push(pushPromise, notificationPromise);
+        sentCount++;
+      }
+
+      // Wait for all notifications to be sent
+      await Promise.all(notificationPromises);
+
+      // Update lastStoryNotifiedAt to prevent duplicate notifications
+      await admin.firestore().collection('darkrooms').doc(userId).update({
+        lastStoryNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      logger.info('sendStoryNotification: Notifications sent', {
+        userId,
+        sentCount,
+        totalFriends: friendIds.size,
+      });
+
+      return { sentCount, totalFriends: friendIds.size };
+    } catch (error) {
+      logger.error('sendStoryNotification: Error:', error);
       return null;
     }
   });
