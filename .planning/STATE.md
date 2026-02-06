@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 Phase: 36 of 41 (Photo Notification Events)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-06 — Completed 36-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-02-06 — Completed 36-02-PLAN.md (Tagged Photo Notifications)
 
-Progress: ████░░░░░░ 44%
+Progress: █████░░░░░ 50%
 
 ## Performance Metrics
 
@@ -51,10 +51,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 36-01-PLAN.md
+Stopped at: Completed 36-02-PLAN.md (Phase 36 complete)
 Resume file: None
 
 ## Next Steps
 
-- `/gsd:execute-plan 36-02` — Execute Tagged Photo Notifications plan
-- `/gsd:verify-work 36` — Test story notifications before continuing
+- `/gsd:execute-plan 37-01` — Execute Darkroom Ready Notifications plan
+- `/gsd:verify-work 36` — Test story and tagged notifications before continuing
