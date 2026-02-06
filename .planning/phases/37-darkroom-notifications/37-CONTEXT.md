@@ -8,9 +8,13 @@
 <vision>
 ## How This Should Work
 
-When photos finish developing in the darkroom, the user receives a push notification. The notification is actionable — tapping it takes them straight to the darkroom to see their ready photos.
+**This is an audit/update of existing functionality, not a new build.**
 
-No fancy real-time progress indicators or Lock Screen widgets. Just a clear, reliable notification that says "your photos are ready" and gets them there fast.
+Darkroom "photos ready" notification already exists. This phase audits the current implementation, identifies any gaps, and updates as needed to ensure:
+
+- Notification reliably fires when photos finish developing
+- Tapping notification takes user straight to darkroom
+- Messaging is clear and actionable
 
 </vision>
 
@@ -43,7 +47,7 @@ No fancy real-time progress indicators or Lock Screen widgets. Just a clear, rel
 
 This phase was originally scoped as iOS Live Activities (real-time Lock Screen/Dynamic Island updates). User decided push notifications are simpler and sufficient for the use case.
 
-This builds on Phase 34 (Push Infrastructure) — the notification plumbing should already exist.
+**Existing implementation:** Darkroom ready notification already exists in the codebase. This phase is an audit and update, not a greenfield build. During planning, research the current implementation to identify what works and what needs fixing.
 
 </notes>
 

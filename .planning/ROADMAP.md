@@ -137,9 +137,9 @@ Plans:
 
 #### Phase 37: Darkroom Ready Notifications
 
-**Goal**: Push notification when photos finish developing with quick action to open darkroom
+**Goal**: Audit and update existing darkroom ready notification — ensure reliable delivery and clear messaging
 **Depends on**: Phase 34
-**Research**: Unlikely (uses existing push infrastructure)
+**Research**: Unlikely (audit existing implementation)
 **Plans**: TBD
 
 Plans:
