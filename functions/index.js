@@ -420,7 +420,9 @@ exports.sendPhotoRevealNotification = functions.firestore
       // Send notification with simple, direct messaging
       const title = 'Photos Ready!';
       const body =
-        photosRevealed === 1 ? 'Your photo is ready!' : `Your ${photosRevealed} photos are ready!`;
+        photosRevealed === 1
+          ? 'Your photo is ready to reveal!'
+          : `Your ${photosRevealed} photos are ready to reveal!`;
 
       const result = await sendPushNotification(
         fcmToken,
