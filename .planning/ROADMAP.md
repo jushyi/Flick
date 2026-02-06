@@ -76,7 +76,7 @@ _v1.6 phases complete. See [v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md) for arc
 
 ### 🚧 v1.7 Engagement & Polish (In Progress)
 
-**Milestone Goal:** Clean up technical debt, build robust push notifications with iOS Live Activities, and add friend tagging in photos.
+**Milestone Goal:** Clean up technical debt, build robust push notifications, and add friend tagging in photos.
 
 #### Phase 32: Photo Issues Fix
 
@@ -135,12 +135,11 @@ Plans:
 
 - [ ] 36-01: TBD
 
-#### Phase 37: iOS Live Activities
+#### Phase 37: Darkroom Ready Notifications
 
-**Goal**: Show darkroom status on Lock Screen and Dynamic Island with photo count and processing status
+**Goal**: Push notification when photos finish developing with quick action to open darkroom
 **Depends on**: Phase 34
-**Research**: Likely (ActivityKit, iOS 16+ API)
-**Research topics**: ActivityKit setup, Live Activity lifecycle, Dynamic Island presentation
+**Research**: Unlikely (uses existing push infrastructure)
 **Plans**: TBD
 
 Plans:
@@ -210,7 +209,7 @@ Plans:
 | 34. Push Infrastructure    | v1.7      | 0/?   | Not started | -         |
 | 35. Social Notifications   | v1.7      | 0/?   | Not started | -         |
 | 36. Photo Notifications    | v1.7      | 0/?   | Not started | -         |
-| 37. iOS Live Activities    | v1.7      | 0/?   | Not started | -         |
+| 37. Darkroom Notifications | v1.7      | 0/?   | Not started | -         |
 | 38. Notification UI Polish | v1.7      | 0/?   | Not started | -         |
 | 39. Darkroom Tagging       | v1.7      | 0/?   | Not started | -         |
 | 40. Feed Tagging           | v1.7      | 0/?   | Not started | -         |
