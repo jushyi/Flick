@@ -1,8 +1,8 @@
 /**
  * CommentsBottomSheet Component
  *
- * Bottom sheet modal for displaying and adding comments:
- * - Custom Animated Modal (NOT @gorhom/bottom-sheet due to Expo 54 compatibility)
+ * Bottom sheet for displaying and adding comments:
+ * - Uses Animated.View instead of Modal (ISS-004 fix: survives navigation)
  * - KeyboardAvoidingView for proper keyboard handling on iOS/Android
  * - 60% screen height with photo visible above
  * - FlatList for comments with real-time updates
@@ -13,7 +13,6 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
-  Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
   FlatList,
@@ -32,7 +31,12 @@ import CommentInput from './CommentInput';
 import useComments from '../../hooks/useComments';
 import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
-import { styles, SHEET_HEIGHT, EXPANDED_HEIGHT } from '../../styles/CommentsBottomSheet.styles';
+import {
+  styles,
+  SHEET_HEIGHT,
+  EXPANDED_HEIGHT,
+  SCREEN_HEIGHT,
+} from '../../styles/CommentsBottomSheet.styles';
 
 /**
  * CommentsBottomSheet Component
@@ -58,6 +62,7 @@ const CommentsBottomSheet = ({
   const sheetTranslateY = useRef(new Animated.Value(0)).current; // UAT-021 fix: sheet position for keyboard
   const swipeY = useRef(new Animated.Value(0)).current; // UAT-020 fix: swipe gesture tracking
   const sheetHeight = useRef(new Animated.Value(SHEET_HEIGHT)).current; // 36.1-01: animated height for expand/collapse
+  const backdropOpacity = useRef(new Animated.Value(0)).current; // ISS-004 fix: backdrop fade
   const inputRef = useRef(null);
   const flatListRef = useRef(null);
   const insets = useSafeAreaInsets(); // UAT-010 fix: safe area for bottom input
@@ -215,16 +220,24 @@ const CommentsBottomSheet = ({
 
   /**
    * Animate sheet on visibility change
+   * ISS-004 fix: Uses Animated.View with opacity and pointerEvents instead of Modal
    */
   useEffect(() => {
     if (visible) {
-      // Slide up animation
-      Animated.spring(translateY, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 20,
-        stiffness: 100,
-      }).start();
+      // Animate in: backdrop fade + sheet slide up
+      Animated.parallel([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 20,
+          stiffness: 100,
+        }),
+      ]).start();
 
       logger.info('CommentsBottomSheet: Opened', { photoId });
     } else {
@@ -232,9 +245,10 @@ const CommentsBottomSheet = ({
       translateY.setValue(SHEET_HEIGHT);
       sheetHeight.setValue(SHEET_HEIGHT);
       swipeY.setValue(0); // Reset swipe position here, not in animation callback
+      backdropOpacity.setValue(0);
       isExpandedRef.current = false;
     }
-  }, [visible, translateY, photoId, sheetHeight]);
+  }, [visible, translateY, photoId, sheetHeight, backdropOpacity]);
 
   /**
    * Handle backdrop press to close
@@ -622,100 +636,97 @@ const CommentsBottomSheet = ({
     0
   );
 
+  // ISS-004 fix: Use Animated.View instead of Modal so sheet survives navigation
+  // When visible=false, pointerEvents='none' makes it non-interactive but keeps it in render tree
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleClose}
-      statusBarTranslucent
+    <Animated.View
+      style={[styles.overlay, styles.animatedOverlay, { opacity: backdropOpacity }]}
+      pointerEvents={visible ? 'auto' : 'none'}
     >
-      <View style={styles.overlay}>
-        {/* Backdrop - tap to close */}
-        <TouchableWithoutFeedback onPress={handleBackdropPress}>
-          <View style={styles.backdrop} />
-        </TouchableWithoutFeedback>
+      {/* Backdrop - tap to close */}
+      <TouchableWithoutFeedback onPress={handleBackdropPress}>
+        <View style={styles.backdrop} />
+      </TouchableWithoutFeedback>
 
-        {/* Sheet container - no KeyboardAvoidingView needed with translateY approach (UAT-021 fix) */}
-        <View style={styles.keyboardAvoidContainer}>
-          {/* Outer: Height animation (JS driver) - 36.1-01 expand/collapse */}
-          <Animated.View style={{ height: sheetHeight }}>
-            {/* Inner: Transform animations (native driver) - UAT-020/021 gestures */}
-            <Animated.View
-              style={[
-                styles.sheet,
-                {
-                  flex: 1, // Fill the height-animated container
-                  maxHeight: undefined, // Override fixed maxHeight for expansion
-                  transform: [
-                    { translateY },
-                    { translateY: sheetTranslateY },
-                    { translateY: swipeY },
-                  ],
-                },
-              ]}
-            >
-              {/* Handle bar - swipe-to-close gesture (UAT-020 fix) */}
-              <View style={styles.handleBarContainer} {...panResponder.panHandlers}>
-                <View style={styles.handleBar} />
+      {/* Sheet container - no KeyboardAvoidingView needed with translateY approach (UAT-021 fix) */}
+      <View style={styles.keyboardAvoidContainer} pointerEvents="box-none">
+        {/* Outer: Height animation (JS driver) - 36.1-01 expand/collapse */}
+        <Animated.View style={{ height: sheetHeight }}>
+          {/* Inner: Transform animations (native driver) - UAT-020/021 gestures */}
+          <Animated.View
+            style={[
+              styles.sheet,
+              {
+                flex: 1, // Fill the height-animated container
+                maxHeight: undefined, // Override fixed maxHeight for expansion
+                transform: [
+                  { translateY },
+                  { translateY: sheetTranslateY },
+                  { translateY: swipeY },
+                ],
+              },
+            ]}
+          >
+            {/* Handle bar - swipe-to-close gesture (UAT-020 fix) */}
+            <View style={styles.handleBarContainer} {...panResponder.panHandlers}>
+              <View style={styles.handleBar} />
+            </View>
+
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.headerTitle}>Comments</Text>
+                {totalCommentCount > 0 && (
+                  <Text style={styles.headerCount}>({totalCommentCount})</Text>
+                )}
               </View>
+              <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                <Ionicons name="close" size={24} color={colors.text.primary} />
+              </TouchableOpacity>
+            </View>
 
-              {/* Header */}
-              <View style={styles.header}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={styles.headerTitle}>Comments</Text>
-                  {totalCommentCount > 0 && (
-                    <Text style={styles.headerCount}>({totalCommentCount})</Text>
-                  )}
-                </View>
-                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                  <Ionicons name="close" size={24} color={colors.text.primary} />
-                </TouchableOpacity>
-              </View>
+            {/* Comments List */}
+            {loading ? (
+              renderLoading()
+            ) : error ? (
+              renderError()
+            ) : (
+              <FlatList
+                ref={flatListRef}
+                style={styles.commentsList}
+                contentContainerStyle={styles.commentsListContent}
+                data={threadedComments}
+                renderItem={renderCommentItem}
+                keyExtractor={keyExtractor}
+                ListEmptyComponent={renderEmpty}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="interactive"
+                onScroll={handleScroll}
+                onScrollEndDrag={handleScrollEndDrag}
+                scrollEventThrottle={16}
+                onScrollToIndexFailed={handleScrollToIndexFailed}
+              />
+            )}
 
-              {/* Comments List */}
-              {loading ? (
-                renderLoading()
-              ) : error ? (
-                renderError()
-              ) : (
-                <FlatList
-                  ref={flatListRef}
-                  style={styles.commentsList}
-                  contentContainerStyle={styles.commentsListContent}
-                  data={threadedComments}
-                  renderItem={renderCommentItem}
-                  keyExtractor={keyExtractor}
-                  ListEmptyComponent={renderEmpty}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  keyboardDismissMode="interactive"
-                  onScroll={handleScroll}
-                  onScrollEndDrag={handleScrollEndDrag}
-                  scrollEventThrottle={16}
-                  onScrollToIndexFailed={handleScrollToIndexFailed}
-                />
-              )}
-
-              {/* Comment Input - with safe area padding (UAT-010 fix) */}
-              <View style={{ paddingBottom: Math.max(insets.bottom, 8) }}>
-                <CommentInput
-                  ref={inputRef}
-                  onSubmit={handleSubmitComment}
-                  onImagePick={() => {
-                    logger.debug('CommentsBottomSheet: Image picker (Plan 06)');
-                  }}
-                  replyingTo={replyingTo}
-                  onCancelReply={cancelReply}
-                  initialMention={initialMention}
-                  placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
-                />
-              </View>
-            </Animated.View>
+            {/* Comment Input - with safe area padding (UAT-010 fix) */}
+            <View style={{ paddingBottom: Math.max(insets.bottom, 8) }}>
+              <CommentInput
+                ref={inputRef}
+                onSubmit={handleSubmitComment}
+                onImagePick={() => {
+                  logger.debug('CommentsBottomSheet: Image picker (Plan 06)');
+                }}
+                replyingTo={replyingTo}
+                onCancelReply={cancelReply}
+                initialMention={initialMention}
+                placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
+              />
+            </View>
           </Animated.View>
-        </View>
+        </Animated.View>
       </View>
-    </Modal>
+    </Animated.View>
   );
 };
 

@@ -12,17 +12,26 @@
 import { StyleSheet, Dimensions, Platform, StatusBar } from 'react-native';
 import { colors } from '../constants/colors';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+export const SCREEN_HEIGHT = Dimensions.get('window').height;
 export const SHEET_HEIGHT = SCREEN_HEIGHT * 0.6;
 export const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.85; // Expanded height (leaves room for notch)
 // Minimum height for empty state (UAT-008 fix) - ~50% screen
 export const MIN_SHEET_HEIGHT = SCREEN_HEIGHT * 0.5;
 
 export const styles = StyleSheet.create({
-  // Modal overlay
+  // Overlay container (for both Modal and Animated.View approaches)
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  // ISS-004 fix: Animated.View overlay positioned absolutely to cover screen
+  animatedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000, // Ensure it appears above PhotoDetailScreen content
   },
   // Backdrop for tap-to-close
   backdrop: {
