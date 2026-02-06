@@ -41,6 +41,7 @@ import ReportUserScreen from '../screens/ReportUserScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import RecentlyDeletedScreen from '../screens/RecentlyDeletedScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
+import ProfilePhotoCropScreen from '../screens/ProfilePhotoCropScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -72,6 +73,15 @@ const OnboardingStackNavigator = ({ initialRouteName }) => {
         options={{
           presentation: 'card',
           animation: 'slide_from_bottom',
+        }}
+      />
+      <Stack.Screen
+        name="ProfilePhotoCrop"
+        component={ProfilePhotoCropScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background.primary },
         }}
       />
     </Stack.Navigator>
@@ -109,6 +119,15 @@ const ProfileStackNavigator = () => {
       <Stack.Screen name="AlbumPhotoPicker" component={AlbumPhotoPickerScreen} />
       <Stack.Screen name="AlbumGrid" component={AlbumGridScreen} />
       <Stack.Screen name="MonthlyAlbumGrid" component={MonthlyAlbumGridScreen} />
+      <Stack.Screen
+        name="ProfilePhotoCrop"
+        component={ProfilePhotoCropScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background.primary },
+        }}
+      />
     </Stack.Navigator>
   );
 };
