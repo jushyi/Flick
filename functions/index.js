@@ -40,6 +40,24 @@ function formatReactionSummary(reactions) {
 }
 
 /**
+ * Check if a notification should be sent based on user preferences
+ * @param {string} userId - User ID to check preferences for
+ * @param {string} notificationType - Type of notification ('likes', 'comments', 'follows', 'friendRequests', 'mentions')
+ * @returns {Promise<boolean>} - True if notification should be sent
+ */
+async function shouldSendNotification(userId, notificationType) {
+  const userDoc = await admin.firestore().collection('users').doc(userId).get();
+  if (!userDoc.exists) return false;
+
+  const prefs = userDoc.data().notificationPreferences || {};
+  // Default to true if preferences not set
+  const masterEnabled = prefs.enabled !== false;
+  const typeEnabled = prefs[notificationType] !== false;
+
+  return masterEnabled && typeEnabled;
+}
+
+/**
  * Reveal all developing photos for a user and schedule next reveal
  * @param {string} userId - User ID
  * @param {Timestamp} now - Current timestamp
@@ -453,6 +471,20 @@ exports.sendFriendRequestNotification = functions.firestore
         return null;
       }
 
+      // Check notification preferences (enabled AND friendRequests)
+      const prefs = recipientData.notificationPreferences || {};
+      const masterEnabled = prefs.enabled !== false;
+      const friendRequestsEnabled = prefs.friendRequests !== false;
+
+      if (!masterEnabled || !friendRequestsEnabled) {
+        logger.debug('sendFriendRequestNotification: Notifications disabled by user preferences', {
+          recipientId,
+          masterEnabled,
+          friendRequestsEnabled,
+        });
+        return null;
+      }
+
       // Get sender's display name
       const senderDoc = await admin.firestore().collection('users').doc(requestedBy).get();
 
@@ -821,6 +853,20 @@ exports.sendReactionNotification = functions.firestore
         return null;
       }
 
+      // Check notification preferences (enabled AND likes)
+      const prefs = ownerData.notificationPreferences || {};
+      const masterEnabled = prefs.enabled !== false;
+      const likesEnabled = prefs.likes !== false;
+
+      if (!masterEnabled || !likesEnabled) {
+        logger.debug('sendReactionNotification: Notifications disabled by user preferences', {
+          photoOwnerId,
+          masterEnabled,
+          likesEnabled,
+        });
+        return null;
+      }
+
       // Get reactor's display name and profile photo
       const reactorDoc = await admin.firestore().collection('users').doc(reactorId).get();
 
@@ -923,7 +969,10 @@ exports.getSignedPhotoUrl = onCall(async request => {
  * Cloud Function: Send notification when someone comments on a photo
  * Triggered when a new comment is created in the comments subcollection
  *
- * Only sends notifications for top-level comments to photo owner.
+ * Sends two types of notifications:
+ * 1. Comment notification to photo owner (respects comments preference)
+ * 2. @mention notifications to mentioned users (respects mentions preference)
+ *
  * Skips self-comments (commenter is photo owner) and replies.
  */
 exports.sendCommentNotification = functions.firestore
@@ -960,30 +1009,12 @@ exports.sendCommentNotification = functions.firestore
       const photo = photoDoc.data();
       const photoOwnerId = photo.userId;
 
-      // Don't notify if commenter is the photo owner (self-comment)
-      if (comment.userId === photoOwnerId) {
-        logger.info('sendCommentNotification: Skipping self-comment notification', {
-          photoId,
-          commentId,
-          userId: comment.userId,
-        });
-        return null;
-      }
-
-      // Get photo owner's FCM token
-      const ownerDoc = await admin.firestore().collection('users').doc(photoOwnerId).get();
-
-      if (!ownerDoc.exists || !ownerDoc.data().fcmToken) {
-        logger.warn('sendCommentNotification: No FCM token for photo owner', { photoOwnerId });
-        return null;
-      }
-
-      // Get commenter's name for notification
+      // Get commenter's info for notification
       const commenterDoc = await admin.firestore().collection('users').doc(comment.userId).get();
 
-      const commenterName = commenterDoc.exists
-        ? commenterDoc.data().displayName || commenterDoc.data().username || 'Someone'
-        : 'Someone';
+      const commenterData = commenterDoc.exists ? commenterDoc.data() : {};
+      const commenterName = commenterData.displayName || commenterData.username || 'Someone';
+      const commenterProfilePhotoURL = commenterData.profilePhotoURL || null;
 
       // Build comment preview for notification body
       let commentPreview;
@@ -999,48 +1030,201 @@ exports.sendCommentNotification = functions.firestore
         commentPreview = 'commented';
       }
 
-      // Send notification via Expo Push API
-      const title = '💬 New Comment';
-      const body = `${commenterName}: ${commentPreview}`;
+      let commentNotificationSent = false;
 
-      const result = await sendPushNotification(
-        ownerDoc.data().fcmToken,
-        title,
-        body,
-        {
-          type: 'comment',
+      // ========== PART 1: Send comment notification to photo owner ==========
+      // Don't notify if commenter is the photo owner (self-comment)
+      if (comment.userId !== photoOwnerId) {
+        // Get photo owner's data
+        const ownerDoc = await admin.firestore().collection('users').doc(photoOwnerId).get();
+
+        if (ownerDoc.exists && ownerDoc.data().fcmToken) {
+          const ownerData = ownerDoc.data();
+
+          // Check notification preferences (enabled AND comments)
+          const prefs = ownerData.notificationPreferences || {};
+          const masterEnabled = prefs.enabled !== false;
+          const commentsEnabled = prefs.comments !== false;
+
+          if (masterEnabled && commentsEnabled) {
+            // Send notification via Expo Push API
+            const title = '💬 New Comment';
+            const body = `${commenterName}: ${commentPreview}`;
+
+            await sendPushNotification(
+              ownerData.fcmToken,
+              title,
+              body,
+              {
+                type: 'comment',
+                photoId,
+                commentId,
+                screen: 'Feed',
+              },
+              photoOwnerId
+            );
+
+            // Write to notifications collection for in-app display
+            await admin.firestore().collection('notifications').add({
+              recipientId: photoOwnerId,
+              type: 'comment',
+              senderId: comment.userId,
+              senderName: commenterName,
+              senderProfilePhotoURL: commenterProfilePhotoURL,
+              photoId: photoId,
+              commentId: commentId,
+              message: body,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              read: false,
+            });
+
+            commentNotificationSent = true;
+            logger.info('sendCommentNotification: Comment notification sent', {
+              photoId,
+              commentId,
+              to: photoOwnerId,
+              commenter: comment.userId,
+            });
+          } else {
+            logger.debug(
+              'sendCommentNotification: Comment notifications disabled by user preferences',
+              {
+                photoOwnerId,
+                masterEnabled,
+                commentsEnabled,
+              }
+            );
+          }
+        } else {
+          logger.debug('sendCommentNotification: No FCM token for photo owner', { photoOwnerId });
+        }
+      }
+
+      // ========== PART 2: Send @mention notifications ==========
+      // Extract @mentions from comment text
+      const mentions = (comment.text || '').match(/@(\w+)/g) || [];
+
+      if (mentions.length > 0) {
+        // Get unique usernames (without @ prefix)
+        const uniqueUsernames = [...new Set(mentions.map(m => m.substring(1).toLowerCase()))];
+
+        logger.debug('sendCommentNotification: Processing mentions', {
           photoId,
           commentId,
-          screen: 'Feed',
-        },
-        photoOwnerId
-      );
-
-      // Write to notifications collection for in-app display
-      await admin
-        .firestore()
-        .collection('notifications')
-        .add({
-          recipientId: photoOwnerId,
-          type: 'comment',
-          senderId: comment.userId,
-          senderName: commenterName,
-          senderProfilePhotoURL: commenterDoc.exists ? commenterDoc.data().profilePhotoURL : null,
-          photoId: photoId,
-          commentId: commentId,
-          message: body,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          read: false,
+          uniqueUsernames,
         });
 
-      logger.info('sendCommentNotification: Notification sent', {
-        photoId,
-        commentId,
-        to: photoOwnerId,
-        commenter: comment.userId,
-      });
+        for (const username of uniqueUsernames) {
+          try {
+            // Query users collection for matching username (case-insensitive)
+            // Note: Firestore doesn't support case-insensitive queries directly,
+            // so we store usernames in lowercase or use a lowercased field
+            const usersSnapshot = await admin
+              .firestore()
+              .collection('users')
+              .where('username', '==', username)
+              .limit(1)
+              .get();
 
-      return result;
+            if (usersSnapshot.empty) {
+              logger.debug('sendCommentNotification: Mentioned user not found', { username });
+              continue;
+            }
+
+            const mentionedUserDoc = usersSnapshot.docs[0];
+            const mentionedUserId = mentionedUserDoc.id;
+            const mentionedUserData = mentionedUserDoc.data();
+
+            // Skip if mentioned user is the commenter (don't self-notify)
+            if (mentionedUserId === comment.userId) {
+              logger.debug('sendCommentNotification: Skipping self-mention', { mentionedUserId });
+              continue;
+            }
+
+            // Skip if mentioned user is photo owner (already notified above)
+            if (mentionedUserId === photoOwnerId) {
+              logger.debug(
+                'sendCommentNotification: Skipping mention - already notified as owner',
+                {
+                  mentionedUserId,
+                }
+              );
+              continue;
+            }
+
+            // Check mentioned user's notification preferences
+            const prefs = mentionedUserData.notificationPreferences || {};
+            const masterEnabled = prefs.enabled !== false;
+            const mentionsEnabled = prefs.mentions !== false;
+
+            if (!masterEnabled || !mentionsEnabled) {
+              logger.debug(
+                'sendCommentNotification: Mention notifications disabled by user preferences',
+                {
+                  mentionedUserId,
+                  masterEnabled,
+                  mentionsEnabled,
+                }
+              );
+              continue;
+            }
+
+            // Check for FCM token
+            const fcmToken = mentionedUserData.fcmToken;
+            if (!fcmToken) {
+              logger.debug('sendCommentNotification: No FCM token for mentioned user', {
+                mentionedUserId,
+              });
+              continue;
+            }
+
+            // Send mention notification
+            const mentionTitle = '💬 You were mentioned';
+            const mentionBody = `${commenterName} mentioned you in a comment`;
+
+            await sendPushNotification(
+              fcmToken,
+              mentionTitle,
+              mentionBody,
+              {
+                type: 'mention',
+                photoId,
+                commentId,
+              },
+              mentionedUserId
+            );
+
+            // Write to notifications collection for in-app display
+            await admin.firestore().collection('notifications').add({
+              recipientId: mentionedUserId,
+              type: 'mention',
+              senderId: comment.userId,
+              senderName: commenterName,
+              senderProfilePhotoURL: commenterProfilePhotoURL,
+              photoId: photoId,
+              commentId: commentId,
+              message: mentionBody,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              read: false,
+            });
+
+            logger.info('sendCommentNotification: Mention notification sent', {
+              photoId,
+              commentId,
+              to: mentionedUserId,
+              mentionedUsername: username,
+            });
+          } catch (mentionError) {
+            logger.error('sendCommentNotification: Failed to process mention', {
+              username,
+              error: mentionError.message,
+            });
+            // Continue with other mentions
+          }
+        }
+      }
+
+      return { commentNotificationSent, mentionsProcessed: mentions.length };
     } catch (error) {
       logger.error('sendCommentNotification: Failed', {
         error: error.message,
