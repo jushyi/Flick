@@ -154,11 +154,11 @@ Plans:
 **Goal**: Polish in-app notification presentation and user experience
 **Depends on**: Phase 35, Phase 36
 **Research**: Unlikely (internal UI patterns)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
 
-- [ ] 38-01: TBD
+- [x] 38-01: In-app notification banner (custom dark-themed foreground display)
 
 #### Phase 39: Darkroom Photo Tagging
 
@@ -213,7 +213,7 @@ Plans:
 | 35. Social Notifications   | v1.7      | 2/2   | Complete    | 2026-02-06 |
 | 36. Photo Notifications    | v1.7      | 2/2   | Complete    | 2026-02-06 |
 | 37. Darkroom Notifications | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 38. Notification UI Polish | v1.7      | 0/?   | Not started | -          |
+| 38. Notification UI Polish | v1.7      | 1/1   | Complete    | 2026-02-07 |
 | 39. Darkroom Tagging       | v1.7      | 0/?   | Not started | -          |
 | 40. Feed Tagging           | v1.7      | 0/?   | Not started | -          |
 | 41. Tag Integration        | v1.7      | 0/?   | Not started | -          |
