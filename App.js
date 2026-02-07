@@ -8,7 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { getAuth } from '@react-native-firebase/auth';
 import { AuthProvider, ThemeProvider } from './src/context';
 import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
-import { ErrorBoundary, AnimatedSplash } from './src/components';
+import { ErrorBoundary, AnimatedSplash, InAppNotificationBanner } from './src/components';
 import {
   initializeNotifications,
   handleNotificationReceived,
@@ -39,6 +39,7 @@ export default function App() {
   const responseListener = useRef();
   const tokenRefreshListener = useRef();
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+  const [bannerData, setBannerData] = useState(null);
 
   /**
    * Handle animated splash completion
@@ -53,6 +54,59 @@ export default function App() {
     }
     // Remove the animated splash overlay
     setShowAnimatedSplash(false);
+  };
+
+  /**
+   * Shared navigation helper for notification taps
+   * Used by both the system notification tap listener and the in-app banner press
+   */
+  const navigateToNotification = navData => {
+    if (!navData.success || !navigationRef.current?.isReady()) return;
+    const { screen, params } = navData.data;
+    logger.info('App: Notification navigating', { screen, params });
+
+    if (screen === 'Camera') {
+      // Navigate to Camera tab with all params (openDarkroom, etc.)
+      // First navigate to ensure we're on the right tab
+      navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
+      // Then set params after a small delay to ensure the screen is focused
+      // This works around React Navigation's nested navigator param propagation issue
+      setTimeout(() => {
+        navigationRef.current.navigate('MainTabs', {
+          screen: 'Camera',
+          params: params,
+        });
+      }, 100);
+    } else if (screen === 'Feed') {
+      // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
+      navigationRef.current.navigate('MainTabs', {
+        screen: 'Feed',
+        params: params,
+      });
+    } else if (screen === 'Profile') {
+      // Navigate to Profile tab
+      navigationRef.current.navigate('MainTabs', { screen });
+    } else if (screen === 'FriendRequests') {
+      // Navigate to Friends tab, then to FriendRequests screen
+      navigationRef.current.navigate('MainTabs', {
+        screen: 'Friends',
+        params: { screen: 'FriendRequests' },
+      });
+    }
+  };
+
+  /**
+   * Handle banner tap — builds a fake notification object and navigates
+   */
+  const handleBannerPress = () => {
+    if (!bannerData?.notificationData) return;
+    // Build a minimal notification object for handleNotificationTapped
+    const fakeNotification = {
+      request: { content: { data: bannerData.notificationData } },
+    };
+    const navigationData = handleNotificationTapped(fakeNotification);
+    navigateToNotification(navigationData);
+    setBannerData(null);
   };
 
   useEffect(() => {
@@ -100,48 +154,18 @@ export default function App() {
     });
 
     // Listener for notifications received while app is in foreground
+    // Shows custom InAppNotificationBanner instead of system notification
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      handleNotificationReceived(notification);
+      const result = handleNotificationReceived(notification);
+      if (result.success) {
+        setBannerData(result.data);
+      }
     });
 
-    // Listener for when user taps a notification
+    // Listener for when user taps a notification (background/killed-app)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       const navigationData = handleNotificationTapped(response.notification);
-
-      if (navigationData.success && navigationRef.current?.isReady()) {
-        const { screen, params } = navigationData.data;
-        logger.info('App: Notification tap navigating', { screen, params });
-
-        // Navigate to the appropriate screen based on notification type
-        if (screen === 'Camera') {
-          // Navigate to Camera tab with all params (openDarkroom, revealAll, revealedCount)
-          // First navigate to ensure we're on the right tab
-          navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
-          // Then set params after a small delay to ensure the screen is focused
-          // This works around React Navigation's nested navigator param propagation issue
-          setTimeout(() => {
-            navigationRef.current.navigate('MainTabs', {
-              screen: 'Camera',
-              params: params,
-            });
-          }, 100);
-        } else if (screen === 'Feed') {
-          // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
-          navigationRef.current.navigate('MainTabs', {
-            screen: 'Feed',
-            params: params,
-          });
-        } else if (screen === 'Profile') {
-          // Navigate to Profile tab
-          navigationRef.current.navigate('MainTabs', { screen });
-        } else if (screen === 'FriendRequests') {
-          // Navigate to Friends tab, then to FriendRequests screen
-          navigationRef.current.navigate('MainTabs', {
-            screen: 'Friends',
-            params: { screen: 'FriendRequests' },
-          });
-        }
-      }
+      navigateToNotification(navigationData);
     });
 
     // Cleanup listeners on unmount
@@ -197,6 +221,14 @@ export default function App() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
+      <InAppNotificationBanner
+        visible={!!bannerData}
+        title={bannerData?.title || ''}
+        body={bannerData?.body || ''}
+        avatarUrl={bannerData?.avatarUrl}
+        onPress={handleBannerPress}
+        onDismiss={() => setBannerData(null)}
+      />
       <SafeAreaProvider>
         <ErrorBoundary>
           <ThemeProvider>

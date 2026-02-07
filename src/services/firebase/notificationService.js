@@ -37,7 +37,7 @@ const db = getFirestore();
  */
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowAlert: false, // Suppress system banner — custom InAppNotificationBanner used instead
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -209,20 +209,30 @@ export const clearLocalNotificationToken = async () => {
 
 /**
  * Handle notification received while app is in foreground
+ * Returns structured banner data for the InAppNotificationBanner component
  * @param {object} notification - Notification object from expo-notifications
+ * @returns {{success: boolean, data?: object, error?: string}} Banner data with title, body, avatarUrl, notificationType, notificationData
  */
 export const handleNotificationReceived = notification => {
   try {
-    logger.debug('Notification received in foreground', {
-      title: notification.request.content.title,
-      body: notification.request.content.body,
-      data: notification.request.content.data,
-    });
+    const { title, body, data } = notification.request.content;
+    const { senderProfilePhotoURL, senderName, type } = data || {};
 
-    // Could add custom in-app banner here if desired
-    // For MVP, expo-notifications handles the display automatically
+    logger.debug('Notification received in foreground', { title, body, type });
+
+    return {
+      success: true,
+      data: {
+        title: title || senderName || 'New notification',
+        body: body || '',
+        avatarUrl: senderProfilePhotoURL || null,
+        notificationType: type,
+        notificationData: data || {},
+      },
+    };
   } catch (error) {
     logger.error('Error handling notification received', error);
+    return { success: false, error: error.message };
   }
 };
 
