@@ -38,7 +38,6 @@ export const getDarkroom = async userId => {
     const darkroomRef = doc(db, 'darkrooms', userId);
     const darkroomDoc = await getDoc(darkroomRef);
 
-    // In modular API, exists() is a method
     if (!darkroomDoc.exists()) {
       // Create new darkroom with initial reveal time
       const nextRevealAt = calculateNextRevealTime();

@@ -27,6 +27,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import logger from '../utils/logger';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -60,9 +61,6 @@ class ErrorBoundary extends Component {
 
     // Store error info for potential debugging
     this.setState({ errorInfo });
-
-    // TODO: In Phase 10, send to Sentry
-    // Sentry.captureException(error, { extra: errorInfo });
   }
 
   /**
@@ -137,22 +135,23 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     backgroundColor: colors.status.danger,
     color: colors.text.primary,
-    fontSize: 48,
-    fontWeight: 'bold',
+    fontSize: typography.size.giant,
+    fontFamily: typography.fontFamily.display,
     textAlign: 'center',
     lineHeight: 80,
     marginBottom: 24,
     overflow: 'hidden',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: typography.size.xxl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: 12,
   },
   description: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 24,
@@ -162,28 +161,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand.purple,
     paddingVertical: 16,
     paddingHorizontal: 48,
-    borderRadius: 12,
+    borderRadius: 4,
   },
   buttonText: {
     color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
   },
   debugContainer: {
     marginTop: 32,
     padding: 16,
     backgroundColor: '#FFF3CD', // Warning yellow (dev-only)
-    borderRadius: 8,
+    borderRadius: 2,
     width: '100%',
   },
   debugTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: '#856404', // Warning text (dev-only)
     marginBottom: 8,
   },
   debugText: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
     color: '#856404', // Warning text (dev-only)
     fontFamily: 'monospace',
   },

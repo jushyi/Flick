@@ -652,7 +652,7 @@ exports.sendFriendAcceptedNotification = functions.firestore
         : 'Someone';
 
       const acceptorProfilePhotoURL = acceptorDoc.exists
-        ? acceptorDoc.data().profilePhotoURL
+        ? acceptorDoc.data().profilePhotoURL || acceptorDoc.data().photoURL
         : null;
 
       // Send notification
@@ -757,7 +757,7 @@ exports.sendStoryNotification = functions.firestore
 
       const userData = userDoc.data();
       const displayName = userData.displayName || userData.username || 'Someone';
-      const profilePhotoURL = userData.profilePhotoURL || null;
+      const profilePhotoURL = userData.profilePhotoURL || userData.photoURL || null;
 
       // Query friendships where this user is involved and status is 'accepted'
       // Need to query both user1Id and user2Id since user could be in either position
@@ -1121,7 +1121,7 @@ exports.sendReactionNotification = functions.firestore
 
       const reactorData = reactorDoc.exists ? reactorDoc.data() : {};
       const reactorName = reactorData.displayName || reactorData.username || 'Someone';
-      const reactorProfilePhotoURL = reactorData.profilePhotoURL || null;
+      const reactorProfilePhotoURL = reactorData.profilePhotoURL || reactorData.photoURL || null;
 
       // Create new pending entry
       pendingReactions[pendingKey] = {
@@ -1239,8 +1239,7 @@ async function sendBatchedTagNotification(pendingKey) {
  * - Subsequent tags extend window and aggregate
  * - After 30 seconds of inactivity, sends "Name tagged you in X photos"
  *
- * Note: Tagging UI will be added in Phase 39 (Darkroom) and Phase 40 (Feed).
- * This function is ready to fire when photos have taggedUserIds field.
+ * Tagging is fully implemented in Darkroom and Feed UIs.
  */
 exports.sendTaggedPhotoNotification = functions.firestore
   .document('photos/{photoId}')
@@ -1341,7 +1340,7 @@ exports.sendTaggedPhotoNotification = functions.firestore
 
       const taggerData = taggerDoc.data();
       const taggerName = taggerData.displayName || taggerData.username || 'Someone';
-      const taggerProfilePhotoURL = taggerData.profilePhotoURL || null;
+      const taggerProfilePhotoURL = taggerData.profilePhotoURL || taggerData.photoURL || null;
 
       // Process each newly tagged user
       for (const taggedUserId of newlyTaggedUserIds) {
@@ -1548,7 +1547,8 @@ exports.sendCommentNotification = functions.firestore
 
       const commenterData = commenterDoc.exists ? commenterDoc.data() : {};
       const commenterName = commenterData.displayName || commenterData.username || 'Someone';
-      const commenterProfilePhotoURL = commenterData.profilePhotoURL || null;
+      const commenterProfilePhotoURL =
+        commenterData.profilePhotoURL || commenterData.photoURL || null;
 
       // Build comment preview for notification body
       let commentPreview;
@@ -1963,7 +1963,7 @@ exports.getMutualFriendSuggestions = onCall(async request => {
         userId: suggestionUserId,
         displayName: userData.displayName || null,
         username: userData.username || null,
-        profilePhotoURL: userData.profilePhotoURL || null,
+        profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
         mutualCount,
       };
     });

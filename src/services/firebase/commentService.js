@@ -311,7 +311,7 @@ const fetchUserData = async userIds => {
             uid: userId,
             username: userData.username || 'deleted',
             displayName: userData.displayName || 'Deleted User',
-            profilePhotoURL: userData.profilePhotoURL || null,
+            profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
             isDeleted: false,
           };
         } else {

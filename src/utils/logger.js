@@ -6,7 +6,7 @@
  * - Supports log levels (DEBUG, INFO, WARN, ERROR)
  * - Automatically sanitizes sensitive data
  * - Provides consistent formatting across the app
- * - Can be easily integrated with error tracking services (Sentry)
+ * - Can be extended with external error tracking services
  *
  * Usage:
  * import logger from '../utils/logger';
@@ -214,14 +214,6 @@ const warn = (message, data) => {
   const log = formatLog('WARN', message, data);
 
   console.warn('⚠️ [WARN]', message, data ? log.data : '');
-
-  // TODO: In Phase 10, send to Sentry
-  // if (Sentry) {
-  //   Sentry.captureMessage(message, {
-  //     level: 'warning',
-  //     extra: log.data,
-  //   });
-  // }
 };
 
 /**
@@ -238,20 +230,6 @@ const error = (message, errorObj) => {
   const log = formatLog('ERROR', message, errorObj);
 
   console.error('❌ [ERROR]', message, errorObj ? log.data : '');
-
-  // TODO: In Phase 10, send to Sentry
-  // if (Sentry) {
-  //   if (errorObj instanceof Error) {
-  //     Sentry.captureException(errorObj, {
-  //       extra: { message, ...log.data },
-  //     });
-  //   } else {
-  //     Sentry.captureMessage(message, {
-  //       level: 'error',
-  //       extra: log.data,
-  //     });
-  //   }
-  // }
 };
 
 // =============================================================================

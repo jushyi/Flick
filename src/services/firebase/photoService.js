@@ -65,7 +65,6 @@ export const createPhoto = async (userId, photoUri) => {
     const photoId = photoRef.id;
     logger.debug('PhotoService.createPhoto: Document created', { photoId });
 
-    // Upload photo to Firebase Storage
     logger.debug('PhotoService.createPhoto: Uploading to Storage', { userId, photoId });
     const uploadResult = await uploadPhoto(userId, photoId, photoUri);
 
@@ -79,7 +78,6 @@ export const createPhoto = async (userId, photoUri) => {
       return { success: false, error: uploadResult.error };
     }
 
-    // Update document with imageURL
     logger.debug('PhotoService.createPhoto: Updating document with imageURL', { photoId });
     await updateDoc(photoRef, {
       imageURL: uploadResult.url,
@@ -327,7 +325,6 @@ export const getDevelopingPhotos = async userId => {
  */
 export const revealPhotos = async userId => {
   try {
-    // Get ALL developing photos for this user
     const developingQuery = query(
       collection(db, 'photos'),
       where('userId', '==', userId),
@@ -337,7 +334,6 @@ export const revealPhotos = async userId => {
 
     const updates = [];
 
-    // Reveal ALL developing photos
     snapshot.docs.forEach(docSnap => {
       updates.push(
         updateDoc(docSnap.ref, {
@@ -414,7 +410,6 @@ export const addReaction = async (photoId, userId, emoji) => {
     const photoRef = doc(db, 'photos', photoId);
     const photoDoc = await getDoc(photoRef);
 
-    // In modular API, exists() is a method
     if (!photoDoc.exists()) {
       return { success: false, error: 'Photo not found' };
     }
@@ -445,7 +440,6 @@ export const removeReaction = async (photoId, userId) => {
     const photoRef = doc(db, 'photos', photoId);
     const photoDoc = await getDoc(photoRef);
 
-    // In modular API, exists() is a method
     if (!photoDoc.exists()) {
       return { success: false, error: 'Photo not found' };
     }
@@ -478,7 +472,6 @@ export const getPhotosByIds = async photoIds => {
       return { success: true, photos: [] };
     }
 
-    // Fetch each photo document
     const photoPromises = photoIds.map(async photoId => {
       const photoRef = doc(db, 'photos', photoId);
       const photoDoc = await getDoc(photoRef);
@@ -801,7 +794,6 @@ export const archivePhoto = async (photoId, userId) => {
       return { success: false, error: 'Unauthorized: You do not own this photo' };
     }
 
-    // Update photo state to archive
     await updateDoc(photoRef, {
       photoState: 'archive',
       triagedAt: serverTimestamp(), // Reset visibility window
@@ -851,7 +843,6 @@ export const restorePhoto = async (photoId, userId) => {
       return { success: false, error: 'Unauthorized: You do not own this photo' };
     }
 
-    // Update photo state to journal
     await updateDoc(photoRef, {
       photoState: 'journal',
       triagedAt: serverTimestamp(), // Reset visibility window for re-sharing

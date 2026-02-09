@@ -92,9 +92,9 @@ const filterHotPhotos = (photos, hotOnly) => {
 /**
  * Custom hook for managing feed photos
  * Handles initial load, pagination, real-time updates, and refresh
- * Week 9: Fetches friendships and filters feed to friends-only
- * Week 12.2: Curates feed to top 5 photos per friend by engagement
- * Phase 35: Hot highlights filter for engagement-based curation
+ * Fetches friendships and filters feed to friends-only.
+ * Curates feed to top 5 photos per friend by engagement.
+ * Hot highlights filter for engagement-based curation.
  *
  * @param {boolean} enableRealtime - Enable real-time listener (default: true)
  * @param {boolean} hotOnly - Only show photos with high engagement (default: false)

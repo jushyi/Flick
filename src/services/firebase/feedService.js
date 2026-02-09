@@ -91,7 +91,7 @@ export const getFeedPhotos = async (
             uid: photoData.userId,
             username: userData.username || 'unknown',
             displayName: userData.displayName || 'Unknown User',
-            profilePhotoURL: userData.profilePhotoURL || null,
+            profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
           },
         };
       })
@@ -187,7 +187,7 @@ export const subscribeFeedPhotos = (
                 uid: photoData.userId,
                 username: userData.username || 'unknown',
                 displayName: userData.displayName || 'Unknown User',
-                profilePhotoURL: userData.profilePhotoURL || null,
+                profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
               },
             };
           })
@@ -269,7 +269,7 @@ export const getPhotoById = async photoId => {
           uid: photoData.userId,
           username: userData.username || 'unknown',
           displayName: userData.displayName || 'Unknown User',
-          profilePhotoURL: userData.profilePhotoURL || null,
+          profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
         },
       },
     };
@@ -309,7 +309,7 @@ export const getUserFeedPhotos = async userId => {
         uid: userId,
         username: userData.username || 'unknown',
         displayName: userData.displayName || 'Unknown User',
-        profilePhotoURL: userData.profilePhotoURL || null,
+        profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
       },
     }));
 
@@ -433,7 +433,7 @@ export const getTopPhotosByEngagement = async (userId, limit = 5) => {
     }
 
     // Query photos where userId matches AND photoState == 'journal' (feed-visible only)
-    // Using simple query to avoid composite index requirement
+    // Sorts by engagement client-side since reactionCount ordering varies per request
     const q = query(
       collection(db, 'photos'),
       where('userId', '==', userId),
@@ -446,7 +446,6 @@ export const getTopPhotosByEngagement = async (userId, limit = 5) => {
       totalPhotos: snapshot.size,
     });
 
-    // Map to photo objects
     const photos = snapshot.docs.map(photoDoc => ({
       id: photoDoc.id,
       ...photoDoc.data(),
@@ -459,7 +458,6 @@ export const getTopPhotosByEngagement = async (userId, limit = 5) => {
       return bCount - aCount;
     });
 
-    // Return top N photos
     const topPhotos = photos.slice(0, limit);
 
     logger.info('feedService.getTopPhotosByEngagement: Success', {
@@ -515,7 +513,7 @@ export const getUserStoriesData = async userId => {
       uid: userId,
       username: userData.username || 'unknown',
       displayName: userData.displayName || 'Me',
-      profilePhotoURL: userData.profilePhotoURL || null,
+      profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
     };
 
     // Map and sort photos by capturedAt ASCENDING (oldest first for timeline viewing)
@@ -639,7 +637,7 @@ export const getFriendStoriesData = async currentUserId => {
         uid: friendId,
         username: userData.username || 'unknown',
         displayName: userData.displayName || 'Unknown User',
-        profilePhotoURL: userData.profilePhotoURL || null,
+        profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
       };
 
       // Map and sort photos by capturedAt ASCENDING (oldest first for timeline viewing)
@@ -778,7 +776,7 @@ export const getRandomFriendPhotos = async (
               uid: photoData.userId,
               username: userData.username || 'unknown',
               displayName: userData.displayName || 'Unknown User',
-              profilePhotoURL: userData.profilePhotoURL || null,
+              profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
             },
             isArchivePhoto: true, // Mark as historical/archive photo for UI indicator
           };
@@ -792,7 +790,6 @@ export const getRandomFriendPhotos = async (
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    // Return limited count
     const result = shuffled.slice(0, limitCount);
 
     logger.info('feedService.getRandomFriendPhotos: Success', {
