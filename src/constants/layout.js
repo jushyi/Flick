@@ -1,12 +1,12 @@
 export const layout = {
-  // Border radius scale
+  // Border radius scale - blocky retro (minimal rounding)
   borderRadius: {
-    xs: 4, // Skeleton placeholders
-    sm: 8, // Buttons, inputs
-    md: 12, // Sections
-    lg: 16, // Cards
-    xl: 24, // Photo corners, large radius
-    round: 30, // Circle avatars (half of 60px)
+    xs: 0, // Pure pixel sharp
+    sm: 2, // Barely rounded
+    md: 4, // Slight softening
+    lg: 4, // Cards stay blocky
+    xl: 6, // Max rounding for containers
+    round: 9999, // Circle avatars (photos stay round)
     full: 9999, // Fully round
   },
 
@@ -21,31 +21,31 @@ export const layout = {
     avatarLarge: 60,
     avatarXLarge: 80,
     cameraPreviewMargin: 16,
-    cameraBorderRadius: 24,
+    cameraBorderRadius: 6, // Reduced from 24 for retro blocky feel
   },
 
-  // Shadow presets
+  // Shadow presets - CRT glow effect (cyan-tinted)
   shadow: {
     light: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      shadowColor: '#00D4FF',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
       elevation: 3,
     },
     medium: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
+      shadowColor: '#00D4FF',
+      shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0.25,
-      shadowRadius: 3,
-      elevation: 3,
+      shadowRadius: 12,
+      elevation: 4,
     },
     heavy: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 5,
+      shadowColor: '#00D4FF',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.4,
+      shadowRadius: 20,
+      elevation: 6,
     },
   },
 
