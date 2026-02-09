@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 Phase: 43 of 44 (Comment Cleanup and Audit)
 Plan: 0 of 4 in current phase
 Status: Planned — ready to execute
-Last activity: 2026-02-09 — Completed 42-02-PLAN.md
+Last activity: 2026-02-09 — Completed 38-01-FIX (banner safe area fix)
 
 Progress: ██████████ 100%
 
@@ -34,9 +34,9 @@ Progress: ██████████ 100%
 
 See PROJECT.md Key Decisions table for full history.
 
-| Phase | Decision | Rationale |
-|-------|----------|-----------|
-| 42 | Mutual friend computation via Cloud Function | Firestore security rules correctly block client-side cross-user friendship queries; admin SDK is the established pattern |
+| Phase | Decision                                     | Rationale                                                                                                                |
+| ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 42    | Mutual friend computation via Cloud Function | Firestore security rules correctly block client-side cross-user friendship queries; admin SDK is the established pattern |
 
 ### Deferred Issues
 
@@ -58,7 +58,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 42-02-PLAN.md (mutual friends UI integration + Cloud Function fix)
+Stopped at: Completed 38-01-FIX (banner safe area positioning fix)
 Resume file: None
 
 ## Next Steps
