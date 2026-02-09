@@ -64,7 +64,6 @@ export const blockUser = async (blockerId, blockedId) => {
       return { success: false, error: 'Cannot block yourself' };
     }
 
-    // Check if already blocked
     const blockId = generateBlockId(blockerId, blockedId);
     const blockRef = doc(db, 'blocks', blockId);
     const blockDocSnap = await getDoc(blockRef);
@@ -73,7 +72,6 @@ export const blockUser = async (blockerId, blockedId) => {
       return { success: false, error: 'User already blocked' };
     }
 
-    // Create block document
     await setDoc(blockRef, {
       blockerId,
       blockedId,
@@ -100,7 +98,6 @@ export const blockUser = async (blockerId, blockedId) => {
  */
 const removeBlockedUserContent = async (blockerId, blockedId) => {
   try {
-    // Query all photos owned by the blocker
     const photosQuery = query(collection(db, 'photos'), where('userId', '==', blockerId));
     const photosSnapshot = await getDocs(photosQuery);
 
@@ -108,7 +105,6 @@ const removeBlockedUserContent = async (blockerId, blockedId) => {
       return; // No photos, nothing to clean up
     }
 
-    // Process each photo
     const deletePromises = [];
 
     for (const photoDoc of photosSnapshot.docs) {
@@ -285,7 +281,6 @@ export const getBlockedUsersWithProfiles = async userId => {
       return { success: false, error: 'Invalid user ID' };
     }
 
-    // Get list of blocked user IDs
     const blockedResult = await getBlockedUserIds(userId);
     if (!blockedResult.success) {
       return { success: false, error: blockedResult.error };
@@ -297,7 +292,6 @@ export const getBlockedUsersWithProfiles = async userId => {
       return { success: true, blockedUsers: [] };
     }
 
-    // Fetch profile for each blocked user
     const blockedUsers = [];
     for (const blockedUserId of blockedUserIds) {
       const profileResult = await getUserProfile(blockedUserId);

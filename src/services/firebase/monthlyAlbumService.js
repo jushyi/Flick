@@ -49,7 +49,6 @@ export const getUserPhotosByMonth = async userId => {
 
     const snapshot = await getDocs(photosQuery);
 
-    // Filter to journal/archive photos only
     const photos = snapshot.docs
       .map(doc => ({
         id: doc.id,
@@ -62,7 +61,6 @@ export const getUserPhotosByMonth = async userId => {
       filtered: photos.length,
     });
 
-    // Group photos by month
     const monthGroups = {};
 
     photos.forEach(photo => {
@@ -76,7 +74,6 @@ export const getUserPhotosByMonth = async userId => {
     });
 
     // Sort photos within each month by capturedAt descending
-    // Then extract cover photo (last photo = most recent by capturedAt)
     Object.keys(monthGroups).forEach(month => {
       monthGroups[month].sort((a, b) => {
         const aTime = a.capturedAt?.seconds || 0;
@@ -85,7 +82,6 @@ export const getUserPhotosByMonth = async userId => {
       });
     });
 
-    // Build year-grouped structure
     const yearGroups = {};
 
     Object.keys(monthGroups).forEach(month => {
@@ -109,7 +105,6 @@ export const getUserPhotosByMonth = async userId => {
       yearGroups[year].sort((a, b) => b.month.localeCompare(a.month));
     });
 
-    // Create final monthlyData with years sorted descending
     const sortedYears = Object.keys(yearGroups).sort((a, b) => parseInt(b) - parseInt(a));
     const monthlyData = {};
 
@@ -162,7 +157,6 @@ export const getMonthPhotos = async (userId, month) => {
 
     const snapshot = await getDocs(photosQuery);
 
-    // Filter to journal/archive photos only and sort by capturedAt descending
     const photos = snapshot.docs
       .map(doc => ({
         id: doc.id,

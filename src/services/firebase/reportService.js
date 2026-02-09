@@ -62,7 +62,6 @@ export const submitReport = async (
   profileSnapshot
 ) => {
   try {
-    // Validation
     if (!reporterId || !reportedUserId) {
       return { success: false, error: 'Invalid user IDs' };
     }
@@ -78,7 +77,6 @@ export const submitReport = async (
       };
     }
 
-    // Create report document
     const reportData = {
       reporterId,
       reportedUserId,

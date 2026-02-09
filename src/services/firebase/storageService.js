@@ -60,20 +60,15 @@ export const uploadProfilePhoto = async (userId, localUri) => {
   try {
     logger.debug('StorageService.uploadProfilePhoto: Starting', { userId });
 
-    // Compress image first
     const compressedUri = await compressImage(localUri, 0.7);
-
-    // Convert URI to file path for RN Firebase
     const filePath = uriToFilePath(compressedUri);
 
-    // Create storage reference (modular API pattern)
     // Path: profile-photos/{userId}/{filename} - matches storage.rules
     const storageRef = ref(storageInstance, `profile-photos/${userId}/profile.jpg`);
 
     // Upload file directly (no blob needed with RN Firebase)
     await storageRef.putFile(filePath);
 
-    // Get download URL
     const downloadURL = await storageRef.getDownloadURL();
 
     logger.info('StorageService.uploadProfilePhoto: Upload successful', { userId });
@@ -95,20 +90,15 @@ export const uploadPhoto = async (userId, photoId, localUri) => {
   try {
     logger.debug('StorageService.uploadPhoto: Starting', { userId, photoId });
 
-    // Compress image first
     const compressedUri = await compressImage(localUri, 0.8);
-
-    // Convert URI to file path for RN Firebase
     const filePath = uriToFilePath(compressedUri);
 
-    // Create storage reference (modular API pattern)
     // Path: photos/{userId}/{photoId}.jpg - matches storage.rules
     const storageRef = ref(storageInstance, `photos/${userId}/${photoId}.jpg`);
 
     // Upload file directly (no blob needed with RN Firebase)
     await storageRef.putFile(filePath);
 
-    // Get download URL
     const downloadURL = await storageRef.getDownloadURL();
 
     logger.info('StorageService.uploadPhoto: Upload successful', { photoId });
@@ -193,22 +183,13 @@ export const uploadCommentImage = async localUri => {
   try {
     logger.debug('StorageService.uploadCommentImage: Starting');
 
-    // Generate unique filename
     const filename = `comment-images/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.jpg`;
-
-    // Compress image first (higher quality for comments)
     const compressedUri = await compressImage(localUri, 0.8);
-
-    // Convert URI to file path for RN Firebase
     const filePath = uriToFilePath(compressedUri);
-
-    // Create storage reference
     const storageRef = ref(storageInstance, filename);
 
-    // Upload file
     await storageRef.putFile(filePath);
 
-    // Get download URL
     const downloadURL = await storageRef.getDownloadURL();
 
     logger.info('StorageService.uploadCommentImage: Upload successful', {

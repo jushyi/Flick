@@ -67,14 +67,12 @@ export const validatePhoneNumber = (phoneNumber, countryCode) => {
     countryCode,
   });
 
-  // Check for empty phone number
   if (!phoneNumber || phoneNumber.trim() === '') {
     logger.warn('phoneAuthService.validatePhoneNumber: Empty phone number');
     return { valid: false, error: 'Please enter your phone number.' };
   }
 
   try {
-    // Parse the phone number with country code
     const parsed = parsePhoneNumberFromString(phoneNumber, countryCode);
 
     if (!parsed) {
@@ -122,7 +120,6 @@ export const sendVerificationCode = async (phoneNumber, countryCode) => {
     countryCode,
   });
 
-  // Validate phone number first
   const validation = validatePhoneNumber(phoneNumber, countryCode);
   if (!validation.valid) {
     logger.warn('phoneAuthService.sendVerificationCode: Validation failed', {
@@ -136,7 +133,6 @@ export const sendVerificationCode = async (phoneNumber, countryCode) => {
       e164: validation.e164,
     });
 
-    // Get auth instance and sign in with phone number
     const auth = getAuth();
     const confirmation = await signInWithPhoneNumber(auth, validation.e164);
 
@@ -175,13 +171,11 @@ export const verifyCode = async (confirmation, code) => {
     codeLength: code?.length,
   });
 
-  // Validate confirmation object exists
   if (!confirmation) {
     logger.error('phoneAuthService.verifyCode: No confirmation object');
     return { success: false, error: 'Verification session expired. Please request a new code.' };
   }
 
-  // Validate code format
   if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
     logger.warn('phoneAuthService.verifyCode: Invalid code format', {
       codeLength: code?.length,
@@ -193,7 +187,6 @@ export const verifyCode = async (confirmation, code) => {
   try {
     logger.debug('phoneAuthService.verifyCode: Confirming code');
 
-    // Confirm the verification code
     const userCredential = await confirmation.confirm(code);
 
     logger.info('phoneAuthService.verifyCode: Success', {

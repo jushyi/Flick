@@ -25,7 +25,7 @@ import {
 import logger from '../../utils/logger';
 
 const db = getFirestore();
-const EXPIRY_HOURS = 24; // Viewed state expires after 24 hours
+const EXPIRY_HOURS = 24;
 
 /**
  * Get the viewed photos collection reference for a user
@@ -53,7 +53,6 @@ export const loadViewedPhotos = async userId => {
     const viewedCollection = getViewedPhotosCollection(userId);
     const expiryTime = Timestamp.fromDate(new Date(Date.now() - EXPIRY_HOURS * 60 * 60 * 1000));
 
-    // Query for photos viewed within the last 24 hours
     const q = query(viewedCollection, where('viewedAt', '>=', expiryTime));
     const snapshot = await getDocs(q);
 

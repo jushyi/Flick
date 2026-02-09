@@ -93,7 +93,6 @@ export const incrementDailyPhotoCount = async userId => {
       // New day, reset to 1
       newCount = 1;
     } else {
-      // Same day, increment
       newCount = (userData.dailyPhotoCount || 0) + 1;
     }
 
@@ -236,7 +235,6 @@ export const canChangeUsername = lastUsernameChange => {
     return { canChange: true };
   }
 
-  // Convert Timestamp to Date if needed
   const lastChangeDate =
     lastUsernameChange instanceof Date
       ? lastUsernameChange
@@ -278,14 +276,11 @@ export const updateUserProfile = async (userId, updates, currentUsername) => {
     const userRef = doc(db, 'users', userId);
     const updateData = { ...updates };
 
-    // Check if username is being changed
     if (updates.username && updates.username !== currentUsername) {
-      // Normalize username for comparison
       const normalizedNewUsername = updates.username.toLowerCase().trim();
       const normalizedCurrentUsername = currentUsername?.toLowerCase().trim();
 
       if (normalizedNewUsername !== normalizedCurrentUsername) {
-        // Validate username availability
         const availabilityResult = await checkUsernameAvailability(normalizedNewUsername, userId);
         if (!availabilityResult.success) {
           return { success: false, error: 'Failed to check username availability' };
@@ -294,7 +289,6 @@ export const updateUserProfile = async (userId, updates, currentUsername) => {
           return { success: false, error: 'Username is already taken' };
         }
 
-        // Add timestamp for username change tracking
         updateData.lastUsernameChange = Timestamp.now();
         updateData.username = normalizedNewUsername;
 

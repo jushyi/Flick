@@ -35,16 +35,13 @@ import logger from '../../utils/logger';
 // SYNC ORCHESTRATION AND SUGGESTION FILTERING
 // =============================================================================
 
-// Import friendship service functions for filtering existing relationships
 import { getFriendships, getPendingRequests, getSentRequests } from './friendshipService';
 
-// Initialize Firestore once at module level
 const db = getFirestore();
 
 // Firestore IN query limit
 const BATCH_SIZE = 30;
 
-// Contact pagination size
 const CONTACTS_PAGE_SIZE = 100;
 
 /**
@@ -153,7 +150,6 @@ export const getAllContactPhoneNumbers = async (defaultCountry = 'US') => {
         pageOffset,
       });
 
-      // Extract and normalize all phone numbers
       for (const contact of data) {
         if (contact.phoneNumbers) {
           for (const phone of contact.phoneNumbers) {
@@ -205,7 +201,6 @@ export const findUsersByPhoneNumbers = async phoneNumbers => {
       batches.push(phoneNumbers.slice(i, i + BATCH_SIZE));
     }
 
-    // Execute all batches in parallel
     const results = await Promise.all(
       batches.map(async batch => {
         const usersRef = collection(db, 'users');
@@ -215,7 +210,6 @@ export const findUsersByPhoneNumbers = async phoneNumbers => {
       })
     );
 
-    // Flatten results
     const users = results.flat();
     logger.info('contactSyncService.findUsersByPhoneNumbers: Complete', {
       found: users.length,
@@ -264,21 +258,18 @@ const getExistingRelationshipIds = async userId => {
 
   const ids = new Set();
 
-  // Add friend user IDs
   if (friendsResult.success) {
     friendsResult.friendships.forEach(f => {
       ids.add(f.user1Id === userId ? f.user2Id : f.user1Id);
     });
   }
 
-  // Add incoming request user IDs
   if (incomingResult.success) {
     incomingResult.requests.forEach(r => {
       ids.add(r.user1Id === userId ? r.user2Id : r.user1Id);
     });
   }
 
-  // Add sent request user IDs
   if (sentResult.success) {
     sentResult.requests.forEach(r => {
       ids.add(r.user1Id === userId ? r.user2Id : r.user1Id);
