@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -19,8 +20,8 @@ export const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   headerSpacer: {
@@ -36,7 +37,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
   },

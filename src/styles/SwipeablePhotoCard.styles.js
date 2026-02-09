@@ -7,6 +7,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -21,13 +22,7 @@ export const styles = StyleSheet.create({
     // UAT-012: Black background matches screen, prevents gray flash during cascade
     backgroundColor: colors.background.primary,
     overflow: 'hidden',
-    // UAT-007: Black border removed per user request
-    // iOS-style shadow for depth
-    shadowColor: colors.background.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    elevation: 0,
   },
   photoImage: {
     width: '100%',
@@ -40,8 +35,6 @@ export const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    // UAT-014: Match reduced border radius
-    borderRadius: 6,
   },
   archiveOverlay: {
     backgroundColor: colors.systemColors.gray,
@@ -65,7 +58,7 @@ export const styles = StyleSheet.create({
     height: 48,
     borderWidth: 3,
     borderColor: colors.text.primary,
-    borderRadius: 8,
+    borderRadius: 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -82,13 +75,13 @@ export const styles = StyleSheet.create({
     height: 52,
     borderWidth: 3,
     borderColor: colors.text.primary,
-    borderRadius: 26,
+    borderRadius: 9999,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkmarkText: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: typography.size.xxxl,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   // X icon for Delete
@@ -112,8 +105,8 @@ export const styles = StyleSheet.create({
     transform: [{ rotate: '-45deg' }],
   },
   overlayText: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -125,7 +118,7 @@ export const styles = StyleSheet.create({
     right: 12,
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 9999,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -137,7 +130,7 @@ export const styles = StyleSheet.create({
     right: 4,
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: 9999,
     backgroundColor: colors.interactive.primary,
   },
 });

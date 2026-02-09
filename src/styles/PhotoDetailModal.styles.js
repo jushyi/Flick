@@ -6,6 +6,7 @@
  */
 import { StyleSheet, Dimensions, StatusBar } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -57,13 +58,13 @@ export const styles = StyleSheet.create({
     padding: 8,
   },
   closeButtonText: {
-    fontSize: 24,
+    fontSize: typography.size.xxl,
     color: colors.text.primary,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyBold,
   },
   photoScrollView: {
     flex: 1,
-    borderRadius: 12, // UAT-035 fix: sharper corners (was 24)
+    borderRadius: 4, // UAT-035 fix: sharper corners (was 24)
     overflow: 'hidden',
     marginHorizontal: 8,
     marginBottom: 8,
@@ -85,7 +86,7 @@ export const styles = StyleSheet.create({
   profilePic: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: 9999,
     borderWidth: 0.5,
     borderColor: colors.overlay.lightBorder,
   },
@@ -95,8 +96,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profilePicText: {
-    fontSize: 32,
-    fontWeight: '600',
+    fontSize: typography.size.display,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   userInfoOverlay: {
@@ -108,15 +109,16 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   displayName: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
   timestamp: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 1 },
@@ -148,14 +150,15 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 6,
     gap: 6,
     borderWidth: 1,
     borderColor: colors.pill.background,
   },
   commentInputTriggerText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
   },
   // Emoji pills scroll view - right side of footer (UAT-001 fix: 50/50 split)
@@ -176,7 +179,7 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.pill.background,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 4,
     gap: 4,
     borderWidth: 1,
     borderColor: colors.pill.border,
@@ -185,11 +188,11 @@ export const styles = StyleSheet.create({
     // No visual change for selected state
   },
   emojiPillEmoji: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
   },
   emojiPillCount: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   // Purple highlight overlay for newly added emoji (fades out over 1 second)
@@ -199,7 +202,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 16,
+    borderRadius: 4,
     borderWidth: 2,
     borderColor: colors.brand.purple,
     backgroundColor: colors.overlay.purpleTint,
@@ -209,8 +212,8 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addEmojiText: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
     color: colors.text.primary,
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyBold,
   },
 });

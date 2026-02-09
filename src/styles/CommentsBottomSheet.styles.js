@@ -11,6 +11,7 @@
  */
 import { StyleSheet, Dimensions, Platform, StatusBar } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const SCREEN_HEIGHT = Dimensions.get('window').height;
 export const SHEET_HEIGHT = SCREEN_HEIGHT * 0.6;
@@ -47,8 +48,8 @@ export const styles = StyleSheet.create({
   // Main sheet container
   sheet: {
     backgroundColor: colors.background.secondary,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
     minHeight: MIN_SHEET_HEIGHT, // UAT-008 fix: consistent height even when empty
     maxHeight: SHEET_HEIGHT,
     overflow: 'hidden',
@@ -76,12 +77,13 @@ export const styles = StyleSheet.create({
     borderBottomColor: colors.border.subtle,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   headerCount: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginLeft: 6,
   },
@@ -104,12 +106,14 @@ export const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 12,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     marginTop: 4,
   },
@@ -129,7 +133,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.status.danger,
     textAlign: 'center',
   },
@@ -161,8 +166,8 @@ export const styles = StyleSheet.create({
   // Toggle text styling
   viewRepliesText: {
     color: colors.text.secondary,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
   },
   // Individual reply item container
   replyItem: {

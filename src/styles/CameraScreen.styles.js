@@ -7,6 +7,7 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -89,14 +90,14 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 25,
+    borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   zoomButton: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 6,
   },
   zoomButtonActive: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -107,15 +108,16 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   zoomButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: 'rgba(255, 255, 255, 0.5)',
   },
   zoomButtonTextActive: {
     color: colors.text.primary,
   },
   zoomSuffix: {
-    fontSize: 12, // Slightly smaller for the 'x'
+    fontSize: typography.size.sm, // Slightly smaller for the 'x'
+    fontFamily: typography.fontFamily.body,
     marginLeft: 1,
   },
   // Permission screens
@@ -127,14 +129,15 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   permissionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: typography.size.xxl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: 16,
     textAlign: 'center',
   },
   permissionText: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: 32,
@@ -143,11 +146,11 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background.white,
     paddingHorizontal: 32,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 4,
   },
   permissionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.inverse,
   },
   // Darkroom card stack container - holds fanned cards
@@ -165,9 +168,8 @@ export const styles = StyleSheet.create({
   darkroomCardWrapper: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    // Border handled by SVG stroke in GradientCard — no native border needed
     // White glow effect emanating from card edges
     shadowColor: colors.text.primary,
     shadowOffset: { width: 0, height: 0 },
@@ -184,8 +186,8 @@ export const styles = StyleSheet.create({
   // Number displayed inside the top card
   darkroomCardText: {
     color: colors.text.primary,
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
   },
   // Invisible spacer to balance darkroom button and center capture button
   footerSpacer: {
@@ -199,13 +201,13 @@ export const styles = StyleSheet.create({
     bottom: 4,
     fontSize: 8,
     color: colors.text.primary,
-    fontWeight: '700',
+    fontFamily: typography.fontFamily.bodyBold,
   },
   // Capture button - 88px (10% larger) with thin spaced ring
   captureButtonOuter: {
     width: 100, // 88px button + 6px gap on each side + 2px ring = 100px
     height: 100,
-    borderRadius: 50,
+    borderRadius: 9999,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.6)',
     justifyContent: 'center',
@@ -214,7 +216,7 @@ export const styles = StyleSheet.create({
   captureButton: {
     width: 88,
     height: 88,
-    borderRadius: 44,
+    borderRadius: 9999,
     backgroundColor: colors.background.white,
     justifyContent: 'center',
     alignItems: 'center',
@@ -233,7 +235,7 @@ export const styles = StyleSheet.create({
   captureButtonInner: {
     width: 76,
     height: 76,
-    borderRadius: 38,
+    borderRadius: 9999,
     backgroundColor: colors.background.white,
   },
   // Flash overlay for camera shutter effect - contained within camera preview

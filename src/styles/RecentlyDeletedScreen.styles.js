@@ -1,5 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NUM_COLUMNS = 3;
@@ -34,18 +35,19 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 2,
   },
   selectButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.system.blue,
   },
   loadingContainer: {
@@ -63,12 +65,13 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.secondary,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     marginTop: 8,
     textAlign: 'center',
@@ -93,13 +96,13 @@ export const styles = StyleSheet.create({
     bottom: 4,
     left: 4,
     backgroundColor: colors.overlay.dark,
-    borderRadius: 4,
+    borderRadius: 2,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   countdownText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   selectionOverlay: {
@@ -112,7 +115,7 @@ export const styles = StyleSheet.create({
   checkmark: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 9999,
     backgroundColor: colors.system.blue,
     justifyContent: 'center',
     alignItems: 'center',
@@ -135,7 +138,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 2,
   },
   restoreButton: {
     backgroundColor: colors.system.blue,
@@ -144,8 +147,8 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.status.danger,
   },
   actionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
     marginLeft: 8,
   },
@@ -179,13 +182,13 @@ export const styles = StyleSheet.create({
   },
   viewerDaysBadge: {
     backgroundColor: colors.overlay.light,
-    borderRadius: 12,
+    borderRadius: 4,
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
   viewerDaysText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   viewerImageContainer: {
@@ -204,7 +207,8 @@ export const styles = StyleSheet.create({
     height: '100%',
   },
   viewerPositionText: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 4,
   },
@@ -224,7 +228,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 8,
+    borderRadius: 2,
   },
   viewerRestoreButton: {
     backgroundColor: colors.system.blue,
@@ -233,8 +237,8 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.status.danger,
   },
   viewerButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
     marginLeft: 8,
   },

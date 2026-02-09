@@ -6,17 +6,19 @@
  */
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   // Base text style (inherits from parent)
   baseText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     lineHeight: 20,
   },
   // @mention text style - highlighted and tappable
   mentionText: {
     color: colors.brand.purple,
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.bodyBold,
   },
 });

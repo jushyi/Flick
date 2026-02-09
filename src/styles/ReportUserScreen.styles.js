@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -22,8 +23,8 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   headerSpacer: {
@@ -37,8 +38,8 @@ export const styles = StyleSheet.create({
     flexGrow: 1,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
     marginBottom: 12,
     textTransform: 'uppercase',
@@ -56,7 +57,8 @@ export const styles = StyleSheet.create({
   },
   reasonLabel: {
     flex: 1,
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
   },
   checkmark: {
@@ -67,22 +69,24 @@ export const styles = StyleSheet.create({
   },
   detailsInput: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 12,
+    borderRadius: 4,
     padding: 16,
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     minHeight: 120,
     textAlignVertical: 'top',
   },
   charCount: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'right',
     marginTop: 8,
   },
   submitButton: {
     backgroundColor: colors.brand.purple,
-    borderRadius: 12,
+    borderRadius: 4,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 24,
@@ -91,8 +95,8 @@ export const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
 });

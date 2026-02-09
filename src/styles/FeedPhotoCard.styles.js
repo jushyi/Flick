@@ -2,10 +2,11 @@
  * FeedPhotoCard styles - Instagram-Style Design
  *
  * Edge-to-edge photos with user info row below.
- * Modern, clean aesthetic matching dark theme.
+ * Retro 16-bit aesthetic matching dark theme.
  */
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   // Card container - no margins, photos go edge-to-edge
@@ -38,7 +39,7 @@ export const styles = StyleSheet.create({
   profilePhoto: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 9999,
     marginRight: 10,
     backgroundColor: colors.background.tertiary,
   },
@@ -47,7 +48,7 @@ export const styles = StyleSheet.create({
   profilePhotoFallback: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 9999,
     marginRight: 10,
     backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
@@ -61,14 +62,15 @@ export const styles = StyleSheet.create({
 
   // Display name
   displayName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
 
   // Timestamp
   timestamp: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -88,24 +90,26 @@ export const styles = StyleSheet.create({
   },
 
   reactionEmoji: {
-    fontSize: 14,
+    fontSize: typography.size.md,
     marginRight: 2,
   },
 
   reactionCount: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
 
   moreReactions: {
-    fontSize: 11,
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginLeft: 2,
   },
 
   noReactions: {
-    fontSize: 11,
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     fontStyle: 'italic',
     paddingHorizontal: 12,

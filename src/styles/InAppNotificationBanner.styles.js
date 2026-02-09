@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   outerContainer: {
@@ -11,7 +12,7 @@ export const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 12,
+    borderRadius: 4,
     marginHorizontal: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -26,13 +27,13 @@ export const styles = StyleSheet.create({
   avatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 9999,
     marginRight: 10,
   },
   avatarPlaceholder: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 9999,
     marginRight: 10,
     backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
@@ -43,12 +44,13 @@ export const styles = StyleSheet.create({
     marginRight: 8,
   },
   title: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   body: {
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 1,
   },

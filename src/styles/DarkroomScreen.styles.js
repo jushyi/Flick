@@ -7,6 +7,7 @@
 
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -24,7 +25,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 16,
   },
@@ -39,13 +41,14 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: typography.size.xxl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: 8,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: 24,
@@ -65,7 +68,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.overlay.light,
-    borderRadius: 20,
+    borderRadius: 6,
   },
   downChevron: {
     width: 12,
@@ -92,7 +95,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: colors.overlay.light,
-    borderRadius: 20,
+    borderRadius: 6,
   },
   undoButtonDisabled: {
     opacity: 0.3,
@@ -101,8 +104,8 @@ export const styles = StyleSheet.create({
     marginRight: 4,
   },
   undoText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   undoTextDisabled: {
@@ -114,14 +117,15 @@ export const styles = StyleSheet.create({
     height: 40,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: typography.size.xxl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: 4,
     textAlign: 'center',
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
   },
@@ -147,7 +151,7 @@ export const styles = StyleSheet.create({
   archiveButton: {
     flex: 1,
     height: 56,
-    borderRadius: 28,
+    borderRadius: 6,
     backgroundColor: colors.text.secondary, // iOS gray
     justifyContent: 'center',
     alignItems: 'center',
@@ -156,7 +160,7 @@ export const styles = StyleSheet.create({
   deleteButton: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: 6,
     backgroundColor: colors.system.iosRed, // iOS red for delete
     justifyContent: 'center',
     alignItems: 'center',
@@ -164,31 +168,31 @@ export const styles = StyleSheet.create({
   journalButton: {
     flex: 1,
     height: 56,
-    borderRadius: 28,
+    borderRadius: 6,
     backgroundColor: colors.status.ready, // Green for journal/share
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
   },
   triageButtonIcon: {
-    fontSize: 18,
+    fontSize: typography.size.xl,
     color: colors.text.primary,
-    fontWeight: 'bold',
+    fontFamily: typography.fontFamily.bodyBold,
     marginRight: 4,
   },
   deleteButtonIcon: {
-    fontSize: 24,
+    fontSize: typography.size.xxl,
     color: colors.text.primary,
-    fontWeight: 'bold',
+    fontFamily: typography.fontFamily.bodyBold,
   },
   archiveButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   journalButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   // Inline success state styles
@@ -208,8 +212,8 @@ export const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   successTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: typography.size.display,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
   },
@@ -217,13 +221,13 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.system.blue, // iOS blue
     paddingVertical: 16,
     paddingHorizontal: 48,
-    borderRadius: 24,
+    borderRadius: 6,
     alignSelf: 'center',
     marginBottom: 20,
   },
   doneButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
 });

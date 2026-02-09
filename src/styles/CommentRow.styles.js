@@ -6,6 +6,7 @@
  */
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -20,19 +21,19 @@ export const styles = StyleSheet.create({
   profilePhoto: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 9999,
   },
   profilePhotoPlaceholder: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 9999,
     backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profilePhotoInitial: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   // Middle content section
@@ -47,8 +48,8 @@ export const styles = StyleSheet.create({
     marginBottom: 2,
   },
   displayName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   authorBadge: {
@@ -56,16 +57,17 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     backgroundColor: colors.brand.purple,
-    borderRadius: 4,
+    borderRadius: 2,
   },
   authorBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   // Comment text
   commentText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     lineHeight: 20,
     marginBottom: 6,
@@ -74,7 +76,7 @@ export const styles = StyleSheet.create({
   mediaThumbnail: {
     width: 100,
     height: 100,
-    borderRadius: 8,
+    borderRadius: 2,
     marginBottom: 6,
   },
   // Footer row with reply and timestamp
@@ -87,17 +89,19 @@ export const styles = StyleSheet.create({
     paddingRight: 4,
   },
   replyButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   dot: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     marginHorizontal: 0, // UAT-031 fix: removed margin entirely (replyButton has paddingRight: 8)
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     paddingLeft: 4,
   },
@@ -109,7 +113,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   likeCount: {
-    fontSize: 11,
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 2,
   },

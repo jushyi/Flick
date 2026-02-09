@@ -6,6 +6,7 @@
  */
 import { StyleSheet, Platform } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -25,11 +26,12 @@ export const styles = StyleSheet.create({
     borderBottomColor: colors.border.subtle,
   },
   replyBannerText: {
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
   },
   replyBannerUsername: {
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   replyBannerCancel: {
@@ -49,7 +51,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background.tertiary,
-    borderRadius: 20,
+    borderRadius: 6,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     minHeight: 40,
@@ -57,7 +59,8 @@ export const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     paddingTop: 0,
     paddingBottom: 0,
@@ -75,8 +78,8 @@ export const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   gifButtonText: {
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   gifButtonTextDisabled: {
@@ -87,7 +90,7 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 9999,
     backgroundColor: colors.brand.purple,
     justifyContent: 'center',
     alignItems: 'center',
@@ -106,7 +109,7 @@ export const styles = StyleSheet.create({
   mediaPreview: {
     width: 80,
     height: 80,
-    borderRadius: 8,
+    borderRadius: 2,
   },
   removeMediaButton: {
     position: 'absolute',
@@ -116,7 +119,7 @@ export const styles = StyleSheet.create({
   },
   removeMediaButtonBg: {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 12,
+    borderRadius: 9999,
     width: 24,
     height: 24,
     justifyContent: 'center',
@@ -129,17 +132,17 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 2,
   },
   gifBadgeText: {
     color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.bodyBold,
   },
   // Uploading indicator text
   uploadingText: {
     color: colors.text.tertiary,
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
   },
 });

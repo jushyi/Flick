@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -20,8 +21,8 @@ export const styles = StyleSheet.create({
     marginRight: 12,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: typography.size.xxl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   // Tab navigation
@@ -42,8 +43,8 @@ export const styles = StyleSheet.create({
     borderBottomColor: colors.brand.purple,
   },
   tabText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   tabTextActive: {
@@ -51,7 +52,7 @@ export const styles = StyleSheet.create({
   },
   badge: {
     backgroundColor: colors.brand.pink,
-    borderRadius: 10,
+    borderRadius: 4,
     minWidth: 20,
     height: 20,
     justifyContent: 'center',
@@ -60,8 +61,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   tabContent: {
@@ -81,19 +82,21 @@ export const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     backgroundColor: colors.background.tertiary,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 2,
   },
   clearButton: {
     marginLeft: 12,
     padding: 4,
   },
   clearButtonText: {
-    fontSize: 18,
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.secondary,
   },
   // Section headers
@@ -105,8 +108,8 @@ export const styles = StyleSheet.create({
     borderBottomColor: colors.border.subtle,
   },
   sectionHeaderText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -120,7 +123,8 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
   },
   // Empty states
@@ -135,14 +139,15 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -156,7 +161,8 @@ export const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255, 68, 68, 0.3)',
   },
   errorText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.status.danger,
     textAlign: 'center',
   },
@@ -170,7 +176,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 20,
     backgroundColor: colors.background.secondary,
-    borderRadius: 12,
+    borderRadius: 4,
     marginHorizontal: 16,
     marginVertical: 8,
   },
@@ -178,14 +184,15 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   syncPromptTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: 4,
   },
   syncPromptText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: 16,
@@ -194,11 +201,11 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.brand.purple,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 2,
   },
   syncPromptButtonText: {
     color: colors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
   },
 });

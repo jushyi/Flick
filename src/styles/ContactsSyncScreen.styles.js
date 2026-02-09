@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -16,8 +17,8 @@ export const styles = StyleSheet.create({
     marginRight: 12,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   content: {
@@ -33,14 +34,15 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   privacyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: typography.size.xxl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: 12,
   },
   privacyText: {
-    fontSize: 15,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -50,14 +52,14 @@ export const styles = StyleSheet.create({
   syncButton: {
     backgroundColor: colors.brand.purple,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 4,
     marginTop: 24,
     width: '100%',
   },
   syncButtonText: {
     color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     textAlign: 'center',
   },
   skipButton: {
@@ -66,7 +68,8 @@ export const styles = StyleSheet.create({
   },
   skipButtonText: {
     color: colors.text.secondary,
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
   },
   // Results section
@@ -74,13 +77,14 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   resultsTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: 4,
   },
   resultsSubtitle: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
   },
   listContent: {
@@ -97,14 +101,15 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -117,7 +122,8 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
   },
   // Continue button (fixed at bottom)
@@ -134,12 +140,12 @@ export const styles = StyleSheet.create({
   continueButton: {
     backgroundColor: colors.brand.purple,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 4,
   },
   continueButtonText: {
     color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     textAlign: 'center',
   },
 });

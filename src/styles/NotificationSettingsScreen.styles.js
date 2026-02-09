@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   container: {
@@ -19,8 +20,8 @@ export const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   headerSpacer: {
@@ -37,8 +38,8 @@ export const styles = StyleSheet.create({
     borderBottomColor: colors.border.subtle,
   },
   sectionHeaderText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -67,17 +68,19 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   toggleItemLabel: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
   },
   toggleItemSubtitle: {
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 2,
   },
   masterToggleItem: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 12,
+    borderRadius: 4,
     marginHorizontal: 16,
     marginBottom: 8,
     paddingHorizontal: 16,

@@ -7,6 +7,7 @@
 
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   backdrop: {
@@ -19,8 +20,8 @@ export const styles = StyleSheet.create({
   },
   contentContainer: {
     backgroundColor: colors.background.secondary,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
     maxHeight: '70%',
     paddingTop: 12,
   },
@@ -42,19 +43,19 @@ export const styles = StyleSheet.create({
     borderBottomColor: colors.border.subtle,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   doneButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 4,
     backgroundColor: colors.interactive.primary,
   },
   doneButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   headerSpacer: {
@@ -68,7 +69,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 12,
   },
@@ -77,7 +79,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
   },
   friendRow: {
@@ -90,7 +93,7 @@ export const styles = StyleSheet.create({
   avatar: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 9999,
     backgroundColor: colors.background.tertiary,
   },
   avatarPlaceholder: {
@@ -98,8 +101,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   friendInfo: {
@@ -107,12 +110,13 @@ export const styles = StyleSheet.create({
     marginLeft: 12,
   },
   friendName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   friendUsername: {
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 1,
   },
