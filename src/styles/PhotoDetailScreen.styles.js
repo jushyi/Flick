@@ -205,13 +205,15 @@ export const styles = StyleSheet.create({
   // Tag button for tagging friends on feed photos
   tagButton: {
     position: 'absolute',
-    bottom: 150, // Above photoMenuButton at 102
-    right: 8,
-    width: 44,
-    height: 46,
+    bottom: 150,
+    right: 14,
+    width: 34,
+    height: 34,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: 17,
   },
   // Photo menu button for owner actions (delete, archive, restore)
   photoMenuButton: {

@@ -539,8 +539,8 @@ const PhotoDetailScreen = () => {
           </View>
         )}
 
-        {/* Tag button - visible for owner always, non-owner only when tags exist; hidden in stories mode */}
-        {contextMode !== 'stories' && (isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
+        {/* Tag button - visible for owner always, non-owner only when tags exist */}
+        {(isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
           <TouchableOpacity
             style={styles.tagButton}
             onPress={() => {
@@ -554,7 +554,7 @@ const PhotoDetailScreen = () => {
           >
             <Ionicons
               name={currentPhoto?.taggedUserIds?.length > 0 ? 'person' : 'person-add-outline'}
-              size={24}
+              size={18}
               color={colors.text.primary}
             />
           </TouchableOpacity>
