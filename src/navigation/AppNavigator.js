@@ -7,8 +7,9 @@ import { useAuth } from '../context/AuthContext';
 import { PhoneAuthProvider } from '../context/PhoneAuthContext';
 import { PhotoDetailProvider } from '../context/PhotoDetailContext';
 import { getDevelopingPhotoCount } from '../services/firebase/photoService';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
+import PixelIcon from '../components/PixelIcon';
 import DeletionRecoveryModal from '../components/DeletionRecoveryModal';
 
 // Import auth screens (phone-only authentication)
@@ -169,7 +170,8 @@ const MainTabNavigator = () => {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.background.primary,
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: colors.border.subtle,
           height: Platform.OS === 'ios' ? 85 : 65,
           paddingBottom: Platform.OS === 'ios' ? 28 : 8,
           paddingTop: 12,
@@ -209,66 +211,19 @@ const MainTabNavigator = () => {
 };
 
 /**
- * Minimalist Tab Icons (SVG-based)
+ * Pixel Art Tab Icons (16-bit retro style)
  */
 
-// Feed Icon - Two people silhouettes
-const FeedIcon = ({ color }) => (
-  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <Circle cx="9" cy="7" r="3" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-    <Circle cx="15" cy="9" r="2.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-    <Path
-      d="M3 20c0-3.314 2.686-6 6-6s6 2.686 6 6"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-    <Path
-      d="M15 20c0-2.21 1.343-4.105 3.25-4.917"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-  </Svg>
-);
+// Feed Icon - Two people pixel silhouettes
+const FeedIcon = ({ color }) => <PixelIcon name="tab-feed" size={24} color={color} />;
 
-// Camera Icon - Classic camera shape
-const CameraIcon = ({ color }) => (
-  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <Rect
-      x="2"
-      y="7"
-      width="20"
-      height="13"
-      rx="2"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Path
-      d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Circle cx="12" cy="13.5" r="3.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-  </Svg>
-);
+// Camera Icon - Pixel camera
+const CameraIcon = ({ color }) => <PixelIcon name="tab-camera" size={24} color={color} />;
 
-// Darkroom Icon - Moon/dark circle with badge
+// Darkroom Icon - Pixel crescent moon with badge
 const DarkroomIcon = ({ color, count }) => (
   <View style={{ position: 'relative' }}>
-    <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <PixelIcon name="tab-darkroom" size={24} color={color} />
     {count > 0 && (
       <View
         style={{
@@ -276,7 +231,7 @@ const DarkroomIcon = ({ color, count }) => (
           top: -6,
           right: -8,
           backgroundColor: colors.status.danger,
-          borderRadius: 10,
+          borderRadius: 2,
           minWidth: 18,
           height: 18,
           justifyContent: 'center',
@@ -284,7 +239,13 @@ const DarkroomIcon = ({ color, count }) => (
           paddingHorizontal: 4,
         }}
       >
-        <Text style={{ color: colors.text.primary, fontSize: 10, fontWeight: 'bold' }}>
+        <Text
+          style={{
+            color: colors.text.primary,
+            fontSize: typography.size.xs,
+            fontFamily: typography.fontFamily.bodyBold,
+          }}
+        >
           {count > 99 ? '99+' : count}
         </Text>
       </View>
@@ -292,20 +253,10 @@ const DarkroomIcon = ({ color, count }) => (
   </View>
 );
 
-// Profile Icon - Simple user silhouette (fallback when no photo)
-const ProfileIcon = ({ color }) => (
-  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="8" r="4" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-    <Path
-      d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-  </Svg>
-);
+// Profile Icon - Pixel user silhouette (fallback when no photo)
+const ProfileIcon = ({ color }) => <PixelIcon name="tab-profile" size={24} color={color} />;
 
-// Profile Tab Icon - Shows user photo or fallback icon
+// Profile Tab Icon - Shows user photo or fallback pixel icon
 const ProfileTabIcon = ({ color, focused, photoURL }) => {
   if (photoURL) {
     return (
