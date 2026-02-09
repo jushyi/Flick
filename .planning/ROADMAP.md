@@ -7,7 +7,7 @@ Transform Lapse Clone's authentication experience and profile system from incons
 ## Milestones
 
 - ✅ [v1.6 Auth & Profile Refactor](milestones/v1.6-ROADMAP.md) (Phases 1-31) — SHIPPED 2026-02-06
-- 🚧 **v1.7 Engagement & Polish** — Phases 32-44 (in progress)
+- 🚧 **v1.7 Engagement & Polish** — Phases 32-46 (in progress)
 
 ## Completed Milestones
 
@@ -216,7 +216,7 @@ Plans:
 Plans:
 
 - [x] 43-01: Services + Cloud Functions comment audit (known stale fixes + full service audit)
-- [ ] 43-02: Hooks, utils, context, navigation, App.js comment audit
+- [x] 43-02: Hooks, utils, context, navigation, App.js comment audit
 - [ ] 43-03: Components comment audit
 - [ ] 43-04: Screens, styles, constants comment audit
 
@@ -231,6 +231,28 @@ Plans:
 
 - [ ] TBD (run /gsd:plan-phase 44 to break down)
 
+#### Phase 45: Security Audit
+
+**Goal**: [To be planned]
+**Depends on**: Phase 44
+**Research**: Unlikely (internal patterns)
+**Plans**: 0
+
+Plans:
+
+- [ ] TBD (run /gsd:plan-phase 45 to break down)
+
+#### Phase 46: Full Notifications Testing
+
+**Goal**: [To be planned]
+**Depends on**: Phase 45
+**Research**: Unlikely (internal patterns)
+**Plans**: 0
+
+Plans:
+
+- [ ] TBD (run /gsd:plan-phase 46 to break down)
+
 ---
 
 ## Progress
@@ -243,20 +265,22 @@ Plans:
 
 **v1.7 Engagement & Polish — In Progress**
 
-| Phase                      | Milestone | Plans | Status      | Completed  |
-| -------------------------- | --------- | ----- | ----------- | ---------- |
-| 32. Photo Issues Fix       | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 34. Push Infrastructure    | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 35. Social Notifications   | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 36. Photo Notifications    | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 37. Darkroom Notifications | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 38. Notification UI Polish | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 39. Darkroom Tagging       | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 40. Feed Tagging           | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 41. Tag Integration        | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 42. Mutual Friends         | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 43. Comment Cleanup/Audit  | v1.7      | 1/4   | In progress |            |
-| 44. Notification Activity  | v1.7      | 0/?   | Planned     |            |
+| Phase                          | Milestone | Plans | Status      | Completed  |
+| ------------------------------ | --------- | ----- | ----------- | ---------- |
+| 32. Photo Issues Fix           | v1.7      | 2/2   | Complete    | 2026-02-06 |
+| 33. Navigation Issues Fix      | v1.7      | 1/1   | Complete    | 2026-02-06 |
+| 34. Push Infrastructure        | v1.7      | 2/2   | Complete    | 2026-02-06 |
+| 35. Social Notifications       | v1.7      | 2/2   | Complete    | 2026-02-06 |
+| 36. Photo Notifications        | v1.7      | 2/2   | Complete    | 2026-02-06 |
+| 37. Darkroom Notifications     | v1.7      | 1/1   | Complete    | 2026-02-06 |
+| 38. Notification UI Polish     | v1.7      | 2/2   | Complete    | 2026-02-09 |
+| 39. Darkroom Tagging           | v1.7      | 1/1   | Complete    | 2026-02-09 |
+| 40. Feed Tagging               | v1.7      | 1/1   | Complete    | 2026-02-09 |
+| 41. Tag Integration            | v1.7      | 1/1   | Complete    | 2026-02-09 |
+| 42. Mutual Friends             | v1.7      | 2/2   | Complete    | 2026-02-09 |
+| 43. Comment Cleanup/Audit      | v1.7      | 2/4   | In progress |            |
+| 44. Notification Activity      | v1.7      | 0/?   | Planned     |            |
+| 45. Security Audit             | v1.7      | 0/?   | Planned     |            |
+| 46. Full Notifications Testing | v1.7      | 0/?   | Planned     |            |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.
