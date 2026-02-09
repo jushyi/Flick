@@ -1867,6 +1867,124 @@ exports.deleteUserAccount = onCall({ cors: true }, async request => {
 });
 
 /**
+ * Cloud Function: Get mutual friend suggestions
+ * Computes friends-of-friends for the authenticated user
+ * Uses admin SDK to bypass security rules (users can't read other users' friendships)
+ */
+exports.getMutualFriendSuggestions = onCall(async request => {
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  try {
+    const db = admin.firestore();
+
+    // Step 1: Get all friendships involving this user
+    const [snap1, snap2] = await Promise.all([
+      db.collection('friendships').where('user1Id', '==', userId).get(),
+      db.collection('friendships').where('user2Id', '==', userId).get(),
+    ]);
+
+    // Step 2: Build friendIds (accepted) and excludeIds (all connected + self)
+    const friendIds = new Set();
+    const excludeIds = new Set([userId]);
+
+    const processDocs = docs => {
+      docs.forEach(docSnap => {
+        const data = docSnap.data();
+        const otherId = data.user1Id === userId ? data.user2Id : data.user1Id;
+        excludeIds.add(otherId);
+        if (data.status === 'accepted') {
+          friendIds.add(otherId);
+        }
+      });
+    };
+
+    processDocs(snap1.docs);
+    processDocs(snap2.docs);
+
+    if (friendIds.size === 0) {
+      return { suggestions: [] };
+    }
+
+    // Step 3: Cap at 30 friends to limit query volume
+    const friendIdsToProcess = Array.from(friendIds).slice(0, 30);
+
+    // Step 4: Query each friend's friendships in parallel (admin bypasses rules)
+    const friendQueries = friendIdsToProcess.map(async friendId => {
+      const [f1, f2] = await Promise.all([
+        db
+          .collection('friendships')
+          .where('user1Id', '==', friendId)
+          .where('status', '==', 'accepted')
+          .get(),
+        db
+          .collection('friendships')
+          .where('user2Id', '==', friendId)
+          .where('status', '==', 'accepted')
+          .get(),
+      ]);
+      return [...f1.docs, ...f2.docs];
+    });
+    const friendResults = await Promise.all(friendQueries);
+
+    // Step 5: Count mutual connections
+    const mutualCounts = new Map();
+
+    friendResults.forEach(docs => {
+      docs.forEach(docSnap => {
+        const data = docSnap.data();
+        [data.user1Id, data.user2Id].forEach(id => {
+          if (!excludeIds.has(id)) {
+            mutualCounts.set(id, (mutualCounts.get(id) || 0) + 1);
+          }
+        });
+      });
+    });
+
+    if (mutualCounts.size === 0) {
+      return { suggestions: [] };
+    }
+
+    // Step 6: Sort by count descending, take top 20
+    const sortedEntries = Array.from(mutualCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20);
+
+    // Step 7: Fetch user profiles in parallel
+    const profileFetches = sortedEntries.map(async ([suggestionUserId, mutualCount]) => {
+      const userDoc = await db.collection('users').doc(suggestionUserId).get();
+      if (!userDoc.exists) return null;
+
+      const userData = userDoc.data();
+      return {
+        userId: suggestionUserId,
+        displayName: userData.displayName || null,
+        username: userData.username || null,
+        profilePhotoURL: userData.profilePhotoURL || null,
+        mutualCount,
+      };
+    });
+    const profiles = await Promise.all(profileFetches);
+
+    const suggestions = profiles.filter(p => p !== null);
+
+    logger.info('getMutualFriendSuggestions: Complete', {
+      userId,
+      friendCount: friendIds.size,
+      suggestionsFound: suggestions.length,
+    });
+
+    return { suggestions };
+  } catch (error) {
+    logger.error('getMutualFriendSuggestions: Failed', { userId, error: error.message });
+    throw new HttpsError('internal', 'Failed to get mutual friend suggestions');
+  }
+});
+
+/**
  * Schedule user account for deletion after 30-day grace period
  * Sets scheduledForDeletionAt to 30 days from now
  * User is logged out after scheduling - if they log back in, they can cancel
