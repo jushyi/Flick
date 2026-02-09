@@ -7,7 +7,7 @@ Transform Lapse Clone's authentication experience and profile system from incons
 ## Milestones
 
 - ✅ [v1.6 Auth & Profile Refactor](milestones/v1.6-ROADMAP.md) (Phases 1-31) — SHIPPED 2026-02-06
-- 🚧 **v1.7 Engagement & Polish** — Phases 32-41 (in progress)
+- 🚧 **v1.7 Engagement & Polish** — Phases 32-42 (in progress)
 
 ## Completed Milestones
 
@@ -187,11 +187,22 @@ Plans:
 **Goal**: Connect photo tagging to notification system — notify tagged users
 **Depends on**: Phase 40
 **Research**: Unlikely (internal patterns)
+**Plans**: 1
+
+Plans:
+
+- [x] 41-01: Notification settings toggle + tag removal cancellation
+
+#### Phase 42: Mutual Friends Suggestions
+
+**Goal**: Suggest friends based on mutual connections
+**Depends on**: Phase 41
+**Research**: Unlikely (internal patterns)
 **Plans**: TBD
 
 Plans:
 
-- [ ] 41-01: TBD
+- [ ] 42-01: TBD
 
 ---
 
@@ -216,6 +227,7 @@ Plans:
 | 38. Notification UI Polish | v1.7      | 1/1   | Complete    | 2026-02-07 |
 | 39. Darkroom Tagging       | v1.7      | 1/1   | Complete    | 2026-02-09 |
 | 40. Feed Tagging           | v1.7      | 0/?   | Not started | -          |
-| 41. Tag Integration        | v1.7      | 0/?   | Not started | -          |
+| 41. Tag Integration        | v1.7      | 1/1   | Complete    | 2026-02-09 |
+| 42. Mutual Friends         | v1.7      | 0/?   | Not started | -          |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.
