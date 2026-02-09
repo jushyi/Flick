@@ -48,14 +48,10 @@ const StoriesViewerModal = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-  // Animated values for swipe gesture
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
 
-  // Extract friend data
   const { userId, displayName, profilePhotoURL, topPhotos = [] } = friend || {};
-
-  // Current photo
   const currentPhoto = topPhotos[currentIndex] || null;
 
   // Reset index when modal opens with new friend
@@ -161,9 +157,6 @@ const StoriesViewerModal = ({
     })
   ).current;
 
-  /**
-   * Handle tap navigation on photo area
-   */
   const handleTap = event => {
     const { locationX } = event.nativeEvent;
 
@@ -198,21 +191,15 @@ const StoriesViewerModal = ({
         }
       }
     }
-    // Center tap (40%) - do nothing for now (future: pause auto-advance)
+    // Center tap (40%) - no action
   };
 
-  /**
-   * Handle close button press
-   */
   const handleClose = () => {
     logger.debug('StoriesViewer: Close button pressed');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onClose();
   };
 
-  /**
-   * Handle avatar press - close modal and navigate to profile
-   */
   const handleAvatarPress = () => {
     logger.debug('StoriesViewer: Avatar pressed', { userId, displayName });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -222,9 +209,6 @@ const StoriesViewerModal = ({
     }
   };
 
-  /**
-   * Render progress bar segments
-   */
   const renderProgressBar = () => {
     return (
       <View style={styles.progressBarContainer}>

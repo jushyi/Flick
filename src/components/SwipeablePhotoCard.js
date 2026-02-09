@@ -52,7 +52,6 @@ const SwipeablePhotoCard = forwardRef(
     },
     ref
   ) => {
-    // Use the swipeable card hook for all logic
     const { cardStyle, archiveOverlayStyle, journalOverlayStyle, deleteOverlayStyle, panGesture } =
       useSwipeableCard({
         photo,
@@ -83,7 +82,7 @@ const SwipeablePhotoCard = forwardRef(
           styles.cardContainer,
           cardStyle,
           { zIndex },
-          // Stack cards have no pointer events (UAT-005)
+          // Stack cards have no pointer events
           !isActive && { pointerEvents: 'none' },
         ]}
       >
@@ -168,7 +167,6 @@ const SwipeablePhotoCard = forwardRef(
   }
 );
 
-// Set display name for React DevTools
 SwipeablePhotoCard.displayName = 'SwipeablePhotoCard';
 
 export default SwipeablePhotoCard;

@@ -319,7 +319,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     }
   }, [visible, selects, initializePhotos, translateY]);
 
-  // Check if there are unsaved changes
   const hasUnsavedChanges = useCallback(() => {
     const currentUris = selectedPhotos.map(p => p.uri);
     // Different length means changes
@@ -334,7 +333,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     });
   }, []);
 
-  // Calculate preview dimensions
   const previewWidth = SCREEN_WIDTH - SCREEN_PADDING * 2;
   const previewHeight = previewWidth / PREVIEW_ASPECT_RATIO;
 
@@ -468,7 +466,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     }
   }, [selectedPhotos, onSave]);
 
-  // Attempt to close - check for unsaved changes first
   const attemptClose = useCallback(() => {
     if (hasUnsavedChanges()) {
       Alert.alert(
@@ -490,7 +487,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     }
   }, [hasUnsavedChanges, onClose]);
 
-  // Handle swipe threshold reached - check changes and decide action
   const handleSwipeThreshold = useCallback(() => {
     if (hasUnsavedChanges()) {
       // Bounce back first, then show alert
@@ -520,25 +516,20 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     }
   }, [hasUnsavedChanges, translateY, onClose]);
 
-  // Swipe-to-dismiss gesture
   const swipeGesture = Gesture.Pan()
     .onUpdate(event => {
-      // Only allow downward swipe
       if (event.translationY > 0) {
         translateY.value = event.translationY;
       }
     })
     .onEnd(event => {
       if (event.translationY > SWIPE_THRESHOLD) {
-        // Swipe threshold reached - check for unsaved changes
         runOnJS(handleSwipeThreshold)();
       } else {
-        // Bounce back
         translateY.value = withSpring(0, { damping: 20, stiffness: 300 });
       }
     });
 
-  // Animated style for swipe-to-dismiss
   const swipeAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
   }));
@@ -547,7 +538,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     attemptClose();
   }, [attemptClose]);
 
-  // Render empty preview placeholder
   const renderEmptyPreview = () => (
     <TouchableOpacity
       style={[styles.previewEmpty, { width: previewWidth, height: previewHeight }]}
@@ -559,7 +549,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     </TouchableOpacity>
   );
 
-  // Render preview with photo
   const renderPreviewPhoto = () => (
     <Image
       source={{ uri: selectedPhotos[selectedIndex]?.uri }}
@@ -568,7 +557,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     />
   );
 
-  // Render thumbnail slot
   const renderThumbnailSlot = index => {
     const hasPhoto = index < selectedPhotos.length;
     const isSelected = hasPhoto && index === selectedIndex;

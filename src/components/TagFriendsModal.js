@@ -37,12 +37,9 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
 
-  // State
   const [friends, setFriends] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set(initialSelectedIds));
   const [loading, setLoading] = useState(false);
-
-  // Animation for content slide-up
   const slideAnim = useRef(new Animated.Value(400)).current;
 
   // Animate content slide when visibility changes
@@ -66,9 +63,6 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
     }
   }, [visible, initialSelectedIds]);
 
-  /**
-   * Load accepted friends and hydrate with user profiles
-   */
   const loadFriends = useCallback(async () => {
     setLoading(true);
     try {
@@ -107,16 +101,12 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
     }
   }, [user]);
 
-  // Fetch friends when modal becomes visible
   useEffect(() => {
     if (visible && user) {
       loadFriends();
     }
   }, [visible, user, loadFriends]);
 
-  /**
-   * Toggle friend selection
-   */
   const toggleFriend = useCallback(friendId => {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -129,17 +119,11 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
     });
   }, []);
 
-  /**
-   * Handle Done button press
-   */
   const handleDone = useCallback(() => {
     const ids = Array.from(selectedIds);
     onConfirm(ids);
   }, [selectedIds, onConfirm]);
 
-  /**
-   * Render a single friend row
-   */
   const renderFriendItem = useCallback(
     ({ item }) => {
       const isSelected = selectedIds.has(item.userId);

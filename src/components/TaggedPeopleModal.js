@@ -36,11 +36,8 @@ import logger from '../utils/logger';
 const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress }) => {
   const insets = useSafeAreaInsets();
 
-  // State
   const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // Animation for content slide-up
   const slideAnim = useRef(new Animated.Value(400)).current;
 
   // Animate content slide when visibility changes
@@ -57,9 +54,6 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
     }
   }, [visible, slideAnim]);
 
-  /**
-   * Load profiles for tagged user IDs
-   */
   const loadTaggedPeople = useCallback(async () => {
     if (!taggedUserIds || taggedUserIds.length === 0) {
       setPeople([]);
@@ -93,16 +87,12 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
     }
   }, [taggedUserIds]);
 
-  // Fetch profiles when modal becomes visible
   useEffect(() => {
     if (visible) {
       loadTaggedPeople();
     }
   }, [visible, loadTaggedPeople]);
 
-  /**
-   * Handle tapping a person row
-   */
   const handlePersonPress = useCallback(
     (userId, displayName) => {
       if (onPersonPress) {
@@ -113,9 +103,6 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
     [onPersonPress, onClose]
   );
 
-  /**
-   * Render a single person row
-   */
   const renderPersonItem = useCallback(
     ({ item }) => {
       return (
