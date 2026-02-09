@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 export const styles = StyleSheet.create({
   card: {
@@ -17,7 +18,7 @@ export const styles = StyleSheet.create({
   avatar: {
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 9999,
   },
   avatarPlaceholder: {
     backgroundColor: colors.background.tertiary,
@@ -25,8 +26,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.secondary,
   },
   userInfo: {
@@ -34,17 +35,25 @@ export const styles = StyleSheet.create({
     marginRight: 12,
   },
   displayName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
     marginBottom: 2,
   },
   username: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
   },
   friendsSince: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
+    color: colors.text.tertiary,
+    marginTop: 2,
+  },
+  subtitle: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     marginTop: 2,
   },
@@ -58,33 +67,33 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.brand.purple,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 2,
     minWidth: 70,
     alignItems: 'center',
   },
   addButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   // Dismiss button (X) for suggestions
   dismissButton: {
     padding: 8,
     backgroundColor: colors.background.tertiary,
-    borderRadius: 8,
+    borderRadius: 2,
   },
   // Pending button (gray)
   pendingButton: {
     backgroundColor: colors.background.tertiary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 2,
     minWidth: 70,
     alignItems: 'center',
   },
   pendingButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   // Accept button (green)
@@ -92,13 +101,13 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.status.ready,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 2,
     minWidth: 70,
     alignItems: 'center',
   },
   acceptButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   // Deny button (red/pink)
@@ -106,13 +115,13 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.status.danger,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 2,
     minWidth: 60,
     alignItems: 'center',
   },
   denyButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   // Cancel button (for sent requests)
@@ -120,13 +129,13 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 2,
     minWidth: 70,
     alignItems: 'center',
   },
   cancelButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   buttonDisabled: {

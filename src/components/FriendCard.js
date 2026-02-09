@@ -40,6 +40,7 @@ const FriendCard = ({
   onReport,
   onDismiss, // Optional: renders X button next to Add for suggestions
   isBlocked = false, // Whether current user has blocked this user
+  subtitle, // Optional: subtitle text below username (e.g., "3 mutual friends")
 }) => {
   const { userId, displayName, username, profilePhotoURL } = user || {};
 
@@ -277,6 +278,11 @@ const FriendCard = ({
         <Text style={styles.username} numberOfLines={1}>
           @{username || 'unknown'}
         </Text>
+        {subtitle && (
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        )}
         {showFriendsSince && friendsSince && (
           <Text style={styles.friendsSince}>Friends since {formatFriendsSince()}</Text>
         )}
