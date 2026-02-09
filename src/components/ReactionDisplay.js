@@ -42,7 +42,6 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
 
   const groupedReactions = getGroupedReactions();
 
-  // Empty state
   if (reactionCount === 0 || groupedReactions.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -52,7 +51,6 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
     );
   }
 
-  // Compact mode - just emoji pills
   if (compact) {
     return (
       <View style={styles.compactContainer}>
@@ -74,7 +72,6 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
     );
   }
 
-  // Full mode - detailed reaction list
   return (
     <View style={styles.container}>
       <Text style={styles.title}>

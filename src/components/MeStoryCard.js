@@ -31,9 +31,6 @@ export const MeStoryCard = ({ friend, onPress, isFirst = false, isViewed = false
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array
   const thumbnailUrl = thumbnailURL || topPhotos?.[0]?.imageURL || null;
 
-  /**
-   * Handle card press
-   */
   const handlePress = () => {
     logger.debug('MeStoryCard: Card pressed', { userId });
     if (onPress) {

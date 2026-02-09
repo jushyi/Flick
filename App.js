@@ -240,7 +240,12 @@ export default function App() {
             <AuthProvider>
               <AppNavigator />
               <StatusBar style="auto" />
-              {showAnimatedSplash && <AnimatedSplash onAnimationComplete={handleSplashComplete} />}
+              {showAnimatedSplash && (
+                <AnimatedSplash
+                  onAnimationComplete={handleSplashComplete}
+                  fontsLoaded={fontsLoaded}
+                />
+              )}
             </AuthProvider>
           </ThemeProvider>
         </ErrorBoundary>

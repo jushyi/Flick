@@ -1,6 +1,6 @@
 /**
- * Generate splash screen for Rewind
- * Creates "REWIND" text centered on dark background with brand accent
+ * Generate splash screen for Rewind — 16-Bit Retro Edition
+ * Creates pixel-art "REWIND" text on CRT dark background with scanlines and glow
  */
 const sharp = require('sharp');
 const path = require('path');
@@ -10,34 +10,329 @@ const ASSETS_DIR = path.join(__dirname, '..', 'assets');
 // Splash configuration
 const SPLASH_WIDTH = 1284;
 const SPLASH_HEIGHT = 2778;
-const BACKGROUND_COLOR = '#FAFAFA';
-const TEXT_COLOR = '#FF6B6B'; // Coral - matches icon color
 
-// Create SVG for splash screen
+// 16-bit retro color palette
+const COLORS = {
+  background: '#0A0A1A', // CRT navy-black
+  text: '#00D4FF', // Electric cyan
+  glow: '#00D4FF', // Glow color (same, with opacity via filter)
+  scanline: 'rgba(224, 224, 240, 0.03)', // Barely visible CRT scanlines
+  border: '#353555', // Retro indigo border
+  muted: '#7B7B9E', // Muted gray-blue
+};
+
+/**
+ * Pixel-art letter definitions on 5x7 grids
+ * Each letter is an array of [x, y] coordinates for filled pixels
+ * W is wider at 7x7
+ */
+const PIXEL_LETTERS = {
+  R: {
+    width: 5,
+    height: 7,
+    pixels: [
+      [0, 0],
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [0, 1],
+      [4, 1],
+      [0, 2],
+      [4, 2],
+      [0, 3],
+      [1, 3],
+      [2, 3],
+      [3, 3],
+      [0, 4],
+      [3, 4],
+      [0, 5],
+      [4, 5],
+      [0, 6],
+      [4, 6],
+    ],
+  },
+  E: {
+    width: 5,
+    height: 7,
+    pixels: [
+      [0, 0],
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [4, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [1, 3],
+      [2, 3],
+      [3, 3],
+      [0, 4],
+      [0, 5],
+      [0, 6],
+      [1, 6],
+      [2, 6],
+      [3, 6],
+      [4, 6],
+    ],
+  },
+  W: {
+    width: 7,
+    height: 7,
+    pixels: [
+      [0, 0],
+      [6, 0],
+      [0, 1],
+      [6, 1],
+      [0, 2],
+      [6, 2],
+      [0, 3],
+      [3, 3],
+      [6, 3],
+      [0, 4],
+      [2, 4],
+      [4, 4],
+      [6, 4],
+      [0, 5],
+      [1, 5],
+      [3, 5],
+      [5, 5],
+      [6, 5],
+      [0, 6],
+      [1, 6],
+      [5, 6],
+      [6, 6],
+    ],
+  },
+  I: {
+    width: 5,
+    height: 7,
+    pixels: [
+      [0, 0],
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [4, 0],
+      [2, 1],
+      [2, 2],
+      [2, 3],
+      [2, 4],
+      [2, 5],
+      [0, 6],
+      [1, 6],
+      [2, 6],
+      [3, 6],
+      [4, 6],
+    ],
+  },
+  N: {
+    width: 5,
+    height: 7,
+    pixels: [
+      [0, 0],
+      [4, 0],
+      [0, 1],
+      [1, 1],
+      [4, 1],
+      [0, 2],
+      [2, 2],
+      [4, 2],
+      [0, 3],
+      [2, 3],
+      [4, 3],
+      [0, 4],
+      [3, 4],
+      [4, 4],
+      [0, 5],
+      [4, 5],
+      [0, 6],
+      [4, 6],
+    ],
+  },
+  D: {
+    width: 5,
+    height: 7,
+    pixels: [
+      [0, 0],
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [0, 1],
+      [4, 1],
+      [0, 2],
+      [4, 2],
+      [0, 3],
+      [4, 3],
+      [0, 4],
+      [4, 4],
+      [0, 5],
+      [4, 5],
+      [0, 6],
+      [1, 6],
+      [2, 6],
+      [3, 6],
+    ],
+  },
+};
+
+/**
+ * Render the word "REWIND" as pixel-art SVG rect elements
+ */
+function renderPixelText(word, cellSize, startX, startY) {
+  let rects = '';
+  let offsetX = startX;
+
+  for (const char of word) {
+    const letter = PIXEL_LETTERS[char];
+    if (!letter) continue;
+
+    for (const [x, y] of letter.pixels) {
+      rects += `<rect x="${offsetX + x * cellSize}" y="${startY + y * cellSize}" width="${cellSize}" height="${cellSize}" fill="${COLORS.text}"/>`;
+    }
+
+    offsetX += (letter.width + 2) * cellSize; // 2-cell gap between letters
+  }
+
+  return rects;
+}
+
+/**
+ * Calculate total pixel width of a word
+ */
+function getWordWidth(word) {
+  let totalWidth = 0;
+  for (let i = 0; i < word.length; i++) {
+    const letter = PIXEL_LETTERS[word[i]];
+    if (!letter) continue;
+    totalWidth += letter.width;
+    if (i < word.length - 1) totalWidth += 2; // gap between letters
+  }
+  return totalWidth;
+}
+
+/**
+ * Create SVG for the retro splash screen
+ */
 function createSplashSvg(width, height) {
-  const fontSize = Math.floor(width * 0.18);
-  const textY = Math.floor(height * 0.48);
+  const word = 'REWIND';
+  const wordWidthInCells = getWordWidth(word);
+
+  // Size each pixel cell so the text fills ~60% of screen width
+  const targetWidth = width * 0.6;
+  const cellSize = Math.floor(targetWidth / wordWidthInCells);
+
+  // Center the text
+  const actualWidth = wordWidthInCells * cellSize;
+  const textX = Math.floor((width - actualWidth) / 2);
+  const textHeight = 7 * cellSize;
+  const textY = Math.floor((height - textHeight) / 2);
+
+  // Render the pixel text
+  const textRects = renderPixelText(word, cellSize, textX, textY);
+
+  // Glow filter for CRT phosphor effect
+  const glowFilter = `
+    <defs>
+      <filter id="crt-glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="${cellSize * 0.8}" result="blur"/>
+        <feColorMatrix in="blur" type="matrix"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.35 0" result="glow"/>
+        <feMerge>
+          <feMergeNode in="glow"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+  `;
+
+  // CRT scanlines (subtle horizontal lines across full screen)
+  let scanlines = '';
+  const scanlineSpacing = 4;
+  for (let y = 0; y < height; y += scanlineSpacing) {
+    scanlines += `<rect x="0" y="${y}" width="${width}" height="1" fill="${COLORS.scanline}"/>`;
+  }
+
+  // Decorative horizontal lines above and below text
+  const lineMargin = cellSize * 3;
+  const decorLines = `
+    <rect x="${textX}" y="${textY - lineMargin}" width="${actualWidth}" height="1" fill="${COLORS.border}"/>
+    <rect x="${textX}" y="${textY + textHeight + lineMargin}" width="${actualWidth}" height="1" fill="${COLORS.border}"/>
+  `;
+
+  // Small viewfinder icon below text (matching app icon motif) in muted color
+  const iconCellSize = cellSize * 0.4;
+  const iconWidth = 16 * iconCellSize;
+  const iconX = Math.floor((width - iconWidth) / 2);
+  const iconY = textY + textHeight + lineMargin + cellSize * 2;
+
+  // Simplified viewfinder corners
+  const cornerSize = 4;
+  const cornerThick = 1;
+  let viewfinderRects = '';
+  const corners = [
+    // Top-left
+    { sx: 0, sy: 0, ex: cornerSize, ey: cornerThick },
+    { sx: 0, sy: 0, ex: cornerThick, ey: cornerSize },
+    // Top-right
+    { sx: 16 - cornerSize, sy: 0, ex: 16, ey: cornerThick },
+    { sx: 16 - cornerThick, sy: 0, ex: 16, ey: cornerSize },
+    // Bottom-left
+    { sx: 0, sy: 12 - cornerThick, ex: cornerSize, ey: 12 },
+    { sx: 0, sy: 12 - cornerSize, ex: cornerThick, ey: 12 },
+    // Bottom-right
+    { sx: 16 - cornerSize, sy: 12 - cornerThick, ex: 16, ey: 12 },
+    { sx: 16 - cornerThick, sy: 12 - cornerSize, ex: 16, ey: 12 },
+  ];
+  for (const c of corners) {
+    for (let y = c.sy; y < c.ey; y++) {
+      for (let x = c.sx; x < c.ex; x++) {
+        viewfinderRects += `<rect x="${iconX + x * iconCellSize}" y="${iconY + y * iconCellSize}" width="${iconCellSize}" height="${iconCellSize}" fill="${COLORS.muted}"/>`;
+      }
+    }
+  }
+
+  // Small rewind arrows inside viewfinder (muted)
+  const arrowPixels = [
+    // Left arrow <
+    [5, 6],
+    [6, 5],
+    [6, 6],
+    [6, 7],
+    [7, 4],
+    [7, 5],
+    [7, 6],
+    [7, 7],
+    [7, 8],
+    // Right arrow <
+    [9, 6],
+    [10, 5],
+    [10, 6],
+    [10, 7],
+    [11, 4],
+    [11, 5],
+    [11, 6],
+    [11, 7],
+    [11, 8],
+  ];
+  for (const [x, y] of arrowPixels) {
+    viewfinderRects += `<rect x="${iconX + x * iconCellSize}" y="${iconY + y * iconCellSize}" width="${iconCellSize}" height="${iconCellSize}" fill="${COLORS.muted}"/>`;
+  }
 
   return `
 <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="${BACKGROUND_COLOR}"/>
-  <text
-    x="50%"
-    y="${textY}"
-    font-family="Helvetica Neue, Arial, sans-serif"
-    font-size="${fontSize}"
-    font-weight="bold"
-    fill="${TEXT_COLOR}"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    letter-spacing="0.2em"
-  >OLY</text>
+  ${glowFilter}
+  <rect width="100%" height="100%" fill="${COLORS.background}"/>
+  ${scanlines}
+  <g filter="url(#crt-glow)">
+    ${textRects}
+  </g>
+  ${decorLines}
+  ${viewfinderRects}
 </svg>
   `.trim();
 }
 
 async function generateSplash() {
-  console.log('Generating Rewind splash screen...');
+  console.log('Generating Rewind 16-bit retro splash screen...');
 
   try {
     const splashSvg = Buffer.from(createSplashSvg(SPLASH_WIDTH, SPLASH_HEIGHT));
@@ -48,7 +343,7 @@ async function generateSplash() {
     console.log(`✓ Created assets/splash.png (${SPLASH_WIDTH}x${SPLASH_HEIGHT})`);
 
     console.log('\n✅ Splash screen generated successfully!');
-    console.log('Design: OLY text in coral on off-white background');
+    console.log('Design: Pixel-art REWIND text with CRT glow and scanlines');
   } catch (error) {
     console.error('Error generating splash:', error);
     process.exit(1);

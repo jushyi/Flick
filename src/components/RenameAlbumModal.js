@@ -40,7 +40,6 @@ const RenameAlbumModal = ({ visible, currentName = '', onClose, onSave }) => {
   // Animate content slide when visibility changes
   useEffect(() => {
     if (visible) {
-      // Slide up with spring animation
       Animated.spring(slideAnim, {
         toValue: 0,
         damping: 15,
@@ -56,7 +55,7 @@ const RenameAlbumModal = ({ visible, currentName = '', onClose, onSave }) => {
   const handleSave = () => {
     const trimmedName = name.trim();
     if (trimmedName.length === 0) {
-      return; // Don't save empty names
+      return;
     }
     onSave?.(trimmedName);
     onClose?.();

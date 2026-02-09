@@ -62,10 +62,8 @@ const InAppNotificationBanner = ({ visible, title, body, avatarUrl, onPress, onD
   // Handle visible transitions
   useEffect(() => {
     if (visible) {
-      // Animate in
       animateIn();
 
-      // Set up auto-dismiss timer
       clearAutoDismissTimer();
       autoDismissTimer.current = setTimeout(() => {
         animateDismiss();

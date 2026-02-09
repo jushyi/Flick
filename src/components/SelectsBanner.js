@@ -43,7 +43,6 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
     }
   }, [selects.length]);
 
-  // Stop auto-play
   const stopAutoPlay = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -51,7 +50,6 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
     }
   }, []);
 
-  // Auto-play effect
   useEffect(() => {
     if (!isPaused && selects.length > 1) {
       startAutoPlay();
@@ -67,7 +65,6 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
     setCurrentIndex(0);
   }, [selects]);
 
-  // Handle pause state
   const handlePauseStart = useCallback(() => {
     setIsPaused(true);
     pauseOpacity.value = withTiming(0.9, { duration: 100 });
@@ -78,14 +75,12 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
     pauseOpacity.value = withTiming(1, { duration: 100 });
   }, [pauseOpacity]);
 
-  // Handle tap
   const handleTap = useCallback(() => {
     if (onTap) {
       onTap();
     }
   }, [onTap]);
 
-  // Gestures
   // LongPress for hold-to-pause (activates after 150ms hold)
   const longPressGesture = Gesture.LongPress()
     .minDuration(150)
@@ -107,12 +102,10 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
   // Exclusive: LongPress checked first, Tap wins if released before 150ms
   const composedGesture = Gesture.Exclusive(longPressGesture, tapGesture);
 
-  // Animated style for pause feedback
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: pauseOpacity.value,
   }));
 
-  // Empty state - own profile
   if (selects.length === 0 && isOwnProfile) {
     return (
       <GestureHandlerRootView style={styles.gestureRoot}>
@@ -126,7 +119,6 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
     );
   }
 
-  // Empty state - other profile
   if (selects.length === 0 && !isOwnProfile) {
     return (
       <View style={styles.emptyContainer}>
@@ -136,7 +128,6 @@ const SelectsBanner = ({ selects = [], isOwnProfile = true, onTap }) => {
     );
   }
 
-  // Photo slideshow
   return (
     <GestureHandlerRootView style={styles.gestureRoot}>
       <GestureDetector gesture={composedGesture}>

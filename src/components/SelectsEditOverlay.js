@@ -37,12 +37,11 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const MAX_SELECTS = 10;
 const THUMBNAIL_SIZE = 56;
 const THUMBNAIL_GAP = 8;
-const PREVIEW_ASPECT_RATIO = 3 / 4; // Taller preview (was 4/5)
+const PREVIEW_ASPECT_RATIO = 3 / 4;
 const SCREEN_PADDING = 24;
 const DELETE_BAR_HEIGHT = 48;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// DraggableThumbnail component - reused from SelectsScreen
 const DraggableThumbnail = ({
   photo,
   photoId,
@@ -236,7 +235,6 @@ const DraggableThumbnail = ({
   );
 };
 
-// DeleteBar component - reused from SelectsScreen
 const DeleteBar = ({ isVisible, isHovering }) => {
   const translateY = useSharedValue(DELETE_BAR_HEIGHT + 20);
   const barScale = useSharedValue(1);
@@ -279,7 +277,7 @@ const DeleteBar = ({ isVisible, isHovering }) => {
  * @param {function} onClose - Callback when overlay is closed without saving
  */
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SWIPE_THRESHOLD = 100; // Minimum swipe distance to trigger close
+const SWIPE_THRESHOLD = 100;
 
 const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
   // Get safe area insets for explicit positioning (fixes first-render issue with SafeAreaView edges)
@@ -303,7 +301,6 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [initialSelects, setInitialSelects] = useState([]);
 
-  // Swipe-to-dismiss animation
   const translateY = useSharedValue(0);
 
   // Initialize photos when overlay opens

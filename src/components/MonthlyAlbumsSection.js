@@ -53,7 +53,6 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }) => {
     fetchData();
   }, [userId]);
 
-  // Loading state - show small spinner
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -67,7 +66,6 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }) => {
     return null;
   }
 
-  // Get current year for determining which section is expanded
   const currentYear = new Date().getFullYear().toString();
 
   return (
