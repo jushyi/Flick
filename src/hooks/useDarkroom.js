@@ -51,7 +51,7 @@ const useDarkroom = () => {
   const [pendingSuccess, setPendingSuccess] = useState(false);
 
   // Undo stack for batched triage - stores decisions locally until Done is tapped
-  // Each entry: { photo: PhotoObject, action: 'archive'|'journal'|'delete', exitDirection: 'left'|'right'|'down' }
+  // Each entry: { photo: PhotoObject, action: 'archive'|'journal'|'delete', exitDirection: 'left'|'right'|'down', tags: string[] }
   const [undoStack, setUndoStack] = useState([]);
   const [undoingPhoto, setUndoingPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -152,13 +152,15 @@ const useDarkroom = () => {
         setPhotos(revealedPhotos);
         // Clear hidden state when photos reload to prevent stale state
         setHiddenPhotoIds(new Set());
-        // Also clear undo stack since these are fresh photos
+        // Also clear undo stack and tags since these are fresh photos
         setUndoStack([]);
+        setPhotoTags({});
       } else {
         logger.warn('useDarkroom: Failed to get photos or no photos returned');
         setPhotos([]);
         setHiddenPhotoIds(new Set());
         setUndoStack([]);
+        setPhotoTags({});
       }
     } catch (error) {
       logger.error('useDarkroom: Error loading developing photos', error);
@@ -192,13 +194,20 @@ const useDarkroom = () => {
       // Determine exit direction based on action
       const exitDirection = action === 'archive' ? 'left' : action === 'journal' ? 'right' : 'down';
 
+      // Capture current tags for this photo (for undo restoration)
+      const currentTags = photoTags[photoId] || [];
+
       // Push to undo stack instead of calling triagePhoto()
       setUndoStack(prev => {
-        const newStack = [...prev, { photo: photoToTriage, action, exitDirection }];
+        const newStack = [
+          ...prev,
+          { photo: photoToTriage, action, exitDirection, tags: currentTags },
+        ];
         logger.debug('useDarkroom: Decision pushed to undo stack', {
           photoId,
           action,
           exitDirection,
+          tagCount: currentTags.length,
           stackSize: newStack.length,
         });
         return newStack;
@@ -271,8 +280,8 @@ const useDarkroom = () => {
       action: entry.action,
     }));
 
-    // Batch save to Firestore
-    const result = await batchTriagePhotos(decisions);
+    // Batch save to Firestore (pass photoTags for tagged photo notifications)
+    const result = await batchTriagePhotos(decisions, photoTags);
 
     if (!result.success) {
       logger.error('useDarkroom: Batch save failed', { error: result.error });
@@ -430,6 +439,14 @@ const useDarkroom = () => {
       next.delete(lastDecision.photo.id);
       return next;
     });
+
+    // Restore tags for undone photo
+    if (lastDecision.tags && lastDecision.tags.length > 0) {
+      setPhotoTags(prev => ({
+        ...prev,
+        [lastDecision.photo.id]: lastDecision.tags,
+      }));
+    }
 
     // Clear undo animation state after animation completes
     setTimeout(() => {
