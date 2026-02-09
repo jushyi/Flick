@@ -16,7 +16,6 @@ export const getTimeAgo = timestamp => {
   if (!timestamp) return 'Unknown';
 
   try {
-    // Convert Firestore timestamp to Date
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const now = new Date();
     const diffMs = now - date;

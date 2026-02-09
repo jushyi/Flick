@@ -101,7 +101,6 @@ export default function App() {
         params: params,
       });
     } else if (screen === 'Profile') {
-      // Navigate to Profile tab
       navigationRef.current.navigate('MainTabs', { screen });
     } else if (screen === 'FriendRequests') {
       // Navigate to Friends tab, then to FriendRequests screen
@@ -127,7 +126,6 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Initialize notifications on app launch
     initializeNotifications();
 
     // Request notification permissions and store token for authenticated users
@@ -185,7 +183,6 @@ export default function App() {
       navigateToNotification(navigationData);
     });
 
-    // Cleanup listeners on unmount
     return () => {
       clearTimeout(timeoutId);
       if (notificationListener.current) {
@@ -204,7 +201,6 @@ export default function App() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async nextAppState => {
       if (nextAppState === 'active') {
-        // Check for pending reveals when app comes to foreground
         const currentUser = getAuth().currentUser;
         if (currentUser) {
           logger.debug('App: Checking for pending reveals on foreground', {

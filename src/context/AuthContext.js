@@ -17,8 +17,6 @@ import logger from '../utils/logger';
 import { clearLocalNotificationToken } from '../services/firebase/notificationService';
 import { secureStorage } from '../services/secureStorageService';
 import { cancelAccountDeletion } from '../services/firebase/accountService';
-
-// Initialize Firestore
 const db = getFirestore();
 
 // React Native Firebase Firestore functions for phone auth users

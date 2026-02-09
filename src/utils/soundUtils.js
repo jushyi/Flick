@@ -25,7 +25,6 @@ export const playSuccessSound = async () => {
   logger.debug('soundUtils: Playing success sound');
 
   try {
-    // Load the sound file
     const { sound } = await Audio.Sound.createAsync(
       require('../../assets/theburntpeanut-hooray.mp3')
     );
@@ -40,7 +39,6 @@ export const playSuccessSound = async () => {
       }
     });
 
-    // Play the sound
     await sound.playAsync();
     logger.info('soundUtils: Success sound playing');
   } catch (error) {
