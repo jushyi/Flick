@@ -429,3 +429,31 @@ export const markNotificationsAsRead = async userId => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Mark a single notification as read
+ * @param {string} notificationId - The notification document ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const markSingleNotificationAsRead = async notificationId => {
+  try {
+    if (!notificationId) {
+      return { success: false, error: 'Invalid notification ID' };
+    }
+
+    const notifRef = doc(db, 'notifications', notificationId);
+    await updateDoc(notifRef, { read: true });
+
+    logger.debug('markSingleNotificationAsRead: Notification marked as read', {
+      notificationId,
+    });
+
+    return { success: true };
+  } catch (error) {
+    logger.error('markSingleNotificationAsRead: Failed', {
+      notificationId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
