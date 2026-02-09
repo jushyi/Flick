@@ -231,7 +231,7 @@ const ActivityScreen = () => {
         params: { highlightUserId: taggerId, highlightPhotoId: photoId, openStory: true },
       });
     } else if (type === 'friend_accepted' || type === 'friend_request') {
-      navigation.navigate('FriendRequests');
+      navigation.navigate('FriendsList');
     } else if (item.senderId) {
       // Default: navigate to sender's profile
       handleAvatarPress(item.senderId, item.senderName);
