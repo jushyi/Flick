@@ -204,6 +204,20 @@ Plans:
 
 - [x] 42-01: getMutualFriendSuggestions service function + FriendCard subtitle prop
 
+#### Phase 43: Comment Cleanup and Audit
+
+**Goal**: Full sweep of all code comments — fix inaccurate, remove stale TODOs, cut noise
+**Depends on**: Phase 42
+**Research**: Unlikely (internal patterns)
+**Plans**: 4
+
+Plans:
+
+- [ ] 43-01: Services + Cloud Functions comment audit (known stale fixes + full service audit)
+- [ ] 43-02: Hooks, utils, context, navigation, App.js comment audit
+- [ ] 43-03: Components comment audit
+- [ ] 43-04: Screens, styles, constants comment audit
+
 ---
 
 ## Progress
@@ -229,5 +243,6 @@ Plans:
 | 40. Feed Tagging           | v1.7      | 1/1   | Complete | 2026-02-09 |
 | 41. Tag Integration        | v1.7      | 1/1   | Complete | 2026-02-09 |
 | 42. Mutual Friends         | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 43. Comment Cleanup/Audit  | v1.7      | 0/4   | Planned  |            |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.

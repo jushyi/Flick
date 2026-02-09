@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** v1.7 Engagement & Polish — MILESTONE COMPLETE
+**Current focus:** v1.7 Engagement & Polish — Phase 43 pending
 
 ## Current Position
 
-Phase: 42 of 42 (Mutual Friends Suggestions)
-Plan: 1 of 1 in current phase
-Status: Phase complete — Milestone complete
-Last activity: 2026-02-09 — Completed 42-01-PLAN.md
+Phase: 43 of 43 (Comment Cleanup and Audit)
+Plan: 0 of 4 in current phase
+Status: Planned — ready to execute
+Last activity: 2026-02-09 — Planned Phase 43 (4 plans)
 
 Progress: ██████████ 100%
 
@@ -48,14 +48,15 @@ None.
 
 - Milestone v1.7 created: Engagement & Polish, 10 phases (Phase 32-41)
 - Phase 42 added: Mutual Friends Suggestions
+- Phase 43 added: Comment Cleanup and Audit
 
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 42-01-PLAN.md (Mutual Friends Suggestions)
+Stopped at: Planned Phase 43 (4 plans created)
 Resume file: None
 
 ## Next Steps
 
-- `/gsd:complete-milestone` — Archive v1.7 and prepare for next version
-- `/gsd:verify-work 42` — Test mutual friends suggestions before completing
+- `/gsd:execute-plan .planning/phases/43-comment-cleanup-audit/43-01-PLAN.md` — Start executing
+- `/gsd:complete-milestone` — Archive v1.7 after Phase 43 is done
