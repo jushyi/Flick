@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getFirestore,
@@ -33,7 +33,8 @@ import {
 } from '../services/firebase/friendshipService';
 import { getTimeAgo } from '../utils/timeUtils';
 import { mediumImpact } from '../utils/haptics';
-import { markNotificationsAsRead } from '../services/firebase/notificationService';
+import { markSingleNotificationAsRead } from '../services/firebase/notificationService';
+import { typography } from '../constants/typography';
 import logger from '../utils/logger';
 
 const db = getFirestore();
@@ -127,18 +128,6 @@ const ActivityScreen = () => {
   }, [loadData]);
 
   /**
-   * Mark notifications as read when screen is focused
-   */
-  useFocusEffect(
-    useCallback(() => {
-      // Only mark as read if data is loaded
-      if (!loading && user?.uid) {
-        markNotificationsAsRead(user.uid);
-      }
-    }, [loading, user?.uid])
-  );
-
-  /**
    * Handle pull-to-refresh
    */
   const handleRefresh = () => {
@@ -193,6 +182,63 @@ const ActivityScreen = () => {
   };
 
   /**
+   * Get action text for notification item
+   * Strips sender name prefix if present so username can be bolded separately
+   */
+  const getActionText = item => {
+    const senderName = item.senderName || 'Someone';
+
+    if (item.message) {
+      // If message starts with sender name, strip the prefix
+      if (item.message.startsWith(senderName)) {
+        return item.message.slice(senderName.length).trim();
+      }
+      // Message doesn't start with sender name - return full message
+      return item.message;
+    }
+
+    if (item.reactions) {
+      const reactionsText = formatReactionsText(item.reactions);
+      return `reacted ${reactionsText} to your photo`;
+    }
+
+    return 'sent you a notification';
+  };
+
+  /**
+   * Handle notification item press
+   * Optimistic local update, then Firestore update, then navigation
+   */
+  const handleNotificationPress = async item => {
+    // Mark as read locally (optimistic update)
+    setNotifications(prev => prev.map(n => (n.id === item.id ? { ...n, read: true } : n)));
+
+    // Mark as read in Firestore
+    await markSingleNotificationAsRead(item.id);
+
+    // Navigate based on notification type/data
+    const { type, photoId, userId: notifUserId, taggerId } = item;
+    if (type === 'reaction' && photoId) {
+      navigation.navigate('MainTabs', { screen: 'Feed', params: { photoId } });
+    } else if (type === 'story' && notifUserId) {
+      navigation.navigate('MainTabs', {
+        screen: 'Feed',
+        params: { highlightUserId: notifUserId, openStory: true },
+      });
+    } else if (type === 'tagged' && taggerId) {
+      navigation.navigate('MainTabs', {
+        screen: 'Feed',
+        params: { highlightUserId: taggerId, highlightPhotoId: photoId, openStory: true },
+      });
+    } else if (type === 'friend_accepted' || type === 'friend_request') {
+      navigation.navigate('FriendRequests');
+    } else if (item.senderId) {
+      // Default: navigate to sender's profile
+      handleAvatarPress(item.senderId, item.senderName);
+    }
+  };
+
+  /**
    * Render friend request item (compact)
    */
   const renderFriendRequest = ({ item }) => {
@@ -237,12 +283,16 @@ const ActivityScreen = () => {
    * Render notification item
    */
   const renderNotification = ({ item }) => {
-    const reactionsText = formatReactionsText(item.reactions);
-    const displayMessage =
-      item.message || `${item.senderName || 'Someone'} reacted ${reactionsText} to your photo`;
+    const actionText = getActionText(item);
+    const isUnread = item.read !== true;
 
     return (
-      <View style={styles.notificationItem}>
+      <TouchableOpacity
+        style={styles.notificationItem}
+        onPress={() => handleNotificationPress(item)}
+        activeOpacity={0.7}
+      >
+        {isUnread ? <View style={styles.unreadDot} /> : <View style={styles.readSpacer} />}
         <TouchableOpacity
           onPress={() => item.senderId && handleAvatarPress(item.senderId, item.senderName)}
           activeOpacity={0.7}
@@ -258,13 +308,13 @@ const ActivityScreen = () => {
         </TouchableOpacity>
         <View style={styles.notifContent}>
           <Text style={styles.notifMessage} numberOfLines={2}>
-            {displayMessage}
+            <Text style={styles.notifSenderName}>{item.senderName || 'Someone'}</Text> {actionText}
           </Text>
         </View>
         <Text style={styles.notifTime}>
           {item.createdAt ? getTimeAgo(item.createdAt).replace(' ago', '') : ''}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -379,8 +429,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   headerSpacer: {
@@ -405,23 +455,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.secondary,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionBadge: {
     backgroundColor: colors.brand.pink,
-    borderRadius: 10,
+    borderRadius: 2,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginLeft: 8,
     marginRight: 'auto',
   },
   sectionBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   requestItem: {
@@ -445,8 +495,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   requestPhotoText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
   },
   requestInfo: {
@@ -454,12 +504,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   requestName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   requestSubtext: {
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -508,12 +559,30 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   notifMessage: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     lineHeight: 20,
   },
+  notifSenderName: {
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  unreadDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.brand.purple,
+    marginRight: 6,
+  },
+  readSpacer: {
+    width: 6,
+    height: 6,
+    marginRight: 6,
+  },
   notifTime: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
   },
   emptyContainer: {
@@ -524,13 +593,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
     marginTop: 16,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     marginTop: 8,
