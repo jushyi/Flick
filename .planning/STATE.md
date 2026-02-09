@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** v1.7 Engagement & Polish — fixes, push notifications, photo tagging
+**Current focus:** v1.7 Engagement & Polish — MILESTONE COMPLETE
 
 ## Current Position
 
-Phase: 40 of 42 (Feed Photo Tagging)
+Phase: 42 of 42 (Mutual Friends Suggestions)
 Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-02-09 — Completed 40-01-PLAN.md
+Status: Phase complete — Milestone complete
+Last activity: 2026-02-09 — Completed 42-01-PLAN.md
 
-Progress: █████████░ 95%
+Progress: ██████████ 100%
 
 ## Performance Metrics
 
@@ -52,10 +52,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 40-01-PLAN.md (Feed Photo Tagging)
+Stopped at: Completed 42-01-PLAN.md (Mutual Friends Suggestions)
 Resume file: None
 
 ## Next Steps
 
-- `/gsd:plan-phase 42` — Plan Mutual Friends Suggestions phase
-- `/gsd:verify-work 40` — Test feed photo tagging before continuing
+- `/gsd:complete-milestone` — Archive v1.7 and prepare for next version
+- `/gsd:verify-work 42` — Test mutual friends suggestions before completing

@@ -198,11 +198,11 @@ Plans:
 **Goal**: Suggest friends based on mutual connections
 **Depends on**: Phase 41
 **Research**: Unlikely (internal patterns)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
 
-- [ ] 42-01: TBD
+- [x] 42-01: getMutualFriendSuggestions service function + FriendCard subtitle prop
 
 ---
 
@@ -216,18 +216,18 @@ Plans:
 
 **v1.7 Engagement & Polish — In Progress**
 
-| Phase                      | Milestone | Plans | Status      | Completed  |
-| -------------------------- | --------- | ----- | ----------- | ---------- |
-| 32. Photo Issues Fix       | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 34. Push Infrastructure    | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 35. Social Notifications   | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 36. Photo Notifications    | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 37. Darkroom Notifications | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 38. Notification UI Polish | v1.7      | 1/1   | Complete    | 2026-02-07 |
-| 39. Darkroom Tagging       | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 40. Feed Tagging           | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 41. Tag Integration        | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 42. Mutual Friends         | v1.7      | 0/?   | Not started | -          |
+| Phase                      | Milestone | Plans | Status   | Completed  |
+| -------------------------- | --------- | ----- | -------- | ---------- |
+| 32. Photo Issues Fix       | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete | 2026-02-06 |
+| 34. Push Infrastructure    | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 35. Social Notifications   | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 36. Photo Notifications    | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 37. Darkroom Notifications | v1.7      | 1/1   | Complete | 2026-02-06 |
+| 38. Notification UI Polish | v1.7      | 1/1   | Complete | 2026-02-07 |
+| 39. Darkroom Tagging       | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 40. Feed Tagging           | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 41. Tag Integration        | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 42. Mutual Friends         | v1.7      | 1/1   | Complete | 2026-02-09 |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.
