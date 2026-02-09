@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** v1.7 Engagement & Polish — Phase 43 in progress
+**Current focus:** v1.7 Engagement & Polish — Phase 43 complete, Phase 44 next
 
 ## Current Position
 
 Phase: 43 of 46 (Comment Cleanup and Audit)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-02-09 — Completed 43-03-PLAN.md
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-02-09 — Completed 43-04-PLAN.md
 
 Progress: ██████████ 100%
 
@@ -60,10 +60,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 43-03-PLAN.md
+Stopped at: Completed 43-04-PLAN.md (Phase 43 complete)
 Resume file: None
 
 ## Next Steps
 
-- `/gsd:execute-plan .planning/phases/43-comment-cleanup-audit/43-04-PLAN.md` — Next plan
+- `/gsd:plan-phase 44` — Plan Notification Activity Feed phase
 - `/gsd:complete-milestone` — Archive v1.7 after all phases done
