@@ -482,3 +482,114 @@ export const getFriendUserIds = async userId => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Get mutual friend suggestions based on friends-of-friends
+ * Computes users who share mutual connections with the given user
+ * but are not already friends or have pending requests
+ *
+ * @param {string} userId - User ID to get suggestions for
+ * @returns {Promise<{success: boolean, suggestions?: Array<{userId: string, displayName: string, username: string, profilePhotoURL: string|null, mutualCount: number}>, error?: string}>}
+ */
+export const getMutualFriendSuggestions = async userId => {
+  try {
+    if (!userId) {
+      return { success: false, error: 'Invalid user ID' };
+    }
+
+    // Step 1: Query ALL friendships involving this user
+    const q = query(
+      collection(db, 'friendships'),
+      or(where('user1Id', '==', userId), where('user2Id', '==', userId))
+    );
+    const querySnapshot = await getDocs(q);
+
+    // Step 2: Build friendIds (accepted) and excludeIds (all connected + self)
+    const friendIds = new Set();
+    const excludeIds = new Set([userId]);
+
+    querySnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const otherId = data.user1Id === userId ? data.user2Id : data.user1Id;
+
+      // Exclude all connected users regardless of status
+      excludeIds.add(otherId);
+
+      // Only add accepted friends to friendIds for mutual lookups
+      if (data.status === 'accepted') {
+        friendIds.add(otherId);
+      }
+    });
+
+    // Edge case: no friends means no mutual suggestions
+    if (friendIds.size === 0) {
+      return { success: true, suggestions: [] };
+    }
+
+    // Step 3: Cap at 30 friends to limit query volume
+    const friendIdsToProcess = Array.from(friendIds).slice(0, 30);
+
+    // Step 4: Query each friend's friendships in parallel
+    const friendQueries = friendIdsToProcess.map(async friendId => {
+      const friendQ = query(
+        collection(db, 'friendships'),
+        or(where('user1Id', '==', friendId), where('user2Id', '==', friendId))
+      );
+      return getDocs(friendQ);
+    });
+    const friendSnapshots = await Promise.all(friendQueries);
+
+    // Step 5: Count mutual connections
+    const mutualCounts = new Map();
+
+    friendSnapshots.forEach(snapshot => {
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.status !== 'accepted') return;
+
+        // Get both user IDs from the friendship
+        const ids = [data.user1Id, data.user2Id];
+        ids.forEach(id => {
+          if (!excludeIds.has(id)) {
+            mutualCounts.set(id, (mutualCounts.get(id) || 0) + 1);
+          }
+        });
+      });
+    });
+
+    // Edge case: no mutual connections found
+    if (mutualCounts.size === 0) {
+      return { success: true, suggestions: [] };
+    }
+
+    // Step 6: Sort by count descending, take top 20
+    const sortedEntries = Array.from(mutualCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20);
+
+    // Step 7: Fetch user profiles in parallel
+    const profileFetches = sortedEntries.map(async ([suggestionUserId, mutualCount]) => {
+      const userDocSnap = await getDoc(doc(db, 'users', suggestionUserId));
+      if (!userDocSnap.exists()) return null;
+
+      const userData = userDocSnap.data();
+      return {
+        userId: suggestionUserId,
+        displayName: userData.displayName || null,
+        username: userData.username || null,
+        profilePhotoURL: userData.profilePhotoURL || null,
+        mutualCount,
+      };
+    });
+    const profiles = await Promise.all(profileFetches);
+
+    // Filter out any users whose profiles couldn't be fetched
+    const suggestions = profiles.filter(p => p !== null);
+
+    // Step 8: Return suggestions
+    return { success: true, suggestions };
+  } catch (error) {
+    logger.error('Error getting mutual friend suggestions', error);
+    return { success: false, error: error.message };
+  }
+};
