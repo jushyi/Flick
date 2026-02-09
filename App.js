@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
+import { Silkscreen_400Regular, Silkscreen_700Bold } from '@expo-google-fonts/silkscreen';
 import { colors } from './src/constants/colors';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
@@ -39,22 +41,37 @@ export default function App() {
   const responseListener = useRef();
   const tokenRefreshListener = useRef();
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+  const [animationDone, setAnimationDone] = useState(false);
   const [bannerData, setBannerData] = useState(null);
+
+  // Load retro pixel fonts - gate splash screen on this
+  const [fontsLoaded] = useFonts({
+    PressStart2P_400Regular,
+    Silkscreen_400Regular,
+    Silkscreen_700Bold,
+  });
 
   /**
    * Handle animated splash completion
-   * Hides the native splash and removes the animated overlay
+   * Marks animation as done; actual hide happens in useEffect below
    */
-  const handleSplashComplete = async () => {
-    try {
-      // Hide the native splash screen
-      await SplashScreen.hideAsync();
-    } catch (_err) {
-      // Ignore errors - splash may have already been hidden
-    }
-    // Remove the animated splash overlay
-    setShowAnimatedSplash(false);
+  const handleSplashComplete = () => {
+    setAnimationDone(true);
   };
+
+  // Hide splash only when BOTH fonts are loaded AND animation is done
+  useEffect(() => {
+    if (!fontsLoaded || !animationDone) return;
+    const hideSplash = async () => {
+      try {
+        await SplashScreen.hideAsync();
+      } catch (_err) {
+        // Ignore errors - splash may have already been hidden
+      }
+      setShowAnimatedSplash(false);
+    };
+    hideSplash();
+  }, [fontsLoaded, animationDone]);
 
   /**
    * Shared navigation helper for notification taps
@@ -221,14 +238,6 @@ export default function App() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
-      <InAppNotificationBanner
-        visible={!!bannerData}
-        title={bannerData?.title || ''}
-        body={bannerData?.body || ''}
-        avatarUrl={bannerData?.avatarUrl}
-        onPress={handleBannerPress}
-        onDismiss={() => setBannerData(null)}
-      />
       <SafeAreaProvider>
         <ErrorBoundary>
           <ThemeProvider>
@@ -239,6 +248,14 @@ export default function App() {
             </AuthProvider>
           </ThemeProvider>
         </ErrorBoundary>
+        <InAppNotificationBanner
+          visible={!!bannerData}
+          title={bannerData?.title || ''}
+          body={bannerData?.body || ''}
+          avatarUrl={bannerData?.avatarUrl}
+          onPress={handleBannerPress}
+          onDismiss={() => setBannerData(null)}
+        />
       </SafeAreaProvider>
     </View>
   );

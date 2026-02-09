@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { Animated, PanResponder, TouchableOpacity, View, Text, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/InAppNotificationBanner.styles';
 
 const AUTO_DISMISS_MS = 4000;
 const SWIPE_THRESHOLD = -30;
-const SLIDE_START = -120;
+const SLIDE_START = -160;
 const SLIDE_END = 0;
 
 /**
@@ -24,6 +24,7 @@ const SLIDE_END = 0;
  * @param {function} onDismiss - Called when banner is dismissed (auto, swipe, or tap)
  */
 const InAppNotificationBanner = ({ visible, title, body, avatarUrl, onPress, onDismiss }) => {
+  const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(SLIDE_START)).current;
   const autoDismissTimer = useRef(null);
 
@@ -108,36 +109,34 @@ const InAppNotificationBanner = ({ visible, title, body, avatarUrl, onPress, onD
 
   return (
     <Animated.View
-      style={[styles.outerContainer, { transform: [{ translateY }] }]}
+      style={[styles.outerContainer, { transform: [{ translateY }], paddingTop: insets.top }]}
       {...panResponder.panHandlers}
     >
-      <SafeAreaView edges={['top']}>
-        <TouchableOpacity activeOpacity={0.85} onPress={handlePress} style={styles.container}>
-          {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="notifications" size={18} color={colors.icon.primary} />
-            </View>
-          )}
-          <View style={styles.textContainer}>
-            <Text style={styles.title} numberOfLines={1}>
-              {title}
-            </Text>
-            {body ? (
-              <Text style={styles.body} numberOfLines={1}>
-                {body}
-              </Text>
-            ) : null}
+      <TouchableOpacity activeOpacity={0.85} onPress={handlePress} style={styles.container}>
+        {avatarUrl ? (
+          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <PixelIcon name="notifications" size={18} color={colors.icon.primary} />
           </View>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={colors.icon.secondary}
-            style={styles.chevron}
-          />
-        </TouchableOpacity>
-      </SafeAreaView>
+        )}
+        <View style={styles.textContainer}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+          {body ? (
+            <Text style={styles.body} numberOfLines={1}>
+              {body}
+            </Text>
+          ) : null}
+        </View>
+        <PixelIcon
+          name="chevron-forward"
+          size={18}
+          color={colors.icon.secondary}
+          style={styles.chevron}
+        />
+      </TouchableOpacity>
     </Animated.View>
   );
 };
