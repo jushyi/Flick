@@ -234,14 +234,17 @@ Plans:
 
 #### Phase 45: Security Audit
 
-**Goal**: [To be planned]
+**Goal**: Full-stack security sweep — fix Storage rules (public photo access), Cloud Functions authorization (getSignedPhotoUrl), Firestore access hierarchy (comments), input validation (mentions, tags), and client-side defense-in-depth
 **Depends on**: Phase 44
 **Research**: Unlikely (internal patterns)
-**Plans**: 0
+**Plans**: 4
 
 Plans:
 
-- [ ] TBD (run /gsd:plan-phase 45 to break down)
+- [ ] 45-01: Firebase Security Rules hardening (Storage auth + Firestore comment access)
+- [ ] 45-02: Cloud Functions access control (getSignedPhotoUrl auth + CORS + error sanitization)
+- [ ] 45-03: Cloud Functions input validation (@mention cap + tag validation + atomic deletions)
+- [ ] 45-04: Client-side security (comment/tag validation + logger refinement + album sanitization)
 
 #### Phase 46: Full Notifications Testing
 
@@ -281,7 +284,7 @@ Plans:
 | 42. Mutual Friends             | v1.7      | 2/2   | Complete    | 2026-02-09 |
 | 43. Comment Cleanup/Audit      | v1.7      | 2/4   | In progress |            |
 | 44. Notification Activity      | v1.7      | 0/2   | Planned     |            |
-| 45. Security Audit             | v1.7      | 0/?   | Planned     |            |
+| 45. Security Audit             | v1.7      | 0/4   | Planned     |            |
 | 46. Full Notifications Testing | v1.7      | 0/?   | Planned     |            |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.
