@@ -132,7 +132,11 @@ const PhotoDetailScreen = () => {
    * Both pivot on the shared right edge for a true cube effect
    */
   const handleFriendTransition = useCallback(() => {
-    if (!contextHasNextFriend || isTransitioningRef.current) return false;
+    if (isTransitioningRef.current) return false;
+    if (!contextHasNextFriend) {
+      handleClose();
+      return true;
+    }
 
     // Mark transitioning synchronously so snapshotRef freezes on next render
     isTransitioningRef.current = true;
@@ -156,14 +160,18 @@ const PhotoDetailScreen = () => {
     });
 
     return true;
-  }, [contextHasNextFriend, handleRequestNextFriend, cubeProgress]);
+  }, [contextHasNextFriend, handleRequestNextFriend, cubeProgress, handleClose]);
 
   /**
    * Handle backward friend-to-friend transition with reverse 3D cube animation
    * Incoming face enters from the left, outgoing exits to the right
    */
   const handlePreviousFriendTransition = useCallback(() => {
-    if (!contextHasPreviousFriend || isTransitioningRef.current) return false;
+    if (isTransitioningRef.current) return false;
+    if (!contextHasPreviousFriend) {
+      handleClose();
+      return true;
+    }
 
     isTransitioningRef.current = true;
     setTransitionDirection('backward');
@@ -184,7 +192,7 @@ const PhotoDetailScreen = () => {
     });
 
     return true;
-  }, [contextHasPreviousFriend, handleRequestPreviousFriend, cubeProgress]);
+  }, [contextHasPreviousFriend, handleRequestPreviousFriend, cubeProgress, handleClose]);
 
   // Opens comments on swipe-up if not already visible
   const handleSwipeUpToOpenComments = useCallback(() => {
@@ -239,8 +247,8 @@ const PhotoDetailScreen = () => {
     onClose: handleClose,
     onReactionToggle: handleReactionToggle,
     currentUserId: contextUserId,
-    onFriendTransition: contextHasNextFriend ? handleFriendTransition : null,
-    onPreviousFriendTransition: contextHasPreviousFriend ? handlePreviousFriendTransition : null,
+    onFriendTransition: contextMode === 'stories' ? handleFriendTransition : null,
+    onPreviousFriendTransition: contextMode === 'stories' ? handlePreviousFriendTransition : null,
     onSwipeUp: handleSwipeUpToOpenComments,
   });
 
