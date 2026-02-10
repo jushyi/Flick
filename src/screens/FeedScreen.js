@@ -127,6 +127,10 @@ const FeedScreen = () => {
   const handleCloseStoriesRef = useRef(() => {});
   const handleRequestNextFriendRef = useRef(() => {});
   const handleRequestPreviousFriendRef = useRef(() => {});
+  const handleCancelFriendTransitionRef = useRef(() => {});
+
+  // Save pre-transition state for cancel (interactive swipe cancel restores without side effects)
+  const preTransitionRef = useRef(null);
 
   const loadFriendStories = async () => {
     if (!user?.uid) return;
@@ -305,6 +309,7 @@ const FeedScreen = () => {
       onPhotoChange: handleStoriesPhotoChange,
       onRequestNextFriend: () => handleRequestNextFriendRef.current(),
       onRequestPreviousFriend: () => handleRequestPreviousFriendRef.current(),
+      onCancelFriendTransition: () => handleCancelFriendTransitionRef.current(),
       onClose: () => {
         if (isInStoriesModeRef.current) {
           if (isOwnStoriesRef.current) {
@@ -491,6 +496,13 @@ const FeedScreen = () => {
     const selectedFriendIndex = selectedFriendIndexRef.current;
     if (!selectedFriend) return;
 
+    // Save pre-transition state for potential cancel
+    preTransitionRef.current = {
+      friend: selectedFriend,
+      friendIndex: selectedFriendIndex,
+      currentIndex: storiesCurrentIndexRef.current,
+    };
+
     const sortedFriends = getSortedFriends();
     const nextFriendIdx = selectedFriendIndex + 1;
 
@@ -550,6 +562,13 @@ const FeedScreen = () => {
     const selectedFriend = selectedFriendRef.current;
     const selectedFriendIndex = selectedFriendIndexRef.current;
     if (!selectedFriend) return;
+
+    // Save pre-transition state for potential cancel
+    preTransitionRef.current = {
+      friend: selectedFriend,
+      friendIndex: selectedFriendIndex,
+      currentIndex: storiesCurrentIndexRef.current,
+    };
 
     const sortedFriends = getSortedFriends();
     const prevFriendIdx = selectedFriendIndex - 1;
@@ -647,11 +666,41 @@ const FeedScreen = () => {
     // Mode flags are cleared in the onClose callback
   };
 
+  /**
+   * Cancel a friend transition that was prepared but not committed (interactive swipe cancel).
+   * Restores refs from preTransitionRef without marking any photos as viewed.
+   */
+  const handleCancelFriendTransition = () => {
+    const saved = preTransitionRef.current;
+    if (!saved) return;
+
+    const sortedFriends = getSortedFriends();
+
+    // Restore refs to pre-transition state
+    selectedFriendRef.current = saved.friend;
+    selectedFriendIndexRef.current = saved.friendIndex;
+    storiesCurrentIndexRef.current = saved.currentIndex;
+
+    // Restore context state so PhotoDetailScreen renders original friend's photos
+    openPhotoDetail({
+      mode: 'stories',
+      photos: saved.friend.topPhotos || [],
+      initialIndex: saved.currentIndex,
+      currentUserId: user?.uid,
+      hasNextFriend: saved.friendIndex < sortedFriends.length - 1,
+      hasPreviousFriend: saved.friendIndex > 0,
+      isOwnStory: false,
+    });
+
+    preTransitionRef.current = null;
+  };
+
   // Update handler refs on each render (ensures callbacks get latest handlers)
   handleCloseMyStoriesRef.current = handleCloseMyStories;
   handleCloseStoriesRef.current = handleCloseStories;
   handleRequestNextFriendRef.current = handleRequestNextFriend;
   handleRequestPreviousFriendRef.current = handleRequestPreviousFriend;
+  handleCancelFriendTransitionRef.current = handleCancelFriendTransition;
 
   const handlePhotoPress = photo => {
     currentFeedPhotoRef.current = photo;

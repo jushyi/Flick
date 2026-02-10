@@ -80,6 +80,7 @@ const PhotoDetailScreen = () => {
     handlePhotoChange,
     handleRequestNextFriend,
     handleRequestPreviousFriend,
+    handleCancelFriendTransition,
     handleAvatarPress: contextAvatarPress,
     handleClose: contextClose,
     handlePhotoStateChanged,
@@ -90,6 +91,7 @@ const PhotoDetailScreen = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
   const [transitionDirection, setTransitionDirection] = useState('forward'); // 'forward' | 'backward'
+  const swipeDirectionRef = useRef('forward'); // Sync ref for cancel callback access
   const snapshotRef = useRef({});
 
   // Comments preview state (local since it's just for display)
@@ -194,6 +196,71 @@ const PhotoDetailScreen = () => {
     return true;
   }, [contextHasPreviousFriend, handleRequestPreviousFriend, cubeProgress, handleClose]);
 
+  /**
+   * Prepare for an interactive horizontal swipe transition.
+   * Called by the hook at the START of a horizontal drag.
+   * Freezes snapshot, sets transition direction, loads next/previous friend data.
+   */
+  const handlePrepareSwipeTransition = useCallback(
+    direction => {
+      if (isTransitioningRef.current) return false;
+      if (direction === 'forward' && !contextHasNextFriend) return false;
+      if (direction === 'backward' && !contextHasPreviousFriend) return false;
+
+      isTransitioningRef.current = true;
+      setIsTransitioning(true);
+      setTransitionDirection(direction);
+      swipeDirectionRef.current = direction;
+      cubeProgress.setValue(0);
+
+      if (direction === 'forward') {
+        handleRequestNextFriend();
+      } else {
+        handleRequestPreviousFriend();
+      }
+
+      return true;
+    },
+    [
+      contextHasNextFriend,
+      contextHasPreviousFriend,
+      handleRequestNextFriend,
+      handleRequestPreviousFriend,
+      cubeProgress,
+    ]
+  );
+
+  /**
+   * Complete an interactive swipe transition (user committed the swipe).
+   * Called by the hook after the completion animation finishes.
+   */
+  const handleCommitSwipeTransition = useCallback(() => {
+    isTransitioningRef.current = false;
+    setIsTransitioning(false);
+    setTransitionDirection('forward');
+    swipeDirectionRef.current = 'forward';
+  }, []);
+
+  /**
+   * Cancel an interactive swipe transition (user didn't swipe far enough).
+   * Called by the hook after the spring-back animation finishes.
+   * Restores original friend data via FeedScreen cancel callback.
+   */
+  const handleCancelSwipeTransition = useCallback(() => {
+    handleCancelFriendTransition();
+
+    // Wait for React to render the restored data before unfreezing snapshot
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        isTransitioningRef.current = false;
+        setIsTransitioning(false);
+        setTransitionDirection('forward');
+        swipeDirectionRef.current = 'forward';
+        cubeProgress.setValue(1);
+      });
+    });
+  }, [handleCancelFriendTransition, cubeProgress]);
+
   // Opens comments on swipe-up if not already visible
   const handleSwipeUpToOpenComments = useCallback(() => {
     if (!showComments) {
@@ -250,6 +317,11 @@ const PhotoDetailScreen = () => {
     onFriendTransition: contextMode === 'stories' ? handleFriendTransition : null,
     onPreviousFriendTransition: contextMode === 'stories' ? handlePreviousFriendTransition : null,
     onSwipeUp: handleSwipeUpToOpenComments,
+    // Interactive swipe support
+    cubeProgress,
+    onPrepareSwipeTransition: handlePrepareSwipeTransition,
+    onCommitSwipeTransition: handleCommitSwipeTransition,
+    onCancelSwipeTransition: handleCancelSwipeTransition,
   });
 
   // Keep snapshot ref updated with current display data for cube transition

@@ -74,6 +74,7 @@ export const PhotoDetailProvider = ({ children }) => {
     onPhotoChange: null,
     onRequestNextFriend: null,
     onRequestPreviousFriend: null,
+    onCancelFriendTransition: null, // Called to cancel an interactive swipe transition
     onClose: null,
     onAvatarPress: null,
     onPhotoStateChanged: null, // Called when photo is archived/deleted/restored
@@ -243,6 +244,13 @@ export const PhotoDetailProvider = ({ children }) => {
     }
   }, []);
 
+  const handleCancelFriendTransition = useCallback(() => {
+    const callbacks = callbacksRef.current;
+    if (callbacks.onCancelFriendTransition) {
+      callbacks.onCancelFriendTransition();
+    }
+  }, []);
+
   /**
    * Call onClose callback
    */
@@ -320,6 +328,7 @@ export const PhotoDetailProvider = ({ children }) => {
     handlePhotoChange,
     handleRequestNextFriend,
     handleRequestPreviousFriend,
+    handleCancelFriendTransition,
     handleClose,
     handleAvatarPress,
     handlePhotoStateChanged,

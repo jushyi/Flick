@@ -9,8 +9,7 @@
  * - Stories mode: multi-photo navigation with progress bar
  */
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Animated, PanResponder, Dimensions } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { Animated, PanResponder, Dimensions, Easing } from 'react-native';
 import { reactionHaptic } from '../utils/haptics';
 import logger from '../utils/logger';
 import { getCuratedEmojis } from '../utils/emojiRotation';
@@ -43,9 +42,14 @@ export const usePhotoDetailModal = ({
   onClose,
   onReactionToggle,
   currentUserId,
-  onFriendTransition, // Callback for friend-to-friend transition with cube animation
-  onPreviousFriendTransition, // Callback for backward friend transition with reverse cube
+  onFriendTransition, // Callback for friend-to-friend transition with cube animation (taps)
+  onPreviousFriendTransition, // Callback for backward friend transition with reverse cube (taps)
   onSwipeUp, // Callback when user swipes up to open comments
+  // Interactive swipe support
+  cubeProgress, // Animated.Value from PhotoDetailScreen for interactive gesture tracking
+  onPrepareSwipeTransition, // (direction) => boolean - prepare transition at drag start
+  onCommitSwipeTransition, // () => void - complete transition after commit animation
+  onCancelSwipeTransition, // () => void - cancel transition after spring-back animation
 }) => {
   // Stories mode: current photo index
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -330,7 +334,6 @@ export const usePhotoDetailModal = ({
 
     const newIndex = currentIndex - 1;
     logger.debug('usePhotoDetailModal: Navigate previous', { newIndex });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setCurrentIndex(newIndex);
     if (onPhotoChange && photos[newIndex]) {
       onPhotoChange(photos[newIndex], newIndex);
@@ -363,7 +366,6 @@ export const usePhotoDetailModal = ({
         const transitioned = onFriendTransition();
         if (transitioned) {
           logger.debug('usePhotoDetailModal: Transitioning to next friend');
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           return true;
         }
       }
@@ -372,7 +374,6 @@ export const usePhotoDetailModal = ({
 
     const newIndex = currentIndex + 1;
     logger.debug('usePhotoDetailModal: Navigate next', { newIndex });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setCurrentIndex(newIndex);
     if (onPhotoChange && photos[newIndex]) {
       onPhotoChange(photos[newIndex], newIndex);
@@ -399,18 +400,14 @@ export const usePhotoDetailModal = ({
           if (onPreviousFriendTransition) {
             const transitioned = onPreviousFriendTransition();
             if (transitioned) {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               return;
             }
           }
-          // No previous friend - close stories
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           onClose();
         }
       } else if (locationX > SCREEN_WIDTH * 0.7) {
         // Right tap - next
         if (!goNext()) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           onClose();
         }
       }
@@ -479,6 +476,32 @@ export const usePhotoDetailModal = ({
   useEffect(() => {
     onPreviousFriendTransitionRef.current = onPreviousFriendTransition;
   }, [onPreviousFriendTransition]);
+
+  // Interactive swipe transition refs
+  const cubeProgressRef = useRef(cubeProgress);
+  useEffect(() => {
+    cubeProgressRef.current = cubeProgress;
+  }, [cubeProgress]);
+
+  const onPrepareSwipeTransitionRef = useRef(onPrepareSwipeTransition);
+  useEffect(() => {
+    onPrepareSwipeTransitionRef.current = onPrepareSwipeTransition;
+  }, [onPrepareSwipeTransition]);
+
+  const onCommitSwipeTransitionRef = useRef(onCommitSwipeTransition);
+  useEffect(() => {
+    onCommitSwipeTransitionRef.current = onCommitSwipeTransition;
+  }, [onCommitSwipeTransition]);
+
+  const onCancelSwipeTransitionRef = useRef(onCancelSwipeTransition);
+  useEffect(() => {
+    onCancelSwipeTransitionRef.current = onCancelSwipeTransition;
+  }, [onCancelSwipeTransition]);
+
+  // Gesture tracking state for interactive horizontal swipe
+  const isHorizontalSwipeActiveRef = useRef(false);
+  const swipeDirectionRef = useRef(null); // 'forward' | 'backward'
+  const firstMoveSkippedRef = useRef(false);
 
   // Track if comments are visible (to disable swipe-to-dismiss when scrolling comments)
   const [commentsVisible, setCommentsVisible] = useState(false);
@@ -567,56 +590,103 @@ export const usePhotoDetailModal = ({
         return false;
       },
       onPanResponderMove: (_, gestureState) => {
-        // Only animate for downward swipes (visual feedback for close gesture)
-        // Upward swipes don't need visual feedback - just detect and callback
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
-          // Fade out as user swipes down
-          const fadeAmount = Math.max(0, 1 - gestureState.dy / SCREEN_HEIGHT);
+        const { dx, dy } = gestureState;
+
+        // HORIZONTAL - interactive cube tracking
+        if (isHorizontalSwipeActiveRef.current) {
+          // Skip first frame after prepare to let React render new transitionDirection
+          if (!firstMoveSkippedRef.current) {
+            firstMoveSkippedRef.current = true;
+            return;
+          }
+          // Drive cubeProgress proportional to finger displacement
+          const progress = Math.min(1, Math.max(0, Math.abs(dx) / SCREEN_WIDTH));
+          if (cubeProgressRef.current) {
+            cubeProgressRef.current.setValue(progress);
+          }
+          return;
+        }
+
+        // Check if this should be an interactive horizontal swipe
+        const isHorizontalGesture = Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 15;
+        if (isHorizontalGesture && !isHorizontalSwipeActiveRef.current) {
+          const direction = dx < 0 ? 'forward' : 'backward';
+
+          // Check if transition callback is available
+          const hasCallback =
+            direction === 'forward'
+              ? onFriendTransitionRef.current
+              : onPreviousFriendTransitionRef.current;
+          if (!hasCallback || !onPrepareSwipeTransitionRef.current) return;
+
+          // Prepare transition (freezes snapshot, loads next friend data)
+          const prepared = onPrepareSwipeTransitionRef.current(direction);
+          if (!prepared) return;
+
+          isHorizontalSwipeActiveRef.current = true;
+          swipeDirectionRef.current = direction;
+          firstMoveSkippedRef.current = false;
+          return; // Skip driving cubeProgress this frame
+        }
+
+        // VERTICAL - existing behavior (swipe down to dismiss)
+        if (dy > 0) {
+          translateY.setValue(dy);
+          const fadeAmount = Math.max(0, 1 - dy / SCREEN_HEIGHT);
           opacity.setValue(fadeAmount);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         const { dx, dy, vx, vy } = gestureState;
 
-        // HORIZONTAL SWIPES - friend-to-friend transitions
-        const isHorizontalGesture = Math.abs(dx) > Math.abs(dy);
-        if (isHorizontalGesture) {
-          const SWIPE_THRESHOLD = 50;
-          const VELOCITY_THRESHOLD = 0.3;
+        // HORIZONTAL SWIPES - interactive cube transition
+        if (isHorizontalSwipeActiveRef.current) {
+          const absDx = Math.abs(dx);
+          const absVx = Math.abs(vx);
+          const currentProgress = Math.min(1, absDx / SCREEN_WIDTH);
 
-          // Right-to-left swipe = next friend
-          if (
-            (dx < -SWIPE_THRESHOLD || vx < -VELOCITY_THRESHOLD) &&
-            onFriendTransitionRef.current
-          ) {
-            const transitioned = onFriendTransitionRef.current();
-            if (transitioned) {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }
-            return;
+          const COMMIT_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.3;
+          const COMMIT_VELOCITY_THRESHOLD = 0.5;
+          const shouldCommit =
+            absDx > COMMIT_DISTANCE_THRESHOLD || absVx > COMMIT_VELOCITY_THRESHOLD;
+
+          if (shouldCommit && cubeProgressRef.current) {
+            // Commit: animate remaining distance to 1
+            const remainingDistance = 1 - currentProgress;
+            const baseDuration = remainingDistance * 350;
+            const velocityFactor = Math.max(0.3, 1 - absVx * 0.3);
+            const duration = Math.max(80, Math.min(250, baseDuration * velocityFactor));
+
+            Animated.timing(cubeProgressRef.current, {
+              toValue: 1,
+              duration,
+              easing: Easing.out(Easing.ease),
+              useNativeDriver: true,
+            }).start(() => {
+              onCommitSwipeTransitionRef.current?.();
+            });
+          } else if (cubeProgressRef.current) {
+            // Cancel: spring back to 0
+            Animated.spring(cubeProgressRef.current, {
+              toValue: 0,
+              tension: 80,
+              friction: 12,
+              useNativeDriver: true,
+            }).start(() => {
+              onCancelSwipeTransitionRef.current?.();
+            });
           }
 
-          // Left-to-right swipe = previous friend
-          if (
-            (dx > SWIPE_THRESHOLD || vx > VELOCITY_THRESHOLD) &&
-            onPreviousFriendTransitionRef.current
-          ) {
-            const transitioned = onPreviousFriendTransitionRef.current();
-            if (transitioned) {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }
-            return;
-          }
-
+          // Reset horizontal gesture state
+          isHorizontalSwipeActiveRef.current = false;
+          swipeDirectionRef.current = null;
+          firstMoveSkippedRef.current = false;
           return;
         }
 
         // SWIPE UP - open comments
         if (dy < -50 || vy < -0.5) {
-          // Significant upward swipe detected
           if (onSwipeUpRef.current) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onSwipeUpRef.current();
           }
           return;
@@ -628,6 +698,23 @@ export const usePhotoDetailModal = ({
           closeWithAnimation();
         } else {
           springBack();
+        }
+      },
+      onPanResponderTerminate: () => {
+        // Gesture interrupted by system - cancel any active horizontal swipe
+        if (isHorizontalSwipeActiveRef.current && cubeProgressRef.current) {
+          Animated.spring(cubeProgressRef.current, {
+            toValue: 0,
+            tension: 80,
+            friction: 12,
+            useNativeDriver: true,
+          }).start(() => {
+            onCancelSwipeTransitionRef.current?.();
+          });
+
+          isHorizontalSwipeActiveRef.current = false;
+          swipeDirectionRef.current = null;
+          firstMoveSkippedRef.current = false;
         }
       },
     })
