@@ -13,7 +13,7 @@
  * - Stories mode: progress bar, tap navigation, multi-photo
  * - 3D cube rotation for friend-to-friend transitions
  */
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import {
   Animated,
   Dimensions,
   Alert,
+  Easing,
 } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from '../components/PixelIcon';
@@ -82,9 +83,11 @@ const PhotoDetailScreen = () => {
     handlePhotoStateChanged,
   } = usePhotoDetail();
 
-  // Cube transition animation for friend-to-friend
-  const cubeRotation = useRef(new Animated.Value(0)).current;
+  // Cube transition animation for friend-to-friend (two-view simultaneous rotation)
+  const cubeProgress = useRef(new Animated.Value(1)).current;
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionSnapshot, setTransitionSnapshot] = useState(null);
+  const snapshotRef = useRef({});
 
   // Comments preview state (local since it's just for display)
   const [previewComments, setPreviewComments] = useState([]);
@@ -106,9 +109,9 @@ const PhotoDetailScreen = () => {
   const [tagModalVisible, setTagModalVisible] = useState(false);
   const [taggedPeopleModalVisible, setTaggedPeopleModalVisible] = useState(false);
 
-  // Reset cube rotation when screen mounts
+  // Reset cube state when screen mounts
   useEffect(() => {
-    cubeRotation.setValue(0);
+    cubeProgress.setValue(1);
     setIsTransitioning(false);
   }, []);
 
@@ -120,34 +123,35 @@ const PhotoDetailScreen = () => {
   }, [contextClose, navigation]);
 
   /**
-   * Handle friend-to-friend transition with cube animation
+   * Handle friend-to-friend transition with 3D cube animation
+   * Uses two simultaneous views: outgoing rotates away, incoming rotates in
+   * Both pivot on the shared right edge for a true cube effect
    */
   const handleFriendTransition = useCallback(() => {
     if (!contextHasNextFriend || isTransitioning) return false;
 
     setIsTransitioning(true);
+    setTransitionSnapshot(snapshotRef.current);
+    handleRequestNextFriend();
 
-    // Animate cube rotation out (0 -> -90 degrees)
-    Animated.timing(cubeRotation, {
-      toValue: -90,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => {
-      // Trigger friend change callback
-      handleRequestNextFriend();
-      // Reset rotation for incoming friend (from 90 -> 0)
-      cubeRotation.setValue(90);
-      Animated.timing(cubeRotation, {
-        toValue: 0,
-        duration: 250,
+    return true;
+  }, [contextHasNextFriend, handleRequestNextFriend, isTransitioning]);
+
+  // Start cube animation AFTER React renders the outgoing overlay (prevents flash)
+  useLayoutEffect(() => {
+    if (isTransitioning && transitionSnapshot) {
+      cubeProgress.setValue(0);
+      Animated.timing(cubeProgress, {
+        toValue: 1,
+        duration: 350,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }).start(() => {
         setIsTransitioning(false);
+        setTransitionSnapshot(null);
       });
-    });
-
-    return true;
-  }, [contextHasNextFriend, handleRequestNextFriend, cubeRotation, isTransitioning]);
+    }
+  }, [isTransitioning, transitionSnapshot]);
 
   // Opens comments on swipe-up if not already visible
   const handleSwipeUpToOpenComments = useCallback(() => {
@@ -205,6 +209,9 @@ const PhotoDetailScreen = () => {
     onFriendTransition: contextHasNextFriend ? handleFriendTransition : null,
     onSwipeUp: handleSwipeUpToOpenComments,
   });
+
+  // Keep snapshot ref updated with current display data for cube transition
+  snapshotRef.current = { imageURL, displayName, profilePhotoURL, capturedAt };
 
   // Sync comments visibility with hook (so panResponder knows not to capture gestures)
   useEffect(() => {
@@ -297,8 +304,27 @@ const PhotoDetailScreen = () => {
     );
   }, [currentPhoto?.id, contextUserId, handleClose, handlePhotoStateChanged]);
 
+  const handleReport = useCallback(() => {
+    setShowPhotoMenu(false);
+    navigation.navigate('ReportUser', {
+      userId: currentPhoto?.userId,
+      username: displayName,
+      displayName: displayName,
+      profilePhotoURL: profilePhotoURL,
+    });
+  }, [navigation, currentPhoto?.userId, displayName, profilePhotoURL]);
+
   const menuOptions = useMemo(() => {
-    if (!isOwnPhoto) return [];
+    if (!isOwnPhoto) {
+      return [
+        {
+          label: 'Report',
+          icon: 'flag-outline',
+          onPress: handleReport,
+          destructive: true,
+        },
+      ];
+    }
 
     const options = [];
 
@@ -324,7 +350,14 @@ const PhotoDetailScreen = () => {
     });
 
     return options;
-  }, [isOwnPhoto, currentPhoto?.photoState, handleArchive, handleRestore, handleDeleteConfirm]);
+  }, [
+    isOwnPhoto,
+    currentPhoto?.photoState,
+    handleArchive,
+    handleRestore,
+    handleDeleteConfirm,
+    handleReport,
+  ]);
 
   const handleMenuButtonLayout = useCallback(event => {
     const { x, y, width, height } = event.nativeEvent.layout;
@@ -421,20 +454,29 @@ const PhotoDetailScreen = () => {
     <Animated.View style={[styles.container, { opacity }]} {...panResponder.panHandlers}>
       <StatusBar barStyle="light-content" />
 
-      {/* Animated content wrapper with cube transition */}
+      {/* Main content wrapper - incoming face during cube transition */}
       <Animated.View
         style={[
           styles.contentWrapper,
           {
+            backfaceVisibility: 'hidden',
             transform: [
               { translateY },
-              { perspective: 1000 },
+              { perspective: 800 },
               {
-                rotateY: cubeRotation.interpolate({
-                  inputRange: [-90, 0, 90],
-                  outputRange: ['-90deg', '0deg', '90deg'],
+                translateX: cubeProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [SCREEN_WIDTH, 0],
                 }),
               },
+              { translateX: -SCREEN_WIDTH / 2 },
+              {
+                rotateY: cubeProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['90deg', '0deg'],
+                }),
+              },
+              { translateX: SCREEN_WIDTH / 2 },
             ],
           },
         ]}
@@ -533,8 +575,8 @@ const PhotoDetailScreen = () => {
           </TouchableOpacity>
         )}
 
-        {/* Photo menu button - only for own photos */}
-        {isOwnPhoto && menuOptions.length > 0 && (
+        {/* Photo menu button */}
+        {menuOptions.length > 0 && (
           <TouchableOpacity
             style={styles.photoMenuButton}
             onPress={() => setShowPhotoMenu(true)}
@@ -646,6 +688,70 @@ const PhotoDetailScreen = () => {
           </ScrollView>
         </View>
       </Animated.View>
+
+      {/* Outgoing cube face - rendered on top during transition */}
+      {isTransitioning && transitionSnapshot && (
+        <Animated.View
+          style={[
+            styles.contentWrapper,
+            {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backfaceVisibility: 'hidden',
+              transform: [
+                { perspective: 800 },
+                {
+                  translateX: cubeProgress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -SCREEN_WIDTH],
+                  }),
+                },
+                { translateX: SCREEN_WIDTH / 2 },
+                {
+                  rotateY: cubeProgress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '-90deg'],
+                  }),
+                },
+                { translateX: -SCREEN_WIDTH / 2 },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.photoScrollView}>
+            <Image
+              source={{ uri: transitionSnapshot.imageURL }}
+              style={styles.photo}
+              contentFit="cover"
+              transition={0}
+            />
+          </View>
+          <View style={styles.profilePicContainer}>
+            {transitionSnapshot.profilePhotoURL ? (
+              <Image
+                source={{ uri: transitionSnapshot.profilePhotoURL }}
+                style={styles.profilePic}
+                contentFit="cover"
+              />
+            ) : (
+              <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
+                <Text style={styles.profilePicText}>
+                  {transitionSnapshot.displayName?.[0]?.toUpperCase() || '?'}
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={[styles.userInfoOverlay, { bottom: 110 }]}>
+            <Text style={styles.displayName} numberOfLines={1}>
+              {transitionSnapshot.displayName || 'Unknown User'}
+            </Text>
+            <Text style={styles.timestamp}>{getTimeAgo(transitionSnapshot.capturedAt)}</Text>
+          </View>
+        </Animated.View>
+      )}
 
       {/* Comments Bottom Sheet */}
       <CommentsBottomSheet
