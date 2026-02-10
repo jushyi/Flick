@@ -244,7 +244,7 @@ Plans:
 - [x] 45-01: Firebase Security Rules hardening (Storage auth + Firestore comment access)
 - [x] 45-02: Cloud Functions access control (getSignedPhotoUrl auth + CORS + error sanitization)
 - [x] 45-03: Cloud Functions input validation (@mention cap + tag validation + atomic deletions)
-- [ ] 45-04: Client-side security (comment/tag validation + logger refinement + album sanitization)
+- [x] 45-04: Client-side security (comment/tag validation + logger refinement + album sanitization)
 
 ---
 
@@ -258,21 +258,21 @@ Plans:
 
 **v1.7 Engagement & Polish — In Progress**
 
-| Phase                      | Milestone | Plans | Status      | Completed  |
-| -------------------------- | --------- | ----- | ----------- | ---------- |
-| 32. Photo Issues Fix       | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 34. Push Infrastructure    | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 35. Social Notifications   | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 36. Photo Notifications    | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 37. Darkroom Notifications | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 38. Notification UI Polish | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 39. Darkroom Tagging       | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 40. Feed Tagging           | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 41. Tag Integration        | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 42. Mutual Friends         | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 43. Comment Cleanup/Audit  | v1.7      | 4/4   | Complete    | 2026-02-09 |
-| 44. Notification Activity  | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 45. Security Audit         | v1.7      | 3/4   | In progress |            |
+| Phase                      | Milestone | Plans | Status   | Completed  |
+| -------------------------- | --------- | ----- | -------- | ---------- |
+| 32. Photo Issues Fix       | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete | 2026-02-06 |
+| 34. Push Infrastructure    | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 35. Social Notifications   | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 36. Photo Notifications    | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 37. Darkroom Notifications | v1.7      | 1/1   | Complete | 2026-02-06 |
+| 38. Notification UI Polish | v1.7      | 2/2   | Complete | 2026-02-09 |
+| 39. Darkroom Tagging       | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 40. Feed Tagging           | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 41. Tag Integration        | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 42. Mutual Friends         | v1.7      | 2/2   | Complete | 2026-02-09 |
+| 43. Comment Cleanup/Audit  | v1.7      | 4/4   | Complete | 2026-02-09 |
+| 44. Notification Activity  | v1.7      | 2/2   | Complete | 2026-02-09 |
+| 45. Security Audit         | v1.7      | 4/4   | Complete | 2026-02-10 |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.
