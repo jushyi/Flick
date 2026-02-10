@@ -242,7 +242,7 @@ Plans:
 Plans:
 
 - [x] 45-01: Firebase Security Rules hardening (Storage auth + Firestore comment access)
-- [ ] 45-02: Cloud Functions access control (getSignedPhotoUrl auth + CORS + error sanitization)
+- [x] 45-02: Cloud Functions access control (getSignedPhotoUrl auth + CORS + error sanitization)
 - [ ] 45-03: Cloud Functions input validation (@mention cap + tag validation + atomic deletions)
 - [ ] 45-04: Client-side security (comment/tag validation + logger refinement + album sanitization)
 
@@ -284,7 +284,7 @@ Plans:
 | 42. Mutual Friends             | v1.7      | 2/2   | Complete    | 2026-02-09 |
 | 43. Comment Cleanup/Audit      | v1.7      | 4/4   | Complete    | 2026-02-09 |
 | 44. Notification Activity      | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 45. Security Audit             | v1.7      | 1/4   | In progress |            |
+| 45. Security Audit             | v1.7      | 2/4   | In progress |            |
 | 46. Full Notifications Testing | v1.7      | 0/?   | Planned     |            |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.
