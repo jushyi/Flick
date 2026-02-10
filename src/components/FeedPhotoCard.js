@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, memo } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import PixelIcon from './PixelIcon';
 import { getTimeAgo } from '../utils/timeUtils';
 import { styles } from '../styles/FeedPhotoCard.styles';
@@ -96,7 +97,13 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.95}>
       {/* Photo - full width with rounded top corners */}
       <View style={styles.photoContainer}>
-        <Image source={{ uri: imageURL }} style={styles.photo} resizeMode="cover" />
+        <Image
+          source={{ uri: imageURL }}
+          style={styles.photo}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={0}
+        />
       </View>
 
       {/* User info row - profile photo + name + timestamp */}
@@ -108,7 +115,12 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
           disabled={isOwnPhoto}
         >
           {profilePhotoURL ? (
-            <Image source={{ uri: profilePhotoURL }} style={styles.profilePhoto} />
+            <Image
+              source={{ uri: profilePhotoURL }}
+              style={styles.profilePhoto}
+              cachePolicy="memory-disk"
+              transition={0}
+            />
           ) : (
             <View style={styles.profilePhotoFallback}>
               <PixelIcon name="person-circle" size={36} color={colors.text.secondary} />
@@ -156,4 +168,7 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
   );
 };
 
-export default FeedPhotoCard;
+export default memo(FeedPhotoCard, (prevProps, nextProps) => {
+  // Only re-render when photo data actually changes
+  return prevProps.photo === nextProps.photo && prevProps.currentUserId === nextProps.currentUserId;
+});

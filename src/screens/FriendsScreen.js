@@ -5,11 +5,11 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  ActivityIndicator,
-  RefreshControl,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PixelSpinner from '../components/PixelSpinner';
 import {
   getFirestore,
   collection,
@@ -753,7 +753,7 @@ const FriendsScreen = ({ navigation }) => {
         disabled={suggestionsLoading}
       >
         {suggestionsLoading ? (
-          <ActivityIndicator size="small" color={colors.text.primary} />
+          <PixelSpinner size="small" color={colors.text.primary} />
         ) : (
           <Text style={styles.syncPromptButtonText}>Sync Contacts</Text>
         )}
@@ -790,7 +790,7 @@ const FriendsScreen = ({ navigation }) => {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.text.primary} />
+          <PixelSpinner size="large" color={colors.text.primary} />
           <Text style={styles.loadingText}>Loading friends...</Text>
         </View>
       );
@@ -829,7 +829,9 @@ const FriendsScreen = ({ navigation }) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={colors.text.primary}
+              tintColor={colors.brand.purple}
+              colors={[colors.brand.purple]}
+              progressBackgroundColor={colors.background.secondary}
             />
           }
           ListEmptyComponent={
@@ -854,7 +856,7 @@ const FriendsScreen = ({ navigation }) => {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.text.primary} />
+          <PixelSpinner size="large" color={colors.text.primary} />
           <Text style={styles.loadingText}>Loading requests...</Text>
         </View>
       );
@@ -867,7 +869,7 @@ const FriendsScreen = ({ navigation }) => {
           {renderSearchBar(requestsSearchQuery, setRequestsSearchQuery, 'Search users to add...')}
           {searchLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.text.primary} />
+              <PixelSpinner size="large" color={colors.text.primary} />
               <Text style={styles.loadingText}>Searching...</Text>
             </View>
           ) : (
@@ -1069,7 +1071,9 @@ const FriendsScreen = ({ navigation }) => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                tintColor={colors.text.primary}
+                tintColor={colors.brand.purple}
+                colors={[colors.brand.purple]}
+                progressBackgroundColor={colors.background.secondary}
               />
             }
           />

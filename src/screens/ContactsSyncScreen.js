@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
 import FriendCard from '../components/FriendCard';
 import {
@@ -135,7 +136,7 @@ const ContactsSyncScreen = ({ navigation }) => {
 
   const renderSyncingState = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={colors.brand.purple} />
+      <PixelSpinner size="large" color={colors.brand.purple} />
       <Text style={styles.loadingText}>Finding your friends...</Text>
     </View>
   );

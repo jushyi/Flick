@@ -183,7 +183,8 @@ const CommentRow = ({
               source={{ uri: profilePhotoURL }}
               style={styles.profilePhoto}
               contentFit="cover"
-              transition={200}
+              cachePolicy="memory-disk"
+              transition={0}
             />
           ) : (
             <View style={styles.profilePhotoPlaceholder}>

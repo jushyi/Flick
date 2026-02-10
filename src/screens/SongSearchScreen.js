@@ -19,13 +19,13 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { searchSongs } from '../services/iTunesService';
@@ -175,7 +175,7 @@ const SongSearchScreen = () => {
     if (loading) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.text.secondary} />
+          <PixelSpinner size="large" color={colors.text.secondary} />
         </View>
       );
     }

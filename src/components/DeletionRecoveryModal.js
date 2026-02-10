@@ -6,16 +6,9 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import PixelIcon from './PixelIcon';
+import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { format } from 'date-fns';
@@ -64,7 +57,7 @@ const DeletionRecoveryModal = ({ visible, scheduledDate, onCancel, onProceed }) 
             activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color={colors.text.primary} />
+              <PixelSpinner color={colors.text.primary} />
             ) : (
               <Text style={styles.primaryButtonText}>Keep My Account</Text>
             )}

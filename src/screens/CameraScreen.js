@@ -1,17 +1,10 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Pressable,
-  Animated,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, Animated, Platform } from 'react-native';
 import { CameraView } from 'expo-camera';
 
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { colors } from '../constants/colors';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 
 import useCamera, {
   BASE_ROTATION_PER_CARD,
@@ -259,7 +252,7 @@ const CameraScreen = () => {
   if (!permission) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.icon.primary} />
+        <PixelSpinner size="large" color={colors.icon.primary} />
       </View>
     );
   }

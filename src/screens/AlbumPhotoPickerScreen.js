@@ -7,12 +7,12 @@ import {
   FlatList,
   Dimensions,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext';
@@ -208,7 +208,7 @@ const AlbumPhotoPickerScreen = () => {
           disabled={isCreateDisabled}
         >
           {saving ? (
-            <ActivityIndicator size="small" color={colors.system.blue} />
+            <PixelSpinner size="small" color={colors.system.blue} />
           ) : (
             <Text
               style={[styles.actionButtonText, isCreateDisabled && styles.actionButtonDisabled]}
@@ -222,7 +222,7 @@ const AlbumPhotoPickerScreen = () => {
       {/* Photo Grid */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.text.secondary} />
+          <PixelSpinner size="large" color={colors.text.secondary} />
         </View>
       ) : photos.length === 0 ? (
         <View style={styles.emptyContainer}>

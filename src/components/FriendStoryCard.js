@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage } from 'react-native';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import PixelIcon from './PixelIcon';
@@ -76,7 +76,7 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
 
   /**
    * Render profile photo at bottom of card
-   * Uses RNImage (small size, no flash issue)
+   * Uses expo-image with memory-disk caching to prevent flash on re-render
    * Tappable to navigate to user's profile
    */
   const renderProfilePhoto = () => (
@@ -86,7 +86,12 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
       activeOpacity={0.7}
     >
       {profilePhotoURL ? (
-        <RNImage source={{ uri: profilePhotoURL }} style={styles.profilePhoto} />
+        <Image
+          source={{ uri: profilePhotoURL }}
+          style={styles.profilePhoto}
+          cachePolicy="memory-disk"
+          transition={0}
+        />
       ) : (
         <View style={styles.profilePlaceholder}>
           <PixelIcon name="person" size={18} color={colors.text.secondary} />
@@ -221,4 +226,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FriendStoryCard;
+export default memo(FriendStoryCard);

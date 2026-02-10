@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import PixelIcon from './PixelIcon';
+import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/FriendCard.styles';
 import DropdownMenu from './DropdownMenu';
@@ -163,7 +165,7 @@ const FriendCard = ({
     if (loading) {
       return (
         <View style={styles.addButton}>
-          <ActivityIndicator size="small" color={colors.text.primary} />
+          <PixelSpinner size="small" color={colors.text.primary} />
         </View>
       );
     }
@@ -257,7 +259,12 @@ const FriendCard = ({
       {/* Avatar */}
       <View style={styles.avatarContainer}>
         {profilePhotoURL ? (
-          <Image source={{ uri: profilePhotoURL }} style={styles.avatar} />
+          <Image
+            source={{ uri: profilePhotoURL }}
+            style={styles.avatar}
+            cachePolicy="memory-disk"
+            transition={0}
+          />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
             <Text style={styles.avatarText}>

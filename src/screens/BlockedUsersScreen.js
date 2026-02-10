@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
 import { getBlockedUsersWithProfiles, unblockUser } from '../services/firebase';
 import FriendCard from '../components/FriendCard';
@@ -138,7 +139,7 @@ const BlockedUsersScreen = () => {
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.text.primary} />
+          <PixelSpinner size="large" color={colors.text.primary} />
         </View>
       </SafeAreaView>
     );

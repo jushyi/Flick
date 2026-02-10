@@ -11,12 +11,20 @@
  * - PhotoDetailScreen reads state and calls callbacks from context
  * - Navigation handles actual screen presentation
  */
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, useMemo } from 'react';
 
 const PhotoDetailContext = createContext({});
 
 /**
- * Hook to access photo detail context
+ * Separate context for stable action methods only.
+ * Components that only need to call actions (like FeedScreen) subscribe to this
+ * instead of the full state context, preventing re-renders when state changes.
+ */
+const PhotoDetailActionsContext = createContext({});
+
+/**
+ * Hook to access photo detail context (state + actions)
+ * Use this in components that need to READ state (e.g. PhotoDetailScreen)
  * Must be used within PhotoDetailProvider
  */
 export const usePhotoDetail = () => {
@@ -25,6 +33,15 @@ export const usePhotoDetail = () => {
     throw new Error('usePhotoDetail must be used within a PhotoDetailProvider');
   }
   return context;
+};
+
+/**
+ * Hook to access only stable action methods (no state)
+ * Use this in components that only CALL actions (e.g. FeedScreen)
+ * This prevents re-renders when photo detail state changes
+ */
+export const usePhotoDetailActions = () => {
+  return useContext(PhotoDetailActionsContext);
 };
 
 /**
@@ -258,6 +275,21 @@ export const PhotoDetailProvider = ({ children }) => {
     }
   }, []);
 
+  /**
+   * Stable actions value - only changes if the useCallback functions change (they don't).
+   * FeedScreen subscribes to this via usePhotoDetailActions() and won't re-render
+   * when photo detail state changes.
+   */
+  const actionsValue = useMemo(
+    () => ({
+      openPhotoDetail,
+      setCallbacks,
+      updatePhotoAtIndex,
+      updateCurrentPhoto,
+    }),
+    [openPhotoDetail, setCallbacks, updatePhotoAtIndex, updateCurrentPhoto]
+  );
+
   const value = {
     // State
     currentPhoto,
@@ -293,7 +325,11 @@ export const PhotoDetailProvider = ({ children }) => {
     handlePhotoStateChanged,
   };
 
-  return <PhotoDetailContext.Provider value={value}>{children}</PhotoDetailContext.Provider>;
+  return (
+    <PhotoDetailActionsContext.Provider value={actionsValue}>
+      <PhotoDetailContext.Provider value={value}>{children}</PhotoDetailContext.Provider>
+    </PhotoDetailActionsContext.Provider>
+  );
 };
 
 export default PhotoDetailContext;

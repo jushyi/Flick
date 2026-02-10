@@ -23,7 +23,7 @@ import {
 import PixelIcon from '../components/PixelIcon';
 import useFeedPhotos from '../hooks/useFeedPhotos';
 import { useViewedStories } from '../hooks/useViewedStories';
-import { usePhotoDetail } from '../context/PhotoDetailContext';
+import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
 import { FriendStoryCard } from '../components';
@@ -56,9 +56,10 @@ const FeedScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  // Photo detail context for feed mode navigation
+  // Photo detail actions only - using usePhotoDetailActions to avoid re-renders
+  // when photo detail state changes (e.g. during modal close)
   const { openPhotoDetail, setCallbacks, updatePhotoAtIndex, updateCurrentPhoto } =
-    usePhotoDetail();
+    usePhotoDetailActions();
 
   // Track current feed photo for reaction updates (ref to avoid re-renders)
   const currentFeedPhotoRef = useRef(null);
@@ -1090,9 +1091,9 @@ const FeedScreen = () => {
             }
             onEndReached={photos.length > 0 ? loadMorePhotos : null}
             onEndReachedThreshold={0.5}
-            ListHeaderComponent={renderStoriesRow}
-            ListFooterComponent={renderFooter}
-            ListEmptyComponent={archivePhotosLoading ? null : renderEmptyState}
+            ListHeaderComponent={renderStoriesRow()}
+            ListFooterComponent={renderFooter()}
+            ListEmptyComponent={archivePhotosLoading ? null : renderEmptyState()}
           />
         </Animated.View>
       )}

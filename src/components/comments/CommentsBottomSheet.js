@@ -18,10 +18,10 @@ import {
   Platform,
   Animated,
   Easing,
-  ActivityIndicator,
   Keyboard,
   PanResponder,
 } from 'react-native';
+import PixelSpinner from '../PixelSpinner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from '../PixelIcon';
 import * as Haptics from 'expo-haptics';
@@ -535,7 +535,7 @@ const CommentsBottomSheet = ({
 
   const renderLoading = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={colors.brand.purple} />
+      <PixelSpinner size="large" color={colors.brand.purple} />
     </View>
   );
 

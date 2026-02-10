@@ -23,11 +23,11 @@ import {
   TouchableWithoutFeedback,
   FlatList,
   Image,
-  ActivityIndicator,
   Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
+import PixelSpinner from './PixelSpinner';
 import { getUserProfile } from '../services/firebase/userService';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/TaggedPeopleModal.styles';
@@ -169,7 +169,7 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
           {/* Content */}
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.icon.primary} />
+              <PixelSpinner size="large" color={colors.icon.primary} />
               <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : people.length === 0 ? (

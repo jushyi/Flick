@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  RefreshControl,
   Image,
-  ActivityIndicator,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PixelSpinner from '../components/PixelSpinner';
 import {
   getFirestore,
   collection,
@@ -204,7 +204,7 @@ const NotificationsScreen = () => {
           disabled={enablingPush}
         >
           {enablingPush ? (
-            <ActivityIndicator size="small" color={colors.background.primary} />
+            <PixelSpinner size="small" color={colors.background.primary} />
           ) : (
             <Text style={styles.pushBannerButtonText}>Enable</Text>
           )}
@@ -241,7 +241,7 @@ const NotificationsScreen = () => {
           <Text style={styles.headerTitle}>Notifications</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.text.primary} />
+          <PixelSpinner size="large" color={colors.text.primary} />
         </View>
       </SafeAreaView>
     );
@@ -272,7 +272,9 @@ const NotificationsScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.text.primary}
+            tintColor={colors.brand.purple}
+            colors={[colors.brand.purple]}
+            progressBackgroundColor={colors.background.secondary}
           />
         }
         ListHeaderComponent={renderPushBanner}

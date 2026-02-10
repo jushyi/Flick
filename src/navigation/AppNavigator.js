@@ -1,5 +1,7 @@
 import { useState, useEffect, createRef } from 'react';
-import { Text, ActivityIndicator, View, Platform, Image, Alert } from 'react-native';
+import { Text, View, Platform, Alert } from 'react-native';
+import { Image } from 'expo-image';
+import PixelSpinner from '../components/PixelSpinner';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -269,6 +271,8 @@ const ProfileTabIcon = ({ color, focused, photoURL }) => {
           borderWidth: focused ? 2 : 1,
           borderColor: focused ? color : 'transparent',
         }}
+        cachePolicy="memory-disk"
+        transition={0}
       />
     );
   }
@@ -344,7 +348,7 @@ const AppNavigator = () => {
           backgroundColor: colors.background.primary,
         }}
       >
-        <ActivityIndicator size="large" color={colors.text.primary} />
+        <PixelSpinner size="large" color={colors.text.primary} />
       </View>
     );
   }
@@ -363,7 +367,7 @@ const AppNavigator = () => {
           backgroundColor: colors.background.primary,
         }}
       >
-        <ActivityIndicator size="large" color={colors.text.primary} />
+        <PixelSpinner size="large" color={colors.text.primary} />
       </View>
     );
   }

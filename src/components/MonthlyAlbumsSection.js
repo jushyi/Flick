@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { getUserPhotosByMonth } from '../services/firebase/monthlyAlbumService';
 import YearSection from './YearSection';
@@ -56,7 +57,7 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.text.secondary} />
+        <PixelSpinner size="small" color={colors.text.secondary} />
       </View>
     );
   }

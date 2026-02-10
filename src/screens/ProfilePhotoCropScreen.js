@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import PixelSpinner from '../components/PixelSpinner';
 import {
   TouchableOpacity,
   Gesture,
@@ -308,7 +309,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
             disabled={cropping || loading}
           >
             {cropping ? (
-              <ActivityIndicator size="small" color={colors.brand.purple} />
+              <PixelSpinner size="small" color={colors.brand.purple} />
             ) : (
               <Text style={[styles.confirmText, loading && styles.textDisabled]}>Confirm</Text>
             )}
@@ -318,7 +319,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
         {/* Image area with gestures */}
         <View style={styles.imageArea}>
           {loading ? (
-            <ActivityIndicator size="large" color={colors.text.primary} />
+            <PixelSpinner size="large" color={colors.text.primary} />
           ) : (
             <GestureDetector gesture={composedGesture}>
               <Animated.View style={[styles.imageContainer, animatedImageStyle]}>

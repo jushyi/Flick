@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  ActivityIndicator,
   Alert,
   Platform,
 } from 'react-native';
 import PixelIcon from './PixelIcon';
+import PixelSpinner from './PixelSpinner';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
@@ -160,7 +160,7 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }) => {
         {/* Status indicator */}
         <View style={styles.statusContainer}>
           {isAdding ? (
-            <ActivityIndicator size="small" color={colors.brand.primary} />
+            <PixelSpinner size="small" color={colors.brand.primary} />
           ) : isPhotoInAlbum ? (
             <PixelIcon name="checkmark-circle" size={24} color={colors.brand.primary} />
           ) : (
@@ -205,7 +205,7 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }) => {
           {/* Albums List */}
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.brand.primary} />
+              <PixelSpinner size="large" color={colors.brand.primary} />
               <Text style={styles.loadingText}>Loading albums...</Text>
             </View>
           ) : albums.length === 0 ? (

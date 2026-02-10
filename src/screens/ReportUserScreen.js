@@ -6,13 +6,13 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   LayoutAnimation,
   Keyboard,
 } from 'react-native';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { submitReport, REPORT_REASONS } from '../services/firebase';
@@ -172,7 +172,7 @@ const ReportUserScreen = () => {
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator color={colors.text.primary} />
+              <PixelSpinner color={colors.text.primary} />
             ) : (
               <Text style={styles.submitButtonText}>Submit Report</Text>
             )}

@@ -1,14 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
-import {
-  View,
-  TextInput,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Animated,
-} from 'react-native';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import PixelIcon from './PixelIcon';
+import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
@@ -134,7 +127,7 @@ const Input = ({
         )}
         {rightIcon === 'loading' && (
           <View style={styles.rightIcon}>
-            <ActivityIndicator size="small" color={colors.text.secondary} />
+            <PixelSpinner size="small" color={colors.text.secondary} />
           </View>
         )}
         {rightIcon === 'check' && (

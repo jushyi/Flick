@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
@@ -53,7 +54,7 @@ const Button = ({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={colors.text.primary} />
+        <PixelSpinner color={colors.text.primary} />
       ) : (
         <Text style={getTextStyle()}>{title?.toUpperCase()}</Text>
       )}

@@ -9,10 +9,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import * as ImagePicker from 'expo-image-picker';
 import { Input } from '../components';
 import { useAuth } from '../context/AuthContext';
@@ -411,7 +411,7 @@ const EditProfileScreen = ({ navigation }) => {
             disabled={!saveEnabled}
           >
             {saving ? (
-              <ActivityIndicator size="small" color={colors.brand.purple} />
+              <PixelSpinner size="small" color={colors.brand.purple} />
             ) : (
               <Text style={[styles.saveText, !saveEnabled && styles.saveTextDisabled]}>Save</Text>
             )}

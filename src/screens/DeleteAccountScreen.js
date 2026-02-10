@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
   Animated,
   KeyboardAvoidingView,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth } from '@react-native-firebase/auth';
 import { sendVerificationCode, verifyCode } from '../services/firebase/phoneAuthService';
@@ -477,7 +477,7 @@ const DeleteAccountScreen = () => {
 
   const renderSchedulingStep = () => (
     <View style={styles.contentCentered}>
-      <ActivityIndicator size="large" color={colors.status.danger} />
+      <PixelSpinner size="large" color={colors.status.danger} />
       <Text style={styles.deletingText}>Scheduling deletion...</Text>
       <Text style={styles.deletingSubtext}>Please wait while we process your request</Text>
     </View>

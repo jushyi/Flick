@@ -4,15 +4,15 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  RefreshControl,
   Image,
-  ActivityIndicator,
   Alert,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import {
   getFirestore,
   collection,
@@ -35,7 +35,7 @@ import { getTimeAgo } from '../utils/timeUtils';
 import { mediumImpact } from '../utils/haptics';
 import { markSingleNotificationAsRead } from '../services/firebase/notificationService';
 import { getPhotoById, getUserStoriesData } from '../services/firebase/feedService';
-import { usePhotoDetail } from '../context/PhotoDetailContext';
+import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
 
@@ -91,7 +91,7 @@ const groupNotificationsByTime = notifs => {
 const ActivityScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
-  const { openPhotoDetail } = usePhotoDetail();
+  const { openPhotoDetail } = usePhotoDetailActions();
   const [friendRequests, setFriendRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -432,7 +432,7 @@ const ActivityScreen = () => {
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.text.primary} />
+          <PixelSpinner size="large" color={colors.text.primary} />
         </View>
       </SafeAreaView>
     );
@@ -456,7 +456,9 @@ const ActivityScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.text.primary}
+            tintColor={colors.brand.purple}
+            colors={[colors.brand.purple]}
+            progressBackgroundColor={colors.background.secondary}
           />
         }
       >

@@ -30,3 +30,4 @@ export { default as MonthlyAlbumsSection } from './MonthlyAlbumsSection';
 export { default as InAppNotificationBanner } from './InAppNotificationBanner';
 export { default as TagFriendsModal } from './TagFriendsModal';
 export { default as TaggedPeopleModal } from './TaggedPeopleModal';
+export { default as PixelSpinner } from './PixelSpinner';

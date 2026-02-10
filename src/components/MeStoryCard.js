@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage } from 'react-native';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import PixelIcon from './PixelIcon';
@@ -25,7 +25,7 @@ import logger from '../utils/logger';
  * @param {boolean} isFirst - Whether this is the first card (for left margin)
  * @param {boolean} isViewed - Whether all stories have been viewed (default false)
  */
-export const MeStoryCard = ({ friend, onPress, isFirst = false, isViewed = false }) => {
+const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }) => {
   const { userId, profilePhotoURL, topPhotos, thumbnailURL, hasPhotos } = friend || {};
 
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array
@@ -69,7 +69,12 @@ export const MeStoryCard = ({ friend, onPress, isFirst = false, isViewed = false
   const renderProfilePhoto = () => (
     <View style={styles.profileContainer}>
       {profilePhotoURL ? (
-        <RNImage source={{ uri: profilePhotoURL }} style={styles.profilePhoto} />
+        <Image
+          source={{ uri: profilePhotoURL }}
+          style={styles.profilePhoto}
+          cachePolicy="memory-disk"
+          transition={0}
+        />
       ) : (
         <View style={styles.profilePlaceholder}>
           <PixelIcon name="person" size={18} color={colors.text.secondary} />
@@ -205,4 +210,5 @@ const styles = StyleSheet.create({
   },
 });
 
+export const MeStoryCard = memo(MeStoryCardInner);
 export default MeStoryCard;

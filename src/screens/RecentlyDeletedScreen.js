@@ -5,14 +5,14 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
   Modal,
-  RefreshControl,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import PixelSpinner from '../components/PixelSpinner';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedModule, {
@@ -481,7 +481,7 @@ const RecentlyDeletedScreen = () => {
                   disabled={actionLoading}
                 >
                   {actionLoading ? (
-                    <ActivityIndicator size="small" color={colors.text.primary} />
+                    <PixelSpinner size="small" color={colors.text.primary} />
                   ) : (
                     <>
                       <PixelIcon name="arrow-undo" size={20} color={colors.text.primary} />
@@ -524,7 +524,7 @@ const RecentlyDeletedScreen = () => {
           </View>
         </SafeAreaView>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.text.secondary} />
+          <PixelSpinner size="large" color={colors.text.secondary} />
         </View>
       </View>
     );
@@ -587,7 +587,9 @@ const RecentlyDeletedScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={colors.text.secondary}
+              tintColor={colors.brand.purple}
+              colors={[colors.brand.purple]}
+              progressBackgroundColor={colors.background.secondary}
             />
           }
         />
@@ -602,7 +604,7 @@ const RecentlyDeletedScreen = () => {
             disabled={actionLoading}
           >
             {actionLoading ? (
-              <ActivityIndicator size="small" color={colors.text.primary} />
+              <PixelSpinner size="small" color={colors.text.primary} />
             ) : (
               <>
                 <PixelIcon name="arrow-undo" size={20} color={colors.text.primary} />

@@ -10,10 +10,11 @@
  * - Component: This file (thin render layer with JSX)
  */
 
-import { View, Text, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import useDarkroom from '../hooks/useDarkroom';
 import { SwipeablePhotoCard, TagFriendsModal } from '../components';
 import { styles } from '../styles/DarkroomScreen.styles';
@@ -63,7 +64,7 @@ const DarkroomScreen = () => {
       <GestureHandlerRootView style={styles.gestureRootView}>
         <SafeAreaView style={styles.container}>
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.icon.primary} />
+            <PixelSpinner size="large" color={colors.icon.primary} />
             <Text style={styles.loadingText}>Loading darkroom...</Text>
           </View>
         </SafeAreaView>
