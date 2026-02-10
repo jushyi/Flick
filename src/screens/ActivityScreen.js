@@ -193,7 +193,7 @@ const ActivityScreen = () => {
     await markSingleNotificationAsRead(item.id);
 
     // Navigate based on notification type/data
-    const { type, photoId, userId: notifUserId, taggerId } = item;
+    const { type, photoId, userId: notifUserId } = item;
     if (type === 'reaction' && photoId) {
       navigation.navigate('MainTabs', { screen: 'Feed', params: { photoId } });
     } else if (type === 'story' && notifUserId) {
@@ -201,11 +201,13 @@ const ActivityScreen = () => {
         screen: 'Feed',
         params: { highlightUserId: notifUserId, openStory: true },
       });
-    } else if (type === 'tagged' && taggerId) {
+    } else if (type === 'tagged' && item.senderId) {
       navigation.navigate('MainTabs', {
         screen: 'Feed',
-        params: { highlightUserId: taggerId, highlightPhotoId: photoId, openStory: true },
+        params: { highlightUserId: item.senderId, highlightPhotoId: photoId, openStory: true },
       });
+    } else if ((type === 'comment' || type === 'mention') && photoId) {
+      navigation.navigate('MainTabs', { screen: 'Feed', params: { photoId } });
     } else if (type === 'friend_accepted' || type === 'friend_request') {
       navigation.navigate('FriendsList');
     } else if (item.senderId) {
