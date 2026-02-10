@@ -230,7 +230,7 @@ Plans:
 Plans:
 
 - [x] 44-01: Notification type renderers + photo thumbnails
-- [ ] 44-02: Time grouping + deep linking polish + visual verification
+- [x] 44-02: Time grouping + deep linking polish + visual verification
 
 #### Phase 45: Security Audit
 
@@ -269,22 +269,22 @@ Plans:
 
 **v1.7 Engagement & Polish — In Progress**
 
-| Phase                          | Milestone | Plans | Status      | Completed  |
-| ------------------------------ | --------- | ----- | ----------- | ---------- |
-| 32. Photo Issues Fix           | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 33. Navigation Issues Fix      | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 34. Push Infrastructure        | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 35. Social Notifications       | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 36. Photo Notifications        | v1.7      | 2/2   | Complete    | 2026-02-06 |
-| 37. Darkroom Notifications     | v1.7      | 1/1   | Complete    | 2026-02-06 |
-| 38. Notification UI Polish     | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 39. Darkroom Tagging           | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 40. Feed Tagging               | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 41. Tag Integration            | v1.7      | 1/1   | Complete    | 2026-02-09 |
-| 42. Mutual Friends             | v1.7      | 2/2   | Complete    | 2026-02-09 |
-| 43. Comment Cleanup/Audit      | v1.7      | 4/4   | Complete    | 2026-02-09 |
-| 44. Notification Activity      | v1.7      | 1/2   | In progress |            |
-| 45. Security Audit             | v1.7      | 0/4   | Planned     |            |
-| 46. Full Notifications Testing | v1.7      | 0/?   | Planned     |            |
+| Phase                          | Milestone | Plans | Status   | Completed  |
+| ------------------------------ | --------- | ----- | -------- | ---------- |
+| 32. Photo Issues Fix           | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 33. Navigation Issues Fix      | v1.7      | 1/1   | Complete | 2026-02-06 |
+| 34. Push Infrastructure        | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 35. Social Notifications       | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 36. Photo Notifications        | v1.7      | 2/2   | Complete | 2026-02-06 |
+| 37. Darkroom Notifications     | v1.7      | 1/1   | Complete | 2026-02-06 |
+| 38. Notification UI Polish     | v1.7      | 2/2   | Complete | 2026-02-09 |
+| 39. Darkroom Tagging           | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 40. Feed Tagging               | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 41. Tag Integration            | v1.7      | 1/1   | Complete | 2026-02-09 |
+| 42. Mutual Friends             | v1.7      | 2/2   | Complete | 2026-02-09 |
+| 43. Comment Cleanup/Audit      | v1.7      | 4/4   | Complete | 2026-02-09 |
+| 44. Notification Activity      | v1.7      | 2/2   | Complete | 2026-02-09 |
+| 45. Security Audit             | v1.7      | 0/4   | Planned  |            |
+| 46. Full Notifications Testing | v1.7      | 0/?   | Planned  |            |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.

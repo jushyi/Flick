@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** v1.7 Engagement & Polish — Phase 44 in progress (1/2 plans complete)
+**Current focus:** v1.7 Engagement & Polish — Phase 44 complete
 
 ## Current Position
 
 Phase: 44 of 46 (Notification Activity Feed)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-09 — Completed 44-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-09 — Completed 44-02-PLAN.md
 
 Progress: ██████████ 100%
 
@@ -34,9 +34,11 @@ Progress: ██████████ 100%
 
 See PROJECT.md Key Decisions table for full history.
 
-| Phase | Decision                                     | Rationale                                                                                                                |
-| ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 42    | Mutual friend computation via Cloud Function | Firestore security rules correctly block client-side cross-user friendship queries; admin SDK is the established pattern |
+| Phase | Decision                                              | Rationale                                                                                                                |
+| ----- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 42    | Mutual friend computation via Cloud Function          | Firestore security rules correctly block client-side cross-user friendship queries; admin SDK is the established pattern |
+| 44    | All photo notification taps open PhotoDetail directly | FeedScreen has no handler for photoId route params; openPhotoDetail context is the correct pattern                       |
+| 44    | friend_accepted navigates to sender's profile         | More useful than friends list — user wants to see who accepted                                                           |
 
 ### Deferred Issues
 
@@ -60,10 +62,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 44-01-PLAN.md (1 of 2 plans in Phase 44)
+Stopped at: Completed 44-02-PLAN.md (Phase 44 complete)
 Resume file: None
 
 ## Next Steps
 
-- `/gsd:execute-plan` — Execute 44-02-PLAN.md (time grouping + deep linking polish)
+- `/gsd:plan-phase 45` — Plan Phase 45: Security Audit
 - `/gsd:complete-milestone` — Archive v1.7 after all phases done
