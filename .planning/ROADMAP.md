@@ -7,7 +7,7 @@ Transform Lapse Clone's authentication experience and profile system from incons
 ## Milestones
 
 - ✅ [v1.6 Auth & Profile Refactor](milestones/v1.6-ROADMAP.md) (Phases 1-31) — SHIPPED 2026-02-06
-- 🚧 **v1.7 Engagement & Polish** — Phases 32-45 (in progress)
+- ✅ [v0.9.0 Engagement & Polish](milestones/v0.9.0-ROADMAP.md) (Phases 32-45) — SHIPPED 2026-02-10
 
 ## Completed Milestones
 
@@ -61,6 +61,28 @@ Transform Lapse Clone's authentication experience and profile system from incons
 
 </details>
 
+<details>
+<summary>v0.9.0 Engagement & Polish (Phases 32-45) — SHIPPED 2026-02-10</summary>
+
+**30 plans (27 + 3 FIX) completed over 4 days**
+
+- [x] Phase 32: Photo Issues Fix (2/2 plans) — completed 2026-02-06
+- [x] Phase 33: Navigation Issues Fix (1/1 plan) — completed 2026-02-06
+- [x] Phase 34: Push Infrastructure (2/2 plans) — completed 2026-02-06
+- [x] Phase 35: Social Notification Events (2/2 plans) — completed 2026-02-06
+- [x] Phase 36: Photo Notification Events (2/2 plans) — completed 2026-02-06
+- [x] Phase 37: Darkroom Ready Notifications (1/1 plan) — completed 2026-02-06
+- [x] Phase 38: Notification UI Polish (2/2 + 1 FIX plans) — completed 2026-02-09
+- [x] Phase 39: Darkroom Photo Tagging (1/1 + 1 FIX plans) — completed 2026-02-09
+- [x] Phase 40: Feed Photo Tagging (1/1 plan) — completed 2026-02-09
+- [x] Phase 41: Tagged Notification Integration (1/1 plan) — completed 2026-02-09
+- [x] Phase 42: Mutual Friends Suggestions (2/2 plans) — completed 2026-02-09
+- [x] Phase 43: Comment Cleanup/Audit (4/4 plans) — completed 2026-02-09
+- [x] Phase 44: Notification Activity Feed (2/2 plans) — completed 2026-02-09
+- [x] Phase 45: Security Audit (4/4 plans) — completed 2026-02-10
+
+</details>
+
 ## Phases
 
 **Phase Numbering:**
@@ -71,208 +93,15 @@ Transform Lapse Clone's authentication experience and profile system from incons
 Decimal phases appear between their surrounding integers in numeric order.
 
 _v1.6 phases complete. See [v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md) for archive._
-
----
-
-### 🚧 v1.7 Engagement & Polish (In Progress)
-
-**Milestone Goal:** Clean up technical debt, build robust push notifications, and add friend tagging in photos.
-
-#### Phase 32: Photo Issues Fix
-
-**Goal**: Fix ISS-001 (photo display optimization) and ISS-011 (custom profile photo crop UI)
-**Depends on**: v1.6 complete
-**Research**: Unlikely (internal patterns)
-**Plans**: 2
-
-Plans:
-
-- [x] 32-01: Photo display fix (AlbumPhotoViewer contentFit=contain)
-- [x] 32-02: Profile photo crop UI
-
-#### Phase 33: Navigation Issues Fix
-
-**Goal**: Fix ISS-004 (comments sheet navigation) and ISS-005 (swipe up for comments)
-**Depends on**: Phase 32
-**Research**: Unlikely (internal patterns)
-**Plans**: 1
-
-Plans:
-
-- [x] 33-01: Comments sheet persistence and swipe-up gesture
-
-#### Phase 34: Push Infrastructure
-
-**Goal**: Complete push notification foundation — audit existing code, fix gaps, ensure reliable delivery
-**Depends on**: Phase 33
-**Research**: Likely (Expo Push API, notification services)
-**Research topics**: Expo push notification setup, APNs/FCM configuration, notification tokens
-**Plans**: 2
-
-Plans:
-
-- [x] 34-01: Reliability foundation (expo-server-sdk, token refresh)
-- [x] 34-02: Receipt checking
-
-#### Phase 35: Social Notification Events
-
-**Goal**: Add notification triggers for likes, comments, follows, and friend requests
-**Depends on**: Phase 34
-**Research**: Unlikely (building on infrastructure)
-**Plans**: 2
-
-Plans:
-
-- [x] 35-01: Notification settings UI (master toggle + per-type toggles)
-- [x] 35-02: Friend accepted notifications, @mentions, preference checks
-
-#### Phase 36: Photo Notification Events
-
-**Goal**: Add notifications for tagged in photo and new story events
-**Depends on**: Phase 35
-**Research**: Unlikely (internal patterns)
-**Plans**: 2
-
-Plans:
-
-- [x] 36-01: Story notifications (triage completion tracking, Cloud Function, deep linking)
-- [x] 36-02: Tagged photo notifications (Cloud Function infrastructure, deep linking, schema docs)
-
-#### Phase 37: Darkroom Ready Notifications
-
-**Goal**: Audit and update existing darkroom ready notification — ensure reliable delivery and clear messaging
-**Depends on**: Phase 34
-**Research**: Unlikely (audit existing implementation)
-**Plans**: 1
-
-Plans:
-
-- [x] 37-01: Audit and clean darkroom notification (dead code removal, simplified messaging, push enable banner)
-
-#### Phase 38: Notification UI Polish
-
-**Goal**: Polish in-app notification presentation and user experience
-**Depends on**: Phase 35, Phase 36
-**Research**: Unlikely (internal UI patterns)
-**Plans**: 2
-
-Plans:
-
-- [x] 38-01: In-app notification banner (custom dark-themed foreground display)
-- [x] 38-02: Notification list polish (bold usernames, unread dots, per-tap read, tappable items)
-
-#### Phase 39: Darkroom Photo Tagging
-
-**Goal**: Add UI to tag friends during darkroom photo triage (button on photo card)
-**Depends on**: Phase 38
-**Research**: Unlikely (internal UI patterns)
-**Plans**: 1
-
-Plans:
-
-- [x] 39-01: TagFriendsModal, darkroom tag button, taggedUserIds persistence
-
-#### Phase 40: Feed Photo Tagging
-
-**Goal**: Allow tagging on existing feed photos via three-dots menu
-**Depends on**: Phase 39
-**Research**: Unlikely (internal UI patterns)
-**Plans**: 1
-
-Plans:
-
-- [x] 40-01: Tag button on PhotoDetailScreen, TaggedPeopleModal, updatePhotoTags persistence
-
-#### Phase 41: Tagged Notification Integration
-
-**Goal**: Connect photo tagging to notification system — notify tagged users
-**Depends on**: Phase 40
-**Research**: Unlikely (internal patterns)
-**Plans**: 1
-
-Plans:
-
-- [x] 41-01: Notification settings toggle + tag removal cancellation
-
-#### Phase 42: Mutual Friends Suggestions
-
-**Goal**: Suggest friends based on mutual connections
-**Depends on**: Phase 41
-**Research**: Unlikely (internal patterns)
-**Plans**: 2
-
-Plans:
-
-- [x] 42-01: getMutualFriendSuggestions service function + FriendCard subtitle prop
-- [x] 42-02: Integrate mutual friend suggestions into FriendsScreen UI + Cloud Function
-
-#### Phase 43: Comment Cleanup and Audit
-
-**Goal**: Full sweep of all code comments — fix inaccurate, remove stale TODOs, cut noise
-**Depends on**: Phase 42
-**Research**: Unlikely (internal patterns)
-**Plans**: 4
-
-Plans:
-
-- [x] 43-01: Services + Cloud Functions comment audit (known stale fixes + full service audit)
-- [x] 43-02: Hooks, utils, context, navigation, App.js comment audit
-- [x] 43-03: Components comment audit
-- [x] 43-04: Screens, styles, constants comment audit
-
-#### Phase 44: Notification Activity Feed
-
-**Goal**: Complete the notification screen to properly display all notification types — reactions, comments, comment replies, photo tags, and push notification activity
-**Depends on**: Phase 43
-**Research**: Unlikely (internal patterns)
-**Plans**: 2
-
-Plans:
-
-- [x] 44-01: Notification type renderers + photo thumbnails
-- [x] 44-02: Time grouping + deep linking polish + visual verification
-
-#### Phase 45: Security Audit
-
-**Goal**: Full-stack security sweep — fix Storage rules (public photo access), Cloud Functions authorization (getSignedPhotoUrl), Firestore access hierarchy (comments), input validation (mentions, tags), and client-side defense-in-depth
-**Depends on**: Phase 44
-**Research**: Unlikely (internal patterns)
-**Plans**: 4
-
-Plans:
-
-- [x] 45-01: Firebase Security Rules hardening (Storage auth + Firestore comment access)
-- [x] 45-02: Cloud Functions access control (getSignedPhotoUrl auth + CORS + error sanitization)
-- [x] 45-03: Cloud Functions input validation (@mention cap + tag validation + atomic deletions)
-- [x] 45-04: Client-side security (comment/tag validation + logger refinement + album sanitization)
+_v0.9.0 phases complete. See [v0.9.0-ROADMAP.md](milestones/v0.9.0-ROADMAP.md) for archive._
 
 ---
 
 ## Progress
 
-**v1.6 Auth & Profile Refactor — SHIPPED 2026-02-06**
-
-| Milestone | Phases              | Plans | Status   | Shipped    |
-| --------- | ------------------- | ----- | -------- | ---------- |
-| v1.6      | 1-31 (+ 14 decimal) | 108   | Complete | 2026-02-06 |
-
-**v1.7 Engagement & Polish — In Progress**
-
-| Phase                      | Milestone | Plans | Status   | Completed  |
-| -------------------------- | --------- | ----- | -------- | ---------- |
-| 32. Photo Issues Fix       | v1.7      | 2/2   | Complete | 2026-02-06 |
-| 33. Navigation Issues Fix  | v1.7      | 1/1   | Complete | 2026-02-06 |
-| 34. Push Infrastructure    | v1.7      | 2/2   | Complete | 2026-02-06 |
-| 35. Social Notifications   | v1.7      | 2/2   | Complete | 2026-02-06 |
-| 36. Photo Notifications    | v1.7      | 2/2   | Complete | 2026-02-06 |
-| 37. Darkroom Notifications | v1.7      | 1/1   | Complete | 2026-02-06 |
-| 38. Notification UI Polish | v1.7      | 2/2   | Complete | 2026-02-09 |
-| 39. Darkroom Tagging       | v1.7      | 1/1   | Complete | 2026-02-09 |
-| 40. Feed Tagging           | v1.7      | 1/1   | Complete | 2026-02-09 |
-| 41. Tag Integration        | v1.7      | 1/1   | Complete | 2026-02-09 |
-| 42. Mutual Friends         | v1.7      | 2/2   | Complete | 2026-02-09 |
-| 43. Comment Cleanup/Audit  | v1.7      | 4/4   | Complete | 2026-02-09 |
-| 44. Notification Activity  | v1.7      | 2/2   | Complete | 2026-02-09 |
-| 45. Security Audit         | v1.7      | 4/4   | Complete | 2026-02-10 |
+| Milestone | Phases | Plans | Status   | Shipped    |
+| --------- | ------ | ----- | -------- | ---------- |
+| v1.6      | 1-31   | 108   | Complete | 2026-02-06 |
+| v0.9.0    | 32-45  | 30    | Complete | 2026-02-10 |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.

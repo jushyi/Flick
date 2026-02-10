@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A social photo-sharing app (Lapse Clone / REWIND) with complete dark-themed authentication, comprehensive profile system including Selects banner slideshows, iTunes profile songs, user-created albums, and monthly photo archives. Full social features including friend management, blocking, reactions with emoji picker, threaded comments with @mentions, and content visibility lifecycle management.
+A social photo-sharing app (Lapse Clone / REWIND) with complete dark-themed authentication, comprehensive profile system, full push notification infrastructure, photo tagging, and security-hardened backend. Features include Selects banner slideshows, iTunes profile songs, user-created albums, monthly photo archives, mutual friend suggestions, in-app notification banners, and a polished notification activity feed with deep linking.
 
 ## Core Value
 
@@ -17,7 +17,6 @@ All three areas (login/signup flow, profile creation onboarding, profile screen)
 - Darkroom reveal system — existing
 - Feed with server-side friend filtering — existing
 - Photo reactions system — existing
-- Push notifications — existing
 - Friend/friendship system — existing
 - Login screen refactor — v1.6 (dark theme matching Camera/Feed/Darkroom aesthetic)
 - Signup flow refactor — v1.6 (consistent styling, clear step progression)
@@ -38,10 +37,23 @@ All three areas (login/signup flow, profile creation onboarding, profile screen)
 - Empty feed state guidance — v1.6 (contextual prompts)
 - Own snaps in stories bar — v1.6 (with disabled self-reactions)
 - Split activity into notifications & friends — v1.6
+- Push notifications with Cloud Functions — v0.9.0 (expo-server-sdk, receipt checking, token refresh)
+- Notification settings UI — v0.9.0 (master toggle + per-type toggles)
+- Social notification events — v0.9.0 (likes, comments, @mentions, friend accepted)
+- Story & photo tag notifications — v0.9.0 (Cloud Functions with debounce batching)
+- In-app notification banner — v0.9.0 (custom dark-themed slide animation)
+- Notification activity feed — v0.9.0 (reaction clumping, time grouping, deep linking)
+- Photo tagging in darkroom & feed — v0.9.0 (multi-select, tag removal cancellation)
+- Mutual friends suggestions — v0.9.0 (Cloud Function with cross-user queries)
+- Photo display fix — v0.9.0 (letterboxing with contentFit=contain)
+- Profile photo crop UI — v0.9.0 (circular preview, pinch-zoom, pan gestures)
+- Comments sheet refactor — v0.9.0 (Animated.View with swipe-up gesture)
+- Security audit — v0.9.0 (Storage rules, Cloud Functions auth, input validation, client-side defense)
+- Comment cleanup audit — v0.9.0 (removed ~400+ lines of noise/stale comments)
 
 ### Active
 
-- [ ] Additional features before release (v1.7 planning)
+- [ ] Additional features before release (next milestone planning)
 
 ### Out of Scope
 
@@ -52,19 +64,17 @@ All three areas (login/signup flow, profile creation onboarding, profile screen)
 
 ## Context
 
-**Current State (v1.6 shipped):**
+**Current State (v0.9.0 shipped):**
 
-- 40,354 lines of JavaScript/JSX
-- Tech stack: React Native + Expo, Firebase Auth, Firestore, expo-audio, expo-image
-- 31 integer phases + 14 decimal insertions completed
-- 108 plans executed over 16 days
+- 57,005 lines of JavaScript/JSX
+- Tech stack: React Native + Expo, Firebase Auth, Firestore, Cloud Functions, expo-audio, expo-image
+- 45 phases completed across 2 milestones (v1.6 + v0.9.0)
+- 138 plans executed over 20 days total
+- All known issues resolved (ISS-001 through ISS-011)
 
 **Known Issues:**
 
-- ISS-001: Optimize photo capture for full-screen display
-- ISS-004: Comments sheet closes when navigating to profile
-- ISS-005: Swipe up on photo to open comments
-- ISS-011: Custom profile photo crop UI
+None — all issues closed.
 
 ## Constraints
 
@@ -74,18 +84,23 @@ All three areas (login/signup flow, profile creation onboarding, profile screen)
 
 ## Key Decisions
 
-| Decision                               | Rationale                                                   | Outcome |
-| -------------------------------------- | ----------------------------------------------------------- | ------- |
-| Full onboarding setup                  | Include Selects + song selection in profile creation flow   | Good    |
-| iTunes 30s previews                    | Spotify SDK deprecated 2022, iTunes API free and reliable   | Good    |
-| Own profile first, then other profiles | Built foundation before social profile viewing              | Good    |
-| Flat comment threading with @mentions  | Instagram-style UX, simpler than nested threads             | Good    |
-| 7-day story / 1-day feed visibility    | Stories get more time, feed stays fresh                     | Good    |
-| Pure black (#000000) background        | True dark theme, consistent across all screens              | Good    |
-| 30-day grace periods                   | Industry standard for account/photo deletion recovery       | Good    |
-| expo-image migration                   | Significant performance improvement for image-heavy screens | Good    |
-| Phone-only authentication              | Simpler UX, social login deferred                           | Good    |
+| Decision                                     | Rationale                                                                          | Outcome |
+| -------------------------------------------- | ---------------------------------------------------------------------------------- | ------- |
+| Full onboarding setup                        | Include Selects + song selection in profile creation flow                          | Good    |
+| iTunes 30s previews                          | Spotify SDK deprecated 2022, iTunes API free and reliable                          | Good    |
+| Own profile first, then other profiles       | Built foundation before social profile viewing                                     | Good    |
+| Flat comment threading with @mentions        | Instagram-style UX, simpler than nested threads                                    | Good    |
+| 7-day story / 1-day feed visibility          | Stories get more time, feed stays fresh                                            | Good    |
+| Pure black (#000000) background              | True dark theme, consistent across all screens                                     | Good    |
+| 30-day grace periods                         | Industry standard for account/photo deletion recovery                              | Good    |
+| expo-image migration                         | Significant performance improvement for image-heavy screens                        | Good    |
+| Phone-only authentication                    | Simpler UX, social login deferred                                                  | Good    |
+| Mutual friend computation via Cloud Function | Firestore rules block client-side cross-user queries; admin SDK is correct pattern | Good    |
+| Photo notification taps open PhotoDetail     | FeedScreen has no photoId handler; openPhotoDetail context is correct pattern      | Good    |
+| Main photos owner-only in Storage            | Admin SDK bypasses Storage rules; getSignedPhotoUrl is correct access path         | Good    |
+| Comments as Animated.View not Modal          | Persistent state, swipe gestures, better navigation integration                    | Good    |
+| 30-second tag notification debounce          | Batch multiple tags into single notification, allow cancellation                   | Good    |
 
 ---
 
-_Last updated: 2026-02-06 after v1.6 milestone_
+_Last updated: 2026-02-10 after v0.9.0 milestone_

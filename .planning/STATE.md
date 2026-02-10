@@ -2,17 +2,17 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-06)
+See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** All three areas (login/signup flow, profile creation onboarding, profile screen) must be solid and functional — the app's first impression and personal identity depend on it.
-**Current focus:** v1.7 Engagement & Polish — Phase 45 complete
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 45 of 45 (Security Audit)
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-02-10 — Completed 45-04-PLAN.md
+Phase: All complete (45 phases across 2 milestones)
+Plan: N/A
+Status: Ready to plan next milestone
+Last activity: 2026-02-10 — v0.9.0 milestone complete
 
 Progress: ██████████ 100%
 
@@ -28,18 +28,19 @@ Progress: ██████████ 100%
 - Commits: 1,229
 - Codebase: 40,354 lines JavaScript/JSX
 
+**v0.9.0 Milestone:**
+
+- Total plans completed: 30 (27 + 3 FIX)
+- Total phases: 14
+- Timeline: 4 days (2026-02-06 → 2026-02-10)
+- Commits: 138
+- Codebase: 57,005 lines JavaScript/JSX
+
 ## Accumulated Context
 
 ### Decisions
 
 See PROJECT.md Key Decisions table for full history.
-
-| Phase | Decision                                                      | Rationale                                                                                                                |
-| ----- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 42    | Mutual friend computation via Cloud Function                  | Firestore security rules correctly block client-side cross-user friendship queries; admin SDK is the established pattern |
-| 44    | All photo notification taps open PhotoDetail directly         | FeedScreen has no handler for photoId route params; openPhotoDetail context is the correct pattern                       |
-| 44    | friend_accepted navigates to sender's profile                 | More useful than friends list — user wants to see who accepted                                                           |
-| 45    | Main photos owner-only in Storage, friends via Cloud Function | Admin SDK bypasses Storage rules; getSignedPhotoUrl is the correct access path for non-owners                            |
 
 ### Deferred Issues
 
@@ -53,19 +54,16 @@ None.
 
 ### Roadmap Evolution
 
-- Milestone v1.7 created: Engagement & Polish, 10 phases (Phase 32-41)
-- Phase 42 added: Mutual Friends Suggestions
-- Phase 43 added: Comment Cleanup and Audit
-- Phase 44 added: Notification Activity Feed
-- Phase 45 added: Security Audit
-- Phase 46 removed: Full Notifications Testing
+- Milestone v1.6 shipped: Auth & Profile Refactor, 31 phases (Phase 1-31)
+- Milestone v0.9.0 shipped: Engagement & Polish, 14 phases (Phase 32-45)
 
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Completed 45-04-PLAN.md — Phase 45 complete, milestone ready
+Stopped at: v0.9.0 milestone archived
 Resume file: None
 
 ## Next Steps
 
-- `/gsd:complete-milestone` — Archive v1.7 milestone
+- `/gsd:discuss-milestone` — Plan next milestone
+- `/gsd:new-milestone` — Create directly if scope is clear
