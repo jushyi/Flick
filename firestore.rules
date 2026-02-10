@@ -1,6 +1,7 @@
 rules_version = '2';
 // Hardened: 2026-01-24 - Phase 23 Security Audit
 // Updated: 2026-02-04 - Phase 21 UAT Fix (blocks + reports collections)
+// Updated: 2026-02-09 - Phase 45 Security Audit (comment/like access hierarchy, album field protection, remove unused photoViews)
 // Changes:
 //   - Self-reaction prevention (request.auth.uid != resource.data.userId)
 //   - Immutable field protection on photos (userId, capturedAt, imageURL)
@@ -151,8 +152,12 @@ service cloud.firestore {
       // COMMENTS SUBCOLLECTION (photos/{photoId}/comments/{commentId})
       // =============================================================================
       match /comments/{commentId} {
-        // Anyone authenticated can read comments on journaled photos
-        allow read: if isAuthenticated();
+        // Comments readable only by users who can access the parent photo
+        // (owner, photo is journal state, or user is friends with photo owner)
+        allow read: if isAuthenticated() &&
+          (get(/databases/$(database)/documents/photos/$(photoId)).data.userId == request.auth.uid ||
+           get(/databases/$(database)/documents/photos/$(photoId)).data.photoState == 'journal' ||
+           areFriends(get(/databases/$(database)/documents/photos/$(photoId)).data.userId));
 
         // Only authenticated users can create comments
         // Must set own userId, likeCount must be 0
@@ -178,8 +183,11 @@ service cloud.firestore {
         // LIKES SUBCOLLECTION (photos/{photoId}/comments/{commentId}/likes/{likeId})
         // =============================================================================
         match /likes/{likeId} {
-          // Anyone authenticated can read likes
-          allow read: if isAuthenticated();
+          // Likes readable only by users who can access the parent photo
+          allow read: if isAuthenticated() &&
+            (get(/databases/$(database)/documents/photos/$(photoId)).data.userId == request.auth.uid ||
+             get(/databases/$(database)/documents/photos/$(photoId)).data.photoState == 'journal' ||
+             areFriends(get(/databases/$(database)/documents/photos/$(photoId)).data.userId));
 
           // Can create like with own userId
           // likeId format: ${photoId}_${commentId}_${userId} (deterministic)
@@ -279,29 +287,11 @@ service cloud.firestore {
                        request.resource.data.userId == request.auth.uid &&
                        request.resource.data.keys().hasAll(['userId', 'name', 'photoIds', 'coverPhotoId', 'createdAt']);
 
-      // Users can update their own albums
-      allow update: if isOwner(resource.data.userId);
+      // Users can update their own albums (userId and createdAt are immutable)
+      allow update: if isOwner(resource.data.userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'createdAt']);
 
       // Users can delete their own albums
-      allow delete: if isOwner(resource.data.userId);
-    }
-
-    // =============================================================================
-    // PHOTO VIEWS COLLECTION (for "NEW" indicator tracking)
-    // =============================================================================
-    match /photoViews/{viewId} {
-      // Users can read their own photo view records
-      allow read: if isAuthenticated() &&
-                     resource.data.userId == request.auth.uid;
-
-      // Users can create view records for themselves
-      allow create: if isAuthenticated() &&
-                       request.resource.data.userId == request.auth.uid;
-
-      // Users can update their own view records
-      allow update: if isOwner(resource.data.userId);
-
-      // Users can delete their own view records
       allow delete: if isOwner(resource.data.userId);
     }
 
