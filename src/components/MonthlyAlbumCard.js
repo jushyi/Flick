@@ -32,7 +32,7 @@ const MonthlyAlbumCard = ({ month, coverPhotoUrl, onPress }) => {
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       {coverPhotoUrl ? (
         <Image
-          source={{ uri: coverPhotoUrl }}
+          source={{ uri: coverPhotoUrl, cacheKey: `month-cover-${month}` }}
           style={styles.coverImage}
           contentFit="cover"
           cachePolicy="memory-disk"

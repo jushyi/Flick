@@ -401,7 +401,7 @@ const AlbumPhotoViewer = ({
     ({ item }) => (
       <TouchableOpacity activeOpacity={1} onPress={handleImagePress} style={styles.photoContainer}>
         <Image
-          source={{ uri: item.imageURL }}
+          source={{ uri: item.imageURL, cacheKey: `photo-${item.id}` }}
           style={styles.photo}
           contentFit="contain"
           cachePolicy="memory-disk"
@@ -441,7 +441,7 @@ const AlbumPhotoViewer = ({
         style={styles.thumbnailWrapper}
       >
         <Image
-          source={{ uri: item.imageURL }}
+          source={{ uri: item.imageURL, cacheKey: `photo-${item.id}` }}
           style={[styles.thumbnail, index === currentIndex && styles.thumbnailActive]}
           contentFit="cover"
           cachePolicy="memory-disk"

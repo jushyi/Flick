@@ -158,7 +158,7 @@ const AlbumPhotoPickerScreen = () => {
           activeOpacity={0.7}
         >
           <Image
-            source={{ uri: item.imageURL }}
+            source={{ uri: item.imageURL, cacheKey: `photo-${item.id}` }}
             style={styles.photoImage}
             contentFit="cover"
             cachePolicy="memory-disk"

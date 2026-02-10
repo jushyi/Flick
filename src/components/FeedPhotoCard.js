@@ -98,7 +98,7 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
       {/* Photo - full width with rounded top corners */}
       <View style={styles.photoContainer}>
         <Image
-          source={{ uri: imageURL }}
+          source={{ uri: imageURL, cacheKey: `photo-${id}` }}
           style={styles.photo}
           contentFit="cover"
           cachePolicy="memory-disk"
@@ -116,7 +116,7 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
         >
           {profilePhotoURL ? (
             <Image
-              source={{ uri: profilePhotoURL }}
+              source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
               style={styles.profilePhoto}
               cachePolicy="memory-disk"
               transition={0}

@@ -46,7 +46,7 @@ const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }
     <View style={styles.photoContainer}>
       {thumbnailUrl ? (
         <Image
-          source={{ uri: thumbnailUrl }}
+          source={{ uri: thumbnailUrl, cacheKey: `story-thumb-${userId}` }}
           style={styles.photoThumbnail}
           contentFit="cover"
           transition={0}
@@ -70,7 +70,7 @@ const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }
     <View style={styles.profileContainer}>
       {profilePhotoURL ? (
         <Image
-          source={{ uri: profilePhotoURL }}
+          source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
           style={styles.profilePhoto}
           cachePolicy="memory-disk"
           transition={0}

@@ -180,7 +180,7 @@ const CommentRow = ({
         >
           {profilePhotoURL ? (
             <Image
-              source={{ uri: profilePhotoURL }}
+              source={{ uri: profilePhotoURL, cacheKey: `avatar-${comment.userId}` }}
               style={styles.profilePhoto}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -220,7 +220,7 @@ const CommentRow = ({
           {/* Media Thumbnail (if exists) */}
           {mediaUrl && (
             <Image
-              source={{ uri: mediaUrl }}
+              source={{ uri: mediaUrl, cacheKey: `comment-media-${comment.id}` }}
               style={styles.mediaThumbnail}
               contentFit="cover"
               transition={200}

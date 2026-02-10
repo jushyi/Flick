@@ -114,7 +114,7 @@ const InAppNotificationBanner = ({ visible, title, body, avatarUrl, onPress, onD
       <TouchableOpacity activeOpacity={0.85} onPress={handlePress} style={styles.container}>
         {avatarUrl ? (
           <Image
-            source={{ uri: avatarUrl }}
+            source={{ uri: avatarUrl, cacheKey: avatarUrl ? `notif-avatar` : undefined }}
             style={styles.avatar}
             contentFit="cover"
             cachePolicy="memory-disk"

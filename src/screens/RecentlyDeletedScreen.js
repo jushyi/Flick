@@ -335,7 +335,7 @@ const RecentlyDeletedScreen = () => {
         activeOpacity={0.7}
       >
         <Image
-          source={{ uri: item.imageURL }}
+          source={{ uri: item.imageURL, cacheKey: `photo-${item.id}` }}
           style={styles.photoImage}
           contentFit="cover"
           cachePolicy="memory-disk"
@@ -404,7 +404,7 @@ const RecentlyDeletedScreen = () => {
     ({ item }) => (
       <View style={styles.viewerPhotoContainer}>
         <Image
-          source={{ uri: item.imageURL }}
+          source={{ uri: item.imageURL, cacheKey: `photo-${item.id}` }}
           style={styles.viewerImage}
           contentFit="contain"
           cachePolicy="memory-disk"

@@ -260,7 +260,7 @@ const FriendCard = ({
       <View style={styles.avatarContainer}>
         {profilePhotoURL ? (
           <Image
-            source={{ uri: profilePhotoURL }}
+            source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
             style={styles.avatar}
             cachePolicy="memory-disk"
             transition={0}

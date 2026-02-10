@@ -339,6 +339,8 @@ const PhotoDetailScreen = () => {
       commentCount: currentPhoto?.commentCount || 0,
       orderedEmojis: orderedEmojis,
       groupedReactions: groupedReactions,
+      photoId: currentPhoto?.id,
+      userId: currentPhoto?.userId,
     };
   }
 
@@ -632,7 +634,7 @@ const PhotoDetailScreen = () => {
         >
           <View style={styles.photoScrollView}>
             <Image
-              source={{ uri: imageURL }}
+              source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
               style={styles.photo}
               contentFit="cover"
               transition={0}
@@ -649,7 +651,7 @@ const PhotoDetailScreen = () => {
         >
           {profilePhotoURL ? (
             <Image
-              source={{ uri: profilePhotoURL }}
+              source={{ uri: profilePhotoURL, cacheKey: `profile-${currentPhoto?.userId}` }}
               style={styles.profilePic}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -887,7 +889,12 @@ const PhotoDetailScreen = () => {
             {/* Photo */}
             <View style={styles.photoScrollView}>
               <Image
-                source={{ uri: snapshotRef.current.imageURL }}
+                source={{
+                  uri: snapshotRef.current.imageURL,
+                  cacheKey: snapshotRef.current.photoId
+                    ? `photo-${snapshotRef.current.photoId}`
+                    : undefined,
+                }}
                 style={styles.photo}
                 contentFit="cover"
                 transition={0}
@@ -898,7 +905,12 @@ const PhotoDetailScreen = () => {
             <View style={styles.profilePicContainer}>
               {snapshotRef.current.profilePhotoURL ? (
                 <Image
-                  source={{ uri: snapshotRef.current.profilePhotoURL }}
+                  source={{
+                    uri: snapshotRef.current.profilePhotoURL,
+                    cacheKey: snapshotRef.current.userId
+                      ? `profile-${snapshotRef.current.userId}`
+                      : undefined,
+                  }}
                   style={styles.profilePic}
                   contentFit="cover"
                   cachePolicy="memory-disk"

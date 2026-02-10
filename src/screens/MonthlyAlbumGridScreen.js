@@ -169,7 +169,7 @@ const MonthlyAlbumGridScreen = () => {
         activeOpacity={0.8}
       >
         <Image
-          source={{ uri: item.photo.imageURL }}
+          source={{ uri: item.photo.imageURL, cacheKey: `photo-${item.photo.id}` }}
           style={styles.photoImage}
           contentFit="cover"
           cachePolicy="memory-disk"
@@ -200,7 +200,7 @@ const MonthlyAlbumGridScreen = () => {
         activeOpacity={0.8}
       >
         <Image
-          source={{ uri: item.photo.imageURL }}
+          source={{ uri: item.photo.imageURL, cacheKey: `photo-${item.photo.id}` }}
           style={styles.photoImage}
           contentFit="cover"
           cachePolicy="memory-disk"
@@ -276,7 +276,7 @@ const MonthlyAlbumGridScreen = () => {
               activeOpacity={0.8}
             >
               <Image
-                source={{ uri: photoItem.photo.imageURL }}
+                source={{ uri: photoItem.photo.imageURL, cacheKey: `photo-${photoItem.photo.id}` }}
                 style={styles.photoImage}
                 contentFit="cover"
                 cachePolicy="memory-disk"

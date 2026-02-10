@@ -263,7 +263,7 @@ const ProfileTabIcon = ({ color, focused, photoURL }) => {
   if (photoURL) {
     return (
       <Image
-        source={{ uri: photoURL }}
+        source={{ uri: photoURL, cacheKey: 'profile-tab-icon' }}
         style={{
           width: 28,
           height: 28,

@@ -309,7 +309,7 @@ const AlbumGridScreen = () => {
           activeOpacity={0.8}
         >
           <Image
-            source={{ uri: item.photo.imageURL }}
+            source={{ uri: item.photo.imageURL, cacheKey: `photo-${item.photo.id}` }}
             style={styles.photoImage}
             contentFit="cover"
             cachePolicy="memory-disk"

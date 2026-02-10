@@ -88,7 +88,7 @@ const SwipeablePhotoCard = forwardRef(
       >
         {/* Photo Image - expo-image with native caching and transitions */}
         <Image
-          source={{ uri: photo.imageURL }}
+          source={{ uri: photo.imageURL, cacheKey: `photo-${photo.id}` }}
           style={styles.photoImage}
           contentFit="cover"
           transition={200}

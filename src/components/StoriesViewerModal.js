@@ -256,7 +256,7 @@ const StoriesViewerModal = ({
               <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
                 {profilePhotoURL ? (
                   <Image
-                    source={{ uri: profilePhotoURL }}
+                    source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
                     style={styles.profilePic}
                     contentFit="cover"
                     cachePolicy="memory-disk"
@@ -286,7 +286,7 @@ const StoriesViewerModal = ({
           <TouchableWithoutFeedback onPress={handleTap}>
             <View style={styles.photoContainer}>
               <Image
-                source={{ uri: currentPhoto.imageURL }}
+                source={{ uri: currentPhoto.imageURL, cacheKey: `story-${currentPhoto.id}` }}
                 style={styles.photo}
                 contentFit="cover"
                 cachePolicy="memory-disk"

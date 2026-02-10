@@ -59,7 +59,7 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
     <View style={styles.photoContainer}>
       {thumbnailUrl ? (
         <Image
-          source={{ uri: thumbnailUrl }}
+          source={{ uri: thumbnailUrl, cacheKey: `story-thumb-${userId}` }}
           style={styles.photoThumbnail}
           contentFit="cover"
           transition={0}
@@ -87,7 +87,7 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
     >
       {profilePhotoURL ? (
         <Image
-          source={{ uri: profilePhotoURL }}
+          source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
           style={styles.profilePhoto}
           cachePolicy="memory-disk"
           transition={0}

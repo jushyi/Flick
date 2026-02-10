@@ -829,7 +829,10 @@ const ProfileScreen = () => {
           <View style={styles.profilePhotoContainer}>
             {profileData?.photoURL ? (
               <Image
-                source={{ uri: profileData.photoURL }}
+                source={{
+                  uri: profileData.photoURL,
+                  cacheKey: `profile-${isOwnProfile ? user?.uid : userId}`,
+                }}
                 style={styles.profilePhoto}
                 contentFit="cover"
                 cachePolicy="memory-disk"

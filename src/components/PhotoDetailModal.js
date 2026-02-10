@@ -345,7 +345,7 @@ const PhotoDetailModal = ({
           <TouchableWithoutFeedback onPress={mode === 'stories' ? handleTapNavigation : undefined}>
             <View style={styles.photoScrollView}>
               <Image
-                source={{ uri: imageURL }}
+                source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
                 style={styles.photo}
                 contentFit="cover"
                 transition={0}
@@ -362,7 +362,7 @@ const PhotoDetailModal = ({
           >
             {profilePhotoURL ? (
               <Image
-                source={{ uri: profilePhotoURL }}
+                source={{ uri: profilePhotoURL, cacheKey: `profile-${currentPhoto?.userId}` }}
                 style={styles.profilePic}
                 contentFit="cover"
               />

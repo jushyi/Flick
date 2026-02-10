@@ -67,7 +67,7 @@ export const AlbumCard = ({
         {stackCount >= 2 && (
           <View style={[styles.stackCard, styles.stackCardBack]}>
             <Image
-              source={{ uri: stackPhotoUrls[1] }}
+              source={{ uri: stackPhotoUrls[1], cacheKey: `album-stack-${album.id}-1` }}
               style={styles.stackImage}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -81,7 +81,7 @@ export const AlbumCard = ({
         {stackCount >= 1 && (
           <View style={[styles.stackCard, styles.stackCardMiddle]}>
             <Image
-              source={{ uri: stackPhotoUrls[0] }}
+              source={{ uri: stackPhotoUrls[0], cacheKey: `album-stack-${album.id}-0` }}
               style={styles.stackImage}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -95,7 +95,7 @@ export const AlbumCard = ({
         <View style={styles.imageContainer}>
           {coverPhotoUrl ? (
             <Image
-              source={{ uri: coverPhotoUrl }}
+              source={{ uri: coverPhotoUrl, cacheKey: `album-cover-${album.id}` }}
               style={styles.coverImage}
               contentFit="cover"
               cachePolicy="memory-disk"

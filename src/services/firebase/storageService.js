@@ -67,7 +67,11 @@ export const uploadProfilePhoto = async (userId, localUri) => {
     const storageRef = ref(storageInstance, `profile-photos/${userId}/profile.jpg`);
 
     // Upload file directly (no blob needed with RN Firebase)
-    await storageRef.putFile(filePath);
+    // Cache-Control: immutable images cached at CDN edge for 1 year
+    await storageRef.putFile(filePath, {
+      contentType: 'image/jpeg',
+      cacheControl: 'public, max-age=31536000',
+    });
 
     const downloadURL = await storageRef.getDownloadURL();
 
@@ -97,7 +101,11 @@ export const uploadPhoto = async (userId, photoId, localUri) => {
     const storageRef = ref(storageInstance, `photos/${userId}/${photoId}.jpg`);
 
     // Upload file directly (no blob needed with RN Firebase)
-    await storageRef.putFile(filePath);
+    // Cache-Control: immutable images cached at CDN edge for 1 year
+    await storageRef.putFile(filePath, {
+      contentType: 'image/jpeg',
+      cacheControl: 'public, max-age=31536000',
+    });
 
     const downloadURL = await storageRef.getDownloadURL();
 
@@ -188,7 +196,11 @@ export const uploadCommentImage = async localUri => {
     const filePath = uriToFilePath(compressedUri);
     const storageRef = ref(storageInstance, filename);
 
-    await storageRef.putFile(filePath);
+    // Cache-Control: immutable images cached at CDN edge for 1 year
+    await storageRef.putFile(filePath, {
+      contentType: 'image/jpeg',
+      cacheControl: 'public, max-age=31536000',
+    });
 
     const downloadURL = await storageRef.getDownloadURL();
 
