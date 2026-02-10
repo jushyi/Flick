@@ -34,7 +34,7 @@ import {
 import { getTimeAgo } from '../utils/timeUtils';
 import { mediumImpact } from '../utils/haptics';
 import { markSingleNotificationAsRead } from '../services/firebase/notificationService';
-import { getPhotoById } from '../services/firebase/feedService';
+import { getPhotoById, getUserStoriesData } from '../services/firebase/feedService';
 import { usePhotoDetail } from '../context/PhotoDetailContext';
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
@@ -249,6 +249,11 @@ const ActivityScreen = () => {
   const getActionText = item => {
     const senderName = item.senderName || 'Someone';
 
+    // Story notifications use templates that may embed the name mid-sentence
+    if (item.type === 'story') {
+      return 'posted to their story';
+    }
+
     if (item.message) {
       // If message starts with sender name, strip the prefix
       if (item.message.startsWith(senderName)) {
@@ -278,7 +283,7 @@ const ActivityScreen = () => {
     await markSingleNotificationAsRead(item.id);
 
     // Navigate based on notification type/data
-    const { type, photoId, userId: notifUserId } = item;
+    const { type, photoId } = item;
     if ((type === 'reaction' || type === 'comment' || type === 'mention') && photoId) {
       // Fetch the photo and open PhotoDetail directly
       const result = await getPhotoById(photoId);
@@ -291,11 +296,20 @@ const ActivityScreen = () => {
         });
         navigation.navigate('PhotoDetail');
       }
-    } else if (type === 'story' && notifUserId) {
-      navigation.navigate('MainTabs', {
-        screen: 'Feed',
-        params: { highlightUserId: notifUserId, openStory: true },
-      });
+    } else if (type === 'story' && item.senderId) {
+      // Fetch the poster's story photos and open in stories mode
+      const result = await getUserStoriesData(item.senderId);
+      if (result.success && result.userStory?.hasPhotos) {
+        openPhotoDetail({
+          mode: 'stories',
+          photos: result.userStory.topPhotos,
+          initialIndex: 0,
+          currentUserId: user?.uid,
+          isOwnStory: false,
+          hasNextFriend: false,
+        });
+        navigation.navigate('PhotoDetail');
+      }
     } else if (type === 'tagged' && photoId) {
       // Fetch the tagged photo and open PhotoDetail directly
       const result = await getPhotoById(photoId);
