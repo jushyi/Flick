@@ -34,6 +34,8 @@ import {
 import { getTimeAgo } from '../utils/timeUtils';
 import { mediumImpact } from '../utils/haptics';
 import { markSingleNotificationAsRead } from '../services/firebase/notificationService';
+import { getPhotoById } from '../services/firebase/feedService';
+import { usePhotoDetail } from '../context/PhotoDetailContext';
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
 
@@ -89,6 +91,7 @@ const groupNotificationsByTime = notifs => {
 const ActivityScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { openPhotoDetail } = usePhotoDetail();
   const [friendRequests, setFriendRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -276,21 +279,38 @@ const ActivityScreen = () => {
 
     // Navigate based on notification type/data
     const { type, photoId, userId: notifUserId } = item;
-    if (type === 'reaction' && photoId) {
-      navigation.navigate('MainTabs', { screen: 'Feed', params: { photoId } });
+    if ((type === 'reaction' || type === 'comment' || type === 'mention') && photoId) {
+      // Fetch the photo and open PhotoDetail directly
+      const result = await getPhotoById(photoId);
+      if (result.success) {
+        openPhotoDetail({
+          mode: 'feed',
+          photo: result.photo,
+          currentUserId: user?.uid,
+          initialShowComments: type === 'comment' || type === 'mention',
+        });
+        navigation.navigate('PhotoDetail');
+      }
     } else if (type === 'story' && notifUserId) {
       navigation.navigate('MainTabs', {
         screen: 'Feed',
         params: { highlightUserId: notifUserId, openStory: true },
       });
-    } else if (type === 'tagged' && item.senderId) {
-      navigation.navigate('MainTabs', {
-        screen: 'Feed',
-        params: { highlightUserId: item.senderId, highlightPhotoId: photoId, openStory: true },
-      });
-    } else if ((type === 'comment' || type === 'mention') && photoId) {
-      navigation.navigate('MainTabs', { screen: 'Feed', params: { photoId } });
-    } else if (type === 'friend_accepted' || type === 'friend_request') {
+    } else if (type === 'tagged' && photoId) {
+      // Fetch the tagged photo and open PhotoDetail directly
+      const result = await getPhotoById(photoId);
+      if (result.success) {
+        openPhotoDetail({
+          mode: 'feed',
+          photo: result.photo,
+          currentUserId: user?.uid,
+          initialShowComments: false,
+        });
+        navigation.navigate('PhotoDetail');
+      }
+    } else if (type === 'friend_accepted' && item.senderId) {
+      handleAvatarPress(item.senderId, item.senderName);
+    } else if (type === 'friend_request') {
       navigation.navigate('FriendsList');
     } else if (item.senderId) {
       // Default: navigate to sender's profile
