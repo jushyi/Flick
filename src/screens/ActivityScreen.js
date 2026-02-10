@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -122,6 +122,39 @@ const ActivityScreen = () => {
     setRefreshing(true);
     loadData();
   };
+
+  // Deduplicate reaction notifications: keep only the latest per (senderId, photoId)
+  const clumpedNotifications = useMemo(() => {
+    const reactionKeys = new Map(); // key -> notification
+    const result = [];
+
+    for (const notif of notifications) {
+      if (notif.type === 'reaction' && notif.senderId && notif.photoId) {
+        const key = `${notif.senderId}-${notif.photoId}`;
+        const existing = reactionKeys.get(key);
+        if (!existing) {
+          reactionKeys.set(key, notif);
+          result.push(notif);
+        } else {
+          // Keep the one with the latest createdAt
+          const existingTime = existing.createdAt?.seconds || 0;
+          const newTime = notif.createdAt?.seconds || 0;
+          if (newTime > existingTime) {
+            // Replace existing in result array
+            const idx = result.indexOf(existing);
+            result[idx] = notif;
+            reactionKeys.set(key, notif);
+          }
+          // else discard the older duplicate
+        }
+      } else {
+        // Non-reaction notifications pass through unchanged
+        result.push(notif);
+      }
+    }
+
+    return result;
+  }, [notifications]);
 
   const handleAccept = async requestId => {
     mediumImpact();
@@ -293,7 +326,7 @@ const ActivityScreen = () => {
   const renderEmpty = () => {
     if (loading) return null;
 
-    if (friendRequests.length === 0 && notifications.length === 0) {
+    if (friendRequests.length === 0 && clumpedNotifications.length === 0) {
       return (
         <View style={styles.emptyContainer}>
           <PixelIcon name="heart-outline" size={64} color={colors.text.tertiary} />
@@ -364,12 +397,12 @@ const ActivityScreen = () => {
         )}
 
         {/* Reactions Section */}
-        {notifications.length > 0 && (
+        {clumpedNotifications.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { paddingHorizontal: 16, paddingVertical: 12 }]}>
               Reactions
             </Text>
-            {notifications.map(item => (
+            {clumpedNotifications.map(item => (
               <View key={item.id}>{renderNotification({ item })}</View>
             ))}
           </View>
