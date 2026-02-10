@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -65,21 +66,42 @@ export const AlbumCard = ({
         {/* Back card (2nd back) - only show if we have 2+ stack photos */}
         {stackCount >= 2 && (
           <View style={[styles.stackCard, styles.stackCardBack]}>
-            <Image source={{ uri: stackPhotoUrls[1] }} style={styles.stackImage} />
+            <Image
+              source={{ uri: stackPhotoUrls[1] }}
+              style={styles.stackImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              priority="normal"
+              recyclingKey={album.id}
+            />
           </View>
         )}
 
         {/* Middle card (1st back) - only show if we have 1+ stack photos */}
         {stackCount >= 1 && (
           <View style={[styles.stackCard, styles.stackCardMiddle]}>
-            <Image source={{ uri: stackPhotoUrls[0] }} style={styles.stackImage} />
+            <Image
+              source={{ uri: stackPhotoUrls[0] }}
+              style={styles.stackImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              priority="normal"
+              recyclingKey={album.id}
+            />
           </View>
         )}
 
         {/* Front card (cover) */}
         <View style={styles.imageContainer}>
           {coverPhotoUrl ? (
-            <Image source={{ uri: coverPhotoUrl }} style={styles.coverImage} />
+            <Image
+              source={{ uri: coverPhotoUrl }}
+              style={styles.coverImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              priority="normal"
+              recyclingKey={album.id}
+            />
           ) : (
             <View style={styles.placeholder}>
               <PixelIcon name="images-outline" size={40} color={colors.text.secondary} />
@@ -131,7 +153,6 @@ const styles = StyleSheet.create({
   stackImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   stackCardBack: {
     transform: [{ scale: 0.94 }, { translateY: 0 }],
@@ -156,7 +177,6 @@ const styles = StyleSheet.create({
   coverImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   placeholder: {
     flex: 1,

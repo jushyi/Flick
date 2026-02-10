@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
@@ -827,7 +828,13 @@ const ProfileScreen = () => {
           {/* Profile Photo (absolutely positioned, overlapping Selects) */}
           <View style={styles.profilePhotoContainer}>
             {profileData?.photoURL ? (
-              <Image source={{ uri: profileData.photoURL }} style={styles.profilePhoto} />
+              <Image
+                source={{ uri: profileData.photoURL }}
+                style={styles.profilePhoto}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                priority="high"
+              />
             ) : (
               <View style={[styles.profilePhoto, styles.profilePhotoPlaceholder]}>
                 <PixelIcon name="person" size={60} color={colors.text.secondary} />

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { Animated, PanResponder, TouchableOpacity, View, Text, Image } from 'react-native';
+import { Animated, PanResponder, TouchableOpacity, View, Text } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
@@ -112,7 +113,13 @@ const InAppNotificationBanner = ({ visible, title, body, avatarUrl, onPress, onD
     >
       <TouchableOpacity activeOpacity={0.85} onPress={handlePress} style={styles.container}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          <Image
+            source={{ uri: avatarUrl }}
+            style={styles.avatar}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            priority="normal"
+          />
         ) : (
           <View style={styles.avatarPlaceholder}>
             <PixelIcon name="notifications" size={18} color={colors.icon.primary} />

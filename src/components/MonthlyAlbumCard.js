@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
@@ -30,7 +31,14 @@ const MonthlyAlbumCard = ({ month, coverPhotoUrl, onPress }) => {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       {coverPhotoUrl ? (
-        <Image source={{ uri: coverPhotoUrl }} style={styles.coverImage} />
+        <Image
+          source={{ uri: coverPhotoUrl }}
+          style={styles.coverImage}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="normal"
+          recyclingKey={month}
+        />
       ) : (
         <View style={styles.placeholder} />
       )}
@@ -52,7 +60,6 @@ const styles = StyleSheet.create({
   coverImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   placeholder: {
     width: '100%',

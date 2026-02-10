@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Modal,
-  Image,
   TouchableOpacity,
   TouchableWithoutFeedback,
   Dimensions,
@@ -12,6 +11,7 @@ import {
   PanResponder,
   Animated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { getTimeAgo } from '../utils/timeUtils';
 import logger from '../utils/logger';
@@ -255,7 +255,13 @@ const StoriesViewerModal = ({
             <View style={styles.friendInfo}>
               <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
                 {profilePhotoURL ? (
-                  <Image source={{ uri: profilePhotoURL }} style={styles.profilePic} />
+                  <Image
+                    source={{ uri: profilePhotoURL }}
+                    style={styles.profilePic}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    priority="high"
+                  />
                 ) : (
                   <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
                     <Text style={styles.profilePicText}>
@@ -282,7 +288,9 @@ const StoriesViewerModal = ({
               <Image
                 source={{ uri: currentPhoto.imageURL }}
                 style={styles.photo}
-                resizeMode="contain"
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                priority="high"
               />
             </View>
           </TouchableWithoutFeedback>

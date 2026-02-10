@@ -9,7 +9,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, {
   useSharedValue,
@@ -171,7 +172,13 @@ const ProfileSongCard = ({ song, isOwnProfile, onPress, onLongPress }) => {
         delayLongPress={500}
       >
         {/* Album Art */}
-        <Image source={{ uri: song.albumArt }} style={styles.albumArt} resizeMode="cover" />
+        <Image
+          source={{ uri: song.albumArt }}
+          style={styles.albumArt}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="low"
+        />
 
         {/* Song Info */}
         <View style={styles.songInfo}>
