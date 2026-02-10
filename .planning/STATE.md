@@ -9,7 +9,7 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 ## Current Position
 
-Phase: 45 of 46 (Security Audit)
+Phase: 45 of 45 (Security Audit)
 Plan: 3 of 4 in current phase
 Status: In progress
 Last activity: 2026-02-09 — Completed 45-03-PLAN.md
@@ -58,7 +58,7 @@ None.
 - Phase 43 added: Comment Cleanup and Audit
 - Phase 44 added: Notification Activity Feed
 - Phase 45 added: Security Audit
-- Phase 46 added: Full Notifications Testing
+- Phase 46 removed: Full Notifications Testing
 
 ## Session Continuity
 
@@ -69,4 +69,4 @@ Resume file: None
 ## Next Steps
 
 - `/gsd:execute-plan 45-04` — Execute Plan 45-04: Client-side security
-- `/gsd:complete-milestone` — Archive v1.7 after all phases done
+- `/gsd:complete-milestone` — Archive v1.7 after Phase 45 done
