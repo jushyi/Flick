@@ -11,16 +11,21 @@ service firebase.storage {
       return request.auth.uid == userId;
     }
 
-    // Profile photos - users can upload their own
+    // Profile photos - users can upload their own, authenticated users can view
     match /profile-photos/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAuthenticated() && isOwner(userId);
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId)
+                   && request.resource.contentType.matches('image/.*')
+                   && request.resource.size < 10 * 1024 * 1024;
     }
 
-    // Main photos (darkroom/feed photos) - users can upload their own
+    // Main photos (darkroom/feed photos) - only owner can read directly from Storage
+    // Other users access photos via getSignedPhotoUrl Cloud Function (uses Admin SDK)
     match /photos/{userId}/{allPaths=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOwner(userId);
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && isOwner(userId)
+                   && request.resource.contentType.matches('image/.*')
+                   && request.resource.size < 10 * 1024 * 1024;
     }
 
     // Comment images - any authenticated user can upload
