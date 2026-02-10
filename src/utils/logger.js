@@ -44,11 +44,11 @@ const CURRENT_LOG_LEVEL = __DEV__ ? LOG_LEVELS.DEBUG : LOG_LEVELS.WARN;
  * Sensitive data patterns to remove from logs
  */
 const SENSITIVE_PATTERNS = [
-  /firebase/gi,
-  /token/gi,
+  /firebase[_-]?(api[_-]?key|secret|token|credential|private[_-]?key)/gi,
+  /(auth|access|refresh|bearer|fcm|push)[_-]?token/gi,
   /password/gi,
-  /apikey/gi,
-  /secret/gi,
+  /api[_-]?key/gi,
+  /secret[_-]?key/gi,
   /authorization/gi,
   /bearer/gi,
   /credential/gi,
