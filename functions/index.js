@@ -1462,6 +1462,38 @@ exports.getSignedPhotoUrl = onCall(async request => {
   }
 
   const { photoPath } = validationResult.data;
+
+  // === Access validation: check ownership or friendship ===
+  const pathParts = photoPath.split('/');
+  if (pathParts.length < 2 || pathParts[0] !== 'photos') {
+    // Could be profile-photos - handle that case
+    if (pathParts[0] !== 'profile-photos') {
+      throw new HttpsError('invalid-argument', 'Invalid photo path');
+    }
+    // profile-photos: any authenticated user can access, skip friendship check
+    logger.debug('getSignedPhotoUrl: Profile photo access allowed', { userId, photoPath });
+  } else {
+    const photoOwnerId = pathParts[1];
+    if (userId !== photoOwnerId) {
+      // Not the owner — check friendship
+      const id1 = userId < photoOwnerId ? userId : photoOwnerId;
+      const id2 = userId < photoOwnerId ? photoOwnerId : userId;
+      const friendshipDoc = await admin
+        .firestore()
+        .collection('friendships')
+        .doc(`${id1}_${id2}`)
+        .get();
+
+      if (!friendshipDoc.exists || friendshipDoc.data().status !== 'accepted') {
+        logger.warn('getSignedPhotoUrl: Access denied', { userId, photoOwnerId });
+        throw new HttpsError('permission-denied', 'You do not have access to this photo');
+      }
+      logger.debug('getSignedPhotoUrl: Friend access allowed', { userId, photoOwnerId });
+    } else {
+      logger.debug('getSignedPhotoUrl: Owner access allowed', { userId });
+    }
+  }
+
   logger.info('getSignedPhotoUrl: Generating signed URL', { userId, photoPath });
 
   try {
