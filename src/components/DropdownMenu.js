@@ -5,7 +5,7 @@ import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const MENU_WIDTH = 220;
+const MENU_WIDTH = 260;
 const EDGE_PADDING = 16;
 
 /**
