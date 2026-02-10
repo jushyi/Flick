@@ -44,6 +44,7 @@ export const usePhotoDetailModal = ({
   onReactionToggle,
   currentUserId,
   onFriendTransition, // Callback for friend-to-friend transition with cube animation
+  onPreviousFriendTransition, // Callback for backward friend transition with reverse cube
   onSwipeUp, // Callback when user swipes up to open comments
 }) => {
   // Stories mode: current photo index
@@ -392,8 +393,17 @@ export const usePhotoDetailModal = ({
       const { locationX } = event.nativeEvent;
 
       if (locationX < SCREEN_WIDTH * 0.3) {
-        // Left tap - previous
+        // Left tap - previous photo, or previous friend if at first photo
         if (!goPrev()) {
+          // At first photo - try going to previous friend
+          if (onPreviousFriendTransition) {
+            const transitioned = onPreviousFriendTransition();
+            if (transitioned) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              return;
+            }
+          }
+          // No previous friend - close stories
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           onClose();
         }
@@ -406,7 +416,7 @@ export const usePhotoDetailModal = ({
       }
       // Center 40% - no action (future: pause)
     },
-    [mode, goPrev, goNext, onClose]
+    [mode, goPrev, goNext, onClose, onPreviousFriendTransition]
   );
 
   /**
@@ -454,11 +464,21 @@ export const usePhotoDetailModal = ({
     ]).start();
   }, [translateY, opacity]);
 
-  // Store onSwipeUp in ref for panResponder access
+  // Store callbacks in refs for panResponder access (created once, needs current values)
   const onSwipeUpRef = useRef(onSwipeUp);
   useEffect(() => {
     onSwipeUpRef.current = onSwipeUp;
   }, [onSwipeUp]);
+
+  const onFriendTransitionRef = useRef(onFriendTransition);
+  useEffect(() => {
+    onFriendTransitionRef.current = onFriendTransition;
+  }, [onFriendTransition]);
+
+  const onPreviousFriendTransitionRef = useRef(onPreviousFriendTransition);
+  useEffect(() => {
+    onPreviousFriendTransitionRef.current = onPreviousFriendTransition;
+  }, [onPreviousFriendTransition]);
 
   // Track if comments are visible (to disable swipe-to-dismiss when scrolling comments)
   const [commentsVisible, setCommentsVisible] = useState(false);
@@ -496,12 +516,26 @@ export const usePhotoDetailModal = ({
         const footerThreshold = SCREEN_HEIGHT - 100;
         if (touchY >= footerThreshold) return false;
 
-        // Check for vertical swipe (dy > dx)
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-        // Respond to both downward (close) and upward (open comments) swipes
-        const isDownward = gestureState.dy > 5;
-        const isUpward = gestureState.dy < -10; // Slightly higher threshold for upward
-        return isVerticalSwipe && (isDownward || isUpward);
+
+        if (isVerticalSwipe) {
+          // Respond to both downward (close) and upward (open comments) swipes
+          const isDownward = gestureState.dy > 5;
+          const isUpward = gestureState.dy < -10;
+          return isDownward || isUpward;
+        }
+
+        // Horizontal swipe detection for friend-to-friend transitions
+        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        const isLeftSwipe = gestureState.dx < -15;
+        const isRightSwipe = gestureState.dx > 15;
+        if (isHorizontalSwipe && (isLeftSwipe || isRightSwipe)) {
+          const hasNext = isLeftSwipe && onFriendTransitionRef.current;
+          const hasPrev = isRightSwipe && onPreviousFriendTransitionRef.current;
+          return !!(hasNext || hasPrev);
+        }
+
+        return false;
       },
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
         // Don't capture if comments sheet is open (let it handle its own scrolling)
@@ -512,12 +546,25 @@ export const usePhotoDetailModal = ({
         const footerThreshold = SCREEN_HEIGHT - 100;
         if (touchY >= footerThreshold) return false;
 
-        // Capture gesture when vertical swipe is detected
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-        // Capture both downward and upward swipes
-        const isDownward = gestureState.dy > 5;
-        const isUpward = gestureState.dy < -10;
-        return isVerticalSwipe && (isDownward || isUpward);
+
+        if (isVerticalSwipe) {
+          const isDownward = gestureState.dy > 5;
+          const isUpward = gestureState.dy < -10;
+          return isDownward || isUpward;
+        }
+
+        // Capture horizontal swipes for friend transitions
+        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        const isLeftSwipe = gestureState.dx < -15;
+        const isRightSwipe = gestureState.dx > 15;
+        if (isHorizontalSwipe && (isLeftSwipe || isRightSwipe)) {
+          const hasNext = isLeftSwipe && onFriendTransitionRef.current;
+          const hasPrev = isRightSwipe && onPreviousFriendTransitionRef.current;
+          return !!(hasNext || hasPrev);
+        }
+
+        return false;
       },
       onPanResponderMove: (_, gestureState) => {
         // Only animate for downward swipes (visual feedback for close gesture)
@@ -530,7 +577,40 @@ export const usePhotoDetailModal = ({
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        const { dy, vy } = gestureState;
+        const { dx, dy, vx, vy } = gestureState;
+
+        // HORIZONTAL SWIPES - friend-to-friend transitions
+        const isHorizontalGesture = Math.abs(dx) > Math.abs(dy);
+        if (isHorizontalGesture) {
+          const SWIPE_THRESHOLD = 50;
+          const VELOCITY_THRESHOLD = 0.3;
+
+          // Right-to-left swipe = next friend
+          if (
+            (dx < -SWIPE_THRESHOLD || vx < -VELOCITY_THRESHOLD) &&
+            onFriendTransitionRef.current
+          ) {
+            const transitioned = onFriendTransitionRef.current();
+            if (transitioned) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            return;
+          }
+
+          // Left-to-right swipe = previous friend
+          if (
+            (dx > SWIPE_THRESHOLD || vx > VELOCITY_THRESHOLD) &&
+            onPreviousFriendTransitionRef.current
+          ) {
+            const transitioned = onPreviousFriendTransitionRef.current();
+            if (transitioned) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            return;
+          }
+
+          return;
+        }
 
         // SWIPE UP - open comments
         if (dy < -50 || vy < -0.5) {

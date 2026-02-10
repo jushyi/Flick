@@ -3,15 +3,15 @@ import {
   View,
   Text,
   StyleSheet,
-  RefreshControl,
-  ActivityIndicator,
   TouchableOpacity,
   ScrollView,
   Animated,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import PixelSpinner from '../components/PixelSpinner';
 import {
   getFirestore,
   collection,
@@ -121,9 +121,11 @@ const FeedScreen = () => {
   // Track current index in stories modal (ref to avoid closure capture issues in callbacks)
   const storiesCurrentIndexRef = useRef(0);
 
-  // Refs to hold latest close handlers (avoids stale closures in setCallbacks effect)
+  // Refs to hold latest handlers (avoids stale closures in setCallbacks effect)
   const handleCloseMyStoriesRef = useRef(() => {});
   const handleCloseStoriesRef = useRef(() => {});
+  const handleRequestNextFriendRef = useRef(() => {});
+  const handleRequestPreviousFriendRef = useRef(() => {});
 
   const loadFriendStories = async () => {
     if (!user?.uid) return;
@@ -300,7 +302,8 @@ const FeedScreen = () => {
         }
       },
       onPhotoChange: handleStoriesPhotoChange,
-      onRequestNextFriend: handleRequestNextFriend,
+      onRequestNextFriend: () => handleRequestNextFriendRef.current(),
+      onRequestPreviousFriend: () => handleRequestPreviousFriendRef.current(),
       onClose: () => {
         if (isInStoriesModeRef.current) {
           if (isOwnStoriesRef.current) {
@@ -392,6 +395,7 @@ const FeedScreen = () => {
       initialIndex: startIndex,
       currentUserId: user?.uid,
       hasNextFriend: friendIdx < sortedFriends.length - 1,
+      hasPreviousFriend: friendIdx > 0,
       isOwnStory: false,
     });
     navigation.navigate('PhotoDetail');
@@ -495,11 +499,16 @@ const FeedScreen = () => {
       return;
     }
 
-    // Mark current friend's photos as viewed before transitioning
+    // Mark photos up to current index as viewed (user may be mid-story due to swipe)
     const currentPhotos = selectedFriend.topPhotos || [];
-    const photoIds = currentPhotos.map(p => p.id);
-    if (photoIds.length > 0) {
-      markPhotosAsViewed(photoIds);
+    const viewedPhotoIds = currentPhotos
+      .slice(0, storiesCurrentIndexRef.current + 1)
+      .map(p => p.id);
+    if (viewedPhotoIds.length > 0) {
+      markPhotosAsViewed(viewedPhotoIds);
+    }
+    // Only mark friend as fully viewed if user saw all photos
+    if (storiesCurrentIndexRef.current >= currentPhotos.length - 1) {
       markAsViewed(selectedFriend.userId);
     }
 
@@ -519,8 +528,75 @@ const FeedScreen = () => {
     selectedFriendIndexRef.current = nextFriendIdx;
     storiesCurrentIndexRef.current = nextStartIndex;
 
-    // Note: PhotoDetailScreen will need to update its photos via context
-    // This is handled by the cube animation callback in the screen
+    // Update context state so PhotoDetailScreen renders new friend's photos
+    openPhotoDetail({
+      mode: 'stories',
+      photos: nextFriend.topPhotos || [],
+      initialIndex: nextStartIndex,
+      currentUserId: user?.uid,
+      hasNextFriend: nextFriendIdx < sortedFriends.length - 1,
+      hasPreviousFriend: nextFriendIdx > 0,
+      isOwnStory: false,
+    });
+  };
+
+  /**
+   * Handle transitioning to previous friend's stories (reverse cube animation)
+   * Called when user swipes right or taps left at first photo
+   * Only marks photos up to current index as viewed (user is leaving mid-story)
+   */
+  const handleRequestPreviousFriend = () => {
+    const selectedFriend = selectedFriendRef.current;
+    const selectedFriendIndex = selectedFriendIndexRef.current;
+    if (!selectedFriend) return;
+
+    const sortedFriends = getSortedFriends();
+    const prevFriendIdx = selectedFriendIndex - 1;
+
+    if (prevFriendIdx < 0) {
+      logger.debug('FeedScreen: No previous friend, cannot go back');
+      return;
+    }
+
+    // Mark photos up to current index as viewed (user is leaving mid-story)
+    const currentPhotos = selectedFriend.topPhotos || [];
+    const viewedPhotoIds = currentPhotos
+      .slice(0, storiesCurrentIndexRef.current + 1)
+      .map(p => p.id);
+    if (viewedPhotoIds.length > 0) {
+      markPhotosAsViewed(viewedPhotoIds);
+    }
+    // Only mark friend as fully viewed if user saw all photos
+    if (storiesCurrentIndexRef.current >= currentPhotos.length - 1) {
+      markAsViewed(selectedFriend.userId);
+    }
+
+    // Get previous friend
+    const prevFriend = sortedFriends[prevFriendIdx];
+    const prevStartIndex = getFirstUnviewedIndex(prevFriend.topPhotos || []);
+
+    logger.info('FeedScreen: Transitioning to previous friend', {
+      fromFriend: selectedFriend.displayName,
+      toFriend: prevFriend.displayName,
+      prevFriendIndex: prevFriendIdx,
+      startIndex: prevStartIndex,
+    });
+
+    // Update refs for previous friend
+    selectedFriendRef.current = prevFriend;
+    selectedFriendIndexRef.current = prevFriendIdx;
+    storiesCurrentIndexRef.current = prevStartIndex;
+
+    // Update context state so PhotoDetailScreen renders previous friend's photos
+    openPhotoDetail({
+      mode: 'stories',
+      photos: prevFriend.topPhotos || [],
+      initialIndex: prevStartIndex,
+      currentUserId: user?.uid,
+      hasNextFriend: prevFriendIdx < sortedFriends.length - 1,
+      hasPreviousFriend: prevFriendIdx > 0,
+      isOwnStory: false,
+    });
   };
 
   /**
@@ -570,9 +646,11 @@ const FeedScreen = () => {
     // Mode flags are cleared in the onClose callback
   };
 
-  // Update close handler refs on each render (ensures callbacks get latest handlers)
+  // Update handler refs on each render (ensures callbacks get latest handlers)
   handleCloseMyStoriesRef.current = handleCloseMyStories;
   handleCloseStoriesRef.current = handleCloseStories;
+  handleRequestNextFriendRef.current = handleRequestNextFriend;
+  handleRequestPreviousFriendRef.current = handleRequestPreviousFriend;
 
   const handlePhotoPress = photo => {
     currentFeedPhotoRef.current = photo;
@@ -750,7 +828,7 @@ const FeedScreen = () => {
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={colors.text.primary} />
+        <PixelSpinner size="small" color={colors.text.primary} />
         <Text style={styles.footerText}>Loading more...</Text>
       </View>
     );
@@ -1004,7 +1082,9 @@ const FeedScreen = () => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                tintColor={colors.text.primary}
+                tintColor={colors.brand.purple}
+                colors={[colors.brand.purple]}
+                progressBackgroundColor={colors.background.secondary}
                 progressViewOffset={40}
               />
             }

@@ -72,12 +72,14 @@ const PhotoDetailScreen = () => {
     mode: contextMode,
     isOwnStory: contextIsOwnStory,
     hasNextFriend: contextHasNextFriend,
+    hasPreviousFriend: contextHasPreviousFriend,
     currentUserId: contextUserId,
     showComments,
     setShowComments,
     handleReactionToggle,
     handlePhotoChange,
     handleRequestNextFriend,
+    handleRequestPreviousFriend,
     handleAvatarPress: contextAvatarPress,
     handleClose: contextClose,
     handlePhotoStateChanged,
@@ -87,6 +89,7 @@ const PhotoDetailScreen = () => {
   const cubeProgress = useRef(new Animated.Value(1)).current;
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
+  const [transitionDirection, setTransitionDirection] = useState('forward'); // 'forward' | 'backward'
   const snapshotRef = useRef({});
 
   // Comments preview state (local since it's just for display)
@@ -155,6 +158,34 @@ const PhotoDetailScreen = () => {
     return true;
   }, [contextHasNextFriend, handleRequestNextFriend, cubeProgress]);
 
+  /**
+   * Handle backward friend-to-friend transition with reverse 3D cube animation
+   * Incoming face enters from the left, outgoing exits to the right
+   */
+  const handlePreviousFriendTransition = useCallback(() => {
+    if (!contextHasPreviousFriend || isTransitioningRef.current) return false;
+
+    isTransitioningRef.current = true;
+    setTransitionDirection('backward');
+    setIsTransitioning(true);
+
+    cubeProgress.setValue(0);
+    handleRequestPreviousFriend();
+
+    Animated.timing(cubeProgress, {
+      toValue: 1,
+      duration: 350,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start(() => {
+      isTransitioningRef.current = false;
+      setIsTransitioning(false);
+      setTransitionDirection('forward');
+    });
+
+    return true;
+  }, [contextHasPreviousFriend, handleRequestPreviousFriend, cubeProgress]);
+
   // Opens comments on swipe-up if not already visible
   const handleSwipeUpToOpenComments = useCallback(() => {
     if (!showComments) {
@@ -209,6 +240,7 @@ const PhotoDetailScreen = () => {
     onReactionToggle: handleReactionToggle,
     currentUserId: contextUserId,
     onFriendTransition: contextHasNextFriend ? handleFriendTransition : null,
+    onPreviousFriendTransition: contextHasPreviousFriend ? handlePreviousFriendTransition : null,
     onSwipeUp: handleSwipeUpToOpenComments,
   });
 
@@ -483,17 +515,25 @@ const PhotoDetailScreen = () => {
               {
                 translateX: cubeProgress.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [SCREEN_WIDTH, 0],
+                  outputRange:
+                    transitionDirection === 'forward' ? [SCREEN_WIDTH, 0] : [-SCREEN_WIDTH, 0],
                 }),
               },
-              { translateX: -SCREEN_WIDTH / 2 },
+              {
+                translateX:
+                  transitionDirection === 'forward' ? -SCREEN_WIDTH / 2 : SCREEN_WIDTH / 2,
+              },
               {
                 rotateY: cubeProgress.interpolate({
                   inputRange: [0, 1],
-                  outputRange: ['90deg', '0deg'],
+                  outputRange:
+                    transitionDirection === 'forward' ? ['90deg', '0deg'] : ['-90deg', '0deg'],
                 }),
               },
-              { translateX: SCREEN_WIDTH / 2 },
+              {
+                translateX:
+                  transitionDirection === 'forward' ? SCREEN_WIDTH / 2 : -SCREEN_WIDTH / 2,
+              },
             ],
           },
         ]}
@@ -528,7 +568,13 @@ const PhotoDetailScreen = () => {
           disabled={isOwnPhoto}
         >
           {profilePhotoURL ? (
-            <Image source={{ uri: profilePhotoURL }} style={styles.profilePic} contentFit="cover" />
+            <Image
+              source={{ uri: profilePhotoURL }}
+              style={styles.profilePic}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={0}
+            />
           ) : (
             <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
               <Text style={styles.profilePicText}>{displayName?.[0]?.toUpperCase() || '?'}</Text>
@@ -725,17 +771,25 @@ const PhotoDetailScreen = () => {
               {
                 translateX: cubeProgress.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, -SCREEN_WIDTH],
+                  outputRange:
+                    transitionDirection === 'forward' ? [0, -SCREEN_WIDTH] : [0, SCREEN_WIDTH],
                 }),
               },
-              { translateX: SCREEN_WIDTH / 2 },
+              {
+                translateX:
+                  transitionDirection === 'forward' ? SCREEN_WIDTH / 2 : -SCREEN_WIDTH / 2,
+              },
               {
                 rotateY: cubeProgress.interpolate({
                   inputRange: [0, 1],
-                  outputRange: ['0deg', '-90deg'],
+                  outputRange:
+                    transitionDirection === 'forward' ? ['0deg', '-90deg'] : ['0deg', '90deg'],
                 }),
               },
-              { translateX: -SCREEN_WIDTH / 2 },
+              {
+                translateX:
+                  transitionDirection === 'forward' ? -SCREEN_WIDTH / 2 : SCREEN_WIDTH / 2,
+              },
             ],
           },
         ]}
@@ -767,6 +821,8 @@ const PhotoDetailScreen = () => {
                   source={{ uri: snapshotRef.current.profilePhotoURL }}
                   style={styles.profilePic}
                   contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={0}
                 />
               ) : (
                 <View style={[styles.profilePic, styles.profilePicPlaceholder]}>

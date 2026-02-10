@@ -41,6 +41,7 @@ export const PhotoDetailProvider = ({ children }) => {
   const [mode, setMode] = useState('feed'); // 'feed' | 'stories'
   const [isOwnStory, setIsOwnStory] = useState(false);
   const [hasNextFriend, setHasNextFriend] = useState(false);
+  const [hasPreviousFriend, setHasPreviousFriend] = useState(false);
   const [initialShowComments, setInitialShowComments] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
 
@@ -55,6 +56,7 @@ export const PhotoDetailProvider = ({ children }) => {
     onReactionToggle: null,
     onPhotoChange: null,
     onRequestNextFriend: null,
+    onRequestPreviousFriend: null,
     onClose: null,
     onAvatarPress: null,
     onPhotoStateChanged: null, // Called when photo is archived/deleted/restored
@@ -100,6 +102,7 @@ export const PhotoDetailProvider = ({ children }) => {
         mode: newMode = 'feed',
         isOwnStory: ownStory = false,
         hasNextFriend: nextFriend = false,
+        hasPreviousFriend: prevFriend = false,
         initialShowComments: showComments = false,
         currentUserId: userId = null,
         callbacks = {},
@@ -112,6 +115,7 @@ export const PhotoDetailProvider = ({ children }) => {
       setMode(newMode);
       setIsOwnStory(ownStory);
       setHasNextFriend(nextFriend);
+      setHasPreviousFriend(prevFriend);
       setInitialShowComments(showComments);
       setCurrentUserId(userId);
 
@@ -141,6 +145,7 @@ export const PhotoDetailProvider = ({ children }) => {
       setMode('feed');
       setIsOwnStory(false);
       setHasNextFriend(false);
+      setHasPreviousFriend(false);
       setInitialShowComments(false);
     }, 300);
   }, []);
@@ -175,6 +180,10 @@ export const PhotoDetailProvider = ({ children }) => {
     setHasNextFriend(hasNext);
   }, []);
 
+  const updateHasPreviousFriend = useCallback(hasPrev => {
+    setHasPreviousFriend(hasPrev);
+  }, []);
+
   /**
    * Call onReactionToggle callback
    */
@@ -207,6 +216,13 @@ export const PhotoDetailProvider = ({ children }) => {
     const callbacks = callbacksRef.current;
     if (callbacks.onRequestNextFriend) {
       callbacks.onRequestNextFriend();
+    }
+  }, []);
+
+  const handleRequestPreviousFriend = useCallback(() => {
+    const callbacks = callbacksRef.current;
+    if (callbacks.onRequestPreviousFriend) {
+      callbacks.onRequestPreviousFriend();
     }
   }, []);
 
@@ -250,6 +266,7 @@ export const PhotoDetailProvider = ({ children }) => {
     mode,
     isOwnStory,
     hasNextFriend,
+    hasPreviousFriend,
     initialShowComments,
     currentUserId,
     isActive,
@@ -263,12 +280,14 @@ export const PhotoDetailProvider = ({ children }) => {
     updateCurrentPhoto,
     updatePhotoAtIndex,
     updateHasNextFriend,
+    updateHasPreviousFriend,
     setShowComments,
 
     // Callback handlers (for PhotoDetailScreen to call)
     handleReactionToggle,
     handlePhotoChange,
     handleRequestNextFriend,
+    handleRequestPreviousFriend,
     handleClose,
     handleAvatarPress,
     handlePhotoStateChanged,
