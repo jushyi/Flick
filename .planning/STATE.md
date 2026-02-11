@@ -42,15 +42,16 @@ Progress: █████░░░░░░ 5/11 (v1.0.0 phases)
 
 See PROJECT.md Key Decisions table for full history.
 
-| Phase | Decision                                                  | Rationale                                                       |
-| ----- | --------------------------------------------------------- | --------------------------------------------------------------- |
-| 46.1  | OtherUserProfile card instead of fullScreenModal          | fullScreenModal prevents child card screens from pushing on iOS |
-| 47    | Custom code traces, not startScreenTrace()                | startScreenTrace() crashes on iOS                               |
-| 47    | **DEV** guard skips trace creation entirely               | Prevent polluting production metrics with dev data              |
-| 47.1  | Direct set intersection for mutual friend tagging         | Simpler/cheaper than friends-of-friends graph traversal         |
-| 47.1  | Inline overlay (not Modal/Portal) for mention suggestions | CommentsBottomSheet uses Animated.View — Modal breaks layering  |
-| 48    | Callback pattern for SongSearch navigation                | Preserves source screen local state; matches ProfilePhotoCrop   |
-| 48    | Edge masks for directional overflow clipping              | RN lacks overflow-x/y; opaque masks clip H while allowing V     |
+| Phase | Decision                                                  | Rationale                                                        |
+| ----- | --------------------------------------------------------- | ---------------------------------------------------------------- |
+| 46.1  | OtherUserProfile card instead of fullScreenModal          | fullScreenModal prevents child card screens from pushing on iOS  |
+| 47    | Custom code traces, not startScreenTrace()                | startScreenTrace() crashes on iOS                                |
+| 47    | **DEV** guard skips trace creation entirely               | Prevent polluting production metrics with dev data               |
+| 47.1  | Direct set intersection for mutual friend tagging         | Simpler/cheaper than friends-of-friends graph traversal          |
+| 47.1  | Inline overlay (not Modal/Portal) for mention suggestions | CommentsBottomSheet uses Animated.View — Modal breaks layering   |
+| 48    | Callback pattern for SongSearch navigation                | Preserves source screen local state; matches ProfilePhotoCrop    |
+| 48    | Edge masks for directional overflow clipping              | RN lacks overflow-x/y; opaque masks clip H while allowing V      |
+| 47.1  | requestAnimationFrame for Text.onPress navigation         | Text.onPress vs TouchableOpacity.onPress differ in Animated.View |
 
 ### Deferred Issues
 
@@ -74,5 +75,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 48-01-PLAN.md (Auth & Onboarding Screens Audit) — Phase 48 in progress
+Stopped at: Completed 47.1-02-FIX (Comment @-Tagging UAT Fixes) — Phase 48 in progress
 Resume file: None
