@@ -513,7 +513,8 @@ const AppNavigator = () => {
                   name="OtherUserProfile"
                   component={ProfileScreen}
                   options={{
-                    presentation: 'fullScreenModal', // Modal overlay - keeps parent mounted
+                    presentation: 'card', // Card (not modal) so AlbumGrid/MonthlyAlbumGrid can push on top
+                    animation: 'slide_from_right',
                     headerShown: false,
                     gestureEnabled: true,
                     contentStyle: { backgroundColor: colors.background.primary },
