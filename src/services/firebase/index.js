@@ -89,3 +89,5 @@ export {
 export { submitReport, REPORT_REASONS } from './reportService';
 
 export { initPerformanceMonitoring, withTrace } from './performanceService';
+
+export { getMutualFriendsForTagging } from './mentionService';
