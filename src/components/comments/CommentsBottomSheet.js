@@ -395,6 +395,16 @@ const CommentsBottomSheet = ({
 
       const lowerUsername = username.toLowerCase();
 
+      // Helper: defer onAvatarPress to next frame so the navigation runs
+      // outside the current React/Text.onPress event batch. Without this,
+      // the new screen renders behind the Animated.View overlay.
+      const navigateToProfile = (userId, displayName) => {
+        logger.info('CommentsBottomSheet: @mention navigating to profile', { userId, displayName });
+        requestAnimationFrame(() => {
+          onAvatarPress(userId, displayName);
+        });
+      };
+
       // Search comments for a user with this username
       for (let i = 0; i < threadedComments.length; i++) {
         const comment = threadedComments[i];
@@ -403,7 +413,7 @@ const CommentsBottomSheet = ({
 
         if (commentUsername === lowerUsername || commentDisplayName === lowerUsername) {
           if (comment.userId !== currentUserId && onAvatarPress) {
-            onAvatarPress(comment.userId, comment.user?.displayName);
+            navigateToProfile(comment.userId, comment.user?.displayName);
             return;
           }
         }
@@ -416,7 +426,7 @@ const CommentsBottomSheet = ({
 
             if (replyUsername === lowerUsername || replyDisplayName === lowerUsername) {
               if (reply.userId !== currentUserId && onAvatarPress) {
-                onAvatarPress(reply.userId, reply.user?.displayName);
+                navigateToProfile(reply.userId, reply.user?.displayName);
                 return;
               }
             }
@@ -431,7 +441,7 @@ const CommentsBottomSheet = ({
 
         if (friendUsername === lowerUsername || friendDisplayName === lowerUsername) {
           if (friend.userId !== currentUserId && onAvatarPress) {
-            onAvatarPress(friend.userId, friend.displayName);
+            navigateToProfile(friend.userId, friend.displayName);
             return;
           }
         }
