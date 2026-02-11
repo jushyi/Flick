@@ -179,11 +179,17 @@ Plans:
 **Goal**: Review all screens for visual and interaction consistency — spacing, colors, typography, component patterns, navigation flows, gesture patterns, loading/error states, feedback patterns
 **Depends on**: Phase 47
 **Research**: Unlikely (internal patterns — reviewing and standardizing existing code)
-**Plans**: TBD
+**Plans**: 7
 
 Plans:
 
-- [ ] 48-01: TBD
+- [ ] 48-01: Auth Flow Screens (audit & fix auth/onboarding screens)
+- [ ] 48-02: Settings & Account Screens (audit & fix settings/account screens)
+- [ ] 48-03: Social & Friends Screens (audit & fix social screens & components)
+- [ ] 48-04: FriendsScreen N+1 Query Fix — ISS-012 (batch user fetching, optimize subscriptions)
+- [ ] 48-05: Albums, Photos & Selects (audit & fix album screens & components)
+- [ ] 48-06: Feed, Camera & Core (audit & fix core screens & components)
+- [ ] 48-07: Profile, Notifications & Shared Components (audit & fix remaining screens & all shared components)
 
 #### Phase 49: Automated Test Suite
 
