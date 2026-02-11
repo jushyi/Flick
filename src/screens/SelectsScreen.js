@@ -883,7 +883,7 @@ const styles = StyleSheet.create({
   previewContainer: {
     alignItems: 'center',
     paddingHorizontal: SCREEN_PADDING,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   previewTouchable: {
     borderRadius: 4,
