@@ -142,11 +142,11 @@ Plans:
 **Goal**: Fix album grid full-screen viewer so the bottom nav bar updates optimistically during swipe gestures instead of waiting until the user lands on a photo — currently the nav outline jumps to the new position only after settling, rather than tracking the swipe
 **Depends on**: Phase 46
 **Research**: Unlikely (bug fix — investigating existing swipe/scroll event handling)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
 
-- [ ] 46.2-01: TBD
+- [x] 46.2-01: Add optimistic scroll tracking to album photo viewer
 
 #### Phase 47: Firebase Performance Monitoring
 
@@ -242,7 +242,7 @@ Plans:
 | v0.9.0 (Phases 32-45)          | v0.9.0    | 30    | Complete    | 2026-02-10 |
 | 46. Performance Optimization   | v1.0.0    | 7/7   | Complete    | 2026-02-10 |
 | 46.1 Other Users Albums Fix    | v1.0.0    | 1/1   | Complete    | 2026-02-10 |
-| 46.2 Album Viewer Nav Optimism | v1.0.0    | 0/?   | Not started | -          |
+| 46.2 Album Viewer Nav Optimism | v1.0.0    | 1/1   | Complete    | 2026-02-11 |
 | 47. Firebase Perf Monitoring   | v1.0.0    | 1/3   | In progress | -          |
 | 48. UI/UX Consistency Audit    | v1.0.0    | 0/?   | Not started | -          |
 | 49. Automated Test Suite       | v1.0.0    | 0/?   | Not started | -          |
