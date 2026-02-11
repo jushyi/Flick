@@ -364,14 +364,8 @@ const TutorialHint = ({ isVisible, onDismiss }) => {
       <Animated.View style={[styles.tutorialContainer, containerStyle]}>
         <View style={styles.tutorialIconRow}>
           <Animated.View style={arrowStyle}>
-            <PixelIcon name="hand-left-outline" size={32} color={colors.text.primary} />
+            <PixelIcon name="swap-horizontal" size={32} color={colors.text.primary} />
           </Animated.View>
-          <PixelIcon
-            name="swap-horizontal"
-            size={24}
-            color={colors.text.secondary}
-            style={styles.tutorialSwapIcon}
-          />
         </View>
         <Text style={styles.tutorialTitle}>Drag to reorder</Text>
         <Text style={styles.tutorialSubtitle}>Drag down to delete</Text>
@@ -1009,9 +1003,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.md,
-  },
-  tutorialSwapIcon: {
-    marginLeft: spacing.xs,
   },
   tutorialTitle: {
     fontSize: typography.size.xl,
