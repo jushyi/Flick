@@ -154,11 +154,13 @@ Plans:
 **Depends on**: Phase 46
 **Research**: Likely (new SDK integration — not currently in codebase)
 **Research topics**: Firebase Performance Monitoring SDK setup for React Native/Expo, custom trace API, network trace configuration
-**Plans**: 1
+**Plans**: 3
 
 Plans:
 
 - [x] 47-01: SDK Installation & Core Utilities
+- [ ] 47-02: Service File Instrumentation
+- [ ] 47-03: Screen Traces & Build Verification
 
 #### Phase 48: UI/UX Consistency Audit
 
@@ -241,7 +243,7 @@ Plans:
 | 46. Performance Optimization   | v1.0.0    | 7/7   | Complete    | 2026-02-10 |
 | 46.1 Other Users Albums Fix    | v1.0.0    | 1/1   | Complete    | 2026-02-10 |
 | 46.2 Album Viewer Nav Optimism | v1.0.0    | 0/?   | Not started | -          |
-| 47. Firebase Perf Monitoring   | v1.0.0    | 1/1   | Complete    | 2026-02-11 |
+| 47. Firebase Perf Monitoring   | v1.0.0    | 1/3   | In progress | -          |
 | 48. UI/UX Consistency Audit    | v1.0.0    | 0/?   | Not started | -          |
 | 49. Automated Test Suite       | v1.0.0    | 0/?   | Not started | -          |
 | 50. CI/CD Pipeline             | v1.0.0    | 0/?   | Not started | -          |
