@@ -225,18 +225,20 @@ const ProfileScreen = () => {
 
   // Fetch albums when screen gains focus (refreshes after editing albums)
   // For own profile: re-fetch on every focus to reflect edits
-  // For other profiles: only fetch once when friendship status is determined (read-only, preserve scroll)
+  // For other profiles: only fetch once when friendship status confirms friend access
   useFocusEffect(
     useCallback(() => {
       if (isOwnProfile) {
         // Own profile: always refresh to reflect any album edits
         fetchAlbums();
-      } else if (friendshipStatusLoaded && !albumsFetchedRef.current) {
-        // Other profile: only fetch once when friendship is determined
+      } else if (friendshipStatusLoaded && isFriend && !albumsFetchedRef.current) {
+        // Other profile: only fetch once when confirmed as friends
+        // Guard on isFriend prevents fetching with empty results if friendshipStatus
+        // hasn't resolved to 'friends' yet (race condition with block checks)
         albumsFetchedRef.current = true;
         fetchAlbums();
       }
-    }, [isOwnProfile, user?.uid, userId, friendshipStatus, friendshipStatusLoaded])
+    }, [isOwnProfile, isFriend, user?.uid, userId, friendshipStatusLoaded])
   );
 
   // Run new album animation sequence
