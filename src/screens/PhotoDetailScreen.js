@@ -716,7 +716,11 @@ const PhotoDetailScreen = () => {
             }}
             activeOpacity={0.7}
           >
-            <PixelIcon name="add" size={18} color={colors.text.primary} />
+            <PixelIcon
+              name={isOwnPhoto ? 'person-add-outline' : 'people-outline'}
+              size={18}
+              color={colors.text.primary}
+            />
           </TouchableOpacity>
         )}
 

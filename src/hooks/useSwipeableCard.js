@@ -5,12 +5,13 @@
  * Contains all stateful logic, animated values, gesture handling, and imperative methods.
  *
  * Features:
- * - Arc motion: Card curves downward as it moves horizontally (like flicking from wrist)
- * - Rotation: Card tilts in direction of swipe
+ * - Flick & Spin: Card flies off-screen with a quick full rotation on swipe
+ * - Arc motion preserved during drag (card curves down as it moves horizontally)
  * - On-card overlays: Color overlays with icons fade in during swipe
  * - Three-stage haptic feedback: threshold, release, completion
  * - Spring-back animation when threshold not met
  * - Imperative methods for button-triggered animations
+ * - Delete: Spin-shrink (rapid spin while shrinking to nothing)
  */
 
 import { useState, useCallback, useEffect, useImperativeHandle } from 'react';
@@ -21,6 +22,7 @@ import {
   useSharedValue,
   withSpring,
   withTiming,
+  withSequence,
   withDelay,
   runOnJS,
   interpolate,
@@ -36,20 +38,17 @@ const HORIZONTAL_THRESHOLD = 100;
 // Delete overlay threshold (used for button-triggered animation overlay only)
 const DELETE_OVERLAY_THRESHOLD = 150;
 
-// Exit animation duration
-const EXIT_DURATION = 800;
-
-// Button-triggered animations use slower duration for satisfying pace
-// Swipe gestures have natural lead-in time from drag, but button taps are instant
-const BUTTON_EXIT_DURATION = 800;
-
 // Delay for front card transition gives exiting card time to clear
 const CASCADE_DELAY_MS = 0;
 
 // Clearance delay - time before cascade animation triggers
-// 100ms gives instant feel while allowing exit animation to start
-const SWIPE_CLEARANCE_DELAY = 100;
-const BUTTON_CLEARANCE_DELAY = 100;
+const SWIPE_CLEARANCE_DELAY = 150;
+const BUTTON_CLEARANCE_DELAY = 150;
+
+// Sprite Death timing
+const FLASH_BLINK_DURATION = 60;
+const FLASH_TOTAL_DURATION = FLASH_BLINK_DURATION * 6; // 3 on/off cycles
+const EXPLODE_DURATION = 500;
 
 // Fade-in duration for new cards entering the visible stack
 const STACK_ENTRY_FADE_DURATION = 300;
@@ -116,8 +115,14 @@ const useSwipeableCard = ({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
-  // Scale for delete suction animation (card shrinks as it gets sucked into delete button)
+  // Scale for card (used during stack transitions)
   const cardScale = useSharedValue(1);
+
+  // Sprite Death: flash overlay opacity, content visibility, explosion progress & direction
+  const flashOpacity = useSharedValue(0);
+  const contentOpacity = useSharedValue(1);
+  const explodeProgress = useSharedValue(0);
+  const explodeDirectionX = useSharedValue(0);
 
   // Track if this card has completed its entry animation
   // Used to detect when a card is newly entering the visible stack
@@ -133,20 +138,15 @@ const useSwipeableCard = ({
   const stackOpacityAnim = useSharedValue(initialOpacity);
 
   // Consolidated animation - stackIndex useEffect is the SINGLE source of truth
-  // Removed dual-animation approach that caused race condition (cascade interrupted by stackIndex useEffect)
   const prevStackIndex = useSharedValue(stackIndex);
 
   // Track whether card is transitioning to front position
-  // When a card becomes isActive=true, the cardStyle switches from using stackOffsetAnim to translateX/Y
-  // We need to continue using stackOffsetAnim during the transition animation, not switch immediately
-  // This shared value is 1 during transition, 0 when complete
   const isTransitioningToFront = useSharedValue(0);
 
   // Track if action is in progress to prevent multiple triggers
   const actionInProgress = useSharedValue(false);
 
   // Track when delete is button-triggered (vs gesture swipe)
-  // Delete overlay should only show during button-triggered delete animation
   const isButtonDelete = useSharedValue(false);
 
   // Context for gesture start position
@@ -221,6 +221,11 @@ const useSwipeableCard = ({
   // Entry animation for undo (reverse of exit animation)
   useEffect(() => {
     if (enterFrom && isActive) {
+      // Reset sprite death state
+      flashOpacity.value = 0;
+      contentOpacity.value = 1;
+      explodeProgress.value = 0;
+
       // Start card off-screen in the direction it exited
       if (enterFrom === 'left') {
         translateX.value = -SCREEN_WIDTH * 1.5;
@@ -321,77 +326,90 @@ const useSwipeableCard = ({
     triggerHeavyHaptic();
   }, [photo?.id, onSwipeDown, triggerWarningHaptic, triggerHeavyHaptic]);
 
+  /**
+   * Start Sprite Death sequence: flash 3x then explode into pixel fragments.
+   * @param {number} dirX - Fragment scatter direction (-1=left, 1=right, 0=delete/down)
+   * @param {function} onComplete - Callback when explosion finishes
+   */
+  const startSpriteDeathWorklet = (dirX, onComplete) => {
+    'worklet';
+    // Set explosion direction for fragments
+    explodeDirectionX.value = dirX;
+
+    // Flash white 3 times (on/off/on/off/on/off)
+    flashOpacity.value = withSequence(
+      withTiming(0.9, { duration: FLASH_BLINK_DURATION, easing: Easing.linear }),
+      withTiming(0, { duration: FLASH_BLINK_DURATION, easing: Easing.linear }),
+      withTiming(0.9, { duration: FLASH_BLINK_DURATION, easing: Easing.linear }),
+      withTiming(0, { duration: FLASH_BLINK_DURATION, easing: Easing.linear }),
+      withTiming(0.9, { duration: FLASH_BLINK_DURATION, easing: Easing.linear }),
+      withTiming(0, { duration: FLASH_BLINK_DURATION, easing: Easing.linear })
+    );
+
+    // After flash: hide card content
+    contentOpacity.value = withDelay(FLASH_TOTAL_DURATION, withTiming(0, { duration: 0 }));
+
+    // After flash: scatter fragments
+    explodeProgress.value = withDelay(
+      FLASH_TOTAL_DURATION,
+      withTiming(
+        1,
+        {
+          duration: EXPLODE_DURATION,
+          easing: Easing.out(Easing.quad),
+        },
+        onComplete
+      )
+    );
+  };
+
   // Imperative methods for button-triggered animations
   useImperativeHandle(
     ref,
     () => ({
       /**
-       * Trigger archive animation (left exit with arc).
-       * Called when user taps the archive button.
+       * Trigger archive animation (Sprite Death to left).
+       * Card flashes white 3x then explodes into pixel fragments scattering left.
        * @returns {void}
        */
       triggerArchive: () => {
         if (actionInProgress.value) return;
         logger.info('useSwipeableCard: triggerArchive called', { photoId: photo?.id });
         actionInProgress.value = true;
-        // Fire clearance callback early to trigger cascade while card still visible
+        // Fire clearance callback when explosion starts (after flash)
         if (onExitClearance) {
           setTimeout(() => {
             onExitClearance();
-          }, BUTTON_CLEARANCE_DELAY);
+          }, FLASH_TOTAL_DURATION + BUTTON_CLEARANCE_DELAY);
         }
-        // Animate to archive position (arc to bottom-left)
-        translateX.value = withTiming(
-          -SCREEN_WIDTH * 1.5,
-          {
-            duration: BUTTON_EXIT_DURATION,
-            easing: Easing.out(Easing.cubic),
-          },
-          () => {
-            'worklet';
-            runOnJS(handleArchive)();
-          }
-        );
-        translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
-          duration: BUTTON_EXIT_DURATION,
-          easing: Easing.out(Easing.cubic),
+        startSpriteDeathWorklet(-1, () => {
+          'worklet';
+          runOnJS(handleArchive)();
         });
       },
       /**
-       * Trigger journal animation (right exit with arc).
-       * Called when user taps the journal button.
+       * Trigger journal animation (Sprite Death to right).
+       * Card flashes white 3x then explodes into pixel fragments scattering right.
        * @returns {void}
        */
       triggerJournal: () => {
         if (actionInProgress.value) return;
         logger.info('useSwipeableCard: triggerJournal called', { photoId: photo?.id });
         actionInProgress.value = true;
-        // Fire clearance callback early to trigger cascade while card still visible
+        // Fire clearance callback when explosion starts (after flash)
         if (onExitClearance) {
           setTimeout(() => {
             onExitClearance();
-          }, BUTTON_CLEARANCE_DELAY);
+          }, FLASH_TOTAL_DURATION + BUTTON_CLEARANCE_DELAY);
         }
-        // Animate to journal position (arc to bottom-right)
-        translateX.value = withTiming(
-          SCREEN_WIDTH * 1.5,
-          {
-            duration: BUTTON_EXIT_DURATION,
-            easing: Easing.out(Easing.cubic),
-          },
-          () => {
-            'worklet';
-            runOnJS(handleJournal)();
-          }
-        );
-        translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
-          duration: BUTTON_EXIT_DURATION,
-          easing: Easing.out(Easing.cubic),
+        startSpriteDeathWorklet(1, () => {
+          'worklet';
+          runOnJS(handleJournal)();
         });
       },
       /**
-       * Trigger delete animation (suction effect toward delete button).
-       * Card shrinks while moving toward button position.
+       * Trigger delete animation (Sprite Death downward).
+       * Card flashes white 3x then dissolves into falling pixel debris.
        * @returns {void}
        */
       triggerDelete: () => {
@@ -399,48 +417,18 @@ const useSwipeableCard = ({
         logger.info('useSwipeableCard: triggerDelete called', { photoId: photo?.id });
         actionInProgress.value = true;
         isButtonDelete.value = true;
-
-        const SUCTION_DURATION = 450;
-
-        cardScale.value = withTiming(
-          0.1,
-          {
-            duration: SUCTION_DURATION,
-            easing: Easing.in(Easing.cubic),
-          },
-          () => {
-            'worklet';
-            if (onDeleteComplete) {
-              runOnJS(onDeleteComplete)();
-            }
-            runOnJS(handleDelete)();
+        // Nudge translateY so delete overlay is visible during flash
+        translateY.value = DELETE_OVERLAY_THRESHOLD + 50;
+        startSpriteDeathWorklet(0, () => {
+          'worklet';
+          if (onDeleteComplete) {
+            runOnJS(onDeleteComplete)();
           }
-        );
-
-        translateY.value = withTiming(SCREEN_HEIGHT * 0.35, {
-          duration: SUCTION_DURATION,
-          easing: Easing.in(Easing.cubic),
-        });
-
-        translateX.value = withTiming(0, {
-          duration: SUCTION_DURATION,
-          easing: Easing.in(Easing.cubic),
+          runOnJS(handleDelete)();
         });
       },
     }),
-    [
-      photo?.id,
-      actionInProgress,
-      isButtonDelete,
-      translateX,
-      translateY,
-      cardScale,
-      handleArchive,
-      handleJournal,
-      handleDelete,
-      onDeleteComplete,
-      onExitClearance,
-    ]
+    [photo?.id, handleArchive, handleJournal, handleDelete, onDeleteComplete, onExitClearance]
   );
 
   // Pan gesture using new Gesture API
@@ -470,42 +458,23 @@ const useSwipeableCard = ({
       const isRightSwipe = translateX.value > HORIZONTAL_THRESHOLD || velocityX > 500;
 
       if (isLeftSwipe) {
+        // Sprite Death — left exit
         actionInProgress.value = true;
-        runOnJS(scheduleClearanceCallback)(SWIPE_CLEARANCE_DELAY);
-        translateX.value = withTiming(
-          -SCREEN_WIDTH * 1.5,
-          {
-            duration: EXIT_DURATION,
-            easing: Easing.out(Easing.cubic),
-          },
-          () => {
-            'worklet';
-            runOnJS(handleArchive)();
-          }
-        );
-        translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
-          duration: EXIT_DURATION,
-          easing: Easing.out(Easing.cubic),
+        runOnJS(scheduleClearanceCallback)(FLASH_TOTAL_DURATION + SWIPE_CLEARANCE_DELAY);
+        startSpriteDeathWorklet(-1, () => {
+          'worklet';
+          runOnJS(handleArchive)();
         });
       } else if (isRightSwipe) {
+        // Sprite Death — right exit
         actionInProgress.value = true;
-        runOnJS(scheduleClearanceCallback)(SWIPE_CLEARANCE_DELAY);
-        translateX.value = withTiming(
-          SCREEN_WIDTH * 1.5,
-          {
-            duration: EXIT_DURATION,
-            easing: Easing.out(Easing.cubic),
-          },
-          () => {
-            'worklet';
-            runOnJS(handleJournal)();
-          }
-        );
-        translateY.value = withTiming(SCREEN_HEIGHT * 0.5, {
-          duration: EXIT_DURATION,
-          easing: Easing.out(Easing.cubic),
+        runOnJS(scheduleClearanceCallback)(FLASH_TOTAL_DURATION + SWIPE_CLEARANCE_DELAY);
+        startSpriteDeathWorklet(1, () => {
+          'worklet';
+          runOnJS(handleJournal)();
         });
       } else {
+        // Spring back — threshold not met
         translateX.value = withSpring(0, {
           damping: 15,
           stiffness: 150,
@@ -518,15 +487,16 @@ const useSwipeableCard = ({
       }
     });
 
-  // Animated card style with arc motion, rotation, and stack transforms
+  // Animated card style with tilt and stack transforms
   const cardStyle = useAnimatedStyle(() => {
-    const normalizedX = Math.abs(translateX.value) / (SCREEN_WIDTH * 1.5);
-    const curveProgress = Math.pow(normalizedX, 2.5);
-    const arcY = SCREEN_HEIGHT * 0.5 * curveProgress;
-
     const rotation = isActive ? translateX.value / 15 : 0;
 
     const actionActive = actionInProgress.value;
+
+    // Arc motion during drag (before sprite death triggers)
+    const normalizedX = Math.abs(translateX.value) / (SCREEN_WIDTH * 1.5);
+    const curveProgress = Math.pow(normalizedX, 2.5);
+    const arcY = SCREEN_HEIGHT * 0.5 * curveProgress;
 
     const useStackAnimation = !actionActive && (isTransitioningToFront.value === 1 || !isActive);
 
@@ -551,6 +521,20 @@ const useSwipeableCard = ({
         opacity: cardOpacity.value,
       };
     }
+  });
+
+  // Content opacity style (hides card image/overlays during explosion, fragments stay visible)
+  const contentStyle = useAnimatedStyle(() => {
+    return {
+      opacity: contentOpacity.value,
+    };
+  });
+
+  // Flash overlay style (white blink during sprite death)
+  const flashOverlayStyle = useAnimatedStyle(() => {
+    return {
+      opacity: flashOpacity.value,
+    };
   });
 
   // Archive overlay (left swipe) - gray with box icon
@@ -594,9 +578,14 @@ const useSwipeableCard = ({
   return {
     // Animated styles
     cardStyle,
+    contentStyle,
+    flashOverlayStyle,
     archiveOverlayStyle,
     journalOverlayStyle,
     deleteOverlayStyle,
+    // Sprite Death shared values (for PixelExplosion component)
+    explodeProgress,
+    explodeDirectionX,
     // Gesture handler
     panGesture,
     // State

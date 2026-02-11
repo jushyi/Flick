@@ -1,26 +1,18 @@
 /**
- * SwipeablePhotoCard - Flick-style swipeable card for photo triage
+ * SwipeablePhotoCard - Sprite Death swipeable card for photo triage
  *
  * Features:
- * - Arc motion: Card curves downward as it moves horizontally (like flicking from wrist)
- * - Rotation: Card tilts in direction of swipe
+ * - Sprite Death: Card flashes white 3x then explodes into pixel fragments
+ * - Pixel Explosion: Neon-colored fragments scatter in swipe direction with gravity
  * - On-card overlays: Color overlays with icons fade in during swipe
  * - Three-stage haptic feedback: threshold, release, completion
  * - Spring-back animation when threshold not met
  * - Imperative methods for button-triggered animations
  *
  * Swipe directions:
- * - Left swipe → Archive (gray overlay, box icon)
- * - Right swipe → Journal (green overlay, checkmark icon)
- * - Delete via button only (down-swipe disabled to prevent accidental deletions)
- *
- * @param {object} photo - Photo object to display
- * @param {function} onSwipeLeft - Callback when Archive action triggered (left swipe or button)
- * @param {function} onSwipeRight - Callback when Journal action triggered (right swipe or button)
- * @param {function} onSwipeDown - Callback when Delete action triggered (button only)
- * @param {number} stackIndex - Position in the stack (0=front, 1=behind, 2=furthest back)
- * @param {boolean} isActive - Whether this card is swipeable (only front card)
- * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
+ * - Left swipe → Archive (gray overlay, box icon) → sprite death left
+ * - Right swipe → Journal (green overlay, checkmark icon) → sprite death right
+ * - Delete via button only → sprite death downward
  */
 
 import React, { forwardRef } from 'react';
@@ -29,6 +21,7 @@ import { Image } from 'expo-image';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import PixelIcon from './PixelIcon';
+import PixelExplosion from './PixelExplosion';
 import logger from '../utils/logger';
 import useSwipeableCard from '../hooks/useSwipeableCard';
 import { styles } from '../styles/SwipeablePhotoCard.styles';
@@ -52,20 +45,29 @@ const SwipeablePhotoCard = forwardRef(
     },
     ref
   ) => {
-    const { cardStyle, archiveOverlayStyle, journalOverlayStyle, deleteOverlayStyle, panGesture } =
-      useSwipeableCard({
-        photo,
-        onSwipeLeft,
-        onSwipeRight,
-        onSwipeDown,
-        onDeleteComplete,
-        onExitClearance,
-        stackIndex,
-        isActive,
-        enterFrom,
-        isNewlyVisible,
-        ref,
-      });
+    const {
+      cardStyle,
+      contentStyle,
+      flashOverlayStyle,
+      archiveOverlayStyle,
+      journalOverlayStyle,
+      deleteOverlayStyle,
+      explodeProgress,
+      explodeDirectionX,
+      panGesture,
+    } = useSwipeableCard({
+      photo,
+      onSwipeLeft,
+      onSwipeRight,
+      onSwipeDown,
+      onDeleteComplete,
+      onExitClearance,
+      stackIndex,
+      isActive,
+      enterFrom,
+      isNewlyVisible,
+      ref,
+    });
 
     if (!photo || !photo.imageURL) {
       logger.warn('SwipeablePhotoCard: Missing photo or imageURL', { photo });
@@ -86,73 +88,90 @@ const SwipeablePhotoCard = forwardRef(
           !isActive && { pointerEvents: 'none' },
         ]}
       >
-        {/* Photo Image - expo-image with native caching and transitions */}
-        <Image
-          source={{ uri: photo.imageURL, cacheKey: `photo-${photo.id}` }}
-          style={styles.photoImage}
-          contentFit="cover"
-          transition={200}
-          cachePolicy="memory-disk"
-          onError={error =>
-            logger.error('SwipeablePhotoCard: Image load error', {
-              photoId: photo.id,
-              error: error.error,
-            })
-          }
-          onLoad={() =>
-            logger.debug('SwipeablePhotoCard: Image loaded successfully', {
-              photoId: photo.id,
-            })
-          }
-        />
+        {/* Content wrapper — fades to invisible during sprite death (fragments stay visible) */}
+        <Animated.View style={[styles.contentWrapper, contentStyle]}>
+          {/* Photo Image - expo-image with native caching and transitions */}
+          <Image
+            source={{ uri: photo.imageURL, cacheKey: `photo-${photo.id}` }}
+            style={styles.photoImage}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+            onError={error =>
+              logger.error('SwipeablePhotoCard: Image load error', {
+                photoId: photo.id,
+                error: error.error,
+              })
+            }
+            onLoad={() =>
+              logger.debug('SwipeablePhotoCard: Image loaded successfully', {
+                photoId: photo.id,
+              })
+            }
+          />
 
-        {/* Tag Button Overlay - only on active card when onTagPress provided */}
-        {onTagPress && (
-          <TouchableOpacity
-            style={styles.tagOverlayButton}
-            onPress={onTagPress}
-            activeOpacity={0.7}
-          >
-            <PixelIcon name="add" size={20} color={colors.icon.primary} />
-            {hasTagged && <View style={styles.tagOverlayBadge} />}
-          </TouchableOpacity>
+          {/* Tag Button Overlay - only on active card when onTagPress provided */}
+          {onTagPress && (
+            <TouchableOpacity
+              style={styles.tagOverlayButton}
+              onPress={onTagPress}
+              activeOpacity={0.7}
+            >
+              <PixelIcon
+                name={hasTagged ? 'people-outline' : 'person-add-outline'}
+                size={20}
+                color={colors.icon.primary}
+              />
+              {hasTagged && <View style={styles.tagOverlayBadge} />}
+            </TouchableOpacity>
+          )}
+
+          {/* Archive Overlay (Left swipe) - only show on active card */}
+          {isActive && (
+            <Animated.View style={[styles.overlay, styles.archiveOverlay, archiveOverlayStyle]}>
+              <View style={styles.iconContainer}>
+                <View style={styles.boxIcon}>
+                  <View style={styles.boxIconInner} />
+                </View>
+              </View>
+              <Text style={styles.overlayText}>Archive</Text>
+            </Animated.View>
+          )}
+
+          {/* Journal Overlay (Right swipe) - only show on active card */}
+          {isActive && (
+            <Animated.View style={[styles.overlay, styles.journalOverlay, journalOverlayStyle]}>
+              <View style={styles.iconContainer}>
+                <View style={styles.checkmarkCircle}>
+                  <Text style={styles.checkmarkText}>✓</Text>
+                </View>
+              </View>
+              <Text style={styles.overlayText}>Journal</Text>
+            </Animated.View>
+          )}
+
+          {/* Delete Overlay (button-triggered) - only show on active card */}
+          {isActive && (
+            <Animated.View style={[styles.overlay, styles.deleteOverlay, deleteOverlayStyle]}>
+              <View style={styles.iconContainer}>
+                <View style={styles.xIcon}>
+                  <View style={[styles.xLine, styles.xLine1]} />
+                  <View style={[styles.xLine, styles.xLine2]} />
+                </View>
+              </View>
+              <Text style={styles.overlayText}>Delete</Text>
+            </Animated.View>
+          )}
+        </Animated.View>
+
+        {/* White flash overlay — blinks during sprite death sequence */}
+        {isActive && (
+          <Animated.View style={[styles.flashOverlay, flashOverlayStyle]} pointerEvents="none" />
         )}
 
-        {/* Archive Overlay (Left swipe) - only show on active card */}
+        {/* Pixel Explosion — neon fragments scatter after flash */}
         {isActive && (
-          <Animated.View style={[styles.overlay, styles.archiveOverlay, archiveOverlayStyle]}>
-            <View style={styles.iconContainer}>
-              <View style={styles.boxIcon}>
-                <View style={styles.boxIconInner} />
-              </View>
-            </View>
-            <Text style={styles.overlayText}>Archive</Text>
-          </Animated.View>
-        )}
-
-        {/* Journal Overlay (Right swipe) - only show on active card */}
-        {isActive && (
-          <Animated.View style={[styles.overlay, styles.journalOverlay, journalOverlayStyle]}>
-            <View style={styles.iconContainer}>
-              <View style={styles.checkmarkCircle}>
-                <Text style={styles.checkmarkText}>✓</Text>
-              </View>
-            </View>
-            <Text style={styles.overlayText}>Journal</Text>
-          </Animated.View>
-        )}
-
-        {/* Delete Overlay (button-triggered) - only show on active card */}
-        {isActive && (
-          <Animated.View style={[styles.overlay, styles.deleteOverlay, deleteOverlayStyle]}>
-            <View style={styles.iconContainer}>
-              <View style={styles.xIcon}>
-                <View style={[styles.xLine, styles.xLine1]} />
-                <View style={[styles.xLine, styles.xLine2]} />
-              </View>
-            </View>
-            <Text style={styles.overlayText}>Delete</Text>
-          </Animated.View>
+          <PixelExplosion explodeProgress={explodeProgress} explodeDirectionX={explodeDirectionX} />
         )}
       </Animated.View>
     );

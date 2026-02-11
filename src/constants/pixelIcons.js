@@ -508,16 +508,12 @@ const ICON_GRIDS = {
       [8, 13],
       [9, 13],
       [10, 13],
-      // Plus sign (1px from right edge)
-      [13, 6],
+      // Plus sign (compact, left arm preserved)
       [13, 7],
       [13, 8],
       [13, 9],
-      [13, 10],
       [12, 8],
-      [13, 8],
       [14, 8],
-      [15, 8],
     ],
   },
 

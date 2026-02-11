@@ -19,8 +19,21 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
     // Black background matches screen, prevents flash during cascade animation
     backgroundColor: colors.background.primary,
-    overflow: 'hidden',
+    // overflow visible so pixel explosion fragments can scatter beyond card bounds
+    overflow: 'visible',
     elevation: 0,
+  },
+  // Wrapper for card content (image + overlays) — hidden during sprite death while fragments stay visible
+  contentWrapper: {
+    width: '100%',
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  // White flash overlay for sprite death blink effect
+  flashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
   },
   photoImage: {
     width: '100%',
