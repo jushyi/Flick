@@ -30,6 +30,8 @@ import {
 import { checkUsernameAvailability, cancelProfileSetup } from '../services/firebase/userService';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 const ProfileSetupScreen = ({ navigation, route }) => {
@@ -484,23 +486,23 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
   },
   header: {
     flexDirection: 'row',
-    paddingVertical: 8,
-    marginBottom: 8,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.xs,
   },
   backButton: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   title: {
     fontSize: typography.size.xxxl,
     fontFamily: typography.fontFamily.display,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.xs,
     color: colors.text.primary,
   },
   subtitle: {
@@ -508,11 +510,11 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     textAlign: 'center',
     color: colors.text.secondary,
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   photoContainer: {
     alignSelf: 'center',
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   profilePhoto: {
     width: 120,
@@ -531,7 +533,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   placeholderText: {
-    marginTop: 8,
+    marginTop: spacing.xs,
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
@@ -547,20 +549,20 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   songSection: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   songLabel: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   stepIndicator: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   nextButton: {
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
 });
 

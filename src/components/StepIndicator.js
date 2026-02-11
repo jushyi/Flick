@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
 
 /**
  * Retro 16-Bit StepIndicator
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
   squaresContainer: {
     flexDirection: 'row',
     gap: 6,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   square: {
     width: 10,
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
   },
   squareActive: {
     backgroundColor: colors.interactive.primary,
-    shadowColor: '#00D4FF',
+    shadowColor: colors.interactive.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 4,

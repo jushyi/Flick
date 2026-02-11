@@ -14,6 +14,8 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import Svg, { Defs, Rect, Mask, Circle } from 'react-native-svg';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -270,7 +272,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
           y="0"
           width={SCREEN_WIDTH}
           height={SCREEN_HEIGHT}
-          fill="rgba(0, 0, 0, 0.7)"
+          fill={colors.overlay.dark}
           mask="url(#mask)"
         />
         {/* Circle border for visibility */}
@@ -358,13 +360,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     zIndex: 10,
   },
   headerButton: {
     minWidth: 70,
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
@@ -400,8 +402,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
     alignItems: 'center',
   },
   instructionText: {
