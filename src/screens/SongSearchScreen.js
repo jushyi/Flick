@@ -51,8 +51,8 @@ const SongSearchScreen = () => {
 
   const debounceRef = useRef(null);
 
-  // Get source screen name and editSong from route params
-  const { source, editSong } = route.params || {};
+  // Get source screen name, editSong, and optional callback from route params
+  const { source, editSong, onSongSelect } = route.params || {};
 
   // Handle editSong param - immediately open clip selection
   useEffect(() => {
@@ -145,14 +145,18 @@ const SongSearchScreen = () => {
         clipEnd: songWithClip.clipEnd,
       });
       setSelectedSongForClip(null);
-      // Navigate back to source screen with selected song as serializable params
-      if (source) {
+      // Navigate back to source screen with selected song
+      if (onSongSelect) {
+        // Callback pattern: preserves source screen's local state (e.g. form fields)
+        onSongSelect(songWithClip);
+        navigation.goBack();
+      } else if (source) {
         navigation.navigate(source, { selectedSong: songWithClip });
       } else {
         navigation.goBack();
       }
     },
-    [source, navigation]
+    [source, navigation, onSongSelect]
   );
 
   // Handle clip selection cancel - always stay on search to allow picking different song

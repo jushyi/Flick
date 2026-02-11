@@ -56,15 +56,11 @@ const ProfileSetupScreen = ({ navigation, route }) => {
   const [errors, setErrors] = useState({});
   const usernameCheckTimeout = useRef(null);
 
-  // Detect selectedSong from route params (passed back from SongSearchScreen)
-  useEffect(() => {
-    const { selectedSong: songParam } = route.params || {};
-    if (songParam) {
-      navigation.setParams({ selectedSong: undefined });
-      setSelectedSong(songParam);
-      logger.info('ProfileSetupScreen: Song selected', { songId: songParam.id });
-    }
-  }, [route.params, navigation]);
+  // Callback for SongSearchScreen — receives selected song without re-navigating
+  const handleSongSelect = useCallback(song => {
+    setSelectedSong(song);
+    logger.info('ProfileSetupScreen: Song selected', { songId: song.id });
+  }, []);
 
   // Handle cancel profile setup
   const handleCancel = () => {
@@ -230,6 +226,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
   const handleSongPress = () => {
     navigation.navigate('SongSearch', {
       source: 'ProfileSetup',
+      onSongSelect: handleSongSelect,
     });
   };
 

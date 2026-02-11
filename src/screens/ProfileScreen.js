@@ -282,14 +282,10 @@ const ProfileScreen = () => {
     }
   }, [route.params, albums, navigation, runNewAlbumAnimation]);
 
-  // Detect selectedSong from route params (passed back from SongSearchScreen)
-  useEffect(() => {
-    const { selectedSong } = route.params || {};
-    if (selectedSong) {
-      navigation.setParams({ selectedSong: undefined });
-      handleSaveSong(selectedSong);
-    }
-  }, [route.params, navigation]);
+  // Callback for SongSearchScreen — receives selected song via goBack()
+  const handleSongSelect = useCallback(song => {
+    handleSaveSong(song);
+  }, []);
 
   // Scroll to top when profile tab icon is pressed while already on profile
   const isFocused = useIsFocused();
@@ -585,6 +581,7 @@ const ProfileScreen = () => {
       logger.info('ProfileScreen: Add song pressed');
       navigation.navigate('SongSearch', {
         source: 'ProfileMain',
+        onSongSelect: handleSongSelect,
       });
     }
     // Play/pause handled internally by ProfileSongCard
@@ -603,6 +600,7 @@ const ProfileScreen = () => {
           navigation.navigate('SongSearch', {
             source: 'ProfileMain',
             editSong: profileData.profileSong,
+            onSongSelect: handleSongSelect,
           });
         },
       },
