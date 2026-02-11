@@ -36,8 +36,6 @@ import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { usePhotoDetail } from '../context/PhotoDetailContext';
 import { styles } from '../styles/PhotoDetailScreen.styles';
 import CommentsBottomSheet from '../components/comments/CommentsBottomSheet';
-import CommentPreview from '../components/comments/CommentPreview';
-import { getPreviewComments } from '../services/firebase/commentService';
 import {
   softDeletePhoto,
   archivePhoto,
@@ -96,9 +94,6 @@ const PhotoDetailScreen = () => {
   const swipeDirectionRef = useRef('forward'); // Sync ref for cancel callback access
   const snapshotRef = useRef({});
 
-  // Comments preview state (local since it's just for display)
-  const [previewComments, setPreviewComments] = useState([]);
-
   // Progress bar scroll ref for auto-scrolling
   const progressScrollRef = useRef(null);
 
@@ -155,8 +150,8 @@ const PhotoDetailScreen = () => {
 
     Animated.timing(cubeProgress, {
       toValue: 1,
-      duration: 350,
-      easing: Easing.inOut(Easing.ease),
+      duration: 250,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(() => {
       isTransitioningRef.current = false;
@@ -186,8 +181,8 @@ const PhotoDetailScreen = () => {
 
     Animated.timing(cubeProgress, {
       toValue: 1,
-      duration: 350,
-      easing: Easing.inOut(Easing.ease),
+      duration: 250,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(() => {
       isTransitioningRef.current = false;
@@ -351,6 +346,10 @@ const PhotoDetailScreen = () => {
       groupedReactions: groupedReactions,
       photoId: currentPhoto?.id,
       userId: currentPhoto?.userId,
+      isOwnPhoto: currentPhoto?.userId === contextUserId,
+      taggedUserIds: currentPhoto?.taggedUserIds,
+      hasMenuOptions: true,
+      contextMode: contextMode,
     };
   }
 
@@ -536,25 +535,6 @@ const PhotoDetailScreen = () => {
     setMenuAnchor({ x, y, width, height });
   }, []);
 
-  // Fetch preview comments when photo changes
-  useEffect(() => {
-    const fetchPreviewComments = async () => {
-      if (!currentPhoto?.id) {
-        setPreviewComments([]);
-        return;
-      }
-
-      const result = await getPreviewComments(currentPhoto.id, currentPhoto.userId);
-      if (result.success) {
-        setPreviewComments(result.previewComments || []);
-      } else {
-        setPreviewComments([]);
-      }
-    };
-
-    fetchPreviewComments();
-  }, [currentPhoto?.id, currentPhoto?.userId, showComments]);
-
   // Calculate segment width based on total photos
   const { segmentWidth, needsScroll } = useMemo(() => {
     if (totalPhotos <= 0) return { segmentWidth: MIN_SEGMENT_WIDTH, needsScroll: false };
@@ -633,10 +613,11 @@ const PhotoDetailScreen = () => {
       />
 
       {/* Expand/collapse wrapper - scales + translates content from/to source card */}
+      {/* overflow: visible prevents 3D perspective clipping on cube rotation edges */}
       <Animated.View
         style={{
           flex: 1,
-          overflow: 'hidden',
+          overflow: 'visible',
           opacity,
           transform: [
             { translateX: expandTranslateX },
@@ -728,14 +709,7 @@ const PhotoDetailScreen = () => {
             style={[
               styles.userInfoOverlay,
               {
-                bottom:
-                  contextMode === 'stories'
-                    ? previewComments?.length > 0
-                      ? 130
-                      : 110
-                    : previewComments?.length > 0
-                      ? 120
-                      : 100,
+                bottom: contextMode === 'stories' ? 110 : 100,
               },
             ]}
           >
@@ -744,23 +718,6 @@ const PhotoDetailScreen = () => {
             </Text>
             <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
           </View>
-
-          {/* Comment preview - below user info, above progress bar */}
-          {previewComments.length > 0 && (
-            <View
-              style={[
-                styles.commentPreviewContainer,
-                { bottom: contextMode === 'stories' ? 100 : 90 },
-              ]}
-            >
-              <CommentPreview
-                comments={previewComments}
-                totalCount={currentPhoto?.commentCount || 0}
-                onPress={() => setShowComments(true)}
-                showViewAll={false}
-              />
-            </View>
-          )}
 
           {/* Tag button - visible for owner always, non-owner only when tags exist */}
           {(isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
@@ -988,13 +945,39 @@ const PhotoDetailScreen = () => {
                 )}
               </View>
 
-              {/* User info */}
-              <View style={[styles.userInfoOverlay, { bottom: 110 }]}>
+              {/* User info - bottom offset matches incoming face calculation */}
+              <View
+                style={[
+                  styles.userInfoOverlay,
+                  {
+                    bottom: snapshotRef.current.contextMode === 'stories' ? 110 : 100,
+                  },
+                ]}
+              >
                 <Text style={styles.displayName} numberOfLines={1}>
                   {snapshotRef.current.displayName || 'Unknown User'}
                 </Text>
                 <Text style={styles.timestamp}>{getTimeAgo(snapshotRef.current.capturedAt)}</Text>
               </View>
+
+              {/* Tag button */}
+              {(snapshotRef.current.isOwnPhoto ||
+                snapshotRef.current.taggedUserIds?.length > 0) && (
+                <View style={styles.tagButton}>
+                  <PixelIcon
+                    name={snapshotRef.current.isOwnPhoto ? 'person-add-outline' : 'people-outline'}
+                    size={18}
+                    color={colors.text.primary}
+                  />
+                </View>
+              )}
+
+              {/* Menu button */}
+              {snapshotRef.current.hasMenuOptions && (
+                <View style={styles.photoMenuButton}>
+                  <PixelIcon name="ellipsis-vertical" size={28} color={colors.text.primary} />
+                </View>
+              )}
 
               {/* Progress bar */}
               {snapshotRef.current.showProgressBar && snapshotRef.current.totalPhotos > 0 && (
