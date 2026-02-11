@@ -74,6 +74,7 @@ const PhotoDetailScreen = () => {
     hasPreviousFriend: contextHasPreviousFriend,
     currentUserId: contextUserId,
     sourceRect: contextSourceRect,
+    initialShowComments,
     showComments,
     setShowComments,
     handleReactionToggle,
@@ -116,6 +117,14 @@ const PhotoDetailScreen = () => {
     cubeProgress.setValue(1);
     isTransitioningRef.current = false;
     setIsTransitioning(false);
+  }, []);
+
+  // Apply initialShowComments after mount - delayed so opening animation renders photo first
+  useEffect(() => {
+    if (initialShowComments) {
+      const timer = setTimeout(() => setShowComments(true), 300);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleClose = useCallback(() => {
