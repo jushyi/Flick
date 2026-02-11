@@ -17,9 +17,7 @@ import { sendVerificationCode } from '../services/firebase/phoneAuthService';
 import { formatAsUserTypes } from '../utils/phoneUtils';
 import { usePhoneAuth } from '../context/PhoneAuthContext';
 import { colors } from '../constants/colors';
-import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
-import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 /**
@@ -291,21 +289,21 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   logo: {
     fontSize: typography.size.display,
     fontFamily: typography.fontFamily.display,
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 8,
     color: colors.text.primary,
   },
   subtitle: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.bodyBold,
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 8,
     color: colors.text.primary,
   },
   description: {
@@ -313,7 +311,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: 32,
   },
   form: {
     width: '100%',
@@ -322,22 +320,22 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
-    marginBottom: spacing.xs,
+    marginBottom: 8,
   },
   countrySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: layout.dimensions.inputHeight,
+    height: 52,
     borderWidth: 1,
     borderColor: colors.border.subtle,
-    borderRadius: layout.borderRadius.sm,
-    paddingHorizontal: spacing.md,
+    borderRadius: 2,
+    paddingHorizontal: 16,
     backgroundColor: colors.background.secondary,
-    marginBottom: spacing.md,
+    marginBottom: 16,
   },
   countrySelectorFlag: {
     fontSize: typography.size.xl,
-    marginRight: spacing.sm,
+    marginRight: 12,
   },
   countrySelectorText: {
     flex: 1,
@@ -353,18 +351,18 @@ const styles = StyleSheet.create({
   phoneInputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: spacing.xs,
+    marginBottom: 8,
   },
   countryCodeDisplay: {
-    height: layout.dimensions.inputHeight,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 12,
     backgroundColor: colors.background.tertiary,
     borderWidth: 1,
     borderColor: colors.border.subtle,
-    borderRadius: layout.borderRadius.sm,
-    marginRight: spacing.xs,
+    borderRadius: 2,
+    marginRight: 8,
   },
   countryCodeText: {
     fontSize: typography.size.lg,
@@ -380,21 +378,21 @@ const styles = StyleSheet.create({
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay.dark,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: colors.background.secondary,
-    borderTopLeftRadius: layout.borderRadius.xl,
-    borderTopRightRadius: layout.borderRadius.xl,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
     maxHeight: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -409,18 +407,18 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   countryList: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 20,
   },
   countryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   countryFlag: {
     fontSize: typography.size.xxl,
-    marginRight: spacing.sm,
+    marginRight: 12,
   },
   countryName: {
     flex: 1,

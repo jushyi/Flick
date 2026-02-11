@@ -1,9 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, TextInput, Text, StyleSheet, Pressable } from 'react-native';
 import { colors } from '../constants/colors';
-import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
-import { layout } from '../constants/layout';
 
 const CODE_LENGTH = 6;
 
@@ -88,12 +86,12 @@ const styles = StyleSheet.create({
   },
   boxesContainer: {
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: 8,
   },
   box: {
-    width: spacing.xxxl,
-    height: spacing.huge,
-    borderRadius: layout.borderRadius.xs,
+    width: 48,
+    height: 56,
+    borderRadius: 0,
     backgroundColor: colors.background.secondary,
     borderWidth: 2,
     borderColor: colors.border.subtle,
@@ -102,10 +100,10 @@ const styles = StyleSheet.create({
   },
   boxActive: {
     borderColor: colors.interactive.primary,
-    shadowColor: colors.interactive.primary,
+    shadowColor: '#00D4FF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
-    shadowRadius: spacing.xs,
+    shadowRadius: 8,
     elevation: 3,
   },
   boxFilled: {
@@ -113,10 +111,10 @@ const styles = StyleSheet.create({
   },
   boxError: {
     borderColor: colors.status.danger,
-    shadowColor: colors.status.danger,
+    shadowColor: '#FF3333',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
-    shadowRadius: layout.borderRadius.xl,
+    shadowRadius: 6,
     elevation: 2,
   },
   digit: {
