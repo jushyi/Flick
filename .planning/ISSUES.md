@@ -4,6 +4,16 @@ Enhancements discovered during execution. Not critical - address in future phase
 
 ## Open Enhancements
 
+### ISS-014: Profile navigation from PhotoDetail renders behind transparentModal
+
+- **Discovered:** Phase 47.1-02 UAT (2026-02-11)
+- **Type:** Bug (Regression from Phase 46.1)
+- **Description:** Navigating to OtherUserProfile from within PhotoDetail (via avatar tap or @mention tap) causes the profile screen to render behind the photo view. OtherUserProfile uses `presentation: 'card'` (changed from `fullScreenModal` in Phase 46.1 to allow child card screens on iOS), but PhotoDetail uses `presentation: 'transparentModal'` which renders on a higher native layer. All profile navigation from PhotoDetail is affected, not just @mentions.
+- **Impact:** Cannot view any user's profile from the photo detail / comments view
+- **Suggested fix:** Either dismiss PhotoDetail before navigating, or find a presentation mode for OtherUserProfile that renders above transparentModal without breaking child card screens
+- **Files:** `src/context/PhotoDetailContext.js` (handleAvatarPress), `src/navigation/AppNavigator.js` (screen presentations)
+- **Related:** Phase 46.1 decision (OtherUserProfile card instead of fullScreenModal), ISS-003 (original modal stacking fix)
+
 ### ISS-012: Friends screen N+1 query pattern causes slow initial load
 
 - **Discovered:** Phase 46-07 verification (2026-02-10)
