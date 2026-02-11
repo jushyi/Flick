@@ -126,11 +126,18 @@ const CommentsBottomSheet = ({
           } else if (!expanded && (dy > SHEET_HEIGHT * 0.25 || fastSwipe)) {
             // Close sheet entirely (existing behavior)
             // Note: swipeY reset happens in useEffect when visible becomes false
-            Animated.timing(swipeY, {
-              toValue: SHEET_HEIGHT,
-              duration: 200,
-              useNativeDriver: true,
-            }).start(() => {
+            Animated.parallel([
+              Animated.timing(swipeY, {
+                toValue: SHEET_HEIGHT,
+                duration: 200,
+                useNativeDriver: true,
+              }),
+              Animated.timing(backdropOpacity, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
               if (onClose) {
                 onClose();
               }
@@ -255,21 +262,37 @@ const CommentsBottomSheet = ({
     }
   }, [visible, translateY, photoId, sheetHeight, backdropOpacity]);
 
+  const animateClose = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: SHEET_HEIGHT,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (onClose) {
+        onClose();
+      }
+    });
+  }, [backdropOpacity, translateY, onClose]);
+
   const handleBackdropPress = useCallback(() => {
     logger.debug('CommentsBottomSheet: Backdrop pressed, closing');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (onClose) {
-      onClose();
-    }
-  }, [onClose]);
+    animateClose();
+  }, [animateClose]);
 
   const handleClose = useCallback(() => {
     logger.debug('CommentsBottomSheet: Close button pressed');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (onClose) {
-      onClose();
-    }
-  }, [onClose]);
+    animateClose();
+  }, [animateClose]);
 
   /**
    * Handle comment submit.
@@ -690,12 +713,19 @@ const CommentsBottomSheet = ({
           // Close sheet entirely - use timing with easing for clean close (no bounce)
           // Note: swipeY reset happens in useEffect when visible becomes false
           if (onClose) {
-            Animated.timing(swipeY, {
-              toValue: SHEET_HEIGHT,
-              duration: 250,
-              easing: Easing.out(Easing.cubic),
-              useNativeDriver: true,
-            }).start(() => {
+            Animated.parallel([
+              Animated.timing(swipeY, {
+                toValue: SHEET_HEIGHT,
+                duration: 250,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+              }),
+              Animated.timing(backdropOpacity, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
               onClose();
             });
             logger.debug('CommentsBottomSheet: Closing via scroll pull-down');
