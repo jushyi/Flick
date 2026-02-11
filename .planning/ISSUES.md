@@ -16,6 +16,14 @@ Enhancements discovered during execution. Not critical - address in future phase
 
 ## Closed Enhancements
 
+### ISS-013: ProfileSetupScreen loses form data when returning from SongSearch
+
+- **Discovered:** Phase 48-01 verification (2026-02-11)
+- **Closed:** 2026-02-11
+- **Type:** Bug
+- **Resolution:** Fixed in Phase 48-01 by switching SongSearchScreen from `navigation.navigate(source, { selectedSong })` to callback pattern: source screens pass `onSongSelect` callback in route params, SongSearchScreen calls it then `navigation.goBack()`. This preserves the source screen's local state (form fields) since the component is never remounted. Updated both ProfileSetupScreen and ProfileScreen callers.
+- **Files modified:** `src/screens/SongSearchScreen.js`, `src/screens/ProfileSetupScreen.js`, `src/screens/ProfileScreen.js`
+
 ### ISS-004: Comments sheet closes when navigating to profile
 
 - **Discovered:** Phase 15.3 Plan 02 verification (2026-02-02)

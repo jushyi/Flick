@@ -807,6 +807,9 @@ const SelectsScreen = ({ navigation }) => {
           >
             {Array.from({ length: MAX_SELECTS }).map((_, index) => renderThumbnailSlot(index))}
           </ScrollView>
+          {/* Edge masks to hide horizontal scroll overflow while allowing vertical drag */}
+          <View style={styles.thumbnailMaskLeft} pointerEvents="none" />
+          <View style={styles.thumbnailMaskRight} pointerEvents="none" />
         </View>
 
         {/* Tutorial Hint - only show when there are photos to reorder */}
@@ -910,10 +913,13 @@ const styles = StyleSheet.create({
     zIndex: 1,
     overflow: 'visible',
   },
-  thumbnailScroll: {},
+  thumbnailScroll: {
+    overflow: 'visible',
+  },
   thumbnailContainer: {
     flexDirection: 'row',
     gap: THUMBNAIL_GAP,
+    overflow: 'visible',
   },
   thumbnailSlot: {
     width: THUMBNAIL_SIZE,
@@ -936,6 +942,24 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.text.primary,
     borderStyle: 'solid',
+  },
+  thumbnailMaskLeft: {
+    position: 'absolute',
+    left: -SCREEN_PADDING,
+    top: 0,
+    bottom: 0,
+    width: SCREEN_PADDING,
+    backgroundColor: colors.background.primary,
+    zIndex: 2,
+  },
+  thumbnailMaskRight: {
+    position: 'absolute',
+    right: -SCREEN_PADDING,
+    top: 0,
+    bottom: 0,
+    width: SCREEN_PADDING,
+    backgroundColor: colors.background.primary,
+    zIndex: 2,
   },
   thumbnailImage: {
     width: THUMBNAIL_SIZE,
