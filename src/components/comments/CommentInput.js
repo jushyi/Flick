@@ -29,6 +29,7 @@ import { uploadCommentImage } from '../../services/firebase/storageService';
 // Giphy SDK requires dev client build, not Expo Go
 import { openGifPicker, useGifSelection } from './GifPicker';
 import { styles } from '../../styles/CommentInput.styles';
+import MentionSuggestionsOverlay from './MentionSuggestionsOverlay';
 
 /**
  * CommentInput Component
@@ -39,6 +40,11 @@ import { styles } from '../../styles/CommentInput.styles';
  * @param {string} initialMention - @username to pre-fill in input when replying
  * @param {string} placeholder - Custom placeholder text
  * @param {boolean} autoFocus - Whether to auto-focus input
+ * @param {Array} mentionSuggestions - Array of suggestion objects for @-mention overlay
+ * @param {boolean} showMentionSuggestions - Whether to show the mention overlay
+ * @param {boolean} mentionSuggestionsLoading - Whether mention suggestions are loading
+ * @param {function} onTextChangeForMentions - Callback (text, cursorPosition) for mention detection
+ * @param {function} onMentionSelect - Callback (user) when a mention suggestion is selected
  * @param {ref} ref - Ref forwarded to TextInput for external focus control
  */
 const CommentInput = forwardRef(
@@ -50,6 +56,11 @@ const CommentInput = forwardRef(
       initialMention = null,
       placeholder = 'Add a comment...',
       autoFocus = false,
+      mentionSuggestions = [],
+      showMentionSuggestions = false,
+      mentionSuggestionsLoading = false,
+      onTextChangeForMentions,
+      onMentionSelect,
     },
     ref
   ) => {
@@ -58,6 +69,7 @@ const CommentInput = forwardRef(
     const [selectedMedia, setSelectedMedia] = useState(null); // { uri, type: 'image' | 'gif' }
     const [isUploading, setIsUploading] = useState(false);
     const inputRef = useRef(null);
+    const cursorPositionRef = useRef(0);
 
     // Pre-fill input with @mention when replying
     useEffect(() => {
@@ -97,10 +109,22 @@ const CommentInput = forwardRef(
         logger.debug('CommentInput: setMedia called via ref', { mediaType: media?.type });
         setSelectedMedia(media);
       },
+      setText: newText => {
+        logger.debug('CommentInput: setText called via ref', { textLength: newText?.length });
+        setText(newText);
+      },
     }));
 
-    const handleChangeText = useCallback(newText => {
-      setText(newText);
+    const handleChangeText = useCallback(
+      newText => {
+        setText(newText);
+        onTextChangeForMentions?.(newText, cursorPositionRef.current);
+      },
+      [onTextChangeForMentions]
+    );
+
+    const handleSelectionChange = useCallback(event => {
+      cursorPositionRef.current = event.nativeEvent.selection.start;
     }, []);
 
     const clearMedia = useCallback(() => {
@@ -214,6 +238,14 @@ const CommentInput = forwardRef(
 
     return (
       <View style={styles.container}>
+        {/* @-Mention Suggestions Overlay - positioned above the input */}
+        <MentionSuggestionsOverlay
+          suggestions={mentionSuggestions}
+          onSelect={onMentionSelect}
+          visible={showMentionSuggestions}
+          loading={mentionSuggestionsLoading}
+        />
+
         {/* Reply Banner - shown when replying to a comment */}
         {replyingTo && (
           <View style={styles.replyBanner}>
@@ -258,6 +290,7 @@ const CommentInput = forwardRef(
               placeholderTextColor={colors.text.tertiary}
               value={text}
               onChangeText={handleChangeText}
+              onSelectionChange={handleSelectionChange}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               multiline
