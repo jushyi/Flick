@@ -67,6 +67,7 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "@react-native-firebase/perf",
       "./plugins/withFirebaseFix",
       "@giphy/react-native-sdk",
       "expo-audio"
