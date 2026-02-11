@@ -784,9 +784,6 @@ const SelectsScreen = ({ navigation }) => {
         {/* Title Section */}
         <View style={styles.titleSection}>
           <Text style={styles.title}>Pick Your Highlights</Text>
-          <Text style={styles.subtitle}>
-            Choose up to {MAX_SELECTS} photos to highlight on your profile
-          </Text>
         </View>
 
         {/* Preview Area */}
@@ -874,21 +871,14 @@ const styles = StyleSheet.create({
   },
   titleSection: {
     paddingHorizontal: SCREEN_PADDING,
-    marginTop: 24,
-    marginBottom: 24,
+    marginTop: 16,
+    marginBottom: 16,
   },
   title: {
     fontSize: typography.size.xxxl,
     fontFamily: typography.fontFamily.display,
     textAlign: 'center',
     color: colors.text.primary,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
-    textAlign: 'center',
-    color: colors.text.secondary,
   },
   previewContainer: {
     alignItems: 'center',
@@ -924,13 +914,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     overflow: 'visible',
   },
-  thumbnailScroll: {
-    overflow: 'visible',
-  },
+  thumbnailScroll: {},
   thumbnailContainer: {
     flexDirection: 'row',
     gap: THUMBNAIL_GAP,
-    overflow: 'visible',
   },
   thumbnailSlot: {
     width: THUMBNAIL_SIZE,
@@ -971,7 +958,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     paddingHorizontal: SCREEN_PADDING,
-    paddingBottom: 24,
+    paddingBottom: 16,
     paddingTop: 8,
   },
   deleteBar: {
