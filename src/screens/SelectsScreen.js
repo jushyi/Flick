@@ -29,6 +29,8 @@ import { Button, StepIndicator } from '../components';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 // Enable LayoutAnimation on Android
@@ -853,9 +855,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingHorizontal: spacing.xs,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xxs,
   },
   backButton: {
     width: 44,
@@ -871,8 +873,8 @@ const styles = StyleSheet.create({
   },
   titleSection: {
     paddingHorizontal: SCREEN_PADDING,
-    marginTop: 16,
-    marginBottom: 16,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
   },
   title: {
     fontSize: typography.size.xxxl,
@@ -883,15 +885,15 @@ const styles = StyleSheet.create({
   previewContainer: {
     alignItems: 'center',
     paddingHorizontal: SCREEN_PADDING,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   previewTouchable: {
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.sm,
     overflow: 'hidden',
   },
   previewEmpty: {
     backgroundColor: colors.background.tertiary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.sm,
     borderWidth: 2,
     borderColor: colors.border.subtle,
     borderStyle: 'dashed',
@@ -902,14 +904,14 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
   previewImage: {
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.background.tertiary,
   },
   thumbnailSection: {
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
     marginHorizontal: SCREEN_PADDING,
     zIndex: 1,
     overflow: 'visible',
@@ -922,7 +924,7 @@ const styles = StyleSheet.create({
   thumbnailSlot: {
     width: THUMBNAIL_SIZE,
     height: THUMBNAIL_SIZE,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.xs,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -944,12 +946,12 @@ const styles = StyleSheet.create({
   thumbnailImage: {
     width: THUMBNAIL_SIZE,
     height: THUMBNAIL_SIZE,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.xs,
   },
   thumbnailTouchable: {
     width: '100%',
     height: '100%',
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.xs,
     overflow: 'hidden',
   },
   spacer: {
@@ -958,14 +960,14 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     paddingHorizontal: SCREEN_PADDING,
-    paddingBottom: 16,
-    paddingTop: 8,
+    paddingBottom: spacing.md,
+    paddingTop: spacing.xs,
   },
   deleteBar: {
     height: DELETE_BAR_HEIGHT,
     backgroundColor: colors.status.danger,
     opacity: 0.9,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.xs,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -975,7 +977,7 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   deleteBarIcon: {
-    marginRight: 8,
+    marginRight: spacing.xs,
   },
   deleteBarText: {
     color: colors.text.primary,
@@ -989,16 +991,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.overlay.dark,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
   },
   tutorialContainer: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
-    padding: 24,
-    marginHorizontal: 40,
+    borderRadius: layout.borderRadius.sm,
+    padding: spacing.lg,
+    marginHorizontal: spacing.xxl,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border.subtle,
@@ -1006,28 +1008,28 @@ const styles = StyleSheet.create({
   tutorialIconRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   tutorialSwapIcon: {
-    marginLeft: 8,
+    marginLeft: spacing.xs,
   },
   tutorialTitle: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   tutorialSubtitle: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginBottom: 20,
+    marginBottom: spacing.md,
   },
   tutorialButton: {
     backgroundColor: colors.brand.purple,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 2,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+    borderRadius: layout.borderRadius.xs,
   },
   tutorialButtonText: {
     color: colors.text.primary,
