@@ -171,7 +171,7 @@ Plans:
 
 Plans:
 
-- [ ] 47.1-01: Cloud Function Backend (mutual friends + reply @mention notifications)
+- [x] 47.1-01: Cloud Function Backend (mutual friends + reply @mention notifications)
 - [ ] 47.1-02: Autocomplete UI + Integration (service, hook, overlay, input, wiring)
 
 #### Phase 48: UI/UX Consistency Audit
@@ -256,7 +256,7 @@ Plans:
 | 46.1 Other Users Albums Fix    | v1.0.0    | 1/1   | Complete    | 2026-02-10 |
 | 46.2 Album Viewer Nav Optimism | v1.0.0    | 1/1   | Complete    | 2026-02-11 |
 | 47. Firebase Perf Monitoring   | v1.0.0    | 3/3   | Complete    | 2026-02-11 |
-| 47.1 Comment @-Tagging         | v1.0.0    | 0/?   | Not started | -          |
+| 47.1 Comment @-Tagging         | v1.0.0    | 1/2   | In progress | -          |
 | 48. UI/UX Consistency Audit    | v1.0.0    | 0/?   | Not started | -          |
 | 49. Automated Test Suite       | v1.0.0    | 0/?   | Not started | -          |
 | 50. CI/CD Pipeline             | v1.0.0    | 0/?   | Not started | -          |

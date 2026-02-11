@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 47.1 of 53 (Comment @-Tagging for Mutual Friends)
-Plan: 0 of 2 in current phase
-Status: Planning complete, ready for execution
-Last activity: 2026-02-11 — Created 47.1 phase plans
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-11 — Completed 47.1-01-PLAN.md
 
 Progress: █████████░ 10/10 (v1.0.0 phases)
 
@@ -42,11 +42,12 @@ Progress: █████████░ 10/10 (v1.0.0 phases)
 
 See PROJECT.md Key Decisions table for full history.
 
-| Phase | Decision                                         | Rationale                                                       |
-| ----- | ------------------------------------------------ | --------------------------------------------------------------- |
-| 46.1  | OtherUserProfile card instead of fullScreenModal | fullScreenModal prevents child card screens from pushing on iOS |
-| 47    | Custom code traces, not startScreenTrace()       | startScreenTrace() crashes on iOS                               |
-| 47    | **DEV** guard skips trace creation entirely      | Prevent polluting production metrics with dev data              |
+| Phase | Decision                                          | Rationale                                                       |
+| ----- | ------------------------------------------------- | --------------------------------------------------------------- |
+| 46.1  | OtherUserProfile card instead of fullScreenModal  | fullScreenModal prevents child card screens from pushing on iOS |
+| 47    | Custom code traces, not startScreenTrace()        | startScreenTrace() crashes on iOS                               |
+| 47    | **DEV** guard skips trace creation entirely       | Prevent polluting production metrics with dev data              |
+| 47.1  | Direct set intersection for mutual friend tagging | Simpler/cheaper than friends-of-friends graph traversal         |
 
 ### Deferred Issues
 
@@ -70,5 +71,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Created 47.1 phase plans (ready for execution)
-Resume file: .planning/phases/47.1-comment-at-tagging/47.1-01-PLAN.md
+Stopped at: Completed 47.1-01-PLAN.md (Cloud Function Backend)
+Resume file: .planning/phases/47.1-comment-at-tagging/47.1-02-PLAN.md
