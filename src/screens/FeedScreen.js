@@ -65,6 +65,10 @@ const FeedScreen = () => {
   // Track current feed photo for reaction updates (ref to avoid re-renders)
   const currentFeedPhotoRef = useRef(null);
 
+  // Ref for scrolling FlatList to top
+  const flatListRef = useRef(null);
+  const scrollOffsetRef = useRef(0);
+
   // Animated scroll value for header hide/show
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -361,6 +365,28 @@ const FeedScreen = () => {
     // Refresh all data sources in parallel
     await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories()]);
   };
+
+  // Track scroll offset on the JS side for tab-press logic
+  useEffect(() => {
+    const id = scrollY.addListener(({ value }) => {
+      scrollOffsetRef.current = value;
+    });
+    return () => scrollY.removeListener(id);
+  }, [scrollY]);
+
+  // Tap Feed tab: scroll to top if scrolled down, refresh if already at top
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress', e => {
+      if (navigation.isFocused()) {
+        if (scrollOffsetRef.current > 5) {
+          flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+        } else {
+          handleRefresh();
+        }
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleAvatarPress = (userId, username) => {
     logger.debug('FeedScreen: Avatar pressed, navigating to profile', { userId, username });
@@ -1139,6 +1165,7 @@ const FeedScreen = () => {
       ) : (
         <Animated.View style={[styles.contentContainer, { opacity: contentOpacity }]}>
           <Animated.FlatList
+            ref={flatListRef}
             data={photos.length > 0 ? photos : archivePhotos}
             renderItem={renderFeedItem}
             keyExtractor={item => item.id}
