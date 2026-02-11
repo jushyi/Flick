@@ -24,6 +24,7 @@ import {
   Timestamp,
 } from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
+import { withTrace } from './performanceService';
 
 const db = getFirestore();
 
@@ -189,45 +190,47 @@ export const checkDailyLimit = async userId => {
  * @returns {Promise<{success: boolean, profile?: object, error?: string}>}
  */
 export const getUserProfile = async userId => {
-  try {
-    if (!userId) {
-      return { success: false, error: 'Invalid user ID' };
+  return withTrace('profile/load', async () => {
+    try {
+      if (!userId) {
+        return { success: false, error: 'Invalid user ID' };
+      }
+
+      const userRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userRef);
+
+      if (!userDocSnap.exists()) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const userData = userDocSnap.data();
+
+      // Return only public profile fields
+      // DO NOT return sensitive data (email, phone, etc.)
+      const profile = {
+        userId: userDocSnap.id,
+        displayName: userData.displayName || null,
+        username: userData.username || null,
+        bio: userData.bio || null,
+        photoURL: userData.photoURL || null,
+        profilePhotoURL: userData.profilePhotoURL || null,
+        selects: userData.selects || [],
+        profileSong: userData.profileSong || null,
+        lastUsernameChange: userData.lastUsernameChange || null,
+      };
+
+      logger.info('UserService.getUserProfile: Fetched profile', {
+        userId,
+        hasDisplayName: !!profile.displayName,
+        hasUsername: !!profile.username,
+      });
+
+      return { success: true, profile };
+    } catch (error) {
+      logger.error('UserService.getUserProfile: Error', error);
+      return { success: false, error: error.message };
     }
-
-    const userRef = doc(db, 'users', userId);
-    const userDocSnap = await getDoc(userRef);
-
-    if (!userDocSnap.exists()) {
-      return { success: false, error: 'User not found' };
-    }
-
-    const userData = userDocSnap.data();
-
-    // Return only public profile fields
-    // DO NOT return sensitive data (email, phone, etc.)
-    const profile = {
-      userId: userDocSnap.id,
-      displayName: userData.displayName || null,
-      username: userData.username || null,
-      bio: userData.bio || null,
-      photoURL: userData.photoURL || null,
-      profilePhotoURL: userData.profilePhotoURL || null,
-      selects: userData.selects || [],
-      profileSong: userData.profileSong || null,
-      lastUsernameChange: userData.lastUsernameChange || null,
-    };
-
-    logger.info('UserService.getUserProfile: Fetched profile', {
-      userId,
-      hasDisplayName: !!profile.displayName,
-      hasUsername: !!profile.username,
-    });
-
-    return { success: true, profile };
-  } catch (error) {
-    logger.error('UserService.getUserProfile: Error', error);
-    return { success: false, error: error.message };
-  }
+  });
 };
 
 /**
@@ -268,50 +271,52 @@ export const canChangeUsername = lastUsernameChange => {
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const updateUserProfile = async (userId, updates, currentUsername) => {
-  try {
-    if (!userId) {
-      return { success: false, error: 'Invalid user ID' };
-    }
-
-    logger.info('UserService.updateUserProfile: Starting', {
-      userId,
-      updatingUsername: !!updates.username && updates.username !== currentUsername,
-    });
-
-    const userRef = doc(db, 'users', userId);
-    const updateData = { ...updates };
-
-    if (updates.username && updates.username !== currentUsername) {
-      const normalizedNewUsername = updates.username.toLowerCase().trim();
-      const normalizedCurrentUsername = currentUsername?.toLowerCase().trim();
-
-      if (normalizedNewUsername !== normalizedCurrentUsername) {
-        const availabilityResult = await checkUsernameAvailability(normalizedNewUsername, userId);
-        if (!availabilityResult.success) {
-          return { success: false, error: 'Failed to check username availability' };
-        }
-        if (!availabilityResult.available) {
-          return { success: false, error: 'Username is already taken' };
-        }
-
-        updateData.lastUsernameChange = Timestamp.now();
-        updateData.username = normalizedNewUsername;
-
-        logger.info('UserService.updateUserProfile: Username change detected', {
-          oldUsername: normalizedCurrentUsername,
-          newUsername: normalizedNewUsername,
-        });
+  return withTrace('profile/update', async () => {
+    try {
+      if (!userId) {
+        return { success: false, error: 'Invalid user ID' };
       }
+
+      logger.info('UserService.updateUserProfile: Starting', {
+        userId,
+        updatingUsername: !!updates.username && updates.username !== currentUsername,
+      });
+
+      const userRef = doc(db, 'users', userId);
+      const updateData = { ...updates };
+
+      if (updates.username && updates.username !== currentUsername) {
+        const normalizedNewUsername = updates.username.toLowerCase().trim();
+        const normalizedCurrentUsername = currentUsername?.toLowerCase().trim();
+
+        if (normalizedNewUsername !== normalizedCurrentUsername) {
+          const availabilityResult = await checkUsernameAvailability(normalizedNewUsername, userId);
+          if (!availabilityResult.success) {
+            return { success: false, error: 'Failed to check username availability' };
+          }
+          if (!availabilityResult.available) {
+            return { success: false, error: 'Username is already taken' };
+          }
+
+          updateData.lastUsernameChange = Timestamp.now();
+          updateData.username = normalizedNewUsername;
+
+          logger.info('UserService.updateUserProfile: Username change detected', {
+            oldUsername: normalizedCurrentUsername,
+            newUsername: normalizedNewUsername,
+          });
+        }
+      }
+
+      await updateDoc(userRef, updateData);
+
+      logger.info('UserService.updateUserProfile: Success', { userId });
+      return { success: true };
+    } catch (error) {
+      logger.error('UserService.updateUserProfile: Error', error);
+      return { success: false, error: error.message };
     }
-
-    await updateDoc(userRef, updateData);
-
-    logger.info('UserService.updateUserProfile: Success', { userId });
-    return { success: true };
-  } catch (error) {
-    logger.error('UserService.updateUserProfile: Error', error);
-    return { success: false, error: error.message };
-  }
+  });
 };
 
 /**

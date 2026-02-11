@@ -23,6 +23,7 @@ import {
   Timestamp,
 } from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
+import { withTrace } from './performanceService';
 
 const db = getFirestore();
 const EXPIRY_HOURS = 24;
@@ -94,35 +95,37 @@ export const markPhotosAsViewedInFirestore = async (userId, photoIds) => {
     return { success: true }; // No-op is success
   }
 
-  try {
-    logger.debug('viewedStoriesService.markPhotosAsViewed: Marking photos as viewed', {
-      userId,
-      count: photoIds.length,
-    });
-
-    const viewedCollection = getViewedPhotosCollection(userId);
-    const batch = writeBatch(db);
-
-    photoIds.forEach(photoId => {
-      const photoRef = doc(viewedCollection, photoId);
-      batch.set(photoRef, {
-        viewedAt: serverTimestamp(),
+  return withTrace('stories/mark_viewed', async () => {
+    try {
+      logger.debug('viewedStoriesService.markPhotosAsViewed: Marking photos as viewed', {
+        userId,
+        count: photoIds.length,
       });
-    });
 
-    await batch.commit();
+      const viewedCollection = getViewedPhotosCollection(userId);
+      const batch = writeBatch(db);
 
-    logger.info('viewedStoriesService.markPhotosAsViewed: Photos marked as viewed', {
-      userId,
-      count: photoIds.length,
-    });
+      photoIds.forEach(photoId => {
+        const photoRef = doc(viewedCollection, photoId);
+        batch.set(photoRef, {
+          viewedAt: serverTimestamp(),
+        });
+      });
 
-    return { success: true };
-  } catch (error) {
-    logger.error('viewedStoriesService.markPhotosAsViewed: Failed', {
-      userId,
-      error: error.message,
-    });
-    return { success: false, error: error.message };
-  }
+      await batch.commit();
+
+      logger.info('viewedStoriesService.markPhotosAsViewed: Photos marked as viewed', {
+        userId,
+        count: photoIds.length,
+      });
+
+      return { success: true };
+    } catch (error) {
+      logger.error('viewedStoriesService.markPhotosAsViewed: Failed', {
+        userId,
+        error: error.message,
+      });
+      return { success: false, error: error.message };
+    }
+  });
 };

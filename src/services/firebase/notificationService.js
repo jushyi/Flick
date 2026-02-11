@@ -30,6 +30,7 @@ import {
 } from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
 import { secureStorage, STORAGE_KEYS } from '../secureStorageService';
+import { withTrace } from './performanceService';
 
 const db = getFirestore();
 
@@ -149,29 +150,31 @@ export const getNotificationToken = async () => {
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const storeNotificationToken = async (userId, token) => {
-  try {
-    // Use React Native Firebase Firestore directly (shares auth state with RN Firebase Auth)
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      fcmToken: token,
-      updatedAt: serverTimestamp(),
-    });
+  return withTrace('notif/register_token', async () => {
+    try {
+      // Use React Native Firebase Firestore directly (shares auth state with RN Firebase Auth)
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        fcmToken: token,
+        updatedAt: serverTimestamp(),
+      });
 
-    logger.info('Notification token stored in Firestore', { userId });
+      logger.info('Notification token stored in Firestore', { userId });
 
-    // Also store locally in SecureStore for offline access and logout cleanup
-    const localStored = await secureStorage.setItem(STORAGE_KEYS.FCM_TOKEN, token);
-    if (localStored) {
-      logger.info('Notification token stored in SecureStore', { userId });
-    } else {
-      logger.warn('Failed to store notification token in SecureStore', { userId });
+      // Also store locally in SecureStore for offline access and logout cleanup
+      const localStored = await secureStorage.setItem(STORAGE_KEYS.FCM_TOKEN, token);
+      if (localStored) {
+        logger.info('Notification token stored in SecureStore', { userId });
+      } else {
+        logger.warn('Failed to store notification token in SecureStore', { userId });
+      }
+
+      return { success: true };
+    } catch (error) {
+      logger.error('Error storing notification token', { error: error.message });
+      return { success: false, error: error.message };
     }
-
-    return { success: true };
-  } catch (error) {
-    logger.error('Error storing notification token', { error: error.message });
-    return { success: false, error: error.message };
-  }
+  });
 };
 
 /**

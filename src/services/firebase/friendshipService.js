@@ -16,6 +16,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
 import logger from '../../utils/logger';
+import { withTrace } from './performanceService';
 
 // Initialize Firestore once at module level
 const db = getFirestore();
@@ -61,48 +62,50 @@ export const generateFriendshipId = (userId1, userId2) => {
  * @returns {Promise<{success: boolean, friendshipId?: string, error?: string}>}
  */
 export const sendFriendRequest = async (fromUserId, toUserId) => {
-  try {
-    // Validation
-    if (!fromUserId || !toUserId) {
-      return { success: false, error: 'Invalid user IDs' };
-    }
-
-    if (fromUserId === toUserId) {
-      return { success: false, error: 'Cannot send friend request to yourself' };
-    }
-
-    // Check if friendship already exists
-    const friendshipId = generateFriendshipId(fromUserId, toUserId);
-    const friendshipRef = doc(db, 'friendships', friendshipId);
-    const friendshipDocSnap = await getDoc(friendshipRef);
-
-    if (friendshipDocSnap.exists()) {
-      const existingStatus = friendshipDocSnap.data().status;
-      if (existingStatus === 'accepted') {
-        return { success: false, error: 'Already friends' };
-      } else if (existingStatus === 'pending') {
-        return { success: false, error: 'Friend request already sent' };
+  return withTrace('social/send_request', async () => {
+    try {
+      // Validation
+      if (!fromUserId || !toUserId) {
+        return { success: false, error: 'Invalid user IDs' };
       }
+
+      if (fromUserId === toUserId) {
+        return { success: false, error: 'Cannot send friend request to yourself' };
+      }
+
+      // Check if friendship already exists
+      const friendshipId = generateFriendshipId(fromUserId, toUserId);
+      const friendshipRef = doc(db, 'friendships', friendshipId);
+      const friendshipDocSnap = await getDoc(friendshipRef);
+
+      if (friendshipDocSnap.exists()) {
+        const existingStatus = friendshipDocSnap.data().status;
+        if (existingStatus === 'accepted') {
+          return { success: false, error: 'Already friends' };
+        } else if (existingStatus === 'pending') {
+          return { success: false, error: 'Friend request already sent' };
+        }
+      }
+
+      // Determine user1Id and user2Id (alphabetical order)
+      const [user1Id, user2Id] = [fromUserId, toUserId].sort();
+
+      // Create friendship document
+      await setDoc(friendshipRef, {
+        user1Id,
+        user2Id,
+        status: 'pending',
+        requestedBy: fromUserId,
+        createdAt: serverTimestamp(),
+        acceptedAt: null,
+      });
+
+      return { success: true, friendshipId };
+    } catch (error) {
+      logger.error('Error sending friend request', error);
+      return { success: false, error: error.message };
     }
-
-    // Determine user1Id and user2Id (alphabetical order)
-    const [user1Id, user2Id] = [fromUserId, toUserId].sort();
-
-    // Create friendship document
-    await setDoc(friendshipRef, {
-      user1Id,
-      user2Id,
-      status: 'pending',
-      requestedBy: fromUserId,
-      createdAt: serverTimestamp(),
-      acceptedAt: null,
-    });
-
-    return { success: true, friendshipId };
-  } catch (error) {
-    logger.error('Error sending friend request', error);
-    return { success: false, error: error.message };
-  }
+  });
 };
 
 /**
@@ -114,46 +117,48 @@ export const sendFriendRequest = async (fromUserId, toUserId) => {
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const acceptFriendRequest = async (friendshipId, userId) => {
-  try {
-    if (!friendshipId || !userId) {
-      return { success: false, error: 'Invalid parameters' };
+  return withTrace('social/accept_request', async () => {
+    try {
+      if (!friendshipId || !userId) {
+        return { success: false, error: 'Invalid parameters' };
+      }
+
+      const friendshipRef = doc(db, 'friendships', friendshipId);
+      const friendshipDocSnap = await getDoc(friendshipRef);
+
+      if (!friendshipDocSnap.exists()) {
+        return { success: false, error: 'Friend request not found' };
+      }
+
+      const friendshipData = friendshipDocSnap.data();
+
+      // Verify user is the recipient (not the sender)
+      if (friendshipData.requestedBy === userId) {
+        return { success: false, error: 'Cannot accept your own friend request' };
+      }
+
+      // Verify friendship involves this user
+      if (friendshipData.user1Id !== userId && friendshipData.user2Id !== userId) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      // Verify status is pending
+      if (friendshipData.status !== 'pending') {
+        return { success: false, error: 'Friend request already processed' };
+      }
+
+      // Update to accepted
+      await updateDoc(friendshipRef, {
+        status: 'accepted',
+        acceptedAt: serverTimestamp(),
+      });
+
+      return { success: true };
+    } catch (error) {
+      logger.error('Error accepting friend request', error);
+      return { success: false, error: error.message };
     }
-
-    const friendshipRef = doc(db, 'friendships', friendshipId);
-    const friendshipDocSnap = await getDoc(friendshipRef);
-
-    if (!friendshipDocSnap.exists()) {
-      return { success: false, error: 'Friend request not found' };
-    }
-
-    const friendshipData = friendshipDocSnap.data();
-
-    // Verify user is the recipient (not the sender)
-    if (friendshipData.requestedBy === userId) {
-      return { success: false, error: 'Cannot accept your own friend request' };
-    }
-
-    // Verify friendship involves this user
-    if (friendshipData.user1Id !== userId && friendshipData.user2Id !== userId) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    // Verify status is pending
-    if (friendshipData.status !== 'pending') {
-      return { success: false, error: 'Friend request already processed' };
-    }
-
-    // Update to accepted
-    await updateDoc(friendshipRef, {
-      status: 'accepted',
-      acceptedAt: serverTimestamp(),
-    });
-
-    return { success: true };
-  } catch (error) {
-    logger.error('Error accepting friend request', error);
-    return { success: false, error: error.message };
-  }
+  });
 };
 
 /**
@@ -234,43 +239,47 @@ export const removeFriend = async (userId1, userId2) => {
  * @returns {Promise<{success: boolean, friendships?: Array, error?: string}>}
  */
 export const getFriendships = async userId => {
-  try {
-    if (!userId) {
-      return { success: false, error: 'Invalid user ID' };
-    }
-
-    // Query friendships where user is either user1Id or user2Id using modular or() function
-    const q = query(
-      collection(db, 'friendships'),
-      or(where('user1Id', '==', userId), where('user2Id', '==', userId)),
-      limit(500) // Practical bound on total friendships (all statuses)
-    );
-    const querySnapshot = await getDocs(q);
-
-    // Filter for accepted status (client-side since we need OR query for users)
-    const friendships = [];
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.status === 'accepted') {
-        friendships.push({
-          id: doc.id,
-          ...data,
-        });
+  return withTrace('social/load_friends', async trace => {
+    try {
+      if (!userId) {
+        return { success: false, error: 'Invalid user ID' };
       }
-    });
 
-    // Sort by acceptedAt (most recent first)
-    friendships.sort((a, b) => {
-      const aTime = a.acceptedAt?.toMillis() || 0;
-      const bTime = b.acceptedAt?.toMillis() || 0;
-      return bTime - aTime;
-    });
+      // Query friendships where user is either user1Id or user2Id using modular or() function
+      const q = query(
+        collection(db, 'friendships'),
+        or(where('user1Id', '==', userId), where('user2Id', '==', userId)),
+        limit(500) // Practical bound on total friendships (all statuses)
+      );
+      const querySnapshot = await getDocs(q);
 
-    return { success: true, friendships };
-  } catch (error) {
-    logger.error('Error getting friendships', error);
-    return { success: false, error: error.message };
-  }
+      // Filter for accepted status (client-side since we need OR query for users)
+      const friendships = [];
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === 'accepted') {
+          friendships.push({
+            id: doc.id,
+            ...data,
+          });
+        }
+      });
+
+      // Sort by acceptedAt (most recent first)
+      friendships.sort((a, b) => {
+        const aTime = a.acceptedAt?.toMillis() || 0;
+        const bTime = b.acceptedAt?.toMillis() || 0;
+        return bTime - aTime;
+      });
+
+      trace.putMetric('friend_count', friendships.length);
+
+      return { success: true, friendships };
+    } catch (error) {
+      logger.error('Error getting friendships', error);
+      return { success: false, error: error.message };
+    }
+  });
 };
 
 /**
