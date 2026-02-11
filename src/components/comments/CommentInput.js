@@ -78,6 +78,7 @@ const CommentInput = forwardRef(
         logger.debug('CommentInput: Pre-filling with @mention', { initialMention });
         const mentionText = `@${initialMention} `;
         prevTextLengthRef.current = mentionText.length;
+        cursorPositionRef.current = mentionText.length;
         setText(mentionText);
       }
     }, [initialMention]);

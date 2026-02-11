@@ -142,8 +142,7 @@ const PhotoDetailScreen = () => {
   const handleFriendTransition = useCallback(() => {
     if (isTransitioningRef.current) return false;
     if (!contextHasNextFriend) {
-      handleClose();
-      return true;
+      return false; // Let hook handle animated close
     }
 
     // Mark transitioning synchronously so snapshotRef freezes on next render
@@ -159,8 +158,8 @@ const PhotoDetailScreen = () => {
 
     Animated.timing(cubeProgress, {
       toValue: 1,
-      duration: 250,
-      easing: Easing.out(Easing.cubic),
+      duration: 350,
+      easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
     }).start(() => {
       isTransitioningRef.current = false;
@@ -168,7 +167,7 @@ const PhotoDetailScreen = () => {
     });
 
     return true;
-  }, [contextHasNextFriend, handleRequestNextFriend, cubeProgress, handleClose]);
+  }, [contextHasNextFriend, handleRequestNextFriend, cubeProgress]);
 
   /**
    * Handle backward friend-to-friend transition with reverse 3D cube animation
@@ -177,8 +176,7 @@ const PhotoDetailScreen = () => {
   const handlePreviousFriendTransition = useCallback(() => {
     if (isTransitioningRef.current) return false;
     if (!contextHasPreviousFriend) {
-      handleClose();
-      return true;
+      return false; // Let hook handle animated close
     }
 
     isTransitioningRef.current = true;
@@ -190,8 +188,8 @@ const PhotoDetailScreen = () => {
 
     Animated.timing(cubeProgress, {
       toValue: 1,
-      duration: 250,
-      easing: Easing.out(Easing.cubic),
+      duration: 350,
+      easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
     }).start(() => {
       isTransitioningRef.current = false;
@@ -200,7 +198,7 @@ const PhotoDetailScreen = () => {
     });
 
     return true;
-  }, [contextHasPreviousFriend, handleRequestPreviousFriend, cubeProgress, handleClose]);
+  }, [contextHasPreviousFriend, handleRequestPreviousFriend, cubeProgress]);
 
   /**
    * Prepare for an interactive horizontal swipe transition.
@@ -622,11 +620,10 @@ const PhotoDetailScreen = () => {
       />
 
       {/* Expand/collapse wrapper - scales + translates content from/to source card */}
-      {/* overflow: visible prevents 3D perspective clipping on cube rotation edges */}
       <Animated.View
         style={{
           flex: 1,
-          overflow: 'visible',
+          overflow: 'hidden',
           opacity,
           transform: [
             { translateX: expandTranslateX },

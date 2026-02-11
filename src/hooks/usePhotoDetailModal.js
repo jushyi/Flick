@@ -445,41 +445,6 @@ export const usePhotoDetailModal = ({
   }, [mode, currentIndex, photos, onPhotoChange, onFriendTransition]);
 
   /**
-   * Handle tap navigation on photo area (stories mode only)
-   * Left 30%: previous (or close if first)
-   * Right 30%: next (or close if last)
-   * Center 40%: no action
-   */
-  const handleTapNavigation = useCallback(
-    event => {
-      if (mode !== 'stories') return;
-
-      const { locationX } = event.nativeEvent;
-
-      if (locationX < SCREEN_WIDTH * 0.3) {
-        // Left tap - previous photo, or previous friend if at first photo
-        if (!goPrev()) {
-          // At first photo - try going to previous friend
-          if (onPreviousFriendTransition) {
-            const transitioned = onPreviousFriendTransition();
-            if (transitioned) {
-              return;
-            }
-          }
-          onClose();
-        }
-      } else if (locationX > SCREEN_WIDTH * 0.7) {
-        // Right tap - next
-        if (!goNext()) {
-          onClose();
-        }
-      }
-      // Center 40% - no action (future: pause)
-    },
-    [mode, goPrev, goNext, onClose, onPreviousFriendTransition]
-  );
-
-  /**
    * Close modal with animation
    * Two-phase if sourceRect exists: settle (soft lock) → suck-back to source
    * Fallback: simple slide-down + fade
@@ -558,6 +523,41 @@ export const usePhotoDetailModal = ({
       resetAll();
     });
   }, [translateY, opacity, openProgress, dismissScale, suckTranslateX, onClose]);
+
+  /**
+   * Handle tap navigation on photo area (stories mode only)
+   * Left 30%: previous (or close if first)
+   * Right 30%: next (or close if last)
+   * Center 40%: no action
+   */
+  const handleTapNavigation = useCallback(
+    event => {
+      if (mode !== 'stories') return;
+
+      const { locationX } = event.nativeEvent;
+
+      if (locationX < SCREEN_WIDTH * 0.3) {
+        // Left tap - previous photo, or previous friend if at first photo
+        if (!goPrev()) {
+          // At first photo - try going to previous friend
+          if (onPreviousFriendTransition) {
+            const transitioned = onPreviousFriendTransition();
+            if (transitioned) {
+              return;
+            }
+          }
+          closeWithAnimation();
+        }
+      } else if (locationX > SCREEN_WIDTH * 0.7) {
+        // Right tap - next
+        if (!goNext()) {
+          closeWithAnimation();
+        }
+      }
+      // Center 40% - no action (future: pause)
+    },
+    [mode, goPrev, goNext, closeWithAnimation, onPreviousFriendTransition]
+  );
 
   /**
    * Spring back to original position
