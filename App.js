@@ -25,6 +25,7 @@ import {
 } from './src/services/firebase/darkroomService';
 import { revealPhotos } from './src/services/firebase/photoService';
 import { initializeGiphy } from './src/components/comments/GifPicker';
+import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
 import logger from './src/utils/logger';
 import { GIPHY_API_KEY } from '@env';
 
@@ -35,6 +36,10 @@ SplashScreen.preventAutoHideAsync();
 // Initialize Giphy SDK for GIF picker functionality
 // Get your free API key at https://developers.giphy.com/
 initializeGiphy(GIPHY_API_KEY);
+
+// Initialize Firebase Performance Monitoring
+// Disables collection in __DEV__ to prevent polluting production metrics
+initPerformanceMonitoring();
 
 export default function App() {
   const notificationListener = useRef();

@@ -87,3 +87,5 @@ export {
 } from './blockService';
 
 export { submitReport, REPORT_REASONS } from './reportService';
+
+export { initPerformanceMonitoring, withTrace } from './performanceService';
