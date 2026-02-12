@@ -1,0 +1,5 @@
+# Friend Request E2E Flow
+# Placeholder — actual flow will be implemented in 49-08
+appId: com.spoodsjs.rewind
+---
+- launchApp

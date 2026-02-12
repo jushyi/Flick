@@ -1,0 +1,4 @@
+# Phone Login E2E Flow (placeholder — will be populated in Task 2)
+appId: com.spoodsjs.rewind
+---
+- launchApp
