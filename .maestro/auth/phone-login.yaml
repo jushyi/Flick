@@ -1,4 +1,30 @@
-# Phone Login E2E Flow (placeholder — will be populated in Task 2)
+# Phone Login E2E Flow
+# Prerequisites: Firebase test phone number +16505553434 with code 123456
+# configured in Firebase Console > Authentication > Phone > Test phone numbers
 appId: com.spoodsjs.rewind
 ---
-- launchApp
+- launchApp:
+    clearState: true
+
+# Enter phone number on PhoneInputScreen
+- tapOn:
+    id: "phone-input"
+- inputText: "6505553434"
+- tapOn:
+    id: "phone-continue-button"
+
+# Wait for VerificationScreen to appear
+- assertVisible:
+    id: "verification-code-input"
+    timeout: 10000
+
+# Enter the 6-digit test verification code
+- tapOn:
+    id: "verification-code-input"
+- inputText: "123456"
+
+# AuthCodeInput auto-submits on 6 digits via onComplete
+# But the verify button is also available as backup
+- assertNotVisible:
+    text: "Verify your number"
+    timeout: 15000

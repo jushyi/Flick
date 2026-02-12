@@ -220,6 +220,7 @@ const PhoneInputScreen = ({ navigation }) => {
                     autoCorrect={false}
                     error={error}
                     style={styles.phoneInput}
+                    testID="phone-input"
                   />
                 </View>
               </Animated.View>
@@ -231,6 +232,7 @@ const PhoneInputScreen = ({ navigation }) => {
                 onPress={handleSendCode}
                 loading={loading}
                 disabled={loading || !phoneNumber.trim()}
+                testID="phone-continue-button"
               />
             </View>
           </View>

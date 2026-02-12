@@ -122,6 +122,7 @@ const NotificationPermissionScreen = ({ navigation }) => {
             onPress={handleEnable}
             activeOpacity={0.7}
             disabled={enabling}
+            testID="notifications-enable-button"
           >
             {enabling ? (
               <PixelSpinner size="small" color={colors.text.primary} />
@@ -134,6 +135,7 @@ const NotificationPermissionScreen = ({ navigation }) => {
             onPress={handleSkip}
             activeOpacity={0.7}
             disabled={enabling}
+            testID="notifications-skip-button"
           >
             <Text style={styles.skipButtonText}>Maybe Later</Text>
           </TouchableOpacity>

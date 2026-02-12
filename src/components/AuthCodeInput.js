@@ -18,6 +18,7 @@ const AuthCodeInput = ({
   error = false,
   disabled = false,
   autoFocus = false,
+  testID,
 }) => {
   const inputRef = useRef(null);
 
@@ -63,7 +64,7 @@ const AuthCodeInput = ({
   };
 
   return (
-    <Pressable style={styles.container} onPress={handlePress}>
+    <Pressable style={styles.container} onPress={handlePress} testID={testID}>
       <View style={styles.boxesContainer}>{renderBoxes()}</View>
       <TextInput
         ref={inputRef}

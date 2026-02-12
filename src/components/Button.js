@@ -15,6 +15,7 @@ const Button = ({
   disabled = false,
   loading = false,
   style,
+  testID,
 }) => {
   const getButtonStyle = () => {
     switch (variant) {
@@ -52,6 +53,7 @@ const Button = ({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
+      testID={testID}
     >
       {loading ? (
         <PixelSpinner color={colors.text.primary} />

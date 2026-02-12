@@ -125,7 +125,12 @@ const ContactsSyncScreen = ({ navigation }) => {
         >
           <Text style={styles.syncButtonText}>Sync Contacts</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.skipButton}
+          onPress={handleSkip}
+          activeOpacity={0.7}
+          testID="contacts-skip-button"
+        >
           <Text style={styles.skipButtonText}>Skip for now</Text>
         </TouchableOpacity>
       </View>

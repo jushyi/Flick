@@ -366,6 +366,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
                 error={errors.displayName}
                 maxLength={24}
                 showCharacterCount={true}
+                testID="profile-display-name-input"
               />
 
               <Input
@@ -385,6 +386,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
                 }
                 maxLength={24}
                 showCharacterCount={true}
+                testID="profile-username-input"
               />
 
               <Input
@@ -426,6 +428,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
                 onPress={handleNextStep}
                 loading={uploading}
                 style={styles.nextButton}
+                testID="profile-next-button"
               />
             </View>
           </View>

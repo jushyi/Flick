@@ -830,6 +830,7 @@ const SelectsScreen = ({ navigation }) => {
               variant="primary"
               onPress={handleComplete}
               loading={uploading}
+              testID="selects-complete-button"
             />
           )}
         </View>

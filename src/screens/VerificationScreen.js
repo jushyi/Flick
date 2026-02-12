@@ -193,6 +193,7 @@ const VerificationScreen = ({ navigation, route }) => {
               error={!!error}
               disabled={loading || retryDelay > 0}
               autoFocus
+              testID="verification-code-input"
             />
           </Animated.View>
 
@@ -212,6 +213,7 @@ const VerificationScreen = ({ navigation, route }) => {
               onPress={handleVerify}
               loading={loading}
               style={styles.verifyButton}
+              testID="verification-submit-button"
             />
           )}
 

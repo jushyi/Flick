@@ -1,4 +1,88 @@
-# Onboarding E2E Flow (placeholder — will be populated in Task 2)
+# Onboarding E2E Flow — New User Profile Setup
+# Prerequisites:
+#   - Firebase test phone number +16505553434 / code 123456
+#   - Test user account must be NEW (no existing profile) or deleted before run
+#
+# Flow: PhoneInput -> Verification -> ProfileSetup -> Selects -> ContactsSync -> NotificationPermission -> Main App
+#
+# This flow covers the full critical path through onboarding,
+# skipping optional screens (contacts sync, notifications) where possible.
 appId: com.spoodsjs.rewind
 ---
-- launchApp
+- launchApp:
+    clearState: true
+
+# ── Step 1: Phone Authentication ──
+- tapOn:
+    id: "phone-input"
+- inputText: "6505553434"
+- tapOn:
+    id: "phone-continue-button"
+
+- assertVisible:
+    id: "verification-code-input"
+    timeout: 10000
+- tapOn:
+    id: "verification-code-input"
+- inputText: "123456"
+
+# ── Step 2: Profile Setup (ProfileSetupScreen) ──
+# Wait for profile setup screen to appear
+- assertVisible:
+    id: "profile-display-name-input"
+    timeout: 15000
+
+# Fill in display name
+- tapOn:
+    id: "profile-display-name-input"
+- inputText: "Test User"
+
+# Fill in username
+- tapOn:
+    id: "profile-username-input"
+- inputText: "testuser_e2e"
+
+# Tap Next step button (skip optional bio and profile song)
+- tapOn:
+    id: "profile-next-button"
+
+# ── Step 3: Selects / Highlights (SelectsScreen) ──
+# Wait for selects screen to appear
+- assertVisible:
+    text: "Pick Your Highlights"
+    timeout: 10000
+
+# Skip highlights by tapping Complete (will show skip confirmation alert)
+- tapOn:
+    id: "selects-complete-button"
+
+# Confirm skip in the alert dialog
+- tapOn:
+    text: "Skip"
+
+# ── Step 4: Contacts Sync (ContactsSyncScreen) ──
+# Wait for contacts sync screen
+- assertVisible:
+    id: "contacts-skip-button"
+    timeout: 10000
+
+# Skip contacts sync
+- tapOn:
+    id: "contacts-skip-button"
+
+# ── Step 5: Notification Permission (NotificationPermissionScreen) ──
+# Wait for notification permission screen
+- assertVisible:
+    id: "notifications-skip-button"
+    timeout: 10000
+
+# Skip notifications
+- tapOn:
+    id: "notifications-skip-button"
+
+# ── Verify: Main App Loaded ──
+# After onboarding completes, user should land on the main app (Feed tab)
+# The app uses bottom tabs with Feed, Camera, Profile
+- assertVisible:
+    text: ".*REWIND.*"
+    timeout: 15000
