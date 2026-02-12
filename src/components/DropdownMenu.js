@@ -2,7 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MENU_WIDTH = 260;
@@ -147,14 +149,14 @@ const styles = StyleSheet.create({
   },
   menu: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     overflow: 'hidden',
   },
   menuAnchored: {
     position: 'absolute',
     width: MENU_WIDTH,
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     overflow: 'hidden',
     // Shadow for depth
     shadowColor: colors.background.primary,
@@ -166,16 +168,16 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
     paddingLeft: 20,
-    paddingRight: 24,
+    paddingRight: spacing.lg,
   },
   menuItemBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.overlay.light,
   },
   menuIcon: {
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   menuText: {
     fontSize: typography.size.lg,

@@ -6,7 +6,9 @@
  */
 import { StyleSheet, Dimensions, StatusBar } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -23,12 +25,12 @@ export const styles = StyleSheet.create({
   // Segments extend edge-to-edge within container for edge-to-edge visual effect
   progressBarScrollView: {
     flexGrow: 0, // Prevent ScrollView from expanding and pushing photo
-    marginHorizontal: 8, // Match photo marginHorizontal - clips the segments
+    marginHorizontal: spacing.xs, // Match photo marginHorizontal - clips the segments
     overflow: 'hidden', // Clip segments at container edges
   },
   progressBarContainer: {
     flexDirection: 'row',
-    paddingBottom: 8,
+    paddingBottom: spacing.xs,
     // No horizontal padding - segments extend to edges (clipped by container)
     gap: 2,
   },
@@ -48,14 +50,14 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: (StatusBar.currentHeight || 44) + 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
     backgroundColor: 'transparent',
   },
   headerSpacer: {
     flex: 1,
   },
   closeButton: {
-    padding: 8,
+    padding: spacing.xs,
   },
   closeButtonText: {
     fontSize: typography.size.xxl,
@@ -64,16 +66,16 @@ export const styles = StyleSheet.create({
   },
   photoScrollView: {
     flex: 1,
-    borderRadius: 4, // Sharper corners for retro feel
+    borderRadius: layout.borderRadius.md, // Sharper corners for retro feel
     overflow: 'hidden',
-    marginHorizontal: 8,
-    marginBottom: 8,
+    marginHorizontal: spacing.xs,
+    marginBottom: spacing.xs,
   },
   photoContentContainer: {
     flex: 1,
   },
   photo: {
-    width: SCREEN_WIDTH - 16,
+    width: SCREEN_WIDTH - spacing.md,
     height: '100%',
     minHeight: SCREEN_HEIGHT * 0.7,
   },
@@ -84,9 +86,9 @@ export const styles = StyleSheet.create({
     zIndex: 5,
   },
   profilePic: {
-    width: 80,
-    height: 80,
-    borderRadius: 9999,
+    width: layout.dimensions.avatarXLarge,
+    height: layout.dimensions.avatarXLarge,
+    borderRadius: layout.borderRadius.full,
     borderWidth: 0.5,
     borderColor: colors.overlay.lightBorder,
   },
@@ -112,7 +114,7 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowColor: colors.overlay.darker,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
@@ -120,7 +122,7 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowColor: colors.overlay.darker,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
@@ -134,11 +136,11 @@ export const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingTop: 4,
-    paddingBottom: 32,
+    paddingHorizontal: spacing.xs,
+    paddingTop: spacing.xxs,
+    paddingBottom: spacing.xl,
     backgroundColor: colors.overlay.darker,
-    gap: 8,
+    gap: spacing.xs,
   },
   // Comment input trigger - left side of footer (50/50 split with emoji pills)
   commentInputTrigger: {
@@ -146,9 +148,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background.tertiary,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: layout.borderRadius.xl,
     gap: 6,
     borderWidth: 1,
     borderColor: colors.pill.background,
@@ -168,17 +170,17 @@ export const styles = StyleSheet.create({
     opacity: 0.4,
   },
   emojiPickerContainer: {
-    gap: 8,
-    paddingVertical: 4,
+    gap: spacing.xs,
+    paddingVertical: spacing.xxs,
   },
   emojiPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.pill.background,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 4,
-    gap: 4,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.md,
+    gap: spacing.xxs,
     borderWidth: 1,
     borderColor: colors.pill.border,
   },
@@ -200,7 +202,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 2,
     borderColor: colors.brand.purple,
     backgroundColor: colors.overlay.purpleTint,

@@ -8,7 +8,9 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const STATUS_MESSAGES = {
   preparing: 'Preparing download...',
@@ -79,21 +81,21 @@ const DownloadProgress = ({ current = 0, total = 0, status = 'preparing' }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: spacing.md,
   },
   progressTrack: {
-    height: 8,
+    height: spacing.xs,
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
     backgroundColor: colors.brand.purple,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
   },
   statusText: {
-    marginTop: 12,
+    marginTop: spacing.sm,
     textAlign: 'center',
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,

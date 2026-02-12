@@ -6,7 +6,9 @@
  */
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   // Card container - no margins, photos go edge-to-edge
@@ -31,14 +33,14 @@ export const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
 
   profilePhoto: {
     width: 36,
     height: 36,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.full,
     marginRight: 10,
     backgroundColor: colors.background.tertiary,
   },
@@ -46,7 +48,7 @@ export const styles = StyleSheet.create({
   profilePhotoFallback: {
     width: 36,
     height: 36,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.full,
     marginRight: 10,
     backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
@@ -74,14 +76,14 @@ export const styles = StyleSheet.create({
   reactions: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
   },
 
   reactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
 
   reactionEmoji: {
@@ -107,13 +109,13 @@ export const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     fontStyle: 'italic',
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
   },
 
   // Comment preview section
   commentPreview: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
   },
 });

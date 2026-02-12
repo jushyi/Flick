@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Dimensions, Animated, ScrollView } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -120,8 +122,8 @@ const styles = StyleSheet.create({
   // Stories row
   storiesRow: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
   },
 
   // Individual story card skeleton
@@ -134,9 +136,9 @@ const styles = StyleSheet.create({
   storyPhoto: {
     width: STORY_PHOTO_WIDTH + STORY_BORDER_WIDTH * 2,
     height: STORY_PHOTO_HEIGHT + STORY_BORDER_WIDTH * 2,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     backgroundColor: colors.background.tertiary,
-    marginBottom: STORY_PROFILE_SIZE / 2 + 4,
+    marginBottom: STORY_PROFILE_SIZE / 2 + spacing.xxs,
     overflow: 'hidden',
   },
 
@@ -166,8 +168,8 @@ const styles = StyleSheet.create({
   feedInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
 
   feedProfile: {
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 14,
     backgroundColor: colors.background.tertiary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     marginBottom: 6,
     overflow: 'hidden',
   },
@@ -196,7 +198,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 12,
     backgroundColor: colors.background.tertiary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     overflow: 'hidden',
   },
 

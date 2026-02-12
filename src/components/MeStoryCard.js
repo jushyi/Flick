@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 /**
@@ -148,13 +149,13 @@ const styles = StyleSheet.create({
   gradientBorder: {
     width: PHOTO_WIDTH + BORDER_WIDTH * 2,
     height: PHOTO_HEIGHT + BORDER_WIDTH * 2,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     padding: BORDER_WIDTH,
   },
   viewedBorder: {
     width: PHOTO_WIDTH + BORDER_WIDTH * 2,
     height: PHOTO_HEIGHT + BORDER_WIDTH * 2,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     padding: BORDER_WIDTH,
     borderWidth: 2,
     borderColor: colors.storyCard.glowViewed,
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   },
   photoContainer: {
     flex: 1,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     overflow: 'hidden',
     backgroundColor: colors.background.tertiary,
   },

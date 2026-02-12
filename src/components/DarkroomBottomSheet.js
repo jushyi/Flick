@@ -14,7 +14,9 @@ import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -753,18 +755,18 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: COLORS.sheetBackground,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: Platform.OS === 'ios' ? 48 : 32,
+    borderTopLeftRadius: layout.borderRadius.xl,
+    borderTopRightRadius: layout.borderRadius.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? spacing.xxxl : spacing.xl,
   },
   // Header row - flex row with title/status left, cards right
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   headerLeft: {
     flex: 1,
@@ -772,7 +774,7 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   titleText: {
     fontSize: typography.size.xxl,
@@ -801,7 +803,7 @@ const styles = StyleSheet.create({
   cardStackCardWrapper: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     // White glow effect emanating from card edges
     shadowColor: colors.text.primary,
     shadowOffset: { width: 0, height: 0 },
@@ -817,8 +819,8 @@ const styles = StyleSheet.create({
   // Hold button
   holdButtonContainer: {
     width: '100%',
-    marginTop: 16,
-    borderRadius: 4,
+    marginTop: spacing.md,
+    borderRadius: layout.borderRadius.md,
     overflow: 'hidden',
   },
   holdButtonBase: {
@@ -880,7 +882,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 11,
     backgroundColor: colors.retro.readyBackground,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
   },
   readyText: {
     fontSize: typography.size.xxl,
@@ -900,7 +902,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.bodyBold,
     color: COLORS.textPrimary,
-    marginLeft: 12,
+    marginLeft: spacing.sm,
   },
   // Spinner - retro pixel block chase
   spinnerOuter: {
@@ -917,7 +919,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.interactive.primary, // '#00D4FF' electric cyan
   },
   pixelBlockGlow: {
-    shadowColor: '#00D4FF',
+    shadowColor: colors.interactive.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 4,
@@ -938,7 +940,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    marginTop: 16,
+    marginTop: spacing.md,
   },
 });
 

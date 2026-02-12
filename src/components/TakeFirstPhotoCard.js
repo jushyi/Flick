@@ -2,7 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -30,12 +32,12 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.background.primary,
     marginBottom: 20,
-    marginHorizontal: 16,
+    marginHorizontal: spacing.md,
   },
   contentContainer: {
-    width: SCREEN_WIDTH - 32, // Account for horizontal margins
+    width: SCREEN_WIDTH - spacing.md * 2, // Account for horizontal margins
     aspectRatio: 1,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 2,
     borderColor: colors.background.tertiary,
     borderStyle: 'dashed',
@@ -47,15 +49,15 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginTop: 16,
+    marginTop: spacing.md,
   },
   subtitle: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 8,
+    marginTop: spacing.xs,
     textAlign: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: spacing.xxl,
   },
 });
 

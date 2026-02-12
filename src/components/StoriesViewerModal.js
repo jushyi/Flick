@@ -17,7 +17,9 @@ import { getTimeAgo } from '../utils/timeUtils';
 import logger from '../utils/logger';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -337,8 +339,8 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     flexDirection: 'row',
     paddingTop: (StatusBar.currentHeight || 54) + 8,
-    paddingHorizontal: 8,
-    gap: 4,
+    paddingHorizontal: spacing.xs,
+    gap: spacing.xxs,
   },
   progressSegment: {
     flex: 1,
@@ -355,8 +357,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   friendInfo: {
     flexDirection: 'row',
@@ -364,9 +366,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profilePic: {
-    width: 32,
-    height: 32,
-    borderRadius: 9999,
+    width: layout.dimensions.avatarSmall,
+    height: layout.dimensions.avatarSmall,
+    borderRadius: layout.borderRadius.full,
     borderWidth: 1,
     borderColor: colors.overlay.light,
   },
@@ -396,8 +398,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   closeButton: {
-    padding: 8,
-    marginLeft: 8,
+    padding: spacing.xs,
+    marginLeft: spacing.xs,
   },
   closeButtonText: {
     fontSize: typography.size.xl,

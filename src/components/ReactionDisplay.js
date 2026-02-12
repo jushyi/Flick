@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 /**
  * ReactionDisplay - Detailed reaction list with user info
@@ -106,15 +108,15 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
 const styles = StyleSheet.create({
   // Empty state
   emptyContainer: {
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
     alignItems: 'center',
   },
   emptyText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   emptySubtext: {
     fontSize: typography.size.md,
@@ -126,16 +128,16 @@ const styles = StyleSheet.create({
   compactContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    paddingVertical: 8,
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
   },
   compactPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     backgroundColor: colors.pill.background,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 1,
     borderColor: colors.pill.border,
   },
@@ -145,7 +147,7 @@ const styles = StyleSheet.create({
   },
   compactEmoji: {
     fontSize: typography.size.lg,
-    marginRight: 4,
+    marginRight: spacing.xxs,
   },
   compactCount: {
     fontSize: typography.size.md,
@@ -158,26 +160,26 @@ const styles = StyleSheet.create({
 
   // Full mode
   container: {
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
   },
   title: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginBottom: 12,
-    paddingHorizontal: 16,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   reactionList: {
-    paddingHorizontal: 16,
-    gap: 12,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
   },
   reactionCard: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
     backgroundColor: colors.pill.background,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 2,
     borderColor: colors.pill.border,
     minWidth: 80,
@@ -188,7 +190,7 @@ const styles = StyleSheet.create({
   },
   reactionEmoji: {
     fontSize: 32,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   reactionCount: {
     fontSize: typography.size.lg,
