@@ -1,6 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   container: {
@@ -11,13 +13,13 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   backButton: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
@@ -28,11 +30,11 @@ export const styles = StyleSheet.create({
     width: 36,
   },
   menuContainer: {
-    marginTop: 24,
+    marginTop: spacing.lg,
   },
   sectionHeader: {
     backgroundColor: colors.background.primary,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
@@ -50,7 +52,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 56,
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -61,10 +63,10 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   toggleItemContent: {
-    marginLeft: 16,
+    marginLeft: spacing.md,
     flex: 1,
   },
   toggleItemLabel: {
@@ -80,19 +82,19 @@ export const styles = StyleSheet.create({
   },
   masterToggleItem: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingHorizontal: 16,
+    borderRadius: layout.borderRadius.md,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
     paddingVertical: 14,
     borderBottomWidth: 0,
   },
   permissionBanner: {
     backgroundColor: colors.background.secondary,
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 4,
-    padding: 16,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: layout.borderRadius.md,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.status.danger,
   },
@@ -101,7 +103,7 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   permissionBannerText: {
-    marginLeft: 12,
+    marginLeft: spacing.sm,
     flex: 1,
   },
   permissionBannerTitle: {
@@ -113,13 +115,13 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
   permissionBannerButton: {
-    backgroundColor: colors.brand.purple,
+    backgroundColor: colors.interactive.primary,
     paddingVertical: 10,
-    borderRadius: 4,
-    marginTop: 12,
+    borderRadius: layout.borderRadius.md,
+    marginTop: spacing.sm,
     alignItems: 'center',
   },
   permissionBannerButtonText: {

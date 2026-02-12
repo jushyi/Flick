@@ -5,7 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 /**
@@ -227,13 +229,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   backButton: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
@@ -244,11 +246,11 @@ const styles = StyleSheet.create({
     width: 36, // Balance the back button width
   },
   menuContainer: {
-    marginTop: 24,
+    marginTop: spacing.lg,
   },
   sectionHeader: {
     backgroundColor: colors.background.primary,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
@@ -277,14 +279,14 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
-    marginLeft: 16,
+    marginLeft: spacing.md,
   },
   menuItemLabelDanger: {
     color: colors.status.danger,
   },
   versionContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
   versionText: {
