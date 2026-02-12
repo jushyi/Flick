@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 
 ## Current Position
 
-Phase: 49 of 53 (Automated Test Suite)
-Plan: 8 of 8 in current phase
-Status: Phase complete
-Last activity: 2026-02-12 — Completed 48-07-PLAN.md (Phase 48 complete)
+Phase: 50 of 53 (CI/CD Pipeline)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-12 — Completed 50-01-PLAN.md
 
 Progress: █████████░░░ 9/12 (v1.0.0 phases)
 
@@ -56,6 +56,8 @@ See PROJECT.md Key Decisions table for full history.
 | 49    | --legacy-peer-deps for RNTL v13 install                   | react-test-renderer deprecated in React 19, RNTL makes it optional |
 | 48.1  | fullScreenModal for ProfileFromPhotoDetail                | iOS modal stacking: fullScreenModal renders above transparentModal |
 | 48.1  | Accept slide-from-bottom + no gesture dismiss             | Native iOS modal behavior, user confirmed acceptable trade-off     |
+| 50    | APP_ENV env var for aps-environment switching             | Dynamic config in app.config.js, production set via eas.json env   |
+| 50    | expo export for free PR bundle verification               | No EAS build credits consumed, validates JS bundle compiles        |
 
 ### Deferred Issues
 
@@ -81,5 +83,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 48-07-PLAN.md (Phase 48 complete, backfill)
+Stopped at: Completed 50-01-PLAN.md
 Resume file: None

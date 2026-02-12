@@ -226,11 +226,13 @@ Plans:
 **Depends on**: Phase 49
 **Research**: Likely (EAS Build/Submit integration, GitHub Actions workflows)
 **Research topics**: EAS Build configuration, GitHub Actions for Expo/EAS, secrets management, pipeline validation
-**Plans**: TBD
+**Plans**: 3
 
 Plans:
 
-- [ ] 50-01: TBD
+- [x] 50-01: Build Config & PR Checks (aps-environment switching, GitHub Actions PR workflow)
+- [ ] 50-02: TBD
+- [ ] 50-03: TBD
 
 #### Phase 51: iOS Release Preparation
 
@@ -291,7 +293,7 @@ Plans:
 | 48. UI/UX Consistency Audit    | v1.0.0    | 7/7   | Complete    | 2026-02-12 |
 | 48.1 PhotoDetail Profile Nav   | v1.0.0    | 1/1   | Complete    | 2026-02-12 |
 | 49. Automated Test Suite       | v1.0.0    | 8/8   | Complete    | 2026-02-12 |
-| 50. CI/CD Pipeline             | v1.0.0    | 0/?   | Not started | -          |
+| 50. CI/CD Pipeline             | v1.0.0    | 1/3   | In progress | -          |
 | 51. iOS Release Preparation    | v1.0.0    | 0/10  | Not started | -          |
 | 52. Systematic UAT             | v1.0.0    | 0/?   | Not started | -          |
 | 53. Unlisted App Store Release | v1.0.0    | 0/?   | Not started | -          |
