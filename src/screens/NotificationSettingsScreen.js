@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Switch, ScrollView, Linking, AppState } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Linking, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import PixelToggle from '../components/PixelToggle';
 import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { checkNotificationPermissions } from '../services/firebase/notificationService';
@@ -191,12 +192,7 @@ const NotificationSettingsScreen = () => {
                 <Text style={styles.toggleItemSubtitle}>Turn off to stop all notifications</Text>
               </View>
             </View>
-            <Switch
-              value={preferences.enabled}
-              onValueChange={handleMasterToggle}
-              trackColor={{ false: colors.background.tertiary, true: colors.interactive.primary }}
-              thumbColor={colors.text.primary}
-            />
+            <PixelToggle value={preferences.enabled} onValueChange={handleMasterToggle} />
           </View>
 
           {/* Notification Types Section */}
@@ -216,12 +212,10 @@ const NotificationSettingsScreen = () => {
                   <Text style={styles.toggleItemSubtitle}>{type.subtitle}</Text>
                 </View>
               </View>
-              <Switch
+              <PixelToggle
                 value={preferences[type.id]}
                 onValueChange={value => handleTypeToggle(type.id, value)}
                 disabled={!preferences.enabled}
-                trackColor={{ false: colors.background.tertiary, true: colors.interactive.primary }}
-                thumbColor={colors.text.primary}
               />
             </View>
           ))}
