@@ -60,6 +60,8 @@ const CommentsBottomSheet = ({
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const inputRef = useRef(null);
   const flatListRef = useRef(null);
+  const contentHeightRef = useRef(0); // Actual content height from onContentSizeChange
+  const viewportHeightRef = useRef(0); // Actual FlatList viewport height from onLayout
   const insets = useSafeAreaInsets();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -333,72 +335,57 @@ const CommentsBottomSheet = ({
   }, [visible, translateY, photoId, sheetHeight, backdropOpacity]);
 
   /**
-   * Handle pending scroll after comment added
-   * Waits for comment to appear in threadedComments before scrolling
-   * Scrolls FIRST, then animation plays after scroll completes
+   * Handle pending scroll after comment added.
+   * Waits for both pendingScrollTarget to be set AND threadedComments to update
+   * (new comment appears via real-time subscription) before scrolling.
+   * Uses scrollToEnd for top-level comments (avoids height estimation errors).
+   * 300ms delay ensures the FlatList has fully laid out the new comment.
    */
   useEffect(() => {
     if (!pendingScrollTarget || !flatListRef.current || threadedComments.length === 0) {
       return;
     }
 
-    const { type, commentId, parentId } = pendingScrollTarget;
+    const { type, parentId } = pendingScrollTarget;
 
-    // Small delay to ensure layout is ready, then scroll immediately
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       if (!flatListRef.current) return;
 
       if (type === 'top-level') {
-        // Scroll to last item (newest top-level comment)
-        const lastIndex = threadedComments.length - 1;
-        flatListRef.current.scrollToIndex({
-          index: lastIndex,
-          animated: true,
-          viewPosition: 0.5, // Center in view
+        // Use tracked dimensions for accurate scroll (scrollToEnd uses stale cached values)
+        const contentH = contentHeightRef.current;
+        const viewportH = viewportHeightRef.current;
+        if (contentH > 0 && viewportH > 0 && contentH > viewportH) {
+          flatListRef.current.scrollToOffset({
+            offset: contentH - viewportH,
+            animated: true,
+          });
+        } else {
+          flatListRef.current.scrollToEnd({ animated: true });
+        }
+        logger.debug('CommentsBottomSheet: Scrolled to end for new top-level comment', {
+          contentH,
+          viewportH,
         });
-        logger.debug('CommentsBottomSheet: Scrolled to new top-level comment', { lastIndex });
       } else if (type === 'reply' && parentId) {
-        // Find parent comment and calculate scroll position to show the new reply
         const parentIndex = threadedComments.findIndex(c => c.id === parentId);
         if (parentIndex >= 0) {
-          const parent = threadedComments[parentIndex];
-          const replyCount = parent.replies?.length || 0;
-
-          // Two-stage scroll: first to parent, then adjust to show new reply
-          // Stage 1: Scroll to parent
           flatListRef.current.scrollToIndex({
             index: parentIndex,
             animated: true,
-            viewPosition: 0, // Top of view
+            viewPosition: 0,
           });
-
-          // Stage 2: After expansion settles, scroll down to show the new reply
-          // Each reply is ~80-100px, so scroll down to show more of the thread
-          setTimeout(() => {
-            if (flatListRef.current && replyCount > 2) {
-              // For longer threads, scroll down additional pixels to show new reply
-              // Approximate: 100px for parent + 90px per reply (showing last few replies)
-              const additionalScroll = Math.min(replyCount * 90, 400); // Cap at 400px
-
-              // Get current scroll position and add offset
-              flatListRef.current.scrollToOffset({
-                offset: parentIndex * 120 + additionalScroll, // Approximate position
-                animated: true,
-              });
-              logger.debug('CommentsBottomSheet: Scrolled to show new reply', {
-                parentIndex,
-                parentId,
-                replyCount,
-                additionalScroll,
-              });
-            }
-          }, 300); // Wait for expansion animation
+          logger.debug('CommentsBottomSheet: Scrolled to parent for new reply', {
+            parentIndex,
+            parentId,
+          });
         }
       }
 
-      // Clear pending scroll
       setPendingScrollTarget(null);
-    }, 50); // Minimal delay just for layout
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [threadedComments, pendingScrollTarget]);
 
   const animateClose = useCallback(() => {
@@ -486,8 +473,6 @@ const CommentsBottomSheet = ({
         logger.error('CommentsBottomSheet: Failed to add comment', {
           error: result.error,
         });
-        // NOTE: Don't need explicit revert - real-time Firebase subscription
-        // will sync correct count automatically within ~100-200ms
       }
     },
     [photoId, replyingTo, addComment, onCommentAdded, onCommentCountChange, mentionSuggestions]
@@ -903,6 +888,19 @@ const CommentsBottomSheet = ({
     [sheetHeight, swipeY, onClose]
   );
 
+  /**
+   * Track FlatList content height and viewport height for accurate scrollToOffset.
+   * These refs provide the actual measured values that scrollToEnd() gets wrong
+   * when removeClippedSubviews replaces measured heights with estimates.
+   */
+  const handleContentSizeChange = useCallback((contentWidth, contentHeight) => {
+    contentHeightRef.current = contentHeight;
+  }, []);
+
+  const handleListLayout = useCallback(event => {
+    viewportHeightRef.current = event.nativeEvent.layout.height;
+  }, []);
+
   const totalCommentCount = threadedComments.reduce(
     (count, comment) => count + 1 + (comment.replies?.length || 0),
     0
@@ -970,14 +968,14 @@ const CommentsBottomSheet = ({
                 showsVerticalScrollIndicator={false}
                 initialNumToRender={10}
                 maxToRenderPerBatch={5}
-                windowSize={5}
-                removeClippedSubviews={true}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="interactive"
                 onScroll={handleScroll}
                 onScrollEndDrag={handleScrollEndDrag}
                 scrollEventThrottle={16}
                 onScrollToIndexFailed={handleScrollToIndexFailed}
+                onContentSizeChange={handleContentSizeChange}
+                onLayout={handleListLayout}
               />
             )}
 
