@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 100, // Clear absolute-positioned tab bar (85px iOS / 65px Android)
   },
   bodyText: {
     fontSize: typography.size.md,
