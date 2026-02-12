@@ -26,6 +26,16 @@ jest.mock('../../src/services/firebase/darkroomService', () => ({
   ensureDarkroomInitialized: (...args) => mockEnsureDarkroomInitialized(...args),
 }));
 
+// Mock album service - photoService imports getUserAlbums, removePhotoFromAlbum, deleteAlbum
+const mockGetUserAlbums = jest.fn(() => Promise.resolve({ success: true, albums: [] }));
+const mockRemovePhotoFromAlbum = jest.fn(() => Promise.resolve({ success: true }));
+const mockDeleteAlbum = jest.fn(() => Promise.resolve({ success: true }));
+jest.mock('../../src/services/firebase/albumService', () => ({
+  getUserAlbums: (...args) => mockGetUserAlbums(...args),
+  removePhotoFromAlbum: (...args) => mockRemovePhotoFromAlbum(...args),
+  deleteAlbum: (...args) => mockDeleteAlbum(...args),
+}));
+
 // Create Firestore mocks
 const mockAddDoc = jest.fn();
 const mockGetDoc = jest.fn();
@@ -51,7 +61,26 @@ jest.mock('@react-native-firebase/firestore', () => ({
   query: (...args) => mockQuery(...args),
   where: (...args) => mockWhere(...args),
   orderBy: (...args) => mockOrderBy(...args),
+  limit: jest.fn(() => ({})),
   serverTimestamp: () => ({ _serverTimestamp: true }),
+  writeBatch: jest.fn(() => ({
+    set: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    delete: jest.fn().mockReturnThis(),
+    commit: jest.fn(() => Promise.resolve()),
+  })),
+  Timestamp: {
+    now: () => ({ seconds: Math.floor(Date.now() / 1000), toDate: () => new Date() }),
+    fromDate: date => ({ seconds: Math.floor(date.getTime() / 1000), toDate: () => date }),
+  },
+  FieldValue: {
+    serverTimestamp: () => ({ _serverTimestamp: true }),
+    increment: n => ({ _increment: n }),
+    arrayUnion: (...items) => ({ _arrayUnion: items }),
+    arrayRemove: (...items) => ({ _arrayRemove: items }),
+    delete: () => ({ _delete: true }),
+  },
+  getCountFromServer: jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
 }));
 
 // Import service after mocks

@@ -33,6 +33,12 @@ jest.mock('../../src/services/firebase/friendshipService', () => ({
   getFriendUserIds: (...args) => mockGetFriendUserIds(...args),
 }));
 
+// Mock blockService - feedService imports getBlockedByUserIds
+const mockGetBlockedByUserIds = jest.fn(() => Promise.resolve({ success: true, blockedByIds: [] }));
+jest.mock('../../src/services/firebase/blockService', () => ({
+  getBlockedByUserIds: (...args) => mockGetBlockedByUserIds(...args),
+}));
+
 // Mock @react-native-firebase/firestore
 jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: () => ({}),
@@ -45,6 +51,13 @@ jest.mock('@react-native-firebase/firestore', () => ({
   query: jest.fn(() => ({})),
   where: jest.fn(() => ({})),
   orderBy: jest.fn(() => ({})),
+  limit: jest.fn(() => ({})),
+  startAfter: jest.fn(() => ({})),
+  Timestamp: {
+    now: () => ({ seconds: Math.floor(Date.now() / 1000), toDate: () => new Date() }),
+    fromDate: date => ({ seconds: Math.floor(date.getTime() / 1000), toDate: () => date }),
+  },
+  getCountFromServer: jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
 }));
 
 // Import service AFTER mocks are set up

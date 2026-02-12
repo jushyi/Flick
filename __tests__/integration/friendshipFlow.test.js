@@ -60,6 +60,8 @@ jest.mock('@react-native-firebase/firestore', () => ({
   orderBy: (...args) => mockOrderBy(...args),
   onSnapshot: (...args) => mockOnSnapshot(...args),
   or: (...args) => mockOr(...args),
+  limit: jest.fn(() => ({})),
+  documentId: jest.fn(() => '__documentId__'),
   serverTimestamp: () => ({ _serverTimestamp: true }),
   Timestamp: {
     now: () => ({
@@ -71,6 +73,11 @@ jest.mock('@react-native-firebase/firestore', () => ({
       toDate: () => date,
     }),
   },
+}));
+
+// Mock blockService - feedService imports getBlockedByUserIds
+jest.mock('../../src/services/firebase/blockService', () => ({
+  getBlockedByUserIds: jest.fn(() => Promise.resolve({ success: true, blockedByIds: [] })),
 }));
 
 // Import services AFTER mocks are set up

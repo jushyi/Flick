@@ -37,6 +37,13 @@ jest.mock('../../src/services/firebase/storageService', () => ({
   deletePhoto: (...args) => mockDeletePhoto(...args),
 }));
 
+// Album service mock - photoService imports getUserAlbums, removePhotoFromAlbum, deleteAlbum
+jest.mock('../../src/services/firebase/albumService', () => ({
+  getUserAlbums: jest.fn(() => Promise.resolve({ success: true, albums: [] })),
+  removePhotoFromAlbum: jest.fn(() => Promise.resolve({ success: true })),
+  deleteAlbum: jest.fn(() => Promise.resolve({ success: true })),
+}));
+
 // Firestore mocks
 const mockAddDoc = jest.fn();
 const mockGetDoc = jest.fn();
@@ -67,7 +74,14 @@ jest.mock('@react-native-firebase/firestore', () => ({
   orderBy: (...args) => mockOrderBy(...args),
   onSnapshot: (...args) => mockOnSnapshot(...args),
   or: (...args) => mockOr(...args),
+  limit: jest.fn(() => ({})),
   serverTimestamp: () => ({ _serverTimestamp: true }),
+  writeBatch: jest.fn(() => ({
+    set: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    delete: jest.fn().mockReturnThis(),
+    commit: jest.fn(() => Promise.resolve()),
+  })),
   Timestamp: {
     now: () => ({
       seconds: Math.floor(Date.now() / 1000),
@@ -78,6 +92,14 @@ jest.mock('@react-native-firebase/firestore', () => ({
       toDate: () => date,
     }),
   },
+  FieldValue: {
+    serverTimestamp: () => ({ _serverTimestamp: true }),
+    increment: n => ({ _increment: n }),
+    arrayUnion: (...items) => ({ _arrayUnion: items }),
+    arrayRemove: (...items) => ({ _arrayRemove: items }),
+    delete: () => ({ _delete: true }),
+  },
+  getCountFromServer: jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
 }));
 
 // Import services AFTER mocks are set up
