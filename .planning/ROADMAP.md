@@ -186,7 +186,7 @@ Plans:
 - [x] 48-01: Auth Flow Screens (audit & fix auth/onboarding screens)
 - [x] 48-02: Settings & Account Screens (audit & fix settings/account screens)
 - [ ] 48-03: Social & Friends Screens (audit & fix social screens & components)
-- [ ] 48-04: FriendsScreen N+1 Query Fix — ISS-012 (batch user fetching, optimize subscriptions)
+- [x] 48-04: FriendsScreen N+1 Query Fix — ISS-012 (batch user fetching, optimize subscriptions)
 - [ ] 48-05: Albums, Photos & Selects (audit & fix album screens & components)
 - [ ] 48-06: Feed, Camera & Core (audit & fix core screens & components)
 - [ ] 48-07: Profile, Notifications & Shared Components (audit & fix remaining screens & all shared components)
@@ -280,7 +280,7 @@ Plans:
 | 46.2 Album Viewer Nav Optimism | v1.0.0    | 1/1   | Complete    | 2026-02-11 |
 | 47. Firebase Perf Monitoring   | v1.0.0    | 3/3   | Complete    | 2026-02-11 |
 | 47.1 Comment @-Tagging         | v1.0.0    | 2/2   | Complete    | 2026-02-11 |
-| 48. UI/UX Consistency Audit    | v1.0.0    | 3/7   | In progress | -          |
+| 48. UI/UX Consistency Audit    | v1.0.0    | 4/7   | In progress | -          |
 | 48.1 PhotoDetail Profile Nav   | v1.0.0    | 1/1   | Complete    | 2026-02-12 |
 | 49. Automated Test Suite       | v1.0.0    | 2/8   | In progress | -          |
 | 50. CI/CD Pipeline             | v1.0.0    | 0/?   | Not started | -          |

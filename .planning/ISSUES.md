@@ -14,17 +14,15 @@ Enhancements discovered during execution. Not critical - address in future phase
 - **Files:** `src/context/PhotoDetailContext.js` (handleAvatarPress), `src/navigation/AppNavigator.js` (screen presentations)
 - **Related:** Phase 46.1 decision (OtherUserProfile card instead of fullScreenModal), ISS-003 (original modal stacking fix)
 
+## Closed Enhancements
+
 ### ISS-012: Friends screen N+1 query pattern causes slow initial load
 
 - **Discovered:** Phase 46-07 verification (2026-02-10)
+- **Closed:** 2026-02-12
 - **Type:** Performance
-- **Description:** FriendsScreen.js `fetchFriends()` and `fetchRequests()` make individual `getDoc()` calls for each friend/request to fetch user data. With many friends, this creates N+1 Firestore reads causing noticeable load delay. Real-time subscription also triggers full `loadData()` reload on any friendship change.
-- **Impact:** 1-4 second initial load time depending on friend count
-- **Suggested fix:** Batch user data fetching, lazy-load suggestions/blocked users, optimize subscription callback to update only changed items
-- **Files:** `src/screens/FriendsScreen.js` (lines 100-146, 148-209, 293-302)
-- **Suggested phase:** Phase 48 (UI/UX Consistency Audit) — reviewed 2026-02-10
-
-## Closed Enhancements
+- **Resolution:** Fixed in Phase 48-04 by replacing N individual getDoc() calls with batched where-in queries (chunks of 30) via new `batchGetUsers()` utility. Subscription optimized to use docChanges() for incremental updates. Non-critical data (suggestions, blocked users) lazy-loaded via InteractionManager.runAfterInteractions.
+- **Files modified:** `src/screens/FriendsScreen.js`, `src/services/firebase/friendshipService.js`
 
 ### ISS-013: ProfileSetupScreen loses form data when returning from SongSearch
 
