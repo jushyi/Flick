@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { getUserPhotosByMonth } from '../services/firebase/monthlyAlbumService';
 import YearSection from './YearSection';
 
@@ -86,10 +87,10 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
+    marginTop: spacing.lg,
   },
   loadingContainer: {
-    marginTop: 24,
+    marginTop: spacing.lg,
     alignItems: 'center',
     paddingVertical: 20,
   },

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import MonthlyAlbumCard from './MonthlyAlbumCard';
 
@@ -85,14 +86,14 @@ const YearSection = ({ year, months, initiallyExpanded = false, onMonthPress }) 
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   yearText: {
     fontSize: typography.size.xxl,
@@ -100,10 +101,10 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   monthsContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
   },
   monthCardSpacing: {
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
 });
 

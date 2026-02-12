@@ -26,7 +26,9 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 // Enable LayoutAnimation on Android
@@ -611,7 +613,7 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
           <GestureDetector gesture={swipeGesture}>
             <Animated.View style={[styles.container, swipeAnimatedStyle]}>
               {/* Header with Cancel button */}
-              <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+              <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
                 <TouchableOpacity
                   style={styles.cancelButton}
                   onPress={handleCancel}
@@ -647,7 +649,7 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
 
               {/* Button Area / Delete Bar (swaps when dragging) */}
               <View
-                style={[styles.buttonContainer, { paddingBottom: insets.bottom + 24 }]}
+                style={[styles.buttonContainer, { paddingBottom: insets.bottom + spacing.lg }]}
                 onLayout={handleDeleteZoneLayout}
               >
                 {isDragging ? (
@@ -688,8 +690,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.xs,
+    paddingBottom: spacing.md,
   },
   cancelButton: {
     width: 44,
@@ -710,12 +712,12 @@ const styles = StyleSheet.create({
   previewContainer: {
     alignItems: 'center',
     paddingHorizontal: SCREEN_PADDING,
-    marginTop: 24, // Space between header and preview
-    marginBottom: 8,
+    marginTop: spacing.lg, // Space between header and preview
+    marginBottom: spacing.xs,
   },
   previewEmpty: {
     backgroundColor: colors.background.tertiary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 2,
     borderColor: colors.border.subtle,
     borderStyle: 'dashed',
@@ -726,14 +728,14 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
   previewImage: {
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     backgroundColor: colors.background.tertiary,
   },
   thumbnailSection: {
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
     marginHorizontal: SCREEN_PADDING,
     zIndex: 1,
     overflow: 'visible',
@@ -749,7 +751,7 @@ const styles = StyleSheet.create({
   thumbnailSlot: {
     width: THUMBNAIL_SIZE,
     height: THUMBNAIL_SIZE,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -771,16 +773,16 @@ const styles = StyleSheet.create({
   thumbnailImage: {
     width: THUMBNAIL_SIZE,
     height: THUMBNAIL_SIZE,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
   },
   thumbnailTouchable: {
     width: '100%',
     height: '100%',
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     overflow: 'hidden',
   },
   spacer: {
-    minHeight: 16,
+    minHeight: spacing.md,
     overflow: 'visible',
   },
   buttonContainer: {
@@ -790,7 +792,7 @@ const styles = StyleSheet.create({
   saveButton: {
     height: 48,
     backgroundColor: colors.brand.purple,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -806,7 +808,7 @@ const styles = StyleSheet.create({
     height: DELETE_BAR_HEIGHT,
     backgroundColor: colors.status.danger,
     opacity: 0.9,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -816,7 +818,7 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   deleteBarIcon: {
-    marginRight: 8,
+    marginRight: spacing.xs,
   },
   deleteBarText: {
     color: colors.text.primary,

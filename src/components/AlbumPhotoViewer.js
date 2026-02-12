@@ -22,7 +22,9 @@ import ReanimatedModule, {
 } from 'react-native-reanimated';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import { deleteAlbum } from '../services/firebase';
 import { softDeletePhoto, archivePhoto, restorePhoto } from '../services/firebase/photoService';
 import DropdownMenu from './DropdownMenu';
@@ -596,8 +598,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.xs,
+    paddingBottom: spacing.sm,
     backgroundColor: colors.overlay.dark,
   },
   headerButton: {
@@ -609,7 +611,7 @@ const styles = StyleSheet.create({
   headerCenter: {
     flex: 1,
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: spacing.xs,
   },
   albumNameText: {
     fontSize: typography.size.lg,
@@ -636,8 +638,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 6,
-    gap: 8,
+    borderRadius: layout.borderRadius.xl,
+    gap: spacing.xs,
   },
   toastText: {
     color: colors.text.primary,
@@ -650,18 +652,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: colors.overlay.dark,
-    paddingTop: 8,
+    paddingTop: spacing.xs,
   },
   thumbnailContent: {
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.xs,
   },
   thumbnailWrapper: {
-    marginHorizontal: 4,
+    marginHorizontal: spacing.xxs,
   },
   thumbnail: {
     width: 50,
     height: 67,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
   },
   thumbnailActive: {
     borderWidth: 2,

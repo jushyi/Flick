@@ -13,7 +13,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const MAX_ALBUM_NAME_LENGTH = 24;
 
@@ -141,16 +143,16 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: colors.background.secondary,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    paddingTop: 12,
-    paddingHorizontal: 24,
+    borderTopLeftRadius: layout.borderRadius.xl,
+    borderTopRightRadius: layout.borderRadius.xl,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
   handle: {
     width: 40,
     height: 4,
     backgroundColor: colors.icon.inactive,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     alignSelf: 'center',
     marginBottom: 20,
   },
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   input: {
     backgroundColor: colors.background.tertiary,
@@ -167,26 +169,26 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 4,
+    paddingHorizontal: spacing.md,
+    borderRadius: layout.borderRadius.md,
   },
   charCount: {
     fontSize: typography.size.sm,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'right',
-    marginTop: 8,
-    marginBottom: 24,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
   },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: spacing.sm,
   },
   button: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     alignItems: 'center',
   },
   cancelText: {

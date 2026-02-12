@@ -10,7 +10,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const CARD_SIZE = 150;
 
@@ -139,7 +141,7 @@ const styles = StyleSheet.create({
   stackContainer: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    paddingTop: 12,
+    paddingTop: spacing.sm,
     overflow: 'visible',
   },
   stackCard: {
@@ -147,7 +149,7 @@ const styles = StyleSheet.create({
     width: CARD_SIZE,
     height: CARD_SIZE,
     backgroundColor: colors.background.tertiary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     overflow: 'hidden',
   },
   stackImage: {
@@ -167,12 +169,12 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     overflow: 'hidden',
     backgroundColor: colors.background.tertiary,
     zIndex: 3,
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: colors.retro.segmentBorder,
   },
   coverImage: {
     width: '100%',
@@ -194,7 +196,7 @@ const styles = StyleSheet.create({
     width: CARD_SIZE,
     height: CARD_SIZE,
     marginTop: 6,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 2,
     borderStyle: 'dashed',
     borderColor: colors.border.subtle,

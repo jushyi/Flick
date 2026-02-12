@@ -10,7 +10,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const BANNER_HEIGHT = 250;
 const CYCLE_INTERVAL_MS = 750; // Faster cycling
@@ -152,7 +154,7 @@ const styles = StyleSheet.create({
   },
   container: {
     height: BANNER_HEIGHT,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     overflow: 'hidden',
     backgroundColor: colors.background.secondary,
   },
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     height: BANNER_HEIGHT,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.background.secondary,
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -174,7 +176,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
 });
 

@@ -10,7 +10,9 @@ import { Modal, View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'rea
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import { format } from 'date-fns';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -87,19 +89,19 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: MODAL_WIDTH,
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
-    padding: 24,
+    borderRadius: layout.borderRadius.md,
+    padding: spacing.lg,
     alignItems: 'center',
   },
   iconContainer: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   title: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   body: {
     fontSize: typography.size.lg,
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   dateText: {
     fontFamily: typography.fontFamily.bodyBold,
@@ -119,17 +121,17 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   primaryButton: {
     width: '100%',
     backgroundColor: colors.brand.purple,
-    paddingVertical: 16,
-    borderRadius: 4,
+    paddingVertical: spacing.md,
+    borderRadius: layout.borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    minHeight: 52,
+    marginBottom: spacing.md,
+    minHeight: layout.dimensions.buttonMinHeight,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   secondaryButton: {
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
   },
   secondaryButtonText: {
     fontSize: typography.size.md,
