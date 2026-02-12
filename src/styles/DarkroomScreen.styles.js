@@ -6,7 +6,9 @@
 
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   container: {
@@ -27,47 +29,47 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 16,
+    marginTop: spacing.md,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xl,
   },
   emptyIcon: {
     fontSize: 64,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   emptyTitle: {
     fontSize: typography.size.xxl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   emptyText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.overlay.light,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: spacing.xxl,
+    height: spacing.xxl,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.overlay.light,
-    borderRadius: 6,
+    borderRadius: layout.borderRadius.xl,
   },
   downChevron: {
     width: 12,
@@ -81,7 +83,7 @@ export const styles = StyleSheet.create({
   headerCenter: {
     flex: 1,
     alignItems: 'center',
-    marginHorizontal: 16,
+    marginHorizontal: spacing.md,
   },
   // Done button disabled state
   doneButtonDisabled: {
@@ -91,16 +93,16 @@ export const styles = StyleSheet.create({
   undoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     backgroundColor: colors.overlay.light,
-    borderRadius: 6,
+    borderRadius: layout.borderRadius.xl,
   },
   undoButtonDisabled: {
     opacity: 0.3,
   },
   undoIcon: {
-    marginRight: 4,
+    marginRight: spacing.xxs,
   },
   undoText: {
     fontSize: typography.size.md,
@@ -113,13 +115,13 @@ export const styles = StyleSheet.create({
   // Placeholder for empty state header to maintain layout balance
   headerRightPlaceholder: {
     width: 70,
-    height: 40,
+    height: spacing.xxl,
   },
   headerTitle: {
     fontSize: typography.size.xxl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
     textAlign: 'center',
   },
   headerSubtitle: {
@@ -132,42 +134,42 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
-    marginTop: 16,
-    marginBottom: 16,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
     backgroundColor: colors.background.primary,
     zIndex: 1,
   },
   triageButtonBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 24,
-    gap: 8,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.xs,
     zIndex: 10,
     elevation: 10,
   },
   archiveButton: {
     flex: 1,
-    height: 56,
-    borderRadius: 6,
+    height: spacing.huge,
+    borderRadius: layout.borderRadius.xl,
     backgroundColor: colors.text.secondary, // iOS gray
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
   },
   deleteButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 6,
+    width: spacing.huge,
+    height: spacing.huge,
+    borderRadius: layout.borderRadius.xl,
     backgroundColor: colors.system.iosRed, // iOS red for delete
     justifyContent: 'center',
     alignItems: 'center',
   },
   journalButton: {
     flex: 1,
-    height: 56,
-    borderRadius: 6,
+    height: spacing.huge,
+    borderRadius: layout.borderRadius.xl,
     backgroundColor: colors.status.ready, // Green for journal/share
     justifyContent: 'center',
     alignItems: 'center',
@@ -177,7 +179,7 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     color: colors.text.primary,
     fontFamily: typography.fontFamily.bodyBold,
-    marginRight: 4,
+    marginRight: spacing.xxs,
   },
   deleteButtonIcon: {
     fontSize: typography.size.xxl,
@@ -202,7 +204,7 @@ export const styles = StyleSheet.create({
   successContentArea: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingBottom: 40,
+    paddingBottom: spacing.xxl,
   },
   successTitleContainer: {
     flex: 1,
@@ -218,9 +220,9 @@ export const styles = StyleSheet.create({
   },
   doneButtonBottom: {
     backgroundColor: colors.system.blue, // iOS blue
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 6,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxxl,
+    borderRadius: layout.borderRadius.xl,
     alignSelf: 'center',
     marginBottom: 20,
   },

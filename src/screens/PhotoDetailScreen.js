@@ -668,7 +668,7 @@ const PhotoDetailScreen = () => {
       {/* Background overlay - fades independently from content */}
       <Animated.View
         pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.98)', opacity }]}
+        style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay.darker, opacity }]}
       />
 
       {/* Expand/collapse wrapper - scales + translates content from/to source card */}

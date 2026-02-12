@@ -6,14 +6,16 @@
 
 import { StyleSheet, Dimensions } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const TAB_BAR_HEIGHT = 65; // Bottom tab navigator height (includes safe area)
-const FOOTER_HEIGHT = 200; // Covers ~1/4 of screen for iOS-native camera feel
+const TAB_BAR_HEIGHT = layout.dimensions.tabBarHeight; // Bottom tab navigator height (includes safe area)
+const FOOTER_HEIGHT = layout.dimensions.footerHeight; // Covers ~1/4 of screen for iOS-native camera feel
 const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
-const CAMERA_BORDER_RADIUS = 24; // Rounded corners for camera preview
+const CAMERA_BORDER_RADIUS = layout.dimensions.cameraBorderRadius; // Rounded corners for camera preview
 const FLOATING_BUTTON_SIZE = 45; // Flash, flip buttons (10% smaller, floating above footer)
 const FLOATING_BUTTON_OFFSET = 8; // Distance above footer edge
 
@@ -52,13 +54,13 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
   },
   // Floating button - 45px (10% smaller than 50px), for flash and flip
   floatingButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: colors.overlay.dark,
     width: FLOATING_BUTTON_SIZE,
     height: FLOATING_BUTTON_SIZE,
     borderRadius: FLOATING_BUTTON_SIZE / 2,
@@ -79,7 +81,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingBottom: 20,
-    paddingHorizontal: 40,
+    paddingHorizontal: spacing.xxl,
     width: '100%',
   },
   // Zoom control bar - centered in floating controls row
@@ -87,18 +89,18 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: colors.overlay.dark,
+    borderRadius: layout.borderRadius.xl,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
   },
   zoomButton: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: layout.borderRadius.xl,
   },
   zoomButtonActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.overlay.lightBorder,
   },
   zoomLabelContainer: {
     flexDirection: 'row',
@@ -108,7 +110,7 @@ export const styles = StyleSheet.create({
   zoomButtonText: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.bodyBold,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: colors.overlay.lightMedium,
   },
   zoomButtonTextActive: {
     color: colors.text.primary,
@@ -124,13 +126,13 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xl,
   },
   permissionTitle: {
     fontSize: typography.size.xxl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginBottom: 16,
+    marginBottom: spacing.md,
     textAlign: 'center',
   },
   permissionText: {
@@ -138,13 +140,13 @@ export const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   permissionButton: {
     backgroundColor: colors.background.white,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 4,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: layout.borderRadius.md,
   },
   permissionButtonText: {
     fontSize: typography.size.lg,
@@ -166,7 +168,7 @@ export const styles = StyleSheet.create({
   darkroomCardWrapper: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     // Border handled by SVG stroke in GradientCard — no native border needed
     // White glow effect emanating from card edges
     shadowColor: colors.text.primary,
@@ -205,16 +207,16 @@ export const styles = StyleSheet.create({
   captureButtonOuter: {
     width: 100, // 88px button + 6px gap on each side + 2px ring = 100px
     height: 100,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.full,
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
+    borderColor: colors.overlay.lightMedium,
     justifyContent: 'center',
     alignItems: 'center',
   },
   captureButton: {
     width: 88,
     height: 88,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.full,
     backgroundColor: colors.background.white,
     justifyContent: 'center',
     alignItems: 'center',
@@ -233,7 +235,7 @@ export const styles = StyleSheet.create({
   captureButtonInner: {
     width: 76,
     height: 76,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.full,
     backgroundColor: colors.background.white,
   },
   // Flash overlay for camera shutter effect - contained within camera preview

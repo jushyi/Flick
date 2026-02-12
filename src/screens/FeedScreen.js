@@ -40,7 +40,9 @@ import { getFriendUserIds } from '../services/firebase/friendshipService';
 import { useAuth } from '../context/AuthContext';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -1268,8 +1270,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
@@ -1280,27 +1282,27 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   friendsButton: {
-    padding: 8,
+    padding: spacing.xs,
     position: 'absolute',
-    left: 24,
+    left: spacing.lg,
   },
   notificationButton: {
-    padding: 8,
+    padding: spacing.xs,
     position: 'absolute',
-    right: 24,
+    right: spacing.lg,
   },
   notificationDot: {
     position: 'absolute',
     top: 6,
     right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: spacing.xs,
+    height: spacing.xs,
+    borderRadius: layout.borderRadius.md,
     backgroundColor: colors.status.danger,
   },
   feedList: {
     // paddingTop set dynamically with insets.top
-    paddingBottom: TAB_BAR_HEIGHT + 24,
+    paddingBottom: TAB_BAR_HEIGHT + spacing.lg,
   },
   footerLoader: {
     flexDirection: 'row',
@@ -1309,7 +1311,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   footerText: {
-    marginLeft: 12,
+    marginLeft: spacing.sm,
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
@@ -1318,18 +1320,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingTop: 40,
+    paddingHorizontal: spacing.xxl,
+    paddingTop: spacing.xxl,
   },
   emptyIcon: {
     fontSize: 64,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   emptyTitle: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   emptyText: {
     fontSize: typography.size.md,
@@ -1342,18 +1344,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: spacing.xxl,
     paddingTop: 100,
   },
   errorIcon: {
     fontSize: 64,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   errorTitle: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   errorText: {
     fontSize: typography.size.md,
@@ -1361,13 +1363,13 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   retryButton: {
     backgroundColor: colors.brand.purple,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 2,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: layout.borderRadius.sm,
   },
   retryButtonText: {
     fontSize: typography.size.md,
@@ -1381,12 +1383,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
   },
   storiesScrollContent: {
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.sm,
   },
   // Stories loading skeleton styles (match FriendStoryCard dimensions)
   storiesSkeletonContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.sm,
   },
   storySkeletonItem: {
     width: 94 + 8, // STORY_PHOTO_WIDTH (88) + STORY_BORDER_WIDTH*2 (6) + padding (8)
@@ -1396,15 +1398,15 @@ const styles = StyleSheet.create({
   storySkeletonPhoto: {
     width: 94, // 88 + 6 border
     height: 136, // 130 + 6 border
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     backgroundColor: colors.background.tertiary,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
     overflow: 'hidden', // Contain shimmer
   },
   storySkeletonName: {
     width: 50,
     height: 10,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.background.tertiary,
     overflow: 'hidden', // Contain shimmer
   },
