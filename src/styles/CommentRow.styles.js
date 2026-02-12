@@ -7,26 +7,28 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   // Profile photo on left
   profilePhotoContainer: {
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   profilePhoto: {
-    width: 40,
-    height: 40,
-    borderRadius: 9999,
+    width: layout.dimensions.avatarMedium,
+    height: layout.dimensions.avatarMedium,
+    borderRadius: layout.borderRadius.round,
   },
   profilePhotoPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 9999,
+    width: layout.dimensions.avatarMedium,
+    height: layout.dimensions.avatarMedium,
+    borderRadius: layout.borderRadius.round,
     backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -39,7 +41,7 @@ export const styles = StyleSheet.create({
   // Middle content section
   contentContainer: {
     flex: 1,
-    marginRight: 8,
+    marginRight: spacing.xs,
   },
   // Name row with optional author badge
   nameRow: {
@@ -53,11 +55,11 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   authorBadge: {
-    marginLeft: 6,
-    paddingHorizontal: 6,
+    marginLeft: spacing.xs,
+    paddingHorizontal: spacing.xs,
     paddingVertical: 2,
     backgroundColor: colors.brand.purple,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
   },
   authorBadgeText: {
     fontSize: typography.size.xs,
@@ -70,14 +72,14 @@ export const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     lineHeight: 20,
-    marginBottom: 6,
+    marginBottom: spacing.xs,
   },
   // Media thumbnail for image/gif comments
   mediaThumbnail: {
     width: 100,
     height: 100,
-    borderRadius: 2,
-    marginBottom: 6,
+    borderRadius: layout.borderRadius.sm,
+    marginBottom: spacing.xs,
   },
   // Footer row with reply and timestamp
   footerRow: {
@@ -107,8 +109,8 @@ export const styles = StyleSheet.create({
   },
   // Heart icon on right
   heartContainer: {
-    paddingLeft: 8,
-    paddingVertical: 4,
+    paddingLeft: spacing.xs,
+    paddingVertical: spacing.xxs,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -125,12 +127,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     width: 80,
     height: '100%',
-    borderRadius: 8,
+    borderRadius: layout.borderRadius.xl,
   },
   deleteButtonText: {
     fontSize: typography.size.xs,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
 });

@@ -1,6 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   outerContainer: {
@@ -12,10 +14,10 @@ export const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
-    marginHorizontal: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: layout.borderRadius.md,
+    marginHorizontal: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000000',
@@ -27,21 +29,21 @@ export const styles = StyleSheet.create({
   avatar: {
     width: 36,
     height: 36,
-    borderRadius: 9999,
-    marginRight: 10,
+    borderRadius: layout.borderRadius.round,
+    marginRight: spacing.xs,
   },
   avatarPlaceholder: {
     width: 36,
     height: 36,
-    borderRadius: 9999,
-    marginRight: 10,
+    borderRadius: layout.borderRadius.round,
+    marginRight: spacing.xs,
     backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   textContainer: {
     flex: 1,
-    marginRight: 8,
+    marginRight: spacing.xs,
   },
   title: {
     fontSize: typography.size.md,
@@ -55,6 +57,6 @@ export const styles = StyleSheet.create({
     marginTop: 1,
   },
   chevron: {
-    marginLeft: 4,
+    marginLeft: spacing.xxs,
   },
 });

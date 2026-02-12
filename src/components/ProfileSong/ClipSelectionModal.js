@@ -26,6 +26,8 @@ import { Image } from 'expo-image';
 import PixelIcon from '../PixelIcon';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
+import { spacing } from '../../constants/spacing';
+import { layout } from '../../constants/layout';
 import { playPreview, stopPreview, seekTo } from '../../services/audioPlayer';
 import WaveformScrubber from './WaveformScrubber';
 import logger from '../../utils/logger';
@@ -182,7 +184,7 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
             </Text>
 
             {/* Action Buttons */}
-            <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 16 }]}>
+            <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + spacing.md }]}>
               {/* Preview Button */}
               <TouchableOpacity
                 style={[
@@ -220,7 +222,7 @@ const ClipSelectionModal = ({ visible, song, onConfirm, onCancel }) => {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
     justifyContent: 'flex-end',
   },
   backdropTouchable: {
@@ -228,9 +230,9 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     backgroundColor: colors.background.primary,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    paddingTop: 8,
+    borderTopLeftRadius: layout.borderRadius.xl,
+    borderTopRightRadius: layout.borderRadius.xl,
+    paddingTop: spacing.xs,
   },
   gestureContainer: {
     flex: 0,
@@ -239,13 +241,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   closeButton: {
-    padding: 8,
+    padding: spacing.xs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
@@ -258,17 +260,17 @@ const styles = StyleSheet.create({
   songInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.md,
   },
   albumArt: {
-    width: 80,
-    height: 80,
-    borderRadius: 2,
+    width: layout.dimensions.avatarXLarge,
+    height: layout.dimensions.avatarXLarge,
+    borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.background.secondary,
   },
   songDetails: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: spacing.md,
   },
   songTitle: {
     fontSize: typography.size.xl,
@@ -279,34 +281,34 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
   waveformSection: {
-    marginHorizontal: 32,
-    marginTop: 16,
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.md,
   },
   instructions: {
     fontSize: typography.size.sm,
     fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     textAlign: 'center',
-    marginTop: 16,
-    marginHorizontal: 32,
+    marginTop: spacing.md,
+    marginHorizontal: spacing.xl,
   },
   buttonContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    gap: 12,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
   },
   button: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 4,
-    gap: 8,
+    paddingVertical: spacing.sm,
+    borderRadius: layout.borderRadius.md,
+    gap: spacing.xs,
   },
   previewButton: {
     backgroundColor: colors.background.tertiary,

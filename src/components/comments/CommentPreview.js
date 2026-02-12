@@ -16,6 +16,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
+import { spacing } from '../../constants/spacing';
 
 /**
  * CommentPreview Component
@@ -121,7 +122,7 @@ const CommentPreview = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 4,
+    paddingVertical: spacing.xxs,
   },
   containerCompact: {
     paddingVertical: 2,
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
 });
 

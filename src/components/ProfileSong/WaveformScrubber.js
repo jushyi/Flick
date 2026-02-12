@@ -23,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
+import { spacing } from '../../constants/spacing';
 
 const BAR_COUNT = 60; // Number of bars in waveform visualization
 
@@ -179,7 +180,7 @@ const WaveformScrubber = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
   },
   waveformContainer: {
     height: 80,
@@ -211,8 +212,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
-    paddingHorizontal: 4,
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.xxs,
   },
   timeLabel: {
     fontSize: typography.size.sm,

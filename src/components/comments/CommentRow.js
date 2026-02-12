@@ -17,6 +17,7 @@ import PixelIcon from '../PixelIcon';
 import * as Haptics from 'expo-haptics';
 import { getTimeAgo } from '../../utils/timeUtils';
 import { colors } from '../../constants/colors';
+import { layout } from '../../constants/layout';
 import logger from '../../utils/logger';
 import { styles } from '../../styles/CommentRow.styles';
 import MentionText from './MentionText';
@@ -237,7 +238,7 @@ const CommentRow = ({
     <Animated.View
       style={{
         backgroundColor: highlightBackgroundColor,
-        borderRadius: 8,
+        borderRadius: layout.borderRadius.xl,
       }}
     >
       <Animated.View

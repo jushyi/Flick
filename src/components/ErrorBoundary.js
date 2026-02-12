@@ -28,6 +28,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import logger from '../utils/logger';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -127,19 +129,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xl,
   },
   icon: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: layout.borderRadius.round,
     backgroundColor: colors.status.danger,
     color: colors.text.primary,
     fontSize: typography.size.giant,
     fontFamily: typography.fontFamily.display,
     textAlign: 'center',
     lineHeight: 80,
-    marginBottom: 24,
+    marginBottom: spacing.lg,
     overflow: 'hidden',
   },
   title: {
@@ -147,7 +149,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   description: {
     fontSize: typography.size.lg,
@@ -155,13 +157,13 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   button: {
     backgroundColor: colors.brand.purple,
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 4,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxxl,
+    borderRadius: layout.borderRadius.md,
   },
   buttonText: {
     color: colors.text.primary,
@@ -169,17 +171,17 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bodyBold,
   },
   debugContainer: {
-    marginTop: 32,
-    padding: 16,
+    marginTop: spacing.xl,
+    padding: spacing.md,
     backgroundColor: '#FFF3CD', // Warning yellow (dev-only)
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     width: '100%',
   },
   debugTitle: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.bodyBold,
     color: '#856404', // Warning text (dev-only)
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   debugText: {
     fontSize: typography.size.sm,

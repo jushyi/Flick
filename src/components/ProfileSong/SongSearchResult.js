@@ -16,6 +16,8 @@ import { Image } from 'expo-image';
 import PixelIcon from '../PixelIcon';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
+import { spacing } from '../../constants/spacing';
+import { layout } from '../../constants/layout';
 import { formatDuration } from '../../services/iTunesService';
 
 const SongSearchResult = ({ song, isPlaying, onPlayPress, onSelectPress }) => {
@@ -58,10 +60,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    borderRadius: 4,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    marginBottom: spacing.xs,
+    borderRadius: layout.borderRadius.md,
     backgroundColor: colors.background.tertiary,
     minHeight: 60,
   },
@@ -73,13 +75,13 @@ const styles = StyleSheet.create({
   albumArt: {
     width: 48,
     height: 48,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.background.secondary,
   },
   songInfo: {
     flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
+    marginLeft: spacing.sm,
+    marginRight: spacing.xs,
   },
   title: {
     fontSize: typography.size.md,

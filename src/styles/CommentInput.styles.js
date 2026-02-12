@@ -7,6 +7,8 @@
 import { StyleSheet, Platform } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   container: {
@@ -19,8 +21,8 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
     backgroundColor: colors.background.tertiary,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
@@ -35,15 +37,15 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   replyBannerCancel: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   // Input row container
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingBottom: Platform.OS === 'ios' ? spacing.sm : spacing.xs,
   },
   // Text input wrapper - alignItems center for placeholder centering
   inputWrapper: {
@@ -51,8 +53,8 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background.tertiary,
-    borderRadius: 6,
-    paddingHorizontal: 16,
+    borderRadius: layout.borderRadius.xl,
+    paddingHorizontal: spacing.md,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     minHeight: 40,
     maxHeight: 100,
@@ -69,12 +71,12 @@ export const styles = StyleSheet.create({
   },
   // Image picker button
   imageButton: {
-    paddingLeft: 8,
+    paddingLeft: spacing.xs,
     paddingVertical: 2,
   },
   // GIF picker button
   gifButton: {
-    paddingLeft: 8,
+    paddingLeft: spacing.xs,
     paddingVertical: 2,
   },
   gifButtonText: {
@@ -87,10 +89,10 @@ export const styles = StyleSheet.create({
   },
   // Send button - 44x44 to match inputWrapper visual height with padding
   sendButton: {
-    marginLeft: 8,
+    marginLeft: spacing.xs,
     width: 44,
     height: 44,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.round,
     backgroundColor: colors.brand.purple,
     justifyContent: 'center',
     alignItems: 'center',
@@ -101,15 +103,15 @@ export const styles = StyleSheet.create({
   // Media preview (above input row)
   mediaPreviewContainer: {
     position: 'relative',
-    marginHorizontal: 12,
-    marginTop: 8,
-    marginBottom: 4,
+    marginHorizontal: spacing.sm,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xxs,
     alignSelf: 'flex-start',
   },
   mediaPreview: {
     width: 80,
     height: 80,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
   },
   removeMediaButton: {
     position: 'absolute',
@@ -118,8 +120,8 @@ export const styles = StyleSheet.create({
     zIndex: 1,
   },
   removeMediaButtonBg: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 9999,
+    backgroundColor: colors.overlay.dark,
+    borderRadius: layout.borderRadius.round,
     width: 24,
     height: 24,
     justifyContent: 'center',
@@ -129,13 +131,13 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 4,
     left: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 6,
+    backgroundColor: colors.overlay.dark,
+    paddingHorizontal: spacing.xs,
     paddingVertical: 2,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
   },
   gifBadgeText: {
-    color: 'white',
+    color: colors.text.primary,
     fontSize: typography.size.xs,
     fontFamily: typography.fontFamily.bodyBold,
   },

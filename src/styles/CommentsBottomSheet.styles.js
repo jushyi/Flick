@@ -12,6 +12,8 @@
 import { StyleSheet, Dimensions, Platform, StatusBar } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 export const SCREEN_HEIGHT = Dimensions.get('window').height;
 export const SHEET_HEIGHT = SCREEN_HEIGHT * 0.6;
@@ -37,7 +39,7 @@ export const styles = StyleSheet.create({
   // Backdrop for tap-to-close
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
   },
   // KeyboardAvoidingView wrapper
   // No maxHeight - allows expand/collapse gesture
@@ -48,8 +50,8 @@ export const styles = StyleSheet.create({
   // Main sheet container
   sheet: {
     backgroundColor: colors.background.secondary,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
+    borderTopLeftRadius: layout.borderRadius.xl,
+    borderTopRightRadius: layout.borderRadius.xl,
     minHeight: MIN_SHEET_HEIGHT, // Consistent height even when empty
     maxHeight: SHEET_HEIGHT,
     overflow: 'hidden',
@@ -57,13 +59,13 @@ export const styles = StyleSheet.create({
   // Handle bar for visual affordance - larger touch target
   handleBarContainer: {
     alignItems: 'center',
-    paddingTop: 16,
-    paddingBottom: 16,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
   },
   handleBar: {
     width: 36,
     height: 4,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.text.tertiary,
   },
   // Header row
@@ -71,8 +73,8 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -85,17 +87,17 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginLeft: 6,
+    marginLeft: spacing.xs,
   },
   closeButton: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   // Comments list
   commentsList: {
     flex: 1,
   },
   commentsListContent: {
-    paddingBottom: 8,
+    paddingBottom: spacing.xs,
   },
   // Empty state - centered with minimum height
   emptyContainer: {
@@ -103,34 +105,34 @@ export const styles = StyleSheet.create({
     minHeight: MIN_SHEET_HEIGHT * 0.5, // Half of sheet min height for content area
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: spacing.xxl,
   },
   emptyText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
   emptySubtext: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
   // Loading state
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: spacing.huge,
   },
   // Error state
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 24,
+    paddingVertical: spacing.huge,
+    paddingHorizontal: spacing.lg,
   },
   errorText: {
     fontSize: typography.size.md,
@@ -146,22 +148,22 @@ export const styles = StyleSheet.create({
   repliesSection: {
     marginLeft: 52, // Align with parent comment text (40px photo + 12px margin)
     borderLeftWidth: 1,
-    borderLeftColor: 'rgba(255, 255, 255, 0.1)',
-    paddingLeft: 12,
+    borderLeftColor: colors.overlay.light,
+    paddingLeft: spacing.sm,
     marginTop: -4, // Pull up slightly to connect visually with parent
   },
   // View/Hide replies toggle button
   viewRepliesButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
   },
   // Small horizontal line before toggle text
   viewRepliesLine: {
     width: 24,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginRight: 8,
+    backgroundColor: colors.overlay.lightBorder,
+    marginRight: spacing.xs,
   },
   // Toggle text styling
   viewRepliesText: {
@@ -171,6 +173,6 @@ export const styles = StyleSheet.create({
   },
   // Individual reply item container
   replyItem: {
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
 });

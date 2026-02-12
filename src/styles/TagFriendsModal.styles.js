@@ -8,6 +8,8 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   backdrop: {
@@ -20,25 +22,25 @@ export const styles = StyleSheet.create({
   },
   contentContainer: {
     backgroundColor: colors.background.secondary,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
+    borderTopLeftRadius: layout.borderRadius.xl,
+    borderTopRightRadius: layout.borderRadius.xl,
     maxHeight: '70%',
-    paddingTop: 12,
+    paddingTop: spacing.sm,
   },
   handle: {
     width: 40,
     height: 4,
     backgroundColor: colors.icon.inactive,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -48,9 +50,9 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   doneButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.md,
     backgroundColor: colors.interactive.primary,
   },
   doneButtonText: {
@@ -62,20 +64,20 @@ export const styles = StyleSheet.create({
     width: 60,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: spacing.md,
   },
   loadingContainer: {
-    paddingVertical: 40,
+    paddingVertical: spacing.xxl,
     alignItems: 'center',
   },
   loadingText: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
   emptyContainer: {
-    paddingVertical: 40,
+    paddingVertical: spacing.xxl,
     alignItems: 'center',
   },
   emptyText: {
@@ -86,14 +88,14 @@ export const styles = StyleSheet.create({
   friendRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 52,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    minHeight: layout.dimensions.inputHeight,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 9999,
+    width: layout.dimensions.avatarMedium,
+    height: layout.dimensions.avatarMedium,
+    borderRadius: layout.borderRadius.round,
     backgroundColor: colors.background.tertiary,
   },
   avatarPlaceholder: {
@@ -107,7 +109,7 @@ export const styles = StyleSheet.create({
   },
   friendInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: spacing.sm,
   },
   friendName: {
     fontSize: typography.size.md,
@@ -121,6 +123,6 @@ export const styles = StyleSheet.create({
     marginTop: 1,
   },
   checkIcon: {
-    marginLeft: 12,
+    marginLeft: spacing.sm,
   },
 });

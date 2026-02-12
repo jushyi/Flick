@@ -3,6 +3,8 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 
 /**
  * Retro 16-Bit Button Component
@@ -66,12 +68,12 @@ const Button = ({
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 2,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: layout.borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
+    minHeight: layout.dimensions.buttonMinHeight,
     borderWidth: 2,
     borderColor: 'transparent',
   },
