@@ -1,6 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 export const styles = StyleSheet.create({
   container: {
@@ -11,14 +13,14 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
     height: 56,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border.subtle,
   },
   headerButton: {
-    width: 40,
-    height: 40,
+    width: spacing.xxl,
+    height: spacing.xxl,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -28,32 +30,32 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   headerSpacer: {
-    width: 40,
+    width: spacing.xxl,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    padding: spacing.md,
     flexGrow: 1,
   },
   sectionTitle: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.secondary,
-    marginBottom: 12,
+    marginBottom: spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   reasonRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border.subtle,
   },
   reasonIcon: {
-    marginRight: 16,
+    marginRight: spacing.md,
   },
   reasonLabel: {
     flex: 1,
@@ -62,15 +64,15 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   checkmark: {
-    marginLeft: 8,
+    marginLeft: spacing.xs,
   },
   detailsContainer: {
-    marginTop: 24,
+    marginTop: spacing.lg,
   },
   detailsInput: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
-    padding: 16,
+    borderRadius: layout.borderRadius.md,
+    padding: spacing.md,
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
@@ -82,14 +84,14 @@ export const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'right',
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
   submitButton: {
-    backgroundColor: colors.brand.purple,
-    borderRadius: 4,
-    paddingVertical: 16,
+    backgroundColor: colors.interactive.primary,
+    borderRadius: layout.borderRadius.md,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: spacing.lg,
   },
   submitButtonDisabled: {
     opacity: 0.5,
@@ -97,6 +99,6 @@ export const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.bodyBold,
-    color: colors.text.primary,
+    color: colors.text.inverse,
   },
 });

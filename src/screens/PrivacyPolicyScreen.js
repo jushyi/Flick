@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import { PRIVACY_POLICY_CONTENT } from '../constants/legalContent';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
 
@@ -55,17 +56,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   backButton: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
-    fontFamily: typography.fontFamily.bodyBold,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   headerSpacer: {
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: spacing.xxl,
   },
   bodyText: {
     fontSize: typography.size.md,

@@ -29,7 +29,9 @@ import {
   canChangeUsername,
 } from '../services/firebase/userService';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 /**
@@ -411,7 +413,7 @@ const EditProfileScreen = ({ navigation }) => {
             disabled={!saveEnabled}
           >
             {saving ? (
-              <PixelSpinner size="small" color={colors.brand.purple} />
+              <PixelSpinner size="small" color={colors.interactive.primary} />
             ) : (
               <Text style={[styles.saveText, !saveEnabled && styles.saveTextDisabled]}>Save</Text>
             )}
@@ -519,8 +521,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -540,16 +542,16 @@ const styles = StyleSheet.create({
   saveText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.bodyBold,
-    color: colors.brand.purple,
+    color: colors.interactive.primary,
     textAlign: 'right',
   },
   saveTextDisabled: {
     opacity: 0.4,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   photoContainer: {
     alignSelf: 'center',
@@ -558,12 +560,12 @@ const styles = StyleSheet.create({
   profilePhoto: {
     width: 120,
     height: 120,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.round,
   },
   placeholderPhoto: {
     width: 120,
     height: 120,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.round,
     backgroundColor: colors.background.tertiary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -576,7 +578,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 36,
     height: 36,
-    borderRadius: 9999,
+    borderRadius: layout.borderRadius.round,
     backgroundColor: colors.background.secondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -585,7 +587,7 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
-    marginTop: 24,
+    marginTop: spacing.lg,
   },
   usernameContainer: {
     marginBottom: 0,
@@ -597,14 +599,14 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
-    marginTop: -8,
-    marginBottom: 16,
-    marginLeft: 4,
+    marginTop: -spacing.xs,
+    marginBottom: spacing.md,
+    marginLeft: spacing.xxs,
   },
   bioInput: {
     height: 100,
     textAlignVertical: 'top',
-    paddingTop: 12,
+    paddingTop: spacing.sm,
   },
 });
 

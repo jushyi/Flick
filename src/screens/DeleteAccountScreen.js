@@ -28,7 +28,9 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components';
 import DownloadProgress from '../components/DownloadProgress';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 /**
@@ -360,7 +362,7 @@ const DeleteAccountScreen = () => {
             <PixelIcon
               name="download-outline"
               size={20}
-              color={colors.brand.purple}
+              color={colors.interactive.primary}
               style={styles.downloadIcon}
             />
             <Text style={styles.downloadButtonText}>Download All Photos</Text>
@@ -517,17 +519,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   backButton: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
-    fontFamily: typography.fontFamily.bodyBold,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
   },
   headerSpacer: {
@@ -535,55 +537,55 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xxl,
   },
   scrollContent: {
     flex: 1,
   },
   scrollContentContainer: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   contentCentered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.lg,
   },
   warningIconContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   title: {
     fontSize: typography.size.xxxl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   phoneNumber: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   warningBox: {
     backgroundColor: colors.background.secondary,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     padding: 20,
-    marginTop: 24,
-    marginBottom: 32,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
   },
   warningText: {
     fontSize: typography.size.lg,
@@ -593,21 +595,21 @@ const styles = StyleSheet.create({
   },
   warningTextBold: {
     fontFamily: typography.fontFamily.bodyBold,
-    color: colors.text.primary,
+    color: colors.status.danger,
   },
   warningSubtext: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 4,
-    marginBottom: 16,
+    marginTop: spacing.xxs,
+    marginBottom: spacing.md,
   },
   warningTextMargin: {
-    marginTop: 8,
-    marginBottom: 12,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
   },
   bulletList: {
-    marginLeft: 4,
+    marginLeft: spacing.xxs,
   },
   bulletRow: {
     flexDirection: 'row',
@@ -617,8 +619,8 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginRight: 8,
-    width: 12,
+    marginRight: spacing.xs,
+    width: spacing.sm,
   },
   bulletText: {
     fontSize: typography.size.md,
@@ -628,15 +630,15 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 40,
+    marginBottom: spacing.xxl,
   },
   dangerButton: {
     borderWidth: 2,
     borderColor: colors.status.danger,
-    borderRadius: 4,
-    paddingVertical: 16,
+    borderRadius: layout.borderRadius.md,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   dangerButtonDisabled: {
     borderColor: colors.text.tertiary,
@@ -651,40 +653,40 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
   },
   downloadSection: {
-    marginBottom: 32,
+    marginBottom: spacing.xl,
   },
   downloadHeading: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   downloadSubtext: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   downloadButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.brand.purple,
-    borderRadius: 4,
+    borderColor: colors.interactive.primary,
+    borderRadius: layout.borderRadius.md,
     paddingVertical: 14,
     paddingHorizontal: 20,
   },
   downloadIcon: {
-    marginRight: 8,
+    marginRight: spacing.xs,
   },
   downloadButtonText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.bodyBold,
-    color: colors.brand.purple,
+    color: colors.interactive.primary,
   },
   cancelButton: {
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -693,22 +695,22 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   primaryButton: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   codeInputContainer: {
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: spacing.lg,
   },
   codeInput: {
     width: '80%',
     height: 72,
     fontSize: typography.size.display,
     fontFamily: typography.fontFamily.bodyBold,
-    letterSpacing: 16,
+    letterSpacing: spacing.md,
     textAlign: 'center',
     borderWidth: 2,
     borderColor: colors.border.subtle,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     backgroundColor: colors.background.secondary,
     color: colors.text.primary,
   },
@@ -717,7 +719,7 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   errorText: {
     fontSize: typography.size.md,
@@ -730,26 +732,26 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
   loadingText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: spacing.md,
   },
   deletingText: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
-    marginTop: 24,
+    marginTop: spacing.lg,
   },
   deletingSubtext: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
 });
 
