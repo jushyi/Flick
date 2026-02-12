@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 
 ## Current Position
 
-Phase: 50 of 53 (CI/CD Pipeline)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-12 — Completed 50-03-PLAN.md
+Phase: 50.1 of 53 (Fix Failing Test Suites)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-12 — Completed 50.1-01-PLAN.md
 
 Progress: ██████████░░ 10/12 (v1.0.0 phases)
 
@@ -59,6 +59,8 @@ See PROJECT.md Key Decisions table for full history.
 | 50    | APP_ENV env var for aps-environment switching             | Dynamic config in app.config.js, production set via eas.json env   |
 | 50    | expo export for free PR bundle verification               | No EAS build credits consumed, validates JS bundle compiles        |
 | 50    | Developer role (not Admin) for EXPO_TOKEN robot           | Minimum necessary permissions for EAS Build/Submit                 |
+| 50.1  | Sequential test runner (&&) not Jest projects             | Two suites have incompatible presets (jest-expo vs node)           |
+| 50.1  | Local service mocks, not global for block/album           | Global mocks break those services' own test suites                 |
 
 ### Deferred Issues
 
@@ -85,5 +87,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 50-03-PLAN.md — Phase 50 complete
+Stopped at: Completed 50.1-01-PLAN.md
 Resume file: None
