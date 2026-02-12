@@ -48,9 +48,6 @@ const CASCADE_DELAY_MS = 120;
 // Fade-in duration for new cards entering the visible stack
 const STACK_ENTRY_FADE_DURATION = 300;
 
-// Entry animation duration for undo
-const ENTRY_DURATION = 400;
-
 /**
  * Get scale factor for card at given stack position.
  * @param {number} idx - Stack index (0=front, 1=behind, 2=furthest back)
@@ -107,6 +104,7 @@ const useSwipeableCard = ({
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
   // Animated values for gesture/front card
+  // For undo entries, start slightly scaled down and invisible for pop-in effect
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
@@ -145,7 +143,14 @@ const useSwipeableCard = ({
   const initialOpacity =
     isNewlyVisible && !hasAnimatedEntry.value ? 0 : getStackOpacity(stackIndex);
   const stackScaleAnim = useSharedValue(getStackScale(stackIndex));
-  const stackOffsetAnim = useSharedValue(getStackOffset(stackIndex));
+  // For undo entries, start offscreen: journal from top, archive/delete from bottom
+  const stackOffsetAnim = useSharedValue(
+    enterFrom === 'up'
+      ? -SCREEN_HEIGHT
+      : enterFrom === 'down' || enterFrom === 'delete'
+        ? SCREEN_HEIGHT
+        : getStackOffset(stackIndex)
+  );
   const stackOpacityAnim = useSharedValue(initialOpacity);
 
   // Consolidated animation - stackIndex useEffect is the SINGLE source of truth
@@ -238,87 +243,16 @@ const useSwipeableCard = ({
     }
   }, [isNewlyVisible, stackIndex]);
 
-  // Entry animation for undo (reverse of exit animation)
+  // Entry animation for undo — pop-in with brief overlay flash
+  // Card starts at scale 0.92 / opacity 0 (set via useSharedValue above)
   useEffect(() => {
     if (enterFrom && isActive) {
-      // Start card off-screen in the direction it exited
-      if (enterFrom === 'up') {
-        // Drop-in from above thin, then expand (reverse of thinning exit)
-        translateX.value = 0;
-        translateY.value = -SCREEN_HEIGHT * 1.2;
-        cardScale.value = 1;
-        cardScaleX.value = 0.05;
-      } else if (enterFrom === 'down') {
-        // Start as small box: crushed on both axes, below screen
-        translateX.value = 0;
-        translateY.value = SCREEN_HEIGHT * 0.5;
-        cardScale.value = 1;
-        cardScaleX.value = 0.2;
-        cardOpacity.value = 0;
-        archiveFlashOpacity.value = 0;
-        boxClipProgress.value = 1;
-      } else if (enterFrom === 'delete') {
-        // Deleted cards re-enter with quick fade-in + scale pop (no reverse dissolve)
-        translateX.value = 0;
-        translateY.value = 0;
-        cardScale.value = 0.8;
-        cardScaleX.value = 1;
-        cardOpacity.value = 0;
-        dissolveProgress.value = 0;
-        // Fade in
-        cardOpacity.value = withTiming(1, {
-          duration: ENTRY_DURATION * 0.4,
-          easing: Easing.out(Easing.cubic),
-        });
-        // Scale pop: 0.8 → 1.03 → 1.0
-        cardScale.value = withSequence(
-          withTiming(1.03, { duration: ENTRY_DURATION * 0.6, easing: Easing.out(Easing.cubic) }),
-          withTiming(1, { duration: ENTRY_DURATION * 0.3 })
-        );
-      }
-
-      // Animate to center position (for up/down entries)
-      if (enterFrom === 'up') {
-        translateY.value = withTiming(0, {
-          duration: ENTRY_DURATION,
-          easing: Easing.out(Easing.cubic),
-        });
-        // Scale bounce: overshoot slightly then settle
-        cardScale.value = withSequence(
-          withTiming(1.03, { duration: ENTRY_DURATION * 0.8, easing: Easing.out(Easing.cubic) }),
-          withTiming(1, { duration: ENTRY_DURATION * 0.2 })
-        );
-        // Expand horizontal scale back to normal
-        cardScaleX.value = withTiming(1, {
-          duration: ENTRY_DURATION,
-          easing: Easing.out(Easing.cubic),
-        });
-      } else if (enterFrom === 'down') {
-        // Reverse crush: expand width first, then height, slide up
-        cardOpacity.value = withTiming(1, {
-          duration: ENTRY_DURATION * 0.3,
-          easing: Easing.out(Easing.cubic),
-        });
-        translateY.value = withTiming(0, {
-          duration: ENTRY_DURATION,
-          easing: Easing.out(Easing.cubic),
-        });
-        // Expand width first (dot → stripe)
-        cardScaleX.value = withTiming(1, {
-          duration: ENTRY_DURATION * 0.5,
-          easing: Easing.out(Easing.cubic),
-        });
-        // Then expand height (stripe → full card)
-        boxClipProgress.value = withDelay(
-          ENTRY_DURATION * 0.2,
-          withTiming(0, {
-            duration: ENTRY_DURATION * 0.6,
-            easing: Easing.out(Easing.cubic),
-          })
-        );
-      }
-
-      logger.debug('useSwipeableCard: Entry animation started', {
+      // Slide from offscreen to stack position (stackOffsetAnim drives cardStyle in stack mode)
+      stackOffsetAnim.value = withTiming(getStackOffset(0), {
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+      });
+      logger.debug('useSwipeableCard: Undo slide-in animation started', {
         photoId: photo?.id,
         enterFrom,
       });
@@ -540,14 +474,14 @@ const useSwipeableCard = ({
         if (onExitClearance) {
           setTimeout(() => {
             onExitClearance();
-          }, 1000);
+          }, 550);
         }
 
         // Drive dissolve progress — blocks scatter based on this value
         dissolveProgress.value = withTiming(
           1,
           {
-            duration: 1100,
+            duration: 800,
             easing: Easing.linear,
           },
           () => {
