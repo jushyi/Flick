@@ -234,6 +234,17 @@ Plans:
 - [x] 50-02: EAS Build & Submit Workflows (tag-triggered builds, manual submit with approval gate)
 - [x] 50-03: Secrets Setup & Pipeline Verification (EXPO_TOKEN, environment gate, pipeline verified)
 
+#### Phase 50.1: Fix Failing Test Suites (INSERTED)
+
+**Goal**: Fix 76 failing tests across 10 test suites — 3 service tests (feedService, friendshipService, photoService), 2 integration tests (friendshipFlow, photoLifecycle), and 5 cloud functions tests (callable, notifications/sender, scheduled, smoke, triggers/notifications). All failures are mock setup issues, not real bugs. Must pass before release so PR checks are green.
+**Depends on**: Phase 50
+**Research**: Unlikely (investigating existing mock setup issues)
+**Plans**: TBD
+
+Plans:
+
+- [ ] TBD (run /gsd:plan-phase 50.1 to break down)
+
 #### Phase 51: iOS Release Preparation
 
 **Goal**: Rebrand to Flick, set up production Firebase environment, build contributions page with IAP name color perk, configure domain/support infrastructure, route reports to email, switch Giphy to production, configure App Store Connect, build and submit to App Store
@@ -265,12 +276,12 @@ Plans:
 
 - [ ] 52-01: TBD
 
-#### Phase 53: Unlisted App Store Release
+#### Phase 53: App Store Release
 
-**Goal**: Build via EAS Build, submit via EAS Submit, pass App Review, publish as unlisted (direct link only, not searchable)
+**Goal**: Build via EAS Build, submit via EAS Submit, pass App Review, publish publicly (no marketing — shared via direct link with friends/family). Post-release: verify CI/CD pipeline with a follow-up update, document future release playbook.
 **Depends on**: Phase 52
-**Research**: Likely (EAS Submit, App Review process, unlisted distribution)
-**Research topics**: EAS Submit configuration, App Review requirements, unlisted app distribution setup
+**Research**: Likely (EAS Submit, App Review process, Apple review guidelines pre-check)
+**Research topics**: EAS Submit configuration, App Review requirements, common rejection reasons, App Store listing best practices
 **Plans**: TBD
 
 Plans:
@@ -294,8 +305,9 @@ Plans:
 | 48.1 PhotoDetail Profile Nav   | v1.0.0    | 1/1   | Complete    | 2026-02-12 |
 | 49. Automated Test Suite       | v1.0.0    | 8/8   | Complete    | 2026-02-12 |
 | 50. CI/CD Pipeline             | v1.0.0    | 3/3   | Complete    | 2026-02-12 |
+| 50.1 Fix Failing Test Suites   | v1.0.0    | 0/?   | Not started | -          |
 | 51. iOS Release Preparation    | v1.0.0    | 0/10  | Not started | -          |
 | 52. Systematic UAT             | v1.0.0    | 0/?   | Not started | -          |
-| 53. Unlisted App Store Release | v1.0.0    | 0/?   | Not started | -          |
+| 53. App Store Release          | v1.0.0    | 0/?   | Not started | -          |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.
