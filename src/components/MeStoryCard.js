@@ -101,7 +101,7 @@ const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }
       <View ref={cardRef} style={styles.cardWrapper}>
         {hasPhotos && !isViewed ? (
           <LinearGradient
-            colors={colors.brand.gradient.developing}
+            colors={colors.storyCard.gradientUnviewed}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientBorder}

@@ -1378,8 +1378,8 @@ const styles = StyleSheet.create({
   },
   // Stories row styles
   storiesContainer: {
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
     backgroundColor: colors.background.primary,
   },
   storiesScrollContent: {

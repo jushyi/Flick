@@ -147,5 +147,6 @@ export const colors = {
     frame: '#1E1E35', // Dark indigo frame
     glowViewed: '#252540', // Subtle glow when viewed
     textName: '#E0E0F0', // Phosphor white name text
+    gradientUnviewed: ['#00D4FF', '#FF8C00', '#00D4FF'], // Cyan → Amber → Cyan
   },
 };
