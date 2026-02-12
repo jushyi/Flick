@@ -53,7 +53,7 @@ jest.mock('firebase-admin', () => {
     increment: jest.fn(n => n),
     arrayUnion: jest.fn((...args) => args),
     arrayRemove: jest.fn((...args) => args),
-    delete: jest.fn(),
+    delete: jest.fn(() => 'mock-field-delete'),
   };
   mockFirestore.Timestamp = {
     now: jest.fn(() => ({
@@ -126,6 +126,23 @@ jest.mock('firebase-admin/firestore', () => {
 
   return {
     initializeFirestore: jest.fn(() => mockDb),
+  };
+});
+
+// Mock firebase-admin/storage (needed by deleteUserAccount, processScheduledDeletions, etc.)
+jest.mock('firebase-admin/storage', () => {
+  const mockFile = {
+    delete: jest.fn().mockResolvedValue(),
+    exists: jest.fn().mockResolvedValue([true]),
+    getSignedUrl: jest.fn().mockResolvedValue(['https://mock-signed-url.com']),
+  };
+  const mockBucket = {
+    file: jest.fn(() => mockFile),
+  };
+  return {
+    getStorage: jest.fn(() => ({
+      bucket: jest.fn(() => mockBucket),
+    })),
   };
 });
 
