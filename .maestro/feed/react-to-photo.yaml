@@ -1,0 +1,14 @@
+# Photo Reaction E2E Flow
+# Prerequisites: Logged-in user, feed has photos
+appId: com.spoodsjs.rewind
+---
+- launchApp
+- assertVisible:
+    id: 'feed-list'
+    timeout: 10000
+- tapOn:
+    id: 'feed-photo-card'
+# Photo detail opens - verify reaction button is visible
+- assertVisible:
+    text: '.*react.*|.*React.*|.*Tap to react.*'
+    timeout: 3000

@@ -1180,6 +1180,7 @@ const FeedScreen = () => {
       >
         {/* Left-aligned friends button */}
         <TouchableOpacity
+          testID="friends-button"
           onPress={() => navigation.navigate('FriendsList')}
           style={styles.friendsButton}
         >
@@ -1208,6 +1209,7 @@ const FeedScreen = () => {
       ) : (
         <Animated.View style={[styles.contentContainer, { opacity: contentOpacity }]}>
           <Animated.FlatList
+            testID="feed-list"
             ref={flatListRef}
             data={photos.length > 0 ? photos : archivePhotos}
             renderItem={renderFeedItem}

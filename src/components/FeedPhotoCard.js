@@ -115,7 +115,12 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
   };
 
   return (
-    <TouchableOpacity style={styles.card} onPress={handlePhotoPress} activeOpacity={0.95}>
+    <TouchableOpacity
+      testID="feed-photo-card"
+      style={styles.card}
+      onPress={handlePhotoPress}
+      activeOpacity={0.95}
+    >
       {/* Photo - full width with rounded top corners */}
       <View ref={photoContainerRef} style={styles.photoContainer}>
         <Image
@@ -176,7 +181,7 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
 
       {/* Comment preview - tapping opens modal with comments sheet */}
       {previewComments.length > 0 && (
-        <View style={styles.commentPreview}>
+        <View testID="feed-comments-button" style={styles.commentPreview}>
           <CommentPreview
             comments={previewComments}
             totalCount={commentCount}

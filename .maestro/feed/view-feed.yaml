@@ -1,5 +1,13 @@
 # Feed Browsing E2E Flow
-# Placeholder — actual flow will be implemented in 49-08
+# Prerequisites: Logged-in user with friends who have photos
 appId: com.spoodsjs.rewind
 ---
 - launchApp
+- assertVisible:
+    id: 'feed-list'
+    timeout: 10000
+- scroll:
+    direction: DOWN
+    duration: 500
+- assertVisible:
+    id: 'feed-photo-card'
