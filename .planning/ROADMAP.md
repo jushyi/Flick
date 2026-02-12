@@ -232,7 +232,7 @@ Plans:
 
 - [x] 50-01: Build Config & PR Checks (aps-environment switching, GitHub Actions PR workflow)
 - [x] 50-02: EAS Build & Submit Workflows (tag-triggered builds, manual submit with approval gate)
-- [ ] 50-03: TBD
+- [x] 50-03: Secrets Setup & Pipeline Verification (EXPO_TOKEN, environment gate, pipeline verified)
 
 #### Phase 51: iOS Release Preparation
 
@@ -293,7 +293,7 @@ Plans:
 | 48. UI/UX Consistency Audit    | v1.0.0    | 7/7   | Complete    | 2026-02-12 |
 | 48.1 PhotoDetail Profile Nav   | v1.0.0    | 1/1   | Complete    | 2026-02-12 |
 | 49. Automated Test Suite       | v1.0.0    | 8/8   | Complete    | 2026-02-12 |
-| 50. CI/CD Pipeline             | v1.0.0    | 2/3   | In progress | -          |
+| 50. CI/CD Pipeline             | v1.0.0    | 3/3   | Complete    | 2026-02-12 |
 | 51. iOS Release Preparation    | v1.0.0    | 0/10  | Not started | -          |
 | 52. Systematic UAT             | v1.0.0    | 0/?   | Not started | -          |
 | 53. Unlisted App Store Release | v1.0.0    | 0/?   | Not started | -          |
