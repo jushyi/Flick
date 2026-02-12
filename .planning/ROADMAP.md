@@ -216,7 +216,7 @@ Plans:
 - [x] 49-03: Service Tests — Content & Account Layer (albums, users, accounts, notifications)
 - [x] 49-04: Hook Tests (mentions, comments, feed, darkroom)
 - [x] 49-05: Cloud Functions Test Infrastructure & Notification Tests
-- [ ] 49-06: Cloud Functions Trigger & Callable Tests
+- [x] 49-06: Cloud Functions Trigger & Callable Tests
 - [ ] 49-07: Maestro E2E Setup & Auth Flow
 - [ ] 49-08: Maestro E2E Critical Flows & Final Verification
 
@@ -282,7 +282,7 @@ Plans:
 | 47.1 Comment @-Tagging         | v1.0.0    | 2/2   | Complete    | 2026-02-11 |
 | 48. UI/UX Consistency Audit    | v1.0.0    | 5/7   | In progress | -          |
 | 48.1 PhotoDetail Profile Nav   | v1.0.0    | 1/1   | Complete    | 2026-02-12 |
-| 49. Automated Test Suite       | v1.0.0    | 5/8   | In progress | -          |
+| 49. Automated Test Suite       | v1.0.0    | 6/8   | In progress | -          |
 | 50. CI/CD Pipeline             | v1.0.0    | 0/?   | Not started | -          |
 | 51. iOS Release Preparation    | v1.0.0    | 0/?   | Not started | -          |
 | 52. Systematic UAT             | v1.0.0    | 0/?   | Not started | -          |
