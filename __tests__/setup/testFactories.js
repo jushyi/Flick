@@ -225,6 +225,65 @@ const createTimestamp = (dateOrMs = Date.now()) => {
   };
 };
 
+/**
+ * Create a test comment document
+ * @param {Object} overrides - Properties to override defaults
+ * @returns {Object} Comment document
+ */
+const createTestComment = (overrides = {}) => ({
+  id: 'comment-123',
+  photoId: 'photo-123',
+  userId: 'test-user-123',
+  text: 'Test comment',
+  parentId: null,
+  mentionedCommentId: null,
+  createdAt: { _seconds: Date.now() / 1000, _nanoseconds: 0 },
+  likes: 0,
+  ...overrides,
+});
+
+/**
+ * Create a test album document
+ * @param {Object} overrides - Properties to override defaults
+ * @returns {Object} Album document
+ */
+const createTestAlbum = (overrides = {}) => ({
+  id: 'album-123',
+  userId: 'test-user-123',
+  name: 'Test Album',
+  photoIds: [],
+  coverPhotoId: null,
+  createdAt: { _seconds: Date.now() / 1000, _nanoseconds: 0 },
+  updatedAt: { _seconds: Date.now() / 1000, _nanoseconds: 0 },
+  ...overrides,
+});
+
+/**
+ * Create a test mention object
+ * @param {Object} overrides - Properties to override defaults
+ * @returns {Object} Mention object
+ */
+const createTestMention = (overrides = {}) => ({
+  uid: 'mention-user-123',
+  displayName: 'Mentioned User',
+  username: 'mentioneduser',
+  profilePhotoURL: 'https://example.com/mention-photo.jpg',
+  ...overrides,
+});
+
+/**
+ * Create a test block document
+ * @param {Object} overrides - Properties to override defaults
+ * @returns {Object} Block document
+ */
+const createTestBlock = (overrides = {}) => ({
+  id: 'block-123',
+  blockerId: 'test-user-123',
+  blockedId: 'blocked-user-456',
+  createdAt: { _seconds: Date.now() / 1000, _nanoseconds: 0 },
+  ...overrides,
+});
+
 module.exports = {
   createTestUser,
   createTestPhoto,
@@ -239,4 +298,8 @@ module.exports = {
   createTestReactions,
   generateFriendshipId,
   createTimestamp,
+  createTestComment,
+  createTestAlbum,
+  createTestMention,
+  createTestBlock,
 };
