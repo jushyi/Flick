@@ -13,6 +13,7 @@ import {
   limit,
   onSnapshot,
   serverTimestamp,
+  documentId,
 } from '@react-native-firebase/firestore';
 import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
 import logger from '../../utils/logger';
@@ -520,5 +521,55 @@ export const getMutualFriendSuggestions = async userId => {
   } catch (error) {
     logger.error('Error getting mutual friend suggestions', error);
     return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Batch fetch user documents by IDs
+ * Chunks IDs into groups of 30 (Firestore `in` operator limit) and queries in parallel.
+ * Returns a Map of userId -> userData for O(1) lookups.
+ *
+ * @param {string[]} userIds - Array of user IDs to fetch
+ * @returns {Promise<Map<string, object>>} Map of userId -> user data
+ */
+export const batchGetUsers = async userIds => {
+  if (!userIds || userIds.length === 0) {
+    return new Map();
+  }
+
+  // Deduplicate IDs
+  const uniqueIds = [...new Set(userIds)];
+
+  // Chunk into groups of 30 (Firestore 'in' operator limit)
+  const CHUNK_SIZE = 30;
+  const chunks = [];
+  for (let i = 0; i < uniqueIds.length; i += CHUNK_SIZE) {
+    chunks.push(uniqueIds.slice(i, i + CHUNK_SIZE));
+  }
+
+  try {
+    // Run all chunk queries in parallel
+    const chunkResults = await Promise.all(
+      chunks.map(async chunk => {
+        const q = query(collection(db, 'users'), where(documentId(), 'in', chunk));
+        return getDocs(q);
+      })
+    );
+
+    // Build Map from results
+    const userMap = new Map();
+    chunkResults.forEach(snapshot => {
+      snapshot.forEach(docSnap => {
+        userMap.set(docSnap.id, {
+          id: docSnap.id,
+          ...docSnap.data(),
+        });
+      });
+    });
+
+    return userMap;
+  } catch (error) {
+    logger.error('Error in batchGetUsers', error);
+    return new Map();
   }
 };

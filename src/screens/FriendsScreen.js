@@ -17,8 +17,6 @@ import {
   where,
   limit,
   getDocs,
-  doc,
-  getDoc,
 } from '@react-native-firebase/firestore';
 import PixelIcon from '../components/PixelIcon';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +32,7 @@ import {
   removeFriend,
   checkFriendshipStatus,
   getMutualFriendSuggestions,
+  batchGetUsers,
 } from '../services/firebase/friendshipService';
 import {
   hasUserSyncedContacts,
@@ -111,32 +110,32 @@ const FriendsScreen = ({ navigation }) => {
         return;
       }
 
-      // Fetch user data for each friend
-      const friendsWithUserData = await Promise.all(
-        result.friendships.map(async friendship => {
+      // Collect all friend userIds for batch fetch
+      const friendUserIds = result.friendships.map(friendship =>
+        friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id
+      );
+
+      // Batch fetch all user data at once (ceil(N/30) queries instead of N)
+      const userMap = await batchGetUsers(friendUserIds);
+
+      // Map friendship docs to friend objects using the batch-fetched Map
+      const friendsWithUserData = result.friendships
+        .map(friendship => {
           const otherUserId =
             friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id;
-          try {
-            const userRef = doc(db, 'users', otherUserId);
-            const userDoc = await getDoc(userRef);
-            if (userDoc.exists()) {
-              return {
-                friendshipId: friendship.id,
-                userId: otherUserId,
-                acceptedAt: friendship.acceptedAt,
-                displayName: userDoc.data().displayName,
-                username: userDoc.data().username,
-                profilePhotoURL: userDoc.data().profilePhotoURL || userDoc.data().photoURL,
-              };
-            }
-          } catch (err) {
-            logger.error('Error fetching friend user data', err);
+          const userData = userMap.get(otherUserId);
+          if (userData) {
+            return {
+              friendshipId: friendship.id,
+              userId: otherUserId,
+              acceptedAt: friendship.acceptedAt,
+              displayName: userData.displayName,
+              username: userData.username,
+              profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
+            };
           }
           return null;
         })
-      );
-
-      const validFriends = friendsWithUserData
         .filter(f => f !== null)
         .sort((a, b) => {
           const nameA = (a.displayName || a.username || '').toLowerCase();
@@ -144,8 +143,8 @@ const FriendsScreen = ({ navigation }) => {
           return nameA.localeCompare(nameB);
         });
 
-      setFriends(validFriends);
-      setFilteredFriends(validFriends);
+      setFriends(friendsWithUserData);
+      setFilteredFriends(friendsWithUserData);
     } catch (err) {
       logger.error('Error in fetchFriends', err);
     }
@@ -158,56 +157,64 @@ const FriendsScreen = ({ navigation }) => {
         getSentRequests(user.uid),
       ]);
 
+      // Collect all userIds from both incoming and sent requests for a single batch fetch
+      const allRequestUserIds = [];
+
       if (incomingResult.success) {
-        // Fetch user data for incoming requests
-        const incomingWithUserData = await Promise.all(
-          incomingResult.requests.map(async request => {
-            const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
-            try {
-              const userRef = doc(db, 'users', otherUserId);
-              const userDoc = await getDoc(userRef);
-              if (userDoc.exists()) {
-                return {
-                  ...request,
-                  userId: otherUserId,
-                  displayName: userDoc.data().displayName,
-                  username: userDoc.data().username,
-                  profilePhotoURL: userDoc.data().profilePhotoURL || userDoc.data().photoURL,
-                };
-              }
-            } catch (err) {
-              logger.error('Error fetching request user data', err);
-            }
-            return null;
-          })
-        );
-        setIncomingRequests(incomingWithUserData.filter(r => r !== null));
+        incomingResult.requests.forEach(request => {
+          const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
+          allRequestUserIds.push(otherUserId);
+        });
       }
 
       if (sentResult.success) {
-        // Fetch user data for sent requests
-        const sentWithUserData = await Promise.all(
-          sentResult.requests.map(async request => {
+        sentResult.requests.forEach(request => {
+          const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
+          allRequestUserIds.push(otherUserId);
+        });
+      }
+
+      // Batch fetch all user data at once
+      const userMap = await batchGetUsers(allRequestUserIds);
+
+      if (incomingResult.success) {
+        const incomingWithUserData = incomingResult.requests
+          .map(request => {
             const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
-            try {
-              const userRef = doc(db, 'users', otherUserId);
-              const userDoc = await getDoc(userRef);
-              if (userDoc.exists()) {
-                return {
-                  ...request,
-                  userId: otherUserId,
-                  displayName: userDoc.data().displayName,
-                  username: userDoc.data().username,
-                  profilePhotoURL: userDoc.data().profilePhotoURL || userDoc.data().photoURL,
-                };
-              }
-            } catch (err) {
-              logger.error('Error fetching sent request user data', err);
+            const userData = userMap.get(otherUserId);
+            if (userData) {
+              return {
+                ...request,
+                userId: otherUserId,
+                displayName: userData.displayName,
+                username: userData.username,
+                profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
+              };
             }
             return null;
           })
-        );
-        setSentRequests(sentWithUserData.filter(r => r !== null));
+          .filter(r => r !== null);
+        setIncomingRequests(incomingWithUserData);
+      }
+
+      if (sentResult.success) {
+        const sentWithUserData = sentResult.requests
+          .map(request => {
+            const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
+            const userData = userMap.get(otherUserId);
+            if (userData) {
+              return {
+                ...request,
+                userId: otherUserId,
+                displayName: userData.displayName,
+                username: userData.username,
+                profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
+              };
+            }
+            return null;
+          })
+          .filter(r => r !== null);
+        setSentRequests(sentWithUserData);
       }
     } catch (err) {
       logger.error('Error in fetchRequests', err);
