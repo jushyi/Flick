@@ -175,8 +175,7 @@ const StoriesViewerModal = ({
       // Left tap - previous
       if (currentIndex === 0) {
         logger.debug('StoriesViewer: At first photo, closing');
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        onClose();
+        closeWithAnimation();
       } else {
         const newIndex = currentIndex - 1;
         logger.debug('StoriesViewer: Navigating', { direction: 'previous', newIndex });
@@ -190,8 +189,7 @@ const StoriesViewerModal = ({
       // Right tap - next
       if (currentIndex === topPhotos.length - 1) {
         logger.debug('StoriesViewer: At last photo, closing');
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        onClose();
+        closeWithAnimation();
       } else {
         const newIndex = currentIndex + 1;
         logger.debug('StoriesViewer: Navigating', { direction: 'next', newIndex });
@@ -205,10 +203,27 @@ const StoriesViewerModal = ({
     // Center tap (40%) - no action
   };
 
-  const handleClose = () => {
-    logger.debug('StoriesViewer: Close button pressed');
+  const closeWithAnimation = () => {
+    logger.debug('StoriesViewer: Animated close triggered');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onClose();
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: SCREEN_HEIGHT,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+      setTimeout(() => {
+        translateY.setValue(0);
+        opacity.setValue(1);
+      }, 100);
+    });
   };
 
   const handleAvatarPress = () => {
@@ -243,7 +258,7 @@ const StoriesViewerModal = ({
       visible={visible}
       transparent={true}
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={closeWithAnimation}
       statusBarTranslucent
     >
       <Animated.View style={[styles.container, { opacity }]} {...panResponder.panHandlers}>
@@ -288,7 +303,7 @@ const StoriesViewerModal = ({
                 <Text style={styles.timestamp}>{getTimeAgo(currentPhoto.capturedAt)}</Text>
               </View>
             </View>
-            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={closeWithAnimation} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>X</Text>
             </TouchableOpacity>
           </View>

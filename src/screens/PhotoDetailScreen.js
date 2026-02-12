@@ -324,6 +324,9 @@ const PhotoDetailScreen = () => {
     handleEmojiPickerSelect,
     newlyAddedEmoji,
 
+    // Close handler (animated - plays suck-back/slide-down before calling onClose)
+    handleClose: animatedClose,
+
     // Comments visibility (for disabling swipe-to-dismiss during comment scroll)
     updateCommentsVisible,
   } = usePhotoDetailModal({
@@ -717,7 +720,7 @@ const PhotoDetailScreen = () => {
           {/* Header with close button */}
           <View style={styles.header}>
             <View style={styles.headerSpacer} />
-            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={animatedClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
           </View>

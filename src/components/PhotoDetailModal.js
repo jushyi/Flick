@@ -169,6 +169,9 @@ const PhotoDetailModal = ({
     handleOpenEmojiPicker,
     handleEmojiPickerSelect,
     newlyAddedEmoji,
+
+    // Close handler (animated)
+    handleClose,
   } = usePhotoDetailModal({
     mode,
     photo,
@@ -285,7 +288,7 @@ const PhotoDetailModal = ({
       visible={visible}
       transparent={true}
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       statusBarTranslucent
     >
       <Animated.View style={[styles.container]} {...panResponder.panHandlers}>
@@ -312,7 +315,7 @@ const PhotoDetailModal = ({
           {/* Header with close button */}
           <View style={styles.header}>
             <View style={styles.headerSpacer} />
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
           </View>

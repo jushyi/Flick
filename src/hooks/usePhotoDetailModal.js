@@ -991,8 +991,8 @@ export const usePhotoDetailModal = ({
     handleCustomEmojiConfirm,
     newlyAddedEmoji,
 
-    // Close handler
-    handleClose: onClose,
+    // Close handler (animated)
+    handleClose: closeWithAnimation,
 
     // Comments visibility (for disabling swipe-to-dismiss during comment scroll)
     updateCommentsVisible,
