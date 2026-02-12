@@ -1,0 +1,38 @@
+name: EAS Submit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    # GitHub Environment approval gate — requires a reviewer to approve before
+    # the job runs. Note: environment protection rules require GitHub Pro for
+    # private repos. On the free plan, the manual workflow_dispatch trigger
+    # itself serves as the approval gate.
+    environment: app-store-production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Warning: --latest picks the most recent successful build for the
+      # platform. Ensure no dev/preview builds have completed after the
+      # production build before submitting. For precise build selection,
+      # use: eas submit --platform ios --id <build-id> --non-interactive
+      - name: Submit to App Store
+        run: eas submit --platform ios --profile production --latest --non-interactive
