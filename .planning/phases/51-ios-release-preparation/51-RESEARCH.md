@@ -12,9 +12,9 @@ Researched the complete iOS release preparation pipeline for an Expo/React Nativ
 
 Key finding: EAS managed credentials handle the hardest parts automatically — distribution certificates, provisioning profiles, and push notification keys are generated and stored by EAS when you run `eas build`. The manual work is primarily in App Store Connect: creating the app listing, uploading screenshots, filling in metadata, declaring privacy data collection, setting EU trader status, and requesting unlisted distribution after App Review approval.
 
-Critical discovery: Unlisted distribution requires a **separate request to Apple** after the app passes App Review. The app must first be submitted as a normal public app, with a note in Review Notes indicating it's intended for unlisted distribution. Once approved, unlisted status is **permanent** and cannot be reversed.
+**Decision (2026-02-12):** Public listing instead of unlisted. Unlisted is permanent and irreversible — public listing preserves the option to market later. Also setting `supportsTablet: false` to avoid iPad rendering risk.
 
-**Primary recommendation:** Use EAS managed credentials (not manual). Focus planning effort on App Store Connect metadata preparation, privacy manifest configuration, screenshot capture, and the unlisted distribution request workflow.
+**Primary recommendation:** Use EAS managed credentials (not manual). Focus planning effort on App Store Connect metadata preparation, privacy manifest configuration, and screenshot capture.
 </research_summary>
 
 <standard_stack>
@@ -85,7 +85,7 @@ Critical discovery: Unlisted distribution requires a **separate request to Apple
    │   ├── Screenshots (6.9" iPhone required)
    │   ├── Description, keywords, support URL
    │   ├── What's New text
-   │   └── Review notes (mention unlisted intent)
+   │   └── Review notes
    └── App Privacy
        └── Data collection declarations
 
@@ -100,10 +100,8 @@ Critical discovery: Unlisted distribution requires a **separate request to Apple
    ├── eas submit --platform ios
    └── Monitor TestFlight processing
 
-5. Unlisted Distribution Request
-   ├── Submit unlisted request form to Apple
-   ├── Wait for Apple approval (6-48 hours)
-   └── Receive direct link
+5. Public Release (decision: skip unlisted)
+   └── App goes live on App Store after App Review approval
 ```
 
 ### Pattern 1: EAS Managed Credentials (Recommended)
@@ -179,7 +177,7 @@ Critical discovery: Unlisted distribution requires a **separate request to Apple
 - **Manual certificate management:** Unless required by enterprise policy, EAS managed is simpler and less error-prone
 - **Skipping privacy manifest:** Apple will email rejection within minutes of TestFlight upload
 - **Forgetting EU trader status:** App will be removed from EU App Store
-- **Setting unlisted before App Review:** Must pass review as public app first, then request unlisted
+- ~~**Setting unlisted before App Review:**~~ N/A — going with public listing
   </architecture_patterns>
 
 <dont_hand_roll>
@@ -218,19 +216,13 @@ Problems that look simple but have existing solutions:
 **How to avoid:** Add `privacyManifests` to `expo.ios` in app.json; check all Firebase package PrivacyInfo.xcprivacy files
 **Warning signs:** Email from Apple about "ITMS-91053: Missing API declaration"
 
-### Pitfall 3: iPad Rendering Issues
+### ~~Pitfall 3: iPad Rendering Issues~~ RESOLVED
 
-**What goes wrong:** App rejected because UI doesn't render properly on iPad
-**Why it happens:** Even with `supportsTablet: true`, Apple tests iPad rendering; elements may overlap or be cut off
-**How to avoid:** Test on iPad simulator before submission; current app has `supportsTablet: true` which means it WILL be tested on iPad
-**Warning signs:** Rejection citing guideline 2.4.1 (iPad compatibility)
+**Decision:** Set `supportsTablet: false` — app is phone-only, avoids iPad review risk entirely.
 
-### Pitfall 4: Unlisted Distribution Timing
+### ~~Pitfall 4: Unlisted Distribution Timing~~ RESOLVED
 
-**What goes wrong:** Developer tries to request unlisted before App Review, gets declined
-**Why it happens:** Apple requires the app to either be already on App Store OR submitted for review first
-**How to avoid:** Submit for review as normal public app, add note in Review Notes about unlisted intent, submit unlisted request form concurrently or after approval
-**Warning signs:** Unlisted request declined with "app hasn't been submitted to App Review"
+**Decision:** Going with public listing — unlisted workflow no longer applies.
 
 ### Pitfall 5: EU Trader Status Not Set
 
@@ -253,12 +245,9 @@ Problems that look simple but have existing solutions:
 **How to avoid:** Verify `com.spoodsjs.rewind` is registered in Apple Developer portal and used in App Store Connect app listing
 **Warning signs:** EAS build errors about provisioning profile not matching bundle ID
 
-### Pitfall 8: Unlisted Distribution is Permanent
+### ~~Pitfall 8: Unlisted Distribution is Permanent~~ RESOLVED
 
-**What goes wrong:** Developer wants to make app public later but can't
-**Why it happens:** Once Apple approves unlisted distribution, it cannot be reversed
-**How to avoid:** Be certain unlisted is the right choice. If you might want public distribution later, consider keeping it public but not marketing it.
-**Warning signs:** Apple documentation clearly states this limitation
+**Decision:** Going with public listing — this was the reason for the decision. Unlisted is irreversible; public preserves all options.
 </common_pitfalls>
 
 <code_examples>
@@ -402,26 +391,17 @@ expo-notifications:
    - What's unclear: Whether Giphy SDK, expo-camera, expo-audio, or other project dependencies add additional required reasons
    - Recommendation: During implementation, run `find node_modules -name "PrivacyInfo.xcprivacy"` to discover all dependency privacy manifests and aggregate their entries
 
-2. **iPad compatibility with supportsTablet: true**
-   - What we know: Current app.json has `supportsTablet: true`, Apple will test on iPad
-   - What's unclear: Whether the app's dark-themed UI renders correctly on iPad screen sizes
-   - Recommendation: Test on iPad simulator before submission; consider setting `supportsTablet: false` if iPad experience isn't ready (but this limits potential audience)
+2. ~~**iPad compatibility**~~ RESOLVED — setting `supportsTablet: false`
 
-3. **Unlisted distribution approval timeline**
-   - What we know: Apple says 6-48 hours for unlisted request review
-   - What's unclear: Whether the request can be submitted before or only after App Review approval
-   - Recommendation: Submit the app for review AND the unlisted request concurrently; include explanation in Review Notes
+3. ~~**Unlisted distribution**~~ RESOLVED — going with public listing
 
 4. **App Store Connect app name availability**
    - What we know: App name "Rewind" must be unique on App Store
    - What's unclear: Whether "Rewind" is available (common word, likely taken)
    - Recommendation: Check availability early; have alternatives ready (e.g., "Rewind - Photo Journal", "REWIND")
 
-5. **`supportsTablet` vs App Review**
-   - What we know: The app has `supportsTablet: true` but is phone-focused
-   - What's unclear: Whether Apple will reject if tablet experience isn't optimized
-   - Recommendation: If the app looks fine on iPad at phone resolution, keep it; if not, set to `false` before submission
-     </open_questions>
+5. ~~**`supportsTablet` vs App Review**~~ RESOLVED — setting `supportsTablet: false`
+   </open_questions>
 
 <sources>
 ## Sources
