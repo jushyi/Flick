@@ -1,24 +1,29 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
+
+// Avatar size for FriendCard (between avatarMedium and avatarLarge)
+const AVATAR_SIZE = 50;
 
 export const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background.secondary,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   avatarContainer: {
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 9999,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: layout.borderRadius.round,
   },
   avatarPlaceholder: {
     backgroundColor: colors.background.tertiary,
@@ -32,7 +37,7 @@ export const styles = StyleSheet.create({
   },
   userInfo: {
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   displayName: {
     fontSize: typography.size.lg,
@@ -60,14 +65,14 @@ export const styles = StyleSheet.create({
   actionsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.xs,
   },
-  // Add Friend button (purple)
+  // Add Friend button (interactive primary)
   addButton: {
-    backgroundColor: colors.brand.purple,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 2,
+    backgroundColor: colors.interactive.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.sm,
     minWidth: 70,
     alignItems: 'center',
   },
@@ -78,16 +83,16 @@ export const styles = StyleSheet.create({
   },
   // Dismiss button (X) for suggestions
   dismissButton: {
-    padding: 8,
+    padding: spacing.xs,
     backgroundColor: colors.background.tertiary,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
   },
   // Pending button (gray)
   pendingButton: {
     backgroundColor: colors.background.tertiary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.sm,
     minWidth: 70,
     alignItems: 'center',
   },
@@ -99,9 +104,9 @@ export const styles = StyleSheet.create({
   // Accept button (green)
   acceptButton: {
     backgroundColor: colors.status.ready,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 2,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.sm,
     minWidth: 70,
     alignItems: 'center',
   },
@@ -113,9 +118,9 @@ export const styles = StyleSheet.create({
   // Deny button (red/pink)
   denyButton: {
     backgroundColor: colors.status.danger,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 2,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.sm,
     minWidth: 60,
     alignItems: 'center',
   },
@@ -127,9 +132,9 @@ export const styles = StyleSheet.create({
   // Cancel button (for sent requests)
   cancelButton: {
     backgroundColor: colors.background.tertiary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.sm,
     minWidth: 70,
     alignItems: 'center',
   },
@@ -143,7 +148,7 @@ export const styles = StyleSheet.create({
   },
   // Three-dot menu button for friends
   menuButton: {
-    padding: 8,
-    marginLeft: 8,
+    padding: spacing.xs,
+    marginLeft: spacing.xs,
   },
 });

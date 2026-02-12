@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
 /**
  * AddFriendsPromptCard - Prompt card styled like FriendStoryCard
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   dashedBorder: {
     width: PHOTO_WIDTH + BORDER_WIDTH * 2,
     height: PHOTO_HEIGHT + BORDER_WIDTH * 2,
-    borderRadius: 4,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 2,
     borderColor: colors.background.tertiary,
     borderStyle: 'dashed',
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.background.secondary,
     justifyContent: 'center',
     alignItems: 'center',
