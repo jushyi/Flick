@@ -54,6 +54,18 @@ export const usePhotoDetailModal = ({
 }) => {
   // Stories mode: current photo index
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Immediately sync currentIndex when photos array changes (friend transition).
+  // Uses React's "adjust state during render" pattern so the very first render
+  // after a friend transition already has the correct index, eliminating a
+  // stale-index frame where photos[oldIndex] could show the wrong photo.
+  const [prevPhotosKey, setPrevPhotosKey] = useState(photos);
+  if (photos !== prevPhotosKey) {
+    setPrevPhotosKey(photos);
+    const validIndex = Math.min(Math.max(0, initialIndex), Math.max(0, photos.length - 1));
+    setCurrentIndex(validIndex);
+  }
+
   // State to track if we should re-sort or freeze current order
   const [frozenOrder, setFrozenOrder] = useState(null);
   const sortTimerRef = useRef(null);
@@ -151,9 +163,13 @@ export const usePhotoDetailModal = ({
   }, [visible, initialIndex, photos.length, mode]);
 
   // Derive current photo based on mode
+  // Clamp index to valid range to prevent null during friend transitions
+  // (new photos array may be shorter than old currentIndex before useEffect syncs)
   const currentPhoto = useMemo(() => {
     if (mode === 'stories') {
-      return photos[currentIndex] || null;
+      if (photos.length === 0) return null;
+      const safeIndex = Math.min(currentIndex, photos.length - 1);
+      return photos[safeIndex] || null;
     }
     return photo;
   }, [mode, photo, photos, currentIndex]);
