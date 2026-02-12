@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -49,6 +49,10 @@ const MonthlyAlbumGridScreen = () => {
   const [loading, setLoading] = useState(true);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
+  const [viewerSourceRect, setViewerSourceRect] = useState(null);
+
+  // Refs for measuring photo cell positions (expand/collapse animation)
+  const cellRefs = useRef({});
 
   // Format month for header display: "January 2026"
   const formattedMonthTitle = useMemo(() => {
@@ -151,8 +155,18 @@ const MonthlyAlbumGridScreen = () => {
 
   const handlePhotoPress = photoIndex => {
     logger.info('MonthlyAlbumGridScreen: Photo pressed', { photoIndex });
-    setViewerInitialIndex(photoIndex);
-    setViewerVisible(true);
+    const cellRef = cellRefs.current[photoIndex];
+    if (cellRef) {
+      cellRef.measureInWindow((x, y, width, height) => {
+        setViewerSourceRect({ x, y, width, height });
+        setViewerInitialIndex(photoIndex);
+        setViewerVisible(true);
+      });
+    } else {
+      setViewerSourceRect(null);
+      setViewerInitialIndex(photoIndex);
+      setViewerVisible(true);
+    }
   };
 
   const renderItem = ({ item }) => {
@@ -273,6 +287,9 @@ const MonthlyAlbumGridScreen = () => {
           {item.photos.map(photoItem => (
             <TouchableOpacity
               key={photoItem.key}
+              ref={r => {
+                cellRefs.current[photoItem.photoIndex] = r;
+              }}
               style={styles.photoCell}
               onPress={() => handlePhotoPress(photoItem.photoIndex)}
               activeOpacity={0.8}
@@ -355,7 +372,11 @@ const MonthlyAlbumGridScreen = () => {
         albumName={formattedMonthTitle}
         isOwnProfile={isOwnProfile}
         currentUserId={user?.uid}
-        onClose={() => setViewerVisible(false)}
+        sourceRect={viewerSourceRect}
+        onClose={() => {
+          setViewerVisible(false);
+          setViewerSourceRect(null);
+        }}
         onPhotoStateChanged={handlePhotoStateChanged}
       />
     </View>

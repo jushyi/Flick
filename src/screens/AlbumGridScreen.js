@@ -49,8 +49,12 @@ const AlbumGridScreen = () => {
   const [loading, setLoading] = useState(true);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
+  const [viewerSourceRect, setViewerSourceRect] = useState(null);
   const [toastVisible, setToastVisible] = useState(false);
   const toastOpacity = useRef(new Animated.Value(0)).current;
+
+  // Refs for measuring photo cell positions (expand/collapse animation)
+  const cellRefs = useRef({});
 
   // Menu states
   const [headerMenuVisible, setHeaderMenuVisible] = useState(false);
@@ -186,8 +190,18 @@ const AlbumGridScreen = () => {
 
   const handlePhotoPress = (photo, index) => {
     logger.info('AlbumGridScreen: Photo pressed', { photoId: photo.id, index });
-    setViewerInitialIndex(index);
-    setViewerVisible(true);
+    const cellRef = cellRefs.current[index];
+    if (cellRef) {
+      cellRef.measureInWindow((x, y, width, height) => {
+        setViewerSourceRect({ x, y, width, height });
+        setViewerInitialIndex(index);
+        setViewerVisible(true);
+      });
+    } else {
+      setViewerSourceRect(null);
+      setViewerInitialIndex(index);
+      setViewerVisible(true);
+    }
   };
 
   // Handle long-press on grid photo to show set cover option
@@ -305,6 +319,9 @@ const AlbumGridScreen = () => {
 
       return (
         <TouchableOpacity
+          ref={r => {
+            cellRefs.current[index] = r;
+          }}
           style={styles.photoCell}
           onPress={() => handlePhotoPress(item.photo, index)}
           onLongPress={event => handlePhotoLongPress(item.photo, event)}
@@ -407,7 +424,11 @@ const AlbumGridScreen = () => {
         albumName={album?.name}
         isOwnProfile={isOwnProfile}
         currentUserId={user?.uid}
-        onClose={() => setViewerVisible(false)}
+        sourceRect={viewerSourceRect}
+        onClose={() => {
+          setViewerVisible(false);
+          setViewerSourceRect(null);
+        }}
         onRemovePhoto={handleRemovePhoto}
         onSetCover={handleSetCover}
         onPhotoStateChanged={handlePhotoStateChanged}
