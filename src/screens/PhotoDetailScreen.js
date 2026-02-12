@@ -350,6 +350,31 @@ const PhotoDetailScreen = () => {
     onCancelSwipeTransition: handleCancelSwipeTransition,
   });
 
+  // Calculate segment width based on total photos
+  // Must be computed BEFORE snapshot capture so outgoing cube face has correct widths
+  const { segmentWidth, needsScroll } = useMemo(() => {
+    if (totalPhotos <= 0) return { segmentWidth: MIN_SEGMENT_WIDTH, needsScroll: false };
+
+    const availableWidth = SCREEN_WIDTH - PROGRESS_BAR_HORIZONTAL_PADDING * 2;
+    const totalGapWidth = (totalPhotos - 1) * PROGRESS_BAR_GAP;
+    const widthForSegments = availableWidth - totalGapWidth;
+    const calculatedWidth = widthForSegments / totalPhotos;
+
+    // If segments would be smaller than min, use min width and enable scrolling
+    if (calculatedWidth < MIN_SEGMENT_WIDTH) {
+      return { segmentWidth: MIN_SEGMENT_WIDTH, needsScroll: true };
+    }
+
+    // If more than MAX_VISIBLE_SEGMENTS, cap width and scroll
+    if (totalPhotos > MAX_VISIBLE_SEGMENTS) {
+      const cappedWidth =
+        (availableWidth - (MAX_VISIBLE_SEGMENTS - 1) * PROGRESS_BAR_GAP) / MAX_VISIBLE_SEGMENTS;
+      return { segmentWidth: Math.max(cappedWidth, MIN_SEGMENT_WIDTH), needsScroll: true };
+    }
+
+    return { segmentWidth: calculatedWidth, needsScroll: false };
+  }, [totalPhotos]);
+
   // Keep snapshot ref updated with current display data for cube transition
   // Freeze during transitions so outgoing face keeps the old friend's data
   if (!isTransitioningRef.current) {
@@ -592,30 +617,6 @@ const PhotoDetailScreen = () => {
     const { x, y, width, height } = event.nativeEvent.layout;
     setMenuAnchor({ x, y, width, height });
   }, []);
-
-  // Calculate segment width based on total photos
-  const { segmentWidth, needsScroll } = useMemo(() => {
-    if (totalPhotos <= 0) return { segmentWidth: MIN_SEGMENT_WIDTH, needsScroll: false };
-
-    const availableWidth = SCREEN_WIDTH - PROGRESS_BAR_HORIZONTAL_PADDING * 2;
-    const totalGapWidth = (totalPhotos - 1) * PROGRESS_BAR_GAP;
-    const widthForSegments = availableWidth - totalGapWidth;
-    const calculatedWidth = widthForSegments / totalPhotos;
-
-    // If segments would be smaller than min, use min width and enable scrolling
-    if (calculatedWidth < MIN_SEGMENT_WIDTH) {
-      return { segmentWidth: MIN_SEGMENT_WIDTH, needsScroll: true };
-    }
-
-    // If more than MAX_VISIBLE_SEGMENTS, cap width and scroll
-    if (totalPhotos > MAX_VISIBLE_SEGMENTS) {
-      const cappedWidth =
-        (availableWidth - (MAX_VISIBLE_SEGMENTS - 1) * PROGRESS_BAR_GAP) / MAX_VISIBLE_SEGMENTS;
-      return { segmentWidth: Math.max(cappedWidth, MIN_SEGMENT_WIDTH), needsScroll: true };
-    }
-
-    return { segmentWidth: calculatedWidth, needsScroll: false };
-  }, [totalPhotos]);
 
   // Auto-scroll emoji row to start and fade highlight when new emoji is added
   useEffect(() => {
