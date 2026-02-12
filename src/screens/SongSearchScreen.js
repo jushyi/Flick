@@ -28,6 +28,8 @@ import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 import { searchSongs } from '../services/iTunesService';
 import { stopPreview, playPreview } from '../services/audioPlayer';
 import { SongSearchResult, ClipSelectionModal } from '../components/ProfileSong';
@@ -303,13 +305,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   closeButton: {
-    padding: 8,
+    padding: spacing.xs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
@@ -320,21 +322,21 @@ const styles = StyleSheet.create({
     width: 40,
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background.secondary,
-    borderRadius: 2,
+    borderRadius: layout.borderRadius.sm,
     borderWidth: 1,
     borderColor: colors.border.subtle,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.sm,
     height: 48,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: spacing.xs,
   },
   searchInput: {
     flex: 1,
@@ -343,11 +345,11 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   clearButton: {
-    padding: 4,
+    padding: spacing.xxs,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.lg,
     flexGrow: 1,
   },
   emptyContainer: {
@@ -360,7 +362,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.tertiary,
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
 });
 

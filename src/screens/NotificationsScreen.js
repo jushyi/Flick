@@ -24,6 +24,8 @@ import PixelIcon from '../components/PixelIcon';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 import { useAuth } from '../context/AuthContext';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { getTimeAgo } from '../utils/timeUtils';
@@ -308,14 +310,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   backButton: {
-    marginRight: 8,
+    marginRight: spacing.xs,
   },
   headerTitle: {
     fontSize: typography.size.xl,
@@ -329,17 +331,17 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: spacing.md,
   },
   notificationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.background.secondary,
   },
   profilePhotoContainer: {
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   profilePhoto: {
     width: 50,
@@ -356,7 +358,7 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   messageText: {
     fontSize: typography.size.md,
@@ -378,17 +380,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: spacing.xxl,
   },
   emptyTitle: {
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -398,12 +401,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.background.tertiary,
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 4,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: layout.borderRadius.md,
     borderWidth: 1,
     borderColor: colors.brand.purple + '40',
   },
@@ -413,7 +416,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pushBannerText: {
-    marginLeft: 12,
+    marginLeft: spacing.sm,
     flex: 1,
   },
   pushBannerTitle: {
@@ -429,10 +432,10 @@ const styles = StyleSheet.create({
   },
   pushBannerButton: {
     backgroundColor: colors.brand.purple,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 2,
-    marginLeft: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: layout.borderRadius.sm,
+    marginLeft: spacing.sm,
     minWidth: 70,
     alignItems: 'center',
   },

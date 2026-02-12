@@ -6,6 +6,8 @@ import { useNavigation, useRoute, useFocusEffect, useIsFocused } from '@react-na
 import PixelIcon from '../components/PixelIcon';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
+import { layout } from '../constants/layout';
 import {
   SelectsBanner,
   FullscreenSelectsViewer,
@@ -160,20 +162,21 @@ const ProfileScreen = () => {
     }
   }, [isOwnProfile, userId, user?.uid]);
 
-  // Fetch friend count for the displayed profile
+  // Fetch friend count — own profile queries friendships directly; other profiles use denormalized field
   const fetchFriendCount = useCallback(async () => {
-    const targetUserId = isOwnProfile ? user?.uid : userId;
-    if (!targetUserId) return;
-
-    try {
-      const result = await getFriendships(targetUserId);
-      if (result.success) {
-        setFriendCount(result.friendships.length);
+    if (isOwnProfile && user?.uid) {
+      try {
+        const result = await getFriendships(user.uid);
+        if (result.success) {
+          setFriendCount(result.friendships.length);
+        }
+      } catch (error) {
+        logger.error('ProfileScreen: Error fetching friend count', { error: error.message });
       }
-    } catch (error) {
-      logger.error('ProfileScreen: Error fetching friend count', { error: error.message });
+    } else if (!isOwnProfile && profileData?.friendCount != null) {
+      setFriendCount(profileData.friendCount);
     }
-  }, [isOwnProfile, userId, user?.uid]);
+  }, [isOwnProfile, user?.uid, profileData?.friendCount]);
 
   // Reset fetch refs when userId changes
   useEffect(() => {
@@ -894,7 +897,7 @@ const ProfileScreen = () => {
               {profileData?.bio || 'No bio yet'}
             </Text>
 
-            {/* Friend Count Scoreboard - centered between photo right edge and card right edge */}
+            {/* Friend Count Scoreboard */}
             <TouchableOpacity
               style={styles.friendCounter}
               onPress={() => navigation.navigate('FriendsList')}
@@ -1046,14 +1049,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
   headerButton: {
-    padding: 8,
+    padding: spacing.xs,
   },
   headerTitle: {
     flex: 1,
@@ -1070,12 +1073,12 @@ const styles = StyleSheet.create({
   },
   // Selects Banner Container
   selectsBannerContainer: {
-    marginHorizontal: 16,
+    marginHorizontal: spacing.md,
   },
   // Profile Section
   profileSection: {
-    marginTop: 16,
-    marginHorizontal: 16,
+    marginTop: spacing.md,
+    marginHorizontal: spacing.md,
     flexDirection: 'row',
   },
   profilePhotoContainer: {
@@ -1101,9 +1104,9 @@ const styles = StyleSheet.create({
   profileInfoCard: {
     flex: 1,
     backgroundColor: colors.background.tertiary,
-    borderRadius: 2,
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    borderRadius: layout.borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
     paddingTop: 70, // Space for profile photo overlay
   },
   displayName: {
@@ -1116,13 +1119,13 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
   bio: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
   bioPlaceholder: {
     fontStyle: 'italic',
@@ -1139,7 +1142,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   friendCounterValue: {
     fontSize: typography.size.xxl,
@@ -1150,13 +1153,13 @@ const styles = StyleSheet.create({
   },
   // Profile Song
   songContainer: {
-    marginHorizontal: 16,
-    marginTop: 16,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
   },
   // Add Friend Section (for non-friends)
   addFriendSection: {
-    marginHorizontal: 16,
-    marginTop: 24,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.lg,
     alignItems: 'center',
   },
   addFriendButton: {
@@ -1164,11 +1167,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.brand.purple,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 4,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: layout.borderRadius.md,
     width: '100%',
-    gap: 8,
+    gap: spacing.xs,
   },
   addFriendButtonDisabled: {
     opacity: 0.6,
@@ -1179,8 +1182,8 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bodyBold,
   },
   cancelRequestButton: {
-    marginTop: 12,
-    padding: 8,
+    marginTop: spacing.sm,
+    padding: spacing.xs,
   },
   cancelText: {
     color: colors.text.secondary,
