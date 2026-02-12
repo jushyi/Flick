@@ -16,17 +16,18 @@ jest.mock('firebase-functions', () => ({
   runWith: jest.fn(() => ({
     firestore: {
       document: jest.fn(() => ({
-        onCreate: jest.fn(),
-        onUpdate: jest.fn(),
-        onWrite: jest.fn(),
-        onDelete: jest.fn(),
+        onCreate: jest.fn(handler => handler),
+        onUpdate: jest.fn(handler => handler),
+        onWrite: jest.fn(handler => handler),
+        onDelete: jest.fn(handler => handler),
       })),
     },
     pubsub: {
       schedule: jest.fn(() => ({
         timeZone: jest.fn(() => ({
-          onRun: jest.fn(),
+          onRun: jest.fn(handler => handler),
         })),
+        onRun: jest.fn(handler => handler),
       })),
     },
   })),
@@ -55,7 +56,18 @@ jest.mock('firebase-admin', () => {
     delete: jest.fn(),
   };
   mockFirestore.Timestamp = {
-    now: jest.fn(() => ({ toDate: () => new Date() })),
+    now: jest.fn(() => ({
+      toDate: () => new Date(),
+      toMillis: () => Date.now(),
+    })),
+    fromMillis: jest.fn(ms => ({
+      toDate: () => new Date(ms),
+      toMillis: () => ms,
+    })),
+    fromDate: jest.fn(date => ({
+      toDate: () => date,
+      toMillis: () => date.getTime(),
+    })),
   };
 
   return {
@@ -84,37 +96,38 @@ jest.mock('firebase-admin/app', () => ({
 }));
 
 // Mock firebase-admin/firestore (needed by index.js)
-jest.mock('firebase-admin/firestore', () => ({
-  initializeFirestore: jest.fn(() => {
-    // Return a mock db object
-    const mockDocRef = {
-      get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
-      set: jest.fn().mockResolvedValue(),
-      update: jest.fn().mockResolvedValue(),
-      delete: jest.fn().mockResolvedValue(),
-    };
-    const mockCollectionRef = {
-      doc: jest.fn(() => mockDocRef),
-      add: jest.fn().mockResolvedValue({ id: 'mock-id' }),
-      get: jest.fn().mockResolvedValue({ docs: [], empty: true }),
-      where: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-    };
-    const mockDb = {
-      collection: jest.fn(() => mockCollectionRef),
-      doc: jest.fn(() => mockDocRef),
-      batch: jest.fn(() => ({
-        set: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        commit: jest.fn().mockResolvedValue(),
-      })),
-      runTransaction: jest.fn(fn => fn({ get: jest.fn(), set: jest.fn(), update: jest.fn() })),
-    };
-    return mockDb;
-  }),
-}));
+// IMPORTANT: Use a singleton mockDb so index.js and tests share the same instance
+jest.mock('firebase-admin/firestore', () => {
+  const mockDocRef = {
+    get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+    set: jest.fn().mockResolvedValue(),
+    update: jest.fn().mockResolvedValue(),
+    delete: jest.fn().mockResolvedValue(),
+  };
+  const mockCollectionRef = {
+    doc: jest.fn(() => mockDocRef),
+    add: jest.fn().mockResolvedValue({ id: 'mock-id' }),
+    get: jest.fn().mockResolvedValue({ docs: [], empty: true }),
+    where: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+  };
+  const mockDb = {
+    collection: jest.fn(() => mockCollectionRef),
+    doc: jest.fn(() => mockDocRef),
+    batch: jest.fn(() => ({
+      set: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      commit: jest.fn().mockResolvedValue(),
+    })),
+    runTransaction: jest.fn(fn => fn({ get: jest.fn(), set: jest.fn(), update: jest.fn() })),
+  };
+
+  return {
+    initializeFirestore: jest.fn(() => mockDb),
+  };
+});
 
 // Mock expo-server-sdk
 jest.mock('expo-server-sdk', () => {
@@ -136,41 +149,41 @@ jest.mock('expo-server-sdk', () => {
 
 // Mock zod (used by validation.js)
 jest.mock('zod', () => {
-  const mockSchema = {
-    safeParse: jest.fn(() => ({ success: true, data: {} })),
-    parse: jest.fn(data => data),
-    optional: jest.fn(() => mockSchema),
-    nullable: jest.fn(() => mockSchema),
+  // Create a fully chainable mock schema where every method returns itself
+  const createChainableSchema = () => {
+    const schema = {
+      safeParse: jest.fn(() => ({ success: true, data: {} })),
+      parse: jest.fn(data => data),
+    };
+    // All chainable methods return the same schema object
+    const chainMethods = [
+      'optional',
+      'nullable',
+      'min',
+      'max',
+      'email',
+      'url',
+      'int',
+      'positive',
+      'negative',
+      'nonnegative',
+    ];
+    for (const method of chainMethods) {
+      schema[method] = jest.fn(() => schema);
+    }
+    return schema;
   };
+
   return {
     z: {
-      object: jest.fn(() => mockSchema),
-      string: jest.fn(() => ({
-        ...mockSchema,
-        min: jest.fn(() => mockSchema),
-        max: jest.fn(() => mockSchema),
-        email: jest.fn(() => mockSchema),
-        url: jest.fn(() => mockSchema),
-        optional: jest.fn(() => mockSchema),
-        nullable: jest.fn(() => mockSchema),
-      })),
-      number: jest.fn(() => ({
-        ...mockSchema,
-        min: jest.fn(() => mockSchema),
-        max: jest.fn(() => mockSchema),
-        int: jest.fn(() => mockSchema),
-        optional: jest.fn(() => mockSchema),
-      })),
-      boolean: jest.fn(() => mockSchema),
-      enum: jest.fn(() => mockSchema),
-      array: jest.fn(() => ({
-        ...mockSchema,
-        min: jest.fn(() => mockSchema),
-        max: jest.fn(() => mockSchema),
-        optional: jest.fn(() => mockSchema),
-      })),
-      record: jest.fn(() => mockSchema),
-      any: jest.fn(() => mockSchema),
+      object: jest.fn(() => createChainableSchema()),
+      string: jest.fn(() => createChainableSchema()),
+      number: jest.fn(() => createChainableSchema()),
+      boolean: jest.fn(() => createChainableSchema()),
+      enum: jest.fn(() => createChainableSchema()),
+      array: jest.fn(() => createChainableSchema()),
+      record: jest.fn(() => createChainableSchema()),
+      any: jest.fn(() => createChainableSchema()),
     },
   };
 });
