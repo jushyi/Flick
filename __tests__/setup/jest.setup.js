@@ -360,6 +360,51 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 // ============================================================================
+// Firebase Performance Mock
+// ============================================================================
+const mockPerfTrace = {
+  start: jest.fn(() => Promise.resolve()),
+  stop: jest.fn(() => Promise.resolve()),
+  putAttribute: jest.fn(),
+  putMetric: jest.fn(),
+};
+const mockNewTrace = jest.fn(() => mockPerfTrace);
+const mockSetPerformanceCollectionEnabled = jest.fn();
+
+jest.mock('@react-native-firebase/perf', () => {
+  return () => ({
+    newTrace: mockNewTrace,
+    setPerformanceCollectionEnabled: mockSetPerformanceCollectionEnabled,
+  });
+});
+
+global.mockPerfTrace = mockPerfTrace;
+global.mockNewTrace = mockNewTrace;
+global.mockSetPerformanceCollectionEnabled = mockSetPerformanceCollectionEnabled;
+
+// ============================================================================
+// React Native Reanimated Mock
+// ============================================================================
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+
+// ============================================================================
+// React Navigation Mock
+// ============================================================================
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    setOptions: jest.fn(),
+    dispatch: jest.fn(),
+    reset: jest.fn(),
+    addListener: jest.fn(() => jest.fn()),
+  }),
+  useRoute: () => ({ params: {} }),
+  useFocusEffect: jest.fn(),
+  useIsFocused: () => true,
+}));
+
+// ============================================================================
 // React Native Mocks
 // ============================================================================
 
