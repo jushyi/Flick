@@ -255,7 +255,7 @@ Plans:
 
 Plans:
 
-- [ ] 51-01: Rebrand to Flick (replace all Rewind references, new icon, updated splash)
+- [x] 51-01: Rebrand to Flick (replace all Rewind references, new icon, updated splash)
 - [ ] 51-02: Production Firebase Environment Setup (separate project, EAS profile switching)
 - [ ] 51-03: app.json & eas.json Production Configuration (privacy manifests, APS, supportsTablet)
 - [ ] 51-04: Domain & Support Infrastructure (domain registration, email, in-app links)
@@ -307,7 +307,7 @@ Plans:
 | 49. Automated Test Suite       | v1.0.0    | 8/8   | Complete    | 2026-02-12 |
 | 50. CI/CD Pipeline             | v1.0.0    | 3/3   | Complete    | 2026-02-12 |
 | 50.1 Fix Failing Test Suites   | v1.0.0    | 2/2   | Complete    | 2026-02-13 |
-| 51. iOS Release Preparation    | v1.0.0    | 0/10  | Not started | -          |
+| 51. iOS Release Preparation    | v1.0.0    | 1/10  | In progress | -          |
 | 52. Systematic UAT             | v1.0.0    | 0/?   | Not started | -          |
 | 53. App Store Release          | v1.0.0    | 0/?   | Not started | -          |
 
