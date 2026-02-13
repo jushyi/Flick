@@ -53,6 +53,8 @@ CLAUDE.md
 
 # Firebase config files (never commit)
 GoogleService-Info.plist
+GoogleService-Info-prod.plist
 **/GoogleService-Info.plist
+**/GoogleService-Info-prod.plist
 google-services.json
 **/google-services.json
