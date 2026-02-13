@@ -84,37 +84,49 @@ export default function App() {
    * Used by both the system notification tap listener and the in-app banner press
    */
   const navigateToNotification = navData => {
-    if (!navData.success || !navigationRef.current?.isReady()) return;
+    if (!navData.success) return;
     const { screen, params } = navData.data;
     logger.info('App: Notification navigating', { screen, params });
 
-    if (screen === 'Camera') {
-      // Navigate to Camera tab with all params (openDarkroom, etc.)
-      // First navigate to ensure we're on the right tab
-      navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
-      // Then set params after a small delay to ensure the screen is focused
-      // This works around React Navigation's nested navigator param propagation issue
-      setTimeout(() => {
+    // Wait for navigation to be ready (important for cold starts)
+    const attemptNavigation = () => {
+      if (!navigationRef.current?.isReady()) {
+        logger.debug('Navigation not ready, retrying in 100ms');
+        setTimeout(attemptNavigation, 100);
+        return;
+      }
+
+      if (screen === 'Camera') {
+        // Navigate to Camera tab with all params (openDarkroom, etc.)
+        // First navigate to ensure we're on the right tab
+        navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
+        // Then set params after a small delay to ensure the screen is focused
+        // This works around React Navigation's nested navigator param propagation issue
+        setTimeout(() => {
+          navigationRef.current.navigate('MainTabs', {
+            screen: 'Camera',
+            params: params,
+          });
+        }, 100);
+      } else if (screen === 'Feed') {
+        // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
         navigationRef.current.navigate('MainTabs', {
-          screen: 'Camera',
+          screen: 'Feed',
           params: params,
         });
-      }, 100);
-    } else if (screen === 'Feed') {
-      // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
-      navigationRef.current.navigate('MainTabs', {
-        screen: 'Feed',
-        params: params,
-      });
-    } else if (screen === 'Profile') {
-      navigationRef.current.navigate('MainTabs', { screen });
-    } else if (screen === 'FriendsList') {
-      // Navigate to FriendsList screen (opens on requests tab by default)
-      navigationRef.current.navigate('FriendsList', params);
-    } else if (screen === 'OtherUserProfile') {
-      // Navigate to another user's profile (e.g., friend accepted notification)
-      navigationRef.current.navigate('OtherUserProfile', params);
-    }
+      } else if (screen === 'Profile') {
+        navigationRef.current.navigate('MainTabs', { screen });
+      } else if (screen === 'FriendsList') {
+        // Navigate to FriendsList screen (opens on requests tab by default)
+        navigationRef.current.navigate('FriendsList', params);
+      } else if (screen === 'OtherUserProfile') {
+        // Navigate to another user's profile (e.g., friend accepted notification)
+        navigationRef.current.navigate('OtherUserProfile', params);
+      }
+    };
+
+    // Start attempting navigation
+    attemptNavigation();
   };
 
   /**
