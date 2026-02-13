@@ -700,6 +700,7 @@ exports.sendFriendAcceptedNotification = functions
         {
           type: 'friend_accepted',
           friendshipId: friendshipId,
+          userId: acceptorId, // ID of person who accepted request
         },
         recipientId
       );
