@@ -163,6 +163,21 @@ export default function App() {
   useEffect(() => {
     initializeNotifications();
 
+    // Check for notification that opened the app (cold start)
+    Notifications.getLastNotificationResponseAsync().then(response => {
+      if (response) {
+        logger.info('App: Found cold start notification', {
+          data: response.notification.request.content.data,
+        });
+        const navigationData = handleNotificationTapped(response.notification);
+        logger.info('App: Cold start navigation data', { navigationData });
+        // Small delay to let app initialize
+        setTimeout(() => {
+          navigateToNotification(navigationData);
+        }, 1000);
+      }
+    });
+
     // Register notification token whenever a user authenticates
     // This handles: app startup with existing session, fresh login, and re-login after logout
     const auth = getAuth();
