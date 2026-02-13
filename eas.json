@@ -8,7 +8,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info.plist"
+        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info.plist",
+        "GIPHY_API_KEY": "rCkh8CHn02xlka96pBDVdw3McCnzNq7K"
       }
     },
     "preview": {
@@ -17,14 +18,16 @@
         "simulator": false
       },
       "env": {
-        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info.plist"
+        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info.plist",
+        "GIPHY_API_KEY": "rCkh8CHn02xlka96pBDVdw3McCnzNq7K"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "APP_ENV": "production",
-        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info-prod.plist"
+        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info-prod.plist",
+        "GIPHY_API_KEY": "PLACEHOLDER_UPDATE_WHEN_APPROVED"
       },
       "ios": {
         "image": "latest"
