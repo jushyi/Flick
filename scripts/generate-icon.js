@@ -12,7 +12,8 @@ const SECONDARY_COLOR = 0xff2d78ff; // Hot magenta
 // Film strip constants - THICK
 const PERF_WIDTH = 175; // Thick film strip (175px)
 const PERF_HOLE_SIZE = 90; // Larger perforation holes
-const PERF_SPACING = 105; // Space between perforations
+const PERF_SPACING = 145; // Space between perforations (more spread out)
+const PERF_OFFSET = 50; // Vertical offset from top to better center holes
 
 // Pixel size for solid chunky F
 const PIXEL_SIZE = 100; // Size of each solid block in the F (chunky)
@@ -36,9 +37,9 @@ async function generateIcon() {
 
   console.log('Drawing perforation holes...');
   // Draw perforation holes (dark squares)
-  const perfCount = Math.floor(SIZE / PERF_SPACING);
+  const perfCount = Math.floor((SIZE - PERF_OFFSET) / PERF_SPACING);
   for (let i = 0; i < perfCount; i++) {
-    const perfY = Math.floor(i * PERF_SPACING + (PERF_SPACING - PERF_HOLE_SIZE) / 2);
+    const perfY = Math.floor(PERF_OFFSET + i * PERF_SPACING + (PERF_SPACING - PERF_HOLE_SIZE) / 2);
     const perfX = Math.floor((PERF_WIDTH - PERF_HOLE_SIZE) / 2);
 
     // Left side holes
@@ -73,17 +74,17 @@ async function generateIcon() {
   }
 
   console.log('Drawing solid chunky F letter...');
-  // Draw solid "F" - chunky retro letter
-  // F pattern: 5 blocks wide x 8 blocks tall
+  // Draw solid "F" - chunky retro letter with thick vertical bar
+  // F pattern: 6 blocks wide x 8 blocks tall
   const fPattern = [
-    [1, 1, 1, 1, 1], // Top bar (full width)
-    [1, 0, 0, 0, 0], // Vertical bar
-    [1, 0, 0, 0, 0], // Vertical bar
-    [1, 1, 1, 1, 0], // Middle bar (slightly shorter)
-    [1, 0, 0, 0, 0], // Vertical bar
-    [1, 0, 0, 0, 0], // Vertical bar
-    [1, 0, 0, 0, 0], // Vertical bar
-    [1, 0, 0, 0, 0], // Vertical bar
+    [1, 1, 1, 1, 1, 1], // Top bar (full width)
+    [1, 1, 0, 0, 0, 0], // Thick vertical bar
+    [1, 1, 0, 0, 0, 0], // Thick vertical bar
+    [1, 1, 1, 1, 1, 0], // Middle bar (slightly shorter)
+    [1, 1, 0, 0, 0, 0], // Thick vertical bar
+    [1, 1, 0, 0, 0, 0], // Thick vertical bar
+    [1, 1, 0, 0, 0, 0], // Thick vertical bar
+    [1, 1, 0, 0, 0, 0], // Thick vertical bar
   ];
 
   // Center the F pattern
