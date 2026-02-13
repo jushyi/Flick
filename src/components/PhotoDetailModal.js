@@ -365,7 +365,13 @@ const PhotoDetailModal = ({
               },
             ]}
           >
-            <Text style={styles.displayName} numberOfLines={1}>
+            <Text
+              style={[
+                styles.displayName,
+                currentPhoto?.user?.nameColor && { color: currentPhoto.user.nameColor },
+              ]}
+              numberOfLines={1}
+            >
               {displayName || 'Unknown User'}
             </Text>
             <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>

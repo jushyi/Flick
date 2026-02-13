@@ -119,7 +119,11 @@ const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }
       </View>
 
       {/* Always show "Me" as label */}
-      <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+      <Text
+        style={[styles.name, friend?.nameColor && { color: friend.nameColor }]}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
         Me
       </Text>
     </TouchableOpacity>

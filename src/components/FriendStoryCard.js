@@ -136,7 +136,11 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
       </View>
 
       {/* Display name below card */}
-      <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+      <Text
+        style={[styles.name, friend?.nameColor && { color: friend.nameColor }]}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
         {displayName || 'Unknown'}
       </Text>
     </TouchableOpacity>

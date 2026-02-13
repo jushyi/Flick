@@ -156,7 +156,10 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
 
         {/* Name and timestamp */}
         <View style={styles.textContainer}>
-          <Text style={styles.displayName} numberOfLines={1}>
+          <Text
+            style={[styles.displayName, user?.nameColor && { color: user.nameColor }]}
+            numberOfLines={1}
+          >
             {displayName || 'Unknown'}
           </Text>
           <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>

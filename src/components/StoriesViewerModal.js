@@ -299,7 +299,10 @@ const StoriesViewerModal = ({
                 )}
               </TouchableOpacity>
               <View style={styles.friendTextContainer}>
-                <Text style={styles.displayName} numberOfLines={1}>
+                <Text
+                  style={[styles.displayName, friend?.nameColor && { color: friend.nameColor }]}
+                  numberOfLines={1}
+                >
                   {displayName || 'Unknown User'}
                 </Text>
                 <Text style={styles.timestamp}>{getTimeAgo(currentPhoto.capturedAt)}</Text>
