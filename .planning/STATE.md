@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 50.1 of 53 (Fix Failing Test Suites)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-12 — Completed 50.1-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-13 — Completed 50.1-02-PLAN.md
 
-Progress: ██████████░░ 10/12 (v1.0.0 phases)
+Progress: ███████████░ 11/13 (v1.0.0 phases)
 
 ## Performance Metrics
 
@@ -42,25 +42,26 @@ Progress: ██████████░░ 10/12 (v1.0.0 phases)
 
 See PROJECT.md Key Decisions table for full history.
 
-| Phase | Decision                                                  | Rationale                                                          |
-| ----- | --------------------------------------------------------- | ------------------------------------------------------------------ |
-| 46.1  | OtherUserProfile card instead of fullScreenModal          | fullScreenModal prevents child card screens from pushing on iOS    |
-| 47    | Custom code traces, not startScreenTrace()                | startScreenTrace() crashes on iOS                                  |
-| 47    | **DEV** guard skips trace creation entirely               | Prevent polluting production metrics with dev data                 |
-| 47.1  | Direct set intersection for mutual friend tagging         | Simpler/cheaper than friends-of-friends graph traversal            |
-| 47.1  | Inline overlay (not Modal/Portal) for mention suggestions | CommentsBottomSheet uses Animated.View — Modal breaks layering     |
-| 48    | Callback pattern for SongSearch navigation                | Preserves source screen local state; matches ProfilePhotoCrop      |
-| 48    | Edge masks for directional overflow clipping              | RN lacks overflow-x/y; opaque masks clip H while allowing V        |
-| 47.1  | requestAnimationFrame for Text.onPress navigation         | Text.onPress vs TouchableOpacity.onPress differ in Animated.View   |
-| 48    | Modal screens skip paddingTop: insets.top                 | presentation: 'modal' already offsets from status bar on iOS       |
-| 49    | --legacy-peer-deps for RNTL v13 install                   | react-test-renderer deprecated in React 19, RNTL makes it optional |
-| 48.1  | fullScreenModal for ProfileFromPhotoDetail                | iOS modal stacking: fullScreenModal renders above transparentModal |
-| 48.1  | Accept slide-from-bottom + no gesture dismiss             | Native iOS modal behavior, user confirmed acceptable trade-off     |
-| 50    | APP_ENV env var for aps-environment switching             | Dynamic config in app.config.js, production set via eas.json env   |
-| 50    | expo export for free PR bundle verification               | No EAS build credits consumed, validates JS bundle compiles        |
-| 50    | Developer role (not Admin) for EXPO_TOKEN robot           | Minimum necessary permissions for EAS Build/Submit                 |
-| 50.1  | Sequential test runner (&&) not Jest projects             | Two suites have incompatible presets (jest-expo vs node)           |
-| 50.1  | Local service mocks, not global for block/album           | Global mocks break those services' own test suites                 |
+| Phase | Decision                                                  | Rationale                                                           |
+| ----- | --------------------------------------------------------- | ------------------------------------------------------------------- |
+| 46.1  | OtherUserProfile card instead of fullScreenModal          | fullScreenModal prevents child card screens from pushing on iOS     |
+| 47    | Custom code traces, not startScreenTrace()                | startScreenTrace() crashes on iOS                                   |
+| 47    | **DEV** guard skips trace creation entirely               | Prevent polluting production metrics with dev data                  |
+| 47.1  | Direct set intersection for mutual friend tagging         | Simpler/cheaper than friends-of-friends graph traversal             |
+| 47.1  | Inline overlay (not Modal/Portal) for mention suggestions | CommentsBottomSheet uses Animated.View — Modal breaks layering      |
+| 48    | Callback pattern for SongSearch navigation                | Preserves source screen local state; matches ProfilePhotoCrop       |
+| 48    | Edge masks for directional overflow clipping              | RN lacks overflow-x/y; opaque masks clip H while allowing V         |
+| 47.1  | requestAnimationFrame for Text.onPress navigation         | Text.onPress vs TouchableOpacity.onPress differ in Animated.View    |
+| 48    | Modal screens skip paddingTop: insets.top                 | presentation: 'modal' already offsets from status bar on iOS        |
+| 49    | --legacy-peer-deps for RNTL v13 install                   | react-test-renderer deprecated in React 19, RNTL makes it optional  |
+| 48.1  | fullScreenModal for ProfileFromPhotoDetail                | iOS modal stacking: fullScreenModal renders above transparentModal  |
+| 48.1  | Accept slide-from-bottom + no gesture dismiss             | Native iOS modal behavior, user confirmed acceptable trade-off      |
+| 50    | APP_ENV env var for aps-environment switching             | Dynamic config in app.config.js, production set via eas.json env    |
+| 50    | expo export for free PR bundle verification               | No EAS build credits consumed, validates JS bundle compiles         |
+| 50    | Developer role (not Admin) for EXPO_TOKEN robot           | Minimum necessary permissions for EAS Build/Submit                  |
+| 50.1  | Sequential test runner (&&) not Jest projects             | Two suites have incompatible presets (jest-expo vs node)            |
+| 50.1  | Local service mocks, not global for block/album           | Global mocks break those services' own test suites                  |
+| 50.1  | Prioritize service tests over integration tests           | Service tests verify core logic; integration test failures deferred |
 
 ### Deferred Issues
 
@@ -86,6 +87,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-12
-Stopped at: Completed 50.1-01-PLAN.md
+Last session: 2026-02-13
+Stopped at: Completed 50.1-02-PLAN.md
 Resume file: None
