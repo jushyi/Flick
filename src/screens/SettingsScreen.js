@@ -64,6 +64,12 @@ const SettingsScreen = () => {
           icon: 'person-outline',
           onPress: () => handleNavigate('EditProfile'),
         },
+        {
+          id: 'contributions',
+          label: 'Support Flick',
+          icon: 'heart-outline',
+          onPress: () => handleNavigate('Contributions'),
+        },
       ],
     },
     {
