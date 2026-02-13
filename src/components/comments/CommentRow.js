@@ -303,12 +303,23 @@ const CommentRow = ({
 
               {/* Media Thumbnail (if exists) */}
               {mediaUrl && (
-                <Image
-                  source={{ uri: mediaUrl, cacheKey: `comment-media-${comment.id}` }}
-                  style={styles.mediaThumbnail}
-                  contentFit="cover"
-                  transition={200}
-                />
+                <View style={styles.mediaContainer}>
+                  <Image
+                    source={{ uri: mediaUrl, cacheKey: `comment-media-${comment.id}` }}
+                    style={styles.mediaThumbnail}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                  {/* Giphy attribution (required for inline GIF displays) */}
+                  {mediaType === 'gif' && (
+                    <Image
+                      source={require('../../../assets/Poweredby_100px-Black_VertLogo.png')}
+                      style={styles.giphyAttribution}
+                      contentFit="contain"
+                      contentPosition="bottom"
+                    />
+                  )}
+                </View>
               )}
 
               {/* Footer Row - Reply and Timestamp */}

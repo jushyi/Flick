@@ -75,11 +75,21 @@ export const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   // Media thumbnail for image/gif comments
+  mediaContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: spacing.xs,
+  },
   mediaThumbnail: {
     width: 100,
     height: 100,
     borderRadius: layout.borderRadius.sm,
-    marginBottom: spacing.xs,
+    marginRight: spacing.xs,
+  },
+  // Giphy attribution (required for inline GIF displays)
+  giphyAttribution: {
+    width: 40,
+    height: 60,
   },
   // Footer row with reply and timestamp
   footerRow: {
