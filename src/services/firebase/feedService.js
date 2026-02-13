@@ -181,6 +181,7 @@ export const getFeedPhotos = async (
             username: 'unknown',
             displayName: 'Unknown User',
             profilePhotoURL: null,
+            nameColor: null,
           },
         }));
 
@@ -365,6 +366,7 @@ export const getPhotoById = async photoId => {
           username: userData.username || 'unknown',
           displayName: userData.displayName || 'Unknown User',
           profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+          nameColor: userData.nameColor || null,
         },
       },
     };
@@ -414,6 +416,7 @@ export const getUserFeedPhotos = async (userId, limitCount = 50, lastDoc = null)
           username: userData.username || 'unknown',
           displayName: userData.displayName || 'Unknown User',
           profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+          nameColor: userData.nameColor || null,
         },
       }));
 
