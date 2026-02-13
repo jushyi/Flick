@@ -44,6 +44,16 @@ jest.mock('../../src/services/firebase/albumService', () => ({
   deleteAlbum: jest.fn(() => Promise.resolve({ success: true })),
 }));
 
+// Mock performanceService - photoService and feedService use withTrace
+jest.mock('../../src/services/firebase/performanceService', () => ({
+  withTrace: jest.fn((name, fn) => fn()),
+}));
+
+// Mock blockService - feedService imports getBlockedByUserIds
+jest.mock('../../src/services/firebase/blockService', () => ({
+  getBlockedByUserIds: jest.fn(() => Promise.resolve({ success: true, blockedByUserIds: [] })),
+}));
+
 // Firestore mocks
 const mockAddDoc = jest.fn();
 const mockGetDoc = jest.fn();
@@ -100,6 +110,7 @@ jest.mock('@react-native-firebase/firestore', () => ({
     delete: () => ({ _delete: true }),
   },
   getCountFromServer: jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
+  startAfter: jest.fn(() => ({})),
 }));
 
 // Import services AFTER mocks are set up
@@ -154,7 +165,11 @@ describe('Photo Lifecycle Integration Tests', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.photoId).toBe(mockPhotoId);
-      expect(mockUploadPhoto).toHaveBeenCalledWith(mockPhotoId, 'file://local-photo.jpg');
+      expect(mockUploadPhoto).toHaveBeenCalledWith(
+        mockUser.uid,
+        mockPhotoId,
+        'file://local-photo.jpg'
+      );
       expect(mockAddDoc).toHaveBeenCalled();
     });
 
@@ -311,7 +326,11 @@ describe('Photo Lifecycle Integration Tests', () => {
 
   describe('3. Reveal → Triage flow', () => {
     it('should triage photo to journal state', async () => {
-      // Arrange
+      // Arrange - journal action needs to read photo first for month calculation
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       mockUpdateDoc.mockResolvedValueOnce();
 
       // Act
@@ -319,17 +338,23 @@ describe('Photo Lifecycle Integration Tests', () => {
 
       // Assert
       expect(result.success).toBe(true);
+      expect(mockGetDoc).toHaveBeenCalled();
       expect(mockUpdateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           status: 'triaged',
           photoState: 'journal',
+          month: expect.any(String),
         })
       );
     });
 
     it('should triage photo to archive state', async () => {
-      // Arrange
+      // Arrange - archive action needs to read photo first for month calculation
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       mockUpdateDoc.mockResolvedValueOnce();
 
       // Act
@@ -337,6 +362,7 @@ describe('Photo Lifecycle Integration Tests', () => {
 
       // Assert
       expect(result.success).toBe(true);
+      expect(mockGetDoc).toHaveBeenCalled();
       expect(mockUpdateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
@@ -346,18 +372,26 @@ describe('Photo Lifecycle Integration Tests', () => {
       );
     });
 
-    it('should delete photo from both Firestore and Storage', async () => {
-      // Arrange
-      mockDeletePhoto.mockResolvedValueOnce();
-      mockDeleteDoc.mockResolvedValueOnce();
+    it('should soft delete photo when action is delete', async () => {
+      // Arrange - delete action does NOT call getDoc, just updates with soft delete fields
+      mockUpdateDoc.mockResolvedValueOnce();
 
       // Act
       const result = await triagePhoto('photo-delete-1', 'delete');
 
       // Assert
       expect(result.success).toBe(true);
-      expect(mockDeletePhoto).toHaveBeenCalledWith('photo-delete-1');
-      expect(mockDeleteDoc).toHaveBeenCalled();
+      expect(mockUpdateDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          status: 'triaged',
+          photoState: 'deleted',
+          scheduledForPermanentDeletionAt: expect.anything(),
+        })
+      );
+      // Soft delete does NOT call deletePhoto or deleteDoc
+      expect(mockDeletePhoto).not.toHaveBeenCalled();
+      expect(mockDeleteDoc).not.toHaveBeenCalled();
     });
 
     it('should batch triage multiple photos', async () => {
@@ -367,6 +401,11 @@ describe('Photo Lifecycle Integration Tests', () => {
         { photoId: 'batch-2', action: 'archive' },
         { photoId: 'batch-3', action: 'journal' },
       ];
+      // Mock getDoc for each journal/archive action (3 calls)
+      mockGetDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       mockUpdateDoc.mockResolvedValue();
 
       // Act
@@ -374,6 +413,8 @@ describe('Photo Lifecycle Integration Tests', () => {
 
       // Assert
       expect(result.success).toBe(true);
+      // Each triage action calls getDoc (for month) and updateDoc
+      expect(mockGetDoc).toHaveBeenCalledTimes(3);
       expect(mockUpdateDoc).toHaveBeenCalledTimes(3);
     });
   });
@@ -461,50 +502,34 @@ describe('Photo Lifecycle Integration Tests', () => {
       expect(result.photos.length).toBe(0);
     });
 
-    it('should include own photos in feed', async () => {
-      // Arrange
+    it('should return empty feed when user has no friends', async () => {
+      // Arrange - getFeedPhotos returns early when friendUserIds is empty
       const user = createTestUser({ uid: 'self-user' });
-      const ownPhoto = createJournaledPhoto({
-        id: 'own-photo-1',
-        userId: user.uid,
-      });
 
-      mockGetDocs.mockResolvedValueOnce({
-        docs: [
-          {
-            id: ownPhoto.id,
-            data: () => ownPhoto,
-          },
-        ],
-        size: 1,
-      });
-
-      mockGetDoc.mockResolvedValueOnce({
-        exists: () => true,
-        data: () => user,
-      });
-
-      // Act
+      // Act - empty friend list means no feed content (feed is 100% friend activity)
       const result = await getFeedPhotos(20, null, [], user.uid);
 
       // Assert
       expect(result.success).toBe(true);
-      expect(result.photos.length).toBe(1);
-      expect(result.photos[0].userId).toBe(user.uid);
+      expect(result.photos.length).toBe(0);
+      expect(result.hasMore).toBe(false);
+      // getDocs should not be called when friendUserIds is empty
+      expect(mockGetDocs).not.toHaveBeenCalled();
     });
 
-    it('should sort feed photos by capturedAt descending (newest first)', async () => {
+    it('should sort feed photos by triagedAt descending (newest first)', async () => {
       // Arrange
-      const user = createTestUser({ uid: 'sort-user' });
+      const userA = createTestUser({ uid: 'friend-a' });
+      const userB = createTestUser({ uid: 'viewer-b' });
       const olderPhoto = createJournaledPhoto({
         id: 'older-photo',
-        userId: user.uid,
-        capturedAt: { seconds: 1000, _nanoseconds: 0 },
+        userId: userA.uid,
+        triagedAt: { seconds: 1000 },
       });
       const newerPhoto = createJournaledPhoto({
         id: 'newer-photo',
-        userId: user.uid,
-        capturedAt: { seconds: 2000, _nanoseconds: 0 },
+        userId: userA.uid,
+        triagedAt: { seconds: 2000 },
       });
 
       mockGetDocs.mockResolvedValueOnce({
@@ -516,13 +541,13 @@ describe('Photo Lifecycle Integration Tests', () => {
       });
 
       mockGetDoc
-        .mockResolvedValueOnce({ exists: () => true, data: () => user })
-        .mockResolvedValueOnce({ exists: () => true, data: () => user });
+        .mockResolvedValueOnce({ exists: () => true, data: () => userA })
+        .mockResolvedValueOnce({ exists: () => true, data: () => userA });
 
-      // Act
-      const result = await getFeedPhotos(20, null, [], user.uid);
+      // Act - User B viewing friend A's feed
+      const result = await getFeedPhotos(20, null, [userA.uid], userB.uid);
 
-      // Assert - Newer photo should be first
+      // Assert - Newer photo should be first (sorted by triagedAt)
       expect(result.success).toBe(true);
       expect(result.photos.length).toBe(2);
       expect(result.photos[0].id).toBe('newer-photo');
@@ -531,30 +556,38 @@ describe('Photo Lifecycle Integration Tests', () => {
   });
 
   describe('5. Delete flow', () => {
-    it('should delete photo from Firestore and Storage', async () => {
-      // Arrange
-      mockDeletePhoto.mockResolvedValueOnce();
-      mockDeleteDoc.mockResolvedValueOnce();
+    it('should soft delete photo with 30-day grace period', async () => {
+      // Arrange - delete action uses soft delete (updateDoc, not deleteDoc/deletePhoto)
+      mockUpdateDoc.mockResolvedValueOnce();
 
       // Act
       const result = await triagePhoto('delete-full-1', 'delete');
 
       // Assert
       expect(result.success).toBe(true);
-      expect(mockDeletePhoto).toHaveBeenCalledWith('delete-full-1');
-      expect(mockDeleteDoc).toHaveBeenCalled();
+      expect(mockUpdateDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          status: 'triaged',
+          photoState: 'deleted',
+          scheduledForPermanentDeletionAt: expect.anything(),
+        })
+      );
+      // Soft delete does NOT immediately call deletePhoto or deleteDoc
+      expect(mockDeletePhoto).not.toHaveBeenCalled();
+      expect(mockDeleteDoc).not.toHaveBeenCalled();
     });
 
-    it('should handle storage delete failure', async () => {
+    it('should handle delete update failure', async () => {
       // Arrange
-      mockDeletePhoto.mockRejectedValueOnce(new Error('Storage error'));
+      mockUpdateDoc.mockRejectedValueOnce(new Error('Update error'));
 
       // Act
       const result = await triagePhoto('delete-fail-1', 'delete');
 
       // Assert
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Storage error');
+      expect(result.error).toContain('Update error');
     });
   });
 
@@ -591,11 +624,16 @@ describe('Photo Lifecycle Integration Tests', () => {
       expect(revealResult.success).toBe(true);
       expect(revealResult.count).toBe(1);
 
-      // Step 3: Triage to journal
+      // Step 3: Triage to journal - needs getDoc for month calculation
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       const triageResult = await triagePhoto(photoId, 'journal');
       expect(triageResult.success).toBe(true);
 
-      // Step 4: Photo appears in feed
+      // Step 4: Photo appears in feed (for a friend, not self - feed excludes own photos)
+      const friendId = 'friend-of-e2e-user';
       const journaledPhoto = createJournaledPhoto({ id: photoId, userId });
       mockGetDocs.mockResolvedValueOnce({
         docs: [{ id: photoId, data: () => journaledPhoto }],
@@ -606,7 +644,8 @@ describe('Photo Lifecycle Integration Tests', () => {
         data: () => createTestUser({ uid: userId }),
       });
 
-      const feedResult = await getFeedPhotos(20, null, [], userId);
+      // Friend viewing the feed (userId's photo in friend's feed)
+      const feedResult = await getFeedPhotos(20, null, [userId], friendId);
       expect(feedResult.success).toBe(true);
       expect(feedResult.photos.length).toBe(1);
       expect(feedResult.photos[0].id).toBe(photoId);
