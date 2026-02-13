@@ -173,6 +173,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.secondary,
     color: colors.text.primary,
     letterSpacing: 0,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   inputFocused: {
     borderColor: colors.interactive.primary,

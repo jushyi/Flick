@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: typography.size.display,
-    fontFamily: typography.fontFamily.display,
+    fontFamily: typography.fontFamily.bodyBold,
     textAlign: 'center',
     marginBottom: spacing.xs,
     color: colors.text.primary,
@@ -316,6 +316,8 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: spacing.xl,
+    width: '100%',
+    flexWrap: 'wrap',
   },
   form: {
     width: '100%',
@@ -402,7 +404,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: typography.size.xl,
-    fontFamily: typography.fontFamily.display,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   modalClose: {
