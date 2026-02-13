@@ -12,11 +12,13 @@ const SECONDARY_COLOR = 0xff2d78ff; // Hot magenta
 // Film strip constants - THICK
 const PERF_WIDTH = 175; // Thick film strip (175px)
 const PERF_HOLE_SIZE = 90; // Larger perforation holes
-const PERF_SPACING = 145; // Space between perforations (more spread out)
-const PERF_OFFSET = 50; // Vertical offset from top to better center holes
+const PERF_SPACING = 120; // Space between perforations (evenly distributed)
+const PERF_COUNT = 8; // Number of perforation holes
+const PERF_OFFSET = (SIZE - (PERF_COUNT - 1) * PERF_SPACING - PERF_HOLE_SIZE) / 2; // Center holes vertically
 
 // Pixel size for solid chunky F
 const PIXEL_SIZE = 100; // Size of each solid block in the F (chunky)
+const TEXT_PIXEL_SIZE = 60; // Size for FLICK text blocks (smaller for splash)
 
 async function generateIcon() {
   console.log('Creating icon canvas...');
@@ -36,10 +38,9 @@ async function generateIcon() {
   }
 
   console.log('Drawing perforation holes...');
-  // Draw perforation holes (dark squares)
-  const perfCount = Math.floor((SIZE - PERF_OFFSET) / PERF_SPACING);
-  for (let i = 0; i < perfCount; i++) {
-    const perfY = Math.floor(PERF_OFFSET + i * PERF_SPACING + (PERF_SPACING - PERF_HOLE_SIZE) / 2);
+  // Draw perforation holes (dark squares) - evenly spaced
+  for (let i = 0; i < PERF_COUNT; i++) {
+    const perfY = Math.floor(PERF_OFFSET + i * PERF_SPACING);
     const perfX = Math.floor((PERF_WIDTH - PERF_HOLE_SIZE) / 2);
 
     // Left side holes
@@ -74,13 +75,15 @@ async function generateIcon() {
   }
 
   console.log('Drawing solid chunky F letter...');
-  // Draw solid "F" - chunky retro letter with thick vertical bar
-  // F pattern: 6 blocks wide x 8 blocks tall
+  // Draw solid "F" - chunky retro letter with thick bars
+  // F pattern: 6 blocks wide x 10 blocks tall (thick horizontal bars)
   const fPattern = [
-    [1, 1, 1, 1, 1, 1], // Top bar (full width)
+    [1, 1, 1, 1, 1, 1], // Top bar row 1 (2 rows thick)
+    [1, 1, 1, 1, 1, 1], // Top bar row 2
     [1, 1, 0, 0, 0, 0], // Thick vertical bar
     [1, 1, 0, 0, 0, 0], // Thick vertical bar
-    [1, 1, 1, 1, 1, 0], // Middle bar (slightly shorter)
+    [1, 1, 1, 1, 1, 0], // Middle bar row 1 (2 rows thick)
+    [1, 1, 1, 1, 1, 0], // Middle bar row 2
     [1, 1, 0, 0, 0, 0], // Thick vertical bar
     [1, 1, 0, 0, 0, 0], // Thick vertical bar
     [1, 1, 0, 0, 0, 0], // Thick vertical bar
@@ -126,9 +129,11 @@ async function generateIcon() {
   await favicon.write('assets/favicon.png');
   console.log('✓ Generated assets/favicon.png (48x48)');
 
-  // Splash screen (same as icon but can be different if needed)
-  await image.write('assets/splash.png');
-  console.log('✓ Generated assets/splash.png (1024x1024)');
+  // Splash screen - generate separately with FLICK text
+  console.log('Generating splash screen with FLICK text...');
+  const splash = await generateSplashWithText();
+  await splash.write('assets/splash.png');
+  console.log('✓ Generated assets/splash.png (1024x1024) with FLICK text');
 
   console.log('\n✓ Icon generation complete!');
   console.log('Film strip with solid chunky retro F design created.');
@@ -192,6 +197,138 @@ function blendColors(color1, color2, factor) {
   const a = Math.floor(a1 + (a2 - a1) * factor);
 
   return (r << 24) | (g << 16) | (b << 8) | a;
+}
+
+// Generate splash screen with FLICK text
+async function generateSplashWithText() {
+  const splash = new Jimp({ width: SIZE, height: SIZE, color: BG_COLOR });
+
+  // Draw film strip perforations (same as icon)
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < PERF_WIDTH; x++) {
+      splash.setPixelColor(FRAME_COLOR, x, y);
+    }
+  }
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = SIZE - PERF_WIDTH; x < SIZE; x++) {
+      splash.setPixelColor(FRAME_COLOR, x, y);
+    }
+  }
+
+  // Draw perforation holes
+  for (let i = 0; i < PERF_COUNT; i++) {
+    const perfY = Math.floor(PERF_OFFSET + i * PERF_SPACING);
+    const perfX = Math.floor((PERF_WIDTH - PERF_HOLE_SIZE) / 2);
+
+    for (let y = perfY; y < perfY + PERF_HOLE_SIZE; y++) {
+      for (let x = perfX; x < perfX + PERF_HOLE_SIZE; x++) {
+        if (y >= 0 && y < SIZE && x >= 0 && x < SIZE) {
+          splash.setPixelColor(BG_COLOR, x, y);
+        }
+      }
+    }
+
+    for (let y = perfY; y < perfY + PERF_HOLE_SIZE; y++) {
+      for (let x = SIZE - PERF_WIDTH + perfX; x < SIZE - PERF_WIDTH + perfX + PERF_HOLE_SIZE; x++) {
+        if (y >= 0 && y < SIZE && x >= 0 && x < SIZE) {
+          splash.setPixelColor(BG_COLOR, x, y);
+        }
+      }
+    }
+  }
+
+  // Draw gradient background
+  const centerStart = PERF_WIDTH;
+  const centerEnd = SIZE - PERF_WIDTH;
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = centerStart; x < centerEnd; x++) {
+      const t = y / SIZE;
+      const color = blendColors(ACCENT_COLOR, SECONDARY_COLOR, Math.sin(t * Math.PI) * 0.3);
+      splash.setPixelColor(color, x, y);
+    }
+  }
+
+  // Letter patterns for FLICK (5x7 grid each for compact spacing)
+  const letterF = [
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+  ];
+
+  const letterL = [
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1],
+  ];
+
+  const letterI = [
+    [1, 1, 1, 1, 1],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [1, 1, 1, 1, 1],
+  ];
+
+  const letterC = [
+    [0, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1],
+  ];
+
+  const letterK = [
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0],
+    [1, 0, 1, 0, 0],
+    [1, 1, 0, 0, 0],
+    [1, 0, 1, 0, 0],
+    [1, 0, 0, 1, 0],
+    [1, 0, 0, 0, 1],
+  ];
+
+  const letters = [letterF, letterL, letterI, letterC, letterK];
+  const letterSpacing = TEXT_PIXEL_SIZE * 0.5; // Space between letters
+  const totalWidth = letters.length * 5 * TEXT_PIXEL_SIZE + (letters.length - 1) * letterSpacing;
+  const startX = (SIZE - totalWidth) / 2;
+  const startY = (SIZE - 7 * TEXT_PIXEL_SIZE) / 2;
+
+  // Draw each letter
+  for (let letterIdx = 0; letterIdx < letters.length; letterIdx++) {
+    const letter = letters[letterIdx];
+    const letterX = startX + letterIdx * (5 * TEXT_PIXEL_SIZE + letterSpacing);
+
+    for (let row = 0; row < letter.length; row++) {
+      for (let col = 0; col < letter[row].length; col++) {
+        if (letter[row][col] === 1) {
+          const pixelY = startY + row * TEXT_PIXEL_SIZE;
+          const pixelX = letterX + col * TEXT_PIXEL_SIZE;
+
+          for (let y = pixelY; y < pixelY + TEXT_PIXEL_SIZE; y++) {
+            for (let x = pixelX; x < pixelX + TEXT_PIXEL_SIZE; x++) {
+              if (y >= 0 && y < SIZE && x >= 0 && x < SIZE) {
+                splash.setPixelColor(ACCENT_COLOR, x, y);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return splash;
 }
 
 // Run the generator
