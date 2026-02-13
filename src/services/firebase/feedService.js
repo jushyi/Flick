@@ -72,6 +72,7 @@ const batchFetchUserData = async userIds => {
       username: userData.username || 'unknown',
       displayName: userData.displayName || 'Unknown User',
       profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+      nameColor: userData.nameColor || null,
     });
   });
 
