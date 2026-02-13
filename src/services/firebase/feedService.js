@@ -638,6 +638,7 @@ export const getUserStoriesData = async userId => {
       username: userData.username || 'unknown',
       displayName: userData.displayName || 'Me',
       profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+      nameColor: userData.nameColor || null,
     };
 
     // Map and sort photos by capturedAt ASCENDING (oldest first for timeline viewing)
@@ -670,6 +671,7 @@ export const getUserStoriesData = async userId => {
         userId,
         displayName: userObj.displayName,
         profilePhotoURL: userObj.profilePhotoURL,
+        nameColor: userObj.nameColor,
         topPhotos: allPhotos, // All photos in chronological order
         thumbnailURL, // Most recent photo for story card preview
         totalPhotoCount,
