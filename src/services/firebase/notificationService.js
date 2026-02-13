@@ -281,7 +281,7 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'friend_request',
-            screen: 'FriendRequests',
+            screen: 'FriendsList',
             params: { friendshipId },
           },
         };
@@ -291,7 +291,7 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'friend_accepted',
-            screen: 'FriendRequests',
+            screen: 'FriendsList',
             params: {},
           },
         };

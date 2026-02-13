@@ -108,12 +108,9 @@ export default function App() {
       });
     } else if (screen === 'Profile') {
       navigationRef.current.navigate('MainTabs', { screen });
-    } else if (screen === 'FriendRequests') {
-      // Navigate to Friends tab, then to FriendRequests screen
-      navigationRef.current.navigate('MainTabs', {
-        screen: 'Friends',
-        params: { screen: 'FriendRequests' },
-      });
+    } else if (screen === 'FriendsList') {
+      // Navigate to FriendsList screen (opens on requests tab by default)
+      navigationRef.current.navigate('FriendsList', params);
     }
   };
 
