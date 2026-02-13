@@ -17,8 +17,8 @@ const PERF_COUNT = 8; // Number of perforation holes
 const PERF_OFFSET = (SIZE - (PERF_COUNT - 1) * PERF_SPACING - PERF_HOLE_SIZE) / 2; // Center holes vertically
 
 // Pixel size for solid chunky F
-const PIXEL_SIZE = 100; // Size of each solid block in the F (chunky)
-const TEXT_PIXEL_SIZE = 60; // Size for FLICK text blocks (smaller for splash)
+const PIXEL_SIZE = 88; // Size of each solid block in the F (1.75x scale)
+const TEXT_PIXEL_SIZE = 24; // Size for FLICK text blocks (fits between film strips)
 
 async function generateIcon() {
   console.log('Creating icon canvas...');
