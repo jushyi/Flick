@@ -1165,9 +1165,9 @@ const PhotoDetailScreen = () => {
         onConfirm={async selectedIds => {
           const result = await updatePhotoTags(currentPhoto.id, selectedIds);
           if (result.success) {
-            // Update local state immediately so tags appear instantly
+            // Update context photo immediately so tags appear instantly
             updateCurrentPhoto({
-              ...currentPhoto,
+              ...contextPhoto,
               taggedUserIds: selectedIds,
               taggedAt: new Date(),
             });
