@@ -76,16 +76,20 @@ See PROJECT.md Key Decisions table for full history.
 | 51-09 | Age rating: 12+                                           | User-generated content with infrequent/mild profanity               |
 | 51-09 | Defer screenshot capture until pre-submission             | Allows UI polish before captures; infrastructure ready now          |
 | 51-10 | Defer production build/submit to UAT                      | Systematic testing on TestFlight before App Review submission       |
+| 52.1  | 30-second batching window for reactions                   | Better aggregation than 10s, balances responsiveness vs efficiency  |
+| 52.1  | Firestore-based batching state                            | Persists across stateless Cloud Function instances, prevents dupes  |
+| 52.1  | Cloud Tasks for delayed execution                         | Reliable delayed sends in serverless (replaces setTimeout)          |
+| 52.1  | User data fetching at send time                           | Respects preference changes during 30-second batch window           |
 
 ### Deferred Issues
 
 ~~ISS-012: Friends screen N+1 query pattern causes slow initial load~~ → Fixed in Phase 48-04
 ~~ISS-014: Profile navigation from PhotoDetail renders behind transparentModal~~ → Fixed in Phase 48.1
+~~ISS-015: Reaction notification batching broken (Cloud Functions stateless instances causing duplicates)~~ → Fixed in Phase 52.1
 
-**ISS-015:** Reaction notification batching broken (Cloud Functions stateless instances causing duplicates) — Found in 52-02, defer to post-UAT
 **ISS-016:** Photo tagging lag (tag doesn't update without feed refresh) — Found in 52-02, defer to post-UAT
 
-**Closed:** ISS-001, ISS-002, ISS-003, ISS-004, ISS-005, ISS-006, ISS-007, ISS-008, ISS-011, ISS-012, ISS-013, ISS-014
+**Closed:** ISS-001, ISS-002, ISS-003, ISS-004, ISS-005, ISS-006, ISS-007, ISS-008, ISS-011, ISS-012, ISS-013, ISS-014, ISS-015
 
 ### Blockers/Concerns
 
@@ -101,12 +105,12 @@ None.
 - Phase 47.1 inserted after Phase 47: Comment @-Tagging for Mutual Friends (URGENT)
 - Phase 48.1 inserted after Phase 48: PhotoDetail Profile Navigation Fix — ISS-014 (URGENT)
 - Phase 50.1 inserted after Phase 50: Fix Failing Test Suites — 76 tests across 10 suites (URGENT)
-- Phase 52.1 inserted after Phase 52: Fix Reaction Notification Batching — ISS-015 (URGENT)
+- Phase 52.1 inserted after Phase 52: Fix Reaction Notification Batching — ISS-015 (URGENT) — COMPLETE
 - Phase 52.2 inserted after Phase 52: Fix Photo Tagging Lag — ISS-016 (URGENT)
 
 ## Session Continuity
 
-Last session: 2026-02-13
-Stopped at: Completed 52-02 (Multi-Device Tests — 13 inline fixes, 2 deferred issues logged as ISS-015 and ISS-016, darkroom notification fixes applied)
+Last session: 2026-02-14
+Stopped at: Completed 52.1-01 (Reaction Notification Batching Fix — replaced in-memory state with Firestore transactions and Cloud Tasks, ISS-015 resolved)
 Resume file: None
-Next: Ready for 52-03 (Auth & Account Management) — single-device testing only
+Next: Ready for 52-03 (Auth & Account Management) or 52.2 (Photo Tagging Lag Fix) or continue UAT
