@@ -327,19 +327,13 @@ export const handleNotificationTapped = notification => {
         };
 
       case 'tagged':
-        // Navigate to Feed with params to open the tagger's story and highlight the specific photo
-        // Deep link UX: Opens the photo within that person's story (can swipe to see more)
+        // Navigate to Activity screen for tag notifications
         return {
           success: true,
           data: {
             type: 'tagged',
-            screen: 'Feed',
-            params: {
-              highlightUserId: taggerId, // Person who tagged (their story)
-              highlightPhotoId: photoId, // Specific photo to show
-              openStory: true, // Open the tagger's story
-              scrollToPhoto: true, // Scroll to the specific tagged photo
-            },
+            screen: 'Activity',
+            params: {},
           },
         };
 

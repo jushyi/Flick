@@ -13,7 +13,6 @@ import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import PixelIcon from '../components/PixelIcon';
 import DeletionRecoveryModal from '../components/DeletionRecoveryModal';
-import TabScreenWrapper from '../components/TabScreenWrapper';
 
 // Import auth screens (phone-only authentication)
 import PhoneInputScreen from '../screens/PhoneInputScreen';
@@ -228,42 +227,27 @@ const MainTabNavigator = () => {
     >
       <Tab.Screen
         name="Feed"
+        component={FeedScreen}
         options={{
           tabBarIcon: ({ color }) => <FeedIcon color={color} />,
         }}
-      >
-        {props => (
-          <TabScreenWrapper currentTab="Feed">
-            <FeedScreen {...props} />
-          </TabScreenWrapper>
-        )}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Camera"
+        component={CameraScreen}
         options={{
           tabBarIcon: ({ color }) => <CameraIcon color={color} />,
         }}
-      >
-        {props => (
-          <TabScreenWrapper currentTab="Camera">
-            <CameraScreen {...props} />
-          </TabScreenWrapper>
-        )}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="Profile"
+        component={ProfileStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <ProfileTabIcon color={color} focused={focused} photoURL={userProfile?.photoURL} />
           ),
         }}
-      >
-        {props => (
-          <TabScreenWrapper currentTab="Profile">
-            <ProfileStackNavigator {...props} />
-          </TabScreenWrapper>
-        )}
-      </Tab.Screen>
+      />
     </Tab.Navigator>
   );
 };
