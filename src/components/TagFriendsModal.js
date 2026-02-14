@@ -214,6 +214,7 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
           ) : (
             <FlatList
               data={friends}
+              extraData={selectedIds}
               renderItem={renderFriendItem}
               keyExtractor={keyExtractor}
               contentContainerStyle={styles.listContent}
