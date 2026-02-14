@@ -467,16 +467,12 @@ const ActivityScreen = () => {
         {/* Pinned Friend Requests Section */}
         {friendRequests.length > 0 && (
           <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.sectionHeader}
-              onPress={() => navigation.navigate('FriendRequests')}
-            >
+            <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Friend Requests</Text>
               <View style={styles.sectionBadge}>
                 <Text style={styles.sectionBadgeText}>{friendRequests.length}</Text>
               </View>
-              <PixelIcon name="chevron-forward" size={18} color={colors.text.tertiary} />
-            </TouchableOpacity>
+            </View>
             {friendRequests.map(item => (
               <View key={item.id}>{renderFriendRequest({ item })}</View>
             ))}
