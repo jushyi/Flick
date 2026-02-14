@@ -48,6 +48,7 @@ import BlockedUsersScreen from '../screens/BlockedUsersScreen';
 import ProfilePhotoCropScreen from '../screens/ProfilePhotoCropScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import ContributionsScreen from '../screens/ContributionsScreen';
+import SoundSettingsScreen from '../screens/SoundSettingsScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -155,6 +156,11 @@ const ProfileStackNavigator = () => {
       <Stack.Screen
         name="NotificationSettings"
         component={NotificationSettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SoundSettings"
+        component={SoundSettingsScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />

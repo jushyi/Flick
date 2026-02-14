@@ -69,8 +69,13 @@ jest.mock('expo-image', () => ({
 
 // Mock AuthContext
 const mockUser = { uid: 'test-user-123' };
+const mockUserProfile = {
+  soundPreferences: {
+    effectsEnabled: false, // Default: sound effects disabled
+  },
+};
 jest.mock('../../src/context/AuthContext', () => ({
-  useAuth: () => ({ user: mockUser }),
+  useAuth: () => ({ user: mockUser, userProfile: mockUserProfile }),
 }));
 
 // Mock navigation - useFocusEffect delegates to useEffect for deferred execution

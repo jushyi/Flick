@@ -81,6 +81,12 @@ const SettingsScreen = () => {
           icon: 'notifications-outline',
           onPress: () => handleNavigate('NotificationSettings'),
         },
+        {
+          id: 'sounds',
+          label: 'Sounds',
+          icon: 'musical-notes-outline',
+          onPress: () => handleNavigate('SoundSettings'),
+        },
       ],
     },
     {

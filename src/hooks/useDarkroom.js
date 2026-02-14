@@ -41,7 +41,7 @@ import logger from '../utils/logger';
  * @returns {object} - Darkroom state, handlers, refs, and computed values
  */
 const useDarkroom = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const navigation = useNavigation();
 
   // Core state
@@ -556,9 +556,16 @@ const useDarkroom = () => {
         useNativeDriver: true,
       }).start();
 
-      playSuccessSound();
+      // Pass user's sound preference (default: false)
+      const effectsEnabled = userProfile?.soundPreferences?.effectsEnabled ?? false;
+      playSuccessSound(effectsEnabled);
     }
-  }, [visiblePhotos.length, undoStack.length, successFadeAnim]);
+  }, [
+    visiblePhotos.length,
+    undoStack.length,
+    successFadeAnim,
+    userProfile?.soundPreferences?.effectsEnabled,
+  ]);
 
   // Prefetch visible stack card images for smooth animations
   useEffect(() => {

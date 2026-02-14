@@ -15,13 +15,21 @@ import logger from './logger';
  * Sound plays in sync with the success animation.
  *
  * Features:
+ * - Checks user's sound effects preference (opt-in model, default: false)
  * - Respects iOS silent mode (no sound when device is muted)
  * - Auto-removes after playback to prevent memory leaks
  * - Silent failure - sound is enhancement, not critical
  *
+ * @param {boolean} effectsEnabled - User's sound effects preference (default: false)
  * @returns {Promise<void>}
  */
-export const playSuccessSound = async () => {
+export const playSuccessSound = async (effectsEnabled = false) => {
+  // Check user preference first
+  if (!effectsEnabled) {
+    logger.debug('soundUtils: Sound effects disabled by user preference');
+    return;
+  }
+
   logger.debug('soundUtils: Playing success sound');
 
   try {
