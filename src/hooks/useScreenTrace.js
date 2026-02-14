@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import perf from '@react-native-firebase/perf';
+import { getPerformance, startTrace } from '@react-native-firebase/perf';
 
 /**
  * Hook that measures time from screen mount to data-ready.
@@ -16,7 +16,8 @@ export function useScreenTrace(screenName) {
     let active = true;
 
     (async () => {
-      const trace = await perf().startTrace(`screen/${screenName}`);
+      const perf = getPerformance();
+      const trace = await startTrace(perf, `screen/${screenName}`);
       if (active) {
         traceRef.current = trace;
       } else {

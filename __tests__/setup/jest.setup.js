@@ -414,19 +414,20 @@ const mockPerfTrace = {
   putAttribute: jest.fn(),
   putMetric: jest.fn(),
 };
-const mockNewTrace = jest.fn(() => mockPerfTrace);
+const mockStartTrace = jest.fn(() => Promise.resolve(mockPerfTrace));
 const mockSetPerformanceCollectionEnabled = jest.fn();
+const mockGetPerformance = jest.fn(() => ({}));
 
-jest.mock('@react-native-firebase/perf', () => {
-  return () => ({
-    newTrace: mockNewTrace,
-    setPerformanceCollectionEnabled: mockSetPerformanceCollectionEnabled,
-  });
-});
+jest.mock('@react-native-firebase/perf', () => ({
+  getPerformance: mockGetPerformance,
+  setPerformanceCollectionEnabled: mockSetPerformanceCollectionEnabled,
+  startTrace: mockStartTrace,
+}));
 
 global.mockPerfTrace = mockPerfTrace;
-global.mockNewTrace = mockNewTrace;
+global.mockStartTrace = mockStartTrace;
 global.mockSetPerformanceCollectionEnabled = mockSetPerformanceCollectionEnabled;
+global.mockGetPerformance = mockGetPerformance;
 
 // ============================================================================
 // Service Module Mocks

@@ -1,4 +1,8 @@
-import perf from '@react-native-firebase/perf';
+import {
+  getPerformance,
+  setPerformanceCollectionEnabled,
+  startTrace,
+} from '@react-native-firebase/perf';
 
 /**
  * Initialize performance monitoring.
@@ -6,7 +10,8 @@ import perf from '@react-native-firebase/perf';
  */
 export function initPerformanceMonitoring() {
   if (__DEV__) {
-    perf().setPerformanceCollectionEnabled(false);
+    const perf = getPerformance();
+    setPerformanceCollectionEnabled(perf, false);
   }
 }
 
@@ -20,7 +25,8 @@ export function initPerformanceMonitoring() {
 export async function withTrace(traceName, operation, attributes) {
   if (__DEV__) return operation({ putMetric: () => {}, putAttribute: () => {} });
 
-  const trace = await perf().startTrace(traceName);
+  const perf = getPerformance();
+  const trace = await startTrace(perf, traceName);
 
   if (attributes) {
     const entries = Object.entries(attributes).slice(0, 4); // Reserve 1 slot for success
