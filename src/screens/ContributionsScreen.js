@@ -79,7 +79,6 @@ const ContributionsScreen = () => {
   const [isContributor, setIsContributor] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
   const [savingColor, setSavingColor] = useState(false);
-  const [simulatingPurchase, setSimulatingPurchase] = useState(false);
   const scrollViewRef = useRef(null);
 
   const scrollToBottom = useCallback(() => {
@@ -237,42 +236,6 @@ const ContributionsScreen = () => {
     }
   };
 
-  const handleSimulatePurchase = async () => {
-    try {
-      setSimulatingPurchase(true);
-      logger.info('ContributionsScreen: DEV - Simulating purchase');
-      const result = await updateUserDocumentNative(user.uid, { isContributor: true });
-      if (result.success) {
-        await refreshUserProfile();
-        Alert.alert('DEV', 'Contributor status set! Color picker should appear.');
-      } else {
-        Alert.alert('DEV Error', result.error);
-      }
-      setSimulatingPurchase(false);
-    } catch (error) {
-      logger.error('ContributionsScreen: DEV simulate failed', { error: error.message });
-      setSimulatingPurchase(false);
-    }
-  };
-
-  const handleSimulateReset = async () => {
-    try {
-      setSimulatingPurchase(true);
-      logger.info('ContributionsScreen: DEV - Resetting contributor status');
-      const result = await updateUserDocumentNative(user.uid, {
-        isContributor: false,
-        nameColor: null,
-      });
-      if (result.success) {
-        await refreshUserProfile();
-        Alert.alert('DEV', 'Contributor status reset.');
-      }
-      setSimulatingPurchase(false);
-    } catch (error) {
-      setSimulatingPurchase(false);
-    }
-  };
-
   const getProductPrice = productId => {
     const product = products.find(p => p.productId === productId);
     return product?.localizedPrice || '...';
@@ -365,33 +328,6 @@ const ContributionsScreen = () => {
             <View style={styles.tiersContainer}>
               <Text style={styles.sectionTitle}>Choose a contribution</Text>
               {CONTRIBUTION_TIERS.map(tier => renderTierButton(tier))}
-
-              {/* DEV-only: Simulate purchase for testing */}
-              {__DEV__ && (
-                <View style={styles.devContainer}>
-                  <Text style={styles.devLabel}>DEV TESTING</Text>
-                  <View style={styles.devButtonRow}>
-                    <TouchableOpacity
-                      style={styles.devButton}
-                      onPress={handleSimulatePurchase}
-                      disabled={simulatingPurchase}
-                    >
-                      {simulatingPurchase ? (
-                        <ActivityIndicator size="small" color="#00FF00" />
-                      ) : (
-                        <Text style={styles.devButtonText}>Simulate Purchase</Text>
-                      )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.devButton, styles.devResetButton]}
-                      onPress={handleSimulateReset}
-                      disabled={simulatingPurchase}
-                    >
-                      <Text style={styles.devButtonText}>Reset Status</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
             </View>
 
             {/* Color picker (only visible for contributors) */}
@@ -540,40 +476,6 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
-  },
-  devContainer: {
-    marginTop: spacing.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: '#00FF00',
-    borderRadius: 8,
-    borderStyle: 'dashed',
-  },
-  devLabel: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.bodyBold,
-    color: '#00FF00',
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  devButtonRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  devButton: {
-    flex: 1,
-    backgroundColor: '#1a3a1a',
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  devResetButton: {
-    backgroundColor: '#3a1a1a',
-  },
-  devButtonText: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.bodyBold,
-    color: '#00FF00',
   },
   colorPickerContainer: {
     marginTop: spacing.xl,
