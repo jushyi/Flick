@@ -13,7 +13,13 @@
  * 3. Call openGifPicker() to show the dialog
  */
 import { useEffect } from 'react';
-import { GiphyDialog, GiphyDialogEvent, GiphySDK, GiphyContentType } from '@giphy/react-native-sdk';
+import {
+  GiphyDialog,
+  GiphyDialogEvent,
+  GiphySDK,
+  GiphyContentType,
+  GiphyThemePreset,
+} from '@giphy/react-native-sdk';
 import logger from '../../utils/logger';
 
 /**
@@ -47,6 +53,7 @@ export const openGifPicker = () => {
     GiphyDialog.configure({
       mediaTypeConfig: [GiphyContentType.Gif, GiphyContentType.Sticker],
       showConfirmationScreen: false,
+      theme: GiphyThemePreset.Dark,
     });
     GiphyDialog.show();
   } catch (error) {
