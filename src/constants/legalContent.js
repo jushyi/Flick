@@ -133,7 +133,7 @@ We may update this Privacy Policy from time to time. We will notify you of any m
 If you have questions about this Privacy Policy or our privacy practices, please contact us at:
 
 Joshua Jireh Maserin
-Email: maserinj@gmail.com`;
+Email: support@flickcam.app`;
 
 export const TERMS_OF_SERVICE_CONTENT = `Last Updated: February 2026
 
@@ -297,4 +297,4 @@ These Terms, together with our Privacy Policy, constitute the entire agreement b
 For questions about these Terms, please contact us at:
 
 Joshua Jireh Maserin
-Email: maserinj@gmail.com`;
+Email: support@flickcam.app`;
