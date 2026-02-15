@@ -61,13 +61,13 @@ const THUMB_SIZE = 28;
 const HueBar = ({ hue, onHueChange }) => {
   const barRef = useRef(null);
   const barWidth = useRef(0);
+  const barPageX = useRef(0);
 
-  const handleTouch = useCallback(
-    evt => {
+  const calcHue = useCallback(
+    pageX => {
       if (barWidth.current <= 0) return;
-      const x = Math.max(0, Math.min(evt.nativeEvent.locationX, barWidth.current));
-      const newHue = (x / barWidth.current) * 360;
-      onHueChange(newHue);
+      const x = Math.max(0, Math.min(pageX - barPageX.current, barWidth.current));
+      onHueChange((x / barWidth.current) * 360);
     },
     [onHueChange]
   );
@@ -76,8 +76,11 @@ const HueBar = ({ hue, onHueChange }) => {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: handleTouch,
-      onPanResponderMove: handleTouch,
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: evt => calcHue(evt.nativeEvent.pageX),
+      onPanResponderMove: evt => calcHue(evt.nativeEvent.pageX),
     })
   ).current;
 
@@ -89,6 +92,9 @@ const HueBar = ({ hue, onHueChange }) => {
       style={styles.barContainer}
       onLayout={e => {
         barWidth.current = e.nativeEvent.layout.width;
+        barRef.current?.measureInWindow(x => {
+          barPageX.current = x;
+        });
       }}
       {...panResponder.panHandlers}
     >
@@ -104,15 +110,16 @@ const HueBar = ({ hue, onHueChange }) => {
 };
 
 const BrightnessBar = ({ hue, brightness, onBrightnessChange }) => {
+  const barRef = useRef(null);
   const barWidth = useRef(0);
+  const barPageX = useRef(0);
   const pureColor = hslToHex(hue, 100, 50);
 
-  const handleTouch = useCallback(
-    evt => {
+  const calcBrightness = useCallback(
+    pageX => {
       if (barWidth.current <= 0) return;
-      const x = Math.max(0, Math.min(evt.nativeEvent.locationX, barWidth.current));
-      const newBrightness = (x / barWidth.current) * 100;
-      onBrightnessChange(newBrightness);
+      const x = Math.max(0, Math.min(pageX - barPageX.current, barWidth.current));
+      onBrightnessChange((x / barWidth.current) * 100);
     },
     [onBrightnessChange]
   );
@@ -121,8 +128,11 @@ const BrightnessBar = ({ hue, brightness, onBrightnessChange }) => {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: handleTouch,
-      onPanResponderMove: handleTouch,
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: evt => calcBrightness(evt.nativeEvent.pageX),
+      onPanResponderMove: evt => calcBrightness(evt.nativeEvent.pageX),
     })
   ).current;
 
@@ -131,9 +141,13 @@ const BrightnessBar = ({ hue, brightness, onBrightnessChange }) => {
 
   return (
     <View
+      ref={barRef}
       style={styles.barContainer}
       onLayout={e => {
         barWidth.current = e.nativeEvent.layout.width;
+        barRef.current?.measureInWindow(x => {
+          barPageX.current = x;
+        });
       }}
       {...panResponder.panHandlers}
     >
