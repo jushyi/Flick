@@ -42,6 +42,7 @@ import AlbumGridScreen from '../screens/AlbumGridScreen';
 import MonthlyAlbumGridScreen from '../screens/MonthlyAlbumGridScreen';
 import PhotoDetailScreen from '../screens/PhotoDetailScreen';
 import ReportUserScreen from '../screens/ReportUserScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import RecentlyDeletedScreen from '../screens/RecentlyDeletedScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
@@ -614,6 +615,15 @@ const AppNavigator = () => {
                 <Stack.Screen
                   name="ReportUser"
                   component={ReportUserScreen}
+                  options={{
+                    presentation: 'modal',
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.background.primary },
+                  }}
+                />
+                <Stack.Screen
+                  name="HelpSupport"
+                  component={HelpSupportScreen}
                   options={{
                     presentation: 'modal',
                     headerShown: false,

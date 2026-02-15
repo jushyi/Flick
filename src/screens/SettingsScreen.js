@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Application from 'expo-application';
 import { useNavigation } from '@react-navigation/native';
@@ -51,7 +51,7 @@ const SettingsScreen = () => {
 
   const handleHelpSupport = () => {
     logger.debug('SettingsScreen: Help & Support pressed');
-    Linking.openURL('mailto:support@flickcam.app?subject=Flick%20Support%20Request');
+    navigation.navigate('HelpSupport');
   };
 
   const sections = [

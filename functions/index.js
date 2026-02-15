@@ -2503,3 +2503,57 @@ https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firest
       // Email failure shouldn't prevent report submission.
     }
   });
+
+/**
+ * Email support requests to support address
+ * Triggered when new support request document is created in supportRequests/ collection
+ * Sends formatted email with request details to configured support address
+ * Email failure is logged but doesn't prevent request submission (already in Firestore)
+ */
+exports.onSupportRequestCreated = functions.firestore
+  .document('supportRequests/{requestId}')
+  .onCreate(async (snapshot, context) => {
+    const request = snapshot.data();
+    const requestId = context.params.requestId;
+
+    const categoryLabels = {
+      support: 'Support',
+      bug_report: 'Bug Report',
+      feature_request: 'Feature Request',
+    };
+
+    const categoryLabel = categoryLabels[request.category] || request.category;
+    const subject = `[${categoryLabel.toUpperCase()}] Flick Support Request`;
+
+    const body = `
+New Support Request
+====================
+
+Request ID: ${requestId}
+Date: ${new Date().toISOString()}
+
+User ID: ${request.userId}
+Category: ${categoryLabel}
+
+Description:
+${request.description}
+
+---
+View in Firebase Console:
+https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firestore/data/supportRequests/${requestId}
+    `.trim();
+
+    try {
+      const transporter = getTransporter();
+      await transporter.sendMail({
+        from: `"Flick Support" <${process.env.SMTP_EMAIL}>`,
+        to: 'support@flickcam.app',
+        subject,
+        text: body,
+      });
+      logger.info('Support request email sent', { requestId, category: request.category });
+    } catch (error) {
+      logger.error('Failed to send support request email', { requestId, error: error.message });
+      // Don't throw — the request is already saved in Firestore.
+    }
+  });

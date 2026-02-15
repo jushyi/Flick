@@ -351,6 +351,22 @@ service cloud.firestore {
     }
 
     // =============================================================================
+    // SUPPORT REQUESTS COLLECTION (help & support)
+    // =============================================================================
+    match /supportRequests/{requestId} {
+      // Read: Only admins/Cloud Functions (users cannot read support requests)
+      allow read: if false;
+
+      // Create: Authenticated users can create support requests with their own userId
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['userId', 'category', 'description', 'createdAt']);
+
+      // Update/Delete: Not allowed (support requests are immutable once created)
+      allow update, delete: if false;
+    }
+
+    // =============================================================================
     // DEFAULT DENY
     // =============================================================================
     // Deny access to all other collections by default
