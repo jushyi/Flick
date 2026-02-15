@@ -1,6 +1,6 @@
 /**
- * Generate splash screen for Rewind — 16-Bit Retro Edition
- * Creates pixel-art "REWIND" text on CRT dark background with scanlines and glow
+ * Generate splash screen for Flick
+ * Creates pixel-art "FLICK" text on dark background with subtle glow
  */
 const sharp = require('sharp');
 const path = require('path');
@@ -11,47 +11,19 @@ const ASSETS_DIR = path.join(__dirname, '..', 'assets');
 const SPLASH_WIDTH = 1284;
 const SPLASH_HEIGHT = 2778;
 
-// 16-bit retro color palette
+// Color palette
 const COLORS = {
   background: '#0A0A1A', // CRT navy-black
   text: '#00D4FF', // Electric cyan
   glow: '#00D4FF', // Glow color (same, with opacity via filter)
-  scanline: 'rgba(224, 224, 240, 0.03)', // Barely visible CRT scanlines
-  border: '#353555', // Retro indigo border
-  muted: '#7B7B9E', // Muted gray-blue
 };
 
 /**
  * Pixel-art letter definitions on 5x7 grids
  * Each letter is an array of [x, y] coordinates for filled pixels
- * W is wider at 7x7
  */
 const PIXEL_LETTERS = {
-  R: {
-    width: 5,
-    height: 7,
-    pixels: [
-      [0, 0],
-      [1, 0],
-      [2, 0],
-      [3, 0],
-      [0, 1],
-      [4, 1],
-      [0, 2],
-      [4, 2],
-      [0, 3],
-      [1, 3],
-      [2, 3],
-      [3, 3],
-      [0, 4],
-      [3, 4],
-      [0, 5],
-      [4, 5],
-      [0, 6],
-      [4, 6],
-    ],
-  },
-  E: {
+  F: {
     width: 5,
     height: 7,
     pixels: [
@@ -69,38 +41,23 @@ const PIXEL_LETTERS = {
       [0, 4],
       [0, 5],
       [0, 6],
+    ],
+  },
+  L: {
+    width: 5,
+    height: 7,
+    pixels: [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [0, 4],
+      [0, 5],
+      [0, 6],
       [1, 6],
       [2, 6],
       [3, 6],
       [4, 6],
-    ],
-  },
-  W: {
-    width: 7,
-    height: 7,
-    pixels: [
-      [0, 0],
-      [6, 0],
-      [0, 1],
-      [6, 1],
-      [0, 2],
-      [6, 2],
-      [0, 3],
-      [3, 3],
-      [6, 3],
-      [0, 4],
-      [2, 4],
-      [4, 4],
-      [6, 4],
-      [0, 5],
-      [1, 5],
-      [3, 5],
-      [5, 5],
-      [6, 5],
-      [0, 6],
-      [1, 6],
-      [5, 6],
-      [6, 6],
     ],
   },
   I: {
@@ -124,58 +81,49 @@ const PIXEL_LETTERS = {
       [4, 6],
     ],
   },
-  N: {
+  C: {
+    width: 5,
+    height: 7,
+    pixels: [
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [4, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [0, 4],
+      [0, 5],
+      [1, 6],
+      [2, 6],
+      [3, 6],
+      [4, 6],
+    ],
+  },
+  K: {
     width: 5,
     height: 7,
     pixels: [
       [0, 0],
       [4, 0],
       [0, 1],
-      [1, 1],
-      [4, 1],
+      [3, 1],
       [0, 2],
       [2, 2],
-      [4, 2],
       [0, 3],
-      [2, 3],
-      [4, 3],
+      [1, 3],
       [0, 4],
-      [3, 4],
-      [4, 4],
+      [2, 4],
       [0, 5],
-      [4, 5],
+      [3, 5],
       [0, 6],
       [4, 6],
-    ],
-  },
-  D: {
-    width: 5,
-    height: 7,
-    pixels: [
-      [0, 0],
-      [1, 0],
-      [2, 0],
-      [3, 0],
-      [0, 1],
-      [4, 1],
-      [0, 2],
-      [4, 2],
-      [0, 3],
-      [4, 3],
-      [0, 4],
-      [4, 4],
-      [0, 5],
-      [4, 5],
-      [0, 6],
-      [1, 6],
-      [2, 6],
-      [3, 6],
     ],
   },
 };
 
 /**
- * Render the word "REWIND" as pixel-art SVG rect elements
+ * Render the word as pixel-art SVG rect elements
  */
 function renderPixelText(word, cellSize, startX, startY) {
   let rects = '';
@@ -210,10 +158,10 @@ function getWordWidth(word) {
 }
 
 /**
- * Create SVG for the retro splash screen
+ * Create SVG for the splash screen
  */
 function createSplashSvg(width, height) {
-  const word = 'REWIND';
+  const word = 'FLICK';
   const wordWidthInCells = getWordWidth(word);
 
   // Size each pixel cell so the text fills ~60% of screen width
@@ -229,7 +177,7 @@ function createSplashSvg(width, height) {
   // Render the pixel text
   const textRects = renderPixelText(word, cellSize, textX, textY);
 
-  // Glow filter for CRT phosphor effect
+  // Glow filter for subtle phosphor effect
   const glowFilter = `
     <defs>
       <filter id="crt-glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -244,95 +192,19 @@ function createSplashSvg(width, height) {
     </defs>
   `;
 
-  // CRT scanlines (subtle horizontal lines across full screen)
-  let scanlines = '';
-  const scanlineSpacing = 4;
-  for (let y = 0; y < height; y += scanlineSpacing) {
-    scanlines += `<rect x="0" y="${y}" width="${width}" height="1" fill="${COLORS.scanline}"/>`;
-  }
-
-  // Decorative horizontal lines above and below text
-  const lineMargin = cellSize * 3;
-  const decorLines = `
-    <rect x="${textX}" y="${textY - lineMargin}" width="${actualWidth}" height="1" fill="${COLORS.border}"/>
-    <rect x="${textX}" y="${textY + textHeight + lineMargin}" width="${actualWidth}" height="1" fill="${COLORS.border}"/>
-  `;
-
-  // Small viewfinder icon below text (matching app icon motif) in muted color
-  const iconCellSize = cellSize * 0.4;
-  const iconWidth = 16 * iconCellSize;
-  const iconX = Math.floor((width - iconWidth) / 2);
-  const iconY = textY + textHeight + lineMargin + cellSize * 2;
-
-  // Simplified viewfinder corners
-  const cornerSize = 4;
-  const cornerThick = 1;
-  let viewfinderRects = '';
-  const corners = [
-    // Top-left
-    { sx: 0, sy: 0, ex: cornerSize, ey: cornerThick },
-    { sx: 0, sy: 0, ex: cornerThick, ey: cornerSize },
-    // Top-right
-    { sx: 16 - cornerSize, sy: 0, ex: 16, ey: cornerThick },
-    { sx: 16 - cornerThick, sy: 0, ex: 16, ey: cornerSize },
-    // Bottom-left
-    { sx: 0, sy: 12 - cornerThick, ex: cornerSize, ey: 12 },
-    { sx: 0, sy: 12 - cornerSize, ex: cornerThick, ey: 12 },
-    // Bottom-right
-    { sx: 16 - cornerSize, sy: 12 - cornerThick, ex: 16, ey: 12 },
-    { sx: 16 - cornerThick, sy: 12 - cornerSize, ex: 16, ey: 12 },
-  ];
-  for (const c of corners) {
-    for (let y = c.sy; y < c.ey; y++) {
-      for (let x = c.sx; x < c.ex; x++) {
-        viewfinderRects += `<rect x="${iconX + x * iconCellSize}" y="${iconY + y * iconCellSize}" width="${iconCellSize}" height="${iconCellSize}" fill="${COLORS.muted}"/>`;
-      }
-    }
-  }
-
-  // Small rewind arrows inside viewfinder (muted)
-  const arrowPixels = [
-    // Left arrow <
-    [5, 6],
-    [6, 5],
-    [6, 6],
-    [6, 7],
-    [7, 4],
-    [7, 5],
-    [7, 6],
-    [7, 7],
-    [7, 8],
-    // Right arrow <
-    [9, 6],
-    [10, 5],
-    [10, 6],
-    [10, 7],
-    [11, 4],
-    [11, 5],
-    [11, 6],
-    [11, 7],
-    [11, 8],
-  ];
-  for (const [x, y] of arrowPixels) {
-    viewfinderRects += `<rect x="${iconX + x * iconCellSize}" y="${iconY + y * iconCellSize}" width="${iconCellSize}" height="${iconCellSize}" fill="${COLORS.muted}"/>`;
-  }
-
   return `
 <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
   ${glowFilter}
   <rect width="100%" height="100%" fill="${COLORS.background}"/>
-  ${scanlines}
   <g filter="url(#crt-glow)">
     ${textRects}
   </g>
-  ${decorLines}
-  ${viewfinderRects}
 </svg>
   `.trim();
 }
 
 async function generateSplash() {
-  console.log('Generating Rewind 16-bit retro splash screen...');
+  console.log('Generating Flick splash screen...');
 
   try {
     const splashSvg = Buffer.from(createSplashSvg(SPLASH_WIDTH, SPLASH_HEIGHT));
@@ -343,7 +215,7 @@ async function generateSplash() {
     console.log(`✓ Created assets/splash.png (${SPLASH_WIDTH}x${SPLASH_HEIGHT})`);
 
     console.log('\n✅ Splash screen generated successfully!');
-    console.log('Design: Pixel-art REWIND text with CRT glow and scanlines');
+    console.log('Design: Pixel-art FLICK text with subtle glow on dark background');
   } catch (error) {
     console.error('Error generating splash:', error);
     process.exit(1);

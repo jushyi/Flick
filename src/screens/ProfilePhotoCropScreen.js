@@ -408,13 +408,13 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
   },
   errorText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginTop: 100,

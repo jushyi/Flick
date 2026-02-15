@@ -12,24 +12,12 @@
 
 import React, { memo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, interpolateColor } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const COLS = 6;
-const ROWS = 8;
-
-// White glow palette — bright whites with subtle cool tints
-const PIXEL_COLORS = [
-  '#FFFFFF', // pure white
-  '#F0F0FF', // cool white
-  '#E8E8FF', // light blue-white
-  '#FFFFFF', // pure white (weighted)
-  '#F5F5FF', // near-white
-  '#FFFFFF', // pure white (weighted)
-  '#E0E0F0', // phosphor white
-  '#D0D0FF', // soft blue-white glow
-];
+const COLS = 6; // Optimized column count for performance
+const ROWS = 8; // Optimized row count for performance
 
 // Deterministic pseudo-random from seed
 const pseudoRandom = seed => {
@@ -39,32 +27,41 @@ const pseudoRandom = seed => {
 
 // Pre-compute block configs at module level (stable across renders)
 const BLOCK_CONFIGS = [];
+
 for (let row = 0; row < ROWS; row++) {
   for (let col = 0; col < COLS; col++) {
     const seed = row * COLS + col;
-    const rand1 = pseudoRandom(seed);
     const rand2 = pseudoRandom(seed + 100);
     const rand3 = pseudoRandom(seed + 200);
-    const rand4 = pseudoRandom(seed + 300);
+
+    // Create subtle gaps by reducing size slightly
+    const cellWidth = 100 / COLS;
+    const cellHeight = 100 / ROWS;
+    const gapFactor = 0.98; // 2% total gap (1% on each side) - very subtle
+    const offsetFactor = (1 - gapFactor) / 2; // Center the pixel in its cell
+
+    // Center-to-edges bias: middle columns fall first
+    const centerCol = (COLS - 1) / 2; // 5.5 for 12 columns
+    const distanceFromCenter = Math.abs(col - centerCol); // 0 at center (falls first), 5.5 at edges (falls last)
 
     BLOCK_CONFIGS.push({
       row,
       col,
-      // Position as percentage of card
-      leftPct: (col / COLS) * 100,
-      topPct: (row / ROWS) * 100,
-      widthPct: 100 / COLS,
-      heightPct: 100 / ROWS,
-      // Scatter params — fast confetti drop (mostly downward, light drift)
-      driftX: (rand1 - 0.5) * 60,
-      // Top rows fall further (and thus faster) so all pixels collect at the bottom
-      // Row 0 (top) gets 1.8x distance, row 7 (bottom) gets 1.0x
-      fallDistance:
-        (SCREEN_HEIGHT * 0.5 + rand2 * SCREEN_HEIGHT * 0.3) * (1 + (1 - row / (ROWS - 1)) * 0.8),
-      rotation: (rand4 - 0.5) * 20,
-      // Stagger: tight spread so all blocks burst together like confetti
-      staggerNorm: (row * 20 + rand3 * 30) / (ROWS * 20 + 30),
-      color: PIXEL_COLORS[seed % PIXEL_COLORS.length],
+      // Position as percentage of card (with gap offset)
+      leftPct: col * cellWidth + cellWidth * offsetFactor,
+      topPct: row * cellHeight + cellHeight * offsetFactor,
+      widthPct: cellWidth * gapFactor,
+      heightPct: cellHeight * gapFactor,
+      // No horizontal drift - pixels fall straight down
+      driftX: 0,
+      // All pixels fall same distance (same speed) with slight random variation
+      fallDistance: SCREEN_HEIGHT * 0.5 + rand2 * SCREEN_HEIGHT * 0.3,
+      rotation: 0, // No rotation - pixels fall straight
+      // Stagger: cohesive bottom-to-top + center-to-edges pattern
+      // Row (0-150) + distance from center (0-27.5) + minimal random (0-3) = structured cascade
+      staggerNorm:
+        ((ROWS - 1 - row) * 10 + distanceFromCenter * 5 + rand3 * 3) /
+        (ROWS * 10 + centerCol * 5 + 3),
     });
   }
 }
@@ -77,23 +74,34 @@ const PixelBlock = memo(({ config, dissolveProgress }) => {
   const animatedStyle = useAnimatedStyle(() => {
     const p = dissolveProgress.value;
 
+    // Before animation starts: invisible (don't cover photo during triage)
     if (p <= 0) return { opacity: 0 };
 
-    // Tight stagger — all blocks burst out nearly together
-    const blockStart = config.staggerNorm * 0.15;
-    const blockProgress = Math.max(0, Math.min(1, (p - blockStart) / (1 - blockStart)));
+    // Tighter cascade timing - rows closer together
+    const blockStart = config.staggerNorm * 0.45; // Spread starts over 45% of animation (tighter)
+    const blockDuration = 0.4; // Each pixel takes 40% of time - heavy overlap
+    const blockProgress = Math.max(0, Math.min(1, (p - blockStart) / blockDuration));
 
-    if (blockProgress <= 0) return { opacity: 0 };
+    // After animation starts but before this block's turn: visible and stationary
+    if (blockProgress <= 0) {
+      return { opacity: 1, backgroundColor: '#1034A6' }; // Start as blue
+    }
 
-    // Appear instantly (first 5% of block's animation)
-    const appear = Math.min(blockProgress / 0.05, 1);
-    // Fade very late (last 15%) so blocks stay bright as they fall and settle
-    const fade = blockProgress > 0.85 ? (blockProgress - 0.85) / 0.15 : 0;
-    // Fall uses quadratic easing for gravity feel (confetti to floor)
-    const fall = blockProgress * blockProgress;
+    // Once this block's turn begins: fall with delayed fade
+    // Pixels stay fully visible for first 70%, then fade quickly in last 30%
+    const fade = blockProgress < 0.7 ? 0 : (blockProgress - 0.7) / 0.3;
+    const fall = Math.pow(blockProgress, 5); // Quintic fall - very slow start, dramatic exponential acceleration
+
+    // Abrupt color transition from blue to white at 25% of fall
+    const backgroundColor = interpolateColor(
+      fall,
+      [0, 0.25, 0.26],
+      ['#1034A6', '#1034A6', '#FFFFFF']
+    );
 
     return {
-      opacity: appear * (1 - fade),
+      opacity: 1 - fade,
+      backgroundColor: backgroundColor, // Blue → White transition
       transform: [
         { translateX: config.driftX * blockProgress },
         { translateY: config.fallDistance * fall },
@@ -111,15 +119,8 @@ const PixelBlock = memo(({ config, dissolveProgress }) => {
           top: `${config.topPct}%`,
           width: `${config.widthPct}%`,
           height: `${config.heightPct}%`,
-          backgroundColor: config.color,
-          // White glow effect
-          shadowColor: '#FFFFFF',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.8,
-          shadowRadius: 6,
-          elevation: 4,
         },
-        animatedStyle,
+        animatedStyle, // backgroundColor animated from blue to white
       ]}
     />
   );

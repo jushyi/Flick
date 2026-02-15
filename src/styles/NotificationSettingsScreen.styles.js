@@ -76,7 +76,7 @@ export const styles = StyleSheet.create({
   },
   toggleItemSubtitle: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -113,7 +113,7 @@ export const styles = StyleSheet.create({
   },
   permissionBannerSubtitle: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xxs,
   },

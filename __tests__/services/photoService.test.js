@@ -26,6 +26,21 @@ jest.mock('../../src/services/firebase/darkroomService', () => ({
   ensureDarkroomInitialized: (...args) => mockEnsureDarkroomInitialized(...args),
 }));
 
+// Mock album service - photoService imports getUserAlbums, removePhotoFromAlbum, deleteAlbum
+const mockGetUserAlbums = jest.fn(() => Promise.resolve({ success: true, albums: [] }));
+const mockRemovePhotoFromAlbum = jest.fn(() => Promise.resolve({ success: true }));
+const mockDeleteAlbum = jest.fn(() => Promise.resolve({ success: true }));
+jest.mock('../../src/services/firebase/albumService', () => ({
+  getUserAlbums: (...args) => mockGetUserAlbums(...args),
+  removePhotoFromAlbum: (...args) => mockRemovePhotoFromAlbum(...args),
+  deleteAlbum: (...args) => mockDeleteAlbum(...args),
+}));
+
+// Mock performanceService - photoService uses withTrace
+jest.mock('../../src/services/firebase/performanceService', () => ({
+  withTrace: jest.fn((name, fn) => fn()),
+}));
+
 // Create Firestore mocks
 const mockAddDoc = jest.fn();
 const mockGetDoc = jest.fn();
@@ -37,6 +52,7 @@ const mockDoc = jest.fn();
 const mockQuery = jest.fn();
 const mockWhere = jest.fn();
 const mockOrderBy = jest.fn();
+const mockGetCountFromServer = jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) }));
 
 // Mock Firestore
 jest.mock('@react-native-firebase/firestore', () => ({
@@ -51,7 +67,26 @@ jest.mock('@react-native-firebase/firestore', () => ({
   query: (...args) => mockQuery(...args),
   where: (...args) => mockWhere(...args),
   orderBy: (...args) => mockOrderBy(...args),
+  limit: jest.fn(() => ({})),
   serverTimestamp: () => ({ _serverTimestamp: true }),
+  writeBatch: jest.fn(() => ({
+    set: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    delete: jest.fn().mockReturnThis(),
+    commit: jest.fn(() => Promise.resolve()),
+  })),
+  Timestamp: {
+    now: () => ({ seconds: Math.floor(Date.now() / 1000), toDate: () => new Date() }),
+    fromDate: date => ({ seconds: Math.floor(date.getTime() / 1000), toDate: () => date }),
+  },
+  FieldValue: {
+    serverTimestamp: () => ({ _serverTimestamp: true }),
+    increment: n => ({ _increment: n }),
+    arrayUnion: (...items) => ({ _arrayUnion: items }),
+    arrayRemove: (...items) => ({ _arrayRemove: items }),
+    delete: () => ({ _delete: true }),
+  },
+  getCountFromServer: (...args) => mockGetCountFromServer(...args),
 }));
 
 // Import service after mocks
@@ -97,7 +132,11 @@ describe('photoService', () => {
       expect(result.success).toBe(true);
       expect(result.photoId).toBe('photo-123');
       expect(mockAddDoc).toHaveBeenCalled();
-      expect(mockUploadPhoto).toHaveBeenCalledWith('photo-123', 'file:///local/photo.jpg');
+      expect(mockUploadPhoto).toHaveBeenCalledWith(
+        'user-123',
+        'photo-123',
+        'file:///local/photo.jpg'
+      );
       expect(mockUpdateDoc).toHaveBeenCalled();
       expect(mockEnsureDarkroomInitialized).toHaveBeenCalledWith('user-123');
     });
@@ -198,7 +237,7 @@ describe('photoService', () => {
   // ===========================================================================
   describe('getDevelopingPhotoCount', () => {
     it('should return count of developing photos', async () => {
-      mockGetDocs.mockResolvedValueOnce({ size: 5 });
+      mockGetCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 5 }) });
 
       const count = await getDevelopingPhotoCount('user-123');
 
@@ -208,7 +247,7 @@ describe('photoService', () => {
     });
 
     it('should return 0 when query fails', async () => {
-      mockGetDocs.mockRejectedValueOnce(new Error('Query failed'));
+      mockGetCountFromServer.mockRejectedValueOnce(new Error('Query failed'));
 
       const count = await getDevelopingPhotoCount('user-123');
 
@@ -216,7 +255,7 @@ describe('photoService', () => {
     });
 
     it('should return 0 when user has no developing photos', async () => {
-      mockGetDocs.mockResolvedValueOnce({ size: 0 });
+      mockGetCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 0 }) });
 
       const count = await getDevelopingPhotoCount('user-123');
 
@@ -230,9 +269,9 @@ describe('photoService', () => {
   describe('getDarkroomCounts', () => {
     it('should return both developing and revealed counts', async () => {
       // First call for developing, second for revealed
-      mockGetDocs
-        .mockResolvedValueOnce({ size: 3 }) // developing
-        .mockResolvedValueOnce({ size: 2 }); // revealed
+      mockGetCountFromServer
+        .mockResolvedValueOnce({ data: () => ({ count: 3 }) }) // developing
+        .mockResolvedValueOnce({ data: () => ({ count: 2 }) }); // revealed
 
       const result = await getDarkroomCounts('user-123');
 
@@ -242,7 +281,7 @@ describe('photoService', () => {
     });
 
     it('should return zeros when query fails', async () => {
-      mockGetDocs.mockRejectedValueOnce(new Error('Query failed'));
+      mockGetCountFromServer.mockRejectedValueOnce(new Error('Query failed'));
 
       const result = await getDarkroomCounts('user-123');
 
@@ -278,7 +317,10 @@ describe('photoService', () => {
     });
 
     it('should return error when query fails', async () => {
-      mockGetDocs.mockRejectedValueOnce(new Error('Query failed'));
+      // getDevelopingPhotos calls getDocs twice (developing + revealed)
+      mockGetDocs
+        .mockRejectedValueOnce(new Error('Query failed'))
+        .mockResolvedValueOnce({ docs: [] }); // Provide fallback for second call
 
       const result = await getDevelopingPhotos('user-123');
 
@@ -327,47 +369,75 @@ describe('photoService', () => {
   // ===========================================================================
   describe('triagePhoto', () => {
     it('should journal photo successfully', async () => {
+      // Mock getDoc to return photo with capturedAt for month calculation
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       mockUpdateDoc.mockResolvedValueOnce();
 
       const result = await triagePhoto('photo-123', 'journal');
 
       expect(result.success).toBe(true);
+      expect(mockGetDoc).toHaveBeenCalled();
       expect(mockUpdateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           status: 'triaged',
           photoState: 'journal',
+          month: expect.any(String),
         })
       );
     });
 
     it('should archive photo successfully', async () => {
+      // Mock getDoc to return photo with capturedAt for month calculation
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       mockUpdateDoc.mockResolvedValueOnce();
 
       const result = await triagePhoto('photo-123', 'archive');
+
+      expect(result.success).toBe(true);
+      expect(mockGetDoc).toHaveBeenCalled();
+      expect(mockUpdateDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          status: 'triaged',
+          photoState: 'archive',
+          month: expect.any(String),
+        })
+      );
+    });
+
+    it('should soft delete photo when action is delete', async () => {
+      // Delete action does NOT call getDoc, just updates with soft delete fields
+      mockUpdateDoc.mockResolvedValueOnce();
+
+      const result = await triagePhoto('photo-123', 'delete');
 
       expect(result.success).toBe(true);
       expect(mockUpdateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           status: 'triaged',
-          photoState: 'archive',
+          photoState: 'deleted',
+          scheduledForPermanentDeletionAt: expect.anything(),
         })
       );
-    });
-
-    it('should delete photo and document when action is delete', async () => {
-      mockDeletePhoto.mockResolvedValueOnce();
-      mockDeleteDoc.mockResolvedValueOnce();
-
-      const result = await triagePhoto('photo-123', 'delete');
-
-      expect(result.success).toBe(true);
-      expect(mockDeletePhoto).toHaveBeenCalledWith('photo-123');
-      expect(mockDeleteDoc).toHaveBeenCalled();
+      // Soft delete does NOT call deletePhoto or deleteDoc
+      expect(mockDeletePhoto).not.toHaveBeenCalled();
+      expect(mockDeleteDoc).not.toHaveBeenCalled();
     });
 
     it('should return error when triage fails', async () => {
+      // Mock getDoc for journal action
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       mockUpdateDoc.mockRejectedValueOnce(new Error('Update failed'));
 
       const result = await triagePhoto('photo-123', 'journal');
@@ -471,6 +541,11 @@ describe('photoService', () => {
   // ===========================================================================
   describe('batchTriagePhotos', () => {
     it('should triage multiple photos successfully', async () => {
+      // Mock getDoc for triagePhoto calls (journal and archive actions need to read photo)
+      mockGetDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
       mockUpdateDoc.mockResolvedValue();
 
       const decisions = [
@@ -481,6 +556,8 @@ describe('photoService', () => {
       const result = await batchTriagePhotos(decisions);
 
       expect(result.success).toBe(true);
+      // Each triage action calls getDoc once (to get capturedAt) and updateDoc once
+      expect(mockGetDoc).toHaveBeenCalledTimes(2);
       expect(mockUpdateDoc).toHaveBeenCalledTimes(2);
     });
 
@@ -498,17 +575,15 @@ describe('photoService', () => {
       // an error happen in a way that bypasses triagePhoto's try/catch.
       // Actually, the simplest fix is to test that the function handles errors gracefully.
 
-      // Since triagePhoto has its own try/catch, let's verify that batchTriagePhotos
-      // actually catches errors that happen outside of triagePhoto
-      const originalTriagePhoto = require('../../src/services/firebase/photoService').triagePhoto;
-
-      // Mock a decision that causes the iteration to fail
+      // batchTriagePhotos catches errors in the loop. Let's test error handling.
       const decisions = [{ photoId: 'photo-1', action: 'journal' }];
 
-      // Actually, let's just verify it handles the loop - since triagePhoto swallows errors,
-      // the batch will succeed even if individual triage fails. This is by design.
-      // Let's change this test to verify that behavior instead.
-      mockUpdateDoc.mockResolvedValue();
+      // Mock getDoc to succeed but updateDoc to fail
+      mockGetDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({ capturedAt: { seconds: Date.now() / 1000, toDate: () => new Date() } }),
+      });
+      mockUpdateDoc.mockRejectedValueOnce(new Error('Update failed'));
 
       const result = await batchTriagePhotos(decisions);
 

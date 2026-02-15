@@ -281,7 +281,7 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'friend_request',
-            screen: 'FriendRequests',
+            screen: 'FriendsList',
             params: { friendshipId },
           },
         };
@@ -291,8 +291,8 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'friend_accepted',
-            screen: 'FriendRequests',
-            params: {},
+            screen: 'OtherUserProfile',
+            params: { userId },
           },
         };
 
@@ -301,8 +301,11 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'reaction',
-            screen: 'Feed',
-            params: { photoId },
+            screen: 'Activity',
+            params: {
+              photoId,
+              shouldOpenPhoto: true,
+            },
           },
         };
 
@@ -311,8 +314,12 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'comment',
-            screen: 'Feed',
-            params: { photoId },
+            screen: 'Activity',
+            params: {
+              photoId,
+              commentId,
+              shouldOpenPhoto: true,
+            },
           },
         };
 
@@ -321,38 +328,25 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'mention',
-            screen: 'Feed',
-            params: { photoId },
-          },
-        };
-
-      case 'story':
-        // Navigate to Feed with params to highlight the poster's story
-        return {
-          success: true,
-          data: {
-            type: 'story',
-            screen: 'Feed',
+            screen: 'Activity',
             params: {
-              highlightUserId: userId, // User whose story to show
-              openStory: true, // Signal to auto-open their story
+              photoId,
+              commentId,
+              shouldOpenPhoto: true,
             },
           },
         };
 
       case 'tagged':
-        // Navigate to Feed with params to open the tagger's story and highlight the specific photo
-        // Deep link UX: Opens the photo within that person's story (can swipe to see more)
+        // Navigate to Activity screen for tag notifications
         return {
           success: true,
           data: {
             type: 'tagged',
-            screen: 'Feed',
+            screen: 'Activity',
             params: {
-              highlightUserId: taggerId, // Person who tagged (their story)
-              highlightPhotoId: photoId, // Specific photo to show
-              openStory: true, // Open the tagger's story
-              scrollToPhoto: true, // Scroll to the specific tagged photo
+              photoId,
+              shouldOpenPhoto: true,
             },
           },
         };

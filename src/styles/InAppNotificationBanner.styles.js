@@ -52,9 +52,10 @@ export const styles = StyleSheet.create({
   },
   body: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 1,
+    lineHeight: 18,
   },
   chevron: {
     marginLeft: spacing.xxs,

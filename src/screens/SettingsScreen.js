@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Application from 'expo-application';
 import { useNavigation } from '@react-navigation/native';
@@ -51,7 +51,7 @@ const SettingsScreen = () => {
 
   const handleHelpSupport = () => {
     logger.debug('SettingsScreen: Help & Support pressed');
-    Linking.openURL('mailto:support@rewind.app?subject=Rewind%20Support%20Request');
+    navigation.navigate('HelpSupport');
   };
 
   const sections = [
@@ -64,6 +64,12 @@ const SettingsScreen = () => {
           icon: 'person-outline',
           onPress: () => handleNavigate('EditProfile'),
         },
+        {
+          id: 'contributions',
+          label: 'Support Flick',
+          icon: 'heart-outline',
+          onPress: () => handleNavigate('Contributions'),
+        },
       ],
     },
     {
@@ -74,6 +80,12 @@ const SettingsScreen = () => {
           label: 'Notifications',
           icon: 'notifications-outline',
           onPress: () => handleNavigate('NotificationSettings'),
+        },
+        {
+          id: 'sounds',
+          label: 'Sounds',
+          icon: 'musical-notes-outline',
+          onPress: () => handleNavigate('SoundSettings'),
         },
       ],
     },
@@ -157,7 +169,11 @@ const SettingsScreen = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView} bounces={false}>
+      <ScrollView
+        style={styles.scrollView}
+        bounces={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         {/* Sectioned Menu Items */}
         <View style={styles.menuContainer}>
           {sections.map(section => (
@@ -296,8 +312,8 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
-    color: colors.text.tertiary,
+    fontFamily: typography.fontFamily.readable,
+    color: colors.text.secondary,
   },
 });
 

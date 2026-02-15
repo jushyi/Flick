@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     marginTop: spacing.sm,
   },

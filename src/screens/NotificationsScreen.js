@@ -362,13 +362,13 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     lineHeight: 20,
   },
   timestamp: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   separator: {
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   },
   pushBannerSubtitle: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },

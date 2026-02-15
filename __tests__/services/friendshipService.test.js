@@ -47,6 +47,9 @@ jest.mock('@react-native-firebase/firestore', () => ({
   query: jest.fn(() => ({})),
   where: jest.fn(() => ({})),
   or: jest.fn(() => ({})),
+  orderBy: jest.fn(() => ({})),
+  limit: jest.fn(() => ({})),
+  documentId: jest.fn(() => '__documentId__'),
   serverTimestamp: () => mockServerTimestamp(),
 }));
 

@@ -183,7 +183,7 @@ const PhoneInputScreen = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            <Text style={styles.logo}>REWIND</Text>
+            <Text style={styles.logo}>FLICK</Text>
             <Text style={styles.subtitle}>Enter your phone number</Text>
             <Text style={styles.description}>
               We&apos;ll send you a verification code to confirm your number.
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: typography.size.display,
-    fontFamily: typography.fontFamily.display,
+    fontFamily: typography.fontFamily.bodyBold,
     textAlign: 'center',
     marginBottom: spacing.xs,
     color: colors.text.primary,
@@ -312,10 +312,12 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: spacing.xl,
+    width: '100%',
+    flexWrap: 'wrap',
   },
   form: {
     width: '100%',
@@ -402,7 +404,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: typography.size.xl,
-    fontFamily: typography.fontFamily.display,
+    fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
   modalClose: {

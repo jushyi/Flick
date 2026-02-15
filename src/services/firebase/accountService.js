@@ -12,11 +12,13 @@
  */
 
 import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
-import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
+import { getFirestore, collection, doc, getDoc } from '@react-native-firebase/firestore';
+import { getAuth } from '@react-native-firebase/auth';
 import logger from '../../utils/logger';
 
 const functions = getFunctions();
+const auth = getAuth();
+const db = getFirestore();
 
 /**
  * Delete user account and all associated data.
@@ -157,13 +159,13 @@ export const cancelAccountDeletion = async () => {
  */
 export const checkDeletionStatus = async () => {
   try {
-    const currentUser = auth().currentUser;
+    const currentUser = auth.currentUser;
     if (!currentUser) {
       logger.warn('AccountService.checkDeletionStatus: No authenticated user');
       return { isScheduled: false, scheduledDate: null, error: 'Not authenticated' };
     }
 
-    const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
 
     if (!userDoc.exists) {
       logger.warn('AccountService.checkDeletionStatus: User document not found');

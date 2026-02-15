@@ -13,6 +13,7 @@ import {
   serverTimestamp,
 } from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
 import logger from '../utils/logger';
 import { clearLocalNotificationToken } from '../services/firebase/notificationService';
 import { secureStorage } from '../services/secureStorageService';
@@ -270,7 +271,18 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Step 6: Sign out from Firebase Auth (LAST - after all cleanup)
+      // Step 6: Clear expo-image cache (prevents stale gray photos on re-login)
+      try {
+        await Image.clearMemoryCache();
+        await Image.clearDiskCache();
+        logger.info('AuthContext: expo-image cache cleared');
+      } catch (imageCacheError) {
+        logger.warn('AuthContext: Failed to clear expo-image cache', {
+          error: imageCacheError.message,
+        });
+      }
+
+      // Step 7: Sign out from Firebase Auth (LAST - after all cleanup)
       const auth = getAuth();
       await auth.signOut();
 

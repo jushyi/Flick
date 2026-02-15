@@ -217,13 +217,13 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     fontVariant: ['tabular-nums'],
   },
   timeLabelDuration: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     fontVariant: ['tabular-nums'],
   },

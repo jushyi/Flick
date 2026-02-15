@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
   },
   clearButton: {
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     marginTop: spacing.sm,
   },

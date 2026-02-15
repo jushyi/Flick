@@ -10,9 +10,10 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
+import FriendCard from '../components/FriendCard';
 import {
   getFirestore,
   collection,
@@ -37,6 +38,7 @@ import { getTimeAgo } from '../utils/timeUtils';
 import { mediumImpact } from '../utils/haptics';
 import { markSingleNotificationAsRead } from '../services/firebase/notificationService';
 import { getPhotoById, getUserStoriesData } from '../services/firebase/feedService';
+import { isBlocked } from '../services/firebase/blockService';
 import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
@@ -92,12 +94,14 @@ const groupNotificationsByTime = notifs => {
  */
 const ActivityScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const { user } = useAuth();
   const { openPhotoDetail } = usePhotoDetailActions();
   const [friendRequests, setFriendRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionLoading, setActionLoading] = useState({});
 
   const fetchFriendRequests = useCallback(async () => {
     if (!user?.uid) return [];
@@ -130,6 +134,51 @@ const ActivityScreen = () => {
     }
     return [];
   }, [user?.uid]);
+
+  /**
+   * Handle deep link navigation from notifications
+   * Opens PhotoDetail modal when shouldOpenPhoto param is present
+   */
+  useEffect(() => {
+    const handleDeepLinkParams = async () => {
+      const params = route.params || {};
+      const { photoId, commentId, shouldOpenPhoto } = params;
+
+      if (!shouldOpenPhoto || !photoId) {
+        return;
+      }
+
+      logger.info('ActivityScreen: Opening photo from notification', { photoId, commentId });
+
+      // Fetch photo
+      const result = await getPhotoById(photoId);
+      if (!result.success) {
+        logger.error('ActivityScreen: Failed to fetch photo', { photoId, error: result.error });
+        navigation.setParams({ shouldOpenPhoto: undefined });
+        return;
+      }
+
+      // Open PhotoDetail modal
+      openPhotoDetail({
+        mode: 'feed',
+        photo: result.photo,
+        currentUserId: user?.uid,
+        initialShowComments: !!commentId,
+        targetCommentId: commentId || null,
+      });
+
+      navigation.navigate('PhotoDetail');
+
+      // Clear params to prevent re-opening on back navigation
+      navigation.setParams({
+        shouldOpenPhoto: undefined,
+        photoId: undefined,
+        commentId: undefined,
+      });
+    };
+
+    handleDeepLinkParams();
+  }, [route.params, navigation, openPhotoDetail, user?.uid]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user?.uid) return [];
@@ -212,7 +261,9 @@ const ActivityScreen = () => {
 
   const handleAccept = async requestId => {
     mediumImpact();
+    setActionLoading(prev => ({ ...prev, [requestId]: true }));
     const result = await acceptFriendRequest(requestId, user.uid);
+    setActionLoading(prev => ({ ...prev, [requestId]: false }));
     if (result.success) {
       setFriendRequests(prev => prev.filter(r => r.id !== requestId));
     } else {
@@ -222,7 +273,9 @@ const ActivityScreen = () => {
 
   const handleDecline = async requestId => {
     mediumImpact();
+    setActionLoading(prev => ({ ...prev, [requestId]: true }));
     const result = await declineFriendRequest(requestId, user.uid);
+    setActionLoading(prev => ({ ...prev, [requestId]: false }));
     if (result.success) {
       setFriendRequests(prev => prev.filter(r => r.id !== requestId));
     } else {
@@ -286,6 +339,21 @@ const ActivityScreen = () => {
 
     // Navigate based on notification type/data
     const { type, photoId } = item;
+
+    // Check block status before showing content from sender
+    if (item.senderId && user?.uid) {
+      const [blockedBySender, blockedSender] = await Promise.all([
+        isBlocked(item.senderId, user.uid),
+        isBlocked(user.uid, item.senderId),
+      ]);
+      const eitherBlocked =
+        (blockedBySender.success && blockedBySender.isBlocked) ||
+        (blockedSender.success && blockedSender.isBlocked);
+      if (eitherBlocked) {
+        return; // Silently ignore — content from blocked users not shown
+      }
+    }
+
     if ((type === 'reaction' || type === 'comment' || type === 'mention') && photoId) {
       // Fetch the photo and open PhotoDetail directly
       const result = await getPhotoById(photoId);
@@ -338,37 +406,24 @@ const ActivityScreen = () => {
     const { otherUser } = item;
     if (!otherUser) return null;
 
+    // Transform otherUser to match FriendCard's expected user shape
+    const user = {
+      userId: otherUser.id,
+      displayName: otherUser.displayName,
+      username: otherUser.username,
+      profilePhotoURL: otherUser.profilePhotoURL,
+    };
+
     return (
-      <View style={styles.requestItem}>
-        <TouchableOpacity
-          onPress={() => handleAvatarPress(otherUser.id, otherUser.displayName)}
-          activeOpacity={0.7}
-        >
-          {otherUser.profilePhotoURL ? (
-            <Image source={{ uri: otherUser.profilePhotoURL }} style={styles.requestPhoto} />
-          ) : (
-            <View style={[styles.requestPhoto, styles.requestPhotoPlaceholder]}>
-              <Text style={styles.requestPhotoText}>
-                {otherUser.displayName?.[0]?.toUpperCase() || '?'}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <View style={styles.requestInfo}>
-          <Text style={styles.requestName} numberOfLines={1}>
-            {otherUser.displayName || otherUser.username}
-          </Text>
-          <Text style={styles.requestSubtext}>wants to be friends</Text>
-        </View>
-        <View style={styles.requestActions}>
-          <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(item.id)}>
-            <PixelIcon name="checkmark" size={18} color={colors.icon.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.declineButton} onPress={() => handleDecline(item.id)}>
-            <PixelIcon name="close" size={18} color={colors.text.secondary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <FriendCard
+        user={user}
+        relationshipStatus="pending_received"
+        friendshipId={item.id}
+        onAccept={handleAccept}
+        onDeny={handleDecline}
+        loading={actionLoading[item.id]}
+        onPress={() => handleAvatarPress(otherUser.id, otherUser.displayName)}
+      />
     );
   };
 
@@ -467,16 +522,12 @@ const ActivityScreen = () => {
         {/* Pinned Friend Requests Section */}
         {friendRequests.length > 0 && (
           <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.sectionHeader}
-              onPress={() => navigation.navigate('FriendRequests')}
-            >
+            <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Friend Requests</Text>
               <View style={styles.sectionBadge}>
                 <Text style={styles.sectionBadgeText}>{friendRequests.length}</Text>
               </View>
-              <PixelIcon name="chevron-forward" size={18} color={colors.text.tertiary} />
-            </TouchableOpacity>
+            </View>
             {friendRequests.map(item => (
               <View key={item.id}>{renderFriendRequest({ item })}</View>
             ))}
@@ -570,66 +621,6 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bodyBold,
     color: colors.text.primary,
   },
-  requestItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.background.secondary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.subtle,
-  },
-  requestPhoto: {
-    width: layout.dimensions.avatarMedium + 4,
-    height: layout.dimensions.avatarMedium + 4,
-    borderRadius: layout.borderRadius.round,
-    marginRight: spacing.sm,
-  },
-  requestPhotoPlaceholder: {
-    backgroundColor: colors.background.tertiary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  requestPhotoText: {
-    fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.bodyBold,
-    color: colors.text.secondary,
-  },
-  requestInfo: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  requestName: {
-    fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.bodyBold,
-    color: colors.text.primary,
-  },
-  requestSubtext: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
-    color: colors.text.secondary,
-    marginTop: 2,
-  },
-  requestActions: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  acceptButton: {
-    backgroundColor: colors.interactive.primary,
-    width: 36,
-    height: 36,
-    borderRadius: layout.borderRadius.round,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  declineButton: {
-    backgroundColor: colors.background.tertiary,
-    width: 36,
-    height: 36,
-    borderRadius: layout.borderRadius.round,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   notificationItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -656,7 +647,7 @@ const styles = StyleSheet.create({
   },
   notifMessage: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     lineHeight: 20,
   },
@@ -678,7 +669,7 @@ const styles = StyleSheet.create({
   },
   notifTime: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
   },
   emptyContainer: {
@@ -696,7 +687,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginTop: spacing.xs,

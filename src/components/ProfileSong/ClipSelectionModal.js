@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
   songArtist: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xxs,
   },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   instructions: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     textAlign: 'center',
     marginTop: spacing.md,

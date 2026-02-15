@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: 'center',
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
 });

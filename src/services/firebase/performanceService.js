@@ -1,4 +1,4 @@
-import perf from '@react-native-firebase/perf';
+import { getPerformance, trace as createTrace } from '@react-native-firebase/perf';
 
 /**
  * Initialize performance monitoring.
@@ -6,7 +6,8 @@ import perf from '@react-native-firebase/perf';
  */
 export function initPerformanceMonitoring() {
   if (__DEV__) {
-    perf().setPerformanceCollectionEnabled(false);
+    const perf = getPerformance();
+    perf.dataCollectionEnabled = false;
   }
 }
 
@@ -20,23 +21,25 @@ export function initPerformanceMonitoring() {
 export async function withTrace(traceName, operation, attributes) {
   if (__DEV__) return operation({ putMetric: () => {}, putAttribute: () => {} });
 
-  const trace = await perf().startTrace(traceName);
+  const perf = getPerformance();
+  const t = createTrace(perf, traceName);
+  await t.start();
 
   if (attributes) {
     const entries = Object.entries(attributes).slice(0, 4); // Reserve 1 slot for success
     for (const [key, value] of entries) {
-      trace.putAttribute(key, String(value).slice(0, 100));
+      t.putAttribute(key, String(value).slice(0, 100));
     }
   }
 
   try {
-    const result = await operation(trace);
-    trace.putAttribute('success', 'true');
+    const result = await operation(t);
+    t.putAttribute('success', 'true');
     return result;
   } catch (error) {
-    trace.putAttribute('success', 'false');
+    t.putAttribute('success', 'false');
     throw error;
   } finally {
-    await trace.stop();
+    await t.stop();
   }
 }

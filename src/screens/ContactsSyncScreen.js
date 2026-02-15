@@ -115,7 +115,7 @@ const ContactsSyncScreen = ({ navigation }) => {
         />
         <Text style={styles.privacyTitle}>Find Your Friends</Text>
         <Text style={styles.privacyText}>
-          See which of your contacts are already on REWIND. Your contacts stay on your device — we
+          See which of your contacts are already on FLICK. Your contacts stay on your device — we
           only match phone numbers to find friends.
         </Text>
         <TouchableOpacity
@@ -209,7 +209,7 @@ const ContactsSyncScreen = ({ navigation }) => {
         />
         <Text style={styles.emptyTitle}>No Friends Found Yet</Text>
         <Text style={styles.emptyText}>
-          None of your contacts are on REWIND yet. Invite them to join so you can share moments
+          None of your contacts are on FLICK yet. Invite them to join so you can share moments
           together!
         </Text>
       </View>

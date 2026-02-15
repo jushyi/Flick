@@ -27,7 +27,7 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.md,
   },
@@ -49,10 +49,18 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
+  },
+  statusBarCover: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.background.primary,
+    zIndex: layout.zIndex.overlay,
   },
   header: {
     flexDirection: 'row',
@@ -128,7 +136,7 @@ export const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
   },
@@ -155,7 +163,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     height: spacing.huge,
     borderRadius: layout.borderRadius.xl,
-    backgroundColor: colors.text.secondary, // iOS gray
+    backgroundColor: colors.status.developing, // Amber
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',

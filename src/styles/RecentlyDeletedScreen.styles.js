@@ -43,7 +43,7 @@ export const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -73,7 +73,7 @@ export const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     marginTop: spacing.xs,
     textAlign: 'center',
@@ -210,7 +210,7 @@ export const styles = StyleSheet.create({
   },
   viewerPositionText: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xxs,
   },

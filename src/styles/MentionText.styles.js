@@ -12,13 +12,13 @@ export const styles = StyleSheet.create({
   // Base text style (inherits from parent)
   baseText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     lineHeight: 20,
   },
   // @mention text style - highlighted and tappable
   mentionText: {
     color: colors.brand.purple,
-    fontFamily: typography.fontFamily.bodyBold,
+    fontFamily: typography.fontFamily.readableBold,
   },
 });

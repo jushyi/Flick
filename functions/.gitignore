@@ -6,11 +6,17 @@
 !logger.js
 !validation.js
 !notifications/*.js
+!tasks/*.js
 !jest.config.js
 !__tests__/**/*.js
 
 # TypeScript v1 declaration files
 typings/
+
+# Environment files (contain secrets)
+.env
+.env.*
+!.env.example
 
 # Node.js dependency directory
 node_modules/

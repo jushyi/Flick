@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
   },
@@ -300,14 +300,14 @@ const styles = StyleSheet.create({
   },
   retryDelayText: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     textAlign: 'center',
     marginTop: spacing.xxs,
   },
   loadingText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginTop: spacing.md,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   },
   resendTimerText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
   },
   resendButton: {
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   },
   changeNumberText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   changeNumberLink: {

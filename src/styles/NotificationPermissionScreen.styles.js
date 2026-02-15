@@ -41,7 +41,7 @@ export const styles = StyleSheet.create({
   },
   permissionText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
   skipButtonText: {
     color: colors.text.secondary,
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     textAlign: 'center',
   },
 });

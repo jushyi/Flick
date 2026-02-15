@@ -69,17 +69,27 @@ export const styles = StyleSheet.create({
   // Comment text
   commentText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     lineHeight: 20,
     marginBottom: spacing.xs,
   },
   // Media thumbnail for image/gif comments
+  mediaContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: spacing.xs,
+  },
   mediaThumbnail: {
     width: 100,
     height: 100,
     borderRadius: layout.borderRadius.sm,
-    marginBottom: spacing.xs,
+    marginRight: spacing.xs,
+  },
+  // Giphy attribution (required for inline GIF displays)
+  giphyAttribution: {
+    width: 40,
+    height: 60,
   },
   // Footer row with reply and timestamp
   footerRow: {
@@ -97,13 +107,13 @@ export const styles = StyleSheet.create({
   },
   dot: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     marginHorizontal: 0, // No margin - replyButton paddingRight provides spacing
   },
   timestamp: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     paddingLeft: 4,
   },
@@ -116,7 +126,7 @@ export const styles = StyleSheet.create({
   },
   likeCount: {
     fontSize: typography.size.xs,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },

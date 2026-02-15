@@ -205,7 +205,7 @@ export const usePhotoDetailModal = ({
 
   // Extract photo data from currentPhoto
   const { imageURL, capturedAt, reactions = {}, user = {} } = currentPhoto || {};
-  const { username, displayName, profilePhotoURL } = user;
+  const { username, displayName, profilePhotoURL, nameColor } = user;
 
   /**
    * Get grouped reactions (emoji -> count)
@@ -954,6 +954,7 @@ export const usePhotoDetailModal = ({
     displayName,
     username,
     profilePhotoURL,
+    nameColor,
 
     // Stories navigation
     currentIndex,

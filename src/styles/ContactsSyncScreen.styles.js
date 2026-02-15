@@ -44,7 +44,7 @@ export const styles = StyleSheet.create({
   },
   privacyText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -71,7 +71,7 @@ export const styles = StyleSheet.create({
   skipButtonText: {
     color: colors.text.secondary,
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     textAlign: 'center',
   },
   // Results section
@@ -86,7 +86,7 @@ export const styles = StyleSheet.create({
   },
   resultsSubtitle: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   listContent: {
@@ -111,7 +111,7 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -125,7 +125,7 @@ export const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   // Continue button (fixed at bottom)

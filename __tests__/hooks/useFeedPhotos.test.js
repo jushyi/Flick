@@ -12,7 +12,6 @@
  * - Optimistic photo state updates
  */
 
-import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 
 // Import hook after mocks

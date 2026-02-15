@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },

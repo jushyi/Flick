@@ -29,6 +29,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from '../components/PixelIcon';
+import StrokedNameText from '../components/StrokedNameText';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { useNavigation } from '@react-navigation/native';
 import { getTimeAgo } from '../utils/timeUtils';
@@ -41,6 +42,7 @@ import {
   archivePhoto,
   restorePhoto,
   updatePhotoTags,
+  subscribePhoto,
 } from '../services/firebase/photoService';
 import DropdownMenu from '../components/DropdownMenu';
 import { TagFriendsModal, TaggedPeopleModal } from '../components';
@@ -76,6 +78,7 @@ const PhotoDetailScreen = () => {
     currentUserId: contextUserId,
     sourceRect: contextSourceRect,
     initialShowComments,
+    targetCommentId,
     showComments,
     setShowComments,
     handleReactionToggle,
@@ -129,6 +132,34 @@ const PhotoDetailScreen = () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Subscribe to current photo for real-time updates (tags, reactions, etc.)
+  useEffect(() => {
+    if (!contextPhoto?.id) return;
+
+    logger.debug('PhotoDetailScreen: Setting up photo subscription', { photoId: contextPhoto.id });
+
+    const unsubscribe = subscribePhoto(contextPhoto.id, result => {
+      if (result.success && result.photo) {
+        logger.debug('PhotoDetailScreen: Photo updated from subscription', {
+          photoId: result.photo.id,
+          tagCount: result.photo.taggedUserIds?.length || 0,
+        });
+
+        // Update current photo with latest data from Firestore
+        updateCurrentPhoto(result.photo);
+      } else {
+        logger.warn('PhotoDetailScreen: Photo subscription error', { error: result.error });
+      }
+    });
+
+    return () => {
+      logger.debug('PhotoDetailScreen: Cleaning up photo subscription', {
+        photoId: contextPhoto.id,
+      });
+      unsubscribe();
+    };
+  }, [contextPhoto?.id, updateCurrentPhoto]);
 
   const handleClose = useCallback(() => {
     // Call context close handler
@@ -293,6 +324,7 @@ const PhotoDetailScreen = () => {
     capturedAt,
     displayName,
     profilePhotoURL,
+    nameColor,
 
     // Stories navigation
     currentIndex,
@@ -382,6 +414,7 @@ const PhotoDetailScreen = () => {
       imageURL,
       displayName,
       profilePhotoURL,
+      nameColor,
       capturedAt,
       totalPhotos,
       currentIndex,
@@ -771,9 +804,13 @@ const PhotoDetailScreen = () => {
               },
             ]}
           >
-            <Text style={styles.displayName} numberOfLines={1}>
+            <StrokedNameText
+              style={styles.displayName}
+              nameColor={currentPhoto?.user?.nameColor}
+              numberOfLines={1}
+            >
               {displayName || 'Unknown User'}
-            </Text>
+            </StrokedNameText>
             <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
           </View>
 
@@ -1012,9 +1049,13 @@ const PhotoDetailScreen = () => {
                   },
                 ]}
               >
-                <Text style={styles.displayName} numberOfLines={1}>
+                <StrokedNameText
+                  style={styles.displayName}
+                  nameColor={snapshotRef.current.nameColor}
+                  numberOfLines={1}
+                >
                   {snapshotRef.current.displayName || 'Unknown User'}
-                </Text>
+                </StrokedNameText>
                 <Text style={styles.timestamp}>{getTimeAgo(snapshotRef.current.capturedAt)}</Text>
               </View>
 
@@ -1100,6 +1141,7 @@ const PhotoDetailScreen = () => {
         currentUserId={contextUserId}
         onAvatarPress={handleCommentAvatarPress}
         onCommentCountChange={handleCommentCountChange}
+        initialScrollToCommentId={targetCommentId}
       />
 
       {/* Custom Emoji Picker */}

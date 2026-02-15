@@ -41,7 +41,7 @@ import logger from '../utils/logger';
  * @returns {object} - Darkroom state, handlers, refs, and computed values
  */
 const useDarkroom = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const navigation = useNavigation();
 
   // Core state
@@ -107,7 +107,7 @@ const useDarkroom = () => {
       logger.info('useDarkroom: Darkroom ready status', { isReady });
 
       if (isReady) {
-        logger.info('useDarkroom: Revealing photos');
+        logger.info('useDarkroom: Revealing photos (scheduled reveal time reached)');
         // Reveal ALL developing photos
         const revealResult = await revealPhotos(user.uid);
         logger.info('useDarkroom: Photos revealed', {
@@ -140,14 +140,44 @@ const useDarkroom = () => {
           })),
         });
 
-        // Filter for revealed photos only
+        // Catch-up mechanism: If ANY photos are revealed AND there are developing photos,
+        // auto-reveal all developing photos to add them to this triage session
         const revealedPhotos = result.photos.filter(photo => photo.status === 'revealed');
-        logger.info('useDarkroom: Filtered revealed photos', {
-          totalPhotos: result.photos.length,
-          revealedCount: revealedPhotos.length,
-          developingCount: result.photos.filter(p => p.status === 'developing').length,
-        });
-        setPhotos(revealedPhotos);
+        const developingPhotos = result.photos.filter(photo => photo.status === 'developing');
+
+        if (revealedPhotos.length > 0 && developingPhotos.length > 0) {
+          logger.info('useDarkroom: Catch-up reveal triggered', {
+            revealedCount: revealedPhotos.length,
+            developingCount: developingPhotos.length,
+            reason: 'User opened darkroom with revealed photos, auto-revealing remaining photos',
+          });
+
+          // Reveal the developing photos
+          const catchUpResult = await revealPhotos(user.uid);
+          logger.info('useDarkroom: Catch-up reveal complete', {
+            count: catchUpResult.count,
+            success: catchUpResult.success,
+          });
+
+          // Re-fetch photos to get updated statuses
+          const updatedResult = await getDevelopingPhotos(user.uid);
+          if (updatedResult.success && updatedResult.photos) {
+            const allRevealed = updatedResult.photos.filter(photo => photo.status === 'revealed');
+            logger.info('useDarkroom: After catch-up reveal', {
+              totalRevealed: allRevealed.length,
+            });
+            setPhotos(allRevealed);
+          } else {
+            setPhotos(revealedPhotos);
+          }
+        } else {
+          logger.info('useDarkroom: No catch-up needed', {
+            revealedCount: revealedPhotos.length,
+            developingCount: developingPhotos.length,
+          });
+          setPhotos(revealedPhotos);
+        }
+
         // Clear hidden state when photos reload to prevent stale state
         setHiddenPhotoIds(new Set());
         // Also clear undo stack and tags since these are fresh photos
@@ -526,9 +556,16 @@ const useDarkroom = () => {
         useNativeDriver: true,
       }).start();
 
-      playSuccessSound();
+      // Pass user's sound preference (default: false)
+      const effectsEnabled = userProfile?.soundPreferences?.effectsEnabled ?? false;
+      playSuccessSound(effectsEnabled);
     }
-  }, [visiblePhotos.length, undoStack.length, successFadeAnim]);
+  }, [
+    visiblePhotos.length,
+    undoStack.length,
+    successFadeAnim,
+    userProfile?.soundPreferences?.effectsEnabled,
+  ]);
 
   // Prefetch visible stack card images for smooth animations
   useEffect(() => {

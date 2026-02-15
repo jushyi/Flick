@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import StrokedNameText from '../components/StrokedNameText';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
@@ -892,7 +893,9 @@ const ProfileScreen = () => {
 
           {/* Profile Info Card */}
           <View style={styles.profileInfoCard}>
-            <Text style={styles.displayName}>{profileData?.displayName || 'New User'}</Text>
+            <StrokedNameText style={styles.displayName} nameColor={profileData?.nameColor}>
+              {profileData?.displayName || 'New User'}
+            </StrokedNameText>
             <Text style={styles.username}>@{profileData?.username || 'username'}</Text>
             <Text style={[styles.bio, !profileData?.bio && styles.bioPlaceholder]}>
               {profileData?.bio || 'No bio yet'}
@@ -1034,7 +1037,7 @@ const styles = StyleSheet.create({
   loadingText: {
     color: colors.text.secondary,
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
   },
   header: {
     position: 'absolute',
@@ -1120,7 +1123,7 @@ const styles = StyleSheet.create({
   },
   bio: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xs,
   },
@@ -1185,7 +1188,7 @@ const styles = StyleSheet.create({
   cancelText: {
     color: colors.text.secondary,
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
   },
 });
 

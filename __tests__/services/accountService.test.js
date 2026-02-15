@@ -22,30 +22,23 @@ jest.mock('@react-native-firebase/functions', () => ({
   httpsCallable: (...args) => mockHttpsCallable(...args),
 }));
 
-// Firestore mock for checkDeletionStatus
+// Firestore mock for checkDeletionStatus (modular API)
 const mockFirestoreGet = jest.fn();
-const mockFirestoreDoc = jest.fn(() => ({
-  get: mockFirestoreGet,
-}));
-const mockFirestoreCollection = jest.fn(() => ({
-  doc: mockFirestoreDoc,
-}));
 
-jest.mock('@react-native-firebase/firestore', () => {
-  const firestore = () => ({
-    collection: mockFirestoreCollection,
-    doc: mockFirestoreDoc,
-  });
-  return firestore;
-});
+jest.mock('@react-native-firebase/firestore', () => ({
+  getFirestore: () => ({}),
+  collection: jest.fn(),
+  doc: jest.fn(() => ({})),
+  getDoc: (...args) => mockFirestoreGet(...args),
+}));
 
 // Auth mock for checkDeletionStatus
 const mockCurrentUser = { uid: 'test-user-123' };
-jest.mock('@react-native-firebase/auth', () => {
-  return () => ({
+jest.mock('@react-native-firebase/auth', () => ({
+  getAuth: () => ({
     currentUser: mockCurrentUser,
-  });
-});
+  }),
+}));
 
 // Import service after mocks
 const {

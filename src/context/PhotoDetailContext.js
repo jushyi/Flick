@@ -60,6 +60,7 @@ export const PhotoDetailProvider = ({ children }) => {
   const [hasNextFriend, setHasNextFriend] = useState(false);
   const [hasPreviousFriend, setHasPreviousFriend] = useState(false);
   const [initialShowComments, setInitialShowComments] = useState(false);
+  const [targetCommentId, setTargetCommentId] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
   // Track if photo detail should be shown (for navigation trigger)
@@ -127,6 +128,7 @@ export const PhotoDetailProvider = ({ children }) => {
         hasNextFriend: nextFriend = false,
         hasPreviousFriend: prevFriend = false,
         initialShowComments: showComments = false,
+        targetCommentId: targetComment = null,
         currentUserId: userId = null,
         callbacks = {},
         sourceRect: newSourceRect = null,
@@ -141,6 +143,7 @@ export const PhotoDetailProvider = ({ children }) => {
       setHasNextFriend(nextFriend);
       setHasPreviousFriend(prevFriend);
       setInitialShowComments(showComments);
+      setTargetCommentId(targetComment);
       setCurrentUserId(userId);
       setSourceRect(newSourceRect);
 
@@ -172,6 +175,7 @@ export const PhotoDetailProvider = ({ children }) => {
       setHasNextFriend(false);
       setHasPreviousFriend(false);
       setInitialShowComments(false);
+      setTargetCommentId(null);
       setSourceRect(null);
     }, 300);
   }, []);
@@ -316,6 +320,7 @@ export const PhotoDetailProvider = ({ children }) => {
     hasNextFriend,
     hasPreviousFriend,
     initialShowComments,
+    targetCommentId,
     currentUserId,
     isActive,
     showComments,

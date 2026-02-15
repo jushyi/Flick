@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import PixelIcon from './PixelIcon';
+import StrokedNameText from './StrokedNameText';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
@@ -119,9 +120,14 @@ const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }
       </View>
 
       {/* Always show "Me" as label */}
-      <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+      <StrokedNameText
+        style={styles.name}
+        nameColor={friend?.nameColor}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
         Me
-      </Text>
+      </StrokedNameText>
     </TouchableOpacity>
   );
 };

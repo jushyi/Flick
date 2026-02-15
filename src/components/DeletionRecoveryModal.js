@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,

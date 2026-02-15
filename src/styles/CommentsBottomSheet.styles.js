@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
   },
   headerCount: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginLeft: spacing.xs,
   },
@@ -109,13 +109,13 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.sm,
   },
   emptySubtext: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     marginTop: spacing.xxs,
   },
@@ -136,7 +136,7 @@ export const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.status.danger,
     textAlign: 'center',
   },
@@ -169,7 +169,7 @@ export const styles = StyleSheet.create({
   viewRepliesText: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
   },
   // Individual reply item container
   replyItem: {

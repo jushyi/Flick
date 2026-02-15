@@ -117,7 +117,7 @@ export const styles = StyleSheet.create({
   },
   zoomSuffix: {
     fontSize: typography.size.sm, // Slightly smaller for the 'x'
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     marginLeft: 1,
   },
   // Permission screens
@@ -137,7 +137,7 @@ export const styles = StyleSheet.create({
   },
   permissionText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: spacing.xl,

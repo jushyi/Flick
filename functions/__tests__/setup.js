@@ -5,7 +5,30 @@
  * and zod. Loaded via Jest setupFiles before each test suite.
  */
 
+// Set test environment variables for email (replaces deprecated functions.config())
+process.env.SMTP_EMAIL = 'test@gmail.com';
+process.env.SMTP_PASSWORD = 'test-password';
+process.env.SUPPORT_EMAIL = 'support@test.com';
+
 // Mock firebase-functions (needed by logger.js)
+const mockFirestoreHandlers = {
+  onCreate: jest.fn(handler => handler),
+  onUpdate: jest.fn(handler => handler),
+  onWrite: jest.fn(handler => handler),
+  onDelete: jest.fn(handler => handler),
+};
+const mockFirestore = {
+  document: jest.fn(() => mockFirestoreHandlers),
+};
+const mockPubsub = {
+  schedule: jest.fn(() => ({
+    timeZone: jest.fn(() => ({
+      onRun: jest.fn(handler => handler),
+    })),
+    onRun: jest.fn(handler => handler),
+  })),
+};
+
 jest.mock('firebase-functions', () => ({
   logger: {
     debug: jest.fn(),
@@ -13,22 +36,22 @@ jest.mock('firebase-functions', () => ({
     warn: jest.fn(),
     error: jest.fn(),
   },
-  runWith: jest.fn(() => ({
-    firestore: {
-      document: jest.fn(() => ({
-        onCreate: jest.fn(handler => handler),
-        onUpdate: jest.fn(handler => handler),
-        onWrite: jest.fn(handler => handler),
-        onDelete: jest.fn(handler => handler),
-      })),
+  config: jest.fn(() => ({
+    smtp: {
+      email: 'test@gmail.com',
+      password: 'test-password',
     },
-    pubsub: {
-      schedule: jest.fn(() => ({
-        timeZone: jest.fn(() => ({
-          onRun: jest.fn(handler => handler),
-        })),
-        onRun: jest.fn(handler => handler),
-      })),
+    support: {
+      email: 'support@test.com',
+    },
+  })),
+  firestore: mockFirestore,
+  pubsub: mockPubsub,
+  runWith: jest.fn(() => ({
+    firestore: mockFirestore,
+    pubsub: mockPubsub,
+    https: {
+      onRequest: jest.fn(handler => handler),
     },
   })),
 }));
@@ -163,6 +186,13 @@ jest.mock('expo-server-sdk', () => {
   );
   return { Expo: MockExpo };
 });
+
+// Mock nodemailer
+jest.mock('nodemailer', () => ({
+  createTransport: jest.fn(() => ({
+    sendMail: jest.fn().mockResolvedValue({ messageId: 'mock-message-id' }),
+  })),
+}));
 
 // Mock zod (used by validation.js)
 jest.mock('zod', () => {

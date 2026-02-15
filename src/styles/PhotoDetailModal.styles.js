@@ -122,7 +122,7 @@ export const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     flexShrink: 0,
     textShadowColor: colors.overlay.darker,
@@ -161,7 +161,7 @@ export const styles = StyleSheet.create({
   commentInputTriggerText: {
     flex: 1,
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   // Emoji pills scroll view - right side of footer (50/50 split with comment input)

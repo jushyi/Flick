@@ -30,7 +30,7 @@ import {
 } from '@react-native-firebase/firestore';
 import logger from '../../utils/logger';
 import { getFriendUserIds } from './friendshipService';
-import { getBlockedByUserIds } from './blockService';
+import { getBlockedByUserIds, getBlockedUserIds } from './blockService';
 import { withTrace } from './performanceService';
 
 const db = getFirestore();
@@ -72,6 +72,7 @@ const batchFetchUserData = async userIds => {
       username: userData.username || 'unknown',
       displayName: userData.displayName || 'Unknown User',
       profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+      nameColor: userData.nameColor || null,
     });
   });
 
@@ -160,12 +161,18 @@ export const getFeedPhotos = async (
         // Apply limit across merged results
         const limitedDocs = allDocsWithSnapshots.slice(0, limitCount);
 
-        // Get users who have blocked the current user
+        // Get users who have blocked the current user AND users current user has blocked
         let blockedByUserIds = [];
+        let blockedUserIds = [];
         if (currentUserId) {
-          const blockedByResult = await getBlockedByUserIds(currentUserId);
+          const [blockedByResult, blockedResult] = await Promise.all([
+            getBlockedByUserIds(currentUserId),
+            getBlockedUserIds(currentUserId),
+          ]);
           blockedByUserIds = blockedByResult.success ? blockedByResult.blockedByUserIds : [];
+          blockedUserIds = blockedResult.success ? blockedResult.blockedUserIds : [];
         }
+        const allBlockedIds = [...new Set([...blockedByUserIds, ...blockedUserIds])];
 
         // Batch fetch user data with deduplication (eliminates N+1 reads)
         const userIds = limitedDocs.map(({ data: photoData }) => photoData.userId);
@@ -180,13 +187,14 @@ export const getFeedPhotos = async (
             username: 'unknown',
             displayName: 'Unknown User',
             profilePhotoURL: null,
+            nameColor: null,
           },
         }));
 
         // Client-side: filter blocked users only (friend filtering done server-side)
         const filteredPhotos =
-          blockedByUserIds.length > 0
-            ? allPhotos.filter(photo => !blockedByUserIds.includes(photo.userId))
+          allBlockedIds.length > 0
+            ? allPhotos.filter(photo => !allBlockedIds.includes(photo.userId))
             : allPhotos;
 
         // Last document snapshot for cursor-based pagination
@@ -253,17 +261,23 @@ export const subscribeFeedPhotos = (
         chunkMap.forEach((photo, id) => mergedMap.set(id, photo));
       });
 
-      // Get users who have blocked the current user
+      // Get users who have blocked the current user AND users current user has blocked
       let blockedByUserIds = [];
+      let blockedUserIds = [];
       if (currentUserId) {
-        const blockedByResult = await getBlockedByUserIds(currentUserId);
+        const [blockedByResult, blockedResult] = await Promise.all([
+          getBlockedByUserIds(currentUserId),
+          getBlockedUserIds(currentUserId),
+        ]);
         blockedByUserIds = blockedByResult.success ? blockedByResult.blockedByUserIds : [];
+        blockedUserIds = blockedResult.success ? blockedResult.blockedUserIds : [];
       }
+      const allBlockedIds = [...new Set([...blockedByUserIds, ...blockedUserIds])];
 
       // Convert to array, filter blocked users, sort by triagedAt desc, apply limit
       let photos = Array.from(mergedMap.values());
-      if (blockedByUserIds.length > 0) {
-        photos = photos.filter(photo => !blockedByUserIds.includes(photo.userId));
+      if (allBlockedIds.length > 0) {
+        photos = photos.filter(photo => !allBlockedIds.includes(photo.userId));
       }
 
       photos.sort((a, b) => {
@@ -364,6 +378,7 @@ export const getPhotoById = async photoId => {
           username: userData.username || 'unknown',
           displayName: userData.displayName || 'Unknown User',
           profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+          nameColor: userData.nameColor || null,
         },
       },
     };
@@ -413,6 +428,7 @@ export const getUserFeedPhotos = async (userId, limitCount = 50, lastDoc = null)
           username: userData.username || 'unknown',
           displayName: userData.displayName || 'Unknown User',
           profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+          nameColor: userData.nameColor || null,
         },
       }));
 
@@ -634,6 +650,7 @@ export const getUserStoriesData = async userId => {
       username: userData.username || 'unknown',
       displayName: userData.displayName || 'Me',
       profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+      nameColor: userData.nameColor || null,
     };
 
     // Map and sort photos by capturedAt ASCENDING (oldest first for timeline viewing)
@@ -666,6 +683,7 @@ export const getUserStoriesData = async userId => {
         userId,
         displayName: userObj.displayName,
         profilePhotoURL: userObj.profilePhotoURL,
+        nameColor: userObj.nameColor,
         topPhotos: allPhotos, // All photos in chronological order
         thumbnailURL, // Most recent photo for story card preview
         totalPhotoCount,
@@ -716,10 +734,15 @@ export const getFriendStoriesData = async currentUserId => {
       return { success: true, friendStories: [], totalFriendCount: 0 };
     }
 
-    // Get users who have blocked the current user and filter them out
-    const blockedByResult = await getBlockedByUserIds(currentUserId);
+    // Get users who have blocked the current user AND users current user has blocked
+    const [blockedByResult, blockedResult] = await Promise.all([
+      getBlockedByUserIds(currentUserId),
+      getBlockedUserIds(currentUserId),
+    ]);
     const blockedByUserIds = blockedByResult.success ? blockedByResult.blockedByUserIds : [];
-    const visibleFriendIds = friendUserIds.filter(fid => !blockedByUserIds.includes(fid));
+    const blockedUserIds = blockedResult.success ? blockedResult.blockedUserIds : [];
+    const allBlockedIds = [...new Set([...blockedByUserIds, ...blockedUserIds])];
+    const visibleFriendIds = friendUserIds.filter(fid => !allBlockedIds.includes(fid));
 
     logger.debug('feedService.getFriendStoriesData: Filtered blocked users', {
       originalCount: friendUserIds.length,
@@ -759,6 +782,7 @@ export const getFriendStoriesData = async currentUserId => {
         username: userData.username || 'unknown',
         displayName: userData.displayName || 'Unknown User',
         profilePhotoURL: userData.profilePhotoURL || userData.photoURL || null,
+        nameColor: userData.nameColor || null,
       };
 
       // Map and sort photos by capturedAt ASCENDING (oldest first for timeline viewing)
@@ -796,6 +820,7 @@ export const getFriendStoriesData = async currentUserId => {
         username: userObj.username,
         displayName: userObj.displayName,
         profilePhotoURL: userObj.profilePhotoURL,
+        nameColor: userObj.nameColor,
         topPhotos: allPhotos, // All photos in chronological order (backwards compatible name)
         thumbnailURL, // Most recent photo for story card preview
         totalPhotoCount,
@@ -868,17 +893,22 @@ export const getRandomFriendPhotos = async (
       return { success: true, photos: [] };
     }
 
-    // Get users who have blocked the current user
-    let blockedByUserIds = [];
+    // Get users who have blocked the current user AND users current user has blocked
+    let allBlockedIds = [];
     if (currentUserId) {
-      const blockedByResult = await getBlockedByUserIds(currentUserId);
-      blockedByUserIds = blockedByResult.success ? blockedByResult.blockedByUserIds : [];
+      const [blockedByResult, blockedResult] = await Promise.all([
+        getBlockedByUserIds(currentUserId),
+        getBlockedUserIds(currentUserId),
+      ]);
+      const blockedByUserIds = blockedByResult.success ? blockedByResult.blockedByUserIds : [];
+      const blockedUserIds = blockedResult.success ? blockedResult.blockedUserIds : [];
+      allBlockedIds = [...new Set([...blockedByUserIds, ...blockedUserIds])];
     }
 
     // Filter out blocked users before querying
     const visibleFriendIds =
-      blockedByUserIds.length > 0
-        ? friendUserIds.filter(id => !blockedByUserIds.includes(id))
+      allBlockedIds.length > 0
+        ? friendUserIds.filter(id => !allBlockedIds.includes(id))
         : friendUserIds;
 
     if (visibleFriendIds.length === 0) {

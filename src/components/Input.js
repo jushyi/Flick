@@ -169,10 +169,12 @@ const styles = StyleSheet.create({
     borderRadius: layout.borderRadius.sm,
     paddingHorizontal: spacing.md,
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     backgroundColor: colors.background.secondary,
     color: colors.text.primary,
     letterSpacing: 0,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   inputFocused: {
     borderColor: colors.interactive.primary,
@@ -187,9 +189,10 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.size.xs,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.status.danger,
     marginTop: spacing.xxs,
+    lineHeight: 16,
   },
   eyeIcon: {
     position: 'absolute',
@@ -207,7 +210,7 @@ const styles = StyleSheet.create({
   },
   characterCounter: {
     fontSize: typography.size.xs,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     textAlign: 'right',
     marginTop: spacing.xxs,

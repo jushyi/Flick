@@ -42,11 +42,14 @@ import AlbumGridScreen from '../screens/AlbumGridScreen';
 import MonthlyAlbumGridScreen from '../screens/MonthlyAlbumGridScreen';
 import PhotoDetailScreen from '../screens/PhotoDetailScreen';
 import ReportUserScreen from '../screens/ReportUserScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import RecentlyDeletedScreen from '../screens/RecentlyDeletedScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
 import ProfilePhotoCropScreen from '../screens/ProfilePhotoCropScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
+import ContributionsScreen from '../screens/ContributionsScreen';
+import SoundSettingsScreen from '../screens/SoundSettingsScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -156,7 +159,13 @@ const ProfileStackNavigator = () => {
         component={NotificationSettingsScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="SoundSettings"
+        component={SoundSettingsScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="Contributions" component={ContributionsScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
@@ -516,7 +525,7 @@ const AppNavigator = () => {
                   options={{
                     presentation: 'transparentModal',
                     headerShown: false,
-                    animation: 'none',
+                    animation: 'slide_from_bottom',
                     gestureEnabled: true,
                     gestureDirection: 'vertical',
                     contentStyle: { backgroundColor: 'transparent' },
@@ -606,6 +615,15 @@ const AppNavigator = () => {
                 <Stack.Screen
                   name="ReportUser"
                   component={ReportUserScreen}
+                  options={{
+                    presentation: 'modal',
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.background.primary },
+                  }}
+                />
+                <Stack.Screen
+                  name="HelpSupport"
+                  component={HelpSupportScreen}
                   options={{
                     presentation: 'modal',
                     headerShown: false,

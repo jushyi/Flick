@@ -61,7 +61,7 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.sm,
   },
@@ -71,7 +71,7 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   personRow: {

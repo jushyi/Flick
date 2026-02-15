@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
 
   timestamp: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -99,14 +99,14 @@ export const styles = StyleSheet.create({
 
   moreReactions: {
     fontSize: typography.size.xs,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginLeft: 2,
   },
 
   noReactions: {
     fontSize: typography.size.xs,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     fontStyle: 'italic',
     paddingHorizontal: spacing.sm,

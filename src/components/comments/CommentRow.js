@@ -14,6 +14,7 @@ import { View, Text, TouchableOpacity, Alert, Animated } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Image } from 'expo-image';
 import PixelIcon from '../PixelIcon';
+import StrokedNameText from '../StrokedNameText';
 import * as Haptics from 'expo-haptics';
 import { getTimeAgo } from '../../utils/timeUtils';
 import { colors } from '../../constants/colors';
@@ -281,9 +282,13 @@ const CommentRow = ({
             <View style={styles.contentContainer}>
               {/* Name Row with optional Author badge */}
               <View style={styles.nameRow}>
-                <Text style={styles.displayName} numberOfLines={1}>
+                <StrokedNameText
+                  style={styles.displayName}
+                  nameColor={user?.nameColor}
+                  numberOfLines={1}
+                >
                   {displayName || 'Unknown User'}
-                </Text>
+                </StrokedNameText>
                 {isOwnerComment && (
                   <View style={styles.authorBadge}>
                     <Text style={styles.authorBadgeText}>Author</Text>
@@ -303,12 +308,23 @@ const CommentRow = ({
 
               {/* Media Thumbnail (if exists) */}
               {mediaUrl && (
-                <Image
-                  source={{ uri: mediaUrl, cacheKey: `comment-media-${comment.id}` }}
-                  style={styles.mediaThumbnail}
-                  contentFit="cover"
-                  transition={200}
-                />
+                <View style={styles.mediaContainer}>
+                  <Image
+                    source={{ uri: mediaUrl, cacheKey: `comment-media-${comment.id}` }}
+                    style={styles.mediaThumbnail}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                  {/* Giphy attribution (required for inline GIF displays) */}
+                  {mediaType === 'gif' && (
+                    <Image
+                      source={require('../../../assets/Poweredby_100px-Black_VertLogo.png')}
+                      style={styles.giphyAttribution}
+                      contentFit="contain"
+                      contentPosition="bottom"
+                    />
+                  )}
+                </View>
               )}
 
               {/* Footer Row - Reply and Timestamp */}

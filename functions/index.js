@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 const { initializeApp, getApps, getApp } = require('firebase-admin/app');
 const { initializeFirestore } = require('firebase-admin/firestore');
 const logger = require('./logger');
+const nodemailer = require('nodemailer');
 const {
   validateOrNull,
   DarkroomDocSchema,
@@ -16,21 +17,6 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 // Initialize Firebase Admin SDK with preferRest for faster cold starts
 const app = getApps().length > 0 ? getApp() : initializeApp();
 const db = initializeFirestore(app, { preferRest: true });
-
-// Track pending reactions for debouncing: { "photoId_reactorId": { timeout, reactions, photoOwnerId, fcmToken, reactorName, reactorProfilePhotoURL } }
-const pendingReactions = {};
-
-/**
- * Varied notification templates for story posts
- * Makes notifications feel human and not robotic
- */
-const STORY_NOTIFICATION_TEMPLATES = [
-  '{name} just journaled some snaps',
-  '{name} shared new moments',
-  'New photos from {name}',
-  '{name} posted to their story',
-  'See what {name} captured today',
-];
 
 /**
  * Varied notification templates for tagged photos (single tag)
@@ -70,8 +56,8 @@ function getRandomTemplate(templates) {
   return templates[index];
 }
 
-// Debounce window in milliseconds (10 seconds)
-const REACTION_DEBOUNCE_MS = 10000;
+// Reaction batch window in milliseconds (30 seconds)
+const REACTION_BATCH_WINDOW_MS = 30000;
 
 // Abuse prevention limits
 const MAX_MENTIONS_PER_COMMENT = 10;
@@ -88,6 +74,24 @@ function formatReactionSummary(reactions) {
     .filter(([emoji, count]) => count > 0)
     .map(([emoji, count]) => `${emoji}×${count}`)
     .join(' ');
+}
+
+/**
+ * Get configured email transporter for sending emails via Gmail SMTP
+ * Credentials stored in environment variables (functions/.env):
+ * - SMTP_EMAIL: Gmail address for SMTP auth
+ * - SMTP_PASSWORD: Gmail app password
+ * - SUPPORT_EMAIL: Destination email for reports
+ * @returns {nodemailer.Transporter} - Configured nodemailer transporter
+ */
+function getTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
 }
 
 /**
@@ -169,6 +173,16 @@ async function revealUserPhotos(userId, now) {
     nextRevealAt: nextRevealAt.toDate(),
   };
 }
+
+/**
+ * Cloud Function: HTTP handler for batched notification sends
+ * Triggered by Cloud Tasks after 30-second delay
+ * Idempotent handler for sending accumulated reaction notifications
+ */
+const { sendBatchedNotificationHandler } = require('./tasks/sendBatchedNotification');
+exports.sendBatchedNotification = functions
+  .runWith({ memory: '256MB', timeoutSeconds: 60 })
+  .https.onRequest(sendBatchedNotificationHandler);
 
 /**
  * Cloud Function: Process darkroom reveals on schedule
@@ -680,6 +694,7 @@ exports.sendFriendAcceptedNotification = functions
         {
           type: 'friend_accepted',
           friendshipId: friendshipId,
+          userId: acceptorId, // ID of person who accepted request
         },
         recipientId
       );
@@ -706,292 +721,20 @@ exports.sendFriendAcceptedNotification = functions
   });
 
 /**
- * Cloud Function: Send notification to friends when user posts to their story
- * Triggered when darkroom document is updated with new lastTriageCompletedAt timestamp
- *
- * This notifies all friends that the user has new content available.
- * Uses varied templates to feel human and not robotic.
- */
-exports.sendStoryNotification = functions
-  .runWith({ memory: '512MB', timeoutSeconds: 120 })
-  .firestore.document('darkrooms/{userId}')
-  .onUpdate(async (change, context) => {
-    const { sendPushNotification } = require('./notifications/sender');
-    try {
-      const userId = context.params.userId;
-      const before = change.before.data();
-      const after = change.after.data();
-
-      // Guard: validate document data exists
-      if (!after || typeof after !== 'object') {
-        logger.warn('sendStoryNotification: Invalid after data', { userId });
-        return null;
-      }
-      if (!before || typeof before !== 'object') {
-        logger.warn('sendStoryNotification: Invalid before data', { userId });
-        return null;
-      }
-
-      // Check if this is a triage completion event (lastTriageCompletedAt changed)
-      const lastTriageCompletedAtBefore = before.lastTriageCompletedAt?.toMillis() || 0;
-      const lastTriageCompletedAtAfter = after.lastTriageCompletedAt?.toMillis() || 0;
-      const wasTriageCompleted = lastTriageCompletedAtAfter > lastTriageCompletedAtBefore;
-
-      if (!wasTriageCompleted) {
-        logger.debug('sendStoryNotification: No new triage completion, skipping');
-        return null;
-      }
-
-      // Check if any photos were journaled (posted to story)
-      const journaledCount = after.lastJournaledCount || 0;
-      if (journaledCount === 0) {
-        logger.debug('sendStoryNotification: No photos journaled, skipping notification');
-        return null;
-      }
-
-      // Check for duplicate notifications using lastStoryNotifiedAt
-      const lastStoryNotifiedAt = after.lastStoryNotifiedAt?.toMillis() || 0;
-      if (lastStoryNotifiedAt >= lastTriageCompletedAtAfter) {
-        logger.debug('sendStoryNotification: Already notified for this triage, skipping');
-        return null;
-      }
-
-      logger.info('sendStoryNotification: Processing story notification', {
-        userId,
-        journaledCount,
-      });
-
-      // Get user's info for notification
-      const userDoc = await db.collection('users').doc(userId).get();
-      if (!userDoc.exists) {
-        logger.error('sendStoryNotification: User not found:', userId);
-        return null;
-      }
-
-      const userData = userDoc.data();
-      const displayName = userData.displayName || userData.username || 'Someone';
-      const profilePhotoURL = userData.profilePhotoURL || userData.photoURL || null;
-
-      // Query friendships where this user is involved and status is 'accepted'
-      // Need to query both user1Id and user2Id since user could be in either position
-      const [friendships1Snapshot, friendships2Snapshot] = await Promise.all([
-        db
-          .collection('friendships')
-          .where('user1Id', '==', userId)
-          .where('status', '==', 'accepted')
-          .get(),
-        db
-          .collection('friendships')
-          .where('user2Id', '==', userId)
-          .where('status', '==', 'accepted')
-          .get(),
-      ]);
-
-      // Collect unique friend IDs
-      const friendIds = new Set();
-      friendships1Snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.user2Id && data.user2Id !== userId) {
-          friendIds.add(data.user2Id);
-        }
-      });
-      friendships2Snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.user1Id && data.user1Id !== userId) {
-          friendIds.add(data.user1Id);
-        }
-      });
-
-      if (friendIds.size === 0) {
-        logger.info('sendStoryNotification: User has no friends, skipping', { userId });
-        // Still update lastStoryNotifiedAt to prevent reprocessing
-        await db.collection('darkrooms').doc(userId).update({
-          lastStoryNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        return null;
-      }
-
-      logger.info('sendStoryNotification: Sending to friends', {
-        userId,
-        friendCount: friendIds.size,
-      });
-
-      // Get all friends' user data in parallel for FCM tokens
-      const friendDocsPromises = Array.from(friendIds).map(friendId =>
-        db.collection('users').doc(friendId).get()
-      );
-      const friendDocs = await Promise.all(friendDocsPromises);
-
-      // Send notifications to each friend
-      let sentCount = 0;
-      const notificationPromises = [];
-
-      for (const friendDoc of friendDocs) {
-        if (!friendDoc.exists) continue;
-
-        const friendData = friendDoc.data();
-        const friendId = friendDoc.id;
-        const fcmToken = friendData.fcmToken;
-
-        if (!fcmToken) {
-          logger.debug('sendStoryNotification: Friend has no FCM token', { friendId });
-          continue;
-        }
-
-        // Check notification preferences
-        const prefs = friendData.notificationPreferences || {};
-        const masterEnabled = prefs.enabled !== false;
-        // Story notifications fall under 'follows' category (friend activity)
-        const followsEnabled = prefs.follows !== false;
-
-        if (!masterEnabled || !followsEnabled) {
-          logger.debug('sendStoryNotification: Notifications disabled by preferences', {
-            friendId,
-            masterEnabled,
-            followsEnabled,
-          });
-          continue;
-        }
-
-        // Pick random template and substitute name
-        const template = getRandomTemplate(STORY_NOTIFICATION_TEMPLATES);
-        const message = template.replace('{name}', displayName);
-
-        // Send push notification
-        const pushPromise = sendPushNotification(
-          fcmToken,
-          '📷 New Story',
-          message,
-          {
-            type: 'story',
-            userId: userId,
-          },
-          friendId
-        );
-
-        // Write to notifications collection for in-app display
-        const notificationPromise = db.collection('notifications').add({
-          recipientId: friendId,
-          type: 'story',
-          senderId: userId,
-          senderName: displayName,
-          senderProfilePhotoURL: profilePhotoURL,
-          message: message,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          read: false,
-        });
-
-        notificationPromises.push(pushPromise, notificationPromise);
-        sentCount++;
-      }
-
-      // Wait for all notifications to be sent
-      await Promise.all(notificationPromises);
-
-      // Update lastStoryNotifiedAt to prevent duplicate notifications
-      await db.collection('darkrooms').doc(userId).update({
-        lastStoryNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      logger.info('sendStoryNotification: Notifications sent', {
-        userId,
-        sentCount,
-        totalFriends: friendIds.size,
-      });
-
-      return { sentCount, totalFriends: friendIds.size };
-    } catch (error) {
-      logger.error('sendStoryNotification: Error:', error);
-      return null;
-    }
-  });
-
-/**
- * Send the batched reaction notification after debounce window expires
- * @param {string} pendingKey - Key in pendingReactions object
- */
-async function sendBatchedReactionNotification(pendingKey) {
-  const { sendPushNotification } = require('./notifications/sender');
-  const pending = pendingReactions[pendingKey];
-  if (!pending) {
-    logger.debug('sendBatchedReactionNotification: No pending entry found for', pendingKey);
-    return;
-  }
-
-  const {
-    reactions,
-    photoOwnerId,
-    fcmToken,
-    reactorName,
-    reactorId,
-    reactorProfilePhotoURL,
-    photoId,
-  } = pending;
-
-  // Delete pending entry immediately to prevent duplicate sends
-  delete pendingReactions[pendingKey];
-
-  const reactionSummary = formatReactionSummary(reactions);
-  if (!reactionSummary) {
-    logger.debug('sendBatchedReactionNotification: No reactions to send for', pendingKey);
-    return;
-  }
-
-  const title = '❤️ New Reaction';
-  const body = `${reactorName} reacted ${reactionSummary} to your photo`;
-
-  logger.debug('sendBatchedReactionNotification: Sending batched notification', {
-    pendingKey,
-    reactorName,
-    reactions,
-    body,
-  });
-
-  // Send push notification
-  const result = await sendPushNotification(
-    fcmToken,
-    title,
-    body,
-    {
-      type: 'reaction',
-      photoId: photoId,
-    },
-    photoOwnerId
-  );
-
-  // Write to notifications collection for in-app display
-  await db.collection('notifications').add({
-    recipientId: photoOwnerId,
-    type: 'reaction',
-    senderId: reactorId,
-    senderName: reactorName,
-    senderProfilePhotoURL: reactorProfilePhotoURL || null,
-    photoId: photoId,
-    reactions: reactions,
-    message: body,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    read: false,
-  });
-
-  logger.debug('sendBatchedReactionNotification: Notification sent and stored', {
-    pendingKey,
-    result,
-  });
-}
-
-/**
  * Cloud Function: Send notification when someone reacts to user's photo
  * Triggered when photo document is updated with new reactions
  *
- * DEBOUNCING: Batches rapid reactions from same user into single notification
- * - First reaction starts 10-second window
- * - Subsequent reactions extend window and aggregate
- * - After 10 seconds of inactivity, sends "Name reacted 😂×2 ❤️×1 to your photo"
+ * BATCHING: Uses Firestore-based batching for stateless aggregation
+ * - Reactions stored in Firestore reactionBatches collection
+ * - Cloud Tasks schedule delayed sends after 30-second window
+ * - Multiple instances safely merge reactions via transactions
  */
 exports.sendReactionNotification = functions
   .runWith({ memory: '256MB', timeoutSeconds: 60 })
   .firestore.document('photos/{photoId}')
   .onUpdate(async (change, context) => {
+    const { addReactionToBatch } = require('./notifications/batching');
+
     try {
       const photoId = context.params.photoId;
       const before = change.before.data();
@@ -1073,94 +816,15 @@ exports.sendReactionNotification = functions
         reactorId,
         reactionDiff,
         pendingKey,
-        hasPendingEntry: !!pendingReactions[pendingKey],
       });
 
-      // Check if we already have a pending entry for this key
-      if (pendingReactions[pendingKey]) {
-        // Clear existing timeout
-        clearTimeout(pendingReactions[pendingKey].timeout);
+      // Add reaction to Firestore batch (replaces in-memory batching)
+      await addReactionToBatch(photoId, reactorId, reactionDiff);
 
-        // Merge new reactions into existing batch
-        for (const [emoji, count] of Object.entries(reactionDiff)) {
-          pendingReactions[pendingKey].reactions[emoji] =
-            (pendingReactions[pendingKey].reactions[emoji] || 0) + count;
-        }
-
-        logger.debug('sendReactionNotification: Extended debounce window', {
-          pendingKey,
-          mergedReactions: pendingReactions[pendingKey].reactions,
-        });
-
-        // Set new timeout
-        pendingReactions[pendingKey].timeout = setTimeout(
-          () => sendBatchedReactionNotification(pendingKey),
-          REACTION_DEBOUNCE_MS
-        );
-
-        return null;
-      }
-
-      // New pending entry - fetch user data
-      // Get photo owner's FCM token
-      const ownerDoc = await db.collection('users').doc(photoOwnerId).get();
-
-      if (!ownerDoc.exists) {
-        logger.error('sendReactionNotification: Photo owner not found:', photoOwnerId);
-        return null;
-      }
-
-      const ownerData = ownerDoc.data();
-      const fcmToken = ownerData.fcmToken;
-
-      if (!fcmToken) {
-        logger.debug(
-          'sendReactionNotification: Photo owner has no FCM token, skipping:',
-          photoOwnerId
-        );
-        return null;
-      }
-
-      // Check notification preferences (enabled AND likes)
-      const prefs = ownerData.notificationPreferences || {};
-      const masterEnabled = prefs.enabled !== false;
-      const likesEnabled = prefs.likes !== false;
-
-      if (!masterEnabled || !likesEnabled) {
-        logger.debug('sendReactionNotification: Notifications disabled by user preferences', {
-          photoOwnerId,
-          masterEnabled,
-          likesEnabled,
-        });
-        return null;
-      }
-
-      // Get reactor's display name and profile photo
-      const reactorDoc = await db.collection('users').doc(reactorId).get();
-
-      const reactorData = reactorDoc.exists ? reactorDoc.data() : {};
-      const reactorName = reactorData.displayName || reactorData.username || 'Someone';
-      const reactorProfilePhotoURL = reactorData.profilePhotoURL || reactorData.photoURL || null;
-
-      // Create new pending entry
-      pendingReactions[pendingKey] = {
-        reactions: { ...reactionDiff },
-        photoOwnerId,
-        fcmToken,
-        reactorId,
-        reactorName,
-        reactorProfilePhotoURL,
+      logger.debug('sendReactionNotification: Added to Firestore batch', {
         photoId,
-        timeout: setTimeout(
-          () => sendBatchedReactionNotification(pendingKey),
-          REACTION_DEBOUNCE_MS
-        ),
-      };
-
-      logger.debug('sendReactionNotification: Started new debounce window', {
+        reactorId,
         pendingKey,
-        reactions: reactionDiff,
-        debounceMs: REACTION_DEBOUNCE_MS,
       });
 
       return null;
@@ -1248,20 +912,17 @@ async function sendBatchedTagNotification(pendingKey) {
 }
 
 /**
+/**
  * Cloud Function: Send notification when someone is tagged in a photo
  * Triggered when photo document is updated with new taggedUserIds
- *
- * DEBOUNCING: Batches rapid tags from same tagger into single notification
- * - First tag starts 30-second window
- * - Subsequent tags extend window and aggregate
- * - After 30 seconds of inactivity, sends "Name tagged you in X photos"
- *
- * Tagging is fully implemented in Darkroom and Feed UIs.
+ * Sends notifications immediately (no debouncing)
  */
 exports.sendTaggedPhotoNotification = functions
   .runWith({ memory: '256MB', timeoutSeconds: 60 })
   .firestore.document('photos/{photoId}')
   .onUpdate(async (change, context) => {
+    const { sendPushNotification } = require('./notifications/sender');
+
     try {
       const photoId = context.params.photoId;
       const before = change.before.data();
@@ -1295,75 +956,22 @@ exports.sendTaggedPhotoNotification = functions
         return null;
       }
 
-      // The tagger is the photo owner
-      const photoOwnerId = after.userId;
+      const taggerId = after.userId;
 
-      // Cap tagged users, deduplicate, filter invalid entries and self-tags
+      // Filter and validate tagged user IDs
       const rawAfterTags = (after.taggedUserIds || []).slice(0, MAX_TAGS_PER_PHOTO);
       const validAfterTags = [...new Set(rawAfterTags)].filter(
-        id => typeof id === 'string' && id.length > 0 && id !== photoOwnerId
+        id => typeof id === 'string' && id.length > 0 && id !== taggerId
       );
-
-      if (rawAfterTags.length < (after.taggedUserIds || []).length) {
-        logger.warn('sendTaggedPhotoNotification: taggedUserIds capped', {
-          photoId,
-          total: (after.taggedUserIds || []).length,
-          capped: MAX_TAGS_PER_PHOTO,
-        });
-      }
-
-      // Check if taggedUserIds array has NEW entries
-      const beforeTaggedUserIds = before.taggedUserIds || [];
-      const afterTaggedUserIds = validAfterTags;
 
       // Find newly added user IDs (in after but not in before)
-      const newlyTaggedUserIds = afterTaggedUserIds.filter(id => !beforeTaggedUserIds.includes(id));
-
-      // Handle tag removals: cancel pending debounce notifications for untagged users
-      const removedTaggedUserIds = beforeTaggedUserIds.filter(
-        id => !afterTaggedUserIds.includes(id)
-      );
-
-      for (const removedUserId of removedTaggedUserIds) {
-        const pendingKey = `${after.userId}_${removedUserId}`;
-        if (pendingTags[pendingKey]) {
-          clearTimeout(pendingTags[pendingKey].timeout);
-          // Remove the photoId from the pending batch
-          const idx = pendingTags[pendingKey].photoIds.indexOf(photoId);
-          if (idx !== -1) {
-            pendingTags[pendingKey].photoIds.splice(idx, 1);
-          }
-          // If no photos left in batch, delete the entire pending entry
-          if (pendingTags[pendingKey].photoIds.length === 0) {
-            delete pendingTags[pendingKey];
-            logger.debug(
-              'sendTaggedPhotoNotification: Cancelled pending notification (all photos untagged)',
-              {
-                pendingKey,
-                removedUserId,
-              }
-            );
-          } else {
-            // Restart debounce timer with remaining photos
-            pendingTags[pendingKey].timeout = setTimeout(
-              () => sendBatchedTagNotification(pendingKey),
-              TAG_DEBOUNCE_MS
-            );
-            logger.debug('sendTaggedPhotoNotification: Removed photo from pending batch', {
-              pendingKey,
-              removedPhotoId: photoId,
-              remainingCount: pendingTags[pendingKey].photoIds.length,
-            });
-          }
-        }
-      }
+      const beforeTaggedUserIds = before.taggedUserIds || [];
+      const newlyTaggedUserIds = validAfterTags.filter(id => !beforeTaggedUserIds.includes(id));
 
       if (newlyTaggedUserIds.length === 0) {
         logger.debug('sendTaggedPhotoNotification: No new tags, skipping', { photoId });
         return null;
       }
-
-      const taggerId = photoOwnerId;
 
       logger.info('sendTaggedPhotoNotification: Processing new tags', {
         photoId,
@@ -1382,89 +990,80 @@ exports.sendTaggedPhotoNotification = functions
       const taggerName = taggerData.displayName || taggerData.username || 'Someone';
       const taggerProfilePhotoURL = taggerData.profilePhotoURL || taggerData.photoURL || null;
 
-      // Process each newly tagged user
+      // Send immediate notification to each newly tagged user
       for (const taggedUserId of newlyTaggedUserIds) {
-        // Skip if tagger is tagging themselves
-        if (taggedUserId === taggerId) {
-          logger.debug('sendTaggedPhotoNotification: Skipping self-tag', {
-            photoId,
-            taggerId,
-          });
-          continue;
-        }
-
-        // Get tagged user's FCM token and preferences
-        const taggedUserDoc = await db.collection('users').doc(taggedUserId).get();
-        if (!taggedUserDoc.exists) {
-          logger.debug('sendTaggedPhotoNotification: Tagged user not found', { taggedUserId });
-          continue;
-        }
-
-        const taggedUserData = taggedUserDoc.data();
-        const fcmToken = taggedUserData.fcmToken;
-
-        if (!fcmToken) {
-          logger.debug('sendTaggedPhotoNotification: Tagged user has no FCM token', {
-            taggedUserId,
-          });
-          continue;
-        }
-
-        // Check notification preferences
-        const prefs = taggedUserData.notificationPreferences || {};
-        const masterEnabled = prefs.enabled !== false;
-        // Tags preference controlled via NotificationSettingsScreen toggle
-        const tagsEnabled = prefs.tags !== false;
-
-        if (!masterEnabled || !tagsEnabled) {
-          logger.debug('sendTaggedPhotoNotification: Notifications disabled by preferences', {
-            taggedUserId,
-            masterEnabled,
-            tagsEnabled,
-          });
-          continue;
-        }
-
-        // Generate unique key for this tagger+tagged combination
-        const pendingKey = `${taggerId}_${taggedUserId}`;
-
-        // Check if we already have a pending entry for this key (debouncing)
-        if (pendingTags[pendingKey]) {
-          // Clear existing timeout
-          clearTimeout(pendingTags[pendingKey].timeout);
-
-          // Add photoId to batch if not already present
-          if (!pendingTags[pendingKey].photoIds.includes(photoId)) {
-            pendingTags[pendingKey].photoIds.push(photoId);
+        try {
+          // Get tagged user's FCM token and preferences
+          const taggedUserDoc = await db.collection('users').doc(taggedUserId).get();
+          if (!taggedUserDoc.exists) {
+            logger.debug('sendTaggedPhotoNotification: Tagged user not found', { taggedUserId });
+            continue;
           }
 
-          logger.debug('sendTaggedPhotoNotification: Extended debounce window', {
-            pendingKey,
-            photoCount: pendingTags[pendingKey].photoIds.length,
-          });
+          const taggedUserData = taggedUserDoc.data();
+          const fcmToken = taggedUserData.fcmToken;
 
-          // Set new timeout
-          pendingTags[pendingKey].timeout = setTimeout(
-            () => sendBatchedTagNotification(pendingKey),
-            TAG_DEBOUNCE_MS
-          );
-        } else {
-          // Create new pending entry
-          pendingTags[pendingKey] = {
-            photoIds: [photoId],
-            taggerId,
-            taggerName,
-            taggerProfilePhotoURL,
-            taggedUserId,
+          if (!fcmToken) {
+            logger.debug('sendTaggedPhotoNotification: Tagged user has no FCM token', {
+              taggedUserId,
+            });
+            continue;
+          }
+
+          // Check notification preferences
+          const prefs = taggedUserData.notificationPreferences || {};
+          const masterEnabled = prefs.enabled !== false;
+          const tagsEnabled = prefs.tags !== false;
+
+          if (!masterEnabled || !tagsEnabled) {
+            logger.debug('sendTaggedPhotoNotification: Notifications disabled by preferences', {
+              taggedUserId,
+              masterEnabled,
+              tagsEnabled,
+            });
+            continue;
+          }
+
+          // Send push notification immediately
+          const title = '🏷️ Tagged in Photo';
+          const body = `${taggerName} tagged you in a photo`;
+
+          await sendPushNotification(
             fcmToken,
-            timeout: setTimeout(() => sendBatchedTagNotification(pendingKey), TAG_DEBOUNCE_MS),
-          };
+            title,
+            body,
+            {
+              type: 'tagged',
+              photoId: photoId,
+              taggerId: taggerId,
+            },
+            taggedUserId
+          );
 
-          logger.debug('sendTaggedPhotoNotification: Started new debounce window', {
-            pendingKey,
-            photoId,
-            debounceMs: TAG_DEBOUNCE_MS,
+          // Write to notifications collection for in-app display
+          await db.collection('notifications').add({
+            recipientId: taggedUserId,
+            type: 'tagged',
+            senderId: taggerId,
+            senderName: taggerName,
+            senderProfilePhotoURL: taggerProfilePhotoURL || null,
+            photoId: photoId,
+            message: body,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            read: false,
           });
+
+          logger.info('sendTaggedPhotoNotification: Notification sent', {
+            photoId,
+            taggerId,
+            taggedUserId,
+          });
+        } catch (error) {
+          logger.error('sendTaggedPhotoNotification: Error sending to user', {
+            taggedUserId,
+            error: error.message,
+          });
+          // Continue to next user even if one fails
         }
       }
 
@@ -1474,14 +1073,6 @@ exports.sendTaggedPhotoNotification = functions
       return null;
     }
   });
-
-/**
- * Cloud Function: Generate a signed URL for secure photo access
- * Callable function that requires authentication
- *
- * Uses v4 signing with 24-hour expiration. Even if a URL leaks,
- * it becomes invalid after 24 hours.
- */
 exports.getSignedPhotoUrl = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async request => {
   const userId = request.auth?.uid;
 
@@ -1651,12 +1242,13 @@ exports.sendCommentNotification = functions
             if (masterEnabled && commentsEnabled) {
               // Send notification via Expo Push API
               const title = '💬 New Comment';
-              const body = `${commenterName}: ${commentPreview}`;
+              const pushBody = `${commenterName} commented on your photo: ${commentPreview}`;
+              const inAppMessage = `commented on your photo: ${commentPreview}`;
 
               await sendPushNotification(
                 ownerData.fcmToken,
                 title,
-                body,
+                pushBody,
                 {
                   type: 'comment',
                   photoId,
@@ -1675,7 +1267,7 @@ exports.sendCommentNotification = functions
                 senderProfilePhotoURL: commenterProfilePhotoURL,
                 photoId: photoId,
                 commentId: commentId,
-                message: body,
+                message: inAppMessage,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 read: false,
               });
@@ -2650,6 +2242,104 @@ exports.processScheduledPhotoDeletions = functions
   });
 
 /**
+ * Clean up old notification batches and in-app notifications
+ * Runs daily at 2 AM UTC to prevent storage accumulation
+ * - Deletes reactionBatches with status='sent' older than 7 days
+ * - Deletes notifications older than 30 days
+ * Uses batched writes to handle large volumes efficiently
+ */
+exports.cleanupOldNotifications = functions
+  .runWith({ memory: '256MB', timeoutSeconds: 120 })
+  .pubsub.schedule('0 2 * * *') // 2 AM UTC daily
+  .onRun(async _context => {
+    const now = admin.firestore.Timestamp.now();
+    const sevenDaysAgo = new Date(now.toMillis() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.toMillis() - 30 * 24 * 60 * 60 * 1000);
+
+    logger.info('cleanupOldNotifications: Starting cleanup', {
+      checkTime: now.toDate(),
+      sevenDaysAgo,
+      thirtyDaysAgo,
+    });
+
+    let totalDeleted = 0;
+
+    try {
+      // Step 1: Clean up old reaction batches (7 days retention)
+      logger.debug('cleanupOldNotifications: Querying old reactionBatches');
+
+      const batchesSnapshot = await db
+        .collection('reactionBatches')
+        .where('status', '==', 'sent')
+        .where('sentAt', '<', admin.firestore.Timestamp.fromDate(sevenDaysAgo))
+        .limit(500) // Process in chunks to avoid timeouts
+        .get();
+
+      if (!batchesSnapshot.empty) {
+        logger.info('cleanupOldNotifications: Found old reactionBatches', {
+          count: batchesSnapshot.size,
+        });
+
+        const batchDelete = db.batch();
+        batchesSnapshot.docs.forEach(doc => batchDelete.delete(doc.ref));
+        await batchDelete.commit();
+
+        totalDeleted += batchesSnapshot.size;
+
+        logger.info('cleanupOldNotifications: Deleted old reactionBatches', {
+          deleted: batchesSnapshot.size,
+        });
+      } else {
+        logger.debug('cleanupOldNotifications: No old reactionBatches to delete');
+      }
+
+      // Step 2: Clean up old in-app notifications (30 days retention)
+      logger.debug('cleanupOldNotifications: Querying old notifications');
+
+      const notificationsSnapshot = await db
+        .collection('notifications')
+        .where('createdAt', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+        .limit(500) // Process in chunks
+        .get();
+
+      if (!notificationsSnapshot.empty) {
+        logger.info('cleanupOldNotifications: Found old notifications', {
+          count: notificationsSnapshot.size,
+        });
+
+        const notifBatch = db.batch();
+        notificationsSnapshot.docs.forEach(doc => notifBatch.delete(doc.ref));
+        await notifBatch.commit();
+
+        totalDeleted += notificationsSnapshot.size;
+
+        logger.info('cleanupOldNotifications: Deleted old notifications', {
+          deleted: notificationsSnapshot.size,
+        });
+      } else {
+        logger.debug('cleanupOldNotifications: No old notifications to delete');
+      }
+
+      logger.info('cleanupOldNotifications: Completed successfully', {
+        totalDeleted,
+      });
+
+      return {
+        success: true,
+        batchesDeleted: batchesSnapshot.size,
+        notificationsDeleted: notificationsSnapshot.size,
+        totalDeleted,
+      };
+    } catch (error) {
+      logger.error('cleanupOldNotifications: Fatal error', {
+        error: error.message,
+        stack: error.stack,
+      });
+      return { success: false, error: error.message };
+    }
+  });
+
+/**
  * Increment friendCount on both users when a friendship is accepted
  * Triggers on friendship document update (pending → accepted)
  */
@@ -2763,3 +2453,107 @@ exports.backfillFriendCounts = onCall({ memory: '512MiB', timeoutSeconds: 300 },
     throw new HttpsError('internal', error.message);
   }
 });
+
+/**
+ * Email user reports to support address
+ * Triggered when new report document is created in reports/ collection
+ * Sends formatted email with report details to configured support address
+ * Email failure is logged but doesn't prevent report submission (already in Firestore)
+ */
+exports.onReportCreated = functions.firestore
+  .document('reports/{reportId}')
+  .onCreate(async (snapshot, context) => {
+    const report = snapshot.data();
+    const reportId = context.params.reportId;
+
+    const subject = `[REPORT] ${report.reason} — ${report.profileSnapshot?.username || 'Unknown user'}`;
+
+    const body = `
+New Report Submitted
+====================
+
+Report ID: ${reportId}
+Date: ${new Date().toISOString()}
+
+Reporter: ${report.reporterId}
+Reported User: ${report.reportedUserId}
+  Username: ${report.profileSnapshot?.username || 'N/A'}
+  Display Name: ${report.profileSnapshot?.displayName || 'N/A'}
+
+Reason: ${report.reason}
+Details: ${report.details || 'No additional details provided'}
+
+---
+View in Firebase Console:
+https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firestore/data/reports/${reportId}
+    `.trim();
+
+    try {
+      const transporter = getTransporter();
+      await transporter.sendMail({
+        from: `"Flick Reports" <${process.env.SMTP_EMAIL}>`,
+        to: process.env.SUPPORT_EMAIL,
+        subject,
+        text: body,
+      });
+      logger.info('Report email sent', { reportId, reason: report.reason });
+    } catch (error) {
+      logger.error('Failed to send report email', { reportId, error: error.message });
+      // Don't throw — the report is already saved in Firestore.
+      // Email failure shouldn't prevent report submission.
+    }
+  });
+
+/**
+ * Email support requests to support address
+ * Triggered when new support request document is created in supportRequests/ collection
+ * Sends formatted email with request details to configured support address
+ * Email failure is logged but doesn't prevent request submission (already in Firestore)
+ */
+exports.onSupportRequestCreated = functions.firestore
+  .document('supportRequests/{requestId}')
+  .onCreate(async (snapshot, context) => {
+    const request = snapshot.data();
+    const requestId = context.params.requestId;
+
+    const categoryLabels = {
+      support: 'Support',
+      bug_report: 'Bug Report',
+      feature_request: 'Feature Request',
+    };
+
+    const categoryLabel = categoryLabels[request.category] || request.category;
+    const subject = `[${categoryLabel.toUpperCase()}] Flick Support Request`;
+
+    const body = `
+New Support Request
+====================
+
+Request ID: ${requestId}
+Date: ${new Date().toISOString()}
+
+User ID: ${request.userId}
+Category: ${categoryLabel}
+
+Description:
+${request.description}
+
+---
+View in Firebase Console:
+https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firestore/data/supportRequests/${requestId}
+    `.trim();
+
+    try {
+      const transporter = getTransporter();
+      await transporter.sendMail({
+        from: `"Flick Support" <${process.env.SMTP_EMAIL}>`,
+        to: 'support@flickcam.app',
+        subject,
+        text: body,
+      });
+      logger.info('Support request email sent', { requestId, category: request.category });
+    } catch (error) {
+      logger.error('Failed to send support request email', { requestId, error: error.message });
+      // Don't throw — the request is already saved in Firestore.
+    }
+  });

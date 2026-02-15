@@ -90,6 +90,8 @@ export {
 
 export { submitReport, REPORT_REASONS } from './reportService';
 
+export { submitSupportRequest, SUPPORT_CATEGORIES } from './supportService';
+
 export { initPerformanceMonitoring, withTrace } from './performanceService';
 
 export { getMutualFriendsForTagging } from './mentionService';

@@ -1,5 +1,5 @@
 /**
- * Rewind App Color System — 16-Bit Retro Edition
+ * Flick App Color System — 16-Bit Retro Edition
  * ================================================
  * CRT-inspired dark theme with neon pixel accents.
  * Deep indigo backgrounds evoke vintage monitors,

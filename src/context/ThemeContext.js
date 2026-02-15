@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
 
-const THEME_STORAGE_KEY = '@rewind_theme_palette';
+const THEME_STORAGE_KEY = '@flick_theme_palette';
 
 /**
  * Preset color palettes for user personalization

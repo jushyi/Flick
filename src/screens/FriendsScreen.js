@@ -134,6 +134,7 @@ const FriendsScreen = ({ navigation }) => {
               displayName: userData.displayName,
               username: userData.username,
               profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
+              nameColor: userData.nameColor,
             };
           }
           return null;
@@ -191,6 +192,7 @@ const FriendsScreen = ({ navigation }) => {
                 displayName: userData.displayName,
                 username: userData.username,
                 profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
+                nameColor: userData.nameColor,
               };
             }
             return null;
@@ -211,6 +213,7 @@ const FriendsScreen = ({ navigation }) => {
                 displayName: userData.displayName,
                 username: userData.username,
                 profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
+                nameColor: userData.nameColor,
               };
             }
             return null;
@@ -379,6 +382,7 @@ const FriendsScreen = ({ navigation }) => {
               displayName: userData.displayName,
               username: userData.username,
               profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
+              nameColor: userData.nameColor,
             };
 
             const existingIdx = updated.findIndex(f => f.friendshipId === friendshipId);
@@ -694,7 +698,7 @@ const FriendsScreen = ({ navigation }) => {
       if (filteredSuggestions.length === 0) {
         Alert.alert(
           'No Friends Found',
-          'None of your contacts are on REWIND yet. Invite them to join!'
+          'None of your contacts are on FLICK yet. Invite them to join!'
         );
       }
     } catch (err) {
@@ -930,7 +934,7 @@ const FriendsScreen = ({ navigation }) => {
         style={styles.syncPromptIcon}
       />
       <Text style={styles.syncPromptTitle}>Find Friends from Contacts</Text>
-      <Text style={styles.syncPromptText}>See which of your contacts are on REWIND</Text>
+      <Text style={styles.syncPromptText}>See which of your contacts are on FLICK</Text>
       <TouchableOpacity
         style={styles.syncPromptButton}
         onPress={handleSyncContacts}
@@ -1253,7 +1257,8 @@ const FriendsScreen = ({ navigation }) => {
     const keyExtractor = (item, index) => {
       if (item.type === 'header') return `header-${item.title}`;
       if (item.type === 'sync_prompt') return 'sync-prompt';
-      return item.data?.id || item.data?.userId || `item-${index}`;
+      // Include item type in key to prevent duplicates when same user appears in multiple sections
+      return `${item.type}-${item.data?.id || item.data?.userId || index}`;
     };
 
     return (

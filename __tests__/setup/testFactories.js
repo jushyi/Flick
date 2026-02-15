@@ -71,6 +71,7 @@ const createJournaledPhoto = (overrides = {}) => {
     status: 'triaged',
     photoState: 'journal',
     revealedAt: { _seconds: (now - 3600000) / 1000, _nanoseconds: 0 }, // 1 hour ago
+    triagedAt: { seconds: now / 1000, toDate: () => new Date(now) }, // When photo was triaged
     ...overrides,
   });
 };

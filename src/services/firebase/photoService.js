@@ -31,6 +31,7 @@ import {
   Timestamp,
   FieldValue,
   getCountFromServer,
+  onSnapshot,
 } from '@react-native-firebase/firestore';
 import { uploadPhoto, deletePhoto } from './storageService';
 import { ensureDarkroomInitialized } from './darkroomService';
@@ -1139,6 +1140,52 @@ export const updatePhotoTags = async (photoId, taggedUserIds) => {
   } catch (error) {
     logger.error('PhotoService.updatePhotoTags: Failed', { photoId, error: error.message });
     return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Subscribe to real-time updates for a single photo
+ * @param {string} photoId - Photo ID to subscribe to
+ * @param {Function} callback - Called with { success, photo } or { success, error }
+ * @returns {Function} - Unsubscribe function
+ */
+export const subscribePhoto = (photoId, callback) => {
+  try {
+    logger.info('PhotoService.subscribePhoto: Setting up subscription', { photoId });
+
+    const photoRef = doc(db, 'photos', photoId);
+
+    const unsubscribe = onSnapshot(
+      photoRef,
+      snapshot => {
+        if (snapshot.exists()) {
+          const photo = { id: snapshot.id, ...snapshot.data() };
+          logger.debug('PhotoService.subscribePhoto: Photo updated', {
+            photoId,
+            tagCount: photo.taggedUserIds?.length || 0,
+          });
+          callback({ success: true, photo });
+        } else {
+          logger.warn('PhotoService.subscribePhoto: Photo not found', { photoId });
+          callback({ success: false, error: 'Photo not found' });
+        }
+      },
+      error => {
+        logger.error('PhotoService.subscribePhoto: Snapshot error', {
+          photoId,
+          error: error.message,
+        });
+        callback({ success: false, error: error.message });
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    logger.error('PhotoService.subscribePhoto: Setup failed', {
+      photoId,
+      error: error.message,
+    });
+    return () => {}; // Return no-op cleanup function
   }
 };
 

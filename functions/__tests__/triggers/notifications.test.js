@@ -1,13 +1,12 @@
 /**
  * Notification Trigger Tests
  *
- * Tests for all 6 notification trigger functions exported from index.js:
+ * Tests for notification trigger functions exported from index.js:
  * 1. sendFriendAcceptedNotification (onUpdate - friendships)
- * 2. sendStoryNotification (onUpdate - darkrooms)
- * 3. sendReactionNotification (onUpdate - photos)
- * 4. sendTaggedPhotoNotification (onUpdate - photos)
- * 5. sendCommentNotification (onCreate - photos/{photoId}/comments)
- * 6. sendPhotoRevealNotification (onUpdate - darkrooms)
+ * 2. sendReactionNotification (onUpdate - photos)
+ * 3. sendTaggedPhotoNotification (onUpdate - photos)
+ * 4. sendCommentNotification (onCreate - photos/{photoId}/comments)
+ * 5. sendPhotoRevealNotification (onUpdate - darkrooms)
  *
  * Also verifies sendFriendRequestNotification (onCreate - friendships) from 49-05.
  */
@@ -24,6 +23,13 @@ jest.mock('../../notifications/sender', () => ({
   },
 }));
 
+// Mock the notifications/batching module (used by sendReactionNotification)
+const mockAddReactionToBatch = jest.fn().mockResolvedValue();
+jest.mock('../../notifications/batching', () => ({
+  addReactionToBatch: mockAddReactionToBatch,
+  scheduleNotificationTask: jest.fn().mockResolvedValue(),
+}));
+
 const { initializeFirestore } = require('firebase-admin/firestore');
 
 // Get the mock db that index.js will use
@@ -33,7 +39,6 @@ const mockDb = initializeFirestore();
 const {
   sendFriendRequestNotification,
   sendFriendAcceptedNotification,
-  sendStoryNotification,
   sendReactionNotification,
   sendTaggedPhotoNotification,
   sendCommentNotification,
@@ -459,218 +464,6 @@ describe('sendFriendAcceptedNotification', () => {
 });
 
 // ============================================================================
-// sendStoryNotification (onUpdate - darkrooms)
-// ============================================================================
-describe('sendStoryNotification', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should send notifications to friends when triage is completed with journaled photos', async () => {
-    const notifMock = { add: jest.fn().mockResolvedValue({ id: 'n-1' }) };
-    setupMockDb({
-      users: {
-        'poster-1': {
-          displayName: 'Poster',
-          username: 'poster',
-          profilePhotoURL: 'https://poster.photo',
-        },
-        'friend-1': {
-          fcmToken: VALID_TOKEN,
-          displayName: 'Friend',
-          notificationPreferences: {},
-        },
-      },
-      friendships: {
-        docs: [{ data: () => ({ user1Id: 'poster-1', user2Id: 'friend-1', status: 'accepted' }) }],
-        empty: false,
-        size: 1,
-        _callCount: 0,
-      },
-      friendships2: {
-        docs: [],
-        empty: true,
-        size: 0,
-      },
-      notifications: notifMock,
-    });
-
-    const change = {
-      before: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 1000 },
-          lastStoryNotifiedAt: null,
-        }),
-      },
-      after: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 2000 },
-          lastJournaledCount: 3,
-          lastStoryNotifiedAt: null,
-        }),
-      },
-    };
-
-    const context = { params: { userId: 'poster-1' } };
-
-    await sendStoryNotification(change, context);
-
-    expect(mockSendPushNotification).toHaveBeenCalledWith(
-      VALID_TOKEN,
-      expect.stringContaining('Story'),
-      expect.stringContaining('Poster'),
-      expect.objectContaining({ type: 'story', userId: 'poster-1' }),
-      'friend-1'
-    );
-  });
-
-  it('should skip when no triage completion event', async () => {
-    const change = {
-      before: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 1000 },
-        }),
-      },
-      after: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 1000 },
-          lastJournaledCount: 3,
-        }),
-      },
-    };
-
-    const context = { params: { userId: 'poster-1' } };
-
-    await sendStoryNotification(change, context);
-
-    expect(mockSendPushNotification).not.toHaveBeenCalled();
-  });
-
-  it('should skip when no photos were journaled', async () => {
-    const change = {
-      before: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 1000 },
-        }),
-      },
-      after: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 2000 },
-          lastJournaledCount: 0,
-        }),
-      },
-    };
-
-    const context = { params: { userId: 'poster-1' } };
-
-    await sendStoryNotification(change, context);
-
-    expect(mockSendPushNotification).not.toHaveBeenCalled();
-  });
-
-  it('should skip when already notified for this triage batch', async () => {
-    const change = {
-      before: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 1000 },
-        }),
-      },
-      after: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 2000 },
-          lastJournaledCount: 3,
-          lastStoryNotifiedAt: { toMillis: () => 3000 },
-        }),
-      },
-    };
-
-    const context = { params: { userId: 'poster-1' } };
-
-    await sendStoryNotification(change, context);
-
-    expect(mockSendPushNotification).not.toHaveBeenCalled();
-  });
-
-  it('should skip when user has no friends', async () => {
-    setupMockDb({
-      users: {
-        'poster-1': {
-          displayName: 'Poster',
-          username: 'poster',
-        },
-      },
-      friendships: { docs: [], empty: true, size: 0, _callCount: 0 },
-      friendships2: { docs: [], empty: true, size: 0 },
-    });
-
-    const change = {
-      before: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 1000 },
-        }),
-      },
-      after: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 2000 },
-          lastJournaledCount: 3,
-          lastStoryNotifiedAt: null,
-        }),
-      },
-    };
-
-    const context = { params: { userId: 'poster-1' } };
-
-    await sendStoryNotification(change, context);
-
-    expect(mockSendPushNotification).not.toHaveBeenCalled();
-  });
-
-  it('should skip friend with notifications disabled', async () => {
-    setupMockDb({
-      users: {
-        'poster-1': {
-          displayName: 'Poster',
-          username: 'poster',
-        },
-        'friend-1': {
-          fcmToken: VALID_TOKEN,
-          displayName: 'Friend',
-          notificationPreferences: { follows: false },
-        },
-      },
-      friendships: {
-        docs: [{ data: () => ({ user1Id: 'poster-1', user2Id: 'friend-1', status: 'accepted' }) }],
-        empty: false,
-        size: 1,
-        _callCount: 0,
-      },
-      friendships2: { docs: [], empty: true, size: 0 },
-    });
-
-    const change = {
-      before: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 1000 },
-        }),
-      },
-      after: {
-        data: () => ({
-          lastTriageCompletedAt: { toMillis: () => 2000 },
-          lastJournaledCount: 3,
-          lastStoryNotifiedAt: null,
-        }),
-      },
-    };
-
-    const context = { params: { userId: 'poster-1' } };
-
-    await sendStoryNotification(change, context);
-
-    expect(mockSendPushNotification).not.toHaveBeenCalled();
-  });
-});
-
-// ============================================================================
 // sendReactionNotification (onUpdate - photos)
 // ============================================================================
 describe('sendReactionNotification', () => {
@@ -683,22 +476,7 @@ describe('sendReactionNotification', () => {
     jest.useRealTimers();
   });
 
-  it('should start debounce window when reaction is added', async () => {
-    setupMockDb({
-      users: {
-        'owner-1': {
-          fcmToken: VALID_TOKEN,
-          displayName: 'Owner',
-          notificationPreferences: {},
-        },
-        'reactor-1': {
-          displayName: 'Reactor',
-          username: 'reactor',
-          profilePhotoURL: 'https://reactor.photo',
-        },
-      },
-    });
-
+  it('should add reaction to Firestore batch when reaction is added', async () => {
     const change = {
       before: {
         data: () => ({
@@ -722,23 +500,11 @@ describe('sendReactionNotification', () => {
 
     await sendReactionNotification(change, context);
 
-    // Notification should NOT be sent immediately (debouncing)
+    // Should batch via Firestore instead of sending immediately
+    expect(mockAddReactionToBatch).toHaveBeenCalledWith('photo-reaction-1', 'reactor-1', {
+      '\u2764\uFE0F': 1,
+    });
     expect(mockSendPushNotification).not.toHaveBeenCalled();
-
-    // Fast-forward past debounce window (10 seconds)
-    jest.advanceTimersByTime(11000);
-
-    // Allow async promises to flush
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(mockSendPushNotification).toHaveBeenCalledWith(
-      VALID_TOKEN,
-      expect.stringContaining('Reaction'),
-      expect.stringContaining('Reactor'),
-      expect.objectContaining({ type: 'reaction' }),
-      'owner-1'
-    );
   });
 
   it('should skip when reactor is the photo owner (self-reaction)', async () => {
@@ -889,7 +655,7 @@ describe('sendTaggedPhotoNotification', () => {
     jest.useRealTimers();
   });
 
-  it('should start debounce window when user is tagged', async () => {
+  it('should send notification immediately when user is tagged', async () => {
     setupMockDb({
       users: {
         'tagger-1': {
@@ -924,19 +690,12 @@ describe('sendTaggedPhotoNotification', () => {
 
     await sendTaggedPhotoNotification(change, context);
 
-    // Notification should NOT be sent immediately (debouncing)
-    expect(mockSendPushNotification).not.toHaveBeenCalled();
-
-    // Fast-forward past debounce window (30 seconds)
-    jest.advanceTimersByTime(31000);
-    await Promise.resolve();
-    await Promise.resolve();
-
+    // Notification is sent immediately (no debouncing)
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      expect.stringContaining('tagged'),
+      expect.stringContaining('Tagged'),
       expect.stringContaining('Tagger'),
-      expect.objectContaining({ type: 'tagged' }),
+      expect.objectContaining({ type: 'tagged', photoId: 'photo-tag-1' }),
       'tagged-1'
     );
   });

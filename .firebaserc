@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "re-lapse-fa89b"
+    "default": "re-lapse-fa89b",
+    "production": "flick-prod-49615"
   }
 }

@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { Silkscreen_400Regular, Silkscreen_700Bold } from '@expo-google-fonts/silkscreen';
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import { colors } from './src/constants/colors';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,9 +25,10 @@ import {
   isDarkroomReadyToReveal,
   scheduleNextReveal,
 } from './src/services/firebase/darkroomService';
-import { revealPhotos } from './src/services/firebase/photoService';
+import { revealPhotos, getPhotoById } from './src/services/firebase/photoService';
 import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
+import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
 import { GIPHY_API_KEY } from '@env';
 
@@ -55,6 +57,8 @@ export default function App() {
     PressStart2P_400Regular,
     Silkscreen_400Regular,
     Silkscreen_700Bold,
+    SpaceMono_400Regular,
+    SpaceMono_700Bold,
   });
 
   /**
@@ -84,37 +88,70 @@ export default function App() {
    * Used by both the system notification tap listener and the in-app banner press
    */
   const navigateToNotification = navData => {
-    if (!navData.success || !navigationRef.current?.isReady()) return;
+    if (!navData.success) return;
     const { screen, params } = navData.data;
     logger.info('App: Notification navigating', { screen, params });
 
-    if (screen === 'Camera') {
-      // Navigate to Camera tab with all params (openDarkroom, etc.)
-      // First navigate to ensure we're on the right tab
-      navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
-      // Then set params after a small delay to ensure the screen is focused
-      // This works around React Navigation's nested navigator param propagation issue
-      setTimeout(() => {
-        navigationRef.current.navigate('MainTabs', {
-          screen: 'Camera',
-          params: params,
-        });
-      }, 100);
-    } else if (screen === 'Feed') {
-      // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
-      navigationRef.current.navigate('MainTabs', {
-        screen: 'Feed',
-        params: params,
-      });
-    } else if (screen === 'Profile') {
-      navigationRef.current.navigate('MainTabs', { screen });
-    } else if (screen === 'FriendRequests') {
-      // Navigate to Friends tab, then to FriendRequests screen
-      navigationRef.current.navigate('MainTabs', {
-        screen: 'Friends',
-        params: { screen: 'FriendRequests' },
-      });
-    }
+    // Wait for navigation to be ready (important for cold starts)
+    let attempts = 0;
+    const maxAttempts = 600; // 60 seconds max wait time (for Metro bundler in dev mode)
+    const attemptNavigation = () => {
+      attempts++;
+      if (!navigationRef.current?.isReady()) {
+        if (attempts >= maxAttempts) {
+          logger.error('Navigation not ready after 60s, giving up', { screen, attempts });
+          return;
+        }
+        logger.debug('Navigation not ready, retrying', { attempts, screen });
+        setTimeout(attemptNavigation, 100);
+        return;
+      }
+
+      logger.info('Navigation ready, executing navigation', { screen, attempts });
+
+      // Extra delay on cold start to ensure MainTabs is mounted
+      const executeNavigation = () => {
+        logger.info('App: Executing navigation to', { screen, params });
+
+        if (screen === 'Camera') {
+          // Navigate to Camera tab with all params (openDarkroom, etc.)
+          // First navigate to ensure we're on the right tab
+          navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
+          // Then set params after a small delay to ensure the screen is focused
+          // This works around React Navigation's nested navigator param propagation issue
+          setTimeout(() => {
+            navigationRef.current.navigate('MainTabs', {
+              screen: 'Camera',
+              params: params,
+            });
+          }, 100);
+        } else if (screen === 'Feed') {
+          // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
+          navigationRef.current.navigate('MainTabs', {
+            screen: 'Feed',
+            params: params,
+          });
+        } else if (screen === 'Profile') {
+          navigationRef.current.navigate('MainTabs', { screen });
+        } else if (screen === 'FriendsList') {
+          // Navigate to FriendsList screen (opens on requests tab by default)
+          navigationRef.current.navigate('FriendsList', params);
+        } else if (screen === 'OtherUserProfile') {
+          // Navigate to another user's profile (e.g., friend accepted notification)
+          navigationRef.current.navigate('OtherUserProfile', params);
+        } else if (screen === 'Activity') {
+          // Navigate to Activity screen (notifications) for comment/mention/reaction
+          // ActivityScreen handles opening PhotoDetail with proper context
+          navigationRef.current.navigate('Activity', params);
+        }
+      };
+
+      // Add small delay to ensure app is fully initialized (especially on cold start)
+      setTimeout(executeNavigation, attempts > 10 ? 500 : 0);
+    };
+
+    // Start attempting navigation
+    attemptNavigation();
   };
 
   /**
@@ -133,6 +170,21 @@ export default function App() {
 
   useEffect(() => {
     initializeNotifications();
+
+    // Check for notification that opened the app (cold start)
+    Notifications.getLastNotificationResponseAsync().then(response => {
+      if (response) {
+        logger.info('App: Found cold start notification', {
+          data: response.notification.request.content.data,
+        });
+        const navigationData = handleNotificationTapped(response.notification);
+        logger.info('App: Cold start navigation data', { navigationData });
+        // Small delay to let app initialize
+        setTimeout(() => {
+          navigateToNotification(navigationData);
+        }, 1000);
+      }
+    });
 
     // Register notification token whenever a user authenticates
     // This handles: app startup with existing session, fresh login, and re-login after logout
@@ -182,7 +234,11 @@ export default function App() {
 
     // Listener for when user taps a notification (background/killed-app)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      logger.info('App: Notification response received', {
+        data: response.notification.request.content.data,
+      });
       const navigationData = handleNotificationTapped(response.notification);
+      logger.info('App: Navigation data from handler', { navigationData });
       navigateToNotification(navigationData);
     });
 

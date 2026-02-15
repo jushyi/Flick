@@ -17,6 +17,8 @@ module.exports = {
     '<rootDir>/node_modules/',
     '<rootDir>/__tests__/setup/',
     '<rootDir>/__tests__/__mocks__/',
+    '<rootDir>/functions/__tests__/',
+    '<rootDir>/functions/',
   ],
 
   // Only match test files in __tests__ directory

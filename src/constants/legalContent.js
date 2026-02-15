@@ -9,9 +9,9 @@ export const PRIVACY_POLICY_CONTENT = `Last Updated: February 2026
 
 1. INTRODUCTION
 
-Welcome to Rewind ("App"). Rewind is operated by Joshua Jireh Maserin ("we", "our", or "us"). We are committed to protecting your privacy and ensuring you understand how we collect, use, and share your information. This Privacy Policy explains our practices regarding your personal data when you use our photo-sharing social application.
+Welcome to Flick ("App"). Flick is operated by Joshua Jireh Maserin ("we", "our", or "us"). We are committed to protecting your privacy and ensuring you understand how we collect, use, and share your information. This Privacy Policy explains our practices regarding your personal data when you use our photo-sharing social application.
 
-By using Rewind, you agree to the collection and use of information in accordance with this Privacy Policy. If you do not agree with this policy, please do not use the App.
+By using Flick, you agree to the collection and use of information in accordance with this Privacy Policy. If you do not agree with this policy, please do not use the App.
 
 2. INFORMATION WE COLLECT
 
@@ -34,7 +34,7 @@ By using Rewind, you agree to the collection and use of information in accordanc
 - Monthly Albums: We automatically generate monthly albums based on your photo capture dates.
 
 2.3 Information Collected with Your Permission
-- Contacts: If you grant contacts permission, we access phone numbers from your device address book to suggest friends who also use Rewind. Contact phone numbers are normalized and matched against our user database but are NOT stored on our servers.
+- Contacts: If you grant contacts permission, we access phone numbers from your device address book to suggest friends who also use Flick. Contact phone numbers are normalized and matched against our user database but are NOT stored on our servers.
 
 3. HOW WE USE YOUR INFORMATION
 
@@ -122,7 +122,7 @@ You can request account deletion at any time through the Settings menu in the Ap
 
 9. CHILDREN'S PRIVACY
 
-Rewind is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we learn that we have collected personal information from a child under 13, we will take steps to delete that information as soon as possible. If you believe a child under 13 has provided us with personal information, please contact us at maserinj@gmail.com.
+Flick is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we learn that we have collected personal information from a child under 13, we will take steps to delete that information as soon as possible. If you believe a child under 13 has provided us with personal information, please contact us at maserinj@gmail.com.
 
 10. CHANGES TO THIS POLICY
 
@@ -133,13 +133,13 @@ We may update this Privacy Policy from time to time. We will notify you of any m
 If you have questions about this Privacy Policy or our privacy practices, please contact us at:
 
 Joshua Jireh Maserin
-Email: maserinj@gmail.com`;
+Email: support@flickcam.app`;
 
 export const TERMS_OF_SERVICE_CONTENT = `Last Updated: February 2026
 
 1. ACCEPTANCE OF TERMS
 
-By accessing or using the Rewind application ("App", "Service"), you agree to be bound by these Terms of Service ("Terms"). The App is operated by Joshua Jireh Maserin ("we", "our", or "us"). If you do not agree to these Terms, please do not use the App.
+By accessing or using the Flick application ("App", "Service"), you agree to be bound by these Terms of Service ("Terms"). The App is operated by Joshua Jireh Maserin ("we", "our", or "us"). If you do not agree to these Terms, please do not use the App.
 
 2. ELIGIBILITY
 
@@ -297,4 +297,4 @@ These Terms, together with our Privacy Policy, constitute the entire agreement b
 For questions about these Terms, please contact us at:
 
 Joshua Jireh Maserin
-Email: maserinj@gmail.com`;
+Email: support@flickcam.app`;

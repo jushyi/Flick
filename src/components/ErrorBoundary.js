@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 24,

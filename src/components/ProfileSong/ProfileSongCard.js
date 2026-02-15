@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   },
   artist: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
 });

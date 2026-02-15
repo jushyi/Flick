@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
   },
 

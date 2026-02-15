@@ -124,8 +124,12 @@ const mockQuery = jest.fn(() => ({}));
 const mockWhere = jest.fn(() => ({}));
 const mockOrderBy = jest.fn(() => ({}));
 const mockLimit = jest.fn(() => ({}));
+const mockStartAfter = jest.fn(() => ({}));
 const mockOr = jest.fn((...queries) => ({}));
+const mockAnd = jest.fn((...queries) => ({}));
 const mockServerTimestamp = jest.fn(() => ({ _seconds: Date.now() / 1000, _nanoseconds: 0 }));
+const mockIncrement = jest.fn(n => ({ _increment: n }));
+const mockArrayUnion = jest.fn((...items) => ({ _arrayUnion: items }));
 const mockTimestamp = {
   now: jest.fn(() => ({ _seconds: Date.now() / 1000, _nanoseconds: 0 })),
   fromDate: jest.fn(date => ({
@@ -134,6 +138,15 @@ const mockTimestamp = {
     toDate: () => date,
   })),
 };
+const mockGetFirestore = jest.fn(() => ({ collection: mockCollection, doc: mockDoc }));
+const mockGetCountFromServer = jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) }));
+const mockDocumentId = jest.fn(() => '__documentId__');
+const mockWriteBatch = jest.fn(() => ({
+  set: jest.fn().mockReturnThis(),
+  update: jest.fn().mockReturnThis(),
+  delete: jest.fn().mockReturnThis(),
+  commit: jest.fn(() => Promise.resolve()),
+}));
 
 jest.mock('@react-native-firebase/firestore', () => {
   const firestore = () => ({
@@ -141,15 +154,40 @@ jest.mock('@react-native-firebase/firestore', () => {
     doc: mockDoc,
   });
 
-  // Static methods
+  // Static methods (legacy API compatibility)
   firestore.FieldValue = {
     serverTimestamp: mockServerTimestamp,
-    increment: jest.fn(n => ({ _increment: n })),
-    arrayUnion: jest.fn((...items) => ({ _arrayUnion: items })),
+    increment: mockIncrement,
+    arrayUnion: mockArrayUnion,
     arrayRemove: jest.fn((...items) => ({ _arrayRemove: items })),
     delete: jest.fn(() => ({ _delete: true })),
   };
+
+  // Named modular API exports
+  firestore.getFirestore = mockGetFirestore;
+  firestore.collection = mockCollection;
+  firestore.doc = mockDoc;
+  firestore.getDoc = mockGetDoc;
+  firestore.getDocs = mockGetDocs;
+  firestore.setDoc = mockSetDoc;
+  firestore.updateDoc = mockUpdateDoc;
+  firestore.deleteDoc = mockDeleteDoc;
+  firestore.addDoc = mockAddDoc;
+  firestore.query = mockQuery;
+  firestore.where = mockWhere;
+  firestore.orderBy = mockOrderBy;
+  firestore.limit = mockLimit;
+  firestore.startAfter = mockStartAfter;
+  firestore.onSnapshot = mockOnSnapshot;
+  firestore.serverTimestamp = mockServerTimestamp;
   firestore.Timestamp = mockTimestamp;
+  firestore.increment = mockIncrement;
+  firestore.arrayUnion = mockArrayUnion;
+  firestore.writeBatch = mockWriteBatch;
+  firestore.getCountFromServer = mockGetCountFromServer;
+  firestore.documentId = mockDocumentId;
+  firestore.or = mockOr;
+  firestore.and = mockAnd;
 
   return firestore;
 });
@@ -168,9 +206,17 @@ global.mockQuery = mockQuery;
 global.mockWhere = mockWhere;
 global.mockOrderBy = mockOrderBy;
 global.mockLimit = mockLimit;
+global.mockStartAfter = mockStartAfter;
 global.mockOr = mockOr;
+global.mockAnd = mockAnd;
 global.mockServerTimestamp = mockServerTimestamp;
+global.mockIncrement = mockIncrement;
+global.mockArrayUnion = mockArrayUnion;
 global.mockTimestamp = mockTimestamp;
+global.mockGetFirestore = mockGetFirestore;
+global.mockGetCountFromServer = mockGetCountFromServer;
+global.mockDocumentId = mockDocumentId;
+global.mockWriteBatch = mockWriteBatch;
 
 // ============================================================================
 // Firebase Storage Mock
@@ -368,19 +414,35 @@ const mockPerfTrace = {
   putAttribute: jest.fn(),
   putMetric: jest.fn(),
 };
-const mockNewTrace = jest.fn(() => mockPerfTrace);
+const mockStartTrace = jest.fn(() => Promise.resolve(mockPerfTrace));
 const mockSetPerformanceCollectionEnabled = jest.fn();
+const mockGetPerformance = jest.fn(() => ({}));
 
-jest.mock('@react-native-firebase/perf', () => {
-  return () => ({
-    newTrace: mockNewTrace,
-    setPerformanceCollectionEnabled: mockSetPerformanceCollectionEnabled,
-  });
-});
+jest.mock('@react-native-firebase/perf', () => ({
+  getPerformance: mockGetPerformance,
+  setPerformanceCollectionEnabled: mockSetPerformanceCollectionEnabled,
+  startTrace: mockStartTrace,
+}));
 
 global.mockPerfTrace = mockPerfTrace;
-global.mockNewTrace = mockNewTrace;
+global.mockStartTrace = mockStartTrace;
 global.mockSetPerformanceCollectionEnabled = mockSetPerformanceCollectionEnabled;
+global.mockGetPerformance = mockGetPerformance;
+
+// ============================================================================
+// Service Module Mocks
+// ============================================================================
+
+// performanceService - withTrace wraps async operations, pass through in tests
+const mockWithTrace = jest.fn((name, operation) =>
+  operation({ putAttribute: jest.fn(), putMetric: jest.fn() })
+);
+
+jest.mock('../../src/services/firebase/performanceService', () => ({
+  withTrace: mockWithTrace,
+}));
+
+global.mockWithTrace = mockWithTrace;
 
 // ============================================================================
 // React Native Reanimated Mock

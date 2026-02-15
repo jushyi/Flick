@@ -12,7 +12,7 @@
 
 import { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Animated } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
@@ -21,12 +21,14 @@ import { SwipeablePhotoCard, TagFriendsModal } from '../components';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { styles } from '../styles/DarkroomScreen.styles';
 import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
 import logger from '../utils/logger';
 
 const DarkroomScreen = () => {
   // Screen load trace - measures time from mount to data-ready
   const { markLoaded } = useScreenTrace('DarkroomScreen');
   const screenTraceMarkedRef = useRef(false);
+  const insets = useSafeAreaInsets();
 
   const {
     // State
@@ -91,6 +93,7 @@ const DarkroomScreen = () => {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <View style={styles.successContainer}>
+          <View style={[styles.statusBarCover, { height: insets.top }]} />
           <SafeAreaView style={styles.successContainer} edges={['top', 'bottom']}>
             {/* Header */}
             <View style={styles.header}>
@@ -160,6 +163,7 @@ const DarkroomScreen = () => {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <View style={styles.container}>
+          <View style={[styles.statusBarCover, { height: insets.top }]} />
           <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
@@ -202,6 +206,8 @@ const DarkroomScreen = () => {
   return (
     <GestureHandlerRootView style={styles.gestureRootView}>
       <View style={styles.container}>
+        {/* Opaque cover behind status bar to prevent cards showing through */}
+        <View style={[styles.statusBarCover, { height: insets.top }]} />
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
           {/* Header */}
           <View style={styles.header}>
@@ -286,7 +292,12 @@ const DarkroomScreen = () => {
           <View style={styles.triageButtonBar}>
             {/* Archive Button */}
             <TouchableOpacity style={styles.archiveButton} onPress={handleArchiveButton}>
-              <Text style={styles.triageButtonIcon}>{'☐'}</Text>
+              <PixelIcon
+                name="archive-outline"
+                size={18}
+                color={colors.text.primary}
+                style={{ marginRight: spacing.xxs }}
+              />
               <Text style={styles.archiveButtonText}>Archive</Text>
             </TouchableOpacity>
 

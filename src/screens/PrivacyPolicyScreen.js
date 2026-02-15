@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   bodyText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     lineHeight: 22,
     color: colors.text.primary,
   },

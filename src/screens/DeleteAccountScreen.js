@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: spacing.xs,
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     lineHeight: 22,
   },
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   },
   warningSubtext: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xxs,
     marginBottom: spacing.md,
@@ -617,14 +617,14 @@ const styles = StyleSheet.create({
   },
   bulletDot: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginRight: spacing.xs,
     width: spacing.sm,
   },
   bulletText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     flex: 1,
   },
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
   },
   downloadSubtext: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginBottom: spacing.md,
   },
@@ -729,14 +729,14 @@ const styles = StyleSheet.create({
   },
   retryDelayText: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     textAlign: 'center',
     marginTop: spacing.xxs,
   },
   loadingText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginTop: spacing.md,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
   },
   deletingSubtext: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xs,
   },

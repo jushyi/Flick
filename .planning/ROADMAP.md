@@ -232,7 +232,19 @@ Plans:
 
 - [x] 50-01: Build Config & PR Checks (aps-environment switching, GitHub Actions PR workflow)
 - [x] 50-02: EAS Build & Submit Workflows (tag-triggered builds, manual submit with approval gate)
-- [ ] 50-03: TBD
+- [x] 50-03: Secrets Setup & Pipeline Verification (EXPO_TOKEN, environment gate, pipeline verified)
+
+#### Phase 50.1: Fix Failing Test Suites (INSERTED)
+
+**Goal**: Fix 76 failing tests across 10 test suites — 3 service tests (feedService, friendshipService, photoService), 2 integration tests (friendshipFlow, photoLifecycle), and 5 cloud functions tests (callable, notifications/sender, scheduled, smoke, triggers/notifications). All failures are mock setup issues, not real bugs. Must pass before release so PR checks are green.
+**Depends on**: Phase 50
+**Research**: Unlikely (investigating existing mock setup issues)
+**Plans**: 2
+
+Plans:
+
+- [x] 50.1-01: Test Infrastructure & Mock Fixes (jest.config.js cloud function isolation, Firestore mock exports, service mocks)
+- [x] 50.1-02: Fix Diverged Test Expectations (feedService, photoService, integration tests)
 
 #### Phase 51: iOS Release Preparation
 
@@ -243,34 +255,73 @@ Plans:
 
 Plans:
 
-- [ ] 51-01: Rebrand to Flick (replace all Rewind references, new icon, updated splash)
-- [ ] 51-02: Production Firebase Environment Setup (separate project, EAS profile switching)
-- [ ] 51-03: app.json & eas.json Production Configuration (privacy manifests, APS, supportsTablet)
-- [ ] 51-04: Domain & Support Infrastructure (domain registration, email, in-app links)
-- [ ] 51-05: Report Email Routing (Cloud Function to email reports)
-- [ ] 51-06: Giphy Production Key & Attribution
-- [ ] 51-07: Contributions Page UI & IAP Integration (pitch, tiers, color picker)
-- [ ] 51-08: Name Color Perk — Storage & Display (contributor colors app-wide)
-- [ ] 51-09: App Store Connect Setup & Screenshots (listing, metadata, privacy, IAP products)
-- [ ] 51-10: EAS Build, Submit & Final Verification
+- [x] 51-01: Rebrand to Flick (replace all Rewind references, new icon, updated splash)
+- [x] 51-02: Production Firebase Environment Setup (separate project, EAS profile switching)
+- [x] 51-03: app.json & eas.json Production Configuration (privacy manifests, APS, supportsTablet)
+- [x] 51-04: Domain & Support Infrastructure (domain registration, email, in-app links)
+- [x] 51-05: Report Email Routing (Cloud Function to email reports)
+- [x] 51-06: Giphy Production Key & Attribution (attribution complete, prod key pending approval)
+- [x] 51-07: Contributions Page UI & IAP Integration (pitch, tiers, color picker)
+- [x] 51-08: Name Color Perk — Storage & Display (contributor colors app-wide)
+- [x] 51-09: App Store Connect Setup & Screenshots (listing, metadata, privacy, IAP products)
+- [x] 51-10: EAS Build, Submit & Final Verification (partial - Cloud Functions only; build/submit deferred to UAT)
 
 #### Phase 52: Systematic UAT
 
 **Goal**: Manual testing checklists across all 8 feature areas (Auth, Profile, Camera/Photos, Feed, Stories, Social, Notifications, Settings) with pass/fail criteria and edge case identification
 **Depends on**: Phase 51
 **Research**: Unlikely (internal testing — reviewing own app features)
-**Plans**: TBD
+**Plans**: 10
 
 Plans:
 
-- [ ] 52-01: TBD
+- [x] 52-01: Fresh Install & New User Journey
+- [ ] 52-02: Multi-Device Tests
+- [x] 52-03: Camera & Photo Lifecycle
+- [x] 52-04: Profile & Settings
+- [x] 52-05: Camera, Photos & Darkroom
+- [x] 52-06: Albums & Selects
+- [x] 52-07: Feed & Stories
+- [x] 52-08: Social Features (Single Device)
+- [x] 52-09: Contributions & IAP
+- [ ] 52-10: Production Build & Submit
 
-#### Phase 53: Unlisted App Store Release
+#### Phase 52.1: Fix Reaction Notification Batching - ISS-015 (INSERTED)
 
-**Goal**: Build via EAS Build, submit via EAS Submit, pass App Review, publish as unlisted (direct link only, not searchable)
+**Goal**: Fix reaction notification batching broken by Cloud Functions stateless instances. Replace in-memory state with Firestore-based batching to properly batch rapid reactions into single notifications.
+**Depends on**: Phase 52 (Plan 52-02)
+**Research**: Unlikely (investigating existing Cloud Function batching logic)
+**Plans**: 1
+
+Plans:
+
+- [x] 52.1-01: Implement Firestore-based reaction batching (replace in-memory pendingReactions with Firestore documents, 30s batching window, single notification per photo)
+
+**Details:**
+
+Issue found during Plan 52-02 UAT testing. Cloud Functions are stateless - each photo update triggers a separate instance with its own in-memory `pendingReactions` state, causing duplicate notifications instead of proper batching. Solution: Use Firestore to track pending reactions with timestamps, batch within 30-second windows, send single consolidated notification per photo.
+
+#### Phase 52.2: Fix Photo Tagging Lag - ISS-016 (INSERTED)
+
+**Goal**: Fix photo tagging lag where tags don't appear immediately without feed refresh. Debug real-time subscription and state update flow to ensure tags update instantly.
+**Depends on**: Phase 52 (Plan 52-02)
+**Research**: Likely (debugging real-time subscriptions and state flow)
+**Plans**: 1
+
+Plans:
+
+- [x] 52.2-01: Debug and fix tag update real-time flow (investigate Firestore subscription, state updates, FlatList re-render, ensure immediate tag visibility)
+
+**Details:**
+
+Issue found during Plan 52-02 UAT testing. After tagging a user in a photo from feed or story view, the tag doesn't appear immediately - requires navigating away and refreshing to see the update. Root cause unknown, likely related to real-time subscription or state propagation. Must ensure tags update instantly across all views.
+
+#### Phase 53: App Store Release
+
+**Goal**: Build via EAS Build, submit via EAS Submit, pass App Review, publish publicly (no marketing — shared via direct link with friends/family). Post-release: verify CI/CD pipeline with a follow-up update, document future release playbook.
 **Depends on**: Phase 52
-**Research**: Likely (EAS Submit, App Review process, unlisted distribution)
-**Research topics**: EAS Submit configuration, App Review requirements, unlisted app distribution setup
+**Research**: Likely (EAS Submit, App Review process, Apple review guidelines pre-check)
+**Research topics**: EAS Submit configuration, App Review requirements, common rejection reasons, App Store listing best practices
 **Plans**: TBD
 
 Plans:
@@ -293,9 +344,12 @@ Plans:
 | 48. UI/UX Consistency Audit    | v1.0.0    | 7/7   | Complete    | 2026-02-12 |
 | 48.1 PhotoDetail Profile Nav   | v1.0.0    | 1/1   | Complete    | 2026-02-12 |
 | 49. Automated Test Suite       | v1.0.0    | 8/8   | Complete    | 2026-02-12 |
-| 50. CI/CD Pipeline             | v1.0.0    | 2/3   | In progress | -          |
-| 51. iOS Release Preparation    | v1.0.0    | 0/10  | Not started | -          |
-| 52. Systematic UAT             | v1.0.0    | 0/?   | Not started | -          |
-| 53. Unlisted App Store Release | v1.0.0    | 0/?   | Not started | -          |
+| 50. CI/CD Pipeline             | v1.0.0    | 3/3   | Complete    | 2026-02-12 |
+| 50.1 Fix Failing Test Suites   | v1.0.0    | 2/2   | Complete    | 2026-02-13 |
+| 51. iOS Release Preparation    | v1.0.0    | 10/10 | Complete    | 2026-02-13 |
+| 52. Systematic UAT             | v1.0.0    | 9/10  | In progress | -          |
+| 52.1 Reaction Notif Batching   | v1.0.0    | 1/1   | Complete    | 2026-02-14 |
+| 52.2 Photo Tagging Lag         | v1.0.0    | 1/1   | Complete    | 2026-02-14 |
+| 53. App Store Release          | v1.0.0    | 0/?   | Not started | -          |
 
 See [MILESTONES.md](MILESTONES.md) for milestone history.

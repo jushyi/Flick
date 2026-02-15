@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,17 +9,12 @@ import {
   Dimensions,
   Alert,
   Animated,
+  PanResponder,
+  Easing,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import ReanimatedModule, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  runOnJS,
-} from 'react-native-reanimated';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
@@ -28,8 +23,6 @@ import { layout } from '../constants/layout';
 import { deleteAlbum } from '../services/firebase';
 import { softDeletePhoto, archivePhoto, restorePhoto } from '../services/firebase/photoService';
 import DropdownMenu from './DropdownMenu';
-
-const ReanimatedView = ReanimatedModule.View;
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -43,6 +36,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  * @param {string} albumName - Album name for header
  * @param {boolean} isOwnProfile - Show edit options only for own albums
  * @param {string} currentUserId - Current user's ID for ownership checks
+ * @param {object} sourceRect - Source card position for expand/collapse animation { x, y, width, height }
  * @param {function} onClose - Callback to close viewer
  * @param {function} onRemovePhoto - Callback(photoId) when photo removed
  * @param {function} onSetCover - Callback(photoId) when set as cover
@@ -56,6 +50,7 @@ const AlbumPhotoViewer = ({
   albumName = '',
   isOwnProfile = false,
   currentUserId = '',
+  sourceRect,
   onClose,
   onRemovePhoto,
   onSetCover,
@@ -75,48 +70,303 @@ const AlbumPhotoViewer = ({
 
   // Thumbnail dimensions (50x67 for 3:4 ratio)
   const THUMBNAIL_WIDTH = 50;
-  const THUMBNAIL_HEIGHT = 67;
   const THUMBNAIL_MARGIN = 4;
 
-  // Swipe down to close gesture
-  const translateY = useSharedValue(0);
+  // Expand/collapse animation values (matching stories pattern)
+  const translateY = useRef(new Animated.Value(0)).current;
+  const viewerOpacity = useRef(new Animated.Value(0)).current;
+  const openProgress = useRef(new Animated.Value(0)).current;
+  const dismissScale = useRef(new Animated.Value(1)).current;
+  const suckTranslateX = useRef(new Animated.Value(0)).current;
 
-  const handleDismiss = useCallback(() => {
-    onClose?.();
-  }, [onClose]);
+  // Source rect ref for close animation (stable across re-renders)
+  const sourceRectRef = useRef(sourceRect);
+  sourceRectRef.current = sourceRect;
 
-  const panGesture = Gesture.Pan()
-    .onUpdate(event => {
-      'worklet';
-      // Only track downward movement
-      if (event.translationY > 0) {
-        translateY.value = event.translationY;
-      }
-    })
-    .onEnd(event => {
-      'worklet';
-      // Dismiss if dragged far enough or fast enough
-      if (event.translationY > 150 || event.velocityY > 500) {
-        runOnJS(handleDismiss)();
-      } else {
-        // Spring back to original position
-        translateY.value = withSpring(0, { damping: 20, stiffness: 300 });
-      }
-    });
+  // Compute source transform from sourceRect
+  const sourceTransform = useMemo(() => {
+    if (!sourceRect) return null;
+    const scaleX = sourceRect.width / SCREEN_WIDTH;
+    const scaleY = sourceRect.height / SCREEN_HEIGHT;
+    const scale = Math.min(scaleX, scaleY);
+    const sourceCenterX = sourceRect.x + sourceRect.width / 2;
+    const sourceCenterY = sourceRect.y + sourceRect.height / 2;
+    return {
+      scale,
+      translateX: sourceCenterX - SCREEN_WIDTH / 2,
+      translateY: sourceCenterY - SCREEN_HEIGHT / 2,
+    };
+  }, [sourceRect]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
+  // Compute combined expand/collapse + dismiss transforms
+  const expandScale = useMemo(() => {
+    if (!sourceTransform) return dismissScale;
+    return Animated.multiply(
+      openProgress.interpolate({ inputRange: [0, 1], outputRange: [sourceTransform.scale, 1] }),
+      dismissScale
+    );
+  }, [sourceTransform, openProgress, dismissScale]);
 
-  // Reset translateY when modal opens
-  React.useEffect(() => {
-    if (visible) {
-      translateY.value = 0;
+  const expandTranslateX = useMemo(() => {
+    if (!sourceTransform) return suckTranslateX;
+    return Animated.add(
+      openProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [sourceTransform.translateX, 0],
+      }),
+      suckTranslateX
+    );
+  }, [sourceTransform, openProgress, suckTranslateX]);
+
+  const expandTranslateY = useMemo(() => {
+    if (!sourceTransform) return translateY;
+    return Animated.add(
+      openProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [sourceTransform.translateY, 0],
+      }),
+      translateY
+    );
+  }, [sourceTransform, openProgress, translateY]);
+
+  // Opening animation - expand from source card to full screen
+  const hasAnimatedOpen = useRef(false);
+  useEffect(() => {
+    if (visible && sourceTransform && !hasAnimatedOpen.current) {
+      hasAnimatedOpen.current = true;
+      openProgress.setValue(0);
+      viewerOpacity.setValue(0);
+      dismissScale.setValue(1);
+      suckTranslateX.setValue(0);
+      translateY.setValue(0);
+
+      Animated.parallel([
+        Animated.spring(openProgress, {
+          toValue: 1,
+          tension: 180,
+          friction: 16,
+          useNativeDriver: true,
+        }),
+        Animated.timing(viewerOpacity, {
+          toValue: 1,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (visible && !sourceTransform && !hasAnimatedOpen.current) {
+      // No source rect - instant show
+      hasAnimatedOpen.current = true;
+      openProgress.setValue(1);
+      viewerOpacity.setValue(1);
     }
-  }, [visible, translateY]);
+    if (!visible) {
+      hasAnimatedOpen.current = false;
+    }
+  }, [visible, sourceTransform]);
+
+  /**
+   * Close with animation - suck-back to source or slide-down fallback
+   */
+  const closeWithAnimation = useCallback(() => {
+    const source = sourceRectRef.current;
+    const transform = source
+      ? {
+          scale: Math.min(source.width / SCREEN_WIDTH, source.height / SCREEN_HEIGHT),
+          translateX: source.x + source.width / 2 - SCREEN_WIDTH / 2,
+          translateY: source.y + source.height / 2 - SCREEN_HEIGHT / 2,
+        }
+      : null;
+
+    const resetAll = () => {
+      setTimeout(() => {
+        translateY.setValue(0);
+        viewerOpacity.setValue(0);
+        openProgress.setValue(0);
+        dismissScale.setValue(1);
+        suckTranslateX.setValue(0);
+      }, 100);
+    };
+
+    if (!transform) {
+      // Fallback: slide down + fade
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: SCREEN_HEIGHT,
+          duration: 220,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(viewerOpacity, {
+          toValue: 0,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        onClose?.();
+        resetAll();
+      });
+      return;
+    }
+
+    // Suck-back to source position
+    const suckDuration = 200;
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: transform.translateY,
+        duration: suckDuration,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(suckTranslateX, {
+        toValue: transform.translateX,
+        duration: suckDuration,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(dismissScale, {
+        toValue: transform.scale,
+        duration: suckDuration,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(viewerOpacity, {
+        toValue: 0,
+        duration: suckDuration,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose?.();
+      resetAll();
+    });
+  }, [translateY, viewerOpacity, openProgress, dismissScale, suckTranslateX, onClose]);
+
+  /**
+   * Spring back to original position (cancelled swipe)
+   */
+  const springBack = useCallback(() => {
+    Animated.parallel([
+      Animated.spring(translateY, {
+        toValue: 0,
+        tension: 50,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.spring(viewerOpacity, {
+        toValue: 1,
+        tension: 50,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.spring(dismissScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [translateY, viewerOpacity, dismissScale]);
+
+  // Store closeWithAnimation in ref for panResponder access
+  const closeWithAnimationRef = useRef(closeWithAnimation);
+  useEffect(() => {
+    closeWithAnimationRef.current = closeWithAnimation;
+  }, [closeWithAnimation]);
+
+  const springBackRef = useRef(springBack);
+  useEffect(() => {
+    springBackRef.current = springBack;
+  }, [springBack]);
+
+  // Gesture axis lock - once determined vertical, stays locked
+  const gestureLockRef = useRef(null);
+  const verticalDirectionRef = useRef(null);
+
+  /**
+   * PanResponder for swipe-down-to-dismiss gesture
+   * Only captures vertical downward swipes to avoid interfering with horizontal FlatList
+   */
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        if (isVerticalSwipe) {
+          return gestureState.dy > 5;
+        }
+        return false;
+      },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        if (isVerticalSwipe) {
+          return gestureState.dy > 5;
+        }
+        return false;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        const { dy } = gestureState;
+
+        // If already locked to vertical
+        if (gestureLockRef.current === 'vertical') {
+          if (verticalDirectionRef.current === 'down') {
+            const clampedDy = Math.max(0, dy);
+            translateY.setValue(clampedDy);
+            const dragRatio = Math.min(1, clampedDy / SCREEN_HEIGHT);
+            dismissScale.setValue(1 - dragRatio * 0.15);
+            const fadeAmount = Math.max(0, 1 - dragRatio * 0.8);
+            viewerOpacity.setValue(fadeAmount);
+          }
+          return;
+        }
+
+        // Lock axis on first significant movement
+        const absDy = Math.abs(dy);
+        const absDx = Math.abs(gestureState.dx);
+        if (absDy > absDx && absDy > 5) {
+          gestureLockRef.current = 'vertical';
+          verticalDirectionRef.current = dy > 0 ? 'down' : 'up';
+        }
+
+        if (gestureLockRef.current === 'vertical' && verticalDirectionRef.current === 'down') {
+          const clampedDy = Math.max(0, dy);
+          translateY.setValue(clampedDy);
+          const dragRatio = Math.min(1, clampedDy / SCREEN_HEIGHT);
+          dismissScale.setValue(1 - dragRatio * 0.15);
+          const fadeAmount = Math.max(0, 1 - dragRatio * 0.8);
+          viewerOpacity.setValue(fadeAmount);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const { dy, vy } = gestureState;
+        const gestureDir = verticalDirectionRef.current;
+
+        // Reset gesture lock
+        gestureLockRef.current = null;
+        verticalDirectionRef.current = null;
+
+        if (gestureDir === 'down') {
+          const dismissThreshold = SCREEN_HEIGHT / 3;
+          if (dy > dismissThreshold || vy > 0.5) {
+            closeWithAnimationRef.current();
+          } else {
+            springBackRef.current();
+          }
+          return;
+        }
+
+        // Fallback: spring back
+        springBackRef.current();
+      },
+      onPanResponderTerminate: () => {
+        gestureLockRef.current = null;
+        verticalDirectionRef.current = null;
+      },
+    })
+  ).current;
 
   // Reset to initial index when modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
       setCurrentIndex(initialIndex);
       // Scroll to initial index after a brief delay to ensure FlatList is ready
@@ -135,7 +385,7 @@ const AlbumPhotoViewer = ({
   }, [visible, initialIndex]);
 
   // Auto-scroll thumbnail bar when currentIndex changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible && photos.length > 0) {
       thumbnailListRef.current?.scrollToIndex({
         index: currentIndex,
@@ -200,7 +450,6 @@ const AlbumPhotoViewer = ({
         // Right edge - go to next
         goToIndex(currentIndex + 1);
       }
-      // Center tap - could toggle header visibility (optional, not implementing)
     },
     [currentIndex, goToIndex]
   );
@@ -228,6 +477,7 @@ const AlbumPhotoViewer = ({
     const currentPhoto = photos[currentIndex];
     if (!currentPhoto) return;
 
+    setMenuVisible(false);
     if (onSetCover) {
       onSetCover(currentPhoto.id);
       showToast();
@@ -481,105 +731,133 @@ const AlbumPhotoViewer = ({
   }
 
   return (
-    <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'transparent' }}>
-        <GestureDetector gesture={panGesture}>
-          <ReanimatedView style={[styles.container, animatedStyle]}>
-            {/* Photo viewer - fills entire screen */}
+    <Modal
+      visible={visible}
+      animationType="none"
+      transparent={true}
+      onRequestClose={closeWithAnimation}
+    >
+      <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+        {/* Background overlay - fades independently */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: colors.background.primary, opacity: viewerOpacity },
+          ]}
+        />
+
+        {/* Expand/collapse wrapper */}
+        <Animated.View
+          style={{
+            flex: 1,
+            overflow: 'hidden',
+            opacity: viewerOpacity,
+            transform: [
+              { translateX: expandTranslateX },
+              { translateY: expandTranslateY },
+              { scale: expandScale },
+            ],
+          }}
+        >
+          {/* Photo viewer - fills entire screen */}
+          <FlatList
+            ref={flatListRef}
+            data={photos}
+            renderItem={renderPhoto}
+            keyExtractor={item => item.id}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScrollBeginDrag={handleScrollBeginDrag}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            onMomentumScrollEnd={handleMomentumScrollEnd}
+            getItemLayout={getItemLayout}
+            initialScrollIndex={initialIndex}
+            onScrollToIndexFailed={info => {
+              // Fallback if scrollToIndex fails
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: false,
+                });
+              }, 100);
+            }}
+          />
+
+          {/* Header overlay */}
+          <View style={[styles.header, { paddingTop: insets.top }]}>
+            {/* Close button */}
+            <TouchableOpacity
+              onPress={closeWithAnimation}
+              style={styles.headerButton}
+              activeOpacity={0.7}
+            >
+              <PixelIcon name="close" size={28} color={colors.text.primary} />
+            </TouchableOpacity>
+
+            {/* Album name + position */}
+            <View style={styles.headerCenter}>
+              <Text style={styles.albumNameText} numberOfLines={1}>
+                {albumName} • {currentIndex + 1} of {photos.length}
+              </Text>
+            </View>
+
+            {/* 3-dot menu (only for own profile) */}
+            {isOwnProfile ? (
+              <TouchableOpacity
+                ref={menuButtonRef}
+                onPress={handleOpenMenu}
+                style={styles.headerButton}
+                activeOpacity={0.7}
+              >
+                <PixelIcon name="ellipsis-horizontal" size={24} color={colors.text.primary} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.headerButton} />
+            )}
+          </View>
+
+          {/* Thumbnail navigation bar */}
+          <View style={[styles.thumbnailBar, { paddingBottom: insets.bottom + 8 }]}>
             <FlatList
-              ref={flatListRef}
+              ref={thumbnailListRef}
               data={photos}
-              renderItem={renderPhoto}
-              keyExtractor={item => item.id}
+              renderItem={renderThumbnail}
+              keyExtractor={item => `thumb-${item.id}`}
               horizontal
-              pagingEnabled
               showsHorizontalScrollIndicator={false}
-              onScrollBeginDrag={handleScrollBeginDrag}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-              onMomentumScrollEnd={handleMomentumScrollEnd}
-              getItemLayout={getItemLayout}
-              initialScrollIndex={initialIndex}
-              onScrollToIndexFailed={info => {
-                // Fallback if scrollToIndex fails
-                setTimeout(() => {
-                  flatListRef.current?.scrollToIndex({
-                    index: info.index,
-                    animated: false,
-                  });
-                }, 100);
+              getItemLayout={getThumbnailLayout}
+              contentContainerStyle={styles.thumbnailContent}
+              initialNumToRender={10}
+              maxToRenderPerBatch={5}
+              windowSize={7}
+              onScrollToIndexFailed={() => {
+                // Silently handle scroll failure
               }}
             />
+          </View>
 
-            {/* Header overlay */}
-            <View style={[styles.header, { paddingTop: insets.top }]}>
-              {/* Close button */}
-              <TouchableOpacity onPress={onClose} style={styles.headerButton} activeOpacity={0.7}>
-                <PixelIcon name="close" size={28} color={colors.text.primary} />
-              </TouchableOpacity>
+          {/* Toast notification */}
+          {toastVisible && (
+            <Animated.View
+              style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 100 }]}
+            >
+              <PixelIcon name="checkmark-circle" size={20} color={colors.status.ready} />
+              <Text style={styles.toastText}>Cover set</Text>
+            </Animated.View>
+          )}
 
-              {/* Album name + position */}
-              <View style={styles.headerCenter}>
-                <Text style={styles.albumNameText} numberOfLines={1}>
-                  {albumName} • {currentIndex + 1} of {photos.length}
-                </Text>
-              </View>
-
-              {/* 3-dot menu (only for own profile) */}
-              {isOwnProfile ? (
-                <TouchableOpacity
-                  ref={menuButtonRef}
-                  onPress={handleOpenMenu}
-                  style={styles.headerButton}
-                  activeOpacity={0.7}
-                >
-                  <PixelIcon name="ellipsis-horizontal" size={24} color={colors.text.primary} />
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.headerButton} />
-              )}
-            </View>
-
-            {/* Thumbnail navigation bar */}
-            <View style={[styles.thumbnailBar, { paddingBottom: insets.bottom + 8 }]}>
-              <FlatList
-                ref={thumbnailListRef}
-                data={photos}
-                renderItem={renderThumbnail}
-                keyExtractor={item => `thumb-${item.id}`}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                getItemLayout={getThumbnailLayout}
-                contentContainerStyle={styles.thumbnailContent}
-                initialNumToRender={10}
-                maxToRenderPerBatch={5}
-                windowSize={7}
-                onScrollToIndexFailed={() => {
-                  // Silently handle scroll failure
-                }}
-              />
-            </View>
-
-            {/* Toast notification */}
-            {toastVisible && (
-              <Animated.View
-                style={[styles.toast, { opacity: toastOpacity, bottom: insets.bottom + 100 }]}
-              >
-                <PixelIcon name="checkmark-circle" size={20} color={colors.status.ready} />
-                <Text style={styles.toastText}>Cover set</Text>
-              </Animated.View>
-            )}
-
-            {/* Dropdown menu for photo options */}
-            <DropdownMenu
-              visible={menuVisible}
-              onClose={() => setMenuVisible(false)}
-              options={menuOptions}
-              anchorPosition={menuAnchor}
-            />
-          </ReanimatedView>
-        </GestureDetector>
-      </GestureHandlerRootView>
+          {/* Dropdown menu for photo options */}
+          <DropdownMenu
+            visible={menuVisible}
+            onClose={() => setMenuVisible(false)}
+            options={menuOptions}
+            anchorPosition={menuAnchor}
+          />
+        </Animated.View>
+      </View>
     </Modal>
   );
 };

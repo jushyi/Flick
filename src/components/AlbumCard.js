@@ -97,12 +97,15 @@ const AlbumCard = ({
         <View style={styles.imageContainer}>
           {coverPhotoUrl ? (
             <Image
-              source={{ uri: coverPhotoUrl, cacheKey: `album-cover-${album.id}` }}
+              source={{
+                uri: coverPhotoUrl,
+                cacheKey: `album-cover-${album.id}-${album.coverPhotoId}`,
+              }}
               style={styles.coverImage}
               contentFit="cover"
               cachePolicy="memory-disk"
               priority="normal"
-              recyclingKey={album.id}
+              recyclingKey={`${album.id}-${album.coverPhotoId}`}
             />
           ) : (
             <View style={styles.placeholder}>

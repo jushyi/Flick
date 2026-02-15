@@ -64,10 +64,10 @@ export const downloadAllPhotos = async (userId, onProgress) => {
 
   logger.info('downloadPhotosService.downloadAllPhotos: Found photos', { total });
 
-  // 3. Create album "Rewind Export" (or use existing)
-  let album = await MediaLibrary.getAlbumAsync('Rewind Export');
+  // 3. Create album "Flick Export" (or use existing)
+  let album = await MediaLibrary.getAlbumAsync('Flick Export');
   if (!album) {
-    logger.debug('downloadPhotosService.downloadAllPhotos: Creating Rewind Export album');
+    logger.debug('downloadPhotosService.downloadAllPhotos: Creating Flick Export album');
   }
 
   let downloaded = 0;
@@ -105,7 +105,7 @@ export const downloadAllPhotos = async (userId, onProgress) => {
       // c. Add to album
       if (!album) {
         // Create album with first asset
-        album = await MediaLibrary.createAlbumAsync('Rewind Export', asset, false);
+        album = await MediaLibrary.createAlbumAsync('Flick Export', asset, false);
       } else {
         await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
       }

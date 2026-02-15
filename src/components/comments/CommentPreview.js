@@ -14,6 +14,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import StrokedNameText from '../StrokedNameText';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import { spacing } from '../../constants/spacing';
@@ -103,7 +104,9 @@ const CommentPreview = ({
       <Animated.View style={{ opacity: fadeAnim }}>
         <View style={styles.commentRow}>
           <Text style={styles.commentText} numberOfLines={compact ? 1 : 2}>
-            <Text style={styles.username}>{currentComment?.user?.displayName || 'User'}</Text>
+            <StrokedNameText style={styles.username} nameColor={currentComment?.user?.nameColor}>
+              {currentComment?.user?.displayName || 'User'}
+            </StrokedNameText>
             <Text style={[styles.commentContent, isMediaOnly && styles.mediaIndicator]}>
               {' '}
               {displayText}
@@ -132,7 +135,7 @@ const styles = StyleSheet.create({
   },
   commentText: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     lineHeight: 18,
   },
@@ -141,7 +144,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   commentContent: {
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
   },
   mediaIndicator: {
@@ -150,7 +153,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xxs,
   },

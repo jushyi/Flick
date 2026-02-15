@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, memo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from './PixelIcon';
+import StrokedNameText from './StrokedNameText';
 import { getTimeAgo } from '../utils/timeUtils';
 import { styles } from '../styles/FeedPhotoCard.styles';
 import { colors } from '../constants/colors';
@@ -156,9 +157,9 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
 
         {/* Name and timestamp */}
         <View style={styles.textContainer}>
-          <Text style={styles.displayName} numberOfLines={1}>
+          <StrokedNameText style={styles.displayName} nameColor={user?.nameColor} numberOfLines={1}>
             {displayName || 'Unknown'}
-          </Text>
+          </StrokedNameText>
           <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
         </View>
       </View>

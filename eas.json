@@ -6,18 +6,25 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info.plist"
+      }
     },
     "preview": {
       "distribution": "internal",
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info.plist"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info-prod.plist"
       },
       "ios": {
         "image": "latest"
@@ -25,6 +32,10 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6759178451"
+      }
+    }
   }
 }

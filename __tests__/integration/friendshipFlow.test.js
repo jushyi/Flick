@@ -60,6 +60,8 @@ jest.mock('@react-native-firebase/firestore', () => ({
   orderBy: (...args) => mockOrderBy(...args),
   onSnapshot: (...args) => mockOnSnapshot(...args),
   or: (...args) => mockOr(...args),
+  limit: jest.fn(() => ({})),
+  documentId: jest.fn(() => '__documentId__'),
   serverTimestamp: () => ({ _serverTimestamp: true }),
   Timestamp: {
     now: () => ({
@@ -71,6 +73,19 @@ jest.mock('@react-native-firebase/firestore', () => ({
       toDate: () => date,
     }),
   },
+  getCountFromServer: jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
+  startAfter: jest.fn(() => ({})),
+}));
+
+// Mock blockService - feedService imports getBlockedByUserIds
+jest.mock('../../src/services/firebase/blockService', () => ({
+  getBlockedByUserIds: jest.fn(() => Promise.resolve({ success: true, blockedByUserIds: [] })),
+  getBlockedUserIds: jest.fn(() => Promise.resolve({ success: true, blockedUserIds: [] })),
+}));
+
+// Mock performanceService - feedService uses withTrace
+jest.mock('../../src/services/firebase/performanceService', () => ({
+  withTrace: jest.fn((name, fn, attrs) => fn({ putMetric: jest.fn() })),
 }));
 
 // Import services AFTER mocks are set up
@@ -80,10 +95,8 @@ const {
   declineFriendRequest,
   removeFriend,
   getFriendships,
-  getPendingRequests,
   getSentRequests,
   checkFriendshipStatus,
-  getFriendUserIds,
 } = require('../../src/services/firebase/friendshipService');
 
 const { getFeedPhotos } = require('../../src/services/firebase/feedService');
@@ -91,6 +104,13 @@ const { getFeedPhotos } = require('../../src/services/firebase/feedService');
 describe('Friendship Flow Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset mock implementations to clear queued mockResolvedValueOnce calls
+    mockGetDoc.mockReset();
+    mockGetDocs.mockReset();
+    mockAddDoc.mockReset();
+    mockSetDoc.mockReset();
+    mockUpdateDoc.mockReset();
+    mockDeleteDoc.mockReset();
     // Default mock returns
     mockQuery.mockReturnValue({ _query: true });
     mockCollection.mockReturnValue({ _collection: true });
@@ -327,7 +347,7 @@ describe('Friendship Flow Integration Tests', () => {
       // Arrange
       const userA = 'user-a';
       const userB = 'user-b';
-      const friendshipId = generateFriendshipId(userA, userB);
+      generateFriendshipId(userA, userB);
       const acceptedFriendship = createTestFriendship({
         user1Id: userA,
         user2Id: userB,
@@ -374,19 +394,14 @@ describe('Friendship Flow Integration Tests', () => {
       const userAPhoto = createJournaledPhoto({ id: 'photo-a', userId: userA.uid });
       const userCPhoto = createJournaledPhoto({ id: 'photo-c', userId: userC.uid });
 
-      // Feed query returns both photos
+      // Feed query uses server-side filtering, so only User A's photo is returned
       mockGetDocs.mockResolvedValueOnce({
-        docs: [
-          { id: userAPhoto.id, data: () => userAPhoto },
-          { id: userCPhoto.id, data: () => userCPhoto },
-        ],
-        size: 2,
+        docs: [{ id: userAPhoto.id, data: () => userAPhoto }],
+        size: 1,
       });
 
-      // getDoc for user data
-      mockGetDoc
-        .mockResolvedValueOnce({ exists: () => true, data: () => userA })
-        .mockResolvedValueOnce({ exists: () => true, data: () => userC });
+      // getDoc for user data (only User A since server filters to friends)
+      mockGetDoc.mockResolvedValueOnce({ exists: () => true, data: () => userA });
 
       // Act - Get feed with only User A as friend
       const result = await getFeedPhotos(20, null, [userA.uid], userB.uid);

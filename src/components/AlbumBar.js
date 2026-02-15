@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   emptyPromptText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
 });

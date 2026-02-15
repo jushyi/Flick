@@ -53,6 +53,7 @@ const CommentsBottomSheet = ({
   onCommentAdded,
   onCommentCountChange,
   onAvatarPress,
+  initialScrollToCommentId,
 }) => {
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const swipeY = useRef(new Animated.Value(0)).current; // Swipe gesture tracking
@@ -333,6 +334,74 @@ const CommentsBottomSheet = ({
       setPendingScrollTarget(null); // Clear pending scroll
     }
   }, [visible, translateY, photoId, sheetHeight, backdropOpacity]);
+
+  /**
+   * Auto-scroll to specific comment from notification deep link
+   * Waits for sheet to be visible AND comments to load
+   */
+  useEffect(() => {
+    if (!visible || !initialScrollToCommentId || threadedComments.length === 0 || loading) {
+      return;
+    }
+
+    logger.info('CommentsBottomSheet: Auto-scrolling to comment', {
+      commentId: initialScrollToCommentId,
+    });
+
+    // Find comment index (same logic as handleMentionPress)
+    let targetIndex = -1;
+    let isReply = false;
+    let parentId = null;
+
+    for (let i = 0; i < threadedComments.length; i++) {
+      const comment = threadedComments[i];
+
+      // Check if this is the target comment (top-level)
+      if (comment.id === initialScrollToCommentId) {
+        targetIndex = i;
+        break;
+      }
+
+      // Check replies
+      if (comment.replies) {
+        for (let j = 0; j < comment.replies.length; j++) {
+          if (comment.replies[j].id === initialScrollToCommentId) {
+            targetIndex = i; // Parent's index for scrolling
+            isReply = true;
+            parentId = comment.id;
+            break;
+          }
+        }
+      }
+
+      if (targetIndex !== -1) break;
+    }
+
+    if (targetIndex === -1) {
+      logger.warn('CommentsBottomSheet: Target comment not found', {
+        commentId: initialScrollToCommentId,
+      });
+      return;
+    }
+
+    // Expand parent section if target is a reply
+    if (isReply && parentId) {
+      setExpandedReplyParents(prev => ({
+        ...prev,
+        [parentId]: true,
+      }));
+    }
+
+    // Scroll after delay for animations to complete
+    const scrollTimer = setTimeout(
+      () => {
+        scrollToComment(targetIndex, initialScrollToCommentId);
+      },
+      isReply ? 500 : 400
+    );
+
+    return () => clearTimeout(scrollTimer);
+  }, [visible, initialScrollToCommentId, threadedComments, loading, scrollToComment]);
 
   /**
    * Handle pending scroll after comment added.

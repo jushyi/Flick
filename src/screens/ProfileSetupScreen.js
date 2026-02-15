@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     textAlign: 'center',
     color: colors.text.secondary,
     marginBottom: spacing.xl,
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     marginTop: spacing.xs,
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   form: {

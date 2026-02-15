@@ -489,7 +489,7 @@ describe('notificationService', () => {
       expect(result.data.params.openDarkroom).toBe(true);
     });
 
-    it('should navigate to FriendRequests for friend_request', () => {
+    it('should navigate to FriendsList for friend_request', () => {
       const notification = {
         request: {
           content: {
@@ -502,15 +502,15 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.type).toBe('friend_request');
-      expect(result.data.screen).toBe('FriendRequests');
+      expect(result.data.screen).toBe('FriendsList');
       expect(result.data.params.friendshipId).toBe('friend-123');
     });
 
-    it('should navigate to FriendRequests for friend_accepted', () => {
+    it('should navigate to OtherUserProfile for friend_accepted', () => {
       const notification = {
         request: {
           content: {
-            data: { type: 'friend_accepted' },
+            data: { type: 'friend_accepted', userId: 'user-abc' },
           },
         },
       };
@@ -519,10 +519,11 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.type).toBe('friend_accepted');
-      expect(result.data.screen).toBe('FriendRequests');
+      expect(result.data.screen).toBe('OtherUserProfile');
+      expect(result.data.params.userId).toBe('user-abc');
     });
 
-    it('should navigate to Feed for reaction', () => {
+    it('should navigate to Activity for reaction', () => {
       const notification = {
         request: {
           content: {
@@ -535,11 +536,12 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.type).toBe('reaction');
-      expect(result.data.screen).toBe('Feed');
+      expect(result.data.screen).toBe('Activity');
       expect(result.data.params.photoId).toBe('photo-123');
+      expect(result.data.params.shouldOpenPhoto).toBe(true);
     });
 
-    it('should navigate to Feed for comment', () => {
+    it('should navigate to Activity for comment', () => {
       const notification = {
         request: {
           content: {
@@ -552,11 +554,12 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.type).toBe('comment');
-      expect(result.data.screen).toBe('Feed');
+      expect(result.data.screen).toBe('Activity');
       expect(result.data.params.photoId).toBe('photo-456');
+      expect(result.data.params.shouldOpenPhoto).toBe(true);
     });
 
-    it('should navigate to Feed for mention', () => {
+    it('should navigate to Activity for mention', () => {
       const notification = {
         request: {
           content: {
@@ -569,11 +572,12 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.type).toBe('mention');
-      expect(result.data.screen).toBe('Feed');
+      expect(result.data.screen).toBe('Activity');
       expect(result.data.params.photoId).toBe('photo-789');
+      expect(result.data.params.shouldOpenPhoto).toBe(true);
     });
 
-    it('should navigate to Feed with highlight params for story', () => {
+    it('should fall through to default for unknown story type', () => {
       const notification = {
         request: {
           content: {
@@ -585,13 +589,11 @@ describe('notificationService', () => {
       const result = handleNotificationTapped(notification);
 
       expect(result.success).toBe(true);
-      expect(result.data.type).toBe('story');
+      expect(result.data.type).toBe('unknown');
       expect(result.data.screen).toBe('Feed');
-      expect(result.data.params.highlightUserId).toBe('user-456');
-      expect(result.data.params.openStory).toBe(true);
     });
 
-    it('should navigate to Feed with tagger params for tagged', () => {
+    it('should navigate to Activity for tagged', () => {
       const notification = {
         request: {
           content: {
@@ -608,11 +610,9 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.type).toBe('tagged');
-      expect(result.data.screen).toBe('Feed');
-      expect(result.data.params.highlightUserId).toBe('tagger-123');
-      expect(result.data.params.highlightPhotoId).toBe('photo-tagged');
-      expect(result.data.params.openStory).toBe(true);
-      expect(result.data.params.scrollToPhoto).toBe(true);
+      expect(result.data.screen).toBe('Activity');
+      expect(result.data.params.photoId).toBe('photo-tagged');
+      expect(result.data.params.shouldOpenPhoto).toBe(true);
     });
 
     it('should navigate to Feed for unknown notification type', () => {

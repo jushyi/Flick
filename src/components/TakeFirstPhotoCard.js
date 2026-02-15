@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.xs,
     textAlign: 'center',

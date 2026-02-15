@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from './PixelIcon';
+import StrokedNameText from './StrokedNameText';
 import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/FriendCard.styles';
@@ -123,13 +124,7 @@ const FriendCard = ({
    * Handle unblock user action with confirmation
    */
   const handleUnblockUser = () => {
-    Alert.alert('Unblock User', `Unblock ${displayName || username}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Unblock',
-        onPress: () => onUnblock && onUnblock(userId),
-      },
-    ]);
+    onUnblock && onUnblock(userId);
   };
 
   /**
@@ -276,9 +271,9 @@ const FriendCard = ({
 
       {/* User info */}
       <View style={styles.userInfo}>
-        <Text style={styles.displayName} numberOfLines={1}>
+        <StrokedNameText style={styles.displayName} nameColor={user?.nameColor} numberOfLines={1}>
           {displayName || 'Unknown User'}
-        </Text>
+        </StrokedNameText>
         <Text style={styles.username} numberOfLines={1}>
           @{username || 'unknown'}
         </Text>

@@ -3,7 +3,7 @@
  *
  * 4-phase retro TV power-on experience:
  * 1. CRT power-on: bright horizontal line expands to fill screen
- * 2. Text reveal: "REWIND" flickers in with PressStart2P font
+ * 2. Text reveal: "FLICK" flickers in with PressStart2P font
  * 3. Blur-to-focus: lens focus transition
  * 4. Fade out: overlay dissolves to reveal the app
  */
@@ -62,7 +62,7 @@ const AnimatedSplash = ({ onAnimationComplete, fontsLoaded }) => {
       }
     );
 
-    // Phase 2: "REWIND" text flicker (only if fonts are loaded)
+    // Phase 2: "FLICK" text flicker (only if fonts are loaded)
     textOpacity.value = withDelay(
       TEXT_REVEAL_DELAY,
       withSequence(
@@ -116,10 +116,10 @@ const AnimatedSplash = ({ onAnimationComplete, fontsLoaded }) => {
       {/* CRT power-on line */}
       {showLine && <Animated.View style={[styles.crtLine, lineStyle]} />}
 
-      {/* REWIND text (only render when fonts are available) */}
+      {/* FLICK text (only render when fonts are available) */}
       {fontsLoaded && (
         <Animated.View style={[styles.textContainer, textStyle]}>
-          <Text style={styles.rewindText}>REWIND</Text>
+          <Text style={styles.flickText}>FLICK</Text>
         </Animated.View>
       )}
 
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  rewindText: {
+  flickText: {
     fontFamily: typography.fontFamily.display,
     fontSize: typography.size.xxl,
     color: colors.interactive.primary,

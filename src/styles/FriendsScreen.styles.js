@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     backgroundColor: colors.background.tertiary,
     paddingHorizontal: spacing.md,
@@ -126,7 +126,7 @@ export const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.sm,
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   // Empty states
@@ -149,7 +149,7 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -164,7 +164,7 @@ export const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.status.danger,
     textAlign: 'center',
   },
@@ -194,7 +194,7 @@ export const styles = StyleSheet.create({
   },
   syncPromptText: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: spacing.md,

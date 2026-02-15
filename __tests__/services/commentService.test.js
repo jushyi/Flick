@@ -77,7 +77,7 @@ const {
   generateCommentId,
 } = require('../../src/services/firebase/commentService');
 
-const { createTestComment, createTestUser, createTestPhoto } = require('../setup/testFactories');
+const { createTestUser, createTestPhoto } = require('../setup/testFactories');
 
 describe('commentService', () => {
   beforeEach(() => {

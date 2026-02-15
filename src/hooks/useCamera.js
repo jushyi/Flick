@@ -114,8 +114,26 @@ const useCamera = () => {
     return availableLenses.find(lens => lens.toLowerCase() === 'back camera') || null;
   }, [availableLenses, facing]);
 
-  // Build dynamic zoom levels based on device capabilities (iOS ultra-wide support)
+  // Get front camera lens string (typically "Front TrueDepth Camera") for front zoom levels
+  const frontCameraLens = useMemo(() => {
+    if (Platform.OS !== 'ios' || facing !== 'front' || availableLenses.length === 0) {
+      return null;
+    }
+    return availableLenses.find(lens => lens.toLowerCase().includes('front')) || null;
+  }, [availableLenses, facing]);
+
+  // Build dynamic zoom levels based on device capabilities (iOS lens detection)
   const zoomLevels = useMemo(() => {
+    // Front camera on iOS: use detected lens for true 0.5x (full sensor width)
+    if (Platform.OS === 'ios' && facing === 'front') {
+      return [
+        { label: '0.5', value: 0.5, lens: frontCameraLens, cameraZoom: 0 }, // Full sensor (widest)
+        { label: '1', value: 1, lens: frontCameraLens, cameraZoom: 0.05 }, // Standard selfie framing
+        { label: '2', value: 2, lens: frontCameraLens, cameraZoom: 0.17 }, // 2x digital zoom
+        { label: '3', value: 3, lens: frontCameraLens, cameraZoom: 0.33 }, // 3x digital zoom
+      ];
+    }
+
     // Build base levels with explicit wide-angle lens (on iOS) or null (on Android)
     const baseLevels = ZOOM_LEVELS_BASE.map(level => ({
       ...level,
@@ -136,7 +154,7 @@ const useCamera = () => {
       return [{ ...ULTRA_WIDE_LEVEL, lens: ultraWideLens }, ...baseLevels];
     }
     return baseLevels;
-  }, [hasUltraWide, facing, availableLenses, wideAngleLens]);
+  }, [hasUltraWide, facing, availableLenses, wideAngleLens, frontCameraLens]);
 
   // Fallback: Try to get lenses via async method when camera ref is available
   useEffect(() => {
@@ -214,11 +232,25 @@ const useCamera = () => {
     logger.debug('useCamera: route.params changed', { params: route.params });
     if (route.params?.openDarkroom) {
       logger.info('useCamera: Opening darkroom from notification deep link');
-      setIsBottomSheetVisible(true);
+
+      // Refresh darkroom counts first to get latest status (revealed vs developing)
+      // This prevents showing stale "developing" state when photos have been revealed
+      const refreshAndOpen = async () => {
+        if (user) {
+          logger.info('useCamera: Refreshing darkroom counts before opening sheet');
+          const counts = await getDarkroomCounts(user.uid);
+          logger.debug('useCamera: Fresh counts from notification', counts);
+          setDarkroomCounts(counts);
+        }
+        setIsBottomSheetVisible(true);
+      };
+
+      refreshAndOpen();
+
       // Clear the param to prevent re-opening on subsequent renders
       navigation.setParams({ openDarkroom: undefined });
     }
-  }, [route.params, navigation]);
+  }, [route.params, navigation, user]);
 
   // Debug: Log lens changes to verify switching works
   useEffect(() => {
@@ -234,24 +266,53 @@ const useCamera = () => {
     }
   }, [wideAngleLens, selectedLens, facing]);
 
+  // Set the front camera lens when detected (same pattern as back camera)
+  useEffect(() => {
+    if (Platform.OS === 'ios' && frontCameraLens && !selectedLens && facing === 'front') {
+      logger.info('useCamera: Setting initial lens to front camera', { frontCameraLens });
+      setSelectedLens(frontCameraLens);
+    }
+  }, [frontCameraLens, selectedLens, facing]);
+
   // Handlers
 
   const toggleCameraFacing = useCallback(() => {
     lightImpact();
-    setFacing(current => {
-      const newFacing = current === 'back' ? 'front' : 'back';
-      // Reset ultra-wide lens when switching to front camera (no ultra-wide on front)
-      if (newFacing === 'front' && Platform.OS === 'ios') {
+    const newFacing = facing === 'back' ? 'front' : 'back';
+
+    if (Platform.OS === 'ios') {
+      if (newFacing === 'front') {
+        // Clear lens — front camera initial lens effect will set it when detected
         setSelectedLens(null);
-        // If currently on 0.5x, reset to 1x
+        // Map current zoom value to front camera level (lens will be set by effect)
+        const frontZoomMap = { 0.5: 0, 1: 0.05, 2: 0.17, 3: 0.33 };
+        const cameraZoom = frontZoomMap[zoom.value] ?? 0.05;
+        setZoom({ label: String(zoom.value), value: zoom.value, lens: null, cameraZoom });
+      } else {
+        // Switching to back camera
         if (zoom.value === 0.5) {
-          setZoom(ZOOM_LEVELS_BASE[0]); // Reset to 1x
-          logger.debug('useCamera: Reset zoom to 1x (front camera has no ultra-wide)');
+          if (hasUltraWide) {
+            const uwLens = availableLenses.find(
+              l => l.toLowerCase().includes('ultra wide') || l.toLowerCase().includes('ultrawide')
+            );
+            setSelectedLens(uwLens || null);
+            setZoom({ ...ULTRA_WIDE_LEVEL, lens: uwLens });
+          } else {
+            // No ultra-wide on back, reset to 1x
+            setZoom({ ...ZOOM_LEVELS_BASE[0], lens: wideAngleLens });
+            setSelectedLens(wideAngleLens);
+          }
+        } else {
+          const baseLevel =
+            ZOOM_LEVELS_BASE.find(l => l.value === zoom.value) || ZOOM_LEVELS_BASE[0];
+          setZoom({ ...baseLevel, lens: wideAngleLens });
+          setSelectedLens(wideAngleLens);
         }
       }
-      return newFacing;
-    });
-  }, [zoom.value]);
+    }
+
+    setFacing(newFacing);
+  }, [facing, zoom.value, hasUltraWide, availableLenses, wideAngleLens]);
 
   const toggleFlash = useCallback(() => {
     lightImpact();

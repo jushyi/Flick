@@ -121,7 +121,7 @@ const AlbumPhotoPickerScreen = () => {
           navigation.goBack();
         } else {
           // Pop both CreateAlbum and AlbumPhotoPicker screens, passing newAlbumId for animation
-          navigation.navigate('ProfileMain', { newAlbumId: result.album.id });
+          navigation.popTo('ProfileMain', { newAlbumId: result.album.id });
         }
       } else {
         Alert.alert('Error', result.error || 'Could not save album');
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.tertiary,
     marginTop: spacing.xs,
     textAlign: 'center',

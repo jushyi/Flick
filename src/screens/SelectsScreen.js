@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   },
   previewEmptyText: {
     fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginTop: spacing.sm,
   },
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
   },
   tutorialSubtitle: {
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginBottom: spacing.md,
   },

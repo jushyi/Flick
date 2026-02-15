@@ -29,7 +29,7 @@ export const styles = StyleSheet.create({
   },
   replyBannerText: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
   },
   replyBannerUsername: {
@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: colors.text.primary,
     paddingTop: 0,
     paddingBottom: 0,
@@ -145,6 +145,6 @@ export const styles = StyleSheet.create({
   uploadingText: {
     color: colors.text.tertiary,
     fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.bodyBold,
+    fontFamily: typography.fontFamily.readableBold,
   },
 });
