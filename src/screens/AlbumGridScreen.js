@@ -225,7 +225,10 @@ const AlbumGridScreen = () => {
         {
           label: 'Set as Cover',
           icon: 'image-outline',
-          onPress: () => handleSetCover(selectedPhoto.id),
+          onPress: () => {
+            setPhotoMenuVisible(false);
+            handleSetCover(selectedPhoto.id);
+          },
         },
       ]
     : [];

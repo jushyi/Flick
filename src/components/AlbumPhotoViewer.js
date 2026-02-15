@@ -477,6 +477,7 @@ const AlbumPhotoViewer = ({
     const currentPhoto = photos[currentIndex];
     if (!currentPhoto) return;
 
+    setMenuVisible(false);
     if (onSetCover) {
       onSetCover(currentPhoto.id);
       showToast();
