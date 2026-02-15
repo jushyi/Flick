@@ -52,6 +52,12 @@ export const initializeIAP = async () => {
     return { success: true };
   }
 
+  // Check if native module is available (not available in Expo Go or dev builds without native linking)
+  if (!RNIap || typeof RNIap.initConnection !== 'function') {
+    logger.warn('IAPService.initializeIAP: Native module not available in this build');
+    return { success: false, error: 'IAP not available in this build' };
+  }
+
   try {
     logger.debug('IAPService.initializeIAP: Starting connection');
     await RNIap.initConnection();

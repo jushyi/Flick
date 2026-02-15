@@ -48,23 +48,23 @@ import logger from '../utils/logger';
 const CONTRIBUTION_TIERS = [
   {
     productId: 'flick_contribution_099',
-    label: 'Buy me a coffee',
-    emoji: '☕',
+    label: 'Fund my Coke Zero addiction',
+    emoji: '🥤',
   },
   {
     productId: 'flick_contribution_299',
+    label: 'Fund my White Monster addiction',
+    emoji: '⚡',
+  },
+  {
+    productId: 'flick_contribution_499',
     label: 'Keep the lights on',
     emoji: '💡',
   },
   {
-    productId: 'flick_contribution_499',
-    label: 'Fuel new features',
-    emoji: '🚀',
-  },
-  {
     productId: 'flick_contribution_999',
-    label: 'Champion supporter',
-    emoji: '🏆',
+    label: 'Car part fund',
+    emoji: '🏎️',
   },
 ];
 
@@ -100,10 +100,10 @@ const ContributionsScreen = () => {
       // Initialize IAP
       const initResult = await initializeIAP();
       if (!initResult.success) {
-        logger.error('ContributionsScreen: IAP initialization failed', {
+        logger.warn('ContributionsScreen: IAP not available', {
           error: initResult.error,
         });
-        Alert.alert('Error', 'Unable to connect to the App Store. Please try again later.');
+        // Don't alert — show tiers with placeholder prices, alert only on purchase attempt
         setLoading(false);
         return;
       }
@@ -116,10 +116,9 @@ const ContributionsScreen = () => {
         });
         setProducts(productsResult.products);
       } else {
-        logger.error('ContributionsScreen: Failed to fetch products', {
+        logger.warn('ContributionsScreen: Failed to fetch products', {
           error: productsResult.error,
         });
-        Alert.alert('Error', 'Unable to load contribution options. Please try again later.');
       }
 
       setLoading(false);
@@ -277,7 +276,11 @@ const ContributionsScreen = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView} bounces={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        bounces={false}
+      >
         {loading ? (
           <View style={styles.loadingContainer}>
             <PixelSpinner size={48} color={colors.brand.purple} />
@@ -288,10 +291,17 @@ const ContributionsScreen = () => {
             {/* Personal pitch */}
             <View style={styles.pitchContainer}>
               <Text style={styles.pitchText}>
-                Flick is built by one person who loves what disposable cameras do for friendships.
-                Every contribution helps keep the servers running and new features coming.{'\n\n'}
-                If Flick has brought you closer to your friends, consider supporting it — it means
-                the world.
+                Hi, it&apos;s me Josh, the developer of Flick. I hope you&apos;re enjoying the app!
+                {'\n\n'}
+                As the solo developer, I&apos;m happy to keep it free for everyone and not lock any
+                features behind a paywall. However, running the app isn&apos;t free, so I&apos;d
+                really appreciate any contributions you&apos;re willing to give. You don&apos;t have
+                to, but it would lighten the load for me and allow me to keep developing features
+                and keep this app running far into the future.
+                {'\n\n'}
+                As a token of my appreciation, a contribution of any size will give you access to
+                name personalization! You&apos;ll be able to change the color of your display name
+                for all to see. Even the smallest donations help. Thank you!
               </Text>
             </View>
 
@@ -339,6 +349,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xxxl,
   },
   header: {
     flexDirection: 'row',
