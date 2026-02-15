@@ -78,19 +78,18 @@ function formatReactionSummary(reactions) {
 
 /**
  * Get configured email transporter for sending emails via Gmail SMTP
- * Credentials and support email are stored in Firebase Functions config:
- * - smtp.email: Gmail address for SMTP auth
- * - smtp.password: Gmail app password
- * - support.email: Destination email for reports
+ * Credentials stored in environment variables (functions/.env):
+ * - SMTP_EMAIL: Gmail address for SMTP auth
+ * - SMTP_PASSWORD: Gmail app password
+ * - SUPPORT_EMAIL: Destination email for reports
  * @returns {nodemailer.Transporter} - Configured nodemailer transporter
  */
 function getTransporter() {
-  const config = functions.config();
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: config.smtp.email,
-      pass: config.smtp.password,
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD,
     },
   });
 }
@@ -2491,10 +2490,9 @@ https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firest
 
     try {
       const transporter = getTransporter();
-      const config = functions.config();
       await transporter.sendMail({
-        from: `"Flick Reports" <${config.smtp.email}>`,
-        to: config.support.email,
+        from: `"Flick Reports" <${process.env.SMTP_EMAIL}>`,
+        to: process.env.SUPPORT_EMAIL,
         subject,
         text: body,
       });

@@ -5,6 +5,11 @@
  * and zod. Loaded via Jest setupFiles before each test suite.
  */
 
+// Set test environment variables for email (replaces deprecated functions.config())
+process.env.SMTP_EMAIL = 'test@gmail.com';
+process.env.SMTP_PASSWORD = 'test-password';
+process.env.SUPPORT_EMAIL = 'support@test.com';
+
 // Mock firebase-functions (needed by logger.js)
 const mockFirestoreHandlers = {
   onCreate: jest.fn(handler => handler),

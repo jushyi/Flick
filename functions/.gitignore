@@ -13,5 +13,10 @@
 # TypeScript v1 declaration files
 typings/
 
+# Environment files (contain secrets)
+.env
+.env.*
+!.env.example
+
 # Node.js dependency directory
 node_modules/
