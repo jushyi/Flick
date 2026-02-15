@@ -29,6 +29,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from '../components/PixelIcon';
+import StrokedNameText from '../components/StrokedNameText';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { useNavigation } from '@react-navigation/native';
 import { getTimeAgo } from '../utils/timeUtils';
@@ -803,15 +804,13 @@ const PhotoDetailScreen = () => {
               },
             ]}
           >
-            <Text
-              style={[
-                styles.displayName,
-                currentPhoto?.user?.nameColor && { color: currentPhoto.user.nameColor },
-              ]}
+            <StrokedNameText
+              style={styles.displayName}
+              nameColor={currentPhoto?.user?.nameColor}
               numberOfLines={1}
             >
               {displayName || 'Unknown User'}
-            </Text>
+            </StrokedNameText>
             <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
           </View>
 
@@ -1050,15 +1049,13 @@ const PhotoDetailScreen = () => {
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.displayName,
-                    snapshotRef.current.nameColor && { color: snapshotRef.current.nameColor },
-                  ]}
+                <StrokedNameText
+                  style={styles.displayName}
+                  nameColor={snapshotRef.current.nameColor}
                   numberOfLines={1}
                 >
                   {snapshotRef.current.displayName || 'Unknown User'}
-                </Text>
+                </StrokedNameText>
                 <Text style={styles.timestamp}>{getTimeAgo(snapshotRef.current.capturedAt)}</Text>
               </View>
 

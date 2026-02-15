@@ -16,6 +16,7 @@ import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import PixelSpinner from '../PixelSpinner';
+import StrokedNameText from '../StrokedNameText';
 import { colors } from '../../constants/colors';
 import { styles } from '../../styles/MentionSuggestionsOverlay.styles';
 
@@ -70,12 +71,13 @@ const MentionSuggestionsOverlay = ({
 
           {/* Display Name + @username */}
           <View style={styles.textContainer}>
-            <Text
-              style={[styles.displayName, item?.nameColor && { color: item.nameColor }]}
+            <StrokedNameText
+              style={styles.displayName}
+              nameColor={item?.nameColor}
               numberOfLines={1}
             >
               {item.displayName || 'Unknown'}
-            </Text>
+            </StrokedNameText>
             {item.username && (
               <Text style={styles.username} numberOfLines={1}>
                 @{item.username}

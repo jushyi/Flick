@@ -14,6 +14,7 @@ import {
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { getTimeAgo } from '../utils/timeUtils';
+import StrokedNameText from './StrokedNameText';
 import logger from '../utils/logger';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
@@ -299,12 +300,13 @@ const StoriesViewerModal = ({
                 )}
               </TouchableOpacity>
               <View style={styles.friendTextContainer}>
-                <Text
-                  style={[styles.displayName, friend?.nameColor && { color: friend.nameColor }]}
+                <StrokedNameText
+                  style={styles.displayName}
+                  nameColor={friend?.nameColor}
                   numberOfLines={1}
                 >
                   {displayName || 'Unknown User'}
-                </Text>
+                </StrokedNameText>
                 <Text style={styles.timestamp}>{getTimeAgo(currentPhoto.capturedAt)}</Text>
               </View>
             </View>

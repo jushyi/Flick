@@ -14,6 +14,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import StrokedNameText from '../StrokedNameText';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import { spacing } from '../../constants/spacing';
@@ -103,14 +104,9 @@ const CommentPreview = ({
       <Animated.View style={{ opacity: fadeAnim }}>
         <View style={styles.commentRow}>
           <Text style={styles.commentText} numberOfLines={compact ? 1 : 2}>
-            <Text
-              style={[
-                styles.username,
-                currentComment?.user?.nameColor && { color: currentComment.user.nameColor },
-              ]}
-            >
+            <StrokedNameText style={styles.username} nameColor={currentComment?.user?.nameColor}>
               {currentComment?.user?.displayName || 'User'}
-            </Text>
+            </StrokedNameText>
             <Text style={[styles.commentContent, isMediaOnly && styles.mediaIndicator]}>
               {' '}
               {displayText}

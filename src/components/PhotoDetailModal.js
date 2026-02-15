@@ -24,6 +24,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from './PixelIcon';
+import StrokedNameText from './StrokedNameText';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { getTimeAgo } from '../utils/timeUtils';
 import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
@@ -365,15 +366,13 @@ const PhotoDetailModal = ({
               },
             ]}
           >
-            <Text
-              style={[
-                styles.displayName,
-                currentPhoto?.user?.nameColor && { color: currentPhoto.user.nameColor },
-              ]}
+            <StrokedNameText
+              style={styles.displayName}
+              nameColor={currentPhoto?.user?.nameColor}
               numberOfLines={1}
             >
               {displayName || 'Unknown User'}
-            </Text>
+            </StrokedNameText>
             <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
           </View>
 

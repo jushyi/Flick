@@ -14,6 +14,7 @@ import { View, Text, TouchableOpacity, Alert, Animated } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Image } from 'expo-image';
 import PixelIcon from '../PixelIcon';
+import StrokedNameText from '../StrokedNameText';
 import * as Haptics from 'expo-haptics';
 import { getTimeAgo } from '../../utils/timeUtils';
 import { colors } from '../../constants/colors';
@@ -281,12 +282,13 @@ const CommentRow = ({
             <View style={styles.contentContainer}>
               {/* Name Row with optional Author badge */}
               <View style={styles.nameRow}>
-                <Text
-                  style={[styles.displayName, user?.nameColor && { color: user.nameColor }]}
+                <StrokedNameText
+                  style={styles.displayName}
+                  nameColor={user?.nameColor}
                   numberOfLines={1}
                 >
                   {displayName || 'Unknown User'}
-                </Text>
+                </StrokedNameText>
                 {isOwnerComment && (
                   <View style={styles.authorBadge}>
                     <Text style={styles.authorBadgeText}>Author</Text>

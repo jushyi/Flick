@@ -33,3 +33,4 @@ export { default as TaggedPeopleModal } from './TaggedPeopleModal';
 export { default as PixelSpinner } from './PixelSpinner';
 export { default as PixelToggle } from './PixelToggle';
 export { default as PixelDissolveOverlay } from './PixelDissolveOverlay';
+export { default as StrokedNameText } from './StrokedNameText';

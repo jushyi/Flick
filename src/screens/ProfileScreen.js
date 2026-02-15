@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import StrokedNameText from '../components/StrokedNameText';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
@@ -892,14 +893,9 @@ const ProfileScreen = () => {
 
           {/* Profile Info Card */}
           <View style={styles.profileInfoCard}>
-            <Text
-              style={[
-                styles.displayName,
-                profileData?.nameColor && { color: profileData.nameColor },
-              ]}
-            >
+            <StrokedNameText style={styles.displayName} nameColor={profileData?.nameColor}>
               {profileData?.displayName || 'New User'}
-            </Text>
+            </StrokedNameText>
             <Text style={styles.username}>@{profileData?.username || 'username'}</Text>
             <Text style={[styles.bio, !profileData?.bio && styles.bioPlaceholder]}>
               {profileData?.bio || 'No bio yet'}

@@ -26,6 +26,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
+import StrokedNameText from './StrokedNameText';
 import { useAuth } from '../context/AuthContext';
 import { getFriendships } from '../services/firebase/friendshipService';
 import { getUserProfile } from '../services/firebase/userService';
@@ -147,12 +148,13 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
 
           {/* Name and username */}
           <View style={styles.friendInfo}>
-            <Text
-              style={[styles.friendName, item?.nameColor && { color: item.nameColor }]}
+            <StrokedNameText
+              style={styles.friendName}
+              nameColor={item?.nameColor}
               numberOfLines={1}
             >
               {item.displayName || 'Unknown'}
-            </Text>
+            </StrokedNameText>
             {item.username && (
               <Text style={styles.friendUsername} numberOfLines={1}>
                 @{item.username}

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import PixelIcon from './PixelIcon';
+import StrokedNameText from './StrokedNameText';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
@@ -136,13 +137,14 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
       </View>
 
       {/* Display name below card */}
-      <Text
-        style={[styles.name, friend?.nameColor && { color: friend.nameColor }]}
+      <StrokedNameText
+        style={styles.name}
+        nameColor={friend?.nameColor}
         numberOfLines={1}
         ellipsizeMode="tail"
       >
         {displayName || 'Unknown'}
-      </Text>
+      </StrokedNameText>
     </TouchableOpacity>
   );
 };
