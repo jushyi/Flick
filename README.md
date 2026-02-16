@@ -1,10 +1,10 @@
-# Lapse Clone
+# Flick
 
 A friends-only social media app inspired by disposable cameras.
 
 ## What It Is
 
-Lapse Clone recreates the nostalgic experience of disposable film cameras. Photos are captured instantly but revealed later in batches through a "darkroom" system, encouraging authentic moments over polished content. Share only with friends, react with emoji, and experience the anticipation of waiting for your photos to develop.
+Flick recreates the nostalgic experience of disposable film cameras. Photos are captured instantly but revealed later in batches through a "darkroom" system, encouraging authentic moments over polished content. Share only with friends, react with emoji, and experience the anticipation of waiting for your photos to develop.
 
 ## Tech Stack
 
