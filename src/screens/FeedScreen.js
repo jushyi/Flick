@@ -1068,6 +1068,7 @@ const FeedScreen = () => {
         <View style={styles.storiesContainer}>
           <ScrollView
             horizontal
+            nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.storiesScrollContent}
           >
@@ -1097,6 +1098,7 @@ const FeedScreen = () => {
           <View style={styles.storiesContainer}>
             <ScrollView
               horizontal
+              nestedScrollEnabled
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.storiesScrollContent}
             >
@@ -1117,6 +1119,7 @@ const FeedScreen = () => {
       <View style={styles.storiesContainer}>
         <ScrollView
           horizontal
+          nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.storiesScrollContent}
         >
