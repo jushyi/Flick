@@ -93,7 +93,7 @@ const ContactsSyncScreen = ({ navigation }) => {
 
   const handleSkip = async () => {
     mediumImpact();
-    await markContactsSyncCompleted(user.uid, true);
+    await markContactsSyncCompleted(user.uid, false);
     await refreshUserProfile();
     navigation.navigate('NotificationPermission');
   };

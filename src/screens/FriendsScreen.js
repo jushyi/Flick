@@ -38,6 +38,7 @@ import {
 import {
   hasUserSyncedContacts,
   syncContactsAndFindSuggestions,
+  checkContactsPermission,
   getDismissedSuggestionIds,
   filterDismissedSuggestions,
   dismissSuggestion,
@@ -233,6 +234,14 @@ const FriendsScreen = ({ navigation }) => {
       setHasSyncedContacts(synced);
 
       if (!synced) {
+        setSuggestions([]);
+        return;
+      }
+
+      // Check if permission is already granted before attempting sync
+      // This prevents auto-firing the iOS permission dialog on screen load
+      const hasPermission = await checkContactsPermission();
+      if (!hasPermission) {
         setSuggestions([]);
         return;
       }
