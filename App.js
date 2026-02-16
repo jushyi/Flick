@@ -17,7 +17,7 @@ import {
   initializeNotifications,
   handleNotificationReceived,
   handleNotificationTapped,
-  requestNotificationPermission,
+  checkNotificationPermissions,
   getNotificationToken,
   storeNotificationToken,
 } from './src/services/firebase/notificationService';
@@ -192,8 +192,8 @@ export default function App() {
     const unsubscribeAuth = onAuthStateChanged(auth, async firebaseUser => {
       if (firebaseUser) {
         try {
-          const permResult = await requestNotificationPermission();
-          if (permResult.success) {
+          const permResult = await checkNotificationPermissions();
+          if (permResult.success && permResult.data.granted) {
             const tokenResult = await getNotificationToken();
             if (tokenResult.success && tokenResult.data) {
               await storeNotificationToken(firebaseUser.uid, tokenResult.data);
