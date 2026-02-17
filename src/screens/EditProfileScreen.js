@@ -198,8 +198,8 @@ const EditProfileScreen = ({ navigation }) => {
   useEffect(() => {
     if (!pendingCropUri) return;
     const uri = pendingCropUri;
-    setPendingCropUri(null);
     const timer = setTimeout(() => {
+      setPendingCropUri(null);
       navigation.navigate('ProfilePhotoCrop', {
         imageUri: uri,
         onCropComplete: handleCropComplete,
