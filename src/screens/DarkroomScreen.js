@@ -158,40 +158,11 @@ const DarkroomScreen = () => {
     );
   }
 
-  // Empty state - no photos ready
+  // Empty state - blank to avoid flash before success screen
   if (visiblePhotos.length === 0) {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
-        <View style={styles.container}>
-          <View style={[styles.statusBarCover, { height: insets.top }]} />
-          <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-              <TouchableOpacity
-                onPress={() => {
-                  logger.info('DarkroomScreen: User tapped back button (empty state)');
-                  handleBackPress();
-                }}
-                style={styles.backButton}
-              >
-                <View style={styles.downChevron} />
-              </TouchableOpacity>
-              <View style={styles.headerCenter}>
-                <Text style={styles.headerTitle}>Darkroom</Text>
-                <Text style={styles.headerSubtitle}>No photos ready</Text>
-              </View>
-              <View style={styles.headerRightPlaceholder} />
-            </View>
-
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>{'📸'}</Text>
-              <Text style={styles.emptyTitle}>No Photos Ready</Text>
-              <Text style={styles.emptyText}>
-                Photos you take will develop here and be revealed when ready
-              </Text>
-            </View>
-          </SafeAreaView>
-        </View>
+        <View style={styles.container} />
       </GestureHandlerRootView>
     );
   }
