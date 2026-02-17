@@ -61,6 +61,7 @@ const CommentsBottomSheet = ({
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const inputRef = useRef(null);
   const flatListRef = useRef(null);
+  const hasAutoScrolledRef = useRef(false); // Guard: prevent auto-scroll from firing more than once per open
   const contentHeightRef = useRef(0); // Actual content height from onContentSizeChange
   const viewportHeightRef = useRef(0); // Actual FlatList viewport height from onLayout
   const insets = useSafeAreaInsets();
@@ -342,8 +343,11 @@ const CommentsBottomSheet = ({
    */
   useEffect(() => {
     if (!visible || !initialScrollToCommentId || threadedComments.length === 0 || loading) {
+      if (!visible) hasAutoScrolledRef.current = false; // reset guard when sheet closes
       return;
     }
+    if (hasAutoScrolledRef.current) return; // already initiated for this open
+    hasAutoScrolledRef.current = true;
 
     logger.info('CommentsBottomSheet: Auto-scrolling to comment', {
       commentId: initialScrollToCommentId,

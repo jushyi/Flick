@@ -8,7 +8,7 @@
  * - Reply state management
  * - User data joining
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   subscribeToComments,
   addComment,
@@ -440,9 +440,11 @@ const useComments = (photoId, currentUserId, photoOwnerId) => {
 
   /**
    * Organize comments into threads (top-level + replies)
-   * Returns top-level comments with nested replies
+   * Returns top-level comments with nested replies.
+   * useMemo ensures the array reference is stable across re-renders when
+   * comments haven't changed, preventing spurious auto-scroll effect re-runs.
    */
-  const threadedComments = useCallback(() => {
+  const threadedComments = useMemo(() => {
     if (!comments || comments.length === 0) return [];
 
     // Separate top-level and replies
@@ -472,7 +474,7 @@ const useComments = (photoId, currentUserId, photoOwnerId) => {
   return {
     // State
     comments,
-    threadedComments: threadedComments(),
+    threadedComments,
     loading,
     error,
     replyingTo,
