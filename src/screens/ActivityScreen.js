@@ -91,7 +91,7 @@ const groupNotificationsByTime = notifs => {
   return sections;
 };
 
-const NotificationAvatar = ({ url, style }) => {
+const NotificationAvatar = ({ url, senderId, style }) => {
   const [failed, setFailed] = useState(false);
   if (!url || failed) {
     return (
@@ -102,7 +102,7 @@ const NotificationAvatar = ({ url, style }) => {
   }
   return (
     <Image
-      source={{ uri: url, cacheKey: profileCacheKey('notif-avatar', url) }}
+      source={{ uri: url, cacheKey: profileCacheKey(`notif-avatar-${senderId}`, url) }}
       style={style}
       cachePolicy="memory-disk"
       transition={0}
@@ -499,7 +499,11 @@ const ActivityScreen = () => {
           activeOpacity={0.7}
           disabled={!item.senderId}
         >
-          <NotificationAvatar url={item.senderProfilePhotoURL} style={styles.notifPhoto} />
+          <NotificationAvatar
+            url={item.senderProfilePhotoURL}
+            senderId={item.senderId}
+            style={styles.notifPhoto}
+          />
         </TouchableOpacity>
         <View style={styles.notifContent}>
           <Text style={styles.notifMessage} numberOfLines={2}>

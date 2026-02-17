@@ -58,6 +58,7 @@ const EditProfileScreen = ({ navigation }) => {
   const [nameColor, setNameColor] = useState(userProfile?.nameColor || null); // Name color for contributors
   const [saving, setSaving] = useState(false);
   const [checkingUsername, setCheckingUsername] = useState(false);
+  const [pendingCropUri, setPendingCropUri] = useState(null);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
   const [errors, setErrors] = useState({});
 
@@ -190,6 +191,17 @@ const EditProfileScreen = ({ navigation }) => {
     setPhotoRemoved(false);
   };
 
+  // Navigate to crop screen once the native picker has fully dismissed
+  useEffect(() => {
+    if (pendingCropUri) {
+      navigation.navigate('ProfilePhotoCrop', {
+        imageUri: pendingCropUri,
+        onCropComplete: handleCropComplete,
+      });
+      setPendingCropUri(null);
+    }
+  }, [pendingCropUri]);
+
   // Photo picker functions
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -205,14 +217,7 @@ const EditProfileScreen = ({ navigation }) => {
     });
 
     if (!result.canceled && result.assets[0]) {
-      // Navigate to crop screen - setTimeout avoids iOS native picker dismissal timing issue in production
-      const uri = result.assets[0].uri;
-      setTimeout(() => {
-        navigation.navigate('ProfilePhotoCrop', {
-          imageUri: uri,
-          onCropComplete: handleCropComplete,
-        });
-      }, 150);
+      setPendingCropUri(result.assets[0].uri);
     }
   };
 
@@ -229,14 +234,7 @@ const EditProfileScreen = ({ navigation }) => {
     });
 
     if (!result.canceled && result.assets[0]) {
-      // Navigate to crop screen - setTimeout avoids iOS native picker dismissal timing issue in production
-      const uri = result.assets[0].uri;
-      setTimeout(() => {
-        navigation.navigate('ProfilePhotoCrop', {
-          imageUri: uri,
-          onCropComplete: handleCropComplete,
-        });
-      }, 150);
+      setPendingCropUri(result.assets[0].uri);
     }
   };
 

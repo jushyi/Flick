@@ -47,6 +47,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
   const [selectedSong, setSelectedSong] = useState(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
+  const [pendingCropUri, setPendingCropUri] = useState(null);
 
   const [errors, setErrors] = useState({});
   const usernameCheckTimeout = useRef(null);
@@ -167,6 +168,17 @@ const ProfileSetupScreen = ({ navigation, route }) => {
     setPhotoUri(croppedUri);
   };
 
+  // Navigate to crop screen once the native picker has fully dismissed
+  useEffect(() => {
+    if (pendingCropUri) {
+      navigation.navigate('ProfilePhotoCrop', {
+        imageUri: pendingCropUri,
+        onCropComplete: handleCropComplete,
+      });
+      setPendingCropUri(null);
+    }
+  }, [pendingCropUri]);
+
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -181,14 +193,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
     });
 
     if (!result.canceled && result.assets[0]) {
-      // Navigate to crop screen - setTimeout avoids iOS native picker dismissal timing issue in production
-      const uri = result.assets[0].uri;
-      setTimeout(() => {
-        navigation.navigate('ProfilePhotoCrop', {
-          imageUri: uri,
-          onCropComplete: handleCropComplete,
-        });
-      }, 150);
+      setPendingCropUri(result.assets[0].uri);
     }
   };
 
@@ -205,14 +210,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
     });
 
     if (!result.canceled && result.assets[0]) {
-      // Navigate to crop screen - setTimeout avoids iOS native picker dismissal timing issue in production
-      const uri = result.assets[0].uri;
-      setTimeout(() => {
-        navigation.navigate('ProfilePhotoCrop', {
-          imageUri: uri,
-          onCropComplete: handleCropComplete,
-        });
-      }, 150);
+      setPendingCropUri(result.assets[0].uri);
     }
   };
 
