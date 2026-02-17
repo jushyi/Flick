@@ -242,7 +242,7 @@ async function sendReactionPushNotification(
     return;
   }
 
-  const title = '❤️ New Reaction';
+  const title = 'Flick';
   const body = `${reactorName} reacted ${reactionSummary} to your photo`;
 
   logger.debug('sendReactionPushNotification: Sending push notification', {

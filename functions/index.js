@@ -442,7 +442,7 @@ exports.sendPhotoRevealNotification = functions
       }
 
       // Send notification with simple, direct messaging
-      const title = 'Photos Ready!';
+      const title = 'Flick';
       const body =
         photosRevealed === 1
           ? 'Your photo is ready to reveal!'
@@ -567,7 +567,7 @@ exports.sendFriendRequestNotification = functions
         : 'Someone';
 
       // Send notification
-      const title = '👋 Friend Request';
+      const title = 'Flick';
       const body = `${senderName} sent you a friend request`;
 
       const result = await sendPushNotification(
@@ -684,7 +684,7 @@ exports.sendFriendAcceptedNotification = functions
         : null;
 
       // Send notification
-      const title = '🎉 Friend Request Accepted';
+      const title = 'Flick';
       const body = `${acceptorName} accepted your friend request`;
 
       const result = await sendPushNotification(
@@ -867,7 +867,7 @@ async function sendBatchedTagNotification(pendingKey) {
     message = template.replace('{name}', taggerName).replace('{count}', String(count));
   }
 
-  const title = '📸 You were tagged';
+  const title = 'Flick';
 
   logger.debug('sendBatchedTagNotification: Sending notification', {
     pendingKey,
@@ -1025,7 +1025,7 @@ exports.sendTaggedPhotoNotification = functions
           }
 
           // Send push notification immediately
-          const title = '🏷️ Tagged in Photo';
+          const title = 'Flick';
           const body = `${taggerName} tagged you in a photo`;
 
           await sendPushNotification(
@@ -1241,7 +1241,7 @@ exports.sendCommentNotification = functions
 
             if (masterEnabled && commentsEnabled) {
               // Send notification via Expo Push API
-              const title = '💬 New Comment';
+              const title = 'Flick';
               const pushBody = `${commenterName} commented on your photo: ${commentPreview}`;
               const inAppMessage = `commented on your photo: ${commentPreview}`;
 
@@ -1384,7 +1384,7 @@ exports.sendCommentNotification = functions
             }
 
             // Send mention notification
-            const mentionTitle = '💬 You were mentioned';
+            const mentionTitle = 'Flick';
             const mentionBody = `${commenterName} mentioned you in a comment`;
 
             await sendPushNotification(
@@ -1927,7 +1927,7 @@ exports.sendDeletionReminderNotification = functions
         }
 
         // Send reminder notification
-        const title = '⚠️ Account Deletion Reminder';
+        const title = 'Flick';
         const body =
           "Your account will be permanently deleted in 3 days. Log in to cancel if you've changed your mind.";
 
