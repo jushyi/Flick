@@ -179,6 +179,7 @@ export const styles = StyleSheet.create({
   emojiPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.pill.background,
     paddingHorizontal: 10,
     paddingVertical: spacing.xs,
@@ -186,6 +187,7 @@ export const styles = StyleSheet.create({
     gap: spacing.xxs,
     borderWidth: 1,
     borderColor: colors.pill.border,
+    minWidth: 48,
   },
   emojiPillSelected: {
     // No visual change for selected state

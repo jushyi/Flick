@@ -179,17 +179,18 @@ export const usePhotoDetailModal = ({
     return getCuratedEmojis(currentPhoto?.id, 5);
   }, [currentPhoto?.id]);
 
-  // Reset emoji state when photo changes
-  // - Reset frozenOrder so emojis sort correctly by count for new photo
-  // - Initialize activeCustomEmojis with any custom emojis already in the photo's reactions
-  // Read reactions directly from currentPhoto to avoid stale closure issue
+  // Reset frozen order and custom emoji state when navigating to a different photo
   useEffect(() => {
     if (currentPhoto?.id) {
-      // Reset frozen order so new photo shows emojis sorted by count
       setFrozenOrder(null);
+      setCustomEmoji(null);
+    }
+  }, [currentPhoto?.id]);
 
-      // Find custom emojis already in reactions (emojis that are NOT in curated list)
-      // Read directly from currentPhoto to get fresh data
+  // Update activeCustomEmojis when reactions change (picks up new custom emojis)
+  // Separated from the photo-change effect so reaction updates don't reset frozenOrder
+  useEffect(() => {
+    if (currentPhoto?.id) {
       const photoReactions = currentPhoto?.reactions || {};
       const reactionEmojis = new Set();
       Object.values(photoReactions).forEach(userReactions => {
@@ -199,9 +200,8 @@ export const usePhotoDetailModal = ({
       });
       const existingEmojis = [...reactionEmojis].filter(emoji => !curatedEmojis.includes(emoji));
       setActiveCustomEmojis(existingEmojis);
-      setCustomEmoji(null);
     }
-  }, [currentPhoto?.id, currentPhoto?.reactions, curatedEmojis]); // Include reactions to ensure fresh data
+  }, [currentPhoto?.id, currentPhoto?.reactions, curatedEmojis]);
 
   // Extract photo data from currentPhoto
   const { imageURL, capturedAt, reactions = {}, user = {} } = currentPhoto || {};
@@ -274,10 +274,10 @@ export const usePhotoDetailModal = ({
         clearTimeout(sortTimerRef.current);
       }
 
-      // Set new timer to unfreeze and allow re-sorting after 1.5 seconds of no taps
+      // Set new timer to unfreeze and allow re-sorting after 3 seconds of no taps
       sortTimerRef.current = setTimeout(() => {
         setFrozenOrder(null);
-      }, 1500);
+      }, 3000);
 
       // Trigger highlight animation (purple border that fades over 1 second)
       setNewlyAddedEmoji(emoji);
