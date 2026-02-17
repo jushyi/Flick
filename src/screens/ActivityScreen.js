@@ -244,7 +244,7 @@ const ActivityScreen = () => {
         ...n,
         senderNameColor: n.senderId ? colorMap[n.senderId] || null : null,
         senderProfilePhotoURL:
-          n.senderProfilePhotoURL || (n.senderId ? photoMap[n.senderId] || null : null),
+          (n.senderId ? photoMap[n.senderId] || null : null) || n.senderProfilePhotoURL || null,
       }));
     } catch (error) {
       logger.error('Error fetching notifications', { error: error.message });
