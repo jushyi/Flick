@@ -44,6 +44,7 @@ const CommentWithReplies = ({
   highlightedCommentId,
   forceExpanded = false,
   isNewComment,
+  onHighlightedReplyLayout,
 }) => {
   const [showReplies, setShowReplies] = useState(false);
 
@@ -111,7 +112,15 @@ const CommentWithReplies = ({
           {/* Replies (when expanded) - reply button enabled for nested replies */}
           {showReplies &&
             replies.map(reply => (
-              <View key={reply.id} style={styles.replyItem}>
+              <View
+                key={reply.id}
+                style={styles.replyItem}
+                onLayout={
+                  reply.id === highlightedCommentId && onHighlightedReplyLayout
+                    ? e => onHighlightedReplyLayout(e.nativeEvent.layout.y)
+                    : undefined
+                }
+              >
                 <CommentRow
                   comment={reply}
                   user={reply.user}

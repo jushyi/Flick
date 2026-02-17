@@ -70,6 +70,7 @@ const CommentsBottomSheet = ({
   const isExpandedRef = useRef(false); // Ref (not state) so PanResponder closure reads current value
   const keyboardHeightRef = useRef(0); // For PanResponder closure access
   const isAtTopRef = useRef(true); // Track if FlatList is scrolled to top
+  const scrollOffsetRef = useRef(0); // Track current scroll offset for two-phase reply scroll
   const expandedHeight = SCREEN_HEIGHT - Math.max(insets.top - 10, 0); // Full screen, pushed slightly above profile photo
   const expandedHeightRef = useRef(expandedHeight); // For PanResponder closure access
   expandedHeightRef.current = expandedHeight; // Keep in sync with insets
@@ -392,16 +393,18 @@ const CommentsBottomSheet = ({
       }));
     }
 
-    // Scroll after delay for animations to complete
+    // Scroll after delay for animations to complete.
+    // Use scrollToCommentRef so this effect doesn't re-run (and cancel its timer)
+    // every time scrollToComment's identity changes due to unrelated re-renders.
     const scrollTimer = setTimeout(
       () => {
-        scrollToComment(targetIndex, initialScrollToCommentId);
+        scrollToCommentRef.current(targetIndex, initialScrollToCommentId, isReply);
       },
       isReply ? 500 : 400
     );
 
     return () => clearTimeout(scrollTimer);
-  }, [visible, initialScrollToCommentId, threadedComments, loading, scrollToComment]);
+  }, [visible, initialScrollToCommentId, threadedComments, loading]);
 
   /**
    * Handle pending scroll after comment added.
@@ -793,15 +796,18 @@ const CommentsBottomSheet = ({
   );
 
   /**
-   * Scroll to a comment and highlight it
+   * Scroll to a comment and highlight it.
+   * For replies (isReply=true), uses viewPosition:0 so the parent is at the
+   * top of the viewport, giving Phase 2 (handleHighlightedReplyLayout) maximum
+   * space below to reveal the actual reply.
    */
   const scrollToComment = useCallback(
-    (index, commentId) => {
+    (index, commentId, isReply = false) => {
       if (flatListRef.current && index >= 0) {
         flatListRef.current.scrollToIndex({
           index,
           animated: true,
-          viewPosition: 0.3, // Position in upper third of view
+          viewPosition: isReply ? 0 : 0.3,
         });
       }
 
@@ -810,6 +816,32 @@ const CommentsBottomSheet = ({
     },
     [highlightComment]
   );
+
+  // Stable ref so the auto-scroll effect can call the latest scrollToComment
+  // without listing it as a dependency (which causes timer-cancellation races).
+  const scrollToCommentRef = useRef(scrollToComment);
+  useEffect(() => {
+    scrollToCommentRef.current = scrollToComment;
+  }, [scrollToComment]);
+
+  /**
+   * Phase 2 of the two-phase reply scroll.
+   * Called by CommentWithReplies via onLayout when the highlighted reply renders.
+   * layoutY = the reply's Y offset relative to the CommentWithReplies root view.
+   * After Phase 1 put the parent at viewPosition:0, the FlatList scroll offset
+   * equals the parent item's content offset, so adding layoutY scrolls to the reply.
+   */
+  const handleHighlightedReplyLayout = useCallback(layoutY => {
+    setTimeout(() => {
+      if (flatListRef.current) {
+        const targetOffset = scrollOffsetRef.current + layoutY - 80; // 80px top margin
+        flatListRef.current.scrollToOffset({
+          offset: Math.max(0, targetOffset),
+          animated: true,
+        });
+      }
+    }, 150);
+  }, []);
 
   /**
    * Handle scrollToIndex failure (item not yet rendered)
@@ -851,6 +883,7 @@ const CommentsBottomSheet = ({
           highlightedCommentId={highlightedCommentId}
           forceExpanded={shouldForceExpand}
           isNewComment={isNewComment}
+          onHighlightedReplyLayout={handleHighlightedReplyLayout}
         />
       );
     },
@@ -867,6 +900,7 @@ const CommentsBottomSheet = ({
       highlightedCommentId,
       expandedReplyParents,
       justAddedReplyTo,
+      handleHighlightedReplyLayout,
       isNewComment,
     ]
   );
@@ -904,6 +938,7 @@ const CommentsBottomSheet = ({
   const handleScroll = useCallback(event => {
     const offsetY = event.nativeEvent.contentOffset.y;
     isAtTopRef.current = offsetY <= 0;
+    scrollOffsetRef.current = offsetY;
   }, []);
 
   /**
