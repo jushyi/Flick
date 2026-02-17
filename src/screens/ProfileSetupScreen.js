@@ -168,15 +168,21 @@ const ProfileSetupScreen = ({ navigation, route }) => {
     setPhotoUri(croppedUri);
   };
 
-  // Navigate to crop screen once the native picker has fully dismissed
+  // Navigate to crop screen after the native iOS picker modal fully dismisses.
+  // PHPickerViewController's dismissal animation runs ~350ms after the JS promise
+  // resolves, so we must wait longer than that before pushing a new screen or
+  // React Navigation drops the call while UIKit is mid-transition.
   useEffect(() => {
-    if (pendingCropUri) {
+    if (!pendingCropUri) return;
+    const uri = pendingCropUri;
+    setPendingCropUri(null);
+    const timer = setTimeout(() => {
       navigation.navigate('ProfilePhotoCrop', {
-        imageUri: pendingCropUri,
+        imageUri: uri,
         onCropComplete: handleCropComplete,
       });
-      setPendingCropUri(null);
-    }
+    }, 700);
+    return () => clearTimeout(timer);
   }, [pendingCropUri]);
 
   const pickImage = async () => {
