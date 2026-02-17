@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState, View } from 'react-native';
+import * as Updates from 'expo-updates';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -48,6 +49,20 @@ export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
   const tokenRefreshListener = useRef();
+
+  // Actively check for OTA updates on launch and reload immediately if one is found.
+  // This runs while the splash screen is still visible so the reload is seamless.
+  // Skipped in dev because expo-updates doesn't run in development.
+  useEffect(() => {
+    if (__DEV__) return;
+    Updates.checkForUpdateAsync()
+      .then(update => {
+        if (update.isAvailable) {
+          return Updates.fetchUpdateAsync().then(() => Updates.reloadAsync());
+        }
+      })
+      .catch(err => logger.warn('App: OTA update check failed', { error: err.message }));
+  }, []);
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
   const [animationDone, setAnimationDone] = useState(false);
   const [bannerData, setBannerData] = useState(null);
