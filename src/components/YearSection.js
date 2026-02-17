@@ -31,7 +31,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
  * @param {boolean} initiallyExpanded - True for current year, false for older years
  * @param {function} onMonthPress - Callback (month) => void when a month card is tapped
  */
-const YearSection = ({ year, months, initiallyExpanded = false, onMonthPress }) => {
+const YearSection = ({ year, months, userId, initiallyExpanded = false, onMonthPress }) => {
   const [expanded, setExpanded] = useState(initiallyExpanded);
   const rotationAnim = useRef(new Animated.Value(initiallyExpanded ? 1 : 0)).current;
 
@@ -74,6 +74,7 @@ const YearSection = ({ year, months, initiallyExpanded = false, onMonthPress }) 
               <MonthlyAlbumCard
                 month={monthData.month}
                 coverPhotoUrl={monthData.coverPhotoUrl}
+                userId={userId}
                 onPress={() => onMonthPress?.(monthData.month)}
               />
             </View>

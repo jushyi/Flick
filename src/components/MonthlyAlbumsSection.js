@@ -77,6 +77,7 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }) => {
           key={year}
           year={year}
           months={months}
+          userId={userId}
           initiallyExpanded={year === currentYear}
           onMonthPress={onMonthPress}
         />
