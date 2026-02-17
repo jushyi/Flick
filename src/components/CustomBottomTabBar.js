@@ -20,7 +20,7 @@ const CustomBottomTabBar = ({ state, navigation, userProfile }) => {
           });
 
           if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
+            navigation.jumpTo(route.name);
           }
         };
 
