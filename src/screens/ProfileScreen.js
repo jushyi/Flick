@@ -830,10 +830,6 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* OTA TEST BANNER - REMOVE AFTER CONFIRMING */}
-      <View style={{ backgroundColor: 'red', padding: 12, alignItems: 'center' }}>
-        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>OTA IS WORKING ✓</Text>
-      </View>
       {/* Header - 3 column layout with safe area coverage */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         {/* Left: Friends icon (own) or Back arrow (other user) */}
