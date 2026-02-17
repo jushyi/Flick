@@ -337,6 +337,20 @@ export const handleNotificationTapped = notification => {
           },
         };
 
+      case 'reply':
+        return {
+          success: true,
+          data: {
+            type: 'reply',
+            screen: 'Activity',
+            params: {
+              photoId,
+              commentId,
+              shouldOpenPhoto: true,
+            },
+          },
+        };
+
       case 'tagged':
         // Navigate to Activity screen for tag notifications
         return {
