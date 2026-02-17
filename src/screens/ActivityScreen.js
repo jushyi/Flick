@@ -384,6 +384,10 @@ const ActivityScreen = () => {
       // Fetch the photo and open PhotoDetail directly
       const result = await getPhotoById(photoId);
       if (result.success) {
+        if (result.photo.photoState === 'deleted') {
+          Alert.alert('Photo Deleted', 'This photo has been deleted.');
+          return;
+        }
         openPhotoDetail({
           mode: 'feed',
           photo: result.photo,
@@ -411,6 +415,10 @@ const ActivityScreen = () => {
       // Fetch the tagged photo and open PhotoDetail directly
       const result = await getPhotoById(photoId);
       if (result.success) {
+        if (result.photo.photoState === 'deleted') {
+          Alert.alert('Photo Deleted', 'This photo has been deleted.');
+          return;
+        }
         openPhotoDetail({
           mode: 'feed',
           photo: result.photo,

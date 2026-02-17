@@ -912,6 +912,12 @@ export const softDeletePhoto = async (photoId, userId) => {
       deletionScheduledAt: serverTimestamp(),
     });
 
+    // Clean up notifications referencing this photo so they no longer appear in ActivityScreen
+    const notifSnap = await getDocs(
+      query(collection(db, 'notifications'), where('photoId', '==', photoId))
+    );
+    await Promise.all(notifSnap.docs.map(d => deleteDoc(d.ref)));
+
     logger.info('PhotoService.softDeletePhoto: Photo soft deleted successfully', {
       photoId,
       userId,
@@ -1308,6 +1314,13 @@ const cascadeDeletePhoto = async (photoId, userId) => {
     // Step 4: Delete photo document from Firestore
     logger.debug('PhotoService.cascadeDeletePhoto: Deleting document', { photoId });
     await deleteDoc(photoRef);
+
+    // Step 5: Delete notifications referencing this photo
+    logger.debug('PhotoService.cascadeDeletePhoto: Deleting notifications', { photoId });
+    const notifSnap = await getDocs(
+      query(collection(db, 'notifications'), where('photoId', '==', photoId))
+    );
+    await Promise.all(notifSnap.docs.map(d => deleteDoc(d.ref)));
 
     logger.info('PhotoService.cascadeDeletePhoto: Cascade delete complete', { photoId, userId });
     return { success: true };
