@@ -68,6 +68,12 @@ const AlbumPhotoViewer = ({
   const isUserDragging = useRef(false);
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
+  // Ref to always access the latest photos array in async callbacks (setTimeout, etc.)
+  const photosRef = useRef(photos);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
+
   // Thumbnail dimensions (50x67 for 3:4 ratio)
   const THUMBNAIL_WIDTH = 50;
   const THUMBNAIL_MARGIN = 4;
@@ -369,20 +375,33 @@ const AlbumPhotoViewer = ({
   useEffect(() => {
     if (visible) {
       setCurrentIndex(initialIndex);
-      // Scroll to initial index after a brief delay to ensure FlatList is ready
+      // Scroll to initial index after a brief delay to ensure FlatList is ready.
+      // Use photosRef (not photos closure) to get the latest array length at call time,
+      // preventing out-of-bounds if fetchPhotos completes and shrinks photos mid-timeout.
       setTimeout(() => {
+        const currentPhotos = photosRef.current;
+        if (!currentPhotos || currentPhotos.length === 0) return;
+        const safeIndex = Math.min(initialIndex, currentPhotos.length - 1);
+        if (safeIndex < 0) return;
         flatListRef.current?.scrollToIndex({
-          index: initialIndex,
+          index: safeIndex,
           animated: false,
         });
         thumbnailListRef.current?.scrollToIndex({
-          index: initialIndex,
+          index: safeIndex,
           animated: false,
           viewPosition: 0.5,
         });
       }, 50);
     }
   }, [visible, initialIndex]);
+
+  // Clamp currentIndex if photos shrinks while viewer is open (race condition guard)
+  useEffect(() => {
+    if (visible && photos.length > 0 && currentIndex >= photos.length) {
+      setCurrentIndex(photos.length - 1);
+    }
+  }, [visible, photos.length, currentIndex]);
 
   // Auto-scroll thumbnail bar when currentIndex changes
   useEffect(() => {
@@ -776,13 +795,16 @@ const AlbumPhotoViewer = ({
             getItemLayout={getItemLayout}
             initialScrollIndex={initialIndex}
             onScrollToIndexFailed={info => {
-              // Fallback if scrollToIndex fails
-              setTimeout(() => {
-                flatListRef.current?.scrollToIndex({
-                  index: info.index,
-                  animated: false,
-                });
-              }, 100);
+              // Clamp retry index to current photos bounds to avoid a second failure
+              const safeIndex = Math.min(info.index, photosRef.current.length - 1);
+              if (safeIndex >= 0) {
+                setTimeout(() => {
+                  flatListRef.current?.scrollToIndex({
+                    index: safeIndex,
+                    animated: false,
+                  });
+                }, 100);
+              }
             }}
           />
 

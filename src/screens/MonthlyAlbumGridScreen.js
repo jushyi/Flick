@@ -74,6 +74,11 @@ const MonthlyAlbumGridScreen = () => {
       const result = await getMonthPhotos(userId, month);
       if (result.success) {
         setPhotos(result.photos);
+        // Clamp viewerInitialIndex to new bounds to prevent out-of-bounds scroll
+        // if the viewer reopens (or is still open) with a stale index after deletion.
+        if (result.photos.length > 0) {
+          setViewerInitialIndex(prev => Math.min(prev, result.photos.length - 1));
+        }
         logger.info('MonthlyAlbumGridScreen: Fetched photos', {
           month,
           count: result.photos.length,
