@@ -6,7 +6,12 @@ import PixelIcon from '../components/PixelIcon';
 import PixelToggle from '../components/PixelToggle';
 import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import { checkNotificationPermissions } from '../services/firebase/notificationService';
+import {
+  checkNotificationPermissions,
+  requestNotificationPermission,
+  getNotificationToken,
+  storeNotificationToken,
+} from '../services/firebase/notificationService';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/NotificationSettingsScreen.styles';
 import logger from '../utils/logger';
@@ -81,14 +86,14 @@ const NotificationSettingsScreen = () => {
   const navigation = useNavigation();
   const { user, userProfile } = useAuth();
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
-  const [osPermissionDenied, setOsPermissionDenied] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState('granted');
 
   // Check OS notification permission on mount and when app returns to foreground
   useEffect(() => {
     const checkOsPermission = async () => {
       const result = await checkNotificationPermissions();
       if (result.success) {
-        setOsPermissionDenied(!result.data.granted);
+        setPermissionStatus(result.data.status);
       }
     };
 
@@ -161,28 +166,62 @@ const NotificationSettingsScreen = () => {
       </View>
 
       <ScrollView>
-        {osPermissionDenied && (
+        {permissionStatus !== 'granted' && (
           <View style={styles.permissionBanner}>
             <View style={styles.permissionBannerContent}>
               <PixelIcon name="notifications-off-outline" size={22} color={colors.status.danger} />
               <View style={styles.permissionBannerText}>
-                <Text style={styles.permissionBannerTitle}>Notifications are turned off</Text>
-                <Text style={styles.permissionBannerSubtitle}>
-                  Enable notifications in your device settings to receive alerts
-                </Text>
+                {permissionStatus === 'undetermined' ? (
+                  <>
+                    <Text style={styles.permissionBannerTitle}>Allow Notifications</Text>
+                    <Text style={styles.permissionBannerSubtitle}>
+                      Tap below to enable push notifications
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.permissionBannerTitle}>Notifications are turned off</Text>
+                    <Text style={styles.permissionBannerSubtitle}>
+                      Enable notifications in your device settings to receive alerts
+                    </Text>
+                  </>
+                )}
               </View>
             </View>
             <TouchableOpacity
               style={styles.permissionBannerButton}
-              onPress={() => Linking.openSettings()}
+              onPress={async () => {
+                if (permissionStatus === 'undetermined') {
+                  const permResult = await requestNotificationPermission();
+                  if (permResult.success) {
+                    const tokenResult = await getNotificationToken();
+                    if (tokenResult.success && tokenResult.data) {
+                      await storeNotificationToken(user.uid, tokenResult.data);
+                    }
+                  }
+                  const result = await checkNotificationPermissions();
+                  if (result.success) {
+                    setPermissionStatus(result.data.status);
+                  }
+                } else {
+                  Linking.openSettings();
+                }
+              }}
               activeOpacity={0.7}
             >
-              <Text style={styles.permissionBannerButtonText}>Open Settings</Text>
+              <Text style={styles.permissionBannerButtonText}>
+                {permissionStatus === 'undetermined' ? 'Enable Notifications' : 'Open Settings'}
+              </Text>
             </TouchableOpacity>
           </View>
         )}
 
-        <View style={[styles.menuContainer, osPermissionDenied && styles.toggleItemDisabled]}>
+        <View
+          style={[
+            styles.menuContainer,
+            permissionStatus !== 'granted' && styles.toggleItemDisabled,
+          ]}
+        >
           {/* Master Toggle */}
           <View style={[styles.toggleItem, styles.masterToggleItem]}>
             <View style={styles.toggleItemLeft}>

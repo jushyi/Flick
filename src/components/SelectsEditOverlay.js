@@ -42,6 +42,7 @@ const THUMBNAIL_GAP = 8;
 const PREVIEW_ASPECT_RATIO = 3 / 4;
 const SCREEN_PADDING = 24;
 const DELETE_BAR_HEIGHT = 48;
+const MAX_PREVIEW_WIDTH = 400;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const DraggableThumbnail = ({
@@ -335,8 +336,9 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     });
   }, []);
 
-  const previewWidth = SCREEN_WIDTH - SCREEN_PADDING * 2;
-  const previewHeight = previewWidth / PREVIEW_ASPECT_RATIO;
+  const maxPreviewHeight = SCREEN_HEIGHT * 0.45;
+  const previewWidth = Math.min(SCREEN_WIDTH - SCREEN_PADDING * 2, MAX_PREVIEW_WIDTH);
+  const previewHeight = Math.min(previewWidth / PREVIEW_ASPECT_RATIO, maxPreviewHeight);
 
   // Multi-select picker for preview area (matches onboarding flow)
   const handlePickMultiplePhotos = async () => {

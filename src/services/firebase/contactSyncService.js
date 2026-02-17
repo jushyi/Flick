@@ -127,6 +127,21 @@ export const checkContactsPermission = async () => {
 };
 
 /**
+ * Get full contacts permission status (status string + canAskAgain flag)
+ *
+ * @returns {Promise<{success: boolean, data?: {status: string, canAskAgain: boolean}, error?: string}>}
+ */
+export const getContactsPermissionStatus = async () => {
+  try {
+    const { status, canAskAgain } = await Contacts.getPermissionsAsync();
+    return { success: true, data: { status, canAskAgain } };
+  } catch (error) {
+    logger.error('contactSyncService.getContactsPermissionStatus: Error', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Get all phone numbers from device contacts, normalized to E.164
  * Uses pagination to handle large contact lists without blocking UI
  *

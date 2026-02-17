@@ -218,7 +218,7 @@ describe('sendFriendRequestNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      expect.stringContaining('Friend Request'),
+      'Flick',
       expect.stringContaining('Sender User'),
       expect.objectContaining({ type: 'friend_request' }),
       'recipient-1'
@@ -339,7 +339,7 @@ describe('sendFriendAcceptedNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      expect.stringContaining('Accepted'),
+      'Flick',
       expect.stringContaining('Acceptor'),
       expect.objectContaining({ type: 'friend_accepted', friendshipId: 'fs-1' }),
       'requester-1'
@@ -693,7 +693,7 @@ describe('sendTaggedPhotoNotification', () => {
     // Notification is sent immediately (no debouncing)
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      expect.stringContaining('Tagged'),
+      'Flick',
       expect.stringContaining('Tagger'),
       expect.objectContaining({ type: 'tagged', photoId: 'photo-tag-1' }),
       'tagged-1'
@@ -909,7 +909,7 @@ describe('sendCommentNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      expect.stringContaining('Comment'),
+      'Flick',
       expect.stringContaining('Commenter'),
       expect.objectContaining({ type: 'comment', photoId: 'photo-comment-1' }),
       'owner-1'
@@ -1037,7 +1037,7 @@ describe('sendCommentNotification', () => {
     // Verify mention notification
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       'ExponentPushToken[mentioned-token]',
-      expect.stringContaining('mentioned'),
+      'Flick',
       expect.stringContaining('Commenter'),
       expect.objectContaining({ type: 'mention' }),
       'mentioned-1'
@@ -1079,7 +1079,7 @@ describe('sendCommentNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      expect.stringContaining('Comment'),
+      'Flick',
       expect.stringContaining('sent a GIF'),
       expect.objectContaining({ type: 'comment' }),
       'owner-1'
@@ -1193,7 +1193,7 @@ describe('sendPhotoRevealNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      'Photos Ready!',
+      'Flick',
       expect.stringContaining('photos are ready to reveal'),
       expect.objectContaining({ type: 'photo_reveal' }),
       'user-1'
@@ -1244,7 +1244,7 @@ describe('sendPhotoRevealNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      'Photos Ready!',
+      'Flick',
       'Your photo is ready to reveal!',
       expect.objectContaining({ type: 'photo_reveal' }),
       'user-1'

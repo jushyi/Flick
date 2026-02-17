@@ -45,7 +45,8 @@ const THUMBNAIL_GAP = 8;
 const PREVIEW_ASPECT_RATIO = 4 / 5;
 const SCREEN_PADDING = 24;
 const DELETE_BAR_HEIGHT = 48;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const MAX_PREVIEW_WIDTH = 400;
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const DRAG_HINT_STORAGE_KEY = '@selects_drag_hint_dismissed';
 
@@ -443,9 +444,11 @@ const SelectsScreen = ({ navigation }) => {
     });
   }, []);
 
-  // Calculate preview dimensions
-  const previewWidth = SCREEN_WIDTH - SCREEN_PADDING * 2;
-  const previewHeight = previewWidth / PREVIEW_ASPECT_RATIO;
+  // Calculate preview dimensions — cap width on large screens (iPad) so the
+  // button area is never pushed off-screen by a huge preview image.
+  const maxPreviewHeight = SCREEN_HEIGHT * 0.45;
+  const previewWidth = Math.min(SCREEN_WIDTH - SCREEN_PADDING * 2, MAX_PREVIEW_WIDTH);
+  const previewHeight = Math.min(previewWidth / PREVIEW_ASPECT_RATIO, maxPreviewHeight);
 
   // Multi-select picker for preview area
   const handlePickMultiplePhotos = async () => {

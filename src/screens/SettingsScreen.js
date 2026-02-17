@@ -93,6 +93,12 @@ const SettingsScreen = () => {
       title: 'Privacy',
       items: [
         {
+          id: 'contacts',
+          label: 'Sync Contacts',
+          icon: 'people-outline',
+          onPress: () => handleNavigate('ContactsSettings'),
+        },
+        {
           id: 'blockedUsers',
           label: 'Blocked Users',
           icon: 'ban-outline',

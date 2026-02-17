@@ -103,6 +103,7 @@ const FeedScreen = () => {
   const [storiesLoading, setStoriesLoading] = useState(true);
   const selectedFriendRef = useRef(null);
   const selectedFriendIndexRef = useRef(0);
+  const storySequenceRef = useRef([]); // Story sequence locked at session start (stable ordering)
 
   // Own stories state
   const [myStories, setMyStories] = useState(null);
@@ -431,10 +432,16 @@ const FeedScreen = () => {
     selectedFriendRef.current = friend;
     selectedFriendIndexRef.current = friendIdx;
     storiesCurrentIndexRef.current = startIndex;
+    storySequenceRef.current = sortedFriends; // Lock in sequence for this session
 
     // Set mode flags
     isInStoriesModeRef.current = true;
     isOwnStoriesRef.current = false;
+
+    // Check if next friend in sequence has unviewed photos
+    const nextFriendAtOpen = sortedFriends[friendIdx + 1];
+    const hasNextUnviewedAtOpen =
+      nextFriendAtOpen !== undefined && !hasViewedAllPhotos(nextFriendAtOpen.topPhotos || []);
 
     // Open via context and navigate
     openPhotoDetail({
@@ -442,7 +449,7 @@ const FeedScreen = () => {
       photos: friend.topPhotos || [],
       initialIndex: startIndex,
       currentUserId: user?.uid,
-      hasNextFriend: friendIdx < sortedFriends.length - 1,
+      hasNextFriend: hasNextUnviewedAtOpen,
       hasPreviousFriend: friendIdx > 0,
       isOwnStory: false,
       sourceRect: sourceRect || null,
@@ -513,6 +520,7 @@ const FeedScreen = () => {
         }
       }
     }
+    storySequenceRef.current = []; // Clear locked sequence
     // Mode flags are cleared in the onClose callback
   };
 
@@ -547,7 +555,10 @@ const FeedScreen = () => {
       currentIndex: storiesCurrentIndexRef.current,
     };
 
-    const sortedFriends = getSortedFriends();
+    // Use fixed sequence (captured at session start) to avoid sort-order mutation bug:
+    // markPhotosAsViewed updates viewedPhotosRef synchronously, which changes getSortedFriends()
+    // output, making index-based lookup unreliable after marking.
+    const sortedFriends = storySequenceRef.current;
     const nextFriendIdx = selectedFriendIndex + 1;
 
     if (nextFriendIdx >= sortedFriends.length) {
@@ -573,11 +584,17 @@ const FeedScreen = () => {
     const nextFriend = sortedFriends[nextFriendIdx];
     const nextStartIndex = getFirstUnviewedIndex(nextFriend.topPhotos || []);
 
+    // Check if the friend after next has unviewed photos (gates future forward transitions)
+    const nextNextFriend = sortedFriends[nextFriendIdx + 1];
+    const hasNextUnviewed =
+      nextNextFriend !== undefined && !hasViewedAllPhotos(nextNextFriend.topPhotos || []);
+
     logger.info('FeedScreen: Transitioning to next friend', {
       fromFriend: selectedFriend.displayName,
       toFriend: nextFriend.displayName,
       nextFriendIndex: nextFriendIdx,
       startIndex: nextStartIndex,
+      hasNextUnviewed,
     });
 
     // Update refs for next friend
@@ -591,7 +608,7 @@ const FeedScreen = () => {
       photos: nextFriend.topPhotos || [],
       initialIndex: nextStartIndex,
       currentUserId: user?.uid,
-      hasNextFriend: nextFriendIdx < sortedFriends.length - 1,
+      hasNextFriend: hasNextUnviewed,
       hasPreviousFriend: nextFriendIdx > 0,
       isOwnStory: false,
     });
@@ -614,7 +631,7 @@ const FeedScreen = () => {
       currentIndex: storiesCurrentIndexRef.current,
     };
 
-    const sortedFriends = getSortedFriends();
+    const sortedFriends = storySequenceRef.current; // Use fixed sequence
     const prevFriendIdx = selectedFriendIndex - 1;
 
     if (prevFriendIdx < 0) {
@@ -641,6 +658,13 @@ const FeedScreen = () => {
     const prevPhotos = prevFriend.topPhotos || [];
     const prevStartIndex = Math.max(0, prevPhotos.length - 1);
 
+    // The "next" from prevFriend's perspective is the friend we just came from (at prevFriendIdx + 1).
+    // Check if that friend has unviewed photos — if user finished all their photos and went back,
+    // going forward from prevFriend should close rather than re-showing a fully-viewed friend.
+    const nextFromPrev = sortedFriends[prevFriendIdx + 1];
+    const hasNextUnviewedFromPrev =
+      nextFromPrev !== undefined && !hasViewedAllPhotos(nextFromPrev.topPhotos || []);
+
     logger.info('FeedScreen: Transitioning to previous friend', {
       fromFriend: selectedFriend.displayName,
       toFriend: prevFriend.displayName,
@@ -659,7 +683,7 @@ const FeedScreen = () => {
       photos: prevFriend.topPhotos || [],
       initialIndex: prevStartIndex,
       currentUserId: user?.uid,
-      hasNextFriend: prevFriendIdx < sortedFriends.length - 1,
+      hasNextFriend: hasNextUnviewedFromPrev,
       hasPreviousFriend: prevFriendIdx > 0,
       isOwnStory: false,
     });
@@ -709,6 +733,7 @@ const FeedScreen = () => {
       }
     }
     selectedFriendRef.current = null;
+    storySequenceRef.current = []; // Clear locked sequence
     // Mode flags are cleared in the onClose callback
   };
 
@@ -720,12 +745,17 @@ const FeedScreen = () => {
     const saved = preTransitionRef.current;
     if (!saved) return;
 
-    const sortedFriends = getSortedFriends();
+    const sortedFriends = storySequenceRef.current; // Use fixed sequence
 
     // Restore refs to pre-transition state
     selectedFriendRef.current = saved.friend;
     selectedFriendIndexRef.current = saved.friendIndex;
     storiesCurrentIndexRef.current = saved.currentIndex;
+
+    // Check if next friend in fixed sequence has unviewed photos
+    const nextAfterSaved = sortedFriends[saved.friendIndex + 1];
+    const hasNextUnviewedAfterSaved =
+      nextAfterSaved !== undefined && !hasViewedAllPhotos(nextAfterSaved.topPhotos || []);
 
     // Restore context state so PhotoDetailScreen renders original friend's photos
     openPhotoDetail({
@@ -733,7 +763,7 @@ const FeedScreen = () => {
       photos: saved.friend.topPhotos || [],
       initialIndex: saved.currentIndex,
       currentUserId: user?.uid,
-      hasNextFriend: saved.friendIndex < sortedFriends.length - 1,
+      hasNextFriend: hasNextUnviewedAfterSaved,
       hasPreviousFriend: saved.friendIndex > 0,
       isOwnStory: false,
     });
@@ -1068,6 +1098,7 @@ const FeedScreen = () => {
         <View style={styles.storiesContainer}>
           <ScrollView
             horizontal
+            nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.storiesScrollContent}
           >
@@ -1097,6 +1128,7 @@ const FeedScreen = () => {
           <View style={styles.storiesContainer}>
             <ScrollView
               horizontal
+              nestedScrollEnabled
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.storiesScrollContent}
             >
@@ -1117,6 +1149,7 @@ const FeedScreen = () => {
       <View style={styles.storiesContainer}>
         <ScrollView
           horizontal
+          nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.storiesScrollContent}
         >

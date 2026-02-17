@@ -77,7 +77,7 @@ const useCamera = () => {
 
   // Camera state
   const [facing, setFacing] = useState('back');
-  const [flash, setFlash] = useState('on');
+  const [flash, setFlash] = useState('off');
   const [zoom, setZoom] = useState(ZOOM_LEVELS_BASE[0]); // Default to 1x
   const [isCapturing, setIsCapturing] = useState(false);
 

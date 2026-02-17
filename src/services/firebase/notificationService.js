@@ -227,7 +227,7 @@ export const handleNotificationReceived = notification => {
     return {
       success: true,
       data: {
-        title: title || 'Flick',
+        title: title || senderName || 'New notification',
         body: body || '',
         avatarUrl: senderProfilePhotoURL || null,
         notificationType: type,

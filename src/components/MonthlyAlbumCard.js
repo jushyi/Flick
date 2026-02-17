@@ -28,19 +28,19 @@ const getMonthDisplayName = monthStr => {
  * @param {string} coverPhotoUrl - URL for cover image
  * @param {function} onPress - Callback when card is tapped
  */
-const MonthlyAlbumCard = ({ month, coverPhotoUrl, onPress }) => {
+const MonthlyAlbumCard = ({ month, coverPhotoUrl, userId, onPress }) => {
   const monthName = getMonthDisplayName(month);
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       {coverPhotoUrl ? (
         <Image
-          source={{ uri: coverPhotoUrl, cacheKey: `month-cover-${month}` }}
+          source={{ uri: coverPhotoUrl, cacheKey: `month-cover-${userId}-${month}` }}
           style={styles.coverImage}
           contentFit="cover"
           cachePolicy="memory-disk"
           priority="normal"
-          recyclingKey={month}
+          recyclingKey={`${userId}-${month}`}
         />
       ) : (
         <View style={styles.placeholder} />

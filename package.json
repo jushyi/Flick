@@ -1,6 +1,6 @@
 {
   "name": "lapse-clone-app",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
@@ -72,6 +72,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@expo/ngrok": "^4.0.1",
     "@testing-library/react-native": "^13.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "babel-plugin-transform-remove-console": "^6.9.4",

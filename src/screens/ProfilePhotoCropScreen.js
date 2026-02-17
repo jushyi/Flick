@@ -61,48 +61,45 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (!imageUri) return;
 
-    Image.prefetch(imageUri).then(() => {
-      // Use Image.getSize to get dimensions
-      const ImageRN = require('react-native').Image;
-      ImageRN.getSize(
-        imageUri,
-        (width, height) => {
-          setImageSize({ width, height });
+    const ImageRN = require('react-native').Image;
+    ImageRN.getSize(
+      imageUri,
+      (width, height) => {
+        setImageSize({ width, height });
 
-          // Also set shared values for use in worklets
-          imageWidth.value = width;
-          imageHeight.value = height;
+        // Also set shared values for use in worklets
+        imageWidth.value = width;
+        imageHeight.value = height;
 
-          // Calculate base scale so image fills the circle
-          // The smaller dimension should fill the circle diameter
-          const imageAspect = width / height;
-          let initialScale;
+        // Calculate base scale so image fills the circle
+        // The smaller dimension should fill the circle diameter
+        const imageAspect = width / height;
+        let initialScale;
 
-          if (imageAspect > 1) {
-            // Landscape: height is smaller, scale based on height
-            initialScale = CIRCLE_SIZE / height;
-          } else {
-            // Portrait or square: width is smaller, scale based on width
-            initialScale = CIRCLE_SIZE / width;
-          }
-
-          minScaleValue.value = initialScale;
-          scale.value = initialScale;
-          savedScale.value = initialScale;
-          setLoading(false);
-
-          logger.debug('ProfilePhotoCropScreen: Image loaded', {
-            width,
-            height,
-            initialScale,
-          });
-        },
-        error => {
-          logger.error('ProfilePhotoCropScreen: Failed to get image size', { error });
-          setLoading(false);
+        if (imageAspect > 1) {
+          // Landscape: height is smaller, scale based on height
+          initialScale = CIRCLE_SIZE / height;
+        } else {
+          // Portrait or square: width is smaller, scale based on width
+          initialScale = CIRCLE_SIZE / width;
         }
-      );
-    });
+
+        minScaleValue.value = initialScale;
+        scale.value = initialScale;
+        savedScale.value = initialScale;
+        setLoading(false);
+
+        logger.debug('ProfilePhotoCropScreen: Image loaded', {
+          width,
+          height,
+          initialScale,
+        });
+      },
+      error => {
+        logger.error('ProfilePhotoCropScreen: Failed to get image size', { error });
+        setLoading(false);
+      }
+    );
   }, [imageUri, scale, savedScale, imageWidth, imageHeight, minScaleValue]);
 
   // Pinch gesture for zooming

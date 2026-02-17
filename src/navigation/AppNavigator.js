@@ -1,18 +1,18 @@
-import { useState, useEffect, createRef } from 'react';
-import { Text, View, Platform, Alert } from 'react-native';
-import { Image } from 'expo-image';
+import { createRef } from 'react';
+import { View, Alert } from 'react-native';
 import PixelSpinner from '../components/PixelSpinner';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DarkTheme,
+  getFocusedRouteNameFromRoute,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useAuth } from '../context/AuthContext';
 import { PhoneAuthProvider } from '../context/PhoneAuthContext';
 import { PhotoDetailProvider } from '../context/PhotoDetailContext';
-import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 import { colors } from '../constants/colors';
-import { typography } from '../constants/typography';
-import PixelIcon from '../components/PixelIcon';
-import { profileCacheKey } from '../utils/imageUtils';
+import CustomBottomTabBar from '../components/CustomBottomTabBar';
 import DeletionRecoveryModal from '../components/DeletionRecoveryModal';
 
 // Import auth screens (phone-only authentication)
@@ -49,6 +49,7 @@ import RecentlyDeletedScreen from '../screens/RecentlyDeletedScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
 import ProfilePhotoCropScreen from '../screens/ProfilePhotoCropScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
+import ContactsSettingsScreen from '../screens/ContactsSettingsScreen';
 import ContributionsScreen from '../screens/ContributionsScreen';
 import SoundSettingsScreen from '../screens/SoundSettingsScreen';
 
@@ -56,7 +57,7 @@ import SoundSettingsScreen from '../screens/SoundSettingsScreen';
 export const navigationRef = createRef();
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+const Tab = createMaterialTopTabNavigator();
 const ProfileModalStack = createNativeStackNavigator();
 
 /**
@@ -161,6 +162,11 @@ const ProfileStackNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="ContactsSettings"
+        component={ContactsSettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="SoundSettings"
         component={SoundSettingsScreen}
         options={{ headerShown: false }}
@@ -193,138 +199,32 @@ const ProfileStackNavigator = () => {
  * Main Tab Navigator (Feed, Camera, Profile) - 3-tab layout
  */
 const MainTabNavigator = () => {
-  const { user, userProfile } = useAuth();
-  const [darkroomCount, setDarkroomCount] = useState(0);
-
-  // Load darkroom count on mount and when tab becomes active
-  useEffect(() => {
-    if (!user) return;
-
-    const loadDarkroomCount = async () => {
-      const count = await getDevelopingPhotoCount(user.uid);
-      setDarkroomCount(count);
-    };
-
-    loadDarkroomCount();
-
-    // Poll every 30 seconds to update count
-    const interval = setInterval(loadDarkroomCount, 30000);
-
-    return () => clearInterval(interval);
-  }, [user]);
+  const { userProfile } = useAuth();
 
   return (
     <Tab.Navigator
       initialRouteName="Camera"
+      tabBarPosition="bottom"
+      tabBar={props => <CustomBottomTabBar {...props} userProfile={userProfile} />}
       screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: colors.background.primary,
-          borderTopWidth: 1,
-          borderTopColor: colors.border.subtle,
-          height: Platform.OS === 'ios' ? 85 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          paddingTop: 12,
-          position: 'absolute',
-        },
-        tabBarActiveTintColor: colors.icon.primary,
-        tabBarInactiveTintColor: colors.icon.inactive,
-        tabBarShowLabel: false,
-        sceneContainerStyle: { backgroundColor: colors.background.primary },
+        lazy: false,
+        swipeEnabled: true,
+        animationEnabled: true,
+        sceneStyle: { backgroundColor: colors.background.primary },
       }}
     >
-      <Tab.Screen
-        name="Feed"
-        component={FeedScreen}
-        options={{
-          tabBarIcon: ({ color }) => <FeedIcon color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="Camera"
-        component={CameraScreen}
-        options={{
-          tabBarIcon: ({ color }) => <CameraIcon color={color} />,
-        }}
-      />
+      <Tab.Screen name="Feed" component={FeedScreen} />
+      <Tab.Screen name="Camera" component={CameraScreen} />
       <Tab.Screen
         name="Profile"
         component={ProfileStackNavigator}
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <ProfileTabIcon color={color} focused={focused} photoURL={userProfile?.photoURL} />
-          ),
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'ProfileMain';
+          return { swipeEnabled: routeName === 'ProfileMain' };
         }}
       />
     </Tab.Navigator>
   );
-};
-
-/**
- * Pixel Art Tab Icons (16-bit retro style)
- */
-
-// Feed Icon - Two people pixel silhouettes
-const FeedIcon = ({ color }) => <PixelIcon name="tab-feed" size={24} color={color} />;
-
-// Camera Icon - Pixel camera
-const CameraIcon = ({ color }) => <PixelIcon name="tab-camera" size={24} color={color} />;
-
-// Darkroom Icon - Pixel crescent moon with badge
-const DarkroomIcon = ({ color, count }) => (
-  <View style={{ position: 'relative' }}>
-    <PixelIcon name="tab-darkroom" size={24} color={color} />
-    {count > 0 && (
-      <View
-        style={{
-          position: 'absolute',
-          top: -6,
-          right: -8,
-          backgroundColor: colors.status.danger,
-          borderRadius: 2,
-          minWidth: 18,
-          height: 18,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: 4,
-        }}
-      >
-        <Text
-          style={{
-            color: colors.text.primary,
-            fontSize: typography.size.xs,
-            fontFamily: typography.fontFamily.bodyBold,
-          }}
-        >
-          {count > 99 ? '99+' : count}
-        </Text>
-      </View>
-    )}
-  </View>
-);
-
-// Profile Icon - Pixel user silhouette (fallback when no photo)
-const ProfileIcon = ({ color }) => <PixelIcon name="tab-profile" size={24} color={color} />;
-
-// Profile Tab Icon - Shows user photo or fallback pixel icon
-const ProfileTabIcon = ({ color, focused, photoURL }) => {
-  if (photoURL) {
-    return (
-      <Image
-        source={{ uri: photoURL, cacheKey: profileCacheKey('profile-tab', photoURL) }}
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 14,
-          borderWidth: focused ? 2 : 1,
-          borderColor: focused ? color : 'transparent',
-        }}
-        cachePolicy="memory-disk"
-        transition={0}
-      />
-    );
-  }
-  return <ProfileIcon color={color} />;
 };
 
 /**
@@ -442,26 +342,14 @@ const AppNavigator = () => {
     userProfile.selectsCompleted === true &&
     userProfile.contactsSyncCompleted === undefined;
 
-  // Show NotificationPermission if user completed contacts sync but hasn't been prompted for notifications
-  // Skip for existing users who already have a push token registered
-  const needsNotificationPermission =
-    isAuthenticated &&
-    userProfile &&
-    userProfile.profileSetupCompleted === true &&
-    userProfile.selectsCompleted === true &&
-    userProfile.contactsSyncCompleted !== undefined &&
-    userProfile.notificationPermissionCompleted !== true &&
-    !userProfile.fcmToken;
-
-  // Determine if user needs onboarding (profile setup, selects, contacts sync, or notification permission)
-  const needsOnboarding =
-    needsProfileSetup || needsSelects || needsContactsSync || needsNotificationPermission;
+  // Determine if user needs onboarding (profile setup, selects, or contacts sync)
+  // NotificationPermission is reached via ContactsSync navigation during onboarding,
+  // not auto-routed on startup for returning users
+  const needsOnboarding = needsProfileSetup || needsSelects || needsContactsSync;
 
   // Start at appropriate screen (furthest progress first)
   let onboardingInitialRoute = 'ProfileSetup';
-  if (needsNotificationPermission) {
-    onboardingInitialRoute = 'NotificationPermission';
-  } else if (needsContactsSync) {
+  if (needsContactsSync) {
     onboardingInitialRoute = 'ContactsSync';
   } else if (needsSelects) {
     onboardingInitialRoute = 'Selects';

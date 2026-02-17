@@ -7,13 +7,13 @@ import {
   Alert,
   Modal,
   Dimensions,
+  Platform,
   RefreshControl,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import PixelSpinner from '../components/PixelSpinner';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedModule, {
   useSharedValue,
@@ -39,6 +39,7 @@ import {
 
 const ReanimatedView = ReanimatedModule.View;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 85 : 65;
 
 /**
  * RecentlyDeletedScreen
@@ -52,7 +53,6 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const RecentlyDeletedScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const tabBarHeight = useBottomTabBarHeight();
   const { user } = useAuth();
 
   // State
@@ -553,7 +553,7 @@ const RecentlyDeletedScreen = () => {
 
       {/* Content */}
       {photos.length === 0 ? (
-        <View style={[styles.emptyContainer, { paddingBottom: tabBarHeight }]}>
+        <View style={[styles.emptyContainer, { paddingBottom: TAB_BAR_HEIGHT }]}>
           <PixelIcon
             name="trash-outline"
             size={64}
@@ -576,8 +576,8 @@ const RecentlyDeletedScreen = () => {
             {
               paddingBottom:
                 multiSelectMode && selectedIds.length > 0
-                  ? tabBarHeight + ACTION_BAR_HEIGHT + 16
-                  : tabBarHeight + 20,
+                  ? TAB_BAR_HEIGHT + ACTION_BAR_HEIGHT + 16
+                  : TAB_BAR_HEIGHT + 20,
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -598,7 +598,9 @@ const RecentlyDeletedScreen = () => {
 
       {/* Bottom action bar (multi-select mode) */}
       {multiSelectMode && selectedIds.length > 0 && (
-        <View style={[styles.bottomActionBar, { bottom: tabBarHeight, paddingBottom: spacing.md }]}>
+        <View
+          style={[styles.bottomActionBar, { bottom: TAB_BAR_HEIGHT, paddingBottom: spacing.md }]}
+        >
           <TouchableOpacity
             style={[styles.actionButton, styles.restoreButton]}
             onPress={handleBatchRestore}

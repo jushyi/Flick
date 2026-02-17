@@ -1383,16 +1383,19 @@ exports.sendCommentNotification = functions
               continue;
             }
 
-            // Send mention notification
+            // Send mention/reply notification
             const mentionTitle = 'Flick';
-            const mentionBody = `${commenterName} mentioned you in a comment`;
+            const notifType = isReply ? 'reply' : 'mention';
+            const mentionBody = isReply
+              ? `${commenterName} replied to your comment`
+              : `${commenterName} mentioned you in a comment`;
 
             await sendPushNotification(
               fcmToken,
               mentionTitle,
               mentionBody,
               {
-                type: 'mention',
+                type: notifType,
                 photoId,
                 commentId,
               },
@@ -1402,7 +1405,7 @@ exports.sendCommentNotification = functions
             // Write to notifications collection for in-app display
             await db.collection('notifications').add({
               recipientId: mentionedUserId,
-              type: 'mention',
+              type: notifType,
               senderId: comment.userId,
               senderName: commenterName,
               senderProfilePhotoURL: commenterProfilePhotoURL,
@@ -2172,7 +2175,17 @@ exports.processScheduledPhotoDeletions = functions
             operations.push({ ref: commentDoc.ref, type: 'delete' });
           }
 
-          // Step 3: Delete photo document itself
+          // Step 3: Collect notification deletes for this photo
+          const notificationsSnapshot = await db
+            .collection('notifications')
+            .where('photoId', '==', photoId)
+            .get();
+
+          for (const notifDoc of notificationsSnapshot.docs) {
+            operations.push({ ref: notifDoc.ref, type: 'delete' });
+          }
+
+          // Step 4: Delete photo document itself
           operations.push({ ref: photoDoc.ref, type: 'delete' });
 
           // Commit Firestore operations atomically in batches (max 400 per batch for safety)
@@ -2555,5 +2568,51 @@ https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firest
     } catch (error) {
       logger.error('Failed to send support request email', { requestId, error: error.message });
       // Don't throw — the request is already saved in Firestore.
+    }
+  });
+
+/**
+ * Delete notifications for a photo immediately when it is soft-deleted.
+ * Client-side cleanup cannot do this due to Firestore security rules preventing
+ * cross-user queries on the notifications collection. This trigger runs with
+ * admin privileges and fires as soon as photoState transitions to 'deleted'.
+ */
+exports.onPhotoSoftDeleted = functions
+  .runWith({ memory: '256MB', timeoutSeconds: 60 })
+  .firestore.document('photos/{photoId}')
+  .onUpdate(async (change, context) => {
+    try {
+      const before = change.before.data();
+      const after = change.after.data();
+
+      if (!before || !after) return null;
+
+      // Only act on the transition to 'deleted' — ignore all other updates
+      if (before.photoState === 'deleted' || after.photoState !== 'deleted') return null;
+
+      const photoId = context.params.photoId;
+
+      const notifSnapshot = await db
+        .collection('notifications')
+        .where('photoId', '==', photoId)
+        .get();
+
+      if (notifSnapshot.empty) {
+        logger.debug('onPhotoSoftDeleted: No notifications to delete', { photoId });
+        return null;
+      }
+
+      const batch = db.batch();
+      notifSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+
+      logger.info('onPhotoSoftDeleted: Deleted notifications', {
+        photoId,
+        count: notifSnapshot.size,
+      });
+      return null;
+    } catch (error) {
+      logger.error('onPhotoSoftDeleted: Error', { error: error.message });
+      return null;
     }
   });
