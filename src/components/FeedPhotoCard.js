@@ -6,6 +6,7 @@ import StrokedNameText from './StrokedNameText';
 import { getTimeAgo } from '../utils/timeUtils';
 import { styles } from '../styles/FeedPhotoCard.styles';
 import { colors } from '../constants/colors';
+import { profileCacheKey } from '../utils/imageUtils';
 import CommentPreview from './comments/CommentPreview';
 import { getPreviewComments } from '../services/firebase/commentService';
 
@@ -143,7 +144,10 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
         >
           {profilePhotoURL ? (
             <Image
-              source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
+              source={{
+                uri: profilePhotoURL,
+                cacheKey: profileCacheKey(`profile-${userId}`, profilePhotoURL),
+              }}
               style={styles.profilePhoto}
               cachePolicy="memory-disk"
               transition={0}

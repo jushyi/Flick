@@ -31,6 +31,7 @@ import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { styles } from '../styles/PhotoDetailModal.styles';
 import CommentsBottomSheet from './comments/CommentsBottomSheet';
 import { colors } from '../constants/colors';
+import { profileCacheKey } from '../utils/imageUtils';
 
 // Progress bar constants - matches photo marginHorizontal (8px)
 const PROGRESS_BAR_HORIZONTAL_PADDING = 8;
@@ -344,7 +345,10 @@ const PhotoDetailModal = ({
           >
             {profilePhotoURL ? (
               <Image
-                source={{ uri: profilePhotoURL, cacheKey: `profile-${currentPhoto?.userId}` }}
+                source={{
+                  uri: profilePhotoURL,
+                  cacheKey: profileCacheKey(`profile-${currentPhoto?.userId}`, profilePhotoURL),
+                }}
                 style={styles.profilePic}
                 contentFit="cover"
               />

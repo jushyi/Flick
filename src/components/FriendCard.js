@@ -6,6 +6,7 @@ import StrokedNameText from './StrokedNameText';
 import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/FriendCard.styles';
+import { profileCacheKey } from '../utils/imageUtils';
 import DropdownMenu from './DropdownMenu';
 
 /**
@@ -255,7 +256,10 @@ const FriendCard = ({
       <View style={styles.avatarContainer}>
         {profilePhotoURL ? (
           <Image
-            source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
+            source={{
+              uri: profilePhotoURL,
+              cacheKey: profileCacheKey(`profile-${userId}`, profilePhotoURL),
+            }}
             style={styles.avatar}
             cachePolicy="memory-disk"
             transition={0}

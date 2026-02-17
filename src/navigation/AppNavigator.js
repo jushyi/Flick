@@ -12,6 +12,7 @@ import { getDevelopingPhotoCount } from '../services/firebase/photoService';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import PixelIcon from '../components/PixelIcon';
+import { profileCacheKey } from '../utils/imageUtils';
 import DeletionRecoveryModal from '../components/DeletionRecoveryModal';
 
 // Import auth screens (phone-only authentication)
@@ -310,7 +311,7 @@ const ProfileTabIcon = ({ color, focused, photoURL }) => {
   if (photoURL) {
     return (
       <Image
-        source={{ uri: photoURL, cacheKey: 'profile-tab-icon' }}
+        source={{ uri: photoURL, cacheKey: profileCacheKey('profile-tab', photoURL) }}
         style={{
           width: 28,
           height: 28,

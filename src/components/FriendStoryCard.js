@@ -8,6 +8,7 @@ import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
 import logger from '../utils/logger';
+import { profileCacheKey } from '../utils/imageUtils';
 
 /**
  * FriendStoryCard component - Rectangular story card with profile photo
@@ -96,7 +97,10 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
     >
       {profilePhotoURL ? (
         <Image
-          source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
+          source={{
+            uri: profilePhotoURL,
+            cacheKey: profileCacheKey(`profile-${userId}`, profilePhotoURL),
+          }}
           style={styles.profilePhoto}
           cachePolicy="memory-disk"
           transition={0}

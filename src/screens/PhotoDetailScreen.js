@@ -47,6 +47,7 @@ import {
 import DropdownMenu from '../components/DropdownMenu';
 import { TagFriendsModal, TaggedPeopleModal } from '../components';
 import { colors } from '../constants/colors';
+import { profileCacheKey } from '../utils/imageUtils';
 import logger from '../utils/logger';
 
 // Progress bar constants - matches photo marginHorizontal (8px)
@@ -782,7 +783,10 @@ const PhotoDetailScreen = () => {
           >
             {profilePhotoURL ? (
               <Image
-                source={{ uri: profilePhotoURL, cacheKey: `profile-${currentPhoto?.userId}` }}
+                source={{
+                  uri: profilePhotoURL,
+                  cacheKey: profileCacheKey(`profile-${currentPhoto?.userId}`, profilePhotoURL),
+                }}
                 style={styles.profilePic}
                 contentFit="cover"
                 cachePolicy="memory-disk"

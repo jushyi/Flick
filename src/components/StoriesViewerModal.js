@@ -18,6 +18,7 @@ import StrokedNameText from './StrokedNameText';
 import logger from '../utils/logger';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
+import { profileCacheKey } from '../utils/imageUtils';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
@@ -285,7 +286,10 @@ const StoriesViewerModal = ({
               <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
                 {profilePhotoURL ? (
                   <Image
-                    source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
+                    source={{
+                      uri: profilePhotoURL,
+                      cacheKey: profileCacheKey(`profile-${userId}`, profilePhotoURL),
+                    }}
                     style={styles.profilePic}
                     contentFit="cover"
                     cachePolicy="memory-disk"

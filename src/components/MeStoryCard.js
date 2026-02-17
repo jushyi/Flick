@@ -8,6 +8,7 @@ import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
 import logger from '../utils/logger';
+import { profileCacheKey } from '../utils/imageUtils';
 
 /**
  * MeStoryCard component - Rectangular story card for current user's own stories
@@ -79,7 +80,10 @@ const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }
     <View style={styles.profileContainer}>
       {profilePhotoURL ? (
         <Image
-          source={{ uri: profilePhotoURL, cacheKey: `profile-${userId}` }}
+          source={{
+            uri: profilePhotoURL,
+            cacheKey: profileCacheKey(`profile-${userId}`, profilePhotoURL),
+          }}
           style={styles.profilePhoto}
           cachePolicy="memory-disk"
           transition={0}

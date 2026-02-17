@@ -8,6 +8,7 @@ import StrokedNameText from '../components/StrokedNameText';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
+import { profileCacheKey } from '../utils/imageUtils';
 import { layout } from '../constants/layout';
 import {
   SelectsBanner,
@@ -889,7 +890,10 @@ const ProfileScreen = () => {
               <Image
                 source={{
                   uri: profileData.photoURL,
-                  cacheKey: `profile-${isOwnProfile ? user?.uid : userId}`,
+                  cacheKey: profileCacheKey(
+                    `profile-${isOwnProfile ? user?.uid : userId}`,
+                    profileData?.photoURL
+                  ),
                 }}
                 style={styles.profilePhoto}
                 contentFit="cover"
