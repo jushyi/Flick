@@ -339,6 +339,11 @@ const useDarkroom = () => {
       logger.debug('useDarkroom: Exit clearance reached, triggering early cascade', { photoId });
 
       if (!hiddenPhotoIds.has(photoId)) {
+        // If this is the last visible photo, set pendingSuccess immediately so the
+        // success container mounts (at 0 opacity) before the blank state can flash.
+        if (visiblePhotos.length === 1) {
+          setPendingSuccess(true);
+        }
         setHiddenPhotoIds(prev => {
           const newHidden = new Set(prev);
           newHidden.add(photoId);
@@ -346,7 +351,7 @@ const useDarkroom = () => {
         });
       }
     },
-    [hiddenPhotoIds]
+    [hiddenPhotoIds, visiblePhotos]
   );
 
   /**

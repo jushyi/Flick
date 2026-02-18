@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,10 @@ import {
   Alert,
   ScrollView,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
@@ -37,7 +38,10 @@ import {
 import { getTimeAgo } from '../utils/timeUtils';
 import { profileCacheKey } from '../utils/imageUtils';
 import { mediumImpact } from '../utils/haptics';
-import { markSingleNotificationAsRead } from '../services/firebase/notificationService';
+import {
+  markSingleNotificationAsRead,
+  markNotificationReadFromPushData,
+} from '../services/firebase/notificationService';
 import { getPhotoById, getUserStoriesData } from '../services/firebase/feedService';
 import { isBlocked } from '../services/firebase/blockService';
 import { usePhotoDetailActions } from '../context/PhotoDetailContext';
@@ -111,6 +115,90 @@ const NotificationAvatar = ({ url, senderId, style }) => {
   );
 };
 
+const formatReactionsText = reactions => {
+  if (!reactions || typeof reactions !== 'object') return '';
+  const parts = Object.entries(reactions)
+    .filter(([, count]) => count > 0)
+    .map(([emoji, count]) => `${emoji}×${count}`);
+  return parts.length > 0 ? parts.join(' ') : '';
+};
+
+const getActionText = item => {
+  const senderName = item.senderName || 'Someone';
+
+  if (item.type === 'story') {
+    return 'posted to their story';
+  }
+
+  if (item.message) {
+    if (item.message.startsWith(senderName)) {
+      return item.message.slice(senderName.length).trim();
+    }
+    return item.message;
+  }
+
+  if (item.reactions) {
+    const reactionsText = formatReactionsText(item.reactions);
+    return `reacted ${reactionsText} to your photo`;
+  }
+
+  return 'sent you a notification';
+};
+
+/**
+ * Individual notification row.
+ * Measures its own screen position on press so the caller can pass sourceRect
+ * to openPhotoDetail() for the expand/suck-back animation.
+ */
+const NotificationItem = ({ item, onPress, onAvatarPress }) => {
+  const rowRef = useRef(null);
+  const actionText = getActionText(item);
+  const isUnread = item.read !== true;
+
+  const handlePress = () => {
+    if (rowRef.current) {
+      rowRef.current.measureInWindow((x, y, width, height) => {
+        onPress(item, { x, y, width, height, borderRadius: 0 });
+      });
+    } else {
+      onPress(item, null);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      ref={rowRef}
+      style={styles.notificationItem}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
+      {isUnread ? <View style={styles.unreadDot} /> : <View style={styles.readSpacer} />}
+      <TouchableOpacity
+        onPress={() => item.senderId && onAvatarPress(item.senderId, item.senderName)}
+        activeOpacity={0.7}
+        disabled={!item.senderId}
+      >
+        <NotificationAvatar
+          url={item.senderProfilePhotoURL}
+          senderId={item.senderId}
+          style={styles.notifPhoto}
+        />
+      </TouchableOpacity>
+      <View style={styles.notifContent}>
+        <Text style={styles.notifMessage} numberOfLines={2}>
+          <StrokedNameText style={styles.notifSenderName} nameColor={item.senderNameColor}>
+            {item.senderName || 'Someone'}
+          </StrokedNameText>{' '}
+          {actionText}
+        </Text>
+      </View>
+      <Text style={styles.notifTime}>
+        {item.createdAt ? getTimeAgo(item.createdAt).replace(' ago', '') : ''}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
 /**
  * ActivityScreen - Friend requests + reaction notifications
  * Accessed via heart icon in feed header
@@ -119,6 +207,7 @@ const ActivityScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const { openPhotoDetail } = usePhotoDetailActions();
   const [friendRequests, setFriendRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -165,7 +254,7 @@ const ActivityScreen = () => {
   useEffect(() => {
     const handleDeepLinkParams = async () => {
       const params = route.params || {};
-      const { photoId, commentId, shouldOpenPhoto } = params;
+      const { photoId, commentId, shouldOpenPhoto, notifType } = params;
 
       if (!shouldOpenPhoto || !photoId) {
         return;
@@ -192,11 +281,17 @@ const ActivityScreen = () => {
 
       navigation.navigate('PhotoDetail');
 
+      // Mark as read — safety net for cold-start where App.js ran before auth was ready
+      if (user?.uid) {
+        markNotificationReadFromPushData(user.uid, { type: notifType, photoId });
+      }
+
       // Clear params to prevent re-opening on back navigation
       navigation.setParams({
         shouldOpenPhoto: undefined,
         photoId: undefined,
         commentId: undefined,
+        notifType: undefined,
       });
     };
 
@@ -232,7 +327,7 @@ const ActivityScreen = () => {
             if (userDoc.exists()) {
               const data = userDoc.data();
               colorMap[senderId] = data.nameColor || null;
-              photoMap[senderId] = data.profilePhotoURL || data.photoURL || null;
+              photoMap[senderId] = data.photoURL || data.profilePhotoURL || null;
             }
           } catch {
             // Ignore — will fall back to defaults
@@ -338,48 +433,13 @@ const ActivityScreen = () => {
     navigation.navigate('OtherUserProfile', { userId, username: displayName });
   };
 
-  const formatReactionsText = reactions => {
-    if (!reactions || typeof reactions !== 'object') return '';
-    const parts = Object.entries(reactions)
-      .filter(([, count]) => count > 0)
-      .map(([emoji, count]) => `${emoji}×${count}`);
-    return parts.length > 0 ? parts.join(' ') : '';
-  };
-
-  /**
-   * Get action text for notification item
-   * Strips sender name prefix if present so username can be bolded separately
-   */
-  const getActionText = item => {
-    const senderName = item.senderName || 'Someone';
-
-    // Story notifications use templates that may embed the name mid-sentence
-    if (item.type === 'story') {
-      return 'posted to their story';
-    }
-
-    if (item.message) {
-      // If message starts with sender name, strip the prefix
-      if (item.message.startsWith(senderName)) {
-        return item.message.slice(senderName.length).trim();
-      }
-      // Message doesn't start with sender name - return full message
-      return item.message;
-    }
-
-    if (item.reactions) {
-      const reactionsText = formatReactionsText(item.reactions);
-      return `reacted ${reactionsText} to your photo`;
-    }
-
-    return 'sent you a notification';
-  };
-
   /**
    * Handle notification item press
-   * Optimistic local update, then Firestore update, then navigation
+   * Optimistic local update, then Firestore update, then navigation.
+   * sourceRect is the measured screen position of the tapped row, used for
+   * the expand/suck-back animation in PhotoDetail.
    */
-  const handleNotificationPress = async item => {
+  const handleNotificationPress = async (item, sourceRect) => {
     // Mark as read locally (optimistic update)
     setNotifications(prev => prev.map(n => (n.id === item.id ? { ...n, read: true } : n)));
 
@@ -420,6 +480,7 @@ const ActivityScreen = () => {
           currentUserId: user?.uid,
           initialShowComments: type === 'comment' || type === 'mention' || type === 'reply',
           targetCommentId: item.commentId || null,
+          sourceRect: sourceRect || null,
         });
         navigation.navigate('PhotoDetail');
       }
@@ -434,6 +495,7 @@ const ActivityScreen = () => {
           currentUserId: user?.uid,
           isOwnStory: false,
           hasNextFriend: false,
+          sourceRect: sourceRect || null,
         });
         navigation.navigate('PhotoDetail');
       }
@@ -450,6 +512,7 @@ const ActivityScreen = () => {
           photo: result.photo,
           currentUserId: user?.uid,
           initialShowComments: false,
+          sourceRect: sourceRect || null,
         });
         navigation.navigate('PhotoDetail');
       }
@@ -472,7 +535,7 @@ const ActivityScreen = () => {
       userId: otherUser.id,
       displayName: otherUser.displayName,
       username: otherUser.username,
-      profilePhotoURL: otherUser.profilePhotoURL,
+      profilePhotoURL: otherUser.photoURL || otherUser.profilePhotoURL,
     };
 
     return (
@@ -485,43 +548,6 @@ const ActivityScreen = () => {
         loading={actionLoading[item.id]}
         onPress={() => handleAvatarPress(otherUser.id, otherUser.displayName)}
       />
-    );
-  };
-
-  const renderNotification = ({ item }) => {
-    const actionText = getActionText(item);
-    const isUnread = item.read !== true;
-
-    return (
-      <TouchableOpacity
-        style={styles.notificationItem}
-        onPress={() => handleNotificationPress(item)}
-        activeOpacity={0.7}
-      >
-        {isUnread ? <View style={styles.unreadDot} /> : <View style={styles.readSpacer} />}
-        <TouchableOpacity
-          onPress={() => item.senderId && handleAvatarPress(item.senderId, item.senderName)}
-          activeOpacity={0.7}
-          disabled={!item.senderId}
-        >
-          <NotificationAvatar
-            url={item.senderProfilePhotoURL}
-            senderId={item.senderId}
-            style={styles.notifPhoto}
-          />
-        </TouchableOpacity>
-        <View style={styles.notifContent}>
-          <Text style={styles.notifMessage} numberOfLines={2}>
-            <StrokedNameText style={styles.notifSenderName} nameColor={item.senderNameColor}>
-              {item.senderName || 'Someone'}
-            </StrokedNameText>{' '}
-            {actionText}
-          </Text>
-        </View>
-        <Text style={styles.notifTime}>
-          {item.createdAt ? getTimeAgo(item.createdAt).replace(' ago', '') : ''}
-        </Text>
-      </TouchableOpacity>
     );
   };
 
@@ -571,6 +597,9 @@ const ActivityScreen = () => {
       {/* Content */}
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={
+          Platform.OS === 'android' ? { paddingBottom: insets.bottom } : undefined
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -603,7 +632,12 @@ const ActivityScreen = () => {
               <View key={section.title}>
                 <Text style={[styles.sectionTitle, styles.timeSectionHeader]}>{section.title}</Text>
                 {section.data.map(item => (
-                  <View key={item.id}>{renderNotification({ item })}</View>
+                  <NotificationItem
+                    key={item.id}
+                    item={item}
+                    onPress={handleNotificationPress}
+                    onAvatarPress={handleAvatarPress}
+                  />
                 ))}
               </View>
             ))}
@@ -627,6 +661,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    paddingBottom: Platform.OS === 'android' ? 6 : spacing.sm,
     backgroundColor: colors.background.primary,
   },
   backButton: {
@@ -636,6 +671,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 26 } }),
   },
   headerSpacer: {
     width: 36,

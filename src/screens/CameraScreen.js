@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Pressable, Animated, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, Animated } from 'react-native';
 import { CameraView } from 'expo-camera';
 
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
@@ -280,7 +280,7 @@ const CameraScreen = () => {
           flash={flash}
           zoom={zoom.cameraZoom}
           onAvailableLensesChanged={handleAvailableLensesChanged}
-          {...(Platform.OS === 'ios' && selectedLens && { selectedLens })}
+          {...(selectedLens && { selectedLens })}
         />
         {/* Flash Overlay (camera shutter effect) - contained within camera preview */}
         {showFlash && <Animated.View style={[styles.flashOverlay, { opacity: flashOpacity }]} />}

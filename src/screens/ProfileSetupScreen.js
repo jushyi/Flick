@@ -9,8 +9,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, Input, StepIndicator, ProfileSongCard } from '../components';
@@ -59,7 +61,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
   }, []);
 
   // Handle cancel profile setup
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     Alert.alert(
       'Cancel Setup?',
       "Your profile won't be saved. You'll need to verify your phone number again to sign up.",
@@ -88,7 +90,18 @@ const ProfileSetupScreen = ({ navigation, route }) => {
         },
       ]
     );
-  };
+  }, [user.uid, signOut]);
+
+  // Android hardware back — intercept and show the cancel confirmation instead of closing the app
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleCancel();
+        return true;
+      });
+      return () => subscription.remove();
+    }, [handleCancel])
+  );
 
   // Debounced username availability check
   const checkUsername = useCallback(
@@ -221,11 +234,22 @@ const ProfileSetupScreen = ({ navigation, route }) => {
   };
 
   const showImagePickerOptions = () => {
-    Alert.alert('Profile Photo', 'Choose an option', [
-      { text: 'Take Photo', onPress: takePhoto },
-      { text: 'Choose from Library', onPress: pickImage },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    // Android reverses the button array order, so we pass it reversed to get the correct display order
+    Alert.alert(
+      'Profile Photo',
+      'Choose an option',
+      Platform.OS === 'android'
+        ? [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Choose from Library', onPress: pickImage },
+            { text: 'Take Photo', onPress: takePhoto },
+          ]
+        : [
+            { text: 'Take Photo', onPress: takePhoto },
+            { text: 'Choose from Library', onPress: pickImage },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+    );
   };
 
   const handleSongPress = () => {
@@ -505,7 +529,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: colors.border.subtle,
-    borderStyle: 'dashed',
+    // dashed + borderRadius doesn't render on Android — use solid as fallback
+    borderStyle: Platform.select({ ios: 'dashed', android: 'solid' }),
   },
   placeholderText: {
     marginTop: spacing.xs,

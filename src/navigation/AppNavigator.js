@@ -477,7 +477,7 @@ const AppNavigator = () => {
                   options={{
                     presentation: 'transparentModal',
                     headerShown: false,
-                    animation: 'slide_from_bottom',
+                    animation: 'none',
                     gestureEnabled: true,
                     gestureDirection: 'vertical',
                     contentStyle: { backgroundColor: 'transparent' },

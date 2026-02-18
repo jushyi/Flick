@@ -8,7 +8,7 @@
  * 4. Fade out: overlay dissolves to reveal the app
  */
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { Platform, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -128,7 +128,7 @@ const AnimatedSplash = ({ onAnimationComplete, fontsLoaded }) => {
         <AnimatedBlurView
           style={StyleSheet.absoluteFill}
           tint="dark"
-          experimentalBlurMethod="blur"
+          {...(Platform.OS === 'ios' ? { experimentalBlurMethod: 'blur' } : {})}
           animatedProps={blurAnimatedProps}
         />
       )}

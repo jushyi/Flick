@@ -12,7 +12,7 @@
  */
 
 import { useState, useCallback, useEffect, useImperativeHandle } from 'react';
-import { Dimensions } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import {
   useAnimatedStyle,
@@ -44,8 +44,10 @@ const STACK_ENTRY_FADE_DURATION = 300;
 // Duration for exit animations (swipe off screen)
 const EXIT_DURATION = 350;
 
-// Delay before triggering cascade clearance
-const CLEARANCE_DELAY = 150;
+// Delay before triggering cascade clearance.
+// On Android, wait until the card is fully off-screen (~300ms into a 350ms easeIn animation)
+// to avoid a transparent flash when the Animated.View unmounts mid-animation.
+const CLEARANCE_DELAY = Platform.OS === 'android' ? 300 : 150;
 
 /**
  * Get scale factor for card at given stack position.
@@ -390,7 +392,10 @@ const useSwipeableCard = ({
   );
 
   // Pan gesture — vertical: up = journal, down = archive
+  // .enabled(isActive) prevents gesture from firing on stack cards.
+  // This keeps GestureDetector always in the tree (avoids remount on isActive change).
   const panGesture = Gesture.Pan()
+    .enabled(isActive)
     .activeOffsetY([-5, 5])
     .onStart(() => {
       'worklet';

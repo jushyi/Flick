@@ -11,7 +11,7 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Input } from '../components';
 import { sendVerificationCode } from '../services/firebase/phoneAuthService';
 import { formatAsUserTypes } from '../utils/phoneUtils';
@@ -49,6 +49,7 @@ const COUNTRY_CODES = [
  * Uses React Native Firebase native phone auth
  */
 const PhoneInputScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [phoneNumber, setPhoneNumber] = useState(''); // Raw digits only
   const [formattedPhone, setFormattedPhone] = useState(''); // Formatted for display
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]); // Default to US
@@ -247,7 +248,12 @@ const PhoneInputScreen = ({ navigation }) => {
         onRequestClose={() => setShowCountryPicker(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View
+            style={[
+              styles.modalContent,
+              Platform.OS === 'android' && { paddingBottom: insets.bottom },
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Country</Text>
               <TouchableOpacity
@@ -317,7 +323,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.xl,
     width: '100%',
-    flexWrap: 'wrap',
+    ...Platform.select({ android: { lineHeight: 22 } }),
   },
   form: {
     width: '100%',

@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.xs,
-    paddingBottom: spacing.sm,
+    paddingBottom: Platform.OS === 'android' ? 6 : spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -40,6 +40,12 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   headerSubtitle: {
     fontSize: typography.size.sm,
@@ -70,6 +76,12 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.secondary,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   emptySubtext: {
     fontSize: typography.size.md,

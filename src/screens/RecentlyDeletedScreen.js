@@ -39,7 +39,7 @@ import {
 
 const ReanimatedView = ReanimatedModule.View;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 85 : 65;
+const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 85 : 54;
 
 /**
  * RecentlyDeletedScreen
@@ -190,81 +190,81 @@ const RecentlyDeletedScreen = () => {
   // Batch restore selected photos
   const handleBatchRestore = () => {
     const count = selectedIds.length;
+    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    const restoreAction = {
+      text: 'Restore',
+      onPress: async () => {
+        setActionLoading(true);
+        logger.info('RecentlyDeletedScreen: Batch restore started', { count });
+
+        let successCount = 0;
+        for (const photoId of selectedIds) {
+          const result = await restoreDeletedPhoto(photoId, user.uid);
+          if (result.success) successCount++;
+        }
+
+        logger.info('RecentlyDeletedScreen: Batch restore completed', {
+          successCount,
+          total: count,
+        });
+
+        setSelectedIds([]);
+        setMultiSelectMode(false);
+        setActionLoading(false);
+        fetchPhotos();
+
+        Alert.alert(
+          'Success',
+          `Restored ${successCount} ${successCount === 1 ? 'photo' : 'photos'}`
+        );
+      },
+    };
+    // Android reverses button visual order — swap so Cancel stays left, Restore right
     Alert.alert(
       'Restore Photos',
       `Restore ${count} ${count === 1 ? 'photo' : 'photos'} to your journal?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Restore',
-          onPress: async () => {
-            setActionLoading(true);
-            logger.info('RecentlyDeletedScreen: Batch restore started', { count });
-
-            let successCount = 0;
-            for (const photoId of selectedIds) {
-              const result = await restoreDeletedPhoto(photoId, user.uid);
-              if (result.success) successCount++;
-            }
-
-            logger.info('RecentlyDeletedScreen: Batch restore completed', {
-              successCount,
-              total: count,
-            });
-
-            setSelectedIds([]);
-            setMultiSelectMode(false);
-            setActionLoading(false);
-            fetchPhotos();
-
-            Alert.alert(
-              'Success',
-              `Restored ${successCount} ${successCount === 1 ? 'photo' : 'photos'}`
-            );
-          },
-        },
-      ]
+      Platform.OS === 'android' ? [restoreAction, cancelAction] : [cancelAction, restoreAction]
     );
   };
 
   // Batch permanently delete selected photos
   const handleBatchDelete = () => {
     const count = selectedIds.length;
+    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    const deleteAction = {
+      text: 'Delete',
+      style: 'destructive',
+      onPress: async () => {
+        setActionLoading(true);
+        logger.info('RecentlyDeletedScreen: Batch delete started', { count });
+
+        let successCount = 0;
+        for (const photoId of selectedIds) {
+          const result = await permanentlyDeletePhoto(photoId, user.uid);
+          if (result.success) successCount++;
+        }
+
+        logger.info('RecentlyDeletedScreen: Batch delete completed', {
+          successCount,
+          total: count,
+        });
+
+        setSelectedIds([]);
+        setMultiSelectMode(false);
+        setActionLoading(false);
+        fetchPhotos();
+
+        Alert.alert(
+          'Deleted',
+          `Permanently deleted ${successCount} ${successCount === 1 ? 'photo' : 'photos'}`
+        );
+      },
+    };
+    // Android reverses button visual order — swap so Cancel stays left, Delete right
     Alert.alert(
       'Delete Permanently',
       `This will permanently delete ${count} ${count === 1 ? 'photo' : 'photos'}. This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setActionLoading(true);
-            logger.info('RecentlyDeletedScreen: Batch delete started', { count });
-
-            let successCount = 0;
-            for (const photoId of selectedIds) {
-              const result = await permanentlyDeletePhoto(photoId, user.uid);
-              if (result.success) successCount++;
-            }
-
-            logger.info('RecentlyDeletedScreen: Batch delete completed', {
-              successCount,
-              total: count,
-            });
-
-            setSelectedIds([]);
-            setMultiSelectMode(false);
-            setActionLoading(false);
-            fetchPhotos();
-
-            Alert.alert(
-              'Deleted',
-              `Permanently deleted ${successCount} ${successCount === 1 ? 'photo' : 'photos'}`
-            );
-          },
-        },
-      ]
+      Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]
     );
   };
 
@@ -295,32 +295,32 @@ const RecentlyDeletedScreen = () => {
   const handleSingleDelete = () => {
     if (!currentViewerPhoto) return;
 
+    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    const deleteAction = {
+      text: 'Delete',
+      style: 'destructive',
+      onPress: async () => {
+        setActionLoading(true);
+        logger.info('RecentlyDeletedScreen: Single delete', { photoId: currentViewerPhoto.id });
+
+        const result = await permanentlyDeletePhoto(currentViewerPhoto.id, user.uid);
+
+        setActionLoading(false);
+
+        if (result.success) {
+          Alert.alert('Deleted', 'Photo permanently deleted');
+          setViewerVisible(false);
+          fetchPhotos();
+        } else {
+          Alert.alert('Error', 'Failed to delete photo');
+        }
+      },
+    };
+    // Android reverses button visual order — swap so Cancel stays left, Delete right
     Alert.alert(
       'Delete Permanently',
       'This photo will be permanently deleted. This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setActionLoading(true);
-            logger.info('RecentlyDeletedScreen: Single delete', { photoId: currentViewerPhoto.id });
-
-            const result = await permanentlyDeletePhoto(currentViewerPhoto.id, user.uid);
-
-            setActionLoading(false);
-
-            if (result.success) {
-              Alert.alert('Deleted', 'Photo permanently deleted');
-              setViewerVisible(false);
-              fetchPhotos();
-            } else {
-              Alert.alert('Error', 'Failed to delete photo');
-            }
-          },
-        },
-      ]
+      Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]
     );
   };
 
@@ -519,7 +519,9 @@ const RecentlyDeletedScreen = () => {
               <PixelIcon name="chevron-back" size={28} color={colors.text.primary} />
             </TouchableOpacity>
             <View style={styles.headerCenter}>
-              <Text style={styles.headerTitle}>Recently Deleted</Text>
+              <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>
+                Recently Deleted
+              </Text>
             </View>
             <View style={styles.headerButton} />
           </View>
@@ -540,7 +542,9 @@ const RecentlyDeletedScreen = () => {
             <PixelIcon name="chevron-back" size={28} color={colors.text.primary} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Recently Deleted</Text>
+            <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>
+              Recently Deleted
+            </Text>
             {multiSelectMode && selectedIds.length > 0 && (
               <Text style={styles.headerSubtitle}>{selectedIds.length} selected</Text>
             )}

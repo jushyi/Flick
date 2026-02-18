@@ -21,6 +21,7 @@ import {
   checkNotificationPermissions,
   getNotificationToken,
   storeNotificationToken,
+  markNotificationReadFromPushData,
 } from './src/services/firebase/notificationService';
 import {
   isDarkroomReadyToReveal,
@@ -174,6 +175,11 @@ export default function App() {
    */
   const handleBannerPress = () => {
     if (!bannerData?.notificationData) return;
+    // Mark as read — user tapped the banner
+    const userId = getAuth().currentUser?.uid;
+    if (userId) {
+      markNotificationReadFromPushData(userId, bannerData.notificationData);
+    }
     // Build a minimal notification object for handleNotificationTapped
     const fakeNotification = {
       request: { content: { data: bannerData.notificationData } },
@@ -189,11 +195,15 @@ export default function App() {
     // Check for notification that opened the app (cold start)
     Notifications.getLastNotificationResponseAsync().then(response => {
       if (response) {
-        logger.info('App: Found cold start notification', {
-          data: response.notification.request.content.data,
-        });
+        const pushData = response.notification.request.content.data;
+        logger.info('App: Found cold start notification', { data: pushData });
         const navigationData = handleNotificationTapped(response.notification);
         logger.info('App: Cold start navigation data', { navigationData });
+        // Mark as read — user tapped this notification to open the app
+        const userId = getAuth().currentUser?.uid;
+        if (userId && pushData) {
+          markNotificationReadFromPushData(userId, pushData);
+        }
         // Small delay to let app initialize
         setTimeout(() => {
           navigateToNotification(navigationData);
@@ -249,11 +259,15 @@ export default function App() {
 
     // Listener for when user taps a notification (background/killed-app)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      logger.info('App: Notification response received', {
-        data: response.notification.request.content.data,
-      });
+      const pushData = response.notification.request.content.data;
+      logger.info('App: Notification response received', { data: pushData });
       const navigationData = handleNotificationTapped(response.notification);
       logger.info('App: Navigation data from handler', { navigationData });
+      // Mark as read immediately on tap
+      const userId = getAuth().currentUser?.uid;
+      if (userId && pushData) {
+        markNotificationReadFromPushData(userId, pushData);
+      }
       navigateToNotification(navigationData);
     });
 

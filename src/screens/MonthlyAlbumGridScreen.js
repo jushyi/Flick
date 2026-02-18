@@ -1,5 +1,13 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -13,7 +21,7 @@ import { getMonthPhotos } from '../services/firebase/monthlyAlbumService';
 import { AlbumPhotoViewer } from '../components';
 import logger from '../utils/logger';
 
-const HEADER_HEIGHT = 64;
+const HEADER_HEIGHT = Platform.OS === 'android' ? 80 : 64;
 const GRID_GAP = 2;
 const NUM_COLUMNS = 3;
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -466,6 +474,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   photoCount: {
     fontSize: typography.size.sm,

@@ -115,16 +115,21 @@ export const usePhotoDetailModal = ({
   // Opening animation - expand from source card to full screen
   const hasAnimatedOpen = useRef(false);
   useEffect(() => {
-    if (visible && sourceTransform && !hasAnimatedOpen.current) {
+    if (!visible) {
+      hasAnimatedOpen.current = false;
+      return;
+    }
+    if (hasAnimatedOpen.current) return;
+
+    if (sourceTransform) {
+      // Source rect available — play expand animation immediately
       hasAnimatedOpen.current = true;
-      // Start at source position
       openProgress.setValue(0);
       opacity.setValue(0);
       dismissScale.setValue(1);
       suckTranslateX.setValue(0);
       translateY.setValue(0);
 
-      // Spring to full screen immediately
       Animated.parallel([
         Animated.spring(openProgress, {
           toValue: 1,
@@ -138,15 +143,21 @@ export const usePhotoDetailModal = ({
           useNativeDriver: true,
         }),
       ]).start();
-    } else if (visible && !sourceTransform && !hasAnimatedOpen.current) {
-      // No source rect - instant show
-      hasAnimatedOpen.current = true;
-      openProgress.setValue(1);
-      opacity.setValue(1);
+      return;
     }
-    if (!visible) {
-      hasAnimatedOpen.current = false;
-    }
+
+    // sourceTransform null on this render — defer one frame.
+    // If context state propagates (sourceRect arrives), the effect re-runs with
+    // truthy sourceTransform before the rAF fires, cancels this, and plays the animation.
+    // If sourceRect genuinely never comes, instant-show after one frame.
+    const rafId = requestAnimationFrame(() => {
+      if (!hasAnimatedOpen.current) {
+        hasAnimatedOpen.current = true;
+        openProgress.setValue(1);
+        opacity.setValue(1);
+      }
+    });
+    return () => cancelAnimationFrame(rafId);
   }, [visible, sourceTransform]);
 
   // Reset index when modal opens or initialIndex changes

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, TextInput, Text, StyleSheet, Pressable } from 'react-native';
+import { View, TextInput, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
@@ -125,12 +125,14 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
+    ...Platform.select({ android: { lineHeight: 26 } }),
   },
   hiddenInput: {
     position: 'absolute',
     width: 1,
     height: 1,
-    opacity: 0,
+    // Android marks opacity:0 inputs as non-focusable, which prevents keyboard from opening
+    opacity: Platform.OS === 'android' ? 0.01 : 0,
   },
 });
 

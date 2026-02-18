@@ -11,6 +11,7 @@ import {
   LayoutAnimation,
   Keyboard,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 
@@ -42,6 +43,7 @@ const ReportUserScreen = () => {
   const route = useRoute();
   const { user } = useAuth();
 
+  const insets = useSafeAreaInsets();
   const { userId, username, displayName, profilePhotoURL } = route.params || {};
 
   const [selectedReason, setSelectedReason] = useState(null);
@@ -104,7 +106,7 @@ const ReportUserScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
           <PixelIcon name="close" size={24} color={colors.icon.primary} />
         </TouchableOpacity>

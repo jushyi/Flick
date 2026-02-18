@@ -21,7 +21,7 @@
  * @param {ref} ref - Ref for imperative methods (triggerArchive, triggerJournal, triggerDelete)
  */
 
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { GestureDetector } from 'react-native-gesture-handler';
@@ -157,13 +157,10 @@ const SwipeablePhotoCard = forwardRef(
       </Animated.View>
     );
 
-    // Only wrap in GestureDetector for active (swipeable) card
-    if (isActive) {
-      return <GestureDetector gesture={panGesture}>{cardContent}</GestureDetector>;
-    }
-
-    // Stack cards (not swipeable) - render directly
-    return cardContent;
+    // Always wrap in GestureDetector to keep tree structure stable.
+    // Gesture is disabled for inactive cards via .enabled(isActive) in useSwipeableCard,
+    // preventing remount of the Animated.View (and expo-image transition re-trigger) on Android.
+    return <GestureDetector gesture={panGesture}>{cardContent}</GestureDetector>;
   }
 );
 
