@@ -962,33 +962,6 @@ const AlbumPhotoViewer = ({
             )}
           </View>
 
-          {/* Thumbnail navigation bar */}
-          <View style={[styles.thumbnailBar, { paddingBottom: insets.bottom + 8 }]}>
-            <FlatList
-              ref={thumbnailListRef}
-              data={photos}
-              renderItem={renderThumbnail}
-              keyExtractor={item => `thumb-${item.id}`}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              getItemLayout={getThumbnailLayout}
-              contentContainerStyle={styles.thumbnailContent}
-              initialNumToRender={10}
-              maxToRenderPerBatch={5}
-              windowSize={21}
-              removeClippedSubviews={false}
-              onLayout={() => scrollThumbnailTo(currentIndex, false)}
-              onScrollToIndexFailed={info => {
-                const safeIndex = Math.min(info.index, photosRef.current.length - 1);
-                if (safeIndex >= 0) {
-                  setTimeout(() => {
-                    scrollThumbnailTo(safeIndex, false);
-                  }, 100);
-                }
-              }}
-            />
-          </View>
-
           {/* Toast notification */}
           {toastVisible && (
             <Animated.View
@@ -1005,6 +978,41 @@ const AlbumPhotoViewer = ({
             onClose={() => setMenuVisible(false)}
             options={menuOptions}
             anchorPosition={menuAnchor}
+          />
+        </Animated.View>
+
+        {/* Thumbnail navigation bar — rendered OUTSIDE the overflow:hidden expand wrapper
+            so Android's RecyclerView scroll layers cannot clip or overdraw it. It fades
+            with viewerOpacity but does not participate in the expand/collapse transform. */}
+        <Animated.View
+          style={[
+            styles.thumbnailBar,
+            { opacity: viewerOpacity, paddingBottom: insets.bottom + 8 },
+          ]}
+          pointerEvents="box-none"
+        >
+          <FlatList
+            ref={thumbnailListRef}
+            data={photos}
+            renderItem={renderThumbnail}
+            keyExtractor={item => `thumb-${item.id}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            getItemLayout={getThumbnailLayout}
+            contentContainerStyle={styles.thumbnailContent}
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={21}
+            removeClippedSubviews={false}
+            onLayout={() => scrollThumbnailTo(currentIndex, false)}
+            onScrollToIndexFailed={info => {
+              const safeIndex = Math.min(info.index, photosRef.current.length - 1);
+              if (safeIndex >= 0) {
+                setTimeout(() => {
+                  scrollThumbnailTo(safeIndex, false);
+                }, 100);
+              }
+            }}
           />
         </Animated.View>
       </View>
