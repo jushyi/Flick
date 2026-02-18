@@ -9,7 +9,6 @@ import {
   ScrollView,
   LayoutAnimation,
   Platform,
-  UIManager,
 } from 'react-native';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,11 +32,6 @@ import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
 import { layout } from '../constants/layout';
 import logger from '../utils/logger';
-
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const MAX_SELECTS = 10;
 const THUMBNAIL_SIZE = 56;
@@ -700,10 +694,17 @@ const SelectsScreen = ({ navigation }) => {
       Alert.alert(
         'Skip Highlights?',
         'Are you sure you want to skip selecting highlights? You can always add them later from your profile.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Skip', onPress: () => saveSelects([]), style: 'destructive' },
-        ]
+        // Android reverses button display order, so we reverse the array on Android
+        // to keep Cancel on the left and Skip on the right on both platforms.
+        Platform.OS === 'android'
+          ? [
+              { text: 'Skip', onPress: () => saveSelects([]), style: 'destructive' },
+              { text: 'Cancel', style: 'cancel' },
+            ]
+          : [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Skip', onPress: () => saveSelects([]), style: 'destructive' },
+            ]
       );
       return;
     }
@@ -910,7 +911,8 @@ const styles = StyleSheet.create({
     borderRadius: layout.borderRadius.sm,
     borderWidth: 2,
     borderColor: colors.border.subtle,
-    borderStyle: 'dashed',
+    // dashed + borderRadius doesn't render on Android — use solid as fallback
+    borderStyle: Platform.select({ ios: 'dashed', android: 'solid' }),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -953,7 +955,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
     borderWidth: 1,
     borderColor: colors.border.subtle,
-    borderStyle: 'dashed',
+    // dashed + borderRadius doesn't render on Android — use solid as fallback
+    borderStyle: Platform.select({ ios: 'dashed', android: 'solid' }),
   },
   thumbnailSelected: {
     borderWidth: 2,
@@ -1050,12 +1053,14 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: spacing.xxs,
+    textAlign: 'center',
   },
   tutorialSubtitle: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.readable,
     color: colors.text.secondary,
     marginBottom: spacing.md,
+    textAlign: 'center',
   },
   tutorialButton: {
     backgroundColor: colors.brand.purple,
