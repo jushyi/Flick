@@ -1,4 +1,4 @@
-import { createRef } from 'react';
+import { createRef, useRef, useEffect } from 'react';
 import { View, Alert } from 'react-native';
 import PixelSpinner from '../components/PixelSpinner';
 import {
@@ -11,9 +11,18 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { useAuth } from '../context/AuthContext';
 import { PhoneAuthProvider } from '../context/PhoneAuthContext';
 import { PhotoDetailProvider } from '../context/PhotoDetailContext';
+import * as Contacts from 'expo-contacts';
 import { colors } from '../constants/colors';
 import CustomBottomTabBar from '../components/CustomBottomTabBar';
 import DeletionRecoveryModal from '../components/DeletionRecoveryModal';
+import {
+  checkNotificationPermissions,
+  requestNotificationPermission,
+  getNotificationToken,
+  storeNotificationToken,
+} from '../services/firebase/notificationService';
+import { getContactsPermissionStatus } from '../services/firebase/contactSyncService';
+import logger from '../utils/logger';
 
 // Import auth screens (phone-only authentication)
 import PhoneInputScreen from '../screens/PhoneInputScreen';
@@ -271,6 +280,60 @@ const linking = {
  */
 const AppNavigator = () => {
   const { user, userProfile, initializing, pendingDeletion, cancelDeletion, signOut } = useAuth();
+
+  // Reconcile iOS permissions that may have been reset after a TestFlight update/reinstall.
+  // iOS resets permission status to 'undetermined' on full reinstall. When we detect that a
+  // previously-completed permission is now undetermined, re-request it automatically so the
+  // user just taps "Allow" instead of navigating through settings manually.
+  const hasReconciled = useRef(false);
+  useEffect(() => {
+    if (!user || !userProfile || hasReconciled.current) return;
+
+    // Only reconcile for users who completed onboarding
+    const isOnboarded =
+      userProfile.profileSetupCompleted === true &&
+      userProfile.selectsCompleted === true &&
+      userProfile.contactsSyncCompleted !== undefined;
+
+    if (!isOnboarded) return;
+
+    hasReconciled.current = true;
+
+    const reconcilePermissions = async () => {
+      try {
+        // Notification permissions: re-request if previously completed but now undetermined
+        if (userProfile.notificationPermissionCompleted) {
+          const notifResult = await checkNotificationPermissions();
+          if (notifResult.success && notifResult.data.status === 'undetermined') {
+            logger.info('AppNavigator: Notification permission was reset, re-requesting');
+            const permResult = await requestNotificationPermission();
+            if (permResult.success) {
+              const tokenResult = await getNotificationToken();
+              if (tokenResult.success && tokenResult.data) {
+                await storeNotificationToken(user.uid, tokenResult.data);
+              }
+            }
+          }
+        }
+
+        // Contacts permissions: re-request if previously synced but now undetermined
+        // Uses expo-contacts directly to avoid the Alert shown by the service wrapper
+        if (userProfile.contactsSyncCompleted === true) {
+          const contactsResult = await getContactsPermissionStatus();
+          if (contactsResult.success && contactsResult.data.status === 'undetermined') {
+            logger.info('AppNavigator: Contacts permission was reset, re-requesting');
+            await Contacts.requestPermissionsAsync();
+          }
+        }
+      } catch (error) {
+        logger.error('AppNavigator: Permission reconciliation failed', {
+          error: error.message,
+        });
+      }
+    };
+
+    reconcilePermissions();
+  }, [user, userProfile]);
 
   const handleCancelDeletion = async () => {
     const result = await cancelDeletion();
