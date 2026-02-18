@@ -1148,6 +1148,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     paddingRight: '35%', // Stop text before friend counter
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 32 } }),
   },
   username: {
     fontSize: typography.size.lg,
@@ -1184,6 +1185,7 @@ const styles = StyleSheet.create({
     color: colors.brand.purple,
     textAlign: 'center',
     letterSpacing: 3,
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 32 } }),
   },
   // Profile Song
   songContainer: {

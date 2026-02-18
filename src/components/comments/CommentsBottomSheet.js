@@ -18,6 +18,7 @@ import {
   Animated,
   Easing,
   Keyboard,
+  BackHandler,
   PanResponder,
 } from 'react-native';
 import PixelSpinner from '../PixelSpinner';
@@ -259,6 +260,16 @@ const CommentsBottomSheet = ({
       hideSub.remove();
     };
   }, [sheetHeight, expandedHeight]);
+
+  // Android: intercept hardware back press to close sheet before screen dismisses
+  useEffect(() => {
+    if (!visible || Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      animateClose();
+      return true; // Prevent default back navigation
+    });
+    return () => subscription.remove();
+  }, [visible, animateClose]);
 
   // Use comments hook for state management
   const {

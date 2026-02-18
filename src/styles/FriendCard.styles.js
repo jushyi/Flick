@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
@@ -104,10 +104,10 @@ export const styles = StyleSheet.create({
   // Accept button (green)
   acceptButton: {
     backgroundColor: colors.status.ready,
-    paddingHorizontal: spacing.sm + 2,
+    paddingHorizontal: Platform.OS === 'android' ? spacing.xs : spacing.sm + 2,
     paddingVertical: spacing.xs,
     borderRadius: layout.borderRadius.sm,
-    minWidth: 70,
+    minWidth: Platform.OS === 'android' ? 56 : 70,
     alignItems: 'center',
   },
   acceptButtonText: {
@@ -118,10 +118,10 @@ export const styles = StyleSheet.create({
   // Deny button (red/pink)
   denyButton: {
     backgroundColor: colors.status.danger,
-    paddingHorizontal: spacing.sm + 2,
+    paddingHorizontal: Platform.OS === 'android' ? spacing.xs : spacing.sm + 2,
     paddingVertical: spacing.xs,
     borderRadius: layout.borderRadius.sm,
-    minWidth: 60,
+    minWidth: Platform.OS === 'android' ? 48 : 60,
     alignItems: 'center',
   },
   denyButtonText: {

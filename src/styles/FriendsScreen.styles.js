@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
@@ -26,6 +26,7 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.xxl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 32 } }),
   },
   // Tab navigation
   tabContainer: {
@@ -100,6 +101,7 @@ export const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.secondary,
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 26 } }),
   },
   // Section headers
   sectionHeader: {
@@ -146,6 +148,7 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: spacing.xs,
     textAlign: 'center',
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 26 } }),
   },
   emptyText: {
     fontSize: typography.size.md,
