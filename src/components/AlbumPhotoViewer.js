@@ -375,9 +375,8 @@ const AlbumPhotoViewer = ({
   useEffect(() => {
     if (visible) {
       setCurrentIndex(initialIndex);
-      // Scroll to initial index after a brief delay to ensure FlatList is ready.
-      // Use photosRef (not photos closure) to get the latest array length at call time,
-      // preventing out-of-bounds if fetchPhotos completes and shrinks photos mid-timeout.
+      // Fallback scroll in case onLayout fires before initialIndex is set.
+      // Use a longer delay (200ms) to cover Android Modal rendering latency.
       setTimeout(() => {
         const currentPhotos = photosRef.current;
         if (!currentPhotos || currentPhotos.length === 0) return;
@@ -387,14 +386,10 @@ const AlbumPhotoViewer = ({
           index: safeIndex,
           animated: false,
         });
-        thumbnailListRef.current?.scrollToIndex({
-          index: safeIndex,
-          animated: false,
-          viewPosition: 0.5,
-        });
-      }, 50);
+        scrollThumbnailTo(safeIndex, false);
+      }, 200);
     }
-  }, [visible, initialIndex]);
+  }, [visible, initialIndex, scrollThumbnailTo]);
 
   // Clamp currentIndex if photos shrinks while viewer is open (race condition guard)
   useEffect(() => {
@@ -403,16 +398,12 @@ const AlbumPhotoViewer = ({
     }
   }, [visible, photos.length, currentIndex]);
 
-  // Auto-scroll thumbnail bar when currentIndex changes
+  // Auto-scroll thumbnail bar when currentIndex changes (during swiping)
   useEffect(() => {
     if (visible && photos.length > 0) {
-      thumbnailListRef.current?.scrollToIndex({
-        index: currentIndex,
-        animated: true,
-        viewPosition: 0.5,
-      });
+      scrollThumbnailTo(currentIndex, true);
     }
-  }, [currentIndex, visible, photos.length]);
+  }, [currentIndex, visible, photos.length, scrollThumbnailTo]);
 
   // Mark beginning of a user-initiated drag so handleScroll can update the index optimistically
   const handleScrollBeginDrag = useCallback(() => {
@@ -723,6 +714,26 @@ const AlbumPhotoViewer = ({
     [THUMBNAIL_WIDTH, THUMBNAIL_MARGIN]
   );
 
+  // Scroll thumbnail strip to center a specific index using scrollToOffset (more reliable
+  // than scrollToIndex on Android, especially inside a Modal).
+  const THUMB_ITEM_WIDTH = THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2; // 58px
+  const THUMB_CONTENT_PADDING = spacing.xs; // 8px (from contentContainerStyle paddingHorizontal)
+  const scrollThumbnailTo = useCallback(
+    (index, animated) => {
+      const totalItems = photosRef.current.length;
+      if (totalItems === 0 || !thumbnailListRef.current) return;
+      const itemStart = THUMB_CONTENT_PADDING + index * THUMB_ITEM_WIDTH;
+      const centeredOffset = itemStart - (SCREEN_WIDTH - THUMB_ITEM_WIDTH) / 2;
+      const maxOffset = Math.max(
+        0,
+        totalItems * THUMB_ITEM_WIDTH + THUMB_CONTENT_PADDING * 2 - SCREEN_WIDTH
+      );
+      const offset = Math.max(0, Math.min(centeredOffset, maxOffset));
+      thumbnailListRef.current.scrollToOffset({ offset, animated });
+    },
+    [THUMB_ITEM_WIDTH, THUMB_CONTENT_PADDING]
+  );
+
   // Render thumbnail item
   const renderThumbnail = useCallback(
     ({ item, index }) => (
@@ -851,20 +862,16 @@ const AlbumPhotoViewer = ({
               showsHorizontalScrollIndicator={false}
               getItemLayout={getThumbnailLayout}
               contentContainerStyle={styles.thumbnailContent}
-              initialScrollIndex={Math.min(initialIndex, Math.max(0, photos.length - 1))}
               initialNumToRender={10}
               maxToRenderPerBatch={5}
               windowSize={21}
               removeClippedSubviews={false}
+              onLayout={() => scrollThumbnailTo(currentIndex, false)}
               onScrollToIndexFailed={info => {
                 const safeIndex = Math.min(info.index, photosRef.current.length - 1);
                 if (safeIndex >= 0) {
                   setTimeout(() => {
-                    thumbnailListRef.current?.scrollToIndex({
-                      index: safeIndex,
-                      animated: false,
-                      viewPosition: 0.5,
-                    });
+                    scrollThumbnailTo(safeIndex, false);
                   }, 100);
                 }
               }}
@@ -961,6 +968,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 10,
+    elevation: 10,
     backgroundColor: colors.overlay.dark,
     paddingTop: spacing.xs,
   },

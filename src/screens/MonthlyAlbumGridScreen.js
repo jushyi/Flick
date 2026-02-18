@@ -21,7 +21,7 @@ import { getMonthPhotos } from '../services/firebase/monthlyAlbumService';
 import { AlbumPhotoViewer } from '../components';
 import logger from '../utils/logger';
 
-const HEADER_HEIGHT = 64;
+const HEADER_HEIGHT = Platform.OS === 'android' ? 80 : 64;
 const GRID_GAP = 2;
 const NUM_COLUMNS = 3;
 const SCREEN_WIDTH = Dimensions.get('window').width;
