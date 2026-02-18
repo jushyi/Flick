@@ -8,6 +8,7 @@ import {
   Alert,
   Animated,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ScrollView,
 } from 'react-native';
@@ -121,6 +122,7 @@ const DeleteAccountScreen = () => {
   const handleBack = () => {
     logger.debug('DeleteAccountScreen: Back pressed', { step });
     if (step === 'code') {
+      Keyboard.dismiss();
       setStep('verify');
       setCode('');
       setError('');
@@ -407,7 +409,7 @@ const DeleteAccountScreen = () => {
   );
 
   const renderVerifyStep = () => (
-    <View style={styles.content}>
+    <View style={[styles.content, Platform.OS === 'android' && styles.contentAndroid]}>
       <Text style={styles.title}>Verify Your Identity</Text>
       <Text style={styles.subtitle}>For security, please verify your phone number</Text>
 
@@ -436,7 +438,11 @@ const DeleteAccountScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardAvoid}
     >
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.codeStepContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Enter Verification Code</Text>
         <Text style={styles.subtitle}>Enter the 6-digit code sent to</Text>
         <Text style={styles.phoneNumber}>
@@ -473,7 +479,7 @@ const DeleteAccountScreen = () => {
         <TouchableOpacity style={styles.cancelButton} onPress={handleBack}>
           <Text style={styles.cancelButtonText}>Back</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 
@@ -531,6 +537,12 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   headerSpacer: {
     width: 36,
@@ -539,6 +551,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xxl,
+  },
+  contentAndroid: {
+    paddingBottom: spacing.xl,
+  },
+  codeStepContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xxl,
   },
   scrollContent: {
     flex: 1,
@@ -565,6 +586,12 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.xs,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 38,
+      },
+    }),
   },
   subtitle: {
     fontSize: typography.size.lg,

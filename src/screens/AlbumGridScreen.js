@@ -8,6 +8,7 @@ import {
   Alert,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -154,23 +155,27 @@ const AlbumGridScreen = () => {
   // Delete album handler with confirmation
   const handleDeleteAlbum = () => {
     logger.info('AlbumGridScreen: Delete album selected');
-    Alert.alert('Delete Album?', 'Photos will remain in your library.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          logger.info('AlbumGridScreen: Confirming album deletion', { albumId });
-          const result = await deleteAlbum(albumId);
-          if (result.success) {
-            logger.info('AlbumGridScreen: Album deleted successfully');
-            navigation.goBack();
-          } else {
-            Alert.alert('Error', result.error || 'Could not delete album');
-          }
-        },
+    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    const deleteAction = {
+      text: 'Delete',
+      style: 'destructive',
+      onPress: async () => {
+        logger.info('AlbumGridScreen: Confirming album deletion', { albumId });
+        const result = await deleteAlbum(albumId);
+        if (result.success) {
+          logger.info('AlbumGridScreen: Album deleted successfully');
+          navigation.goBack();
+        } else {
+          Alert.alert('Error', result.error || 'Could not delete album');
+        }
       },
-    ]);
+    };
+    // Android reverses button visual order — swap so Cancel stays left, Delete right
+    Alert.alert(
+      'Delete Album?',
+      'Photos will remain in your library.',
+      Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]
+    );
   };
 
   // Header menu options
@@ -528,6 +533,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   photoCount: {
     fontSize: typography.size.sm,
@@ -558,7 +569,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.text.secondary,
-    borderStyle: 'dashed',
+    // 'dashed' + borderRadius doesn't render on Android — use solid there
+    borderStyle: Platform.select({ ios: 'dashed', android: 'solid' }),
     borderRadius: layout.borderRadius.md,
   },
   addButtonText: {

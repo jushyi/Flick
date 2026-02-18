@@ -7,6 +7,7 @@ import {
   FlatList,
   Dimensions,
   Alert,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -201,7 +202,9 @@ const AlbumPhotoPickerScreen = () => {
           <PixelIcon name="chevron-back" size={28} color={colors.text.primary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Select Photos</Text>
+          <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>
+            Select Photos
+          </Text>
           <Text style={styles.headerSubtitle}>{selectedIds.length} selected</Text>
         </View>
         <TouchableOpacity
@@ -279,6 +282,12 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   headerSubtitle: {
     fontSize: typography.size.sm,

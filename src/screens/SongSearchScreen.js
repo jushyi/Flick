@@ -227,7 +227,7 @@ const SongSearchScreen = () => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -271,7 +271,10 @@ const SongSearchScreen = () => {
           data={results}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: spacing.lg + insets.bottom },
+          ]}
           ListEmptyComponent={renderEmptyState}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -317,6 +320,12 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   headerSpacer: {
     width: 40,

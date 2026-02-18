@@ -15,26 +15,42 @@ import Svg, { Defs, Rect, Mask, Circle } from 'react-native-svg';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
-import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Circle size: approximately 80% of screen width
 const CIRCLE_SIZE = SCREEN_WIDTH * 0.8;
 const CIRCLE_RADIUS = CIRCLE_SIZE / 2;
 
 /**
- * ProfilePhotoCropScreen
+ * ProfilePhotoCropScreen (Android)
  *
- * Custom crop UI for profile photos with circular preview and gesture support.
- * - Circular mask overlay showing how the profile photo will appear
- * - Pinch-to-zoom and pan gestures
- * - Direct response (no bouncy animations)
- * - Crop produces square output matching the circular preview area
+ * Uses the same rendering approach as iOS (image at raw pixel dimensions with
+ * initialScale to fit the circle) — the math is identical and proven correct.
  *
- * @param {Object} route.params.imageUri - The image URI to crop
- * @param {Function} route.params.onCropComplete - Callback with cropped URI
+ * Android-specific additions vs the iOS file:
+ *  1. EXIF normalization via ImageManipulator before getting image size.
+ *     On Android, Image.getSize() returns the raw (EXIF-unrotated) dimensions
+ *     while expo-image renders with EXIF rotation applied, creating a mismatch.
+ *     Baking the rotation in via ImageManipulator aligns both coordinate systems.
+ *  2. Measured imageAreaLayout for the circle overlay.
+ *     With edgeToEdgeEnabled: true, Dimensions.get('window').height includes the
+ *     system bars, making SCREEN_HEIGHT larger than the actual imageArea and
+ *     displacing the overlay circle.  We measure the real imageArea height via
+ *     onLayout and use those values for the SVG overlay.
+ *
+ * Crop formula (same as iOS):
+ *   The image is rendered at imageSize.width × imageSize.height dp, centred in
+ *   imageArea.  At initialScale the image's shorter side fills CIRCLE_SIZE.
+ *   After transform [translateX: tx, translateY: ty, scale: s]:
+ *     image centre on screen = imageArea.centre + (tx, ty)
+ *     circle centre = imageArea.centre (fixed)
+ *   Circle centre in image pixel coordinates:
+ *     cropCentreX = imageWidth/2 - tx/s
+ *     cropCentreY = imageHeight/2 - ty/s
+ *   Crop size in pixels:
+ *     cropSize = CIRCLE_SIZE / s
  */
 const ProfilePhotoCropScreen = ({ navigation, route }) => {
   const { imageUri, onCropComplete } = route.params || {};
@@ -43,6 +59,21 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
   const [cropping, setCropping] = useState(false);
+  // workingUri has EXIF rotation baked in so Image.getSize() and the crop
+  // operation share the same coordinate system.
+  const [workingUri, setWorkingUri] = useState(null);
+  // Measured imageArea dimensions so the circle overlay is centred in the real
+  // available space — not the full window height which includes system bars on
+  // Android with edgeToEdgeEnabled.
+  const [imageAreaLayout, setImageAreaLayout] = useState({
+    width: SCREEN_WIDTH,
+    height: 400,
+  });
+
+  const handleImageAreaLayout = useCallback(event => {
+    const { width, height } = event.nativeEvent.layout;
+    setImageAreaLayout({ width, height });
+  }, []);
 
   // Shared values for gestures
   const scale = useSharedValue(1);
@@ -52,70 +83,100 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
 
-  // Shared values for image dimensions (needed in worklets)
+  // Shared values for image dimensions and min scale (needed in worklets)
   const imageWidth = useSharedValue(0);
   const imageHeight = useSharedValue(0);
   const minScaleValue = useSharedValue(1);
 
-  // Load image dimensions
+  // Normalize EXIF rotation then load image dimensions.
   useEffect(() => {
     if (!imageUri) return;
 
-    const ImageRN = require('react-native').Image;
-    ImageRN.getSize(
-      imageUri,
-      (width, height) => {
-        setImageSize({ width, height });
+    setLoading(true);
 
-        // Also set shared values for use in worklets
-        imageWidth.value = width;
-        imageHeight.value = height;
+    const normalizeAndLoad = async () => {
+      let uri = imageUri;
 
-        // Calculate base scale so image fills the circle
-        // The smaller dimension should fill the circle diameter
-        const imageAspect = width / height;
-        let initialScale;
-
-        if (imageAspect > 1) {
-          // Landscape: height is smaller, scale based on height
-          initialScale = CIRCLE_SIZE / height;
-        } else {
-          // Portrait or square: width is smaller, scale based on width
-          initialScale = CIRCLE_SIZE / width;
-        }
-
-        minScaleValue.value = initialScale;
-        scale.value = initialScale;
-        savedScale.value = initialScale;
-        setLoading(false);
-
-        logger.debug('ProfilePhotoCropScreen: Image loaded', {
-          width,
-          height,
-          initialScale,
+      try {
+        const normalized = await ImageManipulator.manipulateAsync(imageUri, [], {
+          compress: 1,
+          format: ImageManipulator.SaveFormat.JPEG,
         });
-      },
-      error => {
-        logger.error('ProfilePhotoCropScreen: Failed to get image size', { error });
-        setLoading(false);
+        uri = normalized.uri;
+      } catch (err) {
+        logger.warn('ProfilePhotoCropScreen (Android): EXIF normalization failed, using original', {
+          error: err.message,
+        });
       }
-    );
-  }, [imageUri, scale, savedScale, imageWidth, imageHeight, minScaleValue]);
+
+      setWorkingUri(uri);
+
+      const ImageRN = require('react-native').Image;
+      ImageRN.getSize(
+        uri,
+        (width, height) => {
+          setImageSize({ width, height });
+          imageWidth.value = width;
+          imageHeight.value = height;
+
+          // initialScale: scale the shorter side to fill CIRCLE_SIZE
+          const imageAspect = width / height;
+          const initialScale =
+            imageAspect > 1
+              ? CIRCLE_SIZE / height // landscape: height is shorter
+              : CIRCLE_SIZE / width; // portrait / square: width is shorter
+
+          minScaleValue.value = initialScale;
+          scale.value = initialScale;
+          savedScale.value = initialScale;
+
+          // Reset pan
+          translateX.value = 0;
+          translateY.value = 0;
+          savedTranslateX.value = 0;
+          savedTranslateY.value = 0;
+
+          setLoading(false);
+
+          logger.debug('ProfilePhotoCropScreen (Android): Image loaded', {
+            width,
+            height,
+            initialScale,
+          });
+        },
+        error => {
+          logger.error('ProfilePhotoCropScreen (Android): Failed to get image size', { error });
+          setLoading(false);
+        }
+      );
+    };
+
+    normalizeAndLoad();
+  }, [
+    imageUri,
+    scale,
+    savedScale,
+    translateX,
+    translateY,
+    savedTranslateX,
+    savedTranslateY,
+    imageWidth,
+    imageHeight,
+    minScaleValue,
+  ]);
 
   // Pinch gesture for zooming
   const pinchGesture = Gesture.Pinch()
     .onUpdate(event => {
       'worklet';
-      // Direct response: new scale = saved scale * pinch scale
       const newScale = savedScale.value * event.scale;
-      // Clamp between minScale and 4x
       scale.value = Math.max(minScaleValue.value, Math.min(4, newScale));
     })
     .onEnd(() => {
       'worklet';
       savedScale.value = scale.value;
 
-      // Re-clamp translation after zoom (inline clamping logic)
+      // Re-clamp translation after zoom
       const scaledWidth = imageWidth.value * scale.value;
       const scaledHeight = imageHeight.value * scale.value;
       const maxTranslateX = Math.max(0, (scaledWidth - CIRCLE_SIZE) / 2);
@@ -134,11 +195,9 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
   const panGesture = Gesture.Pan()
     .onUpdate(event => {
       'worklet';
-      // Direct response: new position = saved position + delta
       const newX = savedTranslateX.value + event.translationX;
       const newY = savedTranslateY.value + event.translationY;
 
-      // Clamp to keep image covering the circle (inline clamping logic)
       const scaledWidth = imageWidth.value * scale.value;
       const scaledHeight = imageHeight.value * scale.value;
       const maxTranslateX = Math.max(0, (scaledWidth - CIRCLE_SIZE) / 2);
@@ -153,10 +212,8 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
       savedTranslateY.value = translateY.value;
     });
 
-  // Compose gestures to work simultaneously
   const composedGesture = Gesture.Simultaneous(pinchGesture, panGesture);
 
-  // Animated style for the image
   const animatedImageStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
@@ -165,37 +222,31 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
     ],
   }));
 
-  // Handle cancel
   const handleCancel = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
 
-  // Handle confirm - crop the image
   const handleConfirm = useCallback(async () => {
-    if (!imageUri || imageSize.width === 0) return;
+    if (!workingUri || imageSize.width === 0) return;
 
     setCropping(true);
 
     try {
-      // Calculate the crop region in original image coordinates
-      // The circle represents a square crop area in the center of the view
       const currentScale = scale.value;
       const currentTranslateX = translateX.value;
       const currentTranslateY = translateY.value;
 
-      // The visible circle corresponds to a square region in the original image
-      // We need to reverse the transformations to find the original pixel coordinates
+      logger.debug('ProfilePhotoCropScreen (Android): handleConfirm gesture values', {
+        scale: currentScale,
+        translateX: currentTranslateX,
+        translateY: currentTranslateY,
+        imageSize,
+      });
 
-      // Center of the crop circle in view coordinates (relative to image center)
-      // The image is centered, and translations move it
-      // So the crop center in image coordinates is: -translateX, -translateY
-
-      // Size of the crop area in original image pixels
+      // Crop size in original image pixels
       const cropSizeInOriginal = CIRCLE_SIZE / currentScale;
 
-      // Origin of the crop area in original image coordinates
-      // Image center is at (width/2, height/2)
-      // The displayed area's center is offset by -translate/scale from image center
+      // Crop centre in original image pixels (same formula as iOS)
       const cropCenterX = imageSize.width / 2 - currentTranslateX / currentScale;
       const cropCenterY = imageSize.height / 2 - currentTranslateY / currentScale;
 
@@ -211,19 +262,16 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
         imageSize.height - clampedOriginY
       );
 
-      logger.debug('ProfilePhotoCropScreen: Crop parameters', {
+      logger.debug('ProfilePhotoCropScreen (Android): Crop parameters', {
         currentScale,
-        currentTranslateX,
-        currentTranslateY,
         cropSizeInOriginal,
         originX: clampedOriginX,
         originY: clampedOriginY,
         size: clampedSize,
       });
 
-      // Crop the image
       const result = await ImageManipulator.manipulateAsync(
-        imageUri,
+        workingUri,
         [
           {
             crop: {
@@ -237,45 +285,41 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
         { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
       );
 
-      logger.info('ProfilePhotoCropScreen: Crop successful', { croppedUri: result.uri });
+      logger.info('ProfilePhotoCropScreen (Android): Crop successful', { croppedUri: result.uri });
 
-      // Call the callback with the cropped URI
       if (onCropComplete) {
         onCropComplete(result.uri);
       }
 
       navigation.goBack();
     } catch (error) {
-      logger.error('ProfilePhotoCropScreen: Crop failed', { error: error.message });
+      logger.error('ProfilePhotoCropScreen (Android): Crop failed', { error: error.message });
       setCropping(false);
     }
-  }, [imageUri, imageSize, scale, translateX, translateY, onCropComplete, navigation]);
+  }, [workingUri, imageSize, scale, translateX, translateY, onCropComplete, navigation]);
 
-  // Circle overlay component with transparent cutout
-  const CircleOverlay = () => (
+  // Circle overlay — uses measured imageArea dimensions so the circle centre
+  // matches the image centre assumed by the crop math (not full window height).
+  const CircleOverlay = ({ areaWidth, areaHeight }) => (
     <View style={styles.overlayContainer} pointerEvents="none">
-      <Svg width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+      <Svg width={areaWidth} height={areaHeight}>
         <Defs>
           <Mask id="mask">
-            {/* White background (will be visible/dimmed) */}
-            <Rect x="0" y="0" width={SCREEN_WIDTH} height={SCREEN_HEIGHT} fill="white" />
-            {/* Black circle (will be transparent cutout) */}
-            <Circle cx={SCREEN_WIDTH / 2} cy={SCREEN_HEIGHT / 2} r={CIRCLE_RADIUS} fill="black" />
+            <Rect x="0" y="0" width={areaWidth} height={areaHeight} fill="white" />
+            <Circle cx={areaWidth / 2} cy={areaHeight / 2} r={CIRCLE_RADIUS} fill="black" />
           </Mask>
         </Defs>
-        {/* Dark overlay with circular cutout */}
         <Rect
           x="0"
           y="0"
-          width={SCREEN_WIDTH}
-          height={SCREEN_HEIGHT}
+          width={areaWidth}
+          height={areaHeight}
           fill={colors.overlay.dark}
           mask="url(#mask)"
         />
-        {/* Circle border for visibility */}
         <Circle
-          cx={SCREEN_WIDTH / 2}
-          cy={SCREEN_HEIGHT / 2}
+          cx={areaWidth / 2}
+          cy={areaHeight / 2}
           r={CIRCLE_RADIUS}
           stroke="rgba(255, 255, 255, 0.5)"
           strokeWidth="2"
@@ -316,14 +360,14 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
         </View>
 
         {/* Image area with gestures */}
-        <View style={styles.imageArea}>
+        <View style={styles.imageArea} onLayout={handleImageAreaLayout}>
           {loading ? (
             <PixelSpinner size="large" color={colors.text.primary} />
           ) : (
             <GestureDetector gesture={composedGesture}>
               <Animated.View style={[styles.imageContainer, animatedImageStyle]}>
                 <Image
-                  source={{ uri: imageUri }}
+                  source={{ uri: workingUri }}
                   style={{
                     width: imageSize.width,
                     height: imageSize.height,
@@ -336,7 +380,9 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
           )}
 
           {/* Circle overlay */}
-          {!loading && <CircleOverlay />}
+          {!loading && (
+            <CircleOverlay areaWidth={imageAreaLayout.width} areaHeight={imageAreaLayout.height} />
+          )}
         </View>
 
         {/* Instructions */}
