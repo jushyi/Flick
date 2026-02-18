@@ -1,13 +1,25 @@
 import { View, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PixelIcon from './PixelIcon';
 
 import { colors } from '../constants/colors';
 
 const CustomBottomTabBar = ({ state, navigation, userProfile }) => {
+  const insets = useSafeAreaInsets();
+  const androidBottomPadding = Platform.OS === 'android' ? insets.bottom : 0;
+
   return (
-    <View style={styles.tabBar}>
+    <View
+      style={[
+        styles.tabBar,
+        androidBottomPadding > 0 && {
+          paddingBottom: androidBottomPadding,
+          height: 65 + androidBottomPadding,
+        },
+      ]}
+    >
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
         const color = isFocused ? colors.icon.primary : colors.icon.inactive;
