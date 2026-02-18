@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -1315,6 +1316,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xxl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 26 } }),
   },
   friendsButton: {
     padding: spacing.xs,
