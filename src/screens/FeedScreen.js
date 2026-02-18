@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
   RefreshControl,
+  AppState,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -70,6 +71,9 @@ const FeedScreen = () => {
   // Ref for scrolling FlatList to top
   const flatListRef = useRef(null);
   const scrollOffsetRef = useRef(0);
+
+  // Timestamp when app was last backgrounded (for auto-reload after inactivity)
+  const backgroundedAtRef = useRef(null);
 
   // Animated scroll value for header hide/show
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -371,6 +375,27 @@ const FeedScreen = () => {
     // Refresh all data sources in parallel
     await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories()]);
   };
+
+  // Auto-reload feed when returning from background after 10+ minutes of inactivity
+  const INACTIVITY_THRESHOLD_MS = 10 * 60 * 1000;
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        backgroundedAtRef.current = Date.now();
+      } else if (nextAppState === 'active' && backgroundedAtRef.current) {
+        const elapsed = Date.now() - backgroundedAtRef.current;
+        if (elapsed >= INACTIVITY_THRESHOLD_MS) {
+          logger.debug('FeedScreen: Auto-refreshing after inactivity', {
+            elapsedMinutes: Math.round(elapsed / 60000),
+          });
+          handleRefresh();
+        }
+        backgroundedAtRef.current = null;
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   // Track scroll offset on the JS side for tab-press logic
   useEffect(() => {
