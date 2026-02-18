@@ -104,6 +104,7 @@ const FeedScreen = () => {
   const selectedFriendRef = useRef(null);
   const selectedFriendIndexRef = useRef(0);
   const storySequenceRef = useRef([]); // Story sequence locked at session start (stable ordering)
+  const startedOnViewedRef = useRef(false); // Whether story session started on a viewed friend
 
   // Own stories state
   const [myStories, setMyStories] = useState(null);
@@ -345,6 +346,7 @@ const FeedScreen = () => {
         }
         isInStoriesModeRef.current = false;
         isOwnStoriesRef.current = false;
+        startedOnViewedRef.current = false;
       },
       onAvatarPress: (userId, username) => {
         // For own stories: header avatar goes to Profile tab
@@ -437,11 +439,15 @@ const FeedScreen = () => {
     // Set mode flags
     isInStoriesModeRef.current = true;
     isOwnStoriesRef.current = false;
+    startedOnViewedRef.current = hasViewedAllPhotos(friend.topPhotos);
 
-    // Check if next friend in sequence has unviewed photos
+    // Check if there's a next friend to transition to.
+    // Started on viewed: allow advancing through all remaining friends.
+    // Started on unviewed: only advance if next friend has unviewed photos.
     const nextFriendAtOpen = sortedFriends[friendIdx + 1];
-    const hasNextUnviewedAtOpen =
-      nextFriendAtOpen !== undefined && !hasViewedAllPhotos(nextFriendAtOpen.topPhotos || []);
+    const hasNextAtOpen = startedOnViewedRef.current
+      ? nextFriendAtOpen !== undefined
+      : nextFriendAtOpen !== undefined && !hasViewedAllPhotos(nextFriendAtOpen.topPhotos || []);
 
     // Open via context and navigate
     openPhotoDetail({
@@ -449,7 +455,7 @@ const FeedScreen = () => {
       photos: friend.topPhotos || [],
       initialIndex: startIndex,
       currentUserId: user?.uid,
-      hasNextFriend: hasNextUnviewedAtOpen,
+      hasNextFriend: hasNextAtOpen,
       hasPreviousFriend: friendIdx > 0,
       isOwnStory: false,
       sourceRect: sourceRect || null,
@@ -584,10 +590,13 @@ const FeedScreen = () => {
     const nextFriend = sortedFriends[nextFriendIdx];
     const nextStartIndex = getFirstUnviewedIndex(nextFriend.topPhotos || []);
 
-    // Check if the friend after next has unviewed photos (gates future forward transitions)
+    // Check if there's a next friend to transition to after this one.
+    // Started on viewed: allow advancing through all remaining friends.
+    // Started on unviewed: only advance if next friend has unviewed photos.
     const nextNextFriend = sortedFriends[nextFriendIdx + 1];
-    const hasNextUnviewed =
-      nextNextFriend !== undefined && !hasViewedAllPhotos(nextNextFriend.topPhotos || []);
+    const hasNextUnviewed = startedOnViewedRef.current
+      ? nextNextFriend !== undefined
+      : nextNextFriend !== undefined && !hasViewedAllPhotos(nextNextFriend.topPhotos || []);
 
     logger.info('FeedScreen: Transitioning to next friend', {
       fromFriend: selectedFriend.displayName,
