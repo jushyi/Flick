@@ -381,7 +381,11 @@ service cloud.firestore {
     // Document ID format: [lowerUserId]_[higherUserId] (deterministic, same as friendships)
     match /conversations/{conversationId} {
       // Read: Only conversation participants
-      allow read: if isConversationMemberById(conversationId);
+      // Two cases:
+      // 1. Collection queries (where participants array-contains userId) — uses resource.data
+      // 2. Direct document reads (by conversationId) — uses ID parsing for non-existent docs
+      allow read: if (isAuthenticated() && request.auth.uid in resource.data.participants) ||
+                     isConversationMemberById(conversationId);
 
       // Create: Authenticated user who is a participant, with required fields
       allow create: if isConversationMemberById(conversationId) &&
