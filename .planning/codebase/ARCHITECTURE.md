@@ -27,14 +27,14 @@
 **Business Logic Layer (Hooks):**
 
 - Purpose: Encapsulate stateful logic, subscriptions, side effects
-- Contains: 11 custom hooks (`src/hooks/`) - camera, feed, darkroom, comments, gestures
+- Contains: 13 custom hooks (`src/hooks/`) - camera, feed, darkroom, comments, gestures, messaging
 - Depends on: Services for data operations, Context for auth state
 - Used by: Screens that need complex state management
 
 **Service Layer (Firebase + External):**
 
 - Purpose: Abstract all data operations behind `{ success, error }` interface
-- Contains: 21 Firebase services (`src/services/firebase/`), 7 root services (`src/services/`)
+- Contains: 22 Firebase services (`src/services/firebase/`), 7 root services (`src/services/`)
 - Depends on: Firebase SDK, external APIs (iTunes, Giphy)
 - Used by: Hooks, Context providers, and occasionally Screens directly
 
@@ -131,9 +131,9 @@
 
 **Cloud Functions:**
 
-- Location: `functions/index.js` (~2500 lines)
+- Location: `functions/index.js` (~2700 lines)
 - Triggers: HTTP callable, Firestore triggers, Cloud Tasks
-- Responsibilities: Push notifications, signed URL generation, account deletion, email sending, reaction batching
+- Responsibilities: Push notifications, signed URL generation, account deletion, email sending, reaction batching, DM metadata updates
 
 ## Error Handling
 

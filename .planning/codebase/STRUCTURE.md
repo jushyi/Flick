@@ -64,23 +64,23 @@ Lapse Clone/
 **src/screens/**
 
 - Purpose: Full-screen components for each route
-- Contains: 36 screen files (PascalCase + `Screen` suffix)
-- Key files: `FeedScreen.js`, `CameraScreen.js`, `ProfileScreen.js`, `DarkroomScreen.js`, `PhotoDetailScreen.js`
+- Contains: 39 screen files (PascalCase + `Screen` suffix)
+- Key files: `FeedScreen.js`, `CameraScreen.js`, `ProfileScreen.js`, `DarkroomScreen.js`, `PhotoDetailScreen.js`, `MessagesScreen.js`, `ConversationScreen.js`, `NewMessageScreen.js`
 - Subdirectories: None (flat structure)
 
 **src/components/**
 
 - Purpose: Reusable UI building blocks
-- Contains: 44+ components (PascalCase naming)
-- Key files: `FeedPhotoCard.js`, `Button.js`, `CustomBottomTabBar.js`, `ErrorBoundary.js`
+- Contains: 49+ components (PascalCase naming)
+- Key files: `FeedPhotoCard.js`, `Button.js`, `CustomBottomTabBar.js`, `ErrorBoundary.js`, `ConversationRow.js`, `MessageBubble.js`, `DMInput.js`, `ConversationHeader.js`, `TimeDivider.js`
 - Subdirectories: `comments/` (8 comment-related components), `ProfileSong/` (song selection)
 - Barrel export: `index.js` re-exports all components
 
 **src/hooks/**
 
 - Purpose: Custom React hooks for business logic
-- Contains: 11 hook files (camelCase + `use` prefix)
-- Key files: `useCamera.ios.js`, `useCamera.android.js`, `useCameraBase.js`, `useFeedPhotos.js`, `useDarkroom.js`, `useComments.js`, `usePhotoDetailModal.js`, `useSwipeableCard.js`
+- Contains: 13 hook files (camelCase + `use` prefix)
+- Key files: `useCamera.ios.js`, `useCamera.android.js`, `useCameraBase.js`, `useFeedPhotos.js`, `useDarkroom.js`, `useComments.js`, `usePhotoDetailModal.js`, `useSwipeableCard.js`, `useMessages.js`, `useConversation.js`
 - Platform variants: `useCamera.ios.js` / `useCamera.android.js` (Metro auto-resolves)
 
 **src/context/**
@@ -93,8 +93,8 @@ Lapse Clone/
 **src/services/firebase/**
 
 - Purpose: Firebase operation abstractions (all return `{ success, error }`)
-- Contains: 21 service files (camelCase + `Service` suffix)
-- Key files: `photoService.js`, `feedService.js`, `darkroomService.js`, `commentService.js`, `friendshipService.js`, `notificationService.js`, `signedUrlService.js`, `albumService.js`, `monthlyAlbumService.js`
+- Contains: 22 service files (camelCase + `Service` suffix)
+- Key files: `photoService.js`, `feedService.js`, `darkroomService.js`, `commentService.js`, `friendshipService.js`, `notificationService.js`, `signedUrlService.js`, `albumService.js`, `monthlyAlbumService.js`, `messageService.js`
 - Barrel export: `index.js`
 
 **src/services/ (root level)**
