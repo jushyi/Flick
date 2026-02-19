@@ -213,7 +213,7 @@ const NewMessageScreen = () => {
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.centered}>
-          <PixelSpinner size="medium" color={colors.text.primary} />
+          <PixelSpinner size="large" color={colors.text.primary} />
         </View>
       </View>
     );
