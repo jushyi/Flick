@@ -234,12 +234,16 @@ const CommentsBottomSheet = ({
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const showSub = Keyboard.addListener(showEvent, event => {
+      // On Android, endCoordinates.height can exclude the keyboard toolbar.
+      // Calculate from screenY for the full keyboard area including toolbar.
       const kbHeight =
         Platform.OS === 'android' && event.endCoordinates.screenY > 0
           ? SCREEN_HEIGHT - event.endCoordinates.screenY
           : event.endCoordinates.height;
       setKeyboardVisible(true);
       keyboardHeightRef.current = kbHeight;
+      // On Android, useAnimatedKeyboard handles paddingBottom via animated style.
+      // Only update state on iOS where keyboardWillShow is reliable for all keyboard changes.
       if (Platform.OS === 'ios') {
         setKeyboardHeight(kbHeight);
       }
