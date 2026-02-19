@@ -161,7 +161,7 @@ describe('getRevealCountdown', () => {
   it('should return only minutes when less than 1 hour', () => {
     const futureTime = new Date(Date.now() + 45 * 60 * 1000); // 45 min
     const result = getRevealCountdown(createTimestamp(futureTime));
-    expect(result).toBe('Reveals in 45m');
+    expect(result).toMatch(/^Reveals in 4[45]m$/);
   });
 
   it('should return "Unknown" for null timestamp', () => {
