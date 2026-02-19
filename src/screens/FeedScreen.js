@@ -58,7 +58,7 @@ const HEADER_HEIGHT = 68; // paddingVertical: 16 × 2 + title height
 const TAB_BAR_HEIGHT = 88; // iOS tab bar with safe area
 
 const FeedScreen = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
@@ -195,6 +195,17 @@ const FeedScreen = () => {
       loadMyStories();
     }
   }, [user?.uid]);
+
+  // Reload own stories when profile photo changes (e.g. after EditProfileScreen save)
+  const prevPhotoURLRef = useRef(userProfile?.photoURL);
+  useEffect(() => {
+    if (userProfile?.photoURL !== prevPhotoURLRef.current) {
+      prevPhotoURLRef.current = userProfile?.photoURL;
+      if (user?.uid) {
+        loadMyStories();
+      }
+    }
+  }, [userProfile?.photoURL]);
 
   // Mark screen trace as loaded after initial feed data loads (once only)
   useEffect(() => {

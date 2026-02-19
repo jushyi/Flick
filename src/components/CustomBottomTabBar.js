@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
 
 import { colors } from '../constants/colors';
+import { profileCacheKey } from '../utils/imageUtils';
 
 const CustomBottomTabBar = ({ state, navigation, userProfile }) => {
   const insets = useSafeAreaInsets();
@@ -45,7 +46,10 @@ const CustomBottomTabBar = ({ state, navigation, userProfile }) => {
           if (userProfile?.photoURL) {
             icon = (
               <Image
-                source={{ uri: userProfile.photoURL, cacheKey: 'profile-tab-icon' }}
+                source={{
+                  uri: userProfile.photoURL,
+                  cacheKey: profileCacheKey('profile-tab', userProfile.photoURL),
+                }}
                 style={[
                   styles.profilePhoto,
                   {
