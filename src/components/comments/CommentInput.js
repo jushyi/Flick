@@ -18,7 +18,7 @@ import React, {
   useRef,
   useEffect,
 } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from '../PixelIcon';
 import * as Haptics from 'expo-haptics';
@@ -308,7 +308,7 @@ const CommentInput = forwardRef(
               multiline
               maxLength={1000}
               returnKeyType="send"
-              blurOnSubmit={true}
+              blurOnSubmit={Platform.OS === 'ios'}
               onSubmitEditing={handleSubmitEditing}
               autoFocus={autoFocus}
               keyboardAppearance="dark"
