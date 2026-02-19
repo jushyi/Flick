@@ -62,3 +62,5 @@ google-services.json
 google-services-prod.json
 **/google-services.json
 **/google-services-prod.json
+
+.work/
