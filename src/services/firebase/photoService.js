@@ -17,7 +17,7 @@ import {
   getFirestore,
   collection,
   doc,
-  addDoc,
+  setDoc,
   getDoc,
   getDocs,
   updateDoc,
@@ -33,7 +33,7 @@ import {
   getCountFromServer,
   onSnapshot,
 } from '@react-native-firebase/firestore';
-import { uploadPhoto, deletePhoto } from './storageService';
+import { uploadPhoto, deletePhoto, getPhotoURL } from './storageService';
 import { ensureDarkroomInitialized } from './darkroomService';
 import { getUserAlbums, removePhotoFromAlbum, deleteAlbum } from './albumService';
 import logger from '../../utils/logger';
@@ -51,12 +51,32 @@ export const createPhoto = async (userId, photoUri) => {
   logger.debug('PhotoService.createPhoto: Starting', { userId });
 
   try {
-    // Create photo document first to get ID
-    logger.debug('PhotoService.createPhoto: Creating Firestore document');
+    // Step 1: Generate a Firestore document ID without writing anything
     const photosCollection = collection(db, 'photos');
-    const photoRef = await addDoc(photosCollection, {
+    const photoRef = doc(photosCollection);
+    const photoId = photoRef.id;
+    const storagePath = `photos/${userId}/${photoId}.jpg`;
+
+    logger.debug('PhotoService.createPhoto: Generated photo ID', { photoId });
+
+    // Step 2: Upload to Storage FIRST
+    logger.debug('PhotoService.createPhoto: Uploading to Storage', { userId, photoId });
+    const uploadResult = await uploadPhoto(userId, photoId, photoUri);
+
+    if (!uploadResult.success) {
+      logger.warn('PhotoService.createPhoto: Upload failed', {
+        photoId,
+        error: uploadResult.error,
+      });
+      return { success: false, error: uploadResult.error };
+    }
+
+    // Step 3: Create Firestore document with real URL (single atomic write)
+    logger.debug('PhotoService.createPhoto: Creating Firestore document with URL', { photoId });
+    await setDoc(photoRef, {
       userId,
-      imageURL: '', // Placeholder, will be updated after upload
+      imageURL: uploadResult.url,
+      storagePath,
       capturedAt: serverTimestamp(),
       status: 'developing',
       photoState: null,
@@ -64,27 +84,6 @@ export const createPhoto = async (userId, photoUri) => {
       month: getCurrentMonth(),
       reactions: {},
       reactionCount: 0,
-    });
-
-    const photoId = photoRef.id;
-    logger.debug('PhotoService.createPhoto: Document created', { photoId });
-
-    logger.debug('PhotoService.createPhoto: Uploading to Storage', { userId, photoId });
-    const uploadResult = await uploadPhoto(userId, photoId, photoUri);
-
-    if (!uploadResult.success) {
-      logger.warn('PhotoService.createPhoto: Upload failed, rolling back', {
-        photoId,
-        error: uploadResult.error,
-      });
-      // If upload fails, delete the document
-      await deleteDoc(photoRef);
-      return { success: false, error: uploadResult.error };
-    }
-
-    logger.debug('PhotoService.createPhoto: Updating document with imageURL', { photoId });
-    await updateDoc(photoRef, {
-      imageURL: uploadResult.url,
     });
 
     logger.info('PhotoService.createPhoto: Photo created successfully', {
@@ -1397,6 +1396,85 @@ const cascadeDeletePhoto = async (photoId, userId) => {
   } catch (error) {
     logger.error('PhotoService.cascadeDeletePhoto: Failed', {
       photoId,
+      userId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Repair photos with empty imageURL by regenerating the URL from Storage
+ * Queries for photos where imageURL is empty and attempts to fetch the
+ * download URL from Storage using the known path convention.
+ *
+ * @param {string} userId - User ID whose photos to repair
+ * @returns {Promise<{success: boolean, repairedCount?: number, failedCount?: number, error?: string}>}
+ */
+export const repairEmptyImageURLs = async userId => {
+  logger.info('PhotoService.repairEmptyImageURLs: Starting', { userId });
+
+  try {
+    const photosQuery = query(
+      collection(db, 'photos'),
+      where('userId', '==', userId),
+      where('imageURL', '==', ''),
+      limit(100)
+    );
+    const snapshot = await getDocs(photosQuery);
+
+    if (snapshot.empty) {
+      logger.info('PhotoService.repairEmptyImageURLs: No broken photos found', { userId });
+      return { success: true, repairedCount: 0, failedCount: 0 };
+    }
+
+    logger.info('PhotoService.repairEmptyImageURLs: Found photos to repair', {
+      userId,
+      count: snapshot.size,
+    });
+
+    let repairedCount = 0;
+    let failedCount = 0;
+
+    for (const photoDoc of snapshot.docs) {
+      const photoId = photoDoc.id;
+      const storagePath = `photos/${userId}/${photoId}.jpg`;
+
+      try {
+        const urlResult = await getPhotoURL(userId, photoId);
+
+        if (urlResult.success) {
+          await updateDoc(doc(db, 'photos', photoId), {
+            imageURL: urlResult.url,
+            storagePath,
+          });
+          repairedCount++;
+          logger.info('PhotoService.repairEmptyImageURLs: Repaired photo', { photoId });
+        } else {
+          failedCount++;
+          logger.warn('PhotoService.repairEmptyImageURLs: Could not get URL for photo', {
+            photoId,
+            error: urlResult.error,
+          });
+        }
+      } catch (repairError) {
+        failedCount++;
+        logger.error('PhotoService.repairEmptyImageURLs: Failed to repair photo', {
+          photoId,
+          error: repairError.message,
+        });
+      }
+    }
+
+    logger.info('PhotoService.repairEmptyImageURLs: Complete', {
+      userId,
+      repairedCount,
+      failedCount,
+    });
+
+    return { success: true, repairedCount, failedCount };
+  } catch (error) {
+    logger.error('PhotoService.repairEmptyImageURLs: Failed', {
       userId,
       error: error.message,
     });

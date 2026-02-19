@@ -15,9 +15,11 @@ jest.mock('../../src/utils/logger', () => ({
 // Mock storage service
 const mockUploadPhoto = jest.fn();
 const mockDeletePhoto = jest.fn();
+const mockGetPhotoURL = jest.fn();
 jest.mock('../../src/services/firebase/storageService', () => ({
   uploadPhoto: (...args) => mockUploadPhoto(...args),
   deletePhoto: (...args) => mockDeletePhoto(...args),
+  getPhotoURL: (...args) => mockGetPhotoURL(...args),
 }));
 
 // Mock darkroom service
@@ -43,6 +45,7 @@ jest.mock('../../src/services/firebase/performanceService', () => ({
 
 // Create Firestore mocks
 const mockAddDoc = jest.fn();
+const mockSetDoc = jest.fn();
 const mockGetDoc = jest.fn();
 const mockGetDocs = jest.fn();
 const mockUpdateDoc = jest.fn();
@@ -60,6 +63,7 @@ jest.mock('@react-native-firebase/firestore', () => ({
   collection: (...args) => mockCollection(...args),
   doc: (...args) => mockDoc(...args),
   addDoc: (...args) => mockAddDoc(...args),
+  setDoc: (...args) => mockSetDoc(...args),
   getDoc: (...args) => mockGetDoc(...args),
   getDocs: (...args) => mockGetDocs(...args),
   updateDoc: (...args) => mockUpdateDoc(...args),
@@ -116,49 +120,62 @@ describe('photoService', () => {
   // createPhoto tests
   // ===========================================================================
   describe('createPhoto', () => {
-    it('should create photo document and upload to storage successfully', async () => {
-      const photoRef = { id: 'photo-123' };
-      mockAddDoc.mockResolvedValueOnce(photoRef);
+    it('should upload to storage first then create Firestore document with URL', async () => {
+      mockDoc.mockReturnValueOnce({ _doc: true, id: 'photo-123' });
       mockUploadPhoto.mockResolvedValueOnce({
         success: true,
         url: 'https://storage.example.com/photo.jpg',
         size: 1024,
       });
-      mockUpdateDoc.mockResolvedValueOnce();
+      mockSetDoc.mockResolvedValueOnce();
       mockEnsureDarkroomInitialized.mockResolvedValueOnce({ success: true });
 
       const result = await createPhoto('user-123', 'file:///local/photo.jpg');
 
       expect(result.success).toBe(true);
       expect(result.photoId).toBe('photo-123');
-      expect(mockAddDoc).toHaveBeenCalled();
+      // Should upload to Storage using the pre-generated ID
       expect(mockUploadPhoto).toHaveBeenCalledWith(
         'user-123',
         'photo-123',
         'file:///local/photo.jpg'
       );
-      expect(mockUpdateDoc).toHaveBeenCalled();
+      // Should create doc with real URL via setDoc (not addDoc + updateDoc)
+      expect(mockSetDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          imageURL: 'https://storage.example.com/photo.jpg',
+        })
+      );
+      expect(mockAddDoc).not.toHaveBeenCalled();
+      expect(mockUpdateDoc).not.toHaveBeenCalled();
       expect(mockEnsureDarkroomInitialized).toHaveBeenCalledWith('user-123');
     });
 
-    it('should rollback document if upload fails', async () => {
-      const photoRef = { id: 'photo-123' };
-      mockAddDoc.mockResolvedValueOnce(photoRef);
+    it('should return error without creating document if upload fails', async () => {
+      mockDoc.mockReturnValueOnce({ _doc: true, id: 'photo-123' });
       mockUploadPhoto.mockResolvedValueOnce({
         success: false,
         error: 'Upload failed',
       });
-      mockDeleteDoc.mockResolvedValueOnce();
 
       const result = await createPhoto('user-123', 'file:///local/photo.jpg');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Upload failed');
-      expect(mockDeleteDoc).toHaveBeenCalledWith(photoRef);
+      // No Firestore document should be created or deleted
+      expect(mockSetDoc).not.toHaveBeenCalled();
+      expect(mockAddDoc).not.toHaveBeenCalled();
+      expect(mockDeleteDoc).not.toHaveBeenCalled();
     });
 
-    it('should return error when document creation fails', async () => {
-      mockAddDoc.mockRejectedValueOnce(new Error('Firestore error'));
+    it('should return error when setDoc fails', async () => {
+      mockDoc.mockReturnValueOnce({ _doc: true, id: 'photo-123' });
+      mockUploadPhoto.mockResolvedValueOnce({
+        success: true,
+        url: 'https://storage.example.com/photo.jpg',
+      });
+      mockSetDoc.mockRejectedValueOnce(new Error('Firestore error'));
 
       const result = await createPhoto('user-123', 'file:///local/photo.jpg');
 
@@ -166,24 +183,24 @@ describe('photoService', () => {
       expect(result.error).toBe('Firestore error');
     });
 
-    it('should create document with correct initial data', async () => {
-      const photoRef = { id: 'photo-123' };
-      mockAddDoc.mockResolvedValueOnce(photoRef);
+    it('should create document with correct fields including storagePath', async () => {
+      mockDoc.mockReturnValueOnce({ _doc: true, id: 'photo-123' });
       mockUploadPhoto.mockResolvedValueOnce({
         success: true,
         url: 'https://example.com/photo.jpg',
       });
-      mockUpdateDoc.mockResolvedValueOnce();
+      mockSetDoc.mockResolvedValueOnce();
       mockEnsureDarkroomInitialized.mockResolvedValueOnce({ success: true });
 
       await createPhoto('user-123', 'file:///photo.jpg');
 
-      // Check that addDoc was called with correct initial fields
-      expect(mockAddDoc).toHaveBeenCalledWith(
+      // Check that setDoc was called with complete document including real URL and storagePath
+      expect(mockSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           userId: 'user-123',
-          imageURL: '',
+          imageURL: 'https://example.com/photo.jpg',
+          storagePath: 'photos/user-123/photo-123.jpg',
           status: 'developing',
           photoState: null,
           visibility: 'friends-only',
