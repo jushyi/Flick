@@ -22,6 +22,7 @@ import {
   limit,
   onSnapshot,
 } from '@react-native-firebase/firestore';
+import { Image } from 'expo-image';
 import PixelIcon from '../components/PixelIcon';
 import useFeedPhotos from '../hooks/useFeedPhotos';
 import { useViewedStories } from '../hooks/useViewedStories';
@@ -475,6 +476,16 @@ const FeedScreen = () => {
       ? nextFriendAtOpen !== undefined
       : nextFriendAtOpen !== undefined && !hasViewedAllPhotos(nextFriendAtOpen.topPhotos || []);
 
+    // Prefetch next friend's first photo for seamless cube transition
+    if (hasNextAtOpen && nextFriendAtOpen) {
+      const nextFriendPhotos = nextFriendAtOpen.topPhotos || [];
+      const nextFirstIdx = getFirstUnviewedIndex(nextFriendPhotos);
+      const nextFirstPhoto = nextFriendPhotos[nextFirstIdx];
+      if (nextFirstPhoto?.imageURL) {
+        Image.prefetch(nextFirstPhoto.imageURL, 'memory-disk').catch(() => {});
+      }
+    }
+
     // Open via context and navigate
     openPhotoDetail({
       mode: 'stories',
@@ -559,6 +570,28 @@ const FeedScreen = () => {
   const handleStoriesPhotoChange = (photo, index) => {
     logger.debug('FeedScreen: Stories photo changed', { photoId: photo?.id, index });
     storiesCurrentIndexRef.current = index;
+
+    // When approaching end of current friend's photos, prefetch next friend's first photo
+    const selectedFriend = selectedFriendRef.current;
+    if (selectedFriend) {
+      const totalPhotos = (selectedFriend.topPhotos || []).length;
+      const isNearEnd = index >= totalPhotos - 2;
+
+      if (isNearEnd) {
+        const sortedFriends = storySequenceRef.current;
+        const nextFriendIdx = selectedFriendIndexRef.current + 1;
+        const nextFriend = sortedFriends[nextFriendIdx];
+
+        if (nextFriend) {
+          const nextFriendPhotos = nextFriend.topPhotos || [];
+          const nextStartIndex = getFirstUnviewedIndex(nextFriendPhotos);
+          const nextPhoto = nextFriendPhotos[nextStartIndex];
+          if (nextPhoto?.imageURL) {
+            Image.prefetch(nextPhoto.imageURL, 'memory-disk').catch(() => {});
+          }
+        }
+      }
+    }
   };
 
   const getSortedFriends = () => {
@@ -631,6 +664,16 @@ const FeedScreen = () => {
       startIndex: nextStartIndex,
       hasNextUnviewed,
     });
+
+    // Prefetch next-next friend's first photo to keep the pipeline warm
+    if (hasNextUnviewed && nextNextFriend) {
+      const nextNextPhotos = nextNextFriend.topPhotos || [];
+      const nextNextStartIdx = getFirstUnviewedIndex(nextNextPhotos);
+      const nextNextPhoto = nextNextPhotos[nextNextStartIdx];
+      if (nextNextPhoto?.imageURL) {
+        Image.prefetch(nextNextPhoto.imageURL, 'memory-disk').catch(() => {});
+      }
+    }
 
     // Update refs for next friend
     selectedFriendRef.current = nextFriend;

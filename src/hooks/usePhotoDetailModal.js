@@ -10,6 +10,8 @@
  */
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Animated, PanResponder, Dimensions, Easing } from 'react-native';
+import { Image } from 'expo-image';
+
 import { reactionHaptic } from '../utils/haptics';
 import logger from '../utils/logger';
 import { getCuratedEmojis } from '../utils/emojiRotation';
@@ -172,6 +174,49 @@ export const usePhotoDetailModal = ({
       });
     }
   }, [visible, initialIndex, photos.length, mode]);
+
+  // Batch prefetch first few photos when stories open for instant initial swiping
+  useEffect(() => {
+    if (!visible || mode !== 'stories' || photos.length === 0) return;
+
+    // Prefetch up to 3 photos after initialIndex (current photo loads via <Image> directly)
+    const startIdx = initialIndex + 1;
+    const endIdx = Math.min(startIdx + 3, photos.length);
+    const urlsToPrefetch = [];
+
+    for (let i = startIdx; i < endIdx; i++) {
+      if (photos[i]?.imageURL) {
+        urlsToPrefetch.push(photos[i].imageURL);
+      }
+    }
+
+    if (urlsToPrefetch.length > 0) {
+      Image.prefetch(urlsToPrefetch, 'memory-disk').catch(() => {});
+      logger.debug('usePhotoDetailModal: Batch prefetched initial story photos', {
+        initialIndex,
+        count: urlsToPrefetch.length,
+      });
+    }
+  }, [visible, mode]); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally sparse: only run on open/close
+
+  // Prefetch adjacent photos for smooth stories navigation
+  useEffect(() => {
+    if (mode !== 'stories' || !visible || photos.length === 0) return;
+
+    const urlsToPrefetch = [];
+
+    // Prefetch next 2 photos for rapid tapping
+    if (currentIndex < photos.length - 1 && photos[currentIndex + 1]?.imageURL) {
+      urlsToPrefetch.push(photos[currentIndex + 1].imageURL);
+    }
+    if (currentIndex < photos.length - 2 && photos[currentIndex + 2]?.imageURL) {
+      urlsToPrefetch.push(photos[currentIndex + 2].imageURL);
+    }
+
+    if (urlsToPrefetch.length > 0) {
+      Image.prefetch(urlsToPrefetch, 'memory-disk').catch(() => {});
+    }
+  }, [mode, visible, currentIndex, photos]);
 
   // Derive current photo based on mode
   // Clamp index to valid range to prevent null during friend transitions
@@ -861,9 +906,9 @@ export const usePhotoDetailModal = ({
           if (shouldCommit && cubeProgressRef.current) {
             // Commit: animate remaining distance to 1
             const remainingDistance = 1 - currentProgress;
-            const baseDuration = remainingDistance * 220;
-            const velocityFactor = Math.max(0.25, 1 - forwardVx * 0.4);
-            const duration = Math.max(60, Math.min(180, baseDuration * velocityFactor));
+            const baseDuration = remainingDistance * 180;
+            const velocityFactor = Math.max(0.2, 1 - forwardVx * 0.5);
+            const duration = Math.max(50, Math.min(150, baseDuration * velocityFactor));
 
             Animated.timing(cubeProgressRef.current, {
               toValue: 1,
@@ -877,8 +922,8 @@ export const usePhotoDetailModal = ({
             // Cancel: spring back to 0
             Animated.spring(cubeProgressRef.current, {
               toValue: 0,
-              tension: 150,
-              friction: 12,
+              tension: 200,
+              friction: 18,
               useNativeDriver: true,
             }).start(() => {
               onCancelSwipeTransitionRef.current?.();

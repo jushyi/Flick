@@ -198,8 +198,8 @@ const PhotoDetailScreen = () => {
     requestAnimationFrame(() => {
       Animated.timing(cubeProgress, {
         toValue: 1,
-        duration: 350,
-        easing: Easing.inOut(Easing.ease),
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start(() => {
         isTransitioningRef.current = false;
@@ -232,8 +232,8 @@ const PhotoDetailScreen = () => {
     requestAnimationFrame(() => {
       Animated.timing(cubeProgress, {
         toValue: 1,
-        duration: 350,
-        easing: Easing.inOut(Easing.ease),
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start(() => {
         isTransitioningRef.current = false;
@@ -760,7 +760,7 @@ const PhotoDetailScreen = () => {
             {
               backfaceVisibility: 'hidden',
               transform: [
-                { perspective: 800 },
+                { perspective: 650 },
                 {
                   translateX: cubeProgress.interpolate({
                     inputRange: [0, 1],
@@ -804,6 +804,7 @@ const PhotoDetailScreen = () => {
                 source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
                 style={styles.photo}
                 contentFit="cover"
+                cachePolicy="memory-disk"
                 transition={0}
               />
             </View>
@@ -1020,7 +1021,7 @@ const PhotoDetailScreen = () => {
               bottom: 0,
               backfaceVisibility: 'hidden',
               transform: [
-                { perspective: 800 },
+                { perspective: 650 },
                 {
                   translateX: cubeProgress.interpolate({
                     inputRange: [0, 1],
@@ -1068,6 +1069,7 @@ const PhotoDetailScreen = () => {
                   }}
                   style={styles.photo}
                   contentFit="cover"
+                  cachePolicy="memory-disk"
                   transition={0}
                 />
               </View>
