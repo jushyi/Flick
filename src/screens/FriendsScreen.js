@@ -8,8 +8,9 @@ import {
   Alert,
   RefreshControl,
   InteractionManager,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelSpinner from '../components/PixelSpinner';
 import {
   getFirestore,
@@ -69,6 +70,7 @@ const db = getFirestore();
  */
 const FriendsScreen = ({ navigation }) => {
   const { user, userProfile } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Screen load trace - measures time from mount to data-ready
   const { markLoaded } = useScreenTrace('FriendsScreen');
@@ -804,29 +806,30 @@ const FriendsScreen = ({ navigation }) => {
   };
 
   const handleRemoveFriend = friend => {
+    const buttons = [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            mediumImpact();
+            const result = await removeFriend(user.uid, friend.userId);
+            if (!result.success) {
+              Alert.alert('Error', result.error || 'Failed to remove friend');
+            }
+            // Real-time listener will update the UI
+          } catch (err) {
+            logger.error('Error removing friend', err);
+            Alert.alert('Error', 'Failed to remove friend');
+          }
+        },
+      },
+    ];
     Alert.alert(
       'Remove Friend',
       `Are you sure you want to remove ${friend.displayName || friend.username} as a friend?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              mediumImpact();
-              const result = await removeFriend(user.uid, friend.userId);
-              if (!result.success) {
-                Alert.alert('Error', result.error || 'Failed to remove friend');
-              }
-              // Real-time listener will update the UI
-            } catch (err) {
-              logger.error('Error removing friend', err);
-              Alert.alert('Error', 'Failed to remove friend');
-            }
-          },
-        },
-      ]
+      Platform.OS === 'android' ? [...buttons].reverse() : buttons
     );
   };
 
@@ -1040,7 +1043,10 @@ const FriendsScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
           keyExtractor={item => item.friendshipId}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            Platform.OS === 'android' && { paddingBottom: insets.bottom },
+          ]}
           showsVerticalScrollIndicator={false}
           initialNumToRender={10}
           maxToRenderPerBatch={8}
@@ -1122,7 +1128,10 @@ const FriendsScreen = ({ navigation }) => {
                 );
               }}
               keyExtractor={item => item.userId}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={[
+                styles.listContent,
+                Platform.OS === 'android' && { paddingBottom: insets.bottom },
+              ]}
               showsVerticalScrollIndicator={false}
               initialNumToRender={10}
               maxToRenderPerBatch={8}
@@ -1291,7 +1300,10 @@ const FriendsScreen = ({ navigation }) => {
             data={sections}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[
+              styles.listContent,
+              Platform.OS === 'android' && { paddingBottom: insets.bottom },
+            ]}
             showsVerticalScrollIndicator={false}
             initialNumToRender={10}
             maxToRenderPerBatch={8}

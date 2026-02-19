@@ -6,11 +6,13 @@ import {
   Modal,
   TouchableOpacity,
   FlatList,
+  ScrollView,
   Dimensions,
   Alert,
   Animated,
   PanResponder,
   Easing,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,6 +27,149 @@ import { softDeletePhoto, archivePhoto, restorePhoto } from '../services/firebas
 import DropdownMenu from './DropdownMenu';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Styles defined at module level so ThumbnailItem (below) can reference them without
+// triggering ESLint's no-use-before-define rule.
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background.primary,
+  },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xs,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.overlay.dark,
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: spacing.xs,
+  },
+  albumNameText: {
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bodyBold,
+    color: colors.text.primary,
+    textAlign: 'center',
+  },
+  albumPositionText: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  photoContainer: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photo: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  },
+  toast: {
+    position: 'absolute',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background.tertiary,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: layout.borderRadius.xl,
+    gap: spacing.xs,
+  },
+  toastText: {
+    color: colors.text.primary,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
+  },
+  thumbnailBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    elevation: 10,
+    backgroundColor: colors.overlay.dark,
+    paddingTop: spacing.xs,
+  },
+  thumbnailContent: {
+    paddingHorizontal: spacing.xs,
+  },
+  thumbnailWrapper: {
+    marginHorizontal: spacing.xxs,
+  },
+  thumbnailContainer: {
+    width: 50,
+    height: 67,
+    borderRadius: layout.borderRadius.md,
+    overflow: 'hidden',
+  },
+  thumbnail: {
+    width: 50,
+    height: 67,
+  },
+  thumbnailActiveBorder: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 2,
+    borderColor: colors.text.primary,
+  },
+});
+
+/**
+ * Memoized thumbnail item — prevents expo-image from re-rendering on every swipe.
+ * When the user swipes photos, renderThumbnail recreates (currentIndex dep), causing
+ * FlatList to call renderItem for every visible cell. Without memo, expo-image briefly
+ * blanks each thumbnail during its update cycle. With memo, only the 2 thumbnails
+ * that change their isActive state actually re-render.
+ */
+const ThumbnailItem = React.memo(function ThumbnailItem({ item, index, isActive, onPress }) {
+  // Stable source reference — expo-image won't re-render unless the URI actually changes.
+  // Without useMemo, every parent render creates a new object, causing expo-image to
+  // briefly blank on Android even when the image is already in memory cache.
+  const source = useMemo(
+    () => ({ uri: item.imageURL, cacheKey: `photo-${item.id}` }),
+    [item.imageURL, item.id]
+  );
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(index)}
+      activeOpacity={0.8}
+      style={styles.thumbnailWrapper}
+    >
+      {/* Container handles border-radius clipping for both image and active overlay */}
+      <View style={styles.thumbnailContainer}>
+        <Image
+          source={source}
+          style={styles.thumbnail}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          priority="normal"
+        />
+        {/* Active border is an overlay so Image.style never changes — prevents expo-image
+            from blanking on Android when isActive toggles between photos. */}
+        {isActive && <View style={styles.thumbnailActiveBorder} />}
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 /**
  * AlbumPhotoViewer - Full-screen photo viewer for browsing album photos
@@ -375,9 +520,8 @@ const AlbumPhotoViewer = ({
   useEffect(() => {
     if (visible) {
       setCurrentIndex(initialIndex);
-      // Scroll to initial index after a brief delay to ensure FlatList is ready.
-      // Use photosRef (not photos closure) to get the latest array length at call time,
-      // preventing out-of-bounds if fetchPhotos completes and shrinks photos mid-timeout.
+      // Fallback scroll in case onLayout fires before initialIndex is set.
+      // Use a longer delay (200ms) to cover Android Modal rendering latency.
       setTimeout(() => {
         const currentPhotos = photosRef.current;
         if (!currentPhotos || currentPhotos.length === 0) return;
@@ -387,14 +531,10 @@ const AlbumPhotoViewer = ({
           index: safeIndex,
           animated: false,
         });
-        thumbnailListRef.current?.scrollToIndex({
-          index: safeIndex,
-          animated: false,
-          viewPosition: 0.5,
-        });
-      }, 50);
+        scrollThumbnailTo(safeIndex, false);
+      }, 200);
     }
-  }, [visible, initialIndex]);
+  }, [visible, initialIndex, scrollThumbnailTo]);
 
   // Clamp currentIndex if photos shrinks while viewer is open (race condition guard)
   useEffect(() => {
@@ -403,16 +543,13 @@ const AlbumPhotoViewer = ({
     }
   }, [visible, photos.length, currentIndex]);
 
-  // Auto-scroll thumbnail bar when currentIndex changes
+  // Auto-scroll thumbnail bar when currentIndex changes (during swiping).
+  // Use animated:false to avoid rapid competing animations (handleScroll fires at 16ms throttle).
   useEffect(() => {
     if (visible && photos.length > 0) {
-      thumbnailListRef.current?.scrollToIndex({
-        index: currentIndex,
-        animated: true,
-        viewPosition: 0.5,
-      });
+      scrollThumbnailTo(currentIndex, false);
     }
-  }, [currentIndex, visible, photos.length]);
+  }, [currentIndex, visible, photos.length, scrollThumbnailTo]);
 
   // Mark beginning of a user-initiated drag so handleScroll can update the index optimistically
   const handleScrollBeginDrag = useCallback(() => {
@@ -713,36 +850,24 @@ const AlbumPhotoViewer = ({
     []
   );
 
-  // Get thumbnail layout for optimization
-  const getThumbnailLayout = useCallback(
-    (_, index) => ({
-      length: THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2,
-      offset: (THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2) * index,
-      index,
-    }),
-    [THUMBNAIL_WIDTH, THUMBNAIL_MARGIN]
-  );
-
-  // Render thumbnail item
-  const renderThumbnail = useCallback(
-    ({ item, index }) => (
-      <TouchableOpacity
-        onPress={() => goToIndex(index)}
-        activeOpacity={0.8}
-        style={styles.thumbnailWrapper}
-      >
-        <Image
-          source={{ uri: item.imageURL, cacheKey: `photo-${item.id}` }}
-          style={[styles.thumbnail, index === currentIndex && styles.thumbnailActive]}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          priority="low"
-          recyclingKey={`thumb-${item.id}`}
-          transition={100}
-        />
-      </TouchableOpacity>
-    ),
-    [currentIndex, goToIndex]
+  // Scroll thumbnail strip to center a specific index.
+  // Uses ScrollView.scrollTo (more reliable on Android than FlatList.scrollToOffset in a Modal).
+  const THUMB_ITEM_WIDTH = THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2; // 58px
+  const THUMB_CONTENT_PADDING = spacing.xs; // 8px (from contentContainerStyle paddingHorizontal)
+  const scrollThumbnailTo = useCallback(
+    (index, animated) => {
+      const totalItems = photosRef.current.length;
+      if (totalItems === 0 || !thumbnailListRef.current) return;
+      const itemStart = THUMB_CONTENT_PADDING + index * THUMB_ITEM_WIDTH;
+      const centeredOffset = itemStart - (SCREEN_WIDTH - THUMB_ITEM_WIDTH) / 2;
+      const maxOffset = Math.max(
+        0,
+        totalItems * THUMB_ITEM_WIDTH + THUMB_CONTENT_PADDING * 2 - SCREEN_WIDTH
+      );
+      const offset = Math.max(0, Math.min(centeredOffset, maxOffset));
+      thumbnailListRef.current.scrollTo({ x: offset, animated });
+    },
+    [THUMB_ITEM_WIDTH, THUMB_CONTENT_PADDING]
   );
 
   if (!visible || photos.length === 0) {
@@ -822,8 +947,15 @@ const AlbumPhotoViewer = ({
             {/* Album name + position */}
             <View style={styles.headerCenter}>
               <Text style={styles.albumNameText} numberOfLines={1}>
-                {albumName} • {currentIndex + 1} of {photos.length}
+                {Platform.OS === 'android'
+                  ? albumName
+                  : `${albumName} • ${currentIndex + 1} of ${photos.length}`}
               </Text>
+              {Platform.OS === 'android' && (
+                <Text style={styles.albumPositionText}>
+                  {currentIndex + 1} of {photos.length}
+                </Text>
+              )}
             </View>
 
             {/* 3-dot menu (only for own profile) */}
@@ -839,26 +971,6 @@ const AlbumPhotoViewer = ({
             ) : (
               <View style={styles.headerButton} />
             )}
-          </View>
-
-          {/* Thumbnail navigation bar */}
-          <View style={[styles.thumbnailBar, { paddingBottom: insets.bottom + 8 }]}>
-            <FlatList
-              ref={thumbnailListRef}
-              data={photos}
-              renderItem={renderThumbnail}
-              keyExtractor={item => `thumb-${item.id}`}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              getItemLayout={getThumbnailLayout}
-              contentContainerStyle={styles.thumbnailContent}
-              initialNumToRender={10}
-              maxToRenderPerBatch={5}
-              windowSize={7}
-              onScrollToIndexFailed={() => {
-                // Silently handle scroll failure
-              }}
-            />
           </View>
 
           {/* Toast notification */}
@@ -879,96 +991,39 @@ const AlbumPhotoViewer = ({
             anchorPosition={menuAnchor}
           />
         </Animated.View>
+
+        {/* Thumbnail navigation bar — rendered OUTSIDE the overflow:hidden expand wrapper
+            so Android's RecyclerView scroll layers cannot clip or overdraw it. It fades
+            with viewerOpacity but does not participate in the expand/collapse transform. */}
+        <Animated.View
+          style={[
+            styles.thumbnailBar,
+            { opacity: viewerOpacity, paddingBottom: insets.bottom + 8 },
+          ]}
+          pointerEvents="box-none"
+        >
+          <ScrollView
+            ref={thumbnailListRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.thumbnailContent}
+            scrollEventThrottle={0}
+            onLayout={() => scrollThumbnailTo(currentIndex, false)}
+          >
+            {photos.map((item, index) => (
+              <ThumbnailItem
+                key={item.id}
+                item={item}
+                index={index}
+                isActive={index === currentIndex}
+                onPress={goToIndex}
+              />
+            ))}
+          </ScrollView>
+        </Animated.View>
       </View>
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-  },
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xs,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.overlay.dark,
-  },
-  headerButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: spacing.xs,
-  },
-  albumNameText: {
-    fontSize: typography.size.lg,
-    fontFamily: typography.fontFamily.bodyBold,
-    color: colors.text.primary,
-    textAlign: 'center',
-  },
-  photoContainer: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photo: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-  },
-  toast: {
-    position: 'absolute',
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background.tertiary,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: layout.borderRadius.xl,
-    gap: spacing.xs,
-  },
-  toastText: {
-    color: colors.text.primary,
-    fontSize: typography.size.md,
-    fontFamily: typography.fontFamily.body,
-  },
-  thumbnailBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.overlay.dark,
-    paddingTop: spacing.xs,
-  },
-  thumbnailContent: {
-    paddingHorizontal: spacing.xs,
-  },
-  thumbnailWrapper: {
-    marginHorizontal: spacing.xxs,
-  },
-  thumbnail: {
-    width: 50,
-    height: 67,
-    borderRadius: layout.borderRadius.md,
-  },
-  thumbnailActive: {
-    borderWidth: 2,
-    borderColor: colors.text.primary,
-  },
-});
 
 export default AlbumPhotoViewer;

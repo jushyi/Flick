@@ -4,7 +4,7 @@
  * StyleSheet definitions for the camera screen component.
  */
 
-import { StyleSheet, Dimensions } from 'react-native';
+import { Platform, StyleSheet, Dimensions } from 'react-native';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
@@ -170,12 +170,14 @@ export const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     borderRadius: layout.borderRadius.sm,
     // Border handled by SVG stroke in GradientCard — no native border needed
-    // White glow effect emanating from card edges
+    // White glow effect emanating from card edges (iOS shadow props only)
     shadowColor: colors.text.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 8,
+    // Android: elevation without backgroundColor injects a dark Material surface background.
+    // Shadow props are iOS-only (no glow on Android), so elevation is not needed.
+    ...Platform.select({ android: { elevation: 0 } }),
   },
   // Gradient background for the card (fills wrapper)
   darkroomCardGradient: {

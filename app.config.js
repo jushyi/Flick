@@ -14,5 +14,11 @@ module.exports = ({ config }) => {
         'aps-environment': isProduction ? 'production' : 'development',
       },
     },
+    android: {
+      ...config.android,
+      googleServicesFile: isProduction
+        ? (process.env.GOOGLE_SERVICES_JSON_PROD ?? './google-services-prod.json')
+        : (process.env.GOOGLE_SERVICES_JSON_DEV ?? './google-services.json'),
+    },
   };
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
@@ -61,37 +61,41 @@ const BlockedUsersScreen = () => {
     const blockedUser = blockedUsers.find(u => u.userId === blockedUserId);
     const displayName = blockedUser?.displayName || blockedUser?.username || 'this user';
 
-    Alert.alert('Unblock User', `Unblock ${displayName}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Unblock',
-        onPress: async () => {
-          try {
-            setActionLoading(blockedUserId);
+    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    const unblockAction = {
+      text: 'Unblock',
+      onPress: async () => {
+        try {
+          setActionLoading(blockedUserId);
 
-            // Optimistic update - remove from list immediately
-            setBlockedUsers(prev => prev.filter(u => u.userId !== blockedUserId));
+          // Optimistic update - remove from list immediately
+          setBlockedUsers(prev => prev.filter(u => u.userId !== blockedUserId));
 
-            const result = await unblockUser(user.uid, blockedUserId);
+          const result = await unblockUser(user.uid, blockedUserId);
 
-            if (!result.success) {
-              // Revert optimistic update on failure
-              setBlockedUsers(prev => [...prev, blockedUser]);
-              Alert.alert('Error', result.error || 'Failed to unblock user');
-            } else {
-              logger.info('BlockedUsersScreen: User unblocked', { blockedUserId });
-            }
-          } catch (error) {
-            // Revert optimistic update on error
+          if (!result.success) {
+            // Revert optimistic update on failure
             setBlockedUsers(prev => [...prev, blockedUser]);
-            logger.error('BlockedUsersScreen: Error unblocking user', { error: error.message });
-            Alert.alert('Error', 'An unexpected error occurred');
-          } finally {
-            setActionLoading(null);
+            Alert.alert('Error', result.error || 'Failed to unblock user');
+          } else {
+            logger.info('BlockedUsersScreen: User unblocked', { blockedUserId });
           }
-        },
+        } catch (error) {
+          // Revert optimistic update on error
+          setBlockedUsers(prev => [...prev, blockedUser]);
+          logger.error('BlockedUsersScreen: Error unblocking user', { error: error.message });
+          Alert.alert('Error', 'An unexpected error occurred');
+        } finally {
+          setActionLoading(null);
+        }
       },
-    ]);
+    };
+    // Android reverses button visual order — swap so Cancel stays left, Unblock right
+    Alert.alert(
+      'Unblock User',
+      `Unblock ${displayName}?`,
+      Platform.OS === 'android' ? [unblockAction, cancelAction] : [cancelAction, unblockAction]
+    );
   };
 
   const handleViewProfile = blockedUser => {

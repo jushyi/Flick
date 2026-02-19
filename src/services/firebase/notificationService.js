@@ -305,6 +305,7 @@ export const handleNotificationTapped = notification => {
             params: {
               photoId,
               shouldOpenPhoto: true,
+              notifType: 'reaction',
             },
           },
         };
@@ -319,6 +320,7 @@ export const handleNotificationTapped = notification => {
               photoId,
               commentId,
               shouldOpenPhoto: true,
+              notifType: 'comment',
             },
           },
         };
@@ -333,6 +335,7 @@ export const handleNotificationTapped = notification => {
               photoId,
               commentId,
               shouldOpenPhoto: true,
+              notifType: 'mention',
             },
           },
         };
@@ -347,6 +350,7 @@ export const handleNotificationTapped = notification => {
               photoId,
               commentId,
               shouldOpenPhoto: true,
+              notifType: 'reply',
             },
           },
         };
@@ -361,6 +365,7 @@ export const handleNotificationTapped = notification => {
             params: {
               photoId,
               shouldOpenPhoto: true,
+              notifType: 'tagged',
             },
           },
         };
@@ -542,6 +547,54 @@ export const markSingleNotificationAsRead = async notificationId => {
       notificationId,
       error: error.message,
     });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Mark notifications as read based on push notification payload data.
+ * Called when the user taps a system push notification or in-app banner so the
+ * notification is marked read without requiring a second tap in ActivityScreen.
+ *
+ * @param {string} userId - The current user's UID (recipient)
+ * @param {object} pushData - The push notification data payload (type, photoId, friendshipId, …)
+ * @returns {Promise<{success: boolean, count?: number, error?: string}>}
+ */
+export const markNotificationReadFromPushData = async (userId, pushData) => {
+  if (!userId || !pushData?.type) {
+    return { success: false, error: 'Missing userId or type' };
+  }
+  try {
+    const { type, photoId, friendshipId } = pushData;
+
+    // Reuse the existing recipientId + read==false index — no new composite index needed
+    const q = query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', userId),
+      where('read', '==', false)
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return { success: true, count: 0 };
+
+    // Filter in memory for the specific notification that was tapped
+    const toMark = snapshot.docs.filter(docSnap => {
+      const data = docSnap.data();
+      if (data.type !== type) return false;
+      if (photoId && data.photoId !== photoId) return false;
+      if (friendshipId && data.friendshipId !== friendshipId) return false;
+      return true;
+    });
+
+    if (toMark.length === 0) return { success: true, count: 0 };
+
+    const batch = writeBatch(db);
+    toMark.forEach(docSnap => batch.update(docSnap.ref, { read: true }));
+    await batch.commit();
+
+    logger.info('markNotificationReadFromPushData: Marked as read', { type, count: toMark.length });
+    return { success: true, count: toMark.length };
+  } catch (error) {
+    logger.error('markNotificationReadFromPushData: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
 };

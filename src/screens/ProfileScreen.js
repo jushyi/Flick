@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Platform,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
@@ -796,7 +804,9 @@ const ProfileScreen = () => {
   if (!isOwnProfile && otherUserError) {
     return (
       <View style={styles.container}>
-        <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View
+          style={[styles.header, { paddingTop: insets.top + (Platform.OS === 'android' ? 8 : 0) }]}
+        >
           <TouchableOpacity onPress={handleBackPress} style={styles.headerButton}>
             <PixelIcon name="chevron-back" size={28} color={colors.text.primary} />
           </TouchableOpacity>
@@ -814,7 +824,9 @@ const ProfileScreen = () => {
   if (!isOwnProfile && hasBlockedMe) {
     return (
       <View style={styles.container}>
-        <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View
+          style={[styles.header, { paddingTop: insets.top + (Platform.OS === 'android' ? 8 : 0) }]}
+        >
           <TouchableOpacity onPress={handleBackPress} style={styles.headerButton}>
             <PixelIcon name="chevron-back" size={28} color={colors.text.primary} />
           </TouchableOpacity>
@@ -831,7 +843,9 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       {/* Header - 3 column layout with safe area coverage */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View
+        style={[styles.header, { paddingTop: insets.top + (Platform.OS === 'android' ? 8 : 0) }]}
+      >
         {/* Left: Friends icon (own) or Back arrow (other user) */}
         {isOwnProfile ? (
           <TouchableOpacity onPress={handleFriendsPress} style={styles.headerButton}>
@@ -873,7 +887,10 @@ const ProfileScreen = () => {
       >
         {/* 1. Selects Banner */}
         <View
-          style={[styles.selectsBannerContainer, { marginTop: insets.top + HEADER_HEIGHT + 16 }]}
+          style={[
+            styles.selectsBannerContainer,
+            { marginTop: insets.top + HEADER_HEIGHT + (Platform.OS === 'android' ? 8 : 0) + 16 },
+          ]}
         >
           <SelectsBanner
             selects={profileData?.selects || []}
@@ -1066,7 +1083,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: Platform.OS === 'android' ? 6 : spacing.sm,
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
@@ -1080,6 +1097,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     textAlign: 'center',
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 22 } }),
   },
   scrollView: {
     flex: 1,
@@ -1130,6 +1148,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     paddingRight: '35%', // Stop text before friend counter
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 32 } }),
   },
   username: {
     fontSize: typography.size.lg,
@@ -1166,6 +1185,7 @@ const styles = StyleSheet.create({
     color: colors.brand.purple,
     textAlign: 'center',
     letterSpacing: 3,
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 32 } }),
   },
   // Profile Song
   songContainer: {

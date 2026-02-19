@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, FlatList, Alert, Platform } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
@@ -27,6 +27,11 @@ import logger from '../utils/logger';
  */
 const ContactsSyncScreen = ({ navigation }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
+  const insets = useSafeAreaInsets();
+  const continueContainerStyle =
+    Platform.OS === 'android'
+      ? [styles.continueContainer, { paddingBottom: insets.bottom + 20 }]
+      : styles.continueContainer;
   const [screenState, setScreenState] = useState('initial'); // initial, syncing, results, empty
   const [suggestions, setSuggestions] = useState([]);
   const [addedUsers, setAddedUsers] = useState(new Set());
@@ -185,7 +190,7 @@ const ContactsSyncScreen = ({ navigation }) => {
           windowSize={5}
           removeClippedSubviews={true}
         />
-        <View style={styles.continueContainer}>
+        <View style={continueContainerStyle}>
           <TouchableOpacity
             style={styles.continueButton}
             onPress={handleContinue}
@@ -213,7 +218,7 @@ const ContactsSyncScreen = ({ navigation }) => {
           together!
         </Text>
       </View>
-      <View style={styles.continueContainer}>
+      <View style={continueContainerStyle}>
         <TouchableOpacity
           style={styles.continueButton}
           onPress={handleContinue}

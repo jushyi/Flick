@@ -242,8 +242,8 @@ async function sendReactionPushNotification(
     return;
   }
 
-  const title = 'Flick';
-  const body = `${reactorName} reacted ${reactionSummary} to your photo`;
+  const title = reactorName;
+  const body = `reacted ${reactionSummary} to your photo`;
 
   logger.debug('sendReactionPushNotification: Sending push notification', {
     reactorName,

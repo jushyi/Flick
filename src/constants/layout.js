@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const layout = {
   // Border radius scale - blocky retro (minimal rounding)
   borderRadius: {
@@ -12,7 +14,7 @@ export const layout = {
 
   // Common dimensions
   dimensions: {
-    tabBarHeight: 65,
+    tabBarHeight: Platform.OS === 'ios' ? 65 : 54,
     footerHeight: 200,
     inputHeight: 52,
     buttonMinHeight: 52,

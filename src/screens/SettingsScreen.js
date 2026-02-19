@@ -1,4 +1,12 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Application from 'expo-application';
 import { useNavigation } from '@react-navigation/native';
@@ -23,20 +31,24 @@ const SettingsScreen = () => {
 
   const handleSignOut = () => {
     logger.info('SettingsScreen: Sign out pressed');
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch (error) {
-            logger.error('SettingsScreen: Sign out failed', { error: error.message });
-          }
-        },
+    const signOutAction = {
+      text: 'Sign Out',
+      style: 'destructive',
+      onPress: async () => {
+        try {
+          await signOut();
+        } catch (error) {
+          logger.error('SettingsScreen: Sign out failed', { error: error.message });
+        }
       },
-    ]);
+    };
+    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    // Android reverses button visual order — swap so Cancel stays left, Sign Out right
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      Platform.OS === 'android' ? [signOutAction, cancelAction] : [cancelAction, signOutAction]
+    );
   };
 
   const handleNavigate = screenName => {
@@ -258,6 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    paddingBottom: Platform.OS === 'android' ? 6 : spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -268,6 +281,12 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   headerSpacer: {
     width: 36, // Balance the back button width

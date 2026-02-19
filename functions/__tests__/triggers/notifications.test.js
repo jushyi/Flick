@@ -218,8 +218,8 @@ describe('sendFriendRequestNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      'Flick',
-      expect.stringContaining('Sender User'),
+      'Sender User',
+      'sent you a friend request',
       expect.objectContaining({ type: 'friend_request' }),
       'recipient-1'
     );
@@ -339,8 +339,8 @@ describe('sendFriendAcceptedNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      'Flick',
-      expect.stringContaining('Acceptor'),
+      'Acceptor',
+      'accepted your friend request',
       expect.objectContaining({ type: 'friend_accepted', friendshipId: 'fs-1' }),
       'requester-1'
     );
@@ -909,8 +909,8 @@ describe('sendCommentNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      'Flick',
-      expect.stringContaining('Commenter'),
+      'Commenter',
+      expect.stringContaining('commented on your photo'),
       expect.objectContaining({ type: 'comment', photoId: 'photo-comment-1' }),
       'owner-1'
     );
@@ -1037,8 +1037,8 @@ describe('sendCommentNotification', () => {
     // Verify mention notification
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       'ExponentPushToken[mentioned-token]',
-      'Flick',
-      expect.stringContaining('Commenter'),
+      'Commenter',
+      'mentioned you in a comment',
       expect.objectContaining({ type: 'mention' }),
       'mentioned-1'
     );
@@ -1079,7 +1079,7 @@ describe('sendCommentNotification', () => {
 
     expect(mockSendPushNotification).toHaveBeenCalledWith(
       VALID_TOKEN,
-      'Flick',
+      'Commenter',
       expect.stringContaining('sent a GIF'),
       expect.objectContaining({ type: 'comment' }),
       'owner-1'

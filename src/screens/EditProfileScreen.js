@@ -400,17 +400,19 @@ const EditProfileScreen = ({ navigation }) => {
   // Handle cancel
   const handleCancel = () => {
     if (hasChanges()) {
+      const keepEditingAction = { text: 'Keep Editing', style: 'cancel' };
+      const discardAction = {
+        text: 'Discard',
+        style: 'destructive',
+        onPress: () => navigation.goBack(),
+      };
+      // Android reverses button visual order — swap so Keep Editing stays left, Discard right
       Alert.alert(
         'Discard Changes?',
         'You have unsaved changes. Are you sure you want to discard them?',
-        [
-          { text: 'Keep Editing', style: 'cancel' },
-          {
-            text: 'Discard',
-            style: 'destructive',
-            onPress: () => navigation.goBack(),
-          },
-        ]
+        Platform.OS === 'android'
+          ? [discardAction, keepEditingAction]
+          : [keepEditingAction, discardAction]
       );
     } else {
       navigation.goBack();
@@ -568,6 +570,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    paddingBottom: Platform.OS === 'android' ? 6 : spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
@@ -578,6 +581,12 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        lineHeight: 26,
+      },
+    }),
   },
   cancelText: {
     fontSize: typography.size.lg,

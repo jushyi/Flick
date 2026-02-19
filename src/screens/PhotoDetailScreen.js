@@ -26,7 +26,9 @@ import {
   Dimensions,
   Alert,
   Easing,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import PixelIcon from '../components/PixelIcon';
 import StrokedNameText from '../components/StrokedNameText';
@@ -66,6 +68,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
  */
 const PhotoDetailScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   // Get state and callbacks from context
   const {
@@ -536,21 +539,37 @@ const PhotoDetailScreen = () => {
     Alert.alert(
       'Remove from Journal',
       'This photo will be hidden from your stories and feed but remain in your albums. You can restore it anytime.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          onPress: async () => {
-            const result = await archivePhoto(currentPhoto.id, contextUserId);
-            if (result.success) {
-              handlePhotoStateChanged?.(); // Refresh feed/stories
-              handleClose(); // Close viewer - photo is now hidden
-            } else {
-              Alert.alert('Error', result.error || 'Failed to archive photo');
-            }
-          },
-        },
-      ]
+      Platform.OS === 'android'
+        ? [
+            {
+              text: 'Remove',
+              onPress: async () => {
+                const result = await archivePhoto(currentPhoto.id, contextUserId);
+                if (result.success) {
+                  handlePhotoStateChanged?.();
+                  handleClose();
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to archive photo');
+                }
+              },
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        : [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Remove',
+              onPress: async () => {
+                const result = await archivePhoto(currentPhoto.id, contextUserId);
+                if (result.success) {
+                  handlePhotoStateChanged?.();
+                  handleClose();
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to archive photo');
+                }
+              },
+            },
+          ]
     );
   }, [currentPhoto?.id, contextUserId, handleClose, handlePhotoStateChanged]);
 
@@ -572,22 +591,39 @@ const PhotoDetailScreen = () => {
     Alert.alert(
       'Delete Photo',
       'This photo will be moved to Recently Deleted. You can restore it within 30 days from Settings.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await softDeletePhoto(currentPhoto.id, contextUserId);
-            if (result.success) {
-              handlePhotoStateChanged?.(); // Refresh feed/stories
-              handleClose(); // Close viewer - photo is deleted
-            } else {
-              Alert.alert('Error', result.error || 'Failed to delete photo');
-            }
-          },
-        },
-      ]
+      Platform.OS === 'android'
+        ? [
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: async () => {
+                const result = await softDeletePhoto(currentPhoto.id, contextUserId);
+                if (result.success) {
+                  handlePhotoStateChanged?.();
+                  handleClose();
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to delete photo');
+                }
+              },
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        : [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: async () => {
+                const result = await softDeletePhoto(currentPhoto.id, contextUserId);
+                if (result.success) {
+                  handlePhotoStateChanged?.();
+                  handleClose();
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to delete photo');
+                }
+              },
+            },
+          ]
     );
   }, [currentPhoto?.id, contextUserId, handleClose, handlePhotoStateChanged]);
 
@@ -696,7 +732,7 @@ const PhotoDetailScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'transparent' }} {...panResponder.panHandlers}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
       {/* Background overlay - fades independently from content */}
       <Animated.View
@@ -803,7 +839,9 @@ const PhotoDetailScreen = () => {
             style={[
               styles.userInfoOverlay,
               {
-                bottom: contextMode === 'stories' ? 110 : 100,
+                bottom:
+                  (contextMode === 'stories' ? 110 : 100) +
+                  (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0),
               },
             ]}
           >
@@ -820,7 +858,10 @@ const PhotoDetailScreen = () => {
           {/* Tag button - visible for owner always, non-owner only when tags exist */}
           {(isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
             <TouchableOpacity
-              style={styles.tagButton}
+              style={[
+                styles.tagButton,
+                Platform.OS === 'android' && { bottom: styles.tagButton.bottom + insets.bottom },
+              ]}
               onPress={() => {
                 if (isOwnPhoto) {
                   setTagModalVisible(true);
@@ -841,7 +882,12 @@ const PhotoDetailScreen = () => {
           {/* Photo menu button */}
           {menuOptions.length > 0 && (
             <TouchableOpacity
-              style={styles.photoMenuButton}
+              style={[
+                styles.photoMenuButton,
+                Platform.OS === 'android' && {
+                  bottom: styles.photoMenuButton.bottom + insets.bottom,
+                },
+              ]}
               onPress={() => setShowPhotoMenu(true)}
               onLayout={handleMenuButtonLayout}
               activeOpacity={0.7}
@@ -876,7 +922,14 @@ const PhotoDetailScreen = () => {
           )}
 
           {/* Footer - Comment Input + Emoji Pills */}
-          <View style={styles.footer}>
+          <View
+            style={[
+              styles.footer,
+              Platform.OS === 'android' && {
+                paddingBottom: styles.footer.paddingBottom + insets.bottom,
+              },
+            ]}
+          >
             {/* Comment input trigger - left side */}
             <TouchableOpacity
               style={styles.commentInputTrigger}

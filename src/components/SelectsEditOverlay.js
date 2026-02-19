@@ -9,8 +9,6 @@ import {
   Dimensions,
   ScrollView,
   LayoutAnimation,
-  Platform,
-  UIManager,
   Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,11 +28,6 @@ import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
 import logger from '../utils/logger';
-
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const MAX_SELECTS = 10;
 const THUMBNAIL_SIZE = 56;

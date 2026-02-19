@@ -34,6 +34,7 @@ const DarkroomScreen = () => {
     // State
     visiblePhotos,
     loading,
+    pendingSuccess,
     undoStack,
     undoingPhoto,
     saving,
@@ -88,8 +89,10 @@ const DarkroomScreen = () => {
     );
   }
 
-  // Success state - all photos triaged, waiting for Done tap
-  if (visiblePhotos.length === 0 && undoStack.length > 0) {
+  // Success state - all photos triaged, waiting for Done tap.
+  // Also show when pendingSuccess=true (last card exited but triage callback not yet fired)
+  // so there's no blank-state flash between clearance (150ms) and triage completion (350ms).
+  if (visiblePhotos.length === 0 && (undoStack.length > 0 || pendingSuccess)) {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <View style={styles.successContainer}>
@@ -107,7 +110,9 @@ const DarkroomScreen = () => {
                 <View style={styles.downChevron} />
               </TouchableOpacity>
               <View style={styles.headerCenter}>
-                <Text style={styles.headerTitle}>Darkroom</Text>
+                <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>
+                  Darkroom
+                </Text>
                 <Text style={styles.headerSubtitle}>All done!</Text>
               </View>
               {/* Undo button */}
@@ -159,7 +164,7 @@ const DarkroomScreen = () => {
   }
 
   // Empty state - blank to avoid flash before success screen
-  if (visiblePhotos.length === 0) {
+  if (visiblePhotos.length === 0 && !pendingSuccess) {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <View style={styles.container} />
@@ -192,7 +197,9 @@ const DarkroomScreen = () => {
               <View style={styles.downChevron} />
             </TouchableOpacity>
             <View style={styles.headerCenter}>
-              <Text style={styles.headerTitle}>Darkroom</Text>
+              <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>
+                Darkroom
+              </Text>
               <Text style={styles.headerSubtitle}>
                 {visiblePhotos.length} {visiblePhotos.length === 1 ? 'photo' : 'photos'} ready to
                 review

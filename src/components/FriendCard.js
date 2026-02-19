@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from './PixelIcon';
 import StrokedNameText from './StrokedNameText';
@@ -69,14 +69,19 @@ const FriendCard = ({
    * Handle pending button press - show cancel confirmation
    */
   const handlePendingPress = () => {
-    Alert.alert('Cancel Request', `Cancel friend request to ${displayName || username}?`, [
+    const buttons = [
       { text: 'Keep', style: 'cancel' },
       {
         text: 'Cancel Request',
         style: 'destructive',
         onPress: () => onAction && onAction(friendshipId, 'cancel'),
       },
-    ]);
+    ];
+    Alert.alert(
+      'Cancel Request',
+      `Cancel friend request to ${displayName || username}?`,
+      Platform.OS === 'android' ? [...buttons].reverse() : buttons
+    );
   };
 
   /**
@@ -93,31 +98,37 @@ const FriendCard = ({
    * Handle remove friend action with confirmation
    */
   const handleRemoveFriend = () => {
-    Alert.alert('Remove Friend', `Remove ${displayName || username} from your friends?`, [
+    const buttons = [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
         style: 'destructive',
         onPress: () => onRemove && onRemove(userId),
       },
-    ]);
+    ];
+    Alert.alert(
+      'Remove Friend',
+      `Remove ${displayName || username} from your friends?`,
+      Platform.OS === 'android' ? [...buttons].reverse() : buttons
+    );
   };
 
   /**
    * Handle block user action with confirmation
    */
   const handleBlockUser = () => {
+    const buttons = [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Block',
+        style: 'destructive',
+        onPress: () => onBlock && onBlock(userId),
+      },
+    ];
     Alert.alert(
       'Block User',
       `Block ${displayName || username}? They won't be able to see your profile or contact you.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: () => onBlock && onBlock(userId),
-        },
-      ]
+      Platform.OS === 'android' ? [...buttons].reverse() : buttons
     );
   };
 

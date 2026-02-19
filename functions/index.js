@@ -19,25 +19,27 @@ const app = getApps().length > 0 ? getApp() : initializeApp();
 const db = initializeFirestore(app, { preferRest: true });
 
 /**
- * Varied notification templates for tagged photos (single tag)
+ * Body-only templates for tagged photos (single tag)
+ * Title is the tagger's name; body is the action phrase without their name.
  * Makes notifications feel human and not robotic
  */
-const TAG_NOTIFICATION_TEMPLATES = [
-  '{name} tagged you in a photo',
-  "You're in {name}'s latest snap",
-  '{name} included you in a moment',
-  "You made it into {name}'s photo",
-  '{name} captured you!',
+const TAG_BODY_TEMPLATES = [
+  'tagged you in a photo',
+  'added you to their latest snap',
+  'included you in a moment',
+  'got you in their photo',
+  'captured you!',
 ];
 
 /**
- * Varied notification templates for batch tags (multiple photos)
+ * Body-only templates for batch tags (multiple photos)
+ * Title is the tagger's name; body is the action phrase without their name.
  * Used when someone tags user in multiple photos within debounce window
  */
-const TAG_BATCH_TEMPLATES = [
-  '{name} tagged you in {count} photos',
-  "You're in {count} of {name}'s snaps",
-  '{name} included you in {count} moments',
+const TAG_BATCH_BODY_TEMPLATES = [
+  'tagged you in {count} photos',
+  'added you to {count} of their snaps',
+  'included you in {count} moments',
 ];
 
 // Track pending tags for debouncing: { "taggerId_taggedId": { timeout, photoIds, taggerName, taggerProfilePhotoURL, taggedUserId, fcmToken } }
@@ -567,8 +569,8 @@ exports.sendFriendRequestNotification = functions
         : 'Someone';
 
       // Send notification
-      const title = 'Flick';
-      const body = `${senderName} sent you a friend request`;
+      const title = senderName;
+      const body = 'sent you a friend request';
 
       const result = await sendPushNotification(
         fcmToken,
@@ -684,8 +686,8 @@ exports.sendFriendAcceptedNotification = functions
         : null;
 
       // Send notification
-      const title = 'Flick';
-      const body = `${acceptorName} accepted your friend request`;
+      const title = acceptorName;
+      const body = 'accepted your friend request';
 
       const result = await sendPushNotification(
         fcmToken,
@@ -860,14 +862,12 @@ async function sendBatchedTagNotification(pendingKey) {
   const count = photoIds.length;
   let message;
   if (count === 1) {
-    const template = getRandomTemplate(TAG_NOTIFICATION_TEMPLATES);
-    message = template.replace('{name}', taggerName);
+    message = getRandomTemplate(TAG_BODY_TEMPLATES);
   } else {
-    const template = getRandomTemplate(TAG_BATCH_TEMPLATES);
-    message = template.replace('{name}', taggerName).replace('{count}', String(count));
+    message = getRandomTemplate(TAG_BATCH_BODY_TEMPLATES).replace('{count}', String(count));
   }
 
-  const title = 'Flick';
+  const title = taggerName;
 
   logger.debug('sendBatchedTagNotification: Sending notification', {
     pendingKey,
@@ -1241,8 +1241,8 @@ exports.sendCommentNotification = functions
 
             if (masterEnabled && commentsEnabled) {
               // Send notification via Expo Push API
-              const title = 'Flick';
-              const pushBody = `${commenterName} commented on your photo: ${commentPreview}`;
+              const title = commenterName;
+              const pushBody = `commented on your photo: ${commentPreview}`;
               const inAppMessage = `commented on your photo: ${commentPreview}`;
 
               await sendPushNotification(
@@ -1384,11 +1384,9 @@ exports.sendCommentNotification = functions
             }
 
             // Send mention/reply notification
-            const mentionTitle = 'Flick';
+            const mentionTitle = commenterName;
             const notifType = isReply ? 'reply' : 'mention';
-            const mentionBody = isReply
-              ? `${commenterName} replied to your comment`
-              : `${commenterName} mentioned you in a comment`;
+            const mentionBody = isReply ? 'replied to your comment' : 'mentioned you in a comment';
 
             await sendPushNotification(
               fcmToken,

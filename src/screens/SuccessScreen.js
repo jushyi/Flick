@@ -7,6 +7,7 @@ import {
   Animated,
   Easing,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -208,6 +209,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: spacing.sm,
+    ...Platform.select({ android: { includeFontPadding: false, lineHeight: 44 } }),
   },
   subtitle: {
     fontSize: typography.size.lg,
