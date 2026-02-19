@@ -14,7 +14,7 @@
 
 3. **feed.png** — "See what your friends captured"
    - Shows: FeedScreen with revealed photos from friends
-   - Caption: Wake up to fresh reveals every morning at 9am
+   - Caption: Your photos reveal moments after you take them
 
 4. **detail.png** — "React and connect"
    - Shows: PhotoDetailModal with full photo and reaction buttons
