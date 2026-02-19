@@ -27,8 +27,7 @@
       "channel": "production",
       "env": {
         "APP_ENV": "production",
-        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info-prod.plist",
-        "GOOGLE_SERVICES_JSON_PROD": "./google-services-prod.json"
+        "GOOGLE_SERVICES_PLIST": "./GoogleService-Info-prod.plist"
       },
       "ios": {
         "image": "latest"
