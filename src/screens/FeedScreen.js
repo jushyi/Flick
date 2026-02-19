@@ -197,6 +197,17 @@ const FeedScreen = () => {
     }
   }, [user?.uid]);
 
+  // Reload own stories when profile photo changes (e.g. after EditProfileScreen save)
+  const prevPhotoURLRef = useRef(userProfile?.photoURL);
+  useEffect(() => {
+    if (userProfile?.photoURL !== prevPhotoURLRef.current) {
+      prevPhotoURLRef.current = userProfile?.photoURL;
+      if (user?.uid) {
+        loadMyStories();
+      }
+    }
+  }, [userProfile?.photoURL]);
+
   // Mark screen trace as loaded after initial feed data loads (once only)
   useEffect(() => {
     if (!loading && !screenTraceMarkedRef.current) {
