@@ -11,6 +11,7 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { useAuth } from '../context/AuthContext';
 import { PhoneAuthProvider } from '../context/PhoneAuthContext';
 import { PhotoDetailProvider } from '../context/PhotoDetailContext';
+import useMessages from '../hooks/useMessages';
 import * as Contacts from 'expo-contacts';
 import { colors } from '../constants/colors';
 import CustomBottomTabBar from '../components/CustomBottomTabBar';
@@ -61,6 +62,9 @@ import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import ContactsSettingsScreen from '../screens/ContactsSettingsScreen';
 import ContributionsScreen from '../screens/ContributionsScreen';
 import SoundSettingsScreen from '../screens/SoundSettingsScreen';
+import MessagesScreen from '../screens/MessagesScreen';
+import ConversationScreen from '../screens/ConversationScreen';
+import NewMessageScreen from '../screens/NewMessageScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -68,6 +72,7 @@ export const navigationRef = createRef();
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
 const ProfileModalStack = createNativeStackNavigator();
+const MessagesStack = createNativeStackNavigator();
 
 /**
  * ProfileFromPhotoDetail Navigator
@@ -205,16 +210,49 @@ const ProfileStackNavigator = () => {
 };
 
 /**
- * Main Tab Navigator (Feed, Camera, Profile) - 3-tab layout
+ * Messages Stack Navigator (MessagesList, Conversation, NewMessage)
+ */
+const MessagesStackNavigator = () => {
+  return (
+    <MessagesStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background.primary },
+      }}
+    >
+      <MessagesStack.Screen name="MessagesList" component={MessagesScreen} />
+      <MessagesStack.Screen
+        name="Conversation"
+        component={ConversationScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <MessagesStack.Screen
+        name="NewMessage"
+        component={NewMessageScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+    </MessagesStack.Navigator>
+  );
+};
+
+/**
+ * Main Tab Navigator (Feed, Messages, Camera, Profile) - 4-tab layout
  */
 const MainTabNavigator = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, user } = useAuth();
+  const { totalUnreadCount } = useMessages(user?.uid);
 
   return (
     <Tab.Navigator
       initialRouteName="Camera"
       tabBarPosition="bottom"
-      tabBar={props => <CustomBottomTabBar {...props} userProfile={userProfile} />}
+      tabBar={props => (
+        <CustomBottomTabBar
+          {...props}
+          userProfile={userProfile}
+          totalUnreadCount={totalUnreadCount}
+        />
+      )}
       screenOptions={{
         lazy: false,
         swipeEnabled: true,
@@ -223,6 +261,14 @@ const MainTabNavigator = () => {
       }}
     >
       <Tab.Screen name="Feed" component={FeedScreen} />
+      <Tab.Screen
+        name="Messages"
+        component={MessagesStackNavigator}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'MessagesList';
+          return { swipeEnabled: routeName === 'MessagesList' };
+        }}
+      />
       <Tab.Screen name="Camera" component={CameraScreen} />
       <Tab.Screen
         name="Profile"
@@ -246,6 +292,13 @@ const linking = {
       MainTabs: {
         screens: {
           Feed: 'feed',
+          Messages: {
+            screens: {
+              MessagesList: 'messages',
+              Conversation: 'messages/:conversationId',
+              NewMessage: 'messages/new',
+            },
+          },
           Camera: 'camera',
           Profile: {
             screens: {
