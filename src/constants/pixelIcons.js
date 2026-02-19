@@ -3036,6 +3036,43 @@ const ICON_GRIDS = {
     ],
   },
 
+  'tab-messages': {
+    width: 12,
+    height: 12,
+    pixels: [
+      // Top edge
+      [3, 0],
+      [4, 0],
+      [5, 0],
+      [6, 0],
+      [7, 0],
+      [8, 0],
+      // Second row sides
+      [2, 1],
+      [9, 1],
+      // Body sides
+      [1, 2],
+      [10, 2],
+      [1, 3],
+      [10, 3],
+      [1, 4],
+      [10, 4],
+      // Pre-bottom sides
+      [2, 5],
+      [9, 5],
+      // Bottom edge
+      [3, 6],
+      [4, 6],
+      [5, 6],
+      [6, 6],
+      [7, 6],
+      [8, 6],
+      // Tail
+      [4, 7],
+      [3, 8],
+    ],
+  },
+
   'tab-profile': {
     width: 12,
     height: 12,
