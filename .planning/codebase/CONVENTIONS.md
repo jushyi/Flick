@@ -1,352 +1,188 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-01-26
+**Analysis Date:** 2026-02-19
 
 ## Naming Patterns
 
 **Files:**
 
-- PascalCase for React components: `FeedScreen.js`, `PhotoDetailModal.js`
-- camelCase for utilities and services: `logger.js`, `photoService.js`
-- `.test.js` suffix for test files
-- `.styles.js` suffix for style modules
+- PascalCase + `Screen` suffix for screens (`FeedScreen.js`, `DarkroomScreen.js`)
+- PascalCase for components (`Button.js`, `FeedPhotoCard.js`, `AlbumCard.js`)
+- camelCase + `Service` suffix for services (`feedService.js`, `photoService.js`)
+- camelCase + `use` prefix for hooks (`useDarkroom.js`, `useFeedPhotos.js`, `useCamera.js`)
+- camelCase for utilities (`logger.js`, `soundUtils.js`, `haptics.js`)
+- camelCase for constants files (`colors.js`, `typography.js`, `spacing.js`)
+- `*.test.js` suffix for tests (`feedService.test.js`, `useDarkroom.test.js`)
+- `*.styles.js` suffix for style files (`FeedScreen.styles.js`)
 
 **Functions:**
 
-- camelCase for all functions: `uploadPhoto`, `getDevelopingPhotoCount`
-- No special prefix for async functions
-- handle\* for event handlers: `handleCapturePhoto`, `handleReaction`
+- camelCase for all functions (`uploadPhoto`, `getDevelopingPhotos`, `batchTriagePhotos`)
+- `handle` prefix for event handlers (`handleCapturePhoto`, `handleLogin`, `handleDone`)
+- `is`/`has` prefix for boolean returns (`isDarkroomReadyToReveal`, `hasPermission`)
+- `use` prefix for custom hooks (`useDarkroom`, `useAuth`, `useFeedPhotos`)
 
 **Variables:**
 
-- camelCase for variables: `userProfile`, `darkroomCount`
-- UPPER_SNAKE_CASE for constants: `REACTION_DEBOUNCE_MS`, `GIPHY_API_KEY`
-- No underscore prefix for private members
+- camelCase for state and local variables (`const [photos, setPhotos]`)
+- UPPER_SNAKE_CASE for module-level constants (`FIRESTORE_IN_LIMIT = 30`, `TAG_DEBOUNCE_MS`)
+- camelCase ending with `Ref` for refs (`cardRef`, `navigationRef`, `confirmationRef`)
 
 **Types:**
 
-- Not applicable (JavaScript, not TypeScript)
+- No TypeScript; JSDoc comments for type hints where provided
+- Service return type: `{ success: boolean, error?: string, data?: any }`
 
 ## Code Style
 
-**Formatting:**
+**Formatting (`.prettierrc`):**
 
-- Prettier with configuration in `eslint.config.js`
-- Single quotes for strings
-- Trailing commas in multiline
-- 2 space indentation
-- ~100 character line length (Prettier default)
+- Semicolons: Required (`"semi": true`)
+- Quotes: Single quotes (`"singleQuote": true`)
+- Trailing commas: ES5 style (`"trailingComma": "es5"`)
+- Tab width: 2 spaces (`"tabWidth": 2`)
+- Line width: 100 characters (`"printWidth": 100`)
+- Arrow parens: Avoid (`"arrowParens": "avoid"`)
+- Bracket spacing: Enabled (`"bracketSpacing": true`)
 
-**Linting:**
+**Linting (`eslint.config.js`):**
 
-- ESLint 9.x with flat config: `eslint.config.js`
-- Extends eslint-config-expo (React Native rules)
-- Prettier integration via eslint-plugin-prettier
-- Run: `npm run lint` or `npm run lint:fix`
+- Extends: `eslint-config-expo` (Expo recommended rules)
+- Prettier integration via `eslint-plugin-prettier` and `eslint-config-prettier`
+- Run: `npm run lint` (check), `npm run lint:fix` (auto-fix)
 
-**Pre-commit:**
+**Pre-commit (`.husky/pre-commit` + lint-staged):**
 
-- Husky + lint-staged
-- Auto-runs ESLint and Prettier on staged files
+- `*.{js,jsx}`: `eslint --fix` then `prettier --write`
+- `*.{json,md}`: `prettier --write` only
+- Secret detection: Blocks `GoogleService-Info.plist`, `.env`, certificates
 
 ## Import Organization
 
 **Order:**
 
-1. React and React Native imports
-2. External packages (expo-_, @react-navigation/_, etc.)
-3. Internal modules (context, services, components)
-4. Relative imports (./_, ../_)
-5. Constants and utils last
+1. React and React Native core (`import React, { useState } from 'react'`)
+2. Third-party packages (`@react-native-firebase/*`, `@react-navigation/*`, `expo-*`)
+3. Internal services (`../services/firebase/feedService`)
+4. Components (`../components`)
+5. Context and hooks (`../context/AuthContext`, `../hooks/useDarkroom`)
+6. Utilities and constants (`../utils/logger`, `../constants/colors`)
 
 **Grouping:**
 
-- Logical grouping with blank lines between categories
-- No strict alphabetical sorting enforced
+- Blank line between each group
+- Firebase imports grouped from single package (`import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore'`)
 
 **Path Aliases:**
 
-- `@/` maps to `src/` (configured in jest.config.js for tests)
-- `@env` for environment variables via react-native-dotenv
+- `@env` maps to `react-native-dotenv` (environment variables)
+- No other path aliases; relative imports throughout (`../`, `../../`)
 
 ## Error Handling
 
 **Patterns:**
 
-- Services return `{ success: true, data }` or `{ success: false, error }` objects
-- Callers check `result.success` before using data
-- Try/catch in async functions, log errors via logger
+- Services always return `{ success, error }` objects (never throw)
+- Hooks check service return values and set state for UI display
+- Screens show Alerts or inline error messages based on hook error state
+- `ErrorBoundary` component at app root for unhandled crashes
+
+**Service Pattern:**
+
+```javascript
+export const doOperation = async params => {
+  try {
+    // ... operation
+    return { success: true, data: result };
+  } catch (error) {
+    logger.error('doOperation failed', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
+```
 
 **Error Types:**
 
-- Throw on unexpected errors (caught by ErrorBoundary)
-- Return error objects for expected failures
-- Log all errors with context: `logger.error('Context: Error message', { details })`
-
-**Example:**
-
-```javascript
-try {
-  const result = await someService();
-  if (!result.success) {
-    logger.warn('Operation failed', { error: result.error });
-    return { success: false, error: result.error };
-  }
-  return { success: true, data: result.data };
-} catch (error) {
-  logger.error('Unexpected error', { error: error.message });
-  return { success: false, error: error.message };
-}
-```
+- Log errors at appropriate level before returning (`logger.error()`, `logger.warn()`)
+- User-safe error messages in return object (not raw error stacks)
 
 ## Logging
 
 **Framework:**
 
-- Custom logger utility: `src/utils/logger.js`
-- Levels: debug, info, warn, error
+- Custom logger: `src/utils/logger.js`
+- Levels: DEBUG (dev only), INFO, WARN, ERROR
+- **Never use `console.log()` directly** - always use logger
 
 **Patterns:**
 
-- Structured logging with context objects
-- Log at service boundaries and user actions
-- Automatic sensitive data sanitization
-- `logger.debug()` for development, `logger.info()` for important events
-- `logger.error()` always includes error details
-
-**Example:**
-
-```javascript
-logger.info('PhotoService.uploadPhoto: Starting upload', { userId });
-logger.debug('PhotoService.uploadPhoto: Processing', { step: 'compress' });
-logger.error('PhotoService.uploadPhoto: Failed', { error: error.message });
-```
+- Structured logging with context: `logger.info('Photo uploaded', { userId, photoId })`
+- Automatic redaction of sensitive fields (tokens, passwords, Firebase keys)
+- Production: `console.log` stripped by Babel `transform-remove-console`
+- Cloud Functions: Use `functions.logger.*` API (`functions/logger.js`)
 
 ## Comments
 
 **When to Comment:**
 
-- Explain why, not what
-- Document business rules (e.g., reveal timing, triage flow)
-- Complex algorithms or workarounds
-- TODOs with issue context
+- Explain _why_, not _what_ (code is self-documenting)
+- Document business rules and edge cases
+- Section dividers: `// ============================================================================`
+- Critical notes: `// CRITICAL:` prefix
+- Important caveats: `// NOTE:` prefix
 
 **JSDoc:**
 
-- Used in Cloud Functions for function documentation
-- Optional in app code (function names should be self-documenting)
+- Used for public API functions in services and utilities
+- Format: `@param`, `@returns`, `@throws` tags
+- Optional for internal functions with self-explanatory signatures
 
 **TODO Comments:**
 
 - Format: `// TODO: description`
-- Include phase reference if applicable
-- Example: `// TODO: In Phase 10, send to Sentry`
+- No username prefix (use git blame)
 
 ## Function Design
 
 **Size:**
 
 - Keep functions focused on single responsibility
-- Extract helpers for complex logic
-- No strict line limit enforced
+- Extract helpers for complex operations
+- Large screen files (1200+ lines) are known tech debt
 
 **Parameters:**
 
-- Destructure objects in parameters where appropriate
-- Use options object for functions with many parameters
+- Use destructuring for options objects
+- Service functions take primitive params (`userId`, `photoId`)
 
 **Return Values:**
 
-- Consistent `{ success, data/error }` pattern for services
-- Return early for guard clauses
-- Explicit returns (no implicit undefined)
+- Services: Always `{ success, error, ...data }`
+- Hooks: Return object with state + action functions
+- Utilities: Direct return values (no wrapper object)
 
 ## Module Design
 
 **Exports:**
 
-- Named exports preferred
-- Default exports for React components
-- Barrel files (`index.js`) for directory exports
+- Named exports for services and utilities
+- Default exports for screens (React Navigation expects default)
+- Barrel files (`index.js`) for components, context, services, constants
 
-**Services:**
+**Barrel Files:**
 
-- Export individual functions, not classes
-- Functions are stateless (state in Firestore)
+- `src/components/index.js` - Re-exports all public components
+- `src/context/index.js` - Re-exports providers and hooks
+- `src/services/firebase/index.js` - Re-exports all Firebase services
+- `src/constants/index.js` - Re-exports all constant modules
 
-**Components:**
+**Platform Variants:**
 
-- One component per file (main component)
-- Helper components can be in same file if small
-- Export default for main component
-
-## Firestore Service Patterns
-
-**Query Construction:**
-
-- Use server-side `where()` clauses for filtering - don't fetch all data and filter client-side
-- Composite indexes are defined in `firestore.indexes.json` for multi-field queries
-- Use `Timestamp.fromDate()` for date comparisons in queries
-
-**Example (correct):**
-
-```javascript
-// Server-side filtering with composite index
-const cutoff = Timestamp.fromDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-const q = query(
-  collection(db, 'photos'),
-  where('userId', '==', userId),
-  where('photoState', '==', 'journal'),
-  where('capturedAt', '>=', cutoff)
-);
-```
-
-**Anti-pattern (avoid):**
-
-```javascript
-// DON'T: Fetch all data then filter client-side
-const snapshot = await getDocs(collection(db, 'photos'));
-const filtered = snapshot.docs.filter(doc => doc.data().capturedAt >= cutoff);
-```
-
-**Client-Side Filtering:**
-
-- Only for user-specific logic that can't be expressed in Firestore (e.g., `userId !== currentUserId`)
-- Only for small result sets where index complexity isn't justified
-
-## React/React Native Patterns
-
-**State Management:**
-
-- useState for local UI state
-- useContext for global state (auth, theme)
-- No external state library (Redux, MobX)
-
-**Effects:**
-
-- useEffect for side effects and subscriptions
-- Cleanup functions for listeners/intervals
-- Dependency arrays always specified
-
-**Navigation:**
-
-- React Navigation hooks: useNavigation, useRoute
-- navigationRef for programmatic navigation
-
-## Color System
-
-**Source of Truth:** `src/constants/colors.js`
-**Reference Documentation:** `src/constants/COLOR_REFERENCE.md`
-
-**Rule:** ALWAYS use color constants from `colors.js`. NEVER hardcode hex, rgb, or rgba values.
-
-**Import Pattern:**
-
-```javascript
-import { colors } from '../constants/colors';
-// or from deeper directories:
-import { colors } from '../../constants/colors';
-```
-
-**Background Hierarchy:**
-
-| Constant                      | Usage                                       |
-| ----------------------------- | ------------------------------------------- |
-| `colors.background.primary`   | All screen backgrounds (pure black #000000) |
-| `colors.background.secondary` | Cards, sheets, bottom sheets, modals        |
-| `colors.background.card`      | Alias for secondary (explicit card usage)   |
-| `colors.background.tertiary`  | Nested elements needing more contrast       |
-
-**Text Hierarchy:**
-
-| Constant                | Usage                            |
-| ----------------------- | -------------------------------- |
-| `colors.text.primary`   | Main text, headings, titles      |
-| `colors.text.secondary` | Labels, descriptions, muted text |
-| `colors.text.tertiary`  | Very muted helper text           |
-
-**Icon Colors (NOT purple):**
-
-| Constant                | Usage                   |
-| ----------------------- | ----------------------- |
-| `colors.icon.primary`   | Default icons (white)   |
-| `colors.icon.secondary` | Muted/secondary icons   |
-| `colors.icon.tertiary`  | Very muted icons        |
-| `colors.icon.inactive`  | Disabled/inactive icons |
-
-**Interactive Elements:**
-
-| Constant                       | Usage                                        |
-| ------------------------------ | -------------------------------------------- |
-| `colors.interactive.primary`   | Primary buttons, active tabs, focused inputs |
-| `colors.brand.purple`          | Accent color for highlights                  |
-| `colors.interactive.secondary` | Secondary buttons                            |
-
-**Correct Usage Examples:**
-
-```javascript
-// Screen container - REQUIRED for all screens
-container: {
-  flex: 1,
-  backgroundColor: colors.background.primary, // ✓ Pure black
-}
-
-// Card or bottom sheet
-cardContainer: {
-  backgroundColor: colors.background.secondary, // ✓ Subtle lift
-  borderRadius: 12,
-}
-
-// Text
-titleText: {
-  color: colors.text.primary, // ✓ White text
-}
-
-// Icon - use icon colors, NOT purple
-<Ionicons
-  name="settings-outline"
-  size={24}
-  color={colors.icon.primary} // ✓ White icon
-/>
-```
-
-**Anti-patterns (DO NOT DO):**
-
-```javascript
-// ✗ WRONG: Hardcoded hex values
-container: {
-  backgroundColor: '#000000', // ✗ Use colors.background.primary
-}
-
-cardContainer: {
-  backgroundColor: '#111111', // ✗ Use colors.background.secondary
-}
-
-titleText: {
-  color: '#FFFFFF', // ✗ Use colors.text.primary
-}
-
-// ✗ WRONG: Purple icons
-<Ionicons
-  name="settings-outline"
-  color="#8B5CF6" // ✗ Icons use colors.icon.*, NOT purple
-/>
-
-// ✗ WRONG: Inline rgba
-overlay: {
-  backgroundColor: 'rgba(0, 0, 0, 0.5)', // ✗ Use colors.overlay.dark
-}
-```
-
-**Key Rules:**
-
-1. Every screen must have `backgroundColor: colors.background.primary`
-2. Cards/sheets use `colors.background.secondary`
-3. Icons use `colors.icon.*` (white/gray), NEVER purple
-4. Purple is reserved for interactive elements and highlights only
-5. No hardcoded color values anywhere - always use constants
+- `.ios.js` / `.android.js` file extensions for platform-specific code
+- Shared logic in `Base.js` file (e.g., `useCameraBase.js`)
+- Metro auto-resolves; import normally without extension
 
 ---
 
-_Convention analysis: 2026-01-26_
+_Convention analysis: 2026-02-19_
 _Update when patterns change_

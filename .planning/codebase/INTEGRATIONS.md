@@ -1,186 +1,164 @@
 # External Integrations
 
-**Analysis Date:** 2026-01-26
+**Analysis Date:** 2026-02-19
 
 ## APIs & External Services
 
-**Push Notifications:**
+**Music Search:**
 
-- Expo Push Notification Service - Push notifications to devices
-  - SDK/Client: expo-notifications ~0.32.16
-  - Auth: Expo Push Tokens (ExponentPushToken[...])
-  - Endpoints: `https://exp.host/--/api/v2/push/send`
-  - Used in: `functions/index.js` (Cloud Functions send notifications)
-  - Client: `src/services/firebase/notificationService.js`
+- iTunes Search API - Song search for profile song feature
+  - Integration method: REST API via fetch (`src/services/iTunesService.js`)
+  - Auth: None (public API)
+  - Used for: Song preview URLs, album art, artist info
 
-**GIF Integration:**
+**GIF/Sticker Picker:**
 
-- Giphy API - GIF picker for comments
-  - SDK/Client: @giphy/react-native-sdk ^5.0.1
-  - Auth: GIPHY_API_KEY env var
-  - Usage: `src/components/comments/GifPicker.js`
-  - Initialize: `App.js` (initializeGiphy call)
+- Giphy SDK - GIF picker in comments
+  - SDK/Client: `@giphy/react-native-sdk` v5.0.1
+  - Auth: API key via `GIPHY_API_KEY` env var (`app.config.js` plugins)
+  - Used in: `src/components/comments/GifPicker.js`
+
+**In-App Purchases:**
+
+- Apple App Store / Google Play - Contributions ($0.99-$9.99)
+  - SDK/Client: `react-native-iap` v14.7.11 (`src/services/iapService.js`)
+  - Auth: Native Store credentials
+  - Submit config: ASC App ID 6759178451 (`eas.json`)
+
+**Email:**
+
+- Gmail SMTP - Account deletion notifications, support emails
+  - SDK/Client: `nodemailer` v8.0.1 (Cloud Functions only - `functions/index.js`)
+  - Auth: Gmail app password in Cloud Functions config
 
 ## Data Storage
 
 **Databases:**
 
-- Cloud Firestore - Primary data store
-  - Connection: @react-native-firebase/firestore ^23.8.2
-  - Collections: users, photos, darkrooms, friendships, notifications, photoViews
-  - Security: `firestore.rules` (comprehensive rules)
-  - Indexes: `firestore.indexes.json` (composite indexes for efficient queries)
-  - Query pattern: Server-side filtering via `where()` clauses with composite indexes
-  - Avoid client-side filtering for large datasets; use Firestore queries instead
+- Firebase Firestore - Primary data store
+  - Connection: React Native Firebase SDK (`@react-native-firebase/firestore`)
+  - Collections: `users/`, `photos/`, `friendships/`, `comments/`, `albums/`, `notifications/`, `blocks/`, `reports/`, `reactionBatches/`
+  - Rules: `firestore.rules`
+  - Indexes: `firestore.indexes.json`
 
 **File Storage:**
 
 - Firebase Cloud Storage - Photo uploads
-  - SDK/Client: @react-native-firebase/storage ^23.8.2
-  - Security: `storage.rules`
-  - Buckets: Default project bucket
-  - Usage: `src/services/firebase/storageService.js`
-  - Signed URLs: `functions/index.js` (getSignedPhotoUrl)
+  - SDK/Client: `@react-native-firebase/storage`
+  - Auth: Firebase Auth token (automatic)
+  - Signed URLs: 7-day expiry via `src/services/firebase/signedUrlService.js`
+  - Rules: `storage.rules`
 
 **Local Storage:**
 
-- AsyncStorage - Auth state persistence
-  - SDK: @react-native-async-storage/async-storage 2.2.0
-  - Usage: `src/context/AuthContext.js`
-
-- Expo SecureStore - Sensitive data
-  - SDK: expo-secure-store ~15.0.8
-  - Usage: `src/services/secureStorageService.js`
+- AsyncStorage - Upload queue persistence, viewed stories, app state (`@react-native-async-storage/async-storage`)
+- Expo Secure Store - Sensitive credentials (`expo-secure-store`, `src/services/secureStorageService.js`)
+- Expo File System - Audio file caching (`expo-file-system`)
 
 **Caching:**
 
-- None (direct Firestore queries)
-- Image caching via expo-image
+- expo-image disk cache - Automatic image caching with `cachePolicy="memory-disk"`
+- No server-side caching (Redis, etc.)
 
 ## Authentication & Identity
 
 **Auth Provider:**
 
-- Firebase Auth - Phone number authentication
-  - SDK: @react-native-firebase/auth ^23.8.2
-  - Implementation: `src/services/firebase/phoneAuthService.js`
-  - Context: `src/context/AuthContext.js`, `src/context/PhoneAuthContext.js`
-  - Token storage: Managed by Firebase SDK
-  - Session: Persisted via AsyncStorage
+- Firebase Phone Authentication - SMS OTP only
+  - Implementation: React Native Firebase Auth SDK (`src/services/firebase/phoneAuthService.js`)
+  - Token storage: Managed by Firebase SDK internally
+  - Session management: Firebase Auth handles token refresh automatically
+  - No social login; phone-only authentication
 
-**Auth Flow:**
+**OAuth Integrations:**
 
-1. Phone number input → `sendVerificationCode()`
-2. SMS code verification → `verifyCode()`
-3. Profile setup (username, bio, photo)
-4. Auth state persisted, auto-login on app restart
+- None (phone-only auth)
 
 ## Monitoring & Observability
 
+**Performance Monitoring:**
+
+- Firebase Performance Monitoring - Screen traces and custom metrics
+  - SDK: `@react-native-firebase/perf`
+  - Implementation: `src/services/firebase/performanceService.js`
+  - Hooks: `src/hooks/useScreenTrace.js` (screen traces), `withTrace()` (operation traces)
+  - Disabled in `__DEV__` to avoid polluting production metrics
+
 **Error Tracking:**
 
-- Planned: Sentry (Phase 10)
-  - Current: `src/utils/logger.js` logs to console
-  - TODOs in code for Sentry integration
-  - Files: `src/utils/logger.js:218`, `src/components/ErrorBoundary.js:63`
+- None (no Sentry, Bugsnag, etc.)
+- Errors logged via custom logger (`src/utils/logger.js`)
 
 **Analytics:**
 
-- None implemented
-- Planned: Phase 2+
+- None (no Firebase Analytics, Mixpanel, etc.)
 
 **Logs:**
 
-- Development: Console via logger utility
-- Production: Console (captured by Expo/device logs)
-- Cloud Functions: Firebase Functions logs (console-based)
+- Custom logger: `src/utils/logger.js` - Structured logging with sensitive data redaction
+- Cloud Functions: `functions/logger.js` - Uses Firebase `functions.logger.*`
+- Production: `console.log` stripped via Babel `transform-remove-console`
 
 ## CI/CD & Deployment
 
-**App Hosting:**
+**Hosting:**
 
-- EAS Build - iOS app builds
-  - Config: `eas.json`
-  - Project ID: b7da185a-d3e1-441b-88f8-0d4379333590
-  - Distribution: TestFlight (planned)
-
-**Cloud Functions:**
-
-- Firebase Cloud Functions - Server-side logic
-  - Location: `functions/`
-  - Runtime: Node.js 20
-  - Deploy: `firebase deploy --only functions`
-  - Region: us-central1
+- EAS (Expo Application Services) - Native builds and OTA updates
+  - Build profiles: development, preview, production (`eas.json`)
+  - OTA: `eas update --branch production` for JS changes
+  - Submit: `eas submit` for App Store / Play Store
 
 **CI Pipeline:**
 
-- Not configured (local deployment)
-- Lint/test via npm scripts
+- GitHub Actions - Automated workflows (`.github/` directory)
+- Pre-commit hooks: husky + lint-staged (ESLint, Prettier, secret detection)
+
+**Cloud Functions:**
+
+- Firebase hosting - `firebase deploy --only functions`
+- Node.js 20 runtime
+- Deployed to Firebase project via `firebase.json`
 
 ## Environment Configuration
 
 **Development:**
 
-- Required env vars: GIPHY_API_KEY
-- Secrets location: `.env` (gitignored)
-- Firebase config: `GoogleService-Info.plist` (iOS)
-- Mock services: Expo Go for testing
-
-**Staging:**
-
-- Same Firebase project (no separate staging)
-- Test via Expo Go development builds
+- Required: Firebase native config files (`GoogleService-Info.plist`, `google-services.json`)
+- Optional env vars: `GIPHY_API_KEY`, `FUNCTIONS_EMULATOR`
+- Firebase dev project: `re-lapse-fa89b` (`.firebaserc` default)
+- Expo Dev Client for native module testing
 
 **Production:**
 
-- EAS Build for standalone iOS app
-- Secrets: EAS Secrets for GOOGLE_SERVICES_PLIST
-- Firebase: Production Firestore rules deployed
+- Firebase prod project: `flick-prod-49615` (`.firebaserc` prod alias)
+- Native configs injected via EAS Secrets: `GOOGLE_SERVICES_PLIST`, `GOOGLE_SERVICES_JSON_DEV`, `GOOGLE_SERVICES_JSON_PROD`
+- `app.config.js` selects config based on `APP_ENV === 'production'`
+- OTA updates: Manual `eas update --branch production`
 
 ## Webhooks & Callbacks
 
 **Incoming:**
 
-- None (Firebase handles internally)
+- None (no external webhook endpoints)
 
 **Outgoing:**
 
-- Expo Push API - Push notifications from Cloud Functions
-  - Endpoint: `https://exp.host/--/api/v2/push/send`
-  - Triggered by: Firestore document changes
-  - Functions: sendPhotoRevealNotification, sendFriendRequestNotification, sendReactionNotification, sendCommentNotification
+- Expo Push Notification Server - Cloud Functions send push via Expo Server SDK
+  - Endpoint: Expo push API (`functions/notifications/sender.js`)
+  - FCM tokens stored in user documents, sent via `expo-server-sdk`
+  - Batched reaction notifications via Cloud Tasks (`functions/tasks/sendBatchedNotification.js`)
 
-## Cloud Functions Summary
+## Not Used (Explicitly)
 
-Located in `functions/index.js`:
-
-| Function                      | Trigger                             | Purpose                              |
-| ----------------------------- | ----------------------------------- | ------------------------------------ |
-| processDarkroomReveals        | Scheduled (every 2 min)             | Reveal overdue photos                |
-| sendPhotoRevealNotification   | darkrooms/{userId} onUpdate         | Notify user of revealed photos       |
-| sendFriendRequestNotification | friendships/{id} onCreate           | Notify of new friend request         |
-| sendReactionNotification      | photos/{id} onUpdate                | Notify of new reactions (debounced)  |
-| sendCommentNotification       | photos/{id}/comments/{cid} onCreate | Notify of new comments               |
-| getSignedPhotoUrl             | onCall                              | Generate signed URL for photo access |
-| deleteUserAccount             | onCall                              | Delete user and all associated data  |
-
-## Deep Linking
-
-**Configuration:**
-
-- Prefixes: `lapse://`, `com.lapseclone.app://`
-- Config: `src/navigation/AppNavigator.js`
-
-**Routes:**
-
-- `lapse://feed` → Feed tab
-- `lapse://camera` → Camera tab
-- `lapse://profile` → Profile tab
-- `lapse://darkroom` → Darkroom screen
-- `lapse://friends/requests` → Friend requests
-- `lapse://notifications` → Activity screen
+- **Firebase Cloud Messaging (FCM)** - Uses Expo Push Notifications instead
+- **Firebase Web SDK** - Uses React Native Firebase SDK only
+- **Social auth** - Phone-only, no Google/Apple Sign-In
+- **Analytics** - Firebase Performance only (perf monitoring, not analytics)
+- **Third-party payment** - Apple/Google IAP only (no Stripe, RevenueCat)
+- **Third-party error tracking** - No Sentry, Bugsnag (custom logger only)
+- **CDN** - Firebase Storage with signed URLs only
 
 ---
 
-_Integration audit: 2026-01-26_
+_Integration audit: 2026-02-19_
 _Update when adding/removing external services_
