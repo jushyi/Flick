@@ -35,12 +35,19 @@
 
 import {
   getFirestore,
+  collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   addDoc,
   updateDoc,
-  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  onSnapshot,
   serverTimestamp,
 } from '@react-native-firebase/firestore';
 
@@ -322,6 +329,229 @@ export const getConversation = async conversationId => {
     };
   } catch (error) {
     logger.error('messageService.getConversation: Failed', {
+      conversationId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Subscribe to real-time conversation list updates for a user.
+ * Returns conversations where the user is a participant, ordered by most recent activity.
+ *
+ * @param {string} userId - User ID to get conversations for
+ * @param {function} callback - Callback receiving { success, conversations } or { success: false, error }
+ * @returns {function} Unsubscribe function
+ */
+export const subscribeToConversations = (userId, callback) => {
+  logger.debug('messageService.subscribeToConversations: Starting', { userId });
+
+  if (!userId) {
+    logger.error('messageService.subscribeToConversations: Missing userId');
+    callback({ success: false, error: 'Missing userId' });
+    return () => {};
+  }
+
+  try {
+    const q = query(
+      collection(db, 'conversations'),
+      where('participants', 'array-contains', userId),
+      orderBy('updatedAt', 'desc'),
+      limit(50)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        const conversations = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+
+        logger.debug('messageService.subscribeToConversations: Snapshot received', {
+          userId,
+          conversationCount: conversations.length,
+        });
+
+        callback({ success: true, conversations });
+      },
+      error => {
+        logger.error('messageService.subscribeToConversations: Error', {
+          userId,
+          error: error.message,
+        });
+        callback({ success: false, error: error.message });
+      }
+    );
+
+    logger.info('messageService.subscribeToConversations: Subscription active', { userId });
+
+    return unsubscribe;
+  } catch (error) {
+    logger.error('messageService.subscribeToConversations: Failed to setup', {
+      userId,
+      error: error.message,
+    });
+    callback({ success: false, error: error.message });
+    return () => {};
+  }
+};
+
+/**
+ * Subscribe to real-time message updates in a conversation.
+ * Supports soft-deletion filtering via deletedAtCutoff.
+ * Passes lastDoc cursor for pagination handoff to loadMoreMessages.
+ *
+ * @param {string} conversationId - Conversation document ID
+ * @param {function} callback - Callback receiving { success, messages, lastDoc } or { success: false, error }
+ * @param {object|null} deletedAtCutoff - Firestore Timestamp cutoff for soft-deletion filtering
+ * @param {number} messageLimit - Maximum messages to subscribe to (default: 25)
+ * @returns {function} Unsubscribe function
+ */
+export const subscribeToMessages = (
+  conversationId,
+  callback,
+  deletedAtCutoff = null,
+  messageLimit = 25
+) => {
+  logger.debug('messageService.subscribeToMessages: Starting', {
+    conversationId,
+    hasDeletedAtCutoff: !!deletedAtCutoff,
+    messageLimit,
+  });
+
+  if (!conversationId) {
+    logger.error('messageService.subscribeToMessages: Missing conversationId');
+    callback({ success: false, error: 'Missing conversationId', messages: [] });
+    return () => {};
+  }
+
+  try {
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+
+    const constraints = [];
+
+    if (deletedAtCutoff) {
+      constraints.push(where('createdAt', '>', deletedAtCutoff));
+    }
+
+    constraints.push(orderBy('createdAt', 'desc'));
+    constraints.push(limit(messageLimit));
+
+    const q = query(messagesRef, ...constraints);
+
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        const messages = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+
+        const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
+
+        logger.debug('messageService.subscribeToMessages: Snapshot received', {
+          conversationId,
+          messageCount: messages.length,
+        });
+
+        callback({ success: true, messages, lastDoc });
+      },
+      error => {
+        logger.error('messageService.subscribeToMessages: Error', {
+          conversationId,
+          error: error.message,
+        });
+        callback({ success: false, error: error.message, messages: [] });
+      }
+    );
+
+    logger.info('messageService.subscribeToMessages: Subscription active', {
+      conversationId,
+    });
+
+    return unsubscribe;
+  } catch (error) {
+    logger.error('messageService.subscribeToMessages: Failed to setup', {
+      conversationId,
+      error: error.message,
+    });
+    callback({ success: false, error: error.message, messages: [] });
+    return () => {};
+  }
+};
+
+/**
+ * Load older messages for pagination (cursor-based).
+ * Uses getDocs (not onSnapshot) for one-time fetches.
+ *
+ * @param {string} conversationId - Conversation document ID
+ * @param {object} lastDoc - Last DocumentSnapshot from previous page (cursor)
+ * @param {object|null} deletedAtCutoff - Firestore Timestamp cutoff for soft-deletion filtering
+ * @param {number} messageLimit - Number of messages to load (default: 25)
+ * @returns {Promise<{success: boolean, messages?: Array, lastDoc?: object, hasMore?: boolean, error?: string}>}
+ */
+export const loadMoreMessages = async (
+  conversationId,
+  lastDoc,
+  deletedAtCutoff = null,
+  messageLimit = 25
+) => {
+  logger.debug('messageService.loadMoreMessages: Starting', {
+    conversationId,
+    hasLastDoc: !!lastDoc,
+    hasDeletedAtCutoff: !!deletedAtCutoff,
+    messageLimit,
+  });
+
+  try {
+    if (!conversationId) {
+      logger.warn('messageService.loadMoreMessages: Missing conversationId');
+      return { success: false, error: 'Missing conversationId' };
+    }
+
+    if (!lastDoc) {
+      logger.warn('messageService.loadMoreMessages: Missing lastDoc cursor');
+      return { success: false, error: 'Missing pagination cursor' };
+    }
+
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+
+    const constraints = [];
+
+    if (deletedAtCutoff) {
+      constraints.push(where('createdAt', '>', deletedAtCutoff));
+    }
+
+    constraints.push(orderBy('createdAt', 'desc'));
+    constraints.push(startAfter(lastDoc));
+    constraints.push(limit(messageLimit));
+
+    const q = query(messagesRef, ...constraints);
+    const snapshot = await getDocs(q);
+
+    const messages = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+
+    const newLastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
+
+    logger.info('messageService.loadMoreMessages: Success', {
+      conversationId,
+      messageCount: messages.length,
+      hasMore: messages.length === messageLimit,
+    });
+
+    return {
+      success: true,
+      messages,
+      lastDoc: newLastDoc,
+      hasMore: messages.length === messageLimit,
+    };
+  } catch (error) {
+    logger.error('messageService.loadMoreMessages: Failed', {
       conversationId,
       error: error.message,
     });
