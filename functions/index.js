@@ -2614,3 +2614,125 @@ exports.onPhotoSoftDeleted = functions
       return null;
     }
   });
+
+/**
+ * onNewMessage - Triggered when a new message is created in a conversation
+ * 1. Updates conversation metadata (lastMessage, updatedAt, unreadCount) atomically
+ * 2. Sends push notification to the recipient
+ */
+exports.onNewMessage = functions
+  .runWith({ memory: '256MB', timeoutSeconds: 60 })
+  .firestore.document('conversations/{conversationId}/messages/{messageId}')
+  .onCreate(async (snapshot, context) => {
+    const { sendPushNotification } = require('./notifications/sender');
+    try {
+      const { conversationId } = context.params;
+      const message = snapshot.data();
+
+      // Guard: validate message data exists and has required shape
+      if (!message || typeof message !== 'object') {
+        logger.warn('onNewMessage: Invalid message data', { conversationId });
+        return null;
+      }
+
+      const senderId = message.senderId;
+      if (!senderId) {
+        logger.warn('onNewMessage: Missing senderId', { conversationId });
+        return null;
+      }
+
+      // Parse recipient from deterministic conversation ID (lowerUserId_higherUserId)
+      const parts = conversationId.split('_');
+      if (parts.length !== 2) {
+        logger.warn('onNewMessage: Invalid conversation ID format', { conversationId });
+        return null;
+      }
+      const [uid1, uid2] = parts;
+      const recipientId = uid1 === senderId ? uid2 : uid1;
+
+      const convRef = db.doc(`conversations/${conversationId}`);
+
+      // 1. Update conversation metadata atomically
+      const lastMessagePreview = message.type === 'gif' ? 'Sent a GIF' : message.text || '';
+      await convRef.update({
+        lastMessage: {
+          text: lastMessagePreview,
+          senderId: senderId,
+          timestamp: message.createdAt,
+          type: message.type || 'text',
+        },
+        updatedAt: message.createdAt,
+        [`unreadCount.${recipientId}`]: admin.firestore.FieldValue.increment(1),
+      });
+
+      // 2. Send push notification to recipient
+      try {
+        const recipientDoc = await db.collection('users').doc(recipientId).get();
+        if (!recipientDoc.exists) {
+          logger.warn('onNewMessage: Recipient not found', { recipientId, conversationId });
+          return null;
+        }
+
+        const recipient = recipientDoc.data();
+        const fcmToken = recipient.fcmToken;
+
+        if (!fcmToken) {
+          logger.debug('onNewMessage: Recipient has no FCM token, skipping notification', {
+            recipientId,
+          });
+          return null;
+        }
+
+        // Check notification preferences (enabled AND directMessages)
+        const prefs = recipient.notificationPreferences || {};
+        const masterEnabled = prefs.enabled !== false;
+        const dmEnabled = prefs.directMessages !== false;
+
+        if (!masterEnabled || !dmEnabled) {
+          logger.debug('onNewMessage: Notifications disabled by user preferences', {
+            recipientId,
+            masterEnabled,
+            dmEnabled,
+          });
+          return null;
+        }
+
+        const senderDoc = await db.collection('users').doc(senderId).get();
+        const senderName = senderDoc.exists
+          ? senderDoc.data().displayName || senderDoc.data().username
+          : 'Someone';
+        const senderPhotoURL = senderDoc.exists ? senderDoc.data().photoURL : null;
+
+        const body = message.type === 'gif' ? 'Sent a GIF' : message.text;
+
+        await sendPushNotification(
+          fcmToken,
+          senderName,
+          body,
+          {
+            type: 'direct_message',
+            conversationId,
+            senderId,
+            senderName,
+            senderProfilePhotoURL: senderPhotoURL || '',
+            threadId: conversationId,
+            channelId: 'messages',
+          },
+          recipientId
+        );
+
+        logger.debug('onNewMessage: Notification sent', { recipientId, conversationId });
+      } catch (notifError) {
+        logger.error('onNewMessage: Failed to send notification', {
+          error: notifError.message,
+          conversationId,
+        });
+        // Don't throw — metadata update already succeeded
+      }
+
+      return null;
+    } catch (error) {
+      logger.error('onNewMessage: Error', { error: error.message });
+      return null;
+    }
+  });
