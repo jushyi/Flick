@@ -93,6 +93,34 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
+  // Caption input - bottom of photo card, avoids tag button
+  captionInputContainer: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    left: spacing.sm,
+    right: spacing.xxl + spacing.sm + spacing.xs,
+    backgroundColor: colors.overlay.dark,
+    borderRadius: layout.borderRadius.sm,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    zIndex: 5,
+  },
+  captionInput: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.readable,
+    color: colors.text.primary,
+    padding: 0,
+    includeFontPadding: false,
+    minHeight: 20,
+  },
+  captionCounter: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.readable,
+    color: colors.text.secondary,
+    textAlign: 'right',
+    marginTop: 2,
+    includeFontPadding: false,
+  },
   // Tag overlay button - bottom-right of photo card
   tagOverlayButton: {
     position: 'absolute',
