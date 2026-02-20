@@ -1215,6 +1215,7 @@ const FeedScreen = () => {
                 onPress={handleOpenMyStories}
                 isFirst={true}
                 isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+                firstUnviewedIndex={getFirstUnviewedIndex(myStories.topPhotos || [])}
               />
             )}
             <AddFriendsPromptCard
@@ -1243,6 +1244,7 @@ const FeedScreen = () => {
                 onPress={handleOpenMyStories}
                 isFirst={true}
                 isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+                firstUnviewedIndex={getFirstUnviewedIndex(myStories.topPhotos || [])}
               />
             </ScrollView>
           </View>
@@ -1267,6 +1269,7 @@ const FeedScreen = () => {
               onAvatarPress={handleOwnAvatarPress}
               isFirst={true}
               isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+              firstUnviewedIndex={getFirstUnviewedIndex(myStories.topPhotos || [])}
             />
           )}
           {/* Friend cards after MeStoryCard */}
@@ -1278,6 +1281,7 @@ const FeedScreen = () => {
               onAvatarPress={handleAvatarPress}
               isFirst={false}
               isViewed={hasViewedAllPhotos(friend.topPhotos)}
+              firstUnviewedIndex={getFirstUnviewedIndex(friend.topPhotos || [])}
             />
           ))}
         </ScrollView>

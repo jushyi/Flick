@@ -27,7 +27,14 @@ import { profileCacheKey } from '../utils/imageUtils';
  * @param {boolean} isFirst - Whether this is the first card (for left margin)
  * @param {boolean} isViewed - Whether the story has been viewed (default false)
  */
-const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isViewed = false }) => {
+const FriendStoryCard = ({
+  friend,
+  onPress,
+  onAvatarPress,
+  isFirst = false,
+  isViewed = false,
+  firstUnviewedIndex = 0,
+}) => {
   const { userId, displayName, profilePhotoURL, topPhotos, thumbnailURL, hasPhotos } = friend;
 
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array
@@ -36,14 +43,14 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
   // Ref for measuring card position (expand/collapse animation)
   const cardRef = useRef(null);
 
-  // Prefetch first full-res photo so it's cached before user taps
+  // Prefetch the actual starting photo (first unviewed) so it's cached before user taps
   // Story card thumbnail uses blurRadius={20} which caches a different entry
-  const firstPhotoUrl = topPhotos?.[0]?.imageURL;
+  const startingPhotoUrl = topPhotos?.[firstUnviewedIndex]?.imageURL;
   useEffect(() => {
-    if (firstPhotoUrl) {
-      Image.prefetch(firstPhotoUrl, 'memory-disk').catch(() => {});
+    if (startingPhotoUrl) {
+      Image.prefetch(startingPhotoUrl, 'memory-disk').catch(() => {});
     }
-  }, [firstPhotoUrl]);
+  }, [startingPhotoUrl]);
 
   const handlePress = () => {
     logger.debug('FriendStoryCard: Card pressed', { userId, displayName });

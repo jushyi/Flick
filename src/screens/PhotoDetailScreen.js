@@ -27,6 +27,7 @@ import {
   Alert,
   Easing,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -121,6 +122,21 @@ const PhotoDetailScreen = () => {
   // Tag modal state
   const [tagModalVisible, setTagModalVisible] = useState(false);
   const [taggedPeopleModalVisible, setTaggedPeopleModalVisible] = useState(false);
+
+  // Image loading state - shows spinner when photo is loading from network
+  const [imageLoading, setImageLoading] = useState(true);
+  const handleImageLoadStart = useCallback(() => setImageLoading(true), []);
+  const handleImageLoadEnd = useCallback(() => setImageLoading(false), []);
+
+  // Reset loading state when photo changes (new photo starts loading)
+  const prevPhotoIdRef = useRef(null);
+  if (contextPhoto?.id !== prevPhotoIdRef.current) {
+    prevPhotoIdRef.current = contextPhoto?.id;
+    // Only set loading if the photo actually changed (avoids flicker on re-renders)
+    if (contextPhoto?.id) {
+      setImageLoading(true);
+    }
+  }
 
   // Reset cube state when screen mounts
   useEffect(() => {
@@ -806,7 +822,16 @@ const PhotoDetailScreen = () => {
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 transition={0}
+                onLoadStart={handleImageLoadStart}
+                onLoadEnd={handleImageLoadEnd}
               />
+              {imageLoading && (
+                <ActivityIndicator
+                  size="small"
+                  color="rgba(255, 255, 255, 0.6)"
+                  style={localStyles.imageLoadingSpinner}
+                />
+              )}
             </View>
           </TouchableWithoutFeedback>
 
@@ -1265,5 +1290,15 @@ const PhotoDetailScreen = () => {
     </View>
   );
 };
+
+const localStyles = StyleSheet.create({
+  imageLoadingSpinner: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -10,
+    marginLeft: -10,
+  },
+});
 
 export default PhotoDetailScreen;
