@@ -58,7 +58,7 @@ const HEADER_HEIGHT = 68; // paddingVertical: 16 × 2 + title height
 const TAB_BAR_HEIGHT = 88; // iOS tab bar with safe area
 
 const FeedScreen = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
@@ -176,7 +176,7 @@ const FeedScreen = () => {
 
     logger.debug('FeedScreen: Loading own stories data');
     setMyStoriesLoading(true);
-    const result = await getUserStoriesData(user.uid);
+    const result = await getUserStoriesData(user.uid, userProfile);
     if (result.success) {
       logger.info('FeedScreen: Own stories loaded', {
         photoCount: result.userStory?.totalPhotoCount || 0,
@@ -476,14 +476,28 @@ const FeedScreen = () => {
       ? nextFriendAtOpen !== undefined
       : nextFriendAtOpen !== undefined && !hasViewedAllPhotos(nextFriendAtOpen.topPhotos || []);
 
-    // Prefetch next friend's first photo for seamless cube transition
+    // Prefetch current friend's opening photo + next photo for instant display
+    const currentPhotos = friend.topPhotos || [];
+    const prefetchUrls = [];
+    if (currentPhotos[startIndex]?.imageURL) {
+      prefetchUrls.push(currentPhotos[startIndex].imageURL);
+    }
+    if (startIndex + 1 < currentPhotos.length && currentPhotos[startIndex + 1]?.imageURL) {
+      prefetchUrls.push(currentPhotos[startIndex + 1].imageURL);
+    }
+
+    // Also prefetch next friend's first photo for seamless cube transition
     if (hasNextAtOpen && nextFriendAtOpen) {
       const nextFriendPhotos = nextFriendAtOpen.topPhotos || [];
       const nextFirstIdx = getFirstUnviewedIndex(nextFriendPhotos);
       const nextFirstPhoto = nextFriendPhotos[nextFirstIdx];
       if (nextFirstPhoto?.imageURL) {
-        Image.prefetch(nextFirstPhoto.imageURL, 'memory-disk').catch(() => {});
+        prefetchUrls.push(nextFirstPhoto.imageURL);
       }
+    }
+
+    if (prefetchUrls.length > 0) {
+      Image.prefetch(prefetchUrls, 'memory-disk').catch(() => {});
     }
 
     // Open via context and navigate
@@ -522,6 +536,19 @@ const FeedScreen = () => {
     // Set mode flags
     isInStoriesModeRef.current = true;
     isOwnStoriesRef.current = true;
+
+    // Prefetch opening photo + next for instant display
+    const ownPhotos = myStories.topPhotos || [];
+    const ownPrefetchUrls = [];
+    if (ownPhotos[startIndex]?.imageURL) {
+      ownPrefetchUrls.push(ownPhotos[startIndex].imageURL);
+    }
+    if (startIndex + 1 < ownPhotos.length && ownPhotos[startIndex + 1]?.imageURL) {
+      ownPrefetchUrls.push(ownPhotos[startIndex + 1].imageURL);
+    }
+    if (ownPrefetchUrls.length > 0) {
+      Image.prefetch(ownPrefetchUrls, 'memory-disk').catch(() => {});
+    }
 
     // Open via context and navigate
     openPhotoDetail({

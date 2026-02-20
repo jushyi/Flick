@@ -1,4 +1,4 @@
-import React, { useRef, memo } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -35,6 +35,15 @@ const FriendStoryCard = ({ friend, onPress, onAvatarPress, isFirst = false, isVi
 
   // Ref for measuring card position (expand/collapse animation)
   const cardRef = useRef(null);
+
+  // Prefetch first full-res photo so it's cached before user taps
+  // Story card thumbnail uses blurRadius={20} which caches a different entry
+  const firstPhotoUrl = topPhotos?.[0]?.imageURL;
+  useEffect(() => {
+    if (firstPhotoUrl) {
+      Image.prefetch(firstPhotoUrl, 'memory-disk').catch(() => {});
+    }
+  }, [firstPhotoUrl]);
 
   const handlePress = () => {
     logger.debug('FriendStoryCard: Card pressed', { userId, displayName });
