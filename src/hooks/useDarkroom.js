@@ -16,10 +16,12 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Animated, Alert } from 'react-native';
+import { Animated, Alert, Keyboard } from 'react-native';
+
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { Image as ExpoImage } from 'expo-image';
+import { useSharedValue } from 'react-native-reanimated';
 import { useAuth } from '../context/AuthContext';
 import {
   getDevelopingPhotos,
@@ -67,6 +69,9 @@ const useDarkroom = () => {
   // Photo caption state - tracks captions per photo locally until Done is tapped
   // { [photoId]: string } mapping photoId to caption text (max 100 chars)
   const [photoCaptions, setPhotoCaptions] = useState({});
+
+  // Keyboard visibility tracking (SharedValue = zero re-renders on keyboard show/hide)
+  const keyboardVisible = useSharedValue(false);
 
   // Refs
   const cardRef = useRef(null);
@@ -598,6 +603,20 @@ const useDarkroom = () => {
     navigation.goBack();
   }, [navigation]);
 
+  // Track keyboard visibility via SharedValue (no React re-renders)
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      keyboardVisible.value = true;
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardVisible.value = false;
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardVisible]);
+
   // Trigger fade-in animation when success state is shown
   useEffect(() => {
     if (visiblePhotos.length === 0 && undoStack.length > 0) {
@@ -656,10 +675,11 @@ const useDarkroom = () => {
     photoCaptions,
     tagModalVisible,
 
-    // Refs
+    // Refs / SharedValues
     cardRef,
     successFadeAnim,
     deleteButtonScale,
+    keyboardVisible,
 
     // Handlers
     handleTriage,

@@ -16,6 +16,7 @@ import { Dimensions, Platform } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import {
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withTiming,
   withDelay,
@@ -100,6 +101,7 @@ const useSwipeableCard = ({
   isActive = true,
   enterFrom = null,
   isNewlyVisible = false,
+  keyboardVisible = null,
   ref,
 }) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
@@ -391,11 +393,16 @@ const useSwipeableCard = ({
     ]
   );
 
+  // Derived value: disable pan gesture when keyboard is visible or card is not active
+  const panEnabled = useDerivedValue(() => {
+    return isActive && !(keyboardVisible?.value ?? false);
+  });
+
   // Pan gesture — vertical: up = journal, down = archive
-  // .enabled(isActive) prevents gesture from firing on stack cards.
+  // .enabled() prevents gesture from firing on stack cards or when keyboard is open.
   // This keeps GestureDetector always in the tree (avoids remount on isActive change).
   const panGesture = Gesture.Pan()
-    .enabled(isActive)
+    .enabled(panEnabled)
     .activeOffsetY([-5, 5])
     .onStart(() => {
       'worklet';
