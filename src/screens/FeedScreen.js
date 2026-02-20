@@ -135,6 +135,7 @@ const FeedScreen = () => {
     markPhotosAsViewed,
     getFirstUnviewedIndex,
     hasViewedAllPhotos,
+    reloadViewedState,
     loading: viewedStoriesLoading,
     viewedPhotoCount, // Forces re-render when count changes (updates ring indicators)
   } = useViewedStories();
@@ -375,7 +376,7 @@ const FeedScreen = () => {
   const handleRefresh = async () => {
     logger.debug('FeedScreen: Pull-to-refresh triggered');
     // Refresh all data sources in parallel
-    await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories()]);
+    await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories(), reloadViewedState()]);
   };
 
   // Auto-reload feed when returning from background after 10+ minutes of inactivity
