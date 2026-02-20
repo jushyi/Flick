@@ -510,13 +510,15 @@ export const getPhotosByIds = async photoIds => {
  * Used by darkroom when user taps Done to save all decisions
  * @param {Array} decisions - Array of { photoId, action } objects
  * @param {Object} [photoTags] - Optional mapping of photoId to taggedUserIds array
+ * @param {Object} [photoCaptions] - Optional mapping of photoId to caption string
  * @returns {Promise<{success: boolean, journaledCount?: number, error?: string}>}
  */
-export const batchTriagePhotos = async (decisions, photoTags = {}) => {
+export const batchTriagePhotos = async (decisions, photoTags = {}, photoCaptions = {}) => {
   try {
     logger.debug('PhotoService.batchTriagePhotos: Starting batch', {
       count: decisions.length,
       taggedPhotoCount: Object.keys(photoTags).length,
+      captionedPhotoCount: Object.keys(photoCaptions).length,
     });
 
     // Count how many photos are being journaled (posted to story)
@@ -534,6 +536,18 @@ export const batchTriagePhotos = async (decisions, photoTags = {}) => {
         logger.debug('PhotoService.batchTriagePhotos: Wrote tags for photo', {
           photoId,
           tagCount: tags.length,
+        });
+      }
+
+      // Write caption before triaging if photo has a caption
+      const caption = photoCaptions[photoId];
+      if (caption && caption.trim().length > 0) {
+        const photoRef = doc(db, 'photos', photoId);
+        await updateDoc(photoRef, {
+          caption: caption.trim(),
+        });
+        logger.debug('PhotoService.batchTriagePhotos: Wrote caption for photo', {
+          photoId,
         });
       }
 
