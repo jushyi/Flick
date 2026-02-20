@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing.xxxl,
+    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',

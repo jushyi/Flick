@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: spacing.md,
+    paddingBottom: 100,
   },
   notificationItem: {
     flexDirection: 'row',

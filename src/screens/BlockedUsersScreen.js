@@ -172,7 +172,7 @@ const BlockedUsersScreen = () => {
         data={blockedUsers}
         keyExtractor={item => item.userId}
         renderItem={renderItem}
-        contentContainerStyle={blockedUsers.length === 0 ? { flex: 1 } : undefined}
+        contentContainerStyle={blockedUsers.length === 0 ? { flex: 1 } : { paddingBottom: 100 }}
         ListEmptyComponent={renderEmptyState}
         style={styles.listContainer}
         initialNumToRender={10}

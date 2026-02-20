@@ -120,7 +120,7 @@ const ContactsSettingsScreen = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Permission banner - shown when OS permission is not granted */}
         {permissionStatus !== 'granted' && (
           <View style={styles.permissionBanner}>

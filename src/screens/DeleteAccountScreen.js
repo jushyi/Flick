@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 100,
   },
   scrollContent: {
     flex: 1,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 100,
   },
   contentCentered: {
     flex: 1,
