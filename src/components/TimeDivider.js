@@ -4,6 +4,7 @@ import { Text, StyleSheet } from 'react-native';
 import { isToday, isYesterday, format } from 'date-fns';
 
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const formatDividerDate = timestamp => {
   if (!timestamp) return '';
@@ -26,8 +27,9 @@ const TimeDivider = ({ timestamp, label }) => {
 
 const styles = StyleSheet.create({
   text: {
-    fontSize: 12,
+    fontSize: 10,
     color: colors.text.secondary,
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
     marginVertical: 16,
     paddingHorizontal: 16,

@@ -23,6 +23,7 @@ import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
 
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 import logger from '../utils/logger';
 
 /**
@@ -284,9 +285,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 14,
     color: colors.text.primary,
+    fontFamily: typography.fontFamily.display,
   },
   headerSpacer: {
     width: 40,
@@ -340,14 +341,15 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   displayName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 13,
     color: colors.text.primary,
+    fontFamily: typography.fontFamily.bodyBold,
   },
   username: {
-    fontSize: 13,
+    fontSize: 11,
     color: colors.text.secondary,
-    marginTop: 1,
+    fontFamily: typography.fontFamily.body,
+    marginTop: 2,
   },
   emptyContainer: {
     flex: 1,

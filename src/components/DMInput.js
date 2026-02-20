@@ -21,6 +21,7 @@ import { openGifPicker, useGifSelection } from './comments/GifPicker';
 import PixelIcon from './PixelIcon';
 
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const MAX_LENGTH = 2000;
 
@@ -125,8 +126,8 @@ const styles = StyleSheet.create({
   },
   gifButtonText: {
     color: colors.text.secondary,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: typography.fontFamily.bodyBold,
   },
   inputWrapper: {
     flex: 1,
@@ -137,7 +138,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     color: colors.text.primary,
-    fontSize: 16,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.readable,
     maxHeight: 100,
     paddingTop: Platform.select({ ios: 0, android: 4 }),
     paddingBottom: Platform.select({ ios: 0, android: 4 }),
@@ -154,7 +156,8 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: colors.text.secondary,
-    fontSize: 14,
+    fontSize: 12,
+    fontFamily: typography.fontFamily.readable,
   },
 });
 

@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { format } from 'date-fns';
 
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const MessageBubble = ({ message, isCurrentUser, showTimestamp, onPress }) => {
   const isGif = message.type === 'gif';
@@ -83,7 +84,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   text: {
-    fontSize: 15,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.readable,
   },
   textUser: {
     color: colors.text.inverse,
@@ -97,8 +99,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   timestamp: {
-    fontSize: 11,
+    fontSize: 10,
     color: colors.text.secondary,
+    fontFamily: typography.fontFamily.readable,
     marginTop: 4,
   },
   timestampRight: {

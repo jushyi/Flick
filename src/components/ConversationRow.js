@@ -7,6 +7,7 @@ import { isYesterday, format } from 'date-fns';
 import PixelIcon from './PixelIcon';
 
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const formatMessageTime = timestamp => {
   if (!timestamp) return '';
@@ -100,16 +101,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   displayName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 13,
     color: colors.text.primary,
+    fontFamily: typography.fontFamily.bodyBold,
   },
   displayNameUnread: {
-    fontWeight: '700',
+    color: colors.text.primary,
   },
   preview: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.text.secondary,
+    fontFamily: typography.fontFamily.readable,
     marginTop: 2,
   },
   rightColumn: {
@@ -117,8 +119,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 10,
     color: colors.text.secondary,
+    fontFamily: typography.fontFamily.readable,
   },
   unreadDot: {
     width: 8,

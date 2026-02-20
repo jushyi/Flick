@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
 
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 
 const ConversationHeader = ({ friendProfile, onBackPress, onProfilePress, onReportPress }) => {
   const insets = useSafeAreaInsets();
@@ -96,8 +97,8 @@ const styles = StyleSheet.create({
   },
   displayName: {
     color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 13,
+    fontFamily: typography.fontFamily.bodyBold,
   },
   menuButton: {
     padding: 4,
