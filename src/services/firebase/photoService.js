@@ -1159,6 +1159,46 @@ export const updatePhotoTags = async (photoId, taggedUserIds) => {
 };
 
 /**
+ * Update caption on a photo document
+ * Normalizes empty/whitespace-only strings to null (never stores "")
+ *
+ * @param {string} photoId - Photo document ID
+ * @param {string|null} caption - Caption text (max 100 chars) or null to remove
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const updateCaption = async (photoId, caption) => {
+  return withTrace('photo/updateCaption', async () => {
+    try {
+      if (!photoId) {
+        return { success: false, error: 'Missing photoId' };
+      }
+
+      const trimmed = caption ? caption.trim() : '';
+      if (trimmed.length > 100) {
+        return { success: false, error: 'Caption exceeds 100 characters' };
+      }
+
+      const photoRef = doc(db, 'photos', photoId);
+      await updateDoc(photoRef, {
+        caption: trimmed.length > 0 ? trimmed : null,
+      });
+
+      logger.info('PhotoService.updateCaption: Caption updated', {
+        photoId,
+        hasCaption: trimmed.length > 0,
+      });
+      return { success: true };
+    } catch (error) {
+      logger.error('PhotoService.updateCaption: Failed', {
+        photoId,
+        error: error.message,
+      });
+      return { success: false, error: error.message };
+    }
+  });
+};
+
+/**
  * Subscribe to real-time updates for a single photo
  * @param {string} photoId - Photo ID to subscribe to
  * @param {Function} callback - Called with { success, photo } or { success, error }
