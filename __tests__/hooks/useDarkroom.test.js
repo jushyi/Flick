@@ -437,7 +437,8 @@ describe('useDarkroom', () => {
         { photoId: 'photo-2', action: 'archive' },
         { photoId: 'photo-3', action: 'delete' },
       ],
-      {} // photoTags
+      {}, // photoTags
+      {} // photoCaptions
     );
 
     // Should navigate back

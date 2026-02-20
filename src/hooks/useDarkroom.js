@@ -64,6 +64,10 @@ const useDarkroom = () => {
   const [photoTags, setPhotoTags] = useState({});
   const [tagModalVisible, setTagModalVisible] = useState(false);
 
+  // Photo caption state - tracks captions per photo locally until Done is tapped
+  // { [photoId]: string } mapping photoId to caption text (max 100 chars)
+  const [photoCaptions, setPhotoCaptions] = useState({});
+
   // Refs
   const cardRef = useRef(null);
   const successFadeAnim = useRef(new Animated.Value(0)).current;
@@ -180,15 +184,17 @@ const useDarkroom = () => {
 
         // Clear hidden state when photos reload to prevent stale state
         setHiddenPhotoIds(new Set());
-        // Also clear undo stack and tags since these are fresh photos
+        // Also clear undo stack, tags, and captions since these are fresh photos
         setUndoStack([]);
         setPhotoTags({});
+        setPhotoCaptions({});
       } else {
         logger.warn('useDarkroom: Failed to get photos or no photos returned');
         setPhotos([]);
         setHiddenPhotoIds(new Set());
         setUndoStack([]);
         setPhotoTags({});
+        setPhotoCaptions({});
       }
     } catch (error) {
       logger.error('useDarkroom: Error loading developing photos', error);
@@ -221,14 +227,21 @@ const useDarkroom = () => {
       // Determine exit direction based on action (vertical: archive=down, journal=up)
       const exitDirection = action === 'archive' ? 'down' : action === 'journal' ? 'up' : 'delete';
 
-      // Capture current tags for this photo (for undo restoration)
+      // Capture current tags and caption for this photo (for undo restoration)
       const currentTags = photoTags[photoId] || [];
+      const currentCaption = photoCaptions[photoId] || '';
 
       // Push to undo stack instead of calling triagePhoto()
       setUndoStack(prev => {
         const newStack = [
           ...prev,
-          { photo: photoToTriage, action, exitDirection, tags: currentTags },
+          {
+            photo: photoToTriage,
+            action,
+            exitDirection,
+            tags: currentTags,
+            caption: currentCaption,
+          },
         ];
         logger.debug('useDarkroom: Decision pushed to undo stack', {
           photoId,
@@ -305,8 +318,8 @@ const useDarkroom = () => {
       action: entry.action,
     }));
 
-    // Batch save to Firestore (pass photoTags for tagged photo notifications)
-    const result = await batchTriagePhotos(decisions, photoTags);
+    // Batch save to Firestore (pass photoTags for tagged photo notifications, photoCaptions for captions)
+    const result = await batchTriagePhotos(decisions, photoTags, photoCaptions);
 
     if (!result.success) {
       logger.error('useDarkroom: Batch save failed', { error: result.error });
@@ -478,6 +491,14 @@ const useDarkroom = () => {
       }));
     }
 
+    // Restore caption for undone photo
+    if (lastDecision.caption) {
+      setPhotoCaptions(prev => ({
+        ...prev,
+        [lastDecision.photo.id]: lastDecision.caption,
+      }));
+    }
+
     // Clear undo animation state after animation completes
     setTimeout(() => {
       setUndoingPhoto(null);
@@ -530,6 +551,31 @@ const useDarkroom = () => {
     },
     [photoTags]
   );
+
+  /**
+   * Update caption for a specific photo.
+   * @param {string} photoId - Photo ID to caption
+   * @param {string} caption - Caption text (max 100 characters)
+   */
+  const handleCaptionChange = useCallback((photoId, caption) => {
+    if (!photoId) return;
+    setPhotoCaptions(prev => {
+      const next = { ...prev };
+      if (!caption || caption.length === 0) {
+        delete next[photoId];
+      } else {
+        next[photoId] = caption.slice(0, 100);
+      }
+      return next;
+    });
+  }, []);
+
+  /**
+   * Get current caption for a photo.
+   * @param {string} photoId - Photo ID
+   * @returns {string} Caption text or empty string
+   */
+  const getCaptionForPhoto = useCallback(photoId => photoCaptions[photoId] || '', [photoCaptions]);
 
   /**
    * Open the tag friends modal (only if a current photo exists).
@@ -607,6 +653,7 @@ const useDarkroom = () => {
     currentPhoto,
     newlyVisibleIds,
     photoTags,
+    photoCaptions,
     tagModalVisible,
 
     // Refs
@@ -629,6 +676,8 @@ const useDarkroom = () => {
     handleBackPress,
     handleTagFriends,
     getTagsForPhoto,
+    handleCaptionChange,
+    getCaptionForPhoto,
     handleOpenTagModal,
     handleCloseTagModal,
   };
