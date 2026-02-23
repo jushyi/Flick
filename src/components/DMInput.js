@@ -145,7 +145,7 @@ const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Messa
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background.secondary,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
     borderTopColor: colors.border.default,
     paddingTop: 8,
     paddingHorizontal: 12,
@@ -155,8 +155,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   gifButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 10,
+    backgroundColor: colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    borderRadius: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     marginRight: 8,
   },
   gifButtonText: {
@@ -182,9 +186,12 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.select({ ios: 0, android: 4 }),
   },
   sendButton: {
+    backgroundColor: colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 212, 255, 0.3)',
+    borderRadius: 2,
+    padding: 8,
     marginLeft: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 10,
   },
   disabledContainer: {
     alignItems: 'center',
@@ -194,7 +201,7 @@ const styles = StyleSheet.create({
   disabledText: {
     color: colors.text.secondary,
     fontSize: 12,
-    fontFamily: typography.fontFamily.readable,
+    fontFamily: typography.fontFamily.body,
   },
 });
 
