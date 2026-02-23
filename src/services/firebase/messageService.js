@@ -28,7 +28,8 @@
  *   senderId: string,
  *   text: string | null,
  *   gifUrl: string | null,
- *   type: 'text' | 'gif',
+ *   imageUrl: string | null,
+ *   type: 'text' | 'gif' | 'image',
  *   createdAt: Timestamp,
  * }
  */
@@ -144,16 +145,24 @@ export const getOrCreateConversation = async (currentUserId, friendId) => {
  *
  * @param {string} conversationId - Conversation document ID
  * @param {string} senderId - Sender's user ID
- * @param {string} text - Message text (null if gif)
- * @param {string|null} gifUrl - GIF URL (null if text)
+ * @param {string} text - Message text (null if gif/image)
+ * @param {string|null} gifUrl - GIF URL (null if text/image)
+ * @param {string|null} imageUrl - Image URL (null if text/gif)
  * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
  */
-export const sendMessage = async (conversationId, senderId, text, gifUrl = null) => {
+export const sendMessage = async (
+  conversationId,
+  senderId,
+  text,
+  gifUrl = null,
+  imageUrl = null
+) => {
   logger.debug('messageService.sendMessage: Starting', {
     conversationId,
     senderId,
     hasText: !!text,
     hasGif: !!gifUrl,
+    hasImage: !!imageUrl,
   });
 
   try {
@@ -165,18 +174,19 @@ export const sendMessage = async (conversationId, senderId, text, gifUrl = null)
       return { success: false, error: 'Missing required fields' };
     }
 
-    if (!text && !gifUrl) {
-      logger.warn('messageService.sendMessage: Message must have text or gif');
-      return { success: false, error: 'Message must have text or gif' };
+    if (!text && !gifUrl && !imageUrl) {
+      logger.warn('messageService.sendMessage: Message must have text, gif, or image');
+      return { success: false, error: 'Message must have text, gif, or image' };
     }
 
-    const type = gifUrl ? 'gif' : 'text';
+    const type = imageUrl ? 'image' : gifUrl ? 'gif' : 'text';
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
 
     const messageData = {
       senderId,
-      text: gifUrl ? null : text,
+      text: gifUrl || imageUrl ? null : text,
       gifUrl: gifUrl || null,
+      imageUrl: imageUrl || null,
       type,
       createdAt: serverTimestamp(),
     };

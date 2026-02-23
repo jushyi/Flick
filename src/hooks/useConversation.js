@@ -260,12 +260,13 @@ const useConversation = (conversationId, currentUserId, deletedAtCutoff = null) 
    * Send a message in the conversation.
    * The real-time subscription will automatically pick up the new message.
    *
-   * @param {string} text - Message text (null if gif)
-   * @param {string|null} gifUrl - GIF URL (null if text)
+   * @param {string} text - Message text (null if gif/image)
+   * @param {string|null} gifUrl - GIF URL (null if text/image)
+   * @param {string|null} imageUrl - Image URL (null if text/gif)
    * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
    */
   const handleSendMessage = useCallback(
-    async (text, gifUrl = null) => {
+    async (text, gifUrl = null, imageUrl = null) => {
       if (!conversationId || !currentUserId) {
         logger.warn('useConversation.handleSendMessage: Missing required fields', {
           conversationId,
@@ -278,9 +279,10 @@ const useConversation = (conversationId, currentUserId, deletedAtCutoff = null) 
         conversationId,
         hasText: !!text,
         hasGif: !!gifUrl,
+        hasImage: !!imageUrl,
       });
 
-      const result = await sendMessage(conversationId, currentUserId, text, gifUrl);
+      const result = await sendMessage(conversationId, currentUserId, text, gifUrl, imageUrl);
 
       if (result.success) {
         logger.info('useConversation.handleSendMessage: Success', {

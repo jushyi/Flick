@@ -9,6 +9,7 @@ import { typography } from '../constants/typography';
 
 const MessageBubble = ({ message, isCurrentUser, showTimestamp, onPress }) => {
   const isGif = message.type === 'gif';
+  const isImage = message.type === 'image';
 
   const formatTimestamp = () => {
     if (!message.createdAt) return '';
@@ -25,14 +26,14 @@ const MessageBubble = ({ message, isCurrentUser, showTimestamp, onPress }) => {
         style={[
           styles.bubble,
           isCurrentUser ? styles.bubbleUser : styles.bubbleFriend,
-          isGif && styles.bubbleGif,
+          (isGif || isImage) && styles.bubbleGif,
         ]}
       >
-        {isGif ? (
+        {isGif || isImage ? (
           <Image
-            source={{ uri: message.gifUrl }}
-            style={styles.gifImage}
-            contentFit="contain"
+            source={{ uri: message.gifUrl || message.imageUrl }}
+            style={isImage ? styles.messageImage : styles.gifImage}
+            contentFit={isImage ? 'cover' : 'contain'}
             transition={200}
           />
         ) : (
@@ -100,6 +101,11 @@ const styles = StyleSheet.create({
   gifImage: {
     width: 200,
     height: 150,
+    borderRadius: 3,
+  },
+  messageImage: {
+    width: 200,
+    height: 200,
     borderRadius: 3,
   },
   timestamp: {
