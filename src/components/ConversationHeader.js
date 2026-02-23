@@ -8,29 +8,29 @@
  * - Three-dot menu with "Report User" option
  * - Safe area top padding for status bar
  */
-import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PixelIcon from './PixelIcon';
+import DropdownMenu from './DropdownMenu';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
 const ConversationHeader = ({ friendProfile, onBackPress, onProfilePress, onReportPress }) => {
   const insets = useSafeAreaInsets();
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const menuButtonRef = useRef(null);
 
   const handleMenuPress = useCallback(() => {
-    Alert.alert(friendProfile?.displayName || 'User', null, [
-      {
-        text: 'Report User',
-        style: 'destructive',
-        onPress: onReportPress,
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }, [friendProfile?.displayName, onReportPress]);
+    menuButtonRef.current?.measureInWindow((x, y, width, height) => {
+      setMenuAnchor({ x, y, width, height });
+      setMenuVisible(true);
+    });
+  }, []);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -66,10 +66,25 @@ const ConversationHeader = ({ friendProfile, onBackPress, onProfilePress, onRepo
         </TouchableOpacity>
 
         {/* Three-dot Menu */}
-        <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress}>
+        <TouchableOpacity ref={menuButtonRef} style={styles.menuButton} onPress={handleMenuPress}>
           <PixelIcon name="ellipsis-vertical" size={20} color={colors.icon.primary} />
         </TouchableOpacity>
       </View>
+
+      {/* Dropdown Menu */}
+      <DropdownMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        anchorPosition={menuAnchor}
+        options={[
+          {
+            label: 'Report User',
+            icon: 'flag',
+            destructive: true,
+            onPress: onReportPress,
+          },
+        ]}
+      />
     </View>
   );
 };
