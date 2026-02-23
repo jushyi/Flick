@@ -161,7 +161,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '700',
     color: colors.text.primary,
     fontFamily: typography.fontFamily.display,
     ...Platform.select({ android: { includeFontPadding: false } }),
