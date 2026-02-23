@@ -55,6 +55,7 @@ None currently.
 | --- | ------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
 | 1   | Fix notification badge persisting on Activity tab when all notifications viewed | 2026-02-23 | d72ed7d | [1-fix-notification-badge-persisting-on-act](./quick/1-fix-notification-badge-persisting-on-act/) |
 | 2   | Fix DM conversation empty state, missing input bar, and profile photos          | 2026-02-23 | b7cb2bc | [2-fix-new-conversation-missing-input-bar-u](./quick/2-fix-new-conversation-missing-input-bar-u/) |
+| 4   | Fix conversation screen three-dot menu to use DropdownMenu instead of Alert     | 2026-02-23 | d57bd11 | [4-fix-convo-screen-three-dot-menu-not-open](./quick/4-fix-convo-screen-three-dot-menu-not-open/) |
 
 ## Notes
 
@@ -65,6 +66,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:09:41Z
-Stopped at: Completed quick task 2 (fix DM conversation empty state, input bar, profile photos)
-Resume file: .planning/quick/2-fix-new-conversation-missing-input-bar-u/2-SUMMARY.md
+Last session: 2026-02-23T20:12:43Z
+Stopped at: Completed quick task 4 (fix conversation header three-dot menu dropdown)
+Resume file: .planning/quick/4-fix-convo-screen-three-dot-menu-not-open/4-SUMMARY.md
