@@ -360,6 +360,19 @@ const ActivityScreen = () => {
     loadData();
   }, [loadData]);
 
+  // Auto-mark notifications as read in Firestore when data finishes loading.
+  // This clears the FeedScreen red dot badge (driven by onSnapshot for read==false)
+  // without changing local state — individual unread dots remain until tapped.
+  useEffect(() => {
+    if (loading || !user?.uid || notifications.length === 0) return;
+
+    const hasUnread = notifications.some(n => n.read !== true);
+    if (!hasUnread) return;
+
+    logger.debug('ActivityScreen: Auto-marking notifications as read for badge clearance');
+    markNotificationsAsRead(user.uid);
+  }, [loading, user?.uid, notifications]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     loadData();
