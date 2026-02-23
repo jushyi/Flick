@@ -57,6 +57,7 @@ None currently.
 | 2   | Fix DM conversation empty state, missing input bar, and profile photos          | 2026-02-23 | b7cb2bc | [2-fix-new-conversation-missing-input-bar-u](./quick/2-fix-new-conversation-missing-input-bar-u/) |
 | 3   | Fix profile photos not showing properly in Messages tab and conversation header | 2026-02-23 | 23d3042 | [3-fix-profile-photos-not-showing-properly-](./quick/3-fix-profile-photos-not-showing-properly-/) |
 | 4   | Fix conversation screen three-dot menu to use DropdownMenu instead of Alert     | 2026-02-23 | d57bd11 | [4-fix-convo-screen-three-dot-menu-not-open](./quick/4-fix-convo-screen-three-dot-menu-not-open/) |
+| 5   | Fix missing input bar when opening or starting a new conversation               | 2026-02-23 | 23d3042 | [5-fix-missing-input-bar-when-opening-or-st](./quick/5-fix-missing-input-bar-when-opening-or-st/) |
 
 ## Notes
 
@@ -67,6 +68,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:15:33Z
-Stopped at: Completed quick task 3 (fix profile photos not showing properly in messages)
-Resume file: .planning/quick/3-fix-profile-photos-not-showing-properly-/3-SUMMARY.md
+Last session: 2026-02-23T20:16:02Z
+Stopped at: Completed quick task 5 (fix missing input bar when opening conversation)
+Resume file: .planning/quick/5-fix-missing-input-bar-when-opening-or-st/5-SUMMARY.md
