@@ -64,6 +64,7 @@ None currently.
 | 9   | Fix iOS DM input bar padding when keyboard open and background color mismatch    | 2026-02-23 | e9b700b | [9-fix-ios-dm-input-bar-padding-and-backgro](./quick/9-fix-ios-dm-input-bar-padding-and-backgro/)   |
 | 10  | Fix iOS conversation scroll on send/receive (auto-scroll inverted FlatList)      | 2026-02-23 | 57c6090 | [10-fix-ios-conversation-scroll-on-send-rece](./quick/10-fix-ios-conversation-scroll-on-send-rece/) |
 | 11  | Restyle DM message bubbles and input to retro 16-bit pixel art aesthetic         | 2026-02-23 | c854c0e | [11-the-message-bubbles-don-t-match-the-16-b](./quick/11-the-message-bubbles-don-t-match-the-16-b/) |
+| 12  | Fix Android DM input bar not returning to bottom on keyboard dismiss             | 2026-02-23 | 4f1cee0 | [12-fix-android-dm-input-bar-not-going-to-bo](./quick/12-fix-android-dm-input-bar-not-going-to-bo/) |
 
 ## Notes
 
@@ -74,6 +75,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:51:45Z
-Stopped at: Completed quick task 11 (restyle DM bubbles to retro 16-bit aesthetic)
-Resume file: .planning/quick/11-the-message-bubbles-don-t-match-the-16-b/11-SUMMARY.md
+Last session: 2026-02-23T20:54:20Z
+Stopped at: Completed quick task 12 (fix Android DM input bar not going to bottom)
+Resume file: .planning/quick/12-fix-android-dm-input-bar-not-going-to-bo/12-SUMMARY.md
