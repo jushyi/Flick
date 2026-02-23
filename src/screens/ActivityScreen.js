@@ -41,6 +41,7 @@ import { mediumImpact } from '../utils/haptics';
 import {
   markSingleNotificationAsRead,
   markNotificationReadFromPushData,
+  markNotificationsAsRead,
 } from '../services/firebase/notificationService';
 import { getPhotoById, getUserStoriesData } from '../services/firebase/feedService';
 import { isBlocked } from '../services/firebase/blockService';
@@ -403,6 +404,16 @@ const ActivityScreen = () => {
     [clumpedNotifications]
   );
 
+  const handleReadAll = useCallback(async () => {
+    if (!user?.uid) return;
+    mediumImpact();
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const result = await markNotificationsAsRead(user.uid);
+    if (!result.success) {
+      logger.error('Failed to mark all notifications as read', { error: result.error });
+    }
+  }, [user?.uid]);
+
   const handleAccept = async requestId => {
     mediumImpact();
     setActionLoading(prev => ({ ...prev, [requestId]: true }));
@@ -591,7 +602,9 @@ const ActivityScreen = () => {
           <PixelIcon name="chevron-back" size={28} color={colors.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity onPress={handleReadAll} hitSlop={8}>
+          <Text style={styles.readAllText}>Read all</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -675,6 +688,12 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 36,
+  },
+  readAllText: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.bodyBold,
+    color: colors.interactive.primary,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   scrollView: {
     flex: 1,
