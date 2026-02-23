@@ -29,7 +29,10 @@
  *   text: string | null,
  *   gifUrl: string | null,
  *   imageUrl: string | null,
- *   type: 'text' | 'gif' | 'image',
+ *   type: 'text' | 'gif' | 'image' | 'reaction',
+ *   emoji: string | null,              // For reaction messages: 'heart', 'laugh', etc.
+ *   targetMessageId: string | null,    // For reaction messages: ID of the reacted-to message
+ *   replyTo: object | null,            // For reply messages: { messageId, senderId, type, text, deleted }
  *   createdAt: Timestamp,
  * }
  */
@@ -50,6 +53,7 @@ import {
   startAfter,
   onSnapshot,
   serverTimestamp,
+  arrayUnion,
 } from '@react-native-firebase/firestore';
 
 import logger from '../../utils/logger';
@@ -565,6 +569,268 @@ export const loadMoreMessages = async (
   } catch (error) {
     logger.error('messageService.loadMoreMessages: Failed', {
       conversationId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send a reaction to a message.
+ * Creates a separate message document of type 'reaction' linking back to the target message.
+ * Does NOT modify the original message document (preserves immutability).
+ *
+ * @param {string} conversationId - Conversation document ID
+ * @param {string} senderId - Sender's user ID
+ * @param {string} targetMessageId - ID of the message being reacted to
+ * @param {string} emoji - Reaction emoji key: 'heart', 'laugh', 'surprise', 'sad', 'angry', 'thumbs_up'
+ * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ */
+export const sendReaction = async (conversationId, senderId, targetMessageId, emoji) => {
+  logger.debug('messageService.sendReaction: Starting', {
+    conversationId,
+    senderId,
+    targetMessageId,
+    emoji,
+  });
+
+  try {
+    if (!conversationId || !senderId || !targetMessageId || !emoji) {
+      logger.warn('messageService.sendReaction: Missing required fields', {
+        conversationId,
+        senderId,
+        targetMessageId,
+        emoji,
+      });
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+
+    const reactionData = {
+      senderId,
+      type: 'reaction',
+      emoji,
+      targetMessageId,
+      text: null,
+      gifUrl: null,
+      imageUrl: null,
+      createdAt: serverTimestamp(),
+    };
+
+    const reactionDoc = await addDoc(messagesRef, reactionData);
+
+    logger.info('messageService.sendReaction: Reaction sent', {
+      conversationId,
+      messageId: reactionDoc.id,
+      emoji,
+      targetMessageId,
+    });
+
+    return { success: true, messageId: reactionDoc.id };
+  } catch (error) {
+    logger.error('messageService.sendReaction: Failed', {
+      conversationId,
+      senderId,
+      targetMessageId,
+      emoji,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Remove a reaction from a message.
+ * Creates a reaction message with emoji: null as a removal sentinel.
+ * Client-side aggregation interprets null emoji as "reaction removed".
+ * Avoids needing a Cloud Function to delete reaction documents.
+ *
+ * @param {string} conversationId - Conversation document ID
+ * @param {string} senderId - Sender's user ID
+ * @param {string} targetMessageId - ID of the message to remove the reaction from
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const removeReaction = async (conversationId, senderId, targetMessageId) => {
+  logger.debug('messageService.removeReaction: Starting', {
+    conversationId,
+    senderId,
+    targetMessageId,
+  });
+
+  try {
+    if (!conversationId || !senderId || !targetMessageId) {
+      logger.warn('messageService.removeReaction: Missing required fields', {
+        conversationId,
+        senderId,
+        targetMessageId,
+      });
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+
+    const removalData = {
+      senderId,
+      type: 'reaction',
+      emoji: null,
+      targetMessageId,
+      text: null,
+      gifUrl: null,
+      imageUrl: null,
+      createdAt: serverTimestamp(),
+    };
+
+    await addDoc(messagesRef, removalData);
+
+    logger.info('messageService.removeReaction: Reaction removed', {
+      conversationId,
+      senderId,
+      targetMessageId,
+    });
+
+    return { success: true };
+  } catch (error) {
+    logger.error('messageService.removeReaction: Failed', {
+      conversationId,
+      senderId,
+      targetMessageId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send a reply message in a conversation.
+ * Creates a message with a denormalized replyTo object containing the original
+ * message preview. Does NOT store image URLs in replyTo to avoid signed URL expiry.
+ *
+ * @param {string} conversationId - Conversation document ID
+ * @param {string} senderId - Sender's user ID
+ * @param {string|null} text - Reply text (null if gif/image)
+ * @param {string|null} gifUrl - GIF URL (null if text/image)
+ * @param {string|null} imageUrl - Image URL (null if text/gif)
+ * @param {object} replyToMessage - Original message being replied to (must have id, senderId, type)
+ * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ */
+export const sendReply = async (
+  conversationId,
+  senderId,
+  text,
+  gifUrl,
+  imageUrl,
+  replyToMessage
+) => {
+  logger.debug('messageService.sendReply: Starting', {
+    conversationId,
+    senderId,
+    hasText: !!text,
+    hasGif: !!gifUrl,
+    hasImage: !!imageUrl,
+    replyToMessageId: replyToMessage?.id,
+  });
+
+  try {
+    if (!conversationId || !senderId) {
+      logger.warn('messageService.sendReply: Missing required fields', {
+        conversationId,
+        senderId,
+      });
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    if (!replyToMessage || !replyToMessage.id || !replyToMessage.senderId || !replyToMessage.type) {
+      logger.warn('messageService.sendReply: Invalid replyToMessage', {
+        replyToMessage,
+      });
+      return { success: false, error: 'Invalid replyToMessage: must have id, senderId, and type' };
+    }
+
+    const type = imageUrl ? 'image' : gifUrl ? 'gif' : 'text';
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+
+    const messageData = {
+      senderId,
+      text: gifUrl || imageUrl ? null : text,
+      gifUrl: gifUrl || null,
+      imageUrl: imageUrl || null,
+      type,
+      replyTo: {
+        messageId: replyToMessage.id,
+        senderId: replyToMessage.senderId,
+        type: replyToMessage.type,
+        text: replyToMessage.type === 'text' ? (replyToMessage.text || '').substring(0, 100) : null,
+        deleted: false,
+      },
+      createdAt: serverTimestamp(),
+    };
+
+    const messageDoc = await addDoc(messagesRef, messageData);
+
+    logger.info('messageService.sendReply: Reply sent', {
+      conversationId,
+      messageId: messageDoc.id,
+      type,
+      replyToMessageId: replyToMessage.id,
+    });
+
+    return { success: true, messageId: messageDoc.id };
+  } catch (error) {
+    logger.error('messageService.sendReply: Failed', {
+      conversationId,
+      senderId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Delete a message for the current user only.
+ * Adds the message ID to the conversation's deletedMessages array for the user.
+ * The message remains visible to the other participant.
+ *
+ * @param {string} conversationId - Conversation document ID
+ * @param {string} userId - User ID performing the delete
+ * @param {string} messageId - ID of the message to hide
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const deleteMessageForMe = async (conversationId, userId, messageId) => {
+  logger.debug('messageService.deleteMessageForMe: Starting', {
+    conversationId,
+    userId,
+    messageId,
+  });
+
+  try {
+    if (!conversationId || !userId || !messageId) {
+      logger.warn('messageService.deleteMessageForMe: Missing required fields', {
+        conversationId,
+        userId,
+        messageId,
+      });
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    const conversationRef = doc(db, 'conversations', conversationId);
+
+    await updateDoc(conversationRef, {
+      [`deletedMessages.${userId}`]: arrayUnion(messageId),
+    });
+
+    logger.info('messageService.deleteMessageForMe: Message deleted for user', {
+      conversationId,
+      userId,
+      messageId,
+    });
+
+    return { success: true };
+  } catch (error) {
+    logger.error('messageService.deleteMessageForMe: Failed', {
+      conversationId,
+      userId,
+      messageId,
       error: error.message,
     });
     return { success: false, error: error.message };

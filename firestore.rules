@@ -409,7 +409,7 @@ service cloud.firestore {
       // Cloud Functions use admin SDK and bypass rules for lastMessage/updatedAt updates
       allow update: if isConversationMemberById(conversationId) &&
                        request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['deletedAt', 'unreadCount', 'readReceipts']);
+                         .hasOnly(['deletedAt', 'unreadCount', 'readReceipts', 'deletedMessages']);
 
       // Delete: Never — conversations are permanent
       allow delete: if false;

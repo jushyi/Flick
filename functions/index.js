@@ -2616,9 +2616,164 @@ exports.onPhotoSoftDeleted = functions
   });
 
 /**
+ * unsendMessage - Callable function to soft-delete a message within 15-minute window
+ * 1. Validates auth, ownership, and time window
+ * 2. Soft-deletes the message (unsent: true, unsentAt: serverTimestamp)
+ * 3. Cascades: removes reactions targeting the unsent message
+ * 4. Cascades: marks replyTo.deleted on replies referencing the unsent message
+ * 5. Updates conversation lastMessage if the unsent message was the latest
+ */
+exports.unsendMessage = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async request => {
+  // Auth check
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be authenticated to unsend a message');
+  }
+
+  const userId = request.auth.uid;
+  const { conversationId, messageId } = request.data || {};
+
+  // Validate params
+  if (!conversationId || !messageId) {
+    throw new HttpsError('invalid-argument', 'conversationId and messageId are required');
+  }
+
+  // Read the message document
+  const messageRef = db
+    .collection('conversations')
+    .doc(conversationId)
+    .collection('messages')
+    .doc(messageId);
+  const messageSnap = await messageRef.get();
+
+  if (!messageSnap.exists) {
+    throw new HttpsError('not-found', 'Message not found');
+  }
+
+  const message = messageSnap.data();
+
+  // Verify sender ownership
+  if (message.senderId !== userId) {
+    throw new HttpsError('permission-denied', 'Can only unsend your own messages');
+  }
+
+  // Verify within 15-minute window
+  const createdAt =
+    message.createdAt && typeof message.createdAt.toDate === 'function'
+      ? message.createdAt.toDate()
+      : new Date(message.createdAt);
+  const now = new Date();
+  const diffMinutes = (now - createdAt) / (1000 * 60);
+
+  if (diffMinutes > 15) {
+    throw new HttpsError('failed-precondition', 'Unsend window has expired');
+  }
+
+  const batch = db.batch();
+
+  // Soft-delete the message
+  batch.update(messageRef, {
+    unsent: true,
+    unsentAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Cascade 1: Remove reactions targeting this message
+  const messagesCol = db.collection('conversations').doc(conversationId).collection('messages');
+  const reactionsSnap = await messagesCol.where('targetMessageId', '==', messageId).get();
+
+  reactionsSnap.docs.forEach(doc => {
+    batch.update(doc.ref, {
+      unsent: true,
+      unsentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+
+  // Cascade 2: Mark replyTo.deleted on replies referencing this message
+  const repliesSnap = await messagesCol.where('replyTo.messageId', '==', messageId).get();
+
+  repliesSnap.docs.forEach(doc => {
+    batch.update(doc.ref, {
+      'replyTo.deleted': true,
+    });
+  });
+
+  // Cascade 3: Update conversation lastMessage if this was the latest
+  const convRef = db.doc(`conversations/${conversationId}`);
+  const convSnap = await convRef.get();
+
+  if (convSnap.exists) {
+    const convData = convSnap.data();
+    const lastMessageTimestamp = convData.lastMessage && convData.lastMessage.timestamp;
+    const messageTimestamp = message.createdAt;
+
+    // Check if timestamps match (within 1 second tolerance)
+    let isLatestMessage = false;
+    if (lastMessageTimestamp && messageTimestamp) {
+      const lastTs =
+        typeof lastMessageTimestamp.toMillis === 'function'
+          ? lastMessageTimestamp.toMillis()
+          : new Date(lastMessageTimestamp).getTime();
+      const msgTs =
+        typeof messageTimestamp.toMillis === 'function'
+          ? messageTimestamp.toMillis()
+          : new Date(messageTimestamp).getTime();
+      isLatestMessage = Math.abs(lastTs - msgTs) <= 1000;
+    }
+
+    if (isLatestMessage) {
+      // Find the next most recent non-unsent message
+      const recentSnap = await messagesCol.orderBy('createdAt', 'desc').limit(5).get();
+
+      let fallbackMessage = null;
+      for (const doc of recentSnap.docs) {
+        const data = doc.data();
+        if (doc.id !== messageId && !data.unsent && data.type !== 'reaction') {
+          fallbackMessage = data;
+          break;
+        }
+      }
+
+      if (fallbackMessage) {
+        const preview =
+          fallbackMessage.type === 'gif'
+            ? 'Sent a GIF'
+            : fallbackMessage.type === 'image'
+              ? 'Sent a photo'
+              : fallbackMessage.text || '';
+        batch.update(convRef, {
+          lastMessage: {
+            text: preview,
+            senderId: fallbackMessage.senderId,
+            timestamp: fallbackMessage.createdAt,
+            type: fallbackMessage.type || 'text',
+          },
+        });
+      } else {
+        batch.update(convRef, {
+          lastMessage: null,
+        });
+      }
+    }
+  }
+
+  await batch.commit();
+
+  logger.info('unsendMessage: Message unsent successfully', {
+    conversationId,
+    messageId,
+    cascadedReactions: reactionsSnap.size,
+    cascadedReplies: repliesSnap.size,
+  });
+
+  return { success: true };
+});
+
+/**
  * onNewMessage - Triggered when a new message is created in a conversation
  * 1. Updates conversation metadata (lastMessage, updatedAt, unreadCount) atomically
+ *    - Reaction messages do NOT update lastMessage or unreadCount
  * 2. Sends push notification to the recipient
+ *    - Reaction messages send emoji-formatted notification
+ *    - Reaction removal (emoji: null) is silent (no notification)
  */
 exports.onNewMessage = functions
   .runWith({ memory: '256MB', timeoutSeconds: 60 })
