@@ -42,12 +42,20 @@ const ConversationHeader = ({ friendProfile, onBackPress, onProfilePress, onRepo
 
         {/* Profile Photo */}
         <TouchableOpacity onPress={onProfilePress} style={styles.profilePhotoWrapper}>
-          <Image
-            source={{ uri: friendProfile?.photoURL }}
-            style={styles.profilePhoto}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-          />
+          {friendProfile?.profilePhotoURL || friendProfile?.photoURL ? (
+            <Image
+              source={{ uri: friendProfile?.profilePhotoURL || friendProfile?.photoURL }}
+              style={styles.profilePhoto}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+            />
+          ) : (
+            <View style={[styles.profilePhoto, styles.profilePhotoFallback]}>
+              <Text style={styles.profilePhotoFallbackText}>
+                {(friendProfile?.displayName || '?').charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Display Name */}
@@ -90,6 +98,15 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: colors.background.tertiary,
+  },
+  profilePhotoFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profilePhotoFallbackText: {
+    color: colors.text.secondary,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.bodyBold,
   },
   nameWrapper: {
     flex: 1,

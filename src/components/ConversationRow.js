@@ -44,7 +44,8 @@ const UnreadBadge = ({ count }) => {
 const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, onLongPress }) => {
   const { userProfile: currentUserProfile } = useAuth();
   const { lastMessage, updatedAt, unreadCount, readReceipts } = conversation;
-  const { photoURL, displayName } = friendProfile;
+  const { displayName } = friendProfile;
+  const photoURL = friendProfile.profilePhotoURL || friendProfile.photoURL;
 
   // unreadCount comes as a number from useMessages (already extracted for current user)
   const hasUnread = unreadCount > 0;
