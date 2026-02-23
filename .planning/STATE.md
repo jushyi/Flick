@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 02
-**Current Plan:** 02-04 (3/6 complete)
+**Current Plan:** 02-06 (4/6 complete)
 **Last Updated:** 2026-02-23
 
 ## Progress
@@ -9,7 +9,7 @@
 | Phase                                      | Status                  | Started    | Completed |
 | ------------------------------------------ | ----------------------- | ---------- | --------- |
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —         |
-| 2 — Message Interactions                   | In Progress (3/6 plans) | 2026-02-23 | —         |
+| 2 — Message Interactions                   | In Progress (4/6 plans) | 2026-02-23 | —         |
 | 3 — Snap Messages                          | Not Started             | —          | —         |
 | 4 — Snap Streaks                           | Not Started             | —          | —         |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —         |
@@ -54,6 +54,8 @@
 | 2026-02-23 | Compound key for reaction-per-user         | targetMessageId_senderId key enforces one reaction per user |
 | 2026-02-23 | Placeholder flags for unsent/deleted       | \_isUnsent/\_isDeletedForMe flags keep messages in list     |
 | 2026-02-23 | reactionMap as parameter to handleReaction | Avoids data duplication; useConversation owns the data      |
+| 2026-02-23 | PixelIcon for ReplyPreview cancel button   | Consistent with project-wide icon system, not Ionicons      |
+| 2026-02-23 | runOnJS for gesture worklet callbacks      | Thread-safe JS callbacks from reanimated gesture handlers   |
 
 ## Blockers
 
@@ -91,4 +93,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-23 - Completed 02-03-PLAN.md: useConversation reaction aggregation, message filtering, useMessageActions hook, 11 new tests
+Last activity: 2026-02-23 - Completed 02-05-PLAN.md: ReactionPicker overlay, ReplyPreview bar, PixelConfirmDialog modal
