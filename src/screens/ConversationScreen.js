@@ -12,6 +12,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 
 import ConversationHeader from '../components/ConversationHeader';
 import MessageBubble from '../components/MessageBubble';
+import ReadReceiptIndicator from '../components/ReadReceiptIndicator';
 import TimeDivider from '../components/TimeDivider';
 import DMInput from '../components/DMInput';
 import PixelSpinner from '../components/PixelSpinner';
@@ -31,20 +32,36 @@ const EmptyConversation = ({ displayName }) => (
 );
 
 const ConversationScreen = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const navigation = useNavigation();
   const route = useRoute();
   const { conversationId, friendId, friendProfile, deletedAt } = route.params;
 
-  const { messages, loading, loadingMore, hasMore, loadMore, handleSendMessage } = useConversation(
-    conversationId,
-    user.uid,
-    deletedAt
-  );
+  const { messages, conversationDoc, loading, loadingMore, hasMore, loadMore, handleSendMessage } =
+    useConversation(conversationId, user.uid, deletedAt);
 
   const flatListRef = useRef(null);
   const [visibleTimestamps, setVisibleTimestamps] = useState(new Set());
   const isReadOnly = route.params?.readOnly || false;
+
+  /**
+   * Derive read receipt state for the sender's last message.
+   * Privacy: both users must have readReceiptsEnabled !== false for "Read" to show.
+   */
+  const lastSentMessage = useMemo(
+    () => messages.find(m => m.senderId === user.uid),
+    [messages, user.uid]
+  );
+  const friendReadAt = conversationDoc?.readReceipts?.[friendId];
+  const senderEnabled = userProfile?.readReceiptsEnabled !== false;
+  const recipientEnabled = friendProfile?.readReceiptsEnabled !== false;
+  const showReadStatus = senderEnabled && recipientEnabled;
+  const isRead =
+    showReadStatus &&
+    !!friendReadAt &&
+    !!lastSentMessage?.createdAt &&
+    friendReadAt.toMillis?.() >= lastSentMessage.createdAt.toMillis?.();
+  const showIndicator = !!lastSentMessage;
 
   /**
    * Toggle tap-to-reveal timestamp for a specific message.
@@ -97,13 +114,16 @@ const ConversationScreen = () => {
 
   /**
    * Render a single item — either a TimeDivider or a MessageBubble
-   * wrapped with consistent spacing.
+   * wrapped with consistent spacing. Includes ReadReceiptIndicator
+   * below the current user's most recent sent message.
    */
   const renderItem = useCallback(
     ({ item }) => {
       if (item.type === 'divider') {
         return <TimeDivider timestamp={item.timestamp} />;
       }
+
+      const isLastSent = showIndicator && lastSentMessage && item.id === lastSentMessage.id;
 
       return (
         <View style={styles.messageWrapper}>
@@ -113,10 +133,21 @@ const ConversationScreen = () => {
             showTimestamp={visibleTimestamps.has(item.id)}
             onPress={() => toggleTimestamp(item.id)}
           />
+          {isLastSent && (
+            <ReadReceiptIndicator isRead={isRead} readAt={friendReadAt} visible={showIndicator} />
+          )}
         </View>
       );
     },
-    [user.uid, visibleTimestamps, toggleTimestamp]
+    [
+      user.uid,
+      visibleTimestamps,
+      toggleTimestamp,
+      showIndicator,
+      lastSentMessage,
+      isRead,
+      friendReadAt,
+    ]
   );
 
   /**
