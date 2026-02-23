@@ -2806,24 +2806,48 @@ exports.onNewMessage = functions
       const recipientId = uid1 === senderId ? uid2 : uid1;
 
       const convRef = db.doc(`conversations/${conversationId}`);
+      const messageType = message.type || 'text';
 
-      // 1. Update conversation metadata atomically
-      const lastMessagePreview =
-        message.type === 'gif'
-          ? 'Sent a GIF'
-          : message.type === 'image'
-            ? 'Sent a photo'
-            : message.text || '';
-      await convRef.update({
-        lastMessage: {
-          text: lastMessagePreview,
-          senderId: senderId,
-          timestamp: message.createdAt,
-          type: message.type || 'text',
-        },
-        updatedAt: message.createdAt,
-        [`unreadCount.${recipientId}`]: admin.firestore.FieldValue.increment(1),
-      });
+      // Determine conversation update behavior based on message type
+      let shouldUpdateLastMessage = true;
+      let shouldIncrementUnread = true;
+
+      if (messageType === 'reaction') {
+        // Reaction removal sentinel (emoji: null) — return early, no notification
+        if (message.emoji === null || message.emoji === undefined) {
+          logger.debug('onNewMessage: Reaction removal sentinel, skipping', { conversationId });
+          return null;
+        }
+        // Reactions: send notification but do NOT update conversation preview or unread count
+        shouldUpdateLastMessage = false;
+        shouldIncrementUnread = false;
+      }
+
+      // 1. Update conversation metadata (skip for reactions)
+      if (shouldUpdateLastMessage) {
+        const lastMessagePreview =
+          messageType === 'gif'
+            ? 'Sent a GIF'
+            : messageType === 'image'
+              ? 'Sent a photo'
+              : message.text || '';
+
+        const updateData = {
+          lastMessage: {
+            text: lastMessagePreview,
+            senderId: senderId,
+            timestamp: message.createdAt,
+            type: messageType,
+          },
+          updatedAt: message.createdAt,
+        };
+
+        if (shouldIncrementUnread) {
+          updateData[`unreadCount.${recipientId}`] = admin.firestore.FieldValue.increment(1);
+        }
+
+        await convRef.update(updateData);
+      }
 
       // 2. Send push notification to recipient
       try {
@@ -2863,12 +2887,27 @@ exports.onNewMessage = functions
           : 'Someone';
         const senderPhotoURL = senderDoc.exists ? senderDoc.data().photoURL : null;
 
-        const body =
-          message.type === 'gif'
-            ? 'Sent a GIF'
-            : message.type === 'image'
-              ? 'Sent a photo'
-              : message.text;
+        // Build notification body based on message type
+        let body;
+        if (messageType === 'reaction' && message.emoji) {
+          const emojiMap = {
+            heart: '\u2764\uFE0F',
+            laugh: '\uD83D\uDE02',
+            surprise: '\uD83D\uDE2E',
+            sad: '\uD83D\uDE22',
+            angry: '\uD83D\uDE21',
+            thumbs_up: '\uD83D\uDC4D',
+          };
+          const emojiChar = emojiMap[message.emoji] || message.emoji;
+          body = `Reacted ${emojiChar} to your message`;
+        } else {
+          body =
+            messageType === 'gif'
+              ? 'Sent a GIF'
+              : messageType === 'image'
+                ? 'Sent a photo'
+                : message.text;
+        }
 
         await sendPushNotification(
           fcmToken,

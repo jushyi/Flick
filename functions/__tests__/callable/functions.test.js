@@ -1,12 +1,13 @@
 /**
  * Callable Function Tests
  *
- * Tests for 5 callable/HTTPS functions exported from index.js:
+ * Tests for 6 callable/HTTPS functions exported from index.js:
  * 1. getMutualFriendSuggestions
  * 2. getMutualFriendsForComments
  * 3. deleteUserAccount
  * 4. scheduleUserAccountDeletion
  * 5. cancelUserAccountDeletion
+ * 6. unsendMessage
  *
  * Callable functions are wrapped by onCall mock to return the handler directly.
  * The handler receives (request) where request has .auth and .data properties.
@@ -25,6 +26,7 @@ const {
   deleteUserAccount,
   scheduleUserAccountDeletion,
   cancelUserAccountDeletion,
+  unsendMessage,
 } = require('../../index');
 
 /**
@@ -651,5 +653,235 @@ describe('cancelUserAccountDeletion', () => {
     });
 
     expect(result).toEqual({ success: true });
+  });
+});
+
+// ============================================================================
+// unsendMessage
+// ============================================================================
+describe('unsendMessage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Helper: set up mock for unsendMessage-specific Firestore operations.
+   * Supports nested doc().collection().doc().get() pattern for messages subcollection.
+   */
+  function setupUnsendMockDb({
+    messageData = null,
+    messageExists = true,
+    conversationData = null,
+    reactionDocs = [],
+    replyDocs = [],
+    recentMessageDocs = [],
+  } = {}) {
+    const mockBatchUpdate = jest.fn();
+    const mockBatchCommit = jest.fn().mockResolvedValue();
+    mockDb.batch.mockReturnValue({
+      set: jest.fn(),
+      update: mockBatchUpdate,
+      delete: jest.fn(),
+      commit: mockBatchCommit,
+    });
+
+    // Mock for the message doc ref (conversations/{id}/messages/{id})
+    const mockMessageRef = {
+      get: jest.fn().mockResolvedValue({
+        exists: messageExists,
+        data: () => messageData,
+        ref: { id: 'msg-1' },
+      }),
+      update: jest.fn().mockResolvedValue(),
+      id: 'msg-1',
+    };
+
+    // Mock for the messages subcollection queries (reactions, replies, recent)
+    let queryCallCount = 0;
+    const mockMessagesCollection = {
+      doc: jest.fn(() => mockMessageRef),
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      get: jest.fn(() => {
+        queryCallCount++;
+        if (queryCallCount === 1) {
+          // First query: reactions (where targetMessageId == messageId)
+          return Promise.resolve({
+            docs: reactionDocs.map((d, i) => ({
+              ref: { id: `reaction-${i}` },
+              data: () => d,
+            })),
+            size: reactionDocs.length,
+          });
+        } else if (queryCallCount === 2) {
+          // Second query: replies (where replyTo.messageId == messageId)
+          return Promise.resolve({
+            docs: replyDocs.map((d, i) => ({
+              ref: { id: `reply-${i}` },
+              data: () => d,
+            })),
+            size: replyDocs.length,
+          });
+        } else {
+          // Third query: recent messages for lastMessage fallback
+          return Promise.resolve({
+            docs: recentMessageDocs.map((d, i) => ({
+              id: d._id || `recent-${i}`,
+              ref: { id: d._id || `recent-${i}` },
+              data: () => d,
+            })),
+            size: recentMessageDocs.length,
+          });
+        }
+      }),
+    };
+
+    // Mock conversation doc ref
+    const mockConvRef = {
+      get: jest.fn().mockResolvedValue({
+        exists: !!conversationData,
+        data: () => conversationData,
+      }),
+      update: jest.fn().mockResolvedValue(),
+    };
+
+    // Wire up mockDb.collection and mockDb.doc
+    mockDb.collection.mockImplementation(collectionName => {
+      if (collectionName === 'conversations') {
+        return {
+          doc: jest.fn(() => ({
+            collection: jest.fn(() => mockMessagesCollection),
+            get: mockConvRef.get,
+            update: mockConvRef.update,
+          })),
+        };
+      }
+      return {
+        doc: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+        })),
+      };
+    });
+
+    mockDb.doc.mockImplementation(path => {
+      if (path.startsWith('conversations/')) {
+        return mockConvRef;
+      }
+      return {
+        get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+      };
+    });
+
+    return { mockBatchUpdate, mockBatchCommit, mockMessageRef, mockConvRef };
+  }
+
+  it('should return success when called with valid params and message within 15-minute window', async () => {
+    const recentCreatedAt = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
+    const { mockBatchCommit } = setupUnsendMockDb({
+      messageData: {
+        senderId: 'user-1',
+        text: 'Hello',
+        type: 'text',
+        createdAt: { toDate: () => recentCreatedAt },
+      },
+      conversationData: {
+        lastMessage: {
+          timestamp: { toMillis: () => recentCreatedAt.getTime() },
+        },
+      },
+      recentMessageDocs: [
+        {
+          _id: 'msg-1',
+          senderId: 'user-1',
+          text: 'Hello',
+          unsent: false,
+          type: 'text',
+          createdAt: recentCreatedAt,
+        },
+      ],
+    });
+
+    const result = await unsendMessage({
+      auth: { uid: 'user-1' },
+      data: { conversationId: 'user-1_user-2', messageId: 'msg-1' },
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(mockBatchCommit).toHaveBeenCalled();
+  });
+
+  it('should throw unauthenticated when no auth context', async () => {
+    await expect(
+      unsendMessage({
+        auth: null,
+        data: { conversationId: 'conv-1', messageId: 'msg-1' },
+      })
+    ).rejects.toThrow('Must be authenticated to unsend a message');
+  });
+
+  it('should throw permission-denied when userId does not match senderId', async () => {
+    const recentCreatedAt = new Date(Date.now() - 5 * 60 * 1000);
+    setupUnsendMockDb({
+      messageData: {
+        senderId: 'other-user',
+        text: 'Hello',
+        type: 'text',
+        createdAt: { toDate: () => recentCreatedAt },
+      },
+    });
+
+    await expect(
+      unsendMessage({
+        auth: { uid: 'user-1' },
+        data: { conversationId: 'conv-1', messageId: 'msg-1' },
+      })
+    ).rejects.toThrow('Can only unsend your own messages');
+  });
+
+  it('should throw failed-precondition when message is older than 15 minutes', async () => {
+    const oldCreatedAt = new Date(Date.now() - 20 * 60 * 1000); // 20 minutes ago
+    setupUnsendMockDb({
+      messageData: {
+        senderId: 'user-1',
+        text: 'Hello',
+        type: 'text',
+        createdAt: { toDate: () => oldCreatedAt },
+      },
+    });
+
+    await expect(
+      unsendMessage({
+        auth: { uid: 'user-1' },
+        data: { conversationId: 'conv-1', messageId: 'msg-1' },
+      })
+    ).rejects.toThrow('Unsend window has expired');
+  });
+
+  it('should set unsent:true on the message document via batch update', async () => {
+    const recentCreatedAt = new Date(Date.now() - 5 * 60 * 1000);
+    const { mockBatchUpdate } = setupUnsendMockDb({
+      messageData: {
+        senderId: 'user-1',
+        text: 'Hello',
+        type: 'text',
+        createdAt: { toDate: () => recentCreatedAt },
+      },
+      conversationData: null,
+    });
+
+    await unsendMessage({
+      auth: { uid: 'user-1' },
+      data: { conversationId: 'user-1_user-2', messageId: 'msg-1' },
+    });
+
+    // First batch.update call should be the message soft-delete
+    expect(mockBatchUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        unsent: true,
+        unsentAt: 'mock-timestamp',
+      })
+    );
   });
 });

@@ -43,6 +43,7 @@ const {
   sendTaggedPhotoNotification,
   sendCommentNotification,
   sendPhotoRevealNotification,
+  onNewMessage,
 } = require('../../index');
 
 // Valid FCM token for tests
@@ -1351,6 +1352,185 @@ describe('sendPhotoRevealNotification', () => {
     const context = { params: { userId: 'user-1' } };
 
     const result = await sendPhotoRevealNotification(change, context);
+
+    expect(result).toBeNull();
+    expect(mockSendPushNotification).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================================
+// onNewMessage - Reaction handling (onCreate - messages subcollection)
+// ============================================================================
+describe('onNewMessage - reaction handling', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Helper: set up mockDb for onNewMessage trigger tests.
+   * Configures the conversation doc update mock and user lookups.
+   */
+  function setupOnNewMessageMockDb({ users = {} } = {}) {
+    const mockConvUpdate = jest.fn().mockResolvedValue();
+    const mockConvRef = {
+      get: jest.fn().mockResolvedValue({ exists: true, data: () => ({}) }),
+      update: mockConvUpdate,
+    };
+
+    mockDb.doc.mockImplementation(path => {
+      if (path.startsWith('conversations/')) {
+        return mockConvRef;
+      }
+      return {
+        get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+      };
+    });
+
+    mockDb.collection.mockImplementation(collectionName => ({
+      doc: jest.fn(docId => {
+        if (collectionName === 'users' && users[docId]) {
+          return {
+            get: jest.fn().mockResolvedValue({
+              exists: true,
+              id: docId,
+              data: () => users[docId],
+            }),
+          };
+        }
+        return {
+          get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+        };
+      }),
+    }));
+
+    return { mockConvUpdate };
+  }
+
+  it('should not update lastMessage or unreadCount for reaction messages', async () => {
+    const { mockConvUpdate } = setupOnNewMessageMockDb({
+      users: {
+        'recipient-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Recipient',
+          notificationPreferences: {},
+        },
+        'sender-1': {
+          displayName: 'Sender',
+          username: 'sender',
+        },
+      },
+    });
+
+    const snapshot = {
+      data: () => ({
+        senderId: 'sender-1',
+        type: 'reaction',
+        emoji: 'heart',
+        targetMessageId: 'target-msg-1',
+        text: null,
+        createdAt: { toDate: () => new Date() },
+      }),
+    };
+
+    const context = {
+      params: {
+        conversationId: 'recipient-1_sender-1',
+        messageId: 'reaction-msg-1',
+      },
+    };
+
+    await onNewMessage(snapshot, context);
+
+    // convRef.update should NOT have been called (no lastMessage/unreadCount update)
+    expect(mockConvUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should send push notification with emoji character for reaction messages', async () => {
+    setupOnNewMessageMockDb({
+      users: {
+        'recipient-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Recipient',
+          notificationPreferences: {},
+        },
+        'sender-1': {
+          displayName: 'Sender',
+          username: 'sender',
+          photoURL: 'https://sender.photo',
+        },
+      },
+    });
+
+    const snapshot = {
+      data: () => ({
+        senderId: 'sender-1',
+        type: 'reaction',
+        emoji: 'heart',
+        targetMessageId: 'target-msg-1',
+        text: null,
+        createdAt: { toDate: () => new Date() },
+      }),
+    };
+
+    const context = {
+      params: {
+        conversationId: 'recipient-1_sender-1',
+        messageId: 'reaction-msg-1',
+      },
+    };
+
+    await onNewMessage(snapshot, context);
+
+    // Should send notification with emoji in body
+    expect(mockSendPushNotification).toHaveBeenCalledWith(
+      VALID_TOKEN,
+      'Sender',
+      expect.stringContaining('Reacted'),
+      expect.objectContaining({
+        type: 'direct_message',
+        conversationId: 'recipient-1_sender-1',
+      }),
+      'recipient-1'
+    );
+
+    // Verify the body contains the heart emoji character
+    const callArgs = mockSendPushNotification.mock.calls[0];
+    expect(callArgs[2]).toContain('\u2764\uFE0F');
+  });
+
+  it('should return early for reaction removal (emoji: null) without sending notification', async () => {
+    setupOnNewMessageMockDb({
+      users: {
+        'recipient-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Recipient',
+          notificationPreferences: {},
+        },
+        'sender-1': {
+          displayName: 'Sender',
+        },
+      },
+    });
+
+    const snapshot = {
+      data: () => ({
+        senderId: 'sender-1',
+        type: 'reaction',
+        emoji: null,
+        targetMessageId: 'target-msg-1',
+        text: null,
+        createdAt: { toDate: () => new Date() },
+      }),
+    };
+
+    const context = {
+      params: {
+        conversationId: 'recipient-1_sender-1',
+        messageId: 'reaction-removal-1',
+      },
+    };
+
+    const result = await onNewMessage(snapshot, context);
 
     expect(result).toBeNull();
     expect(mockSendPushNotification).not.toHaveBeenCalled();
