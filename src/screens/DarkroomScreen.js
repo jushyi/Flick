@@ -49,6 +49,11 @@ const DarkroomScreen = () => {
     // Tagging state
     tagModalVisible,
 
+    // Caption state
+    getCaptionForPhoto,
+    handleCaptionChange,
+    keyboardVisible,
+
     // Handlers
     handleDone,
     handleExitClearance,
@@ -261,6 +266,11 @@ const DarkroomScreen = () => {
                     onExitClearance={isActive ? () => handleExitClearance(photo.id) : undefined}
                     onTagPress={isActive ? handleOpenTagModal : undefined}
                     hasTagged={isActive ? getTagsForPhoto(photo.id).length > 0 : false}
+                    caption={isActive ? getCaptionForPhoto(photo.id) : undefined}
+                    onCaptionChange={
+                      isActive ? text => handleCaptionChange(photo.id, text) : undefined
+                    }
+                    keyboardVisible={isActive ? keyboardVisible : undefined}
                   />
                 );
               })}
