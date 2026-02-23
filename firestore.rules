@@ -2,6 +2,7 @@ rules_version = '2';
 // Hardened: 2026-01-24 - Phase 23 Security Audit
 // Updated: 2026-02-04 - Phase 21 UAT Fix (blocks + reports collections)
 // Updated: 2026-02-09 - Phase 45 Security Audit (comment/like access hierarchy, album field protection, remove unused photoViews)
+// Updated: 2026-02-20 - Photo Captions: caption length validation on owner updates
 // Changes:
 //   - Self-reaction prevention (request.auth.uid != resource.data.userId)
 //   - Immutable field protection on photos (userId, capturedAt, imageURL)
@@ -84,6 +85,16 @@ service cloud.firestore {
       return immutableAlways && imageURLProtected;
     }
 
+    // Helper function to validate caption field on photo updates
+    // Allows: absent caption, null caption, or string <= 100 chars
+    // Denies: non-null non-string values, strings > 100 chars
+    function isValidCaptionIfPresent() {
+      return !('caption' in request.resource.data) ||
+             request.resource.data.caption == null ||
+             (request.resource.data.caption is string &&
+              request.resource.data.caption.size() <= 100);
+    }
+
     // =============================================================================
     // USERS COLLECTION
     // =============================================================================
@@ -136,8 +147,8 @@ service cloud.firestore {
       // Case 2: Non-owners can add reactions (prevents self-reactions)
       // Case 3: Any authenticated user can update commentCount (for comment operations)
       allow update: if
-        // Owner updates: full access except immutable fields
-        (isOwner(resource.data.userId) && immutablePhotoFieldsUnchanged()) ||
+        // Owner updates: full access except immutable fields, with caption validation
+        (isOwner(resource.data.userId) && immutablePhotoFieldsUnchanged() && isValidCaptionIfPresent()) ||
         // Non-owner reaction updates: must not be photo owner, can only change reaction fields
         (isAuthenticated() &&
          request.auth.uid != resource.data.userId &&

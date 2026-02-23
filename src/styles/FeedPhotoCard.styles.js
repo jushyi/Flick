@@ -72,6 +72,16 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  // Caption text below info row
+  captionText: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.readable,
+    color: colors.text.primary,
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.xs,
+    includeFontPadding: false,
+  },
+
   // Reactions row
   reactions: {
     flexDirection: 'row',

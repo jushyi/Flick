@@ -5,5 +5,12 @@
  */
 export const WHATS_NEW = {
   title: "What's New",
-  items: ['Story viewing enhancements and android clipping fixes', 'Enjoy :D'],
+  items: [
+    'Added captions to photos',
+    'More enchancements to story loading',
+    'Fixed bug with story rings randomly resetting on already viewed stories',
+    'Added read all button to notification screen',
+    'Thank you all who keep reporting bugs!',
+    'Hoooooray!! (more to come soon!)',
+  ],
 };

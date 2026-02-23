@@ -17,6 +17,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
@@ -27,6 +28,8 @@ import {
   Alert,
   Easing,
   Platform,
+  ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -44,6 +47,7 @@ import {
   archivePhoto,
   restorePhoto,
   updatePhotoTags,
+  updateCaption,
   subscribePhoto,
 } from '../services/firebase/photoService';
 import DropdownMenu from '../components/DropdownMenu';
@@ -94,6 +98,7 @@ const PhotoDetailScreen = () => {
     handleClose: contextClose,
     handlePhotoStateChanged,
     updateCurrentPhoto,
+    updatePhotoAtIndex,
     getCallbacks,
   } = usePhotoDetail();
 
@@ -121,6 +126,46 @@ const PhotoDetailScreen = () => {
   // Tag modal state
   const [tagModalVisible, setTagModalVisible] = useState(false);
   const [taggedPeopleModalVisible, setTaggedPeopleModalVisible] = useState(false);
+
+  // Caption inline edit state
+  const [isEditingCaption, setIsEditingCaption] = useState(false);
+  const [captionText, setCaptionText] = useState('');
+  const captionInputRef = useRef(null);
+  const lastSavedCaptionRef = useRef('');
+
+  // Keyboard tracking for caption input offset
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, e => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  // Image loading state - shows spinner when photo is loading from network
+  const [imageLoading, setImageLoading] = useState(true);
+  const handleImageLoadStart = useCallback(() => setImageLoading(true), []);
+  const handleImageLoadEnd = useCallback(() => setImageLoading(false), []);
+
+  // Reset loading state when photo changes (new photo starts loading)
+  const prevPhotoIdRef = useRef(null);
+  if (contextPhoto?.id !== prevPhotoIdRef.current) {
+    prevPhotoIdRef.current = contextPhoto?.id;
+    // Only set loading if the photo actually changed (avoids flicker on re-renders)
+    if (contextPhoto?.id) {
+      setImageLoading(true);
+    }
+  }
 
   // Reset cube state when screen mounts
   useEffect(() => {
@@ -163,6 +208,14 @@ const PhotoDetailScreen = () => {
       unsubscribe();
     };
   }, [contextPhoto?.id, updateCurrentPhoto]);
+
+  // Sync caption local state when navigating between photos
+  useEffect(() => {
+    const caption = contextPhoto?.caption || '';
+    setCaptionText(caption);
+    lastSavedCaptionRef.current = caption;
+    setIsEditingCaption(false);
+  }, [contextPhoto?.id]);
 
   const handleClose = useCallback(() => {
     // Call context close handler
@@ -430,6 +483,7 @@ const PhotoDetailScreen = () => {
       userId: currentPhoto?.userId,
       isOwnPhoto: currentPhoto?.userId === contextUserId,
       taggedUserIds: currentPhoto?.taggedUserIds,
+      caption: currentPhoto?.caption,
       hasMenuOptions: true,
       contextMode: contextMode,
     };
@@ -533,6 +587,58 @@ const PhotoDetailScreen = () => {
     },
     [currentPhoto, contextMode, updateCurrentPhoto, getCallbacks]
   );
+
+  /**
+   * Save caption on blur/endEditing — guards against double-save and unnecessary writes
+   */
+  const handleSaveCaption = useCallback(async () => {
+    if (!isEditingCaption) return;
+    const trimmed = captionText.trim();
+    const savedCaption = lastSavedCaptionRef.current || '';
+    setIsEditingCaption(false);
+    if (trimmed === savedCaption) return;
+
+    const updatedPhoto = { ...currentPhoto, caption: trimmed || null };
+    const rollbackPhoto = { ...currentPhoto, caption: savedCaption || null };
+
+    // Optimistic update — show new caption immediately
+    lastSavedCaptionRef.current = trimmed || '';
+    if (contextMode === 'stories') {
+      updatePhotoAtIndex(currentIndex, updatedPhoto);
+    }
+    updateCurrentPhoto(updatedPhoto);
+
+    const result = await updateCaption(currentPhoto?.id, trimmed);
+    if (!result.success) {
+      // Rollback on failure
+      logger.warn('Failed to save caption', { error: result.error });
+      lastSavedCaptionRef.current = savedCaption;
+      if (contextMode === 'stories') {
+        updatePhotoAtIndex(currentIndex, rollbackPhoto);
+      }
+      updateCurrentPhoto(rollbackPhoto);
+    }
+  }, [
+    isEditingCaption,
+    captionText,
+    currentPhoto,
+    currentIndex,
+    contextMode,
+    updateCurrentPhoto,
+    updatePhotoAtIndex,
+  ]);
+
+  /**
+   * Trigger inline caption editing from menu
+   */
+  const handleEditCaption = useCallback(() => {
+    setCaptionText(currentPhoto?.caption || '');
+    setIsEditingCaption(true);
+    // Auto-focus the input after state update
+    setTimeout(() => {
+      captionInputRef.current?.focus();
+    }, 100);
+  }, [currentPhoto?.caption]);
 
   const handleArchive = useCallback(() => {
     setShowPhotoMenu(false);
@@ -666,6 +772,12 @@ const PhotoDetailScreen = () => {
     }
 
     options.push({
+      label: currentPhoto?.caption ? 'Edit Caption' : 'Add Caption',
+      icon: 'pencil-outline',
+      onPress: handleEditCaption,
+    });
+
+    options.push({
       label: 'Delete',
       icon: 'trash-outline',
       onPress: handleDeleteConfirm,
@@ -676,8 +788,10 @@ const PhotoDetailScreen = () => {
   }, [
     isOwnPhoto,
     currentPhoto?.photoState,
+    currentPhoto?.caption,
     handleArchive,
     handleRestore,
+    handleEditCaption,
     handleDeleteConfirm,
     handleReport,
   ]);
@@ -797,7 +911,16 @@ const PhotoDetailScreen = () => {
 
           {/* Photo - TouchableWithoutFeedback for swipe-to-close gesture support */}
           <TouchableWithoutFeedback
-            onPress={contextMode === 'stories' ? handleTapNavigation : undefined}
+            onPress={
+              isEditingCaption
+                ? () => {
+                    Keyboard.dismiss();
+                    handleSaveCaption();
+                  }
+                : contextMode === 'stories'
+                  ? handleTapNavigation
+                  : undefined
+            }
           >
             <View style={styles.photoScrollView}>
               <Image
@@ -806,7 +929,16 @@ const PhotoDetailScreen = () => {
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 transition={0}
+                onLoadStart={handleImageLoadStart}
+                onLoadEnd={handleImageLoadEnd}
               />
+              {imageLoading && (
+                <ActivityIndicator
+                  size="small"
+                  color="rgba(255, 255, 255, 0.6)"
+                  style={localStyles.imageLoadingSpinner}
+                />
+              )}
             </View>
           </TouchableWithoutFeedback>
 
@@ -835,25 +967,63 @@ const PhotoDetailScreen = () => {
             )}
           </TouchableOpacity>
 
-          {/* User info - bottom left of photo */}
+          {/* User info + caption - bottom left of photo */}
           <View
             style={[
               styles.userInfoOverlay,
               {
                 bottom:
-                  (contextMode === 'stories' ? 110 : 100) +
-                  (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0),
+                  isEditingCaption && keyboardHeight > 0
+                    ? keyboardHeight + 16
+                    : (contextMode === 'stories' ? 110 : 100) +
+                      (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0),
               },
             ]}
           >
-            <StrokedNameText
-              style={styles.displayName}
-              nameColor={currentPhoto?.user?.nameColor}
-              numberOfLines={1}
-            >
-              {displayName || 'Unknown User'}
-            </StrokedNameText>
-            <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
+            <View style={styles.userInfoRow}>
+              <StrokedNameText
+                style={styles.displayName}
+                nameColor={currentPhoto?.user?.nameColor}
+                numberOfLines={1}
+              >
+                {displayName || 'Unknown User'}
+              </StrokedNameText>
+              <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
+            </View>
+            {isEditingCaption ? (
+              <View style={localStyles.captionEditRow}>
+                <TextInput
+                  ref={captionInputRef}
+                  style={[styles.captionEditInput, { flex: 1 }]}
+                  value={captionText}
+                  onChangeText={text => setCaptionText(text.slice(0, 100))}
+                  onBlur={handleSaveCaption}
+                  onEndEditing={handleSaveCaption}
+                  maxLength={100}
+                  multiline
+                  scrollEnabled={false}
+                  keyboardAppearance="dark"
+                  cursorColor={colors.interactive.primary}
+                  selectionColor={colors.interactive.primary}
+                  placeholder="Add a caption..."
+                  placeholderTextColor={colors.text.tertiary}
+                />
+                <TouchableOpacity
+                  style={localStyles.captionDoneButton}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    handleSaveCaption();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <PixelIcon name="checkmark" size={18} color={colors.text.primary} />
+                </TouchableOpacity>
+              </View>
+            ) : currentPhoto?.caption ? (
+              <Text style={styles.captionText} numberOfLines={3}>
+                {currentPhoto.caption}
+              </Text>
+            ) : null}
           </View>
 
           {/* Tag button - visible for owner always, non-owner only when tags exist */}
@@ -922,14 +1092,16 @@ const PhotoDetailScreen = () => {
             </ScrollView>
           )}
 
-          {/* Footer - Comment Input + Emoji Pills */}
+          {/* Footer - Comment Input + Emoji Pills (hidden when caption keyboard is open) */}
           <View
             style={[
               styles.footer,
               Platform.OS === 'android' && {
                 paddingBottom: styles.footer.paddingBottom + insets.bottom,
               },
+              isEditingCaption && keyboardHeight > 0 && { opacity: 0 },
             ]}
+            pointerEvents={isEditingCaption && keyboardHeight > 0 ? 'none' : 'auto'}
           >
             {/* Comment input trigger - left side */}
             <TouchableOpacity
@@ -1098,7 +1270,7 @@ const PhotoDetailScreen = () => {
                 )}
               </View>
 
-              {/* User info - bottom offset matches incoming face calculation */}
+              {/* User info + caption - bottom offset matches incoming face calculation */}
               <View
                 style={[
                   styles.userInfoOverlay,
@@ -1107,14 +1279,21 @@ const PhotoDetailScreen = () => {
                   },
                 ]}
               >
-                <StrokedNameText
-                  style={styles.displayName}
-                  nameColor={snapshotRef.current.nameColor}
-                  numberOfLines={1}
-                >
-                  {snapshotRef.current.displayName || 'Unknown User'}
-                </StrokedNameText>
-                <Text style={styles.timestamp}>{getTimeAgo(snapshotRef.current.capturedAt)}</Text>
+                <View style={styles.userInfoRow}>
+                  <StrokedNameText
+                    style={styles.displayName}
+                    nameColor={snapshotRef.current.nameColor}
+                    numberOfLines={1}
+                  >
+                    {snapshotRef.current.displayName || 'Unknown User'}
+                  </StrokedNameText>
+                  <Text style={styles.timestamp}>{getTimeAgo(snapshotRef.current.capturedAt)}</Text>
+                </View>
+                {snapshotRef.current.caption ? (
+                  <Text style={styles.captionText} numberOfLines={3}>
+                    {snapshotRef.current.caption}
+                  </Text>
+                ) : null}
               </View>
 
               {/* Tag button */}
@@ -1265,5 +1444,28 @@ const PhotoDetailScreen = () => {
     </View>
   );
 };
+
+const localStyles = StyleSheet.create({
+  imageLoadingSpinner: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -10,
+    marginLeft: -10,
+  },
+  captionEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  captionDoneButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.overlay.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default PhotoDetailScreen;

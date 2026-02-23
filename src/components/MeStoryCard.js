@@ -1,4 +1,4 @@
-import React, { useRef, memo } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,7 +28,13 @@ import { profileCacheKey } from '../utils/imageUtils';
  * @param {boolean} isFirst - Whether this is the first card (for left margin)
  * @param {boolean} isViewed - Whether all stories have been viewed (default false)
  */
-const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }) => {
+const MeStoryCardInner = ({
+  friend,
+  onPress,
+  isFirst = false,
+  isViewed = false,
+  firstUnviewedIndex = 0,
+}) => {
   const { userId, profilePhotoURL, topPhotos, thumbnailURL, hasPhotos } = friend || {};
 
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array
@@ -36,6 +42,14 @@ const MeStoryCardInner = ({ friend, onPress, isFirst = false, isViewed = false }
 
   // Ref for measuring card position (expand/collapse animation)
   const cardRef = useRef(null);
+
+  // Prefetch the actual starting photo so it's cached before user taps
+  const startingPhotoUrl = topPhotos?.[firstUnviewedIndex]?.imageURL;
+  useEffect(() => {
+    if (startingPhotoUrl) {
+      Image.prefetch(startingPhotoUrl, 'memory-disk').catch(() => {});
+    }
+  }, [startingPhotoUrl]);
 
   const handlePress = () => {
     logger.debug('MeStoryCard: Card pressed', { userId });
