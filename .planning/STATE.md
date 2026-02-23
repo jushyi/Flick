@@ -65,6 +65,7 @@ None currently.
 | 10  | Fix iOS conversation scroll on send/receive (auto-scroll inverted FlatList)      | 2026-02-23 | 57c6090 | [10-fix-ios-conversation-scroll-on-send-rece](./quick/10-fix-ios-conversation-scroll-on-send-rece/) |
 | 11  | Restyle DM message bubbles and input to retro 16-bit pixel art aesthetic         | 2026-02-23 | c854c0e | [11-the-message-bubbles-don-t-match-the-16-b](./quick/11-the-message-bubbles-don-t-match-the-16-b/) |
 | 12  | Fix Android DM input bar not returning to bottom on keyboard dismiss             | 2026-02-23 | 4f1cee0 | [12-fix-android-dm-input-bar-not-going-to-bo](./quick/12-fix-android-dm-input-bar-not-going-to-bo/) |
+| 13  | Restyle DM input bar to full retro 16-bit pixel aesthetic                        | 2026-02-23 | 4b2453e | [13-the-input-pill-on-messages-doesn-t-match](./quick/13-the-input-pill-on-messages-doesn-t-match/) |
 
 ## Notes
 
@@ -75,6 +76,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:54:20Z
-Stopped at: Completed quick task 12 (fix Android DM input bar not going to bottom)
-Resume file: .planning/quick/12-fix-android-dm-input-bar-not-going-to-bo/12-SUMMARY.md
+Last session: 2026-02-23T20:55:45Z
+Stopped at: Completed quick task 13 (restyle DM input bar to retro 16-bit aesthetic)
+Resume file: .planning/quick/13-the-input-pill-on-messages-doesn-t-match/13-SUMMARY.md
