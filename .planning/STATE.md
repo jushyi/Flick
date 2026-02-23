@@ -51,17 +51,18 @@ None currently.
 
 ### Quick Tasks Completed
 
-| #   | Description                                                                      | Date       | Commit  | Directory                                                                                         |
-| --- | -------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
-| 1   | Fix notification badge persisting on Activity tab when all notifications viewed  | 2026-02-23 | d72ed7d | [1-fix-notification-badge-persisting-on-act](./quick/1-fix-notification-badge-persisting-on-act/) |
-| 2   | Fix DM conversation empty state, missing input bar, and profile photos           | 2026-02-23 | b7cb2bc | [2-fix-new-conversation-missing-input-bar-u](./quick/2-fix-new-conversation-missing-input-bar-u/) |
-| 3   | Fix profile photos not showing properly in Messages tab and conversation header  | 2026-02-23 | 23d3042 | [3-fix-profile-photos-not-showing-properly-](./quick/3-fix-profile-photos-not-showing-properly-/) |
-| 4   | Fix conversation screen three-dot menu to use DropdownMenu instead of Alert      | 2026-02-23 | d57bd11 | [4-fix-convo-screen-three-dot-menu-not-open](./quick/4-fix-convo-screen-three-dot-menu-not-open/) |
-| 5   | Fix missing input bar when opening or starting a new conversation                | 2026-02-23 | 23d3042 | [5-fix-missing-input-bar-when-opening-or-st](./quick/5-fix-missing-input-bar-when-opening-or-st/) |
-| 6   | Fix empty conversation text upside-down on Android (platform-conditional scaleY) | 2026-02-23 | 629c3eb | [6-only-on-android-the-empty-text-for-new-c](./quick/6-only-on-android-the-empty-text-for-new-c/) |
-| 7   | Fix missing input bar in conversation view (hide tab bar on nested screens)      | 2026-02-23 | 8843e96 | [7-there-is-no-input-bar-in-the-convo-view-](./quick/7-there-is-no-input-bar-in-the-convo-view-/) |
-| 8   | Fix incoming message spacing near input bar (paddingTop on inverted FlatList)    | 2026-02-23 | 8ad69fd | [8-fix-incoming-message-spacing-near-input-](./quick/8-fix-incoming-message-spacing-near-input-/) |
-| 9   | Fix iOS DM input bar padding when keyboard open and background color mismatch    | 2026-02-23 | e9b700b | [9-fix-ios-dm-input-bar-padding-and-backgro](./quick/9-fix-ios-dm-input-bar-padding-and-backgro/) |
+| #   | Description                                                                      | Date       | Commit  | Directory                                                                                           |
+| --- | -------------------------------------------------------------------------------- | ---------- | ------- | --------------------------------------------------------------------------------------------------- |
+| 1   | Fix notification badge persisting on Activity tab when all notifications viewed  | 2026-02-23 | d72ed7d | [1-fix-notification-badge-persisting-on-act](./quick/1-fix-notification-badge-persisting-on-act/)   |
+| 2   | Fix DM conversation empty state, missing input bar, and profile photos           | 2026-02-23 | b7cb2bc | [2-fix-new-conversation-missing-input-bar-u](./quick/2-fix-new-conversation-missing-input-bar-u/)   |
+| 3   | Fix profile photos not showing properly in Messages tab and conversation header  | 2026-02-23 | 23d3042 | [3-fix-profile-photos-not-showing-properly-](./quick/3-fix-profile-photos-not-showing-properly-/)   |
+| 4   | Fix conversation screen three-dot menu to use DropdownMenu instead of Alert      | 2026-02-23 | d57bd11 | [4-fix-convo-screen-three-dot-menu-not-open](./quick/4-fix-convo-screen-three-dot-menu-not-open/)   |
+| 5   | Fix missing input bar when opening or starting a new conversation                | 2026-02-23 | 23d3042 | [5-fix-missing-input-bar-when-opening-or-st](./quick/5-fix-missing-input-bar-when-opening-or-st/)   |
+| 6   | Fix empty conversation text upside-down on Android (platform-conditional scaleY) | 2026-02-23 | 629c3eb | [6-only-on-android-the-empty-text-for-new-c](./quick/6-only-on-android-the-empty-text-for-new-c/)   |
+| 7   | Fix missing input bar in conversation view (hide tab bar on nested screens)      | 2026-02-23 | 8843e96 | [7-there-is-no-input-bar-in-the-convo-view-](./quick/7-there-is-no-input-bar-in-the-convo-view-/)   |
+| 8   | Fix incoming message spacing near input bar (paddingTop on inverted FlatList)    | 2026-02-23 | 8ad69fd | [8-fix-incoming-message-spacing-near-input-](./quick/8-fix-incoming-message-spacing-near-input-/)   |
+| 9   | Fix iOS DM input bar padding when keyboard open and background color mismatch    | 2026-02-23 | e9b700b | [9-fix-ios-dm-input-bar-padding-and-backgro](./quick/9-fix-ios-dm-input-bar-padding-and-backgro/)   |
+| 10  | Fix iOS conversation scroll on send/receive (auto-scroll inverted FlatList)      | 2026-02-23 | 57c6090 | [10-fix-ios-conversation-scroll-on-send-rece](./quick/10-fix-ios-conversation-scroll-on-send-rece/) |
 
 ## Notes
 
@@ -72,6 +73,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:45:35Z
-Stopped at: Completed quick task 9 (fix iOS DM input bar padding and background color)
-Resume file: .planning/quick/9-fix-ios-dm-input-bar-padding-and-backgro/9-SUMMARY.md
+Last session: 2026-02-23T20:49:25Z
+Stopped at: Completed quick task 10 (fix iOS conversation scroll on send/receive)
+Resume file: .planning/quick/10-fix-ios-conversation-scroll-on-send-rece/10-SUMMARY.md
