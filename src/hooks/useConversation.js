@@ -3,14 +3,18 @@
  *
  * Manages message list and actions for a single conversation including:
  * - Real-time subscription to recent messages
+ * - Real-time subscription to conversation document (readReceipts, metadata)
  * - Cursor-based pagination for older messages
  * - Merged, deduplicated, sorted message list
  * - Send message functionality
- * - Mark as read on mount
+ * - Mark as read on mount (first-read-only, foreground-only)
  * - Notification dismissal for the conversation
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { AppState } from 'react-native';
 import * as Notifications from 'expo-notifications';
+
+import { getFirestore, doc, onSnapshot } from '@react-native-firebase/firestore';
 
 import {
   subscribeToMessages,
@@ -50,10 +54,12 @@ const dismissConversationNotifications = async convId => {
 const useConversation = (conversationId, currentUserId, deletedAtCutoff = null) => {
   const [recentMessages, setRecentMessages] = useState([]);
   const [olderMessages, setOlderMessages] = useState([]);
+  const [conversationDoc, setConversationDoc] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const unsubscribeRef = useRef(null);
+  const convDocUnsubscribeRef = useRef(null);
   const lastDocRef = useRef(null);
 
   logger.debug('useConversation: Hook initialized', {
@@ -116,15 +122,87 @@ const useConversation = (conversationId, currentUserId, deletedAtCutoff = null) 
   }, [conversationId, deletedAtCutoff]);
 
   /**
-   * Mark conversation as read and dismiss notifications on mount
+   * Subscribe to conversation document for real-time readReceipts and metadata
+   */
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const db = getFirestore();
+    const convRef = doc(db, 'conversations', conversationId);
+
+    logger.debug('useConversation: Setting up conversation doc subscription', {
+      conversationId,
+    });
+
+    convDocUnsubscribeRef.current = onSnapshot(
+      convRef,
+      snapshot => {
+        if (snapshot.exists) {
+          const data = { id: snapshot.id, ...snapshot.data() };
+          setConversationDoc(data);
+          logger.debug('useConversation: Conversation doc updated', {
+            conversationId,
+            hasReadReceipts: !!data.readReceipts,
+          });
+        }
+      },
+      error => {
+        logger.error('useConversation: Conversation doc subscription error', {
+          conversationId,
+          error: error.message,
+        });
+      }
+    );
+
+    return () => {
+      if (convDocUnsubscribeRef.current) {
+        convDocUnsubscribeRef.current();
+        convDocUnsubscribeRef.current = null;
+      }
+    };
+  }, [conversationId]);
+
+  /**
+   * Mark conversation as read and dismiss notifications.
+   * First-read-only: only writes when there are unread messages (preserves original read timestamp).
+   * Foreground-only: only writes when app is in foreground (active state).
+   * Also triggers mark-as-read when app returns to foreground with unread messages.
    */
   useEffect(() => {
     if (!conversationId || !currentUserId) return;
 
-    logger.debug('useConversation: Marking as read', { conversationId, currentUserId });
-    markConversationRead(conversationId, currentUserId);
+    const shouldMarkRead = () => {
+      const unread = conversationDoc?.unreadCount?.[currentUserId];
+      return unread > 0 && AppState.currentState === 'active';
+    };
+
+    // Mark as read on mount/focus (if conditions are met)
+    if (shouldMarkRead()) {
+      logger.debug('useConversation: Marking as read', { conversationId, currentUserId });
+      markConversationRead(conversationId, currentUserId);
+    }
+
+    // Always dismiss notifications when entering conversation
     dismissConversationNotifications(conversationId);
-  }, [conversationId, currentUserId]);
+
+    // Listen for app state changes — mark as read when returning to foreground
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        const unread = conversationDoc?.unreadCount?.[currentUserId];
+        if (unread > 0) {
+          logger.debug('useConversation: App returned to foreground, marking as read', {
+            conversationId,
+            currentUserId,
+          });
+          markConversationRead(conversationId, currentUserId);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [conversationId, currentUserId, conversationDoc]);
 
   /**
    * Load older messages (pagination).
@@ -221,6 +299,7 @@ const useConversation = (conversationId, currentUserId, deletedAtCutoff = null) 
 
   return {
     messages,
+    conversationDoc,
     loading,
     loadingMore,
     hasMore,
