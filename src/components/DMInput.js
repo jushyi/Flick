@@ -288,6 +288,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
     paddingHorizontal: 12,
     paddingVertical: Platform.select({ ios: 8, android: 4 }),
+    minHeight: 36,
   },
   textInput: {
     flex: 1,
@@ -319,7 +320,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 212, 255, 0.3)',
     borderRadius: 2,
-    padding: 8,
+    paddingHorizontal: 8,
+    minHeight: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 8,
   },
   uploadingText: {
