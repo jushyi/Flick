@@ -1,24 +1,25 @@
 # Project State: Flick Messaging Upgrade
 
-**Current Phase:** 1 — Context gathered, ready for planning
+**Current Phase:** 1 — Plan 01 complete, executing Plan 02
+**Current Plan:** 2 of 4
 **Last Updated:** 2026-02-23
 
 ## Progress
 
-| Phase                                      | Status           | Started    | Completed |
-| ------------------------------------------ | ---------------- | ---------- | --------- |
-| 1 — Message Infrastructure & Read Receipts | Context Gathered | 2026-02-23 | —         |
-| 2 — Message Interactions                   | Not Started      | —          | —         |
-| 3 — Snap Messages                          | Not Started      | —          | —         |
-| 4 — Snap Streaks                           | Not Started      | —          | —         |
-| 5 — Photo Tag Integration                  | Not Started      | —          | —         |
+| Phase                                      | Status                  | Started    | Completed |
+| ------------------------------------------ | ----------------------- | ---------- | --------- |
+| 1 — Message Infrastructure & Read Receipts | In Progress (1/4 plans) | 2026-02-23 | —         |
+| 2 — Message Interactions                   | Not Started             | —          | —         |
+| 3 — Snap Messages                          | Not Started             | —          | —         |
+| 4 — Snap Streaks                           | Not Started             | —          | —         |
+| 5 — Photo Tag Integration                  | Not Started             | —          | —         |
 
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 0
+- Completed: 4 (INFRA-01, INFRA-02, READ-02, READ-03)
 - In progress: 0
-- Remaining: 37
+- Remaining: 33
 - Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
@@ -37,6 +38,9 @@
 | 2026-02-23 | Conversation-level read receipts         | 1 write per open vs N per-message writes             |
 | 2026-02-23 | Server-authoritative streaks             | Cloud Functions only, never client-side              |
 | 2026-02-23 | Defer screenshot detection to v2         | Avoids native rebuild; iterate on messaging first    |
+| 2026-02-23 | readReceipts at conversation level       | Map field on conversation doc, 1 write per open      |
+| 2026-02-23 | First-read-only guard in hook layer      | Service always writes; hook checks unreadCount > 0   |
+| 2026-02-23 | Foreground-only read receipt writes      | AppState check prevents backgrounded writes          |
 
 ## Blockers
 
@@ -57,5 +61,6 @@ None currently.
 
 ---
 
-Last activity: 2026-02-23 - Phase 1 context gathered (discuss-phase complete)
-Resume file: .planning/phases/01-message-infrastructure-read-receipts/01-CONTEXT.md
+Last session: 2026-02-23T19:33:18Z
+Stopped at: Completed 01-01-PLAN.md (backend infrastructure for read receipts)
+Resume file: .planning/phases/01-message-infrastructure-read-receipts/01-01-SUMMARY.md

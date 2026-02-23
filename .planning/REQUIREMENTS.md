@@ -10,8 +10,8 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 ### Read Receipts
 
 - [ ] **READ-01**: Sender can see "Read" status on their last message when the recipient has opened the conversation
-- [ ] **READ-02**: Read receipt uses a conversation-level `readReceipts` timestamp (not per-message writes) to minimize Firestore costs
-- [ ] **READ-03**: Read indicator updates in real-time via existing conversation document subscription
+- [x] **READ-02**: Read receipt uses a conversation-level `readReceipts` timestamp (not per-message writes) to minimize Firestore costs
+- [x] **READ-03**: Read indicator updates in real-time via existing conversation document subscription
 
 ### Message Reactions
 
@@ -64,8 +64,8 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Firestore security rules updated to allow snap `viewedAt` updates by recipient
-- [ ] **INFRA-02**: Firestore security rules updated to allow `readReceipts` field updates on conversation documents
+- [x] **INFRA-01**: Firestore security rules updated to allow snap `viewedAt` updates by recipient
+- [x] **INFRA-02**: Firestore security rules updated to allow `readReceipts` field updates on conversation documents
 - [ ] **INFRA-03**: Firestore TTL policy configured on messages collection group for `expiresAt` field
 - [ ] **INFRA-04**: Firebase Storage lifecycle rule configured on `snap-photos/` path (7-day auto-delete)
 
@@ -114,46 +114,46 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-| Requirement | Phase   | Status  |
-| ----------- | ------- | ------- |
-| READ-01     | Phase 1 | Pending |
-| READ-02     | Phase 1 | Pending |
-| READ-03     | Phase 1 | Pending |
-| INFRA-01    | Phase 1 | Pending |
-| INFRA-02    | Phase 1 | Pending |
-| DEL-01      | Phase 2 | Pending |
-| DEL-02      | Phase 2 | Pending |
-| DEL-03      | Phase 2 | Pending |
-| REACT-01    | Phase 2 | Pending |
-| REACT-02    | Phase 2 | Pending |
-| REACT-03    | Phase 2 | Pending |
-| REACT-04    | Phase 2 | Pending |
-| REACT-05    | Phase 2 | Pending |
-| REPLY-01    | Phase 2 | Pending |
-| REPLY-02    | Phase 2 | Pending |
-| REPLY-03    | Phase 2 | Pending |
-| REPLY-04    | Phase 2 | Pending |
-| SNAP-01     | Phase 3 | Pending |
-| SNAP-02     | Phase 3 | Pending |
-| SNAP-03     | Phase 3 | Pending |
-| SNAP-04     | Phase 3 | Pending |
-| SNAP-05     | Phase 3 | Pending |
-| SNAP-06     | Phase 3 | Pending |
-| SNAP-07     | Phase 3 | Pending |
-| SNAP-08     | Phase 3 | Pending |
-| INFRA-03    | Phase 3 | Pending |
-| INFRA-04    | Phase 3 | Pending |
-| STRK-01     | Phase 4 | Pending |
-| STRK-02     | Phase 4 | Pending |
-| STRK-03     | Phase 4 | Pending |
-| STRK-04     | Phase 4 | Pending |
-| STRK-05     | Phase 4 | Pending |
-| STRK-06     | Phase 4 | Pending |
-| STRK-07     | Phase 4 | Pending |
-| TAG-01      | Phase 5 | Pending |
-| TAG-02      | Phase 5 | Pending |
-| TAG-03      | Phase 5 | Pending |
-| TAG-04      | Phase 5 | Pending |
+| Requirement | Phase   | Status   |
+| ----------- | ------- | -------- |
+| READ-01     | Phase 1 | Pending  |
+| READ-02     | Phase 1 | Complete |
+| READ-03     | Phase 1 | Complete |
+| INFRA-01    | Phase 1 | Complete |
+| INFRA-02    | Phase 1 | Complete |
+| DEL-01      | Phase 2 | Pending  |
+| DEL-02      | Phase 2 | Pending  |
+| DEL-03      | Phase 2 | Pending  |
+| REACT-01    | Phase 2 | Pending  |
+| REACT-02    | Phase 2 | Pending  |
+| REACT-03    | Phase 2 | Pending  |
+| REACT-04    | Phase 2 | Pending  |
+| REACT-05    | Phase 2 | Pending  |
+| REPLY-01    | Phase 2 | Pending  |
+| REPLY-02    | Phase 2 | Pending  |
+| REPLY-03    | Phase 2 | Pending  |
+| REPLY-04    | Phase 2 | Pending  |
+| SNAP-01     | Phase 3 | Pending  |
+| SNAP-02     | Phase 3 | Pending  |
+| SNAP-03     | Phase 3 | Pending  |
+| SNAP-04     | Phase 3 | Pending  |
+| SNAP-05     | Phase 3 | Pending  |
+| SNAP-06     | Phase 3 | Pending  |
+| SNAP-07     | Phase 3 | Pending  |
+| SNAP-08     | Phase 3 | Pending  |
+| INFRA-03    | Phase 3 | Pending  |
+| INFRA-04    | Phase 3 | Pending  |
+| STRK-01     | Phase 4 | Pending  |
+| STRK-02     | Phase 4 | Pending  |
+| STRK-03     | Phase 4 | Pending  |
+| STRK-04     | Phase 4 | Pending  |
+| STRK-05     | Phase 4 | Pending  |
+| STRK-06     | Phase 4 | Pending  |
+| STRK-07     | Phase 4 | Pending  |
+| TAG-01      | Phase 5 | Pending  |
+| TAG-02      | Phase 5 | Pending  |
+| TAG-03      | Phase 5 | Pending  |
+| TAG-04      | Phase 5 | Pending  |
 
 **Coverage:**
 
