@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 02
-**Current Plan:** 02-06 (4/6 complete)
+**Current Plan:** 02-06 (5/6 complete)
 **Last Updated:** 2026-02-23
 
 ## Progress
@@ -9,7 +9,7 @@
 | Phase                                      | Status                  | Started    | Completed |
 | ------------------------------------------ | ----------------------- | ---------- | --------- |
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —         |
-| 2 — Message Interactions                   | In Progress (4/6 plans) | 2026-02-23 | —         |
+| 2 — Message Interactions                   | In Progress (5/6 plans) | 2026-02-23 | —         |
 | 3 — Snap Messages                          | Not Started             | —          | —         |
 | 4 — Snap Streaks                           | Not Started             | —          | —         |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —         |
@@ -17,7 +17,7 @@
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 16 (INFRA-01, INFRA-02, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-02, REPLY-03, DEL-01, DEL-02, DEL-03)
+- Completed: 17 (INFRA-01, INFRA-02, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03)
 - In progress: 0
 - Remaining: 21
 - Deferred to v2: 5 (screenshot detection)
@@ -56,6 +56,9 @@
 | 2026-02-23 | reactionMap as parameter to handleReaction | Avoids data duplication; useConversation owns the data      |
 | 2026-02-23 | PixelIcon for ReplyPreview cancel button   | Consistent with project-wide icon system, not Ionicons      |
 | 2026-02-23 | runOnJS for gesture worklet callbacks      | Thread-safe JS callbacks from reanimated gesture handlers   |
+| 2026-02-23 | Gesture.Race with Gesture.Exclusive        | Prevents double-tap from triggering single-tap timestamp    |
+| 2026-02-23 | Simplified gesture for deleted messages    | Single-tap only on unsent/deleted prevents invalid actions  |
+| 2026-02-23 | RN core Animated for ReactionBadges fade   | Simple fades don't need reanimated per user decision        |
 
 ## Blockers
 
@@ -93,4 +96,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-23 - Completed 02-05-PLAN.md: ReactionPicker overlay, ReplyPreview bar, PixelConfirmDialog modal
+Last activity: 2026-02-23 - Completed 02-04-PLAN.md: MessageBubble gesture refactor with ReactionBadges, reply mini bubble, deleted states
