@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   messageImage: {
     width: 200,
-    height: 200,
+    height: 250,
     borderRadius: 3,
   },
   timestamp: {
