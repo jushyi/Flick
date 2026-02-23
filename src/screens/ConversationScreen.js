@@ -78,8 +78,42 @@ const ConversationScreen = () => {
     useConversation(conversationId, user.uid, deletedAt);
 
   const flatListRef = useRef(null);
+  const isNearBottomRef = useRef(true);
+  const prevMessageCountRef = useRef(0);
   const [visibleTimestamps, setVisibleTimestamps] = useState(new Set());
   const isReadOnly = route.params?.readOnly || false;
+
+  /**
+   * Scroll the inverted FlatList to offset 0 (newest messages).
+   * Small delay allows FlatList to process the new item before scrolling.
+   */
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }, 100);
+  }, []);
+
+  /**
+   * Track scroll position to determine if user is near the bottom.
+   * In an inverted list, contentOffset.y near 0 = viewing newest messages.
+   * Threshold of 150 (~3-4 message bubbles) provides a comfortable buffer.
+   */
+  const handleScroll = useCallback(event => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    isNearBottomRef.current = offsetY < 150;
+  }, []);
+
+  /**
+   * Auto-scroll to bottom when new messages arrive and user is near bottom.
+   * Does NOT force-scroll when user has scrolled up to read older messages.
+   */
+  useEffect(() => {
+    const currentCount = messages.length;
+    if (currentCount > prevMessageCountRef.current && isNearBottomRef.current) {
+      scrollToBottom();
+    }
+    prevMessageCountRef.current = currentCount;
+  }, [messages.length, scrollToBottom]);
 
   /**
    * Derive read receipt state for the sender's last message.
@@ -276,12 +310,16 @@ const ConversationScreen = () => {
             ListFooterComponent={loadingMore ? <PixelSpinner size="small" /> : null}
             keyboardDismissMode="interactive"
             removeClippedSubviews={true}
-            maintainVisibleContentPosition={
-              Platform.OS === 'ios' ? { minIndexForVisible: 0 } : undefined
-            }
+            onScroll={handleScroll}
+            scrollEventThrottle={100}
           />
         )}
-        <DMInput onSendMessage={handleSendMessage} disabled={isReadOnly} placeholder="Message..." />
+        <DMInput
+          onSendMessage={handleSendMessage}
+          onSend={scrollToBottom}
+          disabled={isReadOnly}
+          placeholder="Message..."
+        />
       </KeyboardAvoidingView>
     </View>
   );

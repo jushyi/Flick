@@ -33,7 +33,7 @@ import { typography } from '../constants/typography';
 
 const MAX_LENGTH = 2000;
 
-const DMInput = ({ onSendMessage, disabled = false, placeholder = 'Message...' }) => {
+const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Message...' }) => {
   const [text, setText] = useState('');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const insets = useSafeAreaInsets();
@@ -56,8 +56,9 @@ const DMInput = ({ onSendMessage, disabled = false, placeholder = 'Message...' }
       if (onSendMessage) {
         onSendMessage(null, gifUrl);
       }
+      onSend?.();
     },
-    [onSendMessage]
+    [onSendMessage, onSend]
   );
 
   useGifSelection(handleGifSelected);
@@ -74,7 +75,8 @@ const DMInput = ({ onSendMessage, disabled = false, placeholder = 'Message...' }
       onSendMessage(trimmedText, null);
     }
     setText('');
-  }, [text, onSendMessage]);
+    onSend?.();
+  }, [text, onSendMessage, onSend]);
 
   const handleSubmitEditing = useCallback(() => {
     handleSend();
@@ -82,7 +84,7 @@ const DMInput = ({ onSendMessage, disabled = false, placeholder = 'Message...' }
 
   const hasText = text.trim().length > 0;
 
-  const bottomPadding = Platform.OS === 'ios' && keyboardVisible ? 4 : Math.max(insets.bottom, 8);
+  const bottomPadding = Platform.OS === 'ios' && keyboardVisible ? 8 : Math.max(insets.bottom, 8);
 
   if (disabled) {
     return (
