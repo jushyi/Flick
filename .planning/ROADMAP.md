@@ -38,7 +38,12 @@
 - Firestore rules allow narrow updates for snap fields and readReceipts (verified with rules tests)
 - No per-message write operations for read tracking
 
-**Estimated plans:** 3-5
+**Plans:** 2 plans
+
+Plans:
+
+- [ ] 01-01-PLAN.md — Backend infrastructure: Firestore rules, messageService readReceipts, useConversation subscription, Cloud Function extension, tests
+- [ ] 01-02-PLAN.md — Read receipt UI: ReadReceiptIndicator component, ConversationScreen integration, ConversationRow status previews + count badge, privacy toggle
 
 ---
 
