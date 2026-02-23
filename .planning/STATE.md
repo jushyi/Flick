@@ -42,6 +42,12 @@
 
 None currently.
 
+### Quick Tasks Completed
+
+| #   | Description                                                                     | Date       | Commit  | Directory                                                                                         |
+| --- | ------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
+| 1   | Fix notification badge persisting on Activity tab when all notifications viewed | 2026-02-23 | d72ed7d | [1-fix-notification-badge-persisting-on-act](./quick/1-fix-notification-badge-persisting-on-act/) |
+
 ## Notes
 
 - No new dependencies needed — `expo-screen-capture` deferred to v2 (avoids native rebuild)
@@ -51,4 +57,4 @@ None currently.
 
 ---
 
-_State initialized: 2026-02-23_
+Last activity: 2026-02-23 - Completed quick task 1: Fix notification badge persisting on Activity tab when all notifications viewed
