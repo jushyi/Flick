@@ -64,6 +64,7 @@ const useMessages = userId => {
           displayName: data.displayName || 'Unknown User',
           profilePhotoURL: data.profilePhotoURL || data.photoURL || null,
           nameColor: data.nameColor || null,
+          readReceiptsEnabled: data.readReceiptsEnabled,
         });
       });
     }
@@ -140,6 +141,7 @@ const useMessages = userId => {
             lastMessage: conv.lastMessage,
             updatedAt: conv.updatedAt,
             unreadCount: conv.unreadCount?.[userId] || 0,
+            readReceipts: conv.readReceipts || {},
             deletedAt: conv.deletedAt,
             participants: conv.participants,
             friendProfile: friendProfile || {

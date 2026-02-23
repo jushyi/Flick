@@ -60,7 +60,7 @@ const makeConversation = (overrides = {}) => ({
     timestamp: { toDate: () => new Date(), toMillis: () => Date.now() - 1000 },
   },
   readReceipts: {},
-  unreadCount: {},
+  unreadCount: 0,
   updatedAt: { toDate: () => new Date(), toMillis: () => Date.now() },
   ...overrides,
 });
@@ -249,7 +249,7 @@ describe('ConversationRow', () => {
   describe('UnreadBadge', () => {
     it('shows unread count number when unreadCount > 0', () => {
       const conversation = makeConversation({
-        unreadCount: { [CURRENT_USER_ID]: 3 },
+        unreadCount: 3,
         lastMessage: {
           senderId: FRIEND_ID,
           text: 'hey',
@@ -271,7 +271,7 @@ describe('ConversationRow', () => {
 
     it('shows "99+" when unread count exceeds 99', () => {
       const conversation = makeConversation({
-        unreadCount: { [CURRENT_USER_ID]: 150 },
+        unreadCount: 150,
         lastMessage: {
           senderId: FRIEND_ID,
           text: 'hey',
@@ -293,7 +293,7 @@ describe('ConversationRow', () => {
 
     it('does not render badge when unreadCount is 0', () => {
       const conversation = makeConversation({
-        unreadCount: { [CURRENT_USER_ID]: 0 },
+        unreadCount: 0,
         lastMessage: {
           senderId: FRIEND_ID,
           text: 'hey',

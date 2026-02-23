@@ -6,6 +6,8 @@ import { isYesterday, format } from 'date-fns';
 
 import PixelIcon from './PixelIcon';
 
+import { useAuth } from '../context/AuthContext';
+
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
@@ -25,15 +27,80 @@ const formatMessageTime = timestamp => {
   return format(date, 'MMM d');
 };
 
+/**
+ * UnreadBadge — Cyan circle with white count number.
+ * Shows "99+" for counts above 99.
+ */
+const UnreadBadge = ({ count }) => {
+  if (!count || count <= 0) return null;
+  const displayText = count > 99 ? '99+' : String(count);
+  return (
+    <View style={styles.unreadBadge}>
+      <Text style={styles.unreadBadgeText}>{displayText}</Text>
+    </View>
+  );
+};
+
 const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, onLongPress }) => {
-  const { lastMessage, updatedAt, unreadCount } = conversation;
+  const { userProfile: currentUserProfile } = useAuth();
+  const { lastMessage, updatedAt, unreadCount, readReceipts } = conversation;
   const { photoURL, displayName } = friendProfile;
-  const hasUnread = unreadCount?.[currentUserId] > 0;
+
+  // unreadCount comes as a number from useMessages (already extracted for current user)
+  const hasUnread = unreadCount > 0;
+
+  // Derive friend ID from participants
+  const friendId = conversation.participants?.find(p => p !== currentUserId);
+
+  // Privacy gate: both users must have readReceiptsEnabled for read status to show
+  const showReadStatus =
+    currentUserProfile?.readReceiptsEnabled !== false &&
+    friendProfile?.readReceiptsEnabled !== false;
+
+  // Check if friend has read the last message
+  const friendReadReceipt = friendId ? readReceipts?.[friendId] : null;
+  const isFriendRead =
+    showReadStatus &&
+    !!friendReadReceipt &&
+    !!lastMessage?.timestamp &&
+    friendReadReceipt.toMillis?.() >= lastMessage.timestamp.toMillis?.();
 
   const getPreviewText = () => {
     if (!lastMessage) return 'No messages yet';
-    if (lastMessage.type === 'gif') return 'Sent a GIF';
-    return lastMessage.text || 'No messages yet';
+    const msgType = lastMessage.type || 'text';
+
+    // Current user sent the last message — show status words
+    if (lastMessage.senderId === currentUserId) {
+      switch (msgType) {
+        case 'text':
+        case 'gif':
+          return isFriendRead ? 'Seen' : 'Sent';
+        case 'snap':
+          return isFriendRead ? 'Opened' : 'Delivered';
+        case 'reaction':
+          return isFriendRead ? 'Seen' : 'Sent';
+        case 'tagged_photo':
+          return isFriendRead ? 'Seen' : 'Sent';
+        default:
+          return 'Sent';
+      }
+    }
+
+    // Friend sent the last message — show descriptive text
+    switch (msgType) {
+      case 'text':
+        return lastMessage.text || 'No messages yet';
+      case 'gif':
+        return 'Sent a GIF';
+      case 'snap':
+        return 'Sent you a snap';
+      case 'reaction':
+        return `Reacted ${lastMessage.emoji} to your message`;
+      case 'tagged_photo':
+        return 'Tagged you in a photo';
+      default:
+        return lastMessage.text || 'No messages yet';
+    }
   };
 
   return (
@@ -67,7 +134,7 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
 
       <View style={styles.rightColumn}>
         <Text style={styles.timestamp}>{formatMessageTime(updatedAt)}</Text>
-        {hasUnread && <View style={styles.unreadDot} />}
+        <UnreadBadge count={unreadCount} />
       </View>
     </TouchableOpacity>
   );
@@ -123,12 +190,21 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontFamily: typography.fontFamily.readable,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  unreadBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: colors.interactive.primary,
+    paddingHorizontal: 4,
     marginTop: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadBadgeText: {
+    fontSize: 10,
+    color: colors.text.inverse,
+    fontFamily: typography.fontFamily.readableBold,
+    textAlign: 'center',
   },
 });
 
