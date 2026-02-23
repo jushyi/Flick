@@ -15,23 +15,23 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 ### Message Reactions
 
-- [ ] **REACT-01**: User can double-tap a message to add a heart reaction
-- [ ] **REACT-02**: User can long-press a message to open a reaction picker with 6 preset emojis
-- [ ] **REACT-03**: Reactions appear as emoji badges below the target message bubble
+- [x] **REACT-01**: User can double-tap a message to add a heart reaction
+- [x] **REACT-02**: User can long-press a message to open a reaction picker with 6 preset emojis
+- [x] **REACT-03**: Reactions appear as emoji badges below the target message bubble
 - [x] **REACT-04**: Reactions are stored as separate `type: 'reaction'` message documents (preserving message immutability)
 - [x] **REACT-05**: Recipient receives a push notification when someone reacts to their message
 
 ### Reply to Message
 
 - [ ] **REPLY-01**: User can swipe right on a message to quote-reply to it
-- [ ] **REPLY-02**: Reply shows a compact preview of the original message above the compose input
+- [x] **REPLY-02**: Reply shows a compact preview of the original message above the compose input
 - [x] **REPLY-03**: Sent reply renders with a quoted message preview above the reply bubble
 - [ ] **REPLY-04**: If the original message was deleted, reply shows "Original message deleted"
 
 ### Message Deletion
 
 - [x] **DEL-01**: User can delete (unsend) their own sent messages
-- [ ] **DEL-02**: Deleted messages show "This message was deleted" for both users
+- [x] **DEL-02**: Deleted messages show "This message was deleted" for both users
 - [x] **DEL-03**: Deletion is a soft-delete (document preserved for moderation) via Cloud Function
 
 ### Snap Messages
@@ -122,15 +122,15 @@ Explicitly excluded. Documented to prevent scope creep.
 | INFRA-01    | Phase 1 | Complete |
 | INFRA-02    | Phase 1 | Complete |
 | DEL-01      | Phase 2 | Complete |
-| DEL-02      | Phase 2 | Pending  |
+| DEL-02      | Phase 2 | Complete |
 | DEL-03      | Phase 2 | Complete |
-| REACT-01    | Phase 2 | Pending  |
-| REACT-02    | Phase 2 | Pending  |
-| REACT-03    | Phase 2 | Pending  |
+| REACT-01    | Phase 2 | Complete |
+| REACT-02    | Phase 2 | Complete |
+| REACT-03    | Phase 2 | Complete |
 | REACT-04    | Phase 2 | Complete |
 | REACT-05    | Phase 2 | Complete |
 | REPLY-01    | Phase 2 | Pending  |
-| REPLY-02    | Phase 2 | Pending  |
+| REPLY-02    | Phase 2 | Complete |
 | REPLY-03    | Phase 2 | Complete |
 | REPLY-04    | Phase 2 | Pending  |
 | SNAP-01     | Phase 3 | Pending  |
