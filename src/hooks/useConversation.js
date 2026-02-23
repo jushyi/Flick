@@ -6,7 +6,9 @@
  * - Real-time subscription to conversation document (readReceipts, metadata)
  * - Cursor-based pagination for older messages
  * - Merged, deduplicated, sorted message list
- * - Send message functionality
+ * - Reaction aggregation (reactionMap keyed by targetMessageId)
+ * - Message filtering (reactions hidden, unsent/deleted-for-me placeholders)
+ * - Send message, reaction, reply, and delete-for-me functionality
  * - Mark as read on mount (first-read-only, foreground-only)
  * - Notification dismissal for the conversation
  */
@@ -20,6 +22,10 @@ import {
   subscribeToMessages,
   loadMoreMessages,
   sendMessage,
+  sendReaction,
+  removeReaction,
+  sendReply,
+  deleteMessageForMe,
   markConversationRead,
 } from '../services/firebase/messageService';
 
@@ -244,17 +250,109 @@ const useConversation = (conversationId, currentUserId, deletedAtCutoff = null) 
   }, [loadingMore, hasMore, conversationId, deletedAtCutoff]);
 
   /**
-   * Merged, deduplicated, and sorted message list.
+   * Merged, deduplicated, and sorted message list (all types including reactions).
    * Combines recentMessages (real-time) and olderMessages (paginated).
    * Sorted by createdAt descending (newest first for inverted FlatList).
+   * This is the raw list used for reactionMap computation before filtering.
    */
-  const messages = useMemo(() => {
+  const mergedMessages = useMemo(() => {
     const map = new Map();
     [...recentMessages, ...olderMessages].forEach(m => map.set(m.id, m));
     return Array.from(map.values()).sort(
       (a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)
     );
   }, [recentMessages, olderMessages]);
+
+  /**
+   * Reaction aggregation map keyed by targetMessageId.
+   * Shape: Map<targetMessageId, { [emoji]: [{ senderId, messageId }] }>
+   *
+   * Processes all reaction-type messages chronologically to determine
+   * the latest reaction per user per target (one reaction per user per message).
+   * A null emoji is a removal sentinel and results in no reaction being shown.
+   */
+  const reactionMap = useMemo(() => {
+    const map = new Map();
+
+    // Sort reaction messages by createdAt ascending so latest reaction per user wins
+    const reactionMsgs = mergedMessages
+      .filter(msg => msg.type === 'reaction' && msg.targetMessageId)
+      .sort((a, b) => {
+        const aTime = a.createdAt?.toMillis
+          ? a.createdAt.toMillis()
+          : a.createdAt?.toDate
+            ? a.createdAt.toDate().getTime()
+            : new Date(a.createdAt || 0).getTime();
+        const bTime = b.createdAt?.toMillis
+          ? b.createdAt.toMillis()
+          : b.createdAt?.toDate
+            ? b.createdAt.toDate().getTime()
+            : new Date(b.createdAt || 0).getTime();
+        return aTime - bTime;
+      });
+
+    // Track latest reaction per user per target (one-reaction-per-user enforcement)
+    const latestByUserTarget = new Map(); // `${targetMessageId}_${senderId}` -> { emoji, messageId, senderId }
+
+    reactionMsgs.forEach(msg => {
+      const key = `${msg.targetMessageId}_${msg.senderId}`;
+      latestByUserTarget.set(key, {
+        emoji: msg.emoji,
+        messageId: msg.id,
+        senderId: msg.senderId,
+      });
+    });
+
+    // Build aggregated map from latest reactions only
+    latestByUserTarget.forEach(({ emoji, messageId, senderId }, key) => {
+      const targetId = key.split('_')[0];
+      if (!emoji) return; // null emoji = removed reaction, skip
+      if (!map.has(targetId)) map.set(targetId, {});
+      const targetReactions = map.get(targetId);
+      if (!targetReactions[emoji]) targetReactions[emoji] = [];
+      targetReactions[emoji].push({ senderId, messageId });
+    });
+
+    return map;
+  }, [mergedMessages]);
+
+  /**
+   * Filtered message list for display.
+   * - Filters OUT reaction-type messages (aggregated in reactionMap instead)
+   * - Replaces unsent messages with placeholder data
+   * - Replaces deleted-for-me messages with placeholder data
+   */
+  const messages = useMemo(() => {
+    const deletedMessages = conversationDoc?.deletedMessages?.[currentUserId] || [];
+
+    return mergedMessages
+      .filter(msg => msg.type !== 'reaction')
+      .map(msg => {
+        // Unsent messages: replace content with placeholder
+        if (msg.unsent === true) {
+          return {
+            ...msg,
+            text: null,
+            gifUrl: null,
+            imageUrl: null,
+            _isUnsent: true,
+          };
+        }
+
+        // Deleted-for-me messages: replace content with placeholder
+        if (deletedMessages.includes(msg.id)) {
+          return {
+            ...msg,
+            text: null,
+            gifUrl: null,
+            imageUrl: null,
+            _isDeletedForMe: true,
+          };
+        }
+
+        return msg;
+      });
+  }, [mergedMessages, conversationDoc, currentUserId]);
 
   /**
    * Send a message in the conversation.
@@ -299,14 +397,68 @@ const useConversation = (conversationId, currentUserId, deletedAtCutoff = null) 
     [conversationId, currentUserId]
   );
 
+  /**
+   * Send a reaction to a message, auto-binding conversationId and currentUserId.
+   *
+   * @param {string} targetMessageId - ID of the message to react to
+   * @param {string} emoji - Reaction emoji key
+   * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+   */
+  const handleSendReaction = useCallback(
+    (targetMessageId, emoji) => sendReaction(conversationId, currentUserId, targetMessageId, emoji),
+    [conversationId, currentUserId]
+  );
+
+  /**
+   * Remove a reaction from a message, auto-binding conversationId and currentUserId.
+   *
+   * @param {string} targetMessageId - ID of the message to remove reaction from
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  const handleRemoveReaction = useCallback(
+    targetMessageId => removeReaction(conversationId, currentUserId, targetMessageId),
+    [conversationId, currentUserId]
+  );
+
+  /**
+   * Send a reply to a message, auto-binding conversationId and currentUserId.
+   *
+   * @param {string} text - Reply text (null if gif/image)
+   * @param {string|null} gifUrl - GIF URL
+   * @param {string|null} imageUrl - Image URL
+   * @param {object} replyToMessage - Original message being replied to
+   * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+   */
+  const handleSendReply = useCallback(
+    (text, gifUrl, imageUrl, replyToMessage) =>
+      sendReply(conversationId, currentUserId, text, gifUrl, imageUrl, replyToMessage),
+    [conversationId, currentUserId]
+  );
+
+  /**
+   * Delete a message for the current user only, auto-binding conversationId and currentUserId.
+   *
+   * @param {string} messageId - ID of the message to delete
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  const handleDeleteForMe = useCallback(
+    messageId => deleteMessageForMe(conversationId, currentUserId, messageId),
+    [conversationId, currentUserId]
+  );
+
   return {
     messages,
+    reactionMap,
     conversationDoc,
     loading,
     loadingMore,
     hasMore,
     loadMore,
     handleSendMessage,
+    handleSendReaction,
+    handleRemoveReaction,
+    handleSendReply,
+    handleDeleteForMe,
   };
 };
 
