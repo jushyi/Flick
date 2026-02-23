@@ -68,10 +68,24 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
 
   const getPreviewText = () => {
     if (!lastMessage) return 'No messages yet';
+
+    const isSender = lastMessage.senderId === currentUserId;
+
+    // Handle unsent messages (race condition: lastMessage still references unsent message)
+    if (lastMessage.unsent) {
+      return isSender ? 'You unsent a message' : 'Message deleted';
+    }
+
+    // Defensive: reaction messages should never be lastMessage (Cloud Function skips them),
+    // but handle gracefully if race condition surfaces
+    if (lastMessage.type === 'reaction') {
+      return isSender ? 'Sent' : 'Sent a message';
+    }
+
     const msgType = lastMessage.type || 'text';
 
     // Current user sent the last message — show status words
-    if (lastMessage.senderId === currentUserId) {
+    if (isSender) {
       switch (msgType) {
         case 'text':
         case 'gif':
@@ -79,8 +93,6 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
           return isFriendRead ? 'Seen' : 'Sent';
         case 'snap':
           return isFriendRead ? 'Opened' : 'Delivered';
-        case 'reaction':
-          return isFriendRead ? 'Seen' : 'Sent';
         case 'tagged_photo':
           return isFriendRead ? 'Seen' : 'Sent';
         default:
@@ -98,8 +110,6 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
         return 'Sent a photo';
       case 'snap':
         return 'Sent you a snap';
-      case 'reaction':
-        return `Reacted ${lastMessage.emoji} to your message`;
       case 'tagged_photo':
         return 'Tagged you in a photo';
       default:

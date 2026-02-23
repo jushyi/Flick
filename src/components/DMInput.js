@@ -13,7 +13,7 @@
  * Intentionally separate from CommentInput — DM input will
  * diverge over time with DM-specific features.
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -33,6 +33,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { openGifPicker, useGifSelection } from './comments/GifPicker';
 
 import PixelIcon from './PixelIcon';
+import ReplyPreview from './ReplyPreview';
 
 import { uploadCommentImage } from '../services/firebase/storageService';
 
@@ -43,11 +44,20 @@ import logger from '../utils/logger';
 
 const MAX_LENGTH = 2000;
 
-const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Message...' }) => {
+const DMInput = ({
+  onSendMessage,
+  onSend,
+  disabled = false,
+  placeholder = 'Message...',
+  replyToMessage = null,
+  replyToSenderName = '',
+  onCancelReply,
+}) => {
   const [text, setText] = useState('');
   const [selectedMedia, setSelectedMedia] = useState(null); // { uri, type: 'image' | 'gif' }
   const [isUploading, setIsUploading] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const inputRef = useRef(null);
   const insets = useSafeAreaInsets();
 
   // Track keyboard visibility to adjust bottom padding per platform
@@ -65,6 +75,13 @@ const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Messa
       hideSub.remove();
     };
   }, []);
+
+  // Auto-focus TextInput when reply mode activates
+  useEffect(() => {
+    if (replyToMessage && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [replyToMessage]);
 
   const handleGifSelected = useCallback(gifUrl => {
     logger.info('DMInput: GIF selected', { urlLength: gifUrl?.length });
@@ -186,6 +203,15 @@ const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Messa
 
   return (
     <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+      {/* Reply Preview - shown when replying to a message */}
+      {replyToMessage && (
+        <ReplyPreview
+          message={replyToMessage}
+          senderName={replyToSenderName}
+          onCancel={onCancelReply}
+        />
+      )}
+
       {/* Media Preview - shown when media is selected */}
       {selectedMedia && (
         <View style={styles.mediaPreviewContainer}>
@@ -211,6 +237,7 @@ const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Messa
         {/* Input Wrapper with text input + image + GIF buttons inside */}
         <View style={styles.inputWrapper}>
           <TextInput
+            ref={inputRef}
             style={styles.textInput}
             placeholder={placeholder}
             placeholderTextColor={colors.text.secondary}
