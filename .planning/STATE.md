@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 02
-**Current Plan:** 02-02 (1/6 complete)
+**Current Plan:** 02-03 (2/6 complete)
 **Last Updated:** 2026-02-23
 
 ## Progress
@@ -9,7 +9,7 @@
 | Phase                                      | Status                  | Started    | Completed |
 | ------------------------------------------ | ----------------------- | ---------- | --------- |
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —         |
-| 2 — Message Interactions                   | In Progress (1/6 plans) | 2026-02-23 | —         |
+| 2 — Message Interactions                   | In Progress (2/6 plans) | 2026-02-23 | —         |
 | 3 — Snap Messages                          | Not Started             | —          | —         |
 | 4 — Snap Streaks                           | Not Started             | —          | —         |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —         |
@@ -17,37 +17,40 @@
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 8 (INFRA-01, INFRA-02, READ-01, READ-02, READ-03, REACT-04, REPLY-03)
+- Completed: 11 (INFRA-01, INFRA-02, READ-01, READ-02, READ-03, REACT-04, REACT-05, REPLY-03, DEL-01, DEL-03)
 - In progress: 0
-- Remaining: 29
+- Remaining: 26
 - Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
 
-| Date       | Decision                                 | Context                                                 |
-| ---------- | ---------------------------------------- | ------------------------------------------------------- |
-| 2026-02-23 | Camera-only snaps (no gallery)           | Keeps authentic, in-the-moment feel                     |
-| 2026-02-23 | View once then gone                      | Ephemeral by design                                     |
-| 2026-02-23 | 3-day streak threshold                   | Low enough to achieve, high enough to mean something    |
-| 2026-02-23 | Streak visual on snap button             | Button changes color + day count                        |
-| 2026-02-23 | Warning color + "!" + push               | Multi-signal before streak expires                      |
-| 2026-02-23 | Caption text only on snaps               | No drawing/doodle for v1                                |
-| 2026-02-23 | Photo attribution on reshare             | "Photo by @user" respects photographer                  |
-| 2026-02-23 | Screenshot notification (not protection) | Deterrent, not security guarantee                       |
-| 2026-02-23 | Reactions as separate message docs       | Preserves message immutability                          |
-| 2026-02-23 | Conversation-level read receipts         | 1 write per open vs N per-message writes                |
-| 2026-02-23 | Server-authoritative streaks             | Cloud Functions only, never client-side                 |
-| 2026-02-23 | Defer screenshot detection to v2         | Avoids native rebuild; iterate on messaging first       |
-| 2026-02-23 | readReceipts at conversation level       | Map field on conversation doc, 1 write per open         |
-| 2026-02-23 | First-read-only guard in hook layer      | Service always writes; hook checks unreadCount > 0      |
-| 2026-02-23 | Foreground-only read receipt writes      | AppState check prevents backgrounded writes             |
-| 2026-02-23 | RN core Animated for read receipt fades  | Simple fades don't need reanimated complexity           |
-| 2026-02-23 | Mutual privacy model for read receipts   | Both users must have receipts enabled for Read to show  |
-| 2026-02-23 | UnreadBadge with 99+ cap                 | Numeric count replaces plain dot, capped for display    |
-| 2026-02-23 | Null-emoji sentinel for reaction removal | Avoids Cloud Function; works within existing rules      |
-| 2026-02-23 | Reply text truncated to 100 chars        | Keeps denormalized preview compact in Firestore docs    |
-| 2026-02-23 | No image URLs in replyTo                 | Avoids signed URL expiry issues; stores type label only |
-| 2026-02-23 | arrayUnion for deleteMessageForMe        | Atomic per-user array updates on conversation doc       |
+| Date       | Decision                                   | Context                                                 |
+| ---------- | ------------------------------------------ | ------------------------------------------------------- |
+| 2026-02-23 | Camera-only snaps (no gallery)             | Keeps authentic, in-the-moment feel                     |
+| 2026-02-23 | View once then gone                        | Ephemeral by design                                     |
+| 2026-02-23 | 3-day streak threshold                     | Low enough to achieve, high enough to mean something    |
+| 2026-02-23 | Streak visual on snap button               | Button changes color + day count                        |
+| 2026-02-23 | Warning color + "!" + push                 | Multi-signal before streak expires                      |
+| 2026-02-23 | Caption text only on snaps                 | No drawing/doodle for v1                                |
+| 2026-02-23 | Photo attribution on reshare               | "Photo by @user" respects photographer                  |
+| 2026-02-23 | Screenshot notification (not protection)   | Deterrent, not security guarantee                       |
+| 2026-02-23 | Reactions as separate message docs         | Preserves message immutability                          |
+| 2026-02-23 | Conversation-level read receipts           | 1 write per open vs N per-message writes                |
+| 2026-02-23 | Server-authoritative streaks               | Cloud Functions only, never client-side                 |
+| 2026-02-23 | Defer screenshot detection to v2           | Avoids native rebuild; iterate on messaging first       |
+| 2026-02-23 | readReceipts at conversation level         | Map field on conversation doc, 1 write per open         |
+| 2026-02-23 | First-read-only guard in hook layer        | Service always writes; hook checks unreadCount > 0      |
+| 2026-02-23 | Foreground-only read receipt writes        | AppState check prevents backgrounded writes             |
+| 2026-02-23 | RN core Animated for read receipt fades    | Simple fades don't need reanimated complexity           |
+| 2026-02-23 | Mutual privacy model for read receipts     | Both users must have receipts enabled for Read to show  |
+| 2026-02-23 | UnreadBadge with 99+ cap                   | Numeric count replaces plain dot, capped for display    |
+| 2026-02-23 | Null-emoji sentinel for reaction removal   | Avoids Cloud Function; works within existing rules      |
+| 2026-02-23 | Reply text truncated to 100 chars          | Keeps denormalized preview compact in Firestore docs    |
+| 2026-02-23 | No image URLs in replyTo                   | Avoids signed URL expiry issues; stores type label only |
+| 2026-02-23 | arrayUnion for deleteMessageForMe          | Atomic per-user array updates on conversation doc       |
+| 2026-02-23 | Batch writes for unsend cascade            | Atomic soft-delete across message, reactions, replies   |
+| 2026-02-23 | Reaction messages skip conversation meta   | No lastMessage/unreadCount update for type:reaction     |
+| 2026-02-23 | Early return for reaction removal sentinel | emoji:null triggers skip all processing in onNewMessage |
 
 ## Blockers
 
@@ -85,4 +88,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-23 - Completed 02-01-PLAN.md: message service functions (sendReaction, removeReaction, sendReply, deleteMessageForMe)
+Last activity: 2026-02-23 - Completed 02-02-PLAN.md: unsendMessage callable, onNewMessage reaction handling, Firestore rules, 8 new tests
