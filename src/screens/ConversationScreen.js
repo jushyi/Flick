@@ -30,7 +30,7 @@ import logger from '../utils/logger';
  */
 const EmptyConversation = ({ displayName }) => (
   <View style={styles.emptyStateWrapper}>
-    <Text style={styles.emptyText}>Say hi to {displayName}!</Text>
+    <Text style={styles.emptyText}>{`Say hi to ${displayName || 'them'}!`}</Text>
   </View>
 );
 
@@ -270,6 +270,7 @@ const ConversationScreen = () => {
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             inverted
+            contentContainerStyle={styles.listContent}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.3}
             ListFooterComponent={loadingMore ? <PixelSpinner size="small" /> : null}
@@ -308,6 +309,9 @@ const styles = StyleSheet.create({
   messageWrapper: {
     paddingHorizontal: 12,
     marginBottom: 4,
+  },
+  listContent: {
+    paddingTop: 8,
   },
   loadingContainer: {
     flex: 1,
