@@ -59,6 +59,7 @@ None currently.
 | 4   | Fix conversation screen three-dot menu to use DropdownMenu instead of Alert      | 2026-02-23 | d57bd11 | [4-fix-convo-screen-three-dot-menu-not-open](./quick/4-fix-convo-screen-three-dot-menu-not-open/) |
 | 5   | Fix missing input bar when opening or starting a new conversation                | 2026-02-23 | 23d3042 | [5-fix-missing-input-bar-when-opening-or-st](./quick/5-fix-missing-input-bar-when-opening-or-st/) |
 | 6   | Fix empty conversation text upside-down on Android (platform-conditional scaleY) | 2026-02-23 | 629c3eb | [6-only-on-android-the-empty-text-for-new-c](./quick/6-only-on-android-the-empty-text-for-new-c/) |
+| 7   | Fix missing input bar in conversation view (hide tab bar on nested screens)      | 2026-02-23 | 8843e96 | [7-there-is-no-input-bar-in-the-convo-view-](./quick/7-there-is-no-input-bar-in-the-convo-view-/) |
 
 ## Notes
 
@@ -69,6 +70,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:17:53Z
-Stopped at: Completed quick task 6 (fix empty conversation text upside-down on Android)
-Resume file: .planning/quick/6-only-on-android-the-empty-text-for-new-c/6-SUMMARY.md
+Last session: 2026-02-23T20:36:09Z
+Stopped at: Completed quick task 7 (fix missing input bar in conversation view)
+Resume file: .planning/quick/7-there-is-no-input-bar-in-the-convo-view-/7-SUMMARY.md
