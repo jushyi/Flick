@@ -26,7 +26,7 @@ const MessageBubble = ({ message, isCurrentUser, showTimestamp, onPress }) => {
         style={[
           styles.bubble,
           isCurrentUser ? styles.bubbleUser : styles.bubbleFriend,
-          (isGif || isImage) && styles.bubbleGif,
+          (isGif || isImage) && styles.bubbleMedia,
         ]}
       >
         {isGif || isImage ? (
@@ -83,9 +83,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.default,
   },
-  bubbleGif: {
-    paddingHorizontal: 4,
-    paddingVertical: 4,
+  bubbleMedia: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderColor: 'transparent',
     overflow: 'hidden',
   },
   text: {

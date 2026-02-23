@@ -169,7 +169,7 @@ const ConversationScreen = () => {
 
       if (dateKey !== lastDate) {
         result.push({
-          type: 'divider',
+          itemType: 'divider',
           id: `divider-${dateKey}`,
           dividerKey: `divider-${dateKey}`,
           timestamp: msgDate,
@@ -177,7 +177,7 @@ const ConversationScreen = () => {
         lastDate = dateKey;
       }
 
-      result.push({ ...msg, type: 'message' });
+      result.push({ ...msg, itemType: 'message' });
     }
 
     return result.reverse(); // Back to newest-first for inverted list
@@ -190,7 +190,7 @@ const ConversationScreen = () => {
    */
   const renderItem = useCallback(
     ({ item }) => {
-      if (item.type === 'divider') {
+      if (item.itemType === 'divider') {
         return <TimeDivider timestamp={item.timestamp} />;
       }
 

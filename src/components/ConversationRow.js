@@ -75,6 +75,7 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
       switch (msgType) {
         case 'text':
         case 'gif':
+        case 'image':
           return isFriendRead ? 'Seen' : 'Sent';
         case 'snap':
           return isFriendRead ? 'Opened' : 'Delivered';
@@ -93,6 +94,8 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
         return lastMessage.text || 'No messages yet';
       case 'gif':
         return 'Sent a GIF';
+      case 'image':
+        return 'Sent a photo';
       case 'snap':
         return 'Sent you a snap';
       case 'reaction':
