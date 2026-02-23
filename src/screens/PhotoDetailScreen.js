@@ -917,7 +917,7 @@ const PhotoDetailScreen = () => {
             )}
           </TouchableOpacity>
 
-          {/* User info - bottom left of photo */}
+          {/* User info + caption - bottom left of photo */}
           <View
             style={[
               styles.userInfoOverlay,
@@ -928,53 +928,39 @@ const PhotoDetailScreen = () => {
               },
             ]}
           >
-            <StrokedNameText
-              style={styles.displayName}
-              nameColor={currentPhoto?.user?.nameColor}
-              numberOfLines={1}
-            >
-              {displayName || 'Unknown User'}
-            </StrokedNameText>
-            <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
-          </View>
-
-          {/* Caption overlay - below username */}
-          {(isEditingCaption || currentPhoto?.caption) && (
-            <View
-              style={[
-                styles.captionOverlay,
-                {
-                  bottom:
-                    (contextMode === 'stories' ? 110 : 100) +
-                    (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0) -
-                    24,
-                },
-              ]}
-            >
-              {isEditingCaption ? (
-                <TextInput
-                  ref={captionInputRef}
-                  style={styles.captionEditInput}
-                  value={captionText}
-                  onChangeText={text => setCaptionText(text.slice(0, 100))}
-                  onBlur={handleSaveCaption}
-                  onEndEditing={handleSaveCaption}
-                  maxLength={100}
-                  multiline
-                  scrollEnabled={false}
-                  keyboardAppearance="dark"
-                  cursorColor={colors.interactive.primary}
-                  selectionColor={colors.interactive.primary}
-                  placeholder="Add a caption..."
-                  placeholderTextColor={colors.text.tertiary}
-                />
-              ) : (
-                <Text style={styles.captionText} numberOfLines={3}>
-                  {currentPhoto.caption}
-                </Text>
-              )}
+            <View style={styles.userInfoRow}>
+              <StrokedNameText
+                style={styles.displayName}
+                nameColor={currentPhoto?.user?.nameColor}
+                numberOfLines={1}
+              >
+                {displayName || 'Unknown User'}
+              </StrokedNameText>
+              <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
             </View>
-          )}
+            {isEditingCaption ? (
+              <TextInput
+                ref={captionInputRef}
+                style={styles.captionEditInput}
+                value={captionText}
+                onChangeText={text => setCaptionText(text.slice(0, 100))}
+                onBlur={handleSaveCaption}
+                onEndEditing={handleSaveCaption}
+                maxLength={100}
+                multiline
+                scrollEnabled={false}
+                keyboardAppearance="dark"
+                cursorColor={colors.interactive.primary}
+                selectionColor={colors.interactive.primary}
+                placeholder="Add a caption..."
+                placeholderTextColor={colors.text.tertiary}
+              />
+            ) : currentPhoto?.caption ? (
+              <Text style={styles.captionText} numberOfLines={3}>
+                {currentPhoto.caption}
+              </Text>
+            ) : null}
+          </View>
 
           {/* Tag button - visible for owner always, non-owner only when tags exist */}
           {(isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
@@ -1218,7 +1204,7 @@ const PhotoDetailScreen = () => {
                 )}
               </View>
 
-              {/* User info - bottom offset matches incoming face calculation */}
+              {/* User info + caption - bottom offset matches incoming face calculation */}
               <View
                 style={[
                   styles.userInfoOverlay,
@@ -1227,31 +1213,22 @@ const PhotoDetailScreen = () => {
                   },
                 ]}
               >
-                <StrokedNameText
-                  style={styles.displayName}
-                  nameColor={snapshotRef.current.nameColor}
-                  numberOfLines={1}
-                >
-                  {snapshotRef.current.displayName || 'Unknown User'}
-                </StrokedNameText>
-                <Text style={styles.timestamp}>{getTimeAgo(snapshotRef.current.capturedAt)}</Text>
-              </View>
-
-              {/* Caption - snapshot (read-only) */}
-              {snapshotRef.current.caption && (
-                <View
-                  style={[
-                    styles.captionOverlay,
-                    {
-                      bottom: (snapshotRef.current.contextMode === 'stories' ? 110 : 100) - 24,
-                    },
-                  ]}
-                >
+                <View style={styles.userInfoRow}>
+                  <StrokedNameText
+                    style={styles.displayName}
+                    nameColor={snapshotRef.current.nameColor}
+                    numberOfLines={1}
+                  >
+                    {snapshotRef.current.displayName || 'Unknown User'}
+                  </StrokedNameText>
+                  <Text style={styles.timestamp}>{getTimeAgo(snapshotRef.current.capturedAt)}</Text>
+                </View>
+                {snapshotRef.current.caption ? (
                   <Text style={styles.captionText} numberOfLines={3}>
                     {snapshotRef.current.caption}
                   </Text>
-                </View>
-              )}
+                ) : null}
+              </View>
 
               {/* Tag button */}
               {(snapshotRef.current.isOwnPhoto ||

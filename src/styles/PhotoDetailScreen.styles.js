@@ -102,6 +102,10 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     left: 22,
     right: 56,
+    flexDirection: 'column',
+    gap: 2,
+  },
+  userInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -123,12 +127,6 @@ export const styles = StyleSheet.create({
     textShadowColor: colors.overlay.darker,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
-  },
-  // Caption overlay - positioned below userInfoOverlay
-  captionOverlay: {
-    position: 'absolute',
-    left: 22,
-    right: 56,
   },
   captionText: {
     fontSize: typography.size.md,
