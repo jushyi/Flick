@@ -1,352 +1,546 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-01-26
+**Analysis Date:** 2026-02-23
 
 ## Naming Patterns
 
 **Files:**
 
-- PascalCase for React components: `FeedScreen.js`, `PhotoDetailModal.js`
-- camelCase for utilities and services: `logger.js`, `photoService.js`
-- `.test.js` suffix for test files
-- `.styles.js` suffix for style modules
+- Components: PascalCase (`Button.js`, `FeedPhotoCard.js`, `CameraScreen.js`)
+- Screens: PascalCase with `Screen` suffix (`CameraScreen.js`, `FeedScreen.js`, `ActivityScreen.js`)
+- Services: camelCase (`photoService.js`, `darkroomService.js`, `audioPlayer.js`, `uploadQueueService.js`)
+- Hooks: camelCase with `use` prefix (`useCamera.js`, `useDarkroom.js`, `useFeedPhotos.js`)
+- Utilities: camelCase (`logger.js`, `haptics.js`, `timeUtils.js`)
+- Styles: camelCase with `.styles` suffix (`CameraScreen.styles.js`)
+- Constants: camelCase (`colors.js`, `typography.js`, `spacing.js`, `layout.js`)
 
 **Functions:**
 
-- camelCase for all functions: `uploadPhoto`, `getDevelopingPhotoCount`
-- No special prefix for async functions
-- handle\* for event handlers: `handleCapturePhoto`, `handleReaction`
+- All functions: camelCase (`createPhoto`, `getUserPhotos`, `calculateNextRevealTime`, `playPreview`)
+- Event handlers: `handle` prefix (`handleCapturePhoto`, `handlePress`, `handleLogin`)
+- Boolean returns: `is`/`has` prefix (`isDarkroomReady`, `hasPermission`, `hasUltraWide`, `containsSensitiveData`)
+- Private/module-level helpers: same camelCase (no leading underscore)
 
 **Variables:**
 
-- camelCase for variables: `userProfile`, `darkroomCount`
-- UPPER_SNAKE_CASE for constants: `REACTION_DEBOUNCE_MS`, `GIPHY_API_KEY`
-- No underscore prefix for private members
+- Local variables: camelCase (`userId`, `photoUri`, `currentPlayer`, `selectedLens`)
+- Constants (module-level): UPPER_SNAKE_CASE for static values (`TAB_BAR_HEIGHT = 88`, `CAMERA_HEIGHT`, `CARD_WIDTH`)
+- State variables: camelCase (`count`, `selectedLens`, `fadeAnim`, `pendingDeletion`)
+- Refs (useRef): camelCase with `Ref` suffix (`currentPlayerRef`, `flatListRef`, `backgroundedAtRef`)
+- Animated values: camelCase with `Anim` suffix (`scaleAnim`, `fanSpreadAnim`)
 
-**Types:**
+**Types & Objects:**
 
-- Not applicable (JavaScript, not TypeScript)
+- Context objects: PascalCase (`AuthContext`, `PhotoDetailContext`, `ThemeContext`)
+- Firestore document paths: lowercase with slash notation (`'photos'`, `'users'`, `'conversations/{id}/messages'`)
+- Firestore collection names: lowercase plural (`photos`, `users`, `albums`, `notifications`)
+- Object keys in Firestore: camelCase (`userId`, `photoURL`, `capturedAt`, `photoState`, `reactionCount`)
+- Status enums: lowercase (`'developing'`, `'revealed'`, `'pending'`, `'accepted'`)
 
 ## Code Style
 
 **Formatting:**
 
-- Prettier with configuration in `eslint.config.js`
-- Single quotes for strings
-- Trailing commas in multiline
-- 2 space indentation
-- ~100 character line length (Prettier default)
+- Tool: Prettier 3.8.1
+- Semicolons: Always included
+- Single quotes: Required for strings
+- Trailing commas: ES5 style (commas where valid in ES5)
+- Tab width: 2 spaces
+- Print width: 100 characters
+- Bracket spacing: Enabled (objects use `{ key: value }` not `{key: value}`)
+- Arrow function parens: Omitted when single parameter (`e => {}` not `(e) => {}`)
+
+**Prettier config (.prettierrc):**
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "arrowParens": "avoid"
+}
+```
 
 **Linting:**
 
-- ESLint 9.x with flat config: `eslint.config.js`
-- Extends eslint-config-expo (React Native rules)
-- Prettier integration via eslint-plugin-prettier
-- Run: `npm run lint` or `npm run lint:fix`
+- Tool: ESLint 9.39.2 with expo config
+- Config: `eslint.config.js` (flat config format, not legacy .eslintrc)
+- Base: `eslint-config-expo` provides React Native globals and best practices
+- Integration: `eslint-plugin-prettier` enforces Prettier rules
+- Ignored paths: `dist/`, `node_modules/`, `android/`, `ios/`, `functions/`, `patches/`, `scripts/`
+- Jest globals: Auto-configured for `__tests__/**/*.js` files
+- Custom rules:
+  - `import/no-unresolved` allows `@expo/vector-icons` and `@env` (resolve at runtime)
+  - `import/namespace` disabled for react-native (TypeScript parse issues)
 
-**Pre-commit:**
+**Git hooks:**
 
-- Husky + lint-staged
-- Auto-runs ESLint and Prettier on staged files
+- Tool: husky 9.1.7 + lint-staged 16.2.7
+- Pre-commit: Automatically lints and formats staged `*.{js,jsx}` files
+- Also formats: `*.{json,md}` files via Prettier
+- Run commands manually:
+  - `npm run lint` - Check for errors
+  - `npm run lint:fix` - Auto-fix errors
+  - `npm run format` - Format all files
 
 ## Import Organization
 
-**Order:**
+**Order (strict - enforced by eslint-config-expo):**
 
-1. React and React Native imports
-2. External packages (expo-_, @react-navigation/_, etc.)
-3. Internal modules (context, services, components)
-4. Relative imports (./_, ../_)
-5. Constants and utils last
+1. React and React Native core imports
+2. Third-party packages (Firebase, navigation, Expo, etc.)
+3. Internal services (`src/services/`)
+4. Components (`src/components/`)
+5. Context and hooks (`src/context/`, `src/hooks/`)
+6. Utilities and constants (`src/utils/`, `src/constants/`)
 
-**Grouping:**
+**Blank lines:** One blank line between each group.
 
-- Logical grouping with blank lines between categories
-- No strict alphabetical sorting enforced
+**Example from FeedScreen.js:**
 
-**Path Aliases:**
+```javascript
+// Group 1: React and React Native
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+  Dimensions,
+  RefreshControl,
+  AppState,
+  Platform,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-- `@/` maps to `src/` (configured in jest.config.js for tests)
-- `@env` for environment variables via react-native-dotenv
+// Group 2: Third-party packages
+import { useNavigation } from '@react-navigation/native';
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  limit,
+  onSnapshot,
+} from '@react-native-firebase/firestore';
+import { Image } from 'expo-image';
+
+// Group 3: Services
+import useFeedPhotos from '../hooks/useFeedPhotos';
+import { toggleReaction, getFriendStoriesData } from '../services/firebase/feedService';
+import { getFriendUserIds } from '../services/firebase/friendshipService';
+
+// Group 4: Components
+import FeedPhotoCard from '../components/FeedPhotoCard';
+import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
+import { FriendStoryCard } from '../components';
+
+// Group 5: Context and hooks
+import { useAuth } from '../context/AuthContext';
+import { usePhotoDetailActions } from '../context/PhotoDetailContext';
+import { useScreenTrace } from '../hooks/useScreenTrace';
+
+// Group 6: Constants and utilities
+import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
+import logger from '../utils/logger';
+```
+
+**Path aliases:**
+
+- Not used in this codebase - all imports use relative paths (`../services/`, `../components/`)
+- Jest uses `@/` → `src/` for test imports (optional, relative paths also work)
 
 ## Error Handling
 
-**Patterns:**
+**Pattern:** Service layer returns standardized result objects
 
-- Services return `{ success: true, data }` or `{ success: false, error }` objects
-- Callers check `result.success` before using data
-- Try/catch in async functions, log errors via logger
+- All Firebase services in `src/services/firebase/` return `{ success, error }` or `{ success, data }` objects
+- Services never throw errors - always catch exceptions and return structured response
+- Components check `success` flag before using data
 
-**Error Types:**
-
-- Throw on unexpected errors (caught by ErrorBoundary)
-- Return error objects for expected failures
-- Log all errors with context: `logger.error('Context: Error message', { details })`
-
-**Example:**
+**Example from photoService.js:**
 
 ```javascript
-try {
-  const result = await someService();
-  if (!result.success) {
-    logger.warn('Operation failed', { error: result.error });
-    return { success: false, error: result.error };
+export const createPhoto = async (userId, photoUri) => {
+  try {
+    const photosCollection = collection(db, 'photos');
+    const photoRef = await addDoc(photosCollection, {
+      userId,
+      imageURL: '',
+      capturedAt: serverTimestamp(),
+      status: 'developing',
+    });
+    const photoId = photoRef.id;
+
+    logger.debug('PhotoService.createPhoto: Document created', { photoId });
+    const uploadResult = await uploadPhoto(userId, photoId, photoUri);
+
+    if (!uploadResult.success) {
+      logger.warn('PhotoService.createPhoto: Upload failed', { error: uploadResult.error });
+      await deleteDoc(photoRef);
+      return { success: false, error: uploadResult.error };
+    }
+
+    return { success: true, photoId };
+  } catch (error) {
+    logger.error('PhotoService.createPhoto: Failed', { userId, error: error.message });
+    return { success: false, error: error.message };
   }
-  return { success: true, data: result.data };
-} catch (error) {
-  logger.error('Unexpected error', { error: error.message });
-  return { success: false, error: error.message };
+};
+```
+
+**Usage in components:**
+
+```javascript
+const result = await createPhoto(userId, photoUri);
+if (!result.success) {
+  logger.error('Photo upload failed', { error: result.error });
+  // Show user-facing error message
+  return;
 }
+// Proceed with result.photoId
+```
+
+**Try-catch:** Only used in service functions and async setup (e.g. AuthContext). Not used for control flow in components.
+
+**Error logging:** Always include context and error message:
+
+```javascript
+logger.error('PhotoService.createPhoto: Failed', { userId, error: error.message });
 ```
 
 ## Logging
 
-**Framework:**
+**Framework:** Custom logger utility at `src/utils/logger.js`
 
-- Custom logger utility: `src/utils/logger.js`
-- Levels: debug, info, warn, error
-
-**Patterns:**
-
-- Structured logging with context objects
-- Log at service boundaries and user actions
-- Automatic sensitive data sanitization
-- `logger.debug()` for development, `logger.info()` for important events
-- `logger.error()` always includes error details
-
-**Example:**
+**Never use `console.log()` directly.** Always use the logger:
 
 ```javascript
-logger.info('PhotoService.uploadPhoto: Starting upload', { userId });
-logger.debug('PhotoService.uploadPhoto: Processing', { step: 'compress' });
-logger.error('PhotoService.uploadPhoto: Failed', { error: error.message });
+import logger from '../utils/logger';
+
+logger.debug('Detailed info', { userId, count }); // Dev only
+logger.info('Important events', { photoId }); // Production
+logger.warn('Recoverable issues', { error }); // Production
+logger.error('Failures', { error: error.message }); // Production
+```
+
+**Logger behavior:**
+
+- Development (**DEV**): Shows all levels (DEBUG, INFO, WARN, ERROR)
+- Production: Shows only WARN and ERROR
+- Automatically sanitizes sensitive data (tokens, passwords, keys, fcmToken, etc.) — redacts as `[REDACTED]`
+- Strips `console.log` from production via babel `transform-remove-console` plugin
+
+**Log levels:**
+
+- `debug` - Dev-only verbose info (stripped in production)
+- `info` - Important app events that should be tracked
+- `warn` - Recoverable issues that need attention
+- `error` - Failures that affect functionality
+
+**Naming pattern:** Log messages start with module/function path for traceability:
+
+```javascript
+logger.debug('PhotoService.createPhoto: Starting', { userId });
+logger.error('PhotoService.createPhoto: Failed', { userId, error: error.message });
+logger.info('useCamera.ios: selectedLens changed', { selectedLens });
+logger.warn('darkroomService: Reveal timing calculation skipped', { userId });
 ```
 
 ## Comments
 
 **When to Comment:**
 
-- Explain why, not what
-- Document business rules (e.g., reveal timing, triage flow)
-- Complex algorithms or workarounds
-- TODOs with issue context
+- File header: JSDoc block explaining module purpose, key functions, and usage
+- Complex logic: Explain the "why", not the "what" (code should be self-explanatory)
+- TODOs/FIXMEs: Use when there's a known limitation or future work needed
+- Retro/artistic decisions: Explain pixel art styling or CRT aesthetic choices
+- Workarounds: Document why a non-obvious approach was chosen
 
-**JSDoc:**
+**JSDoc/TSDoc:**
 
-- Used in Cloud Functions for function documentation
-- Optional in app code (function names should be self-documenting)
+- File headers: Always include. Describe module purpose and key exports.
+- Public functions: Always document parameters and return values with types.
+- Complex utility functions: Document edge cases and special behaviors.
+- Private/internal functions: Comments optional if logic is self-evident.
 
-**TODO Comments:**
+**Example from audioPlayer.js:**
 
-- Format: `// TODO: description`
-- Include phase reference if applicable
-- Example: `// TODO: In Phase 10, send to Sentry`
+```javascript
+/**
+ * Audio Player Service
+ *
+ * Provides audio preview playback for profile songs with:
+ * - Clip range support (start/end positions)
+ * - Progress callbacks
+ *
+ * Uses expo-audio for cross-platform audio support.
+ */
+
+/**
+ * Play a preview clip with optional start/end positions and fade out.
+ *
+ * @param {string} previewUrl - URL of the audio preview
+ * @param {Object} options - Playback options
+ * @param {number} options.clipStart - Start position in seconds (default 0)
+ * @param {number} options.clipEnd - End position in seconds (default 30)
+ * @param {function} options.onProgress - Progress callback (receives 0-1)
+ * @param {function} options.onComplete - Called when playback ends
+ * @returns {Promise<AudioPlayer|null>} Player object for external control
+ */
+export const playPreview = async (previewUrl, options = {}) => {
+  const { clipStart = 0, clipEnd = 30, onProgress, onComplete } = options;
+  // ...
+};
+```
+
+**Example from colors.js (artistic decision):**
+
+```javascript
+/**
+ * Flick App Color System — 16-Bit Retro Edition
+ * ================================================
+ * CRT-inspired dark theme with neon pixel accents.
+ * Deep indigo backgrounds evoke vintage monitors,
+ * electric cyan/magenta/green accents channel SNES-era palettes.
+ *
+ * COLOR HIERARCHY:
+ * - background.primary (#0A0A1A): CRT navy-black - all screen backgrounds
+ * - background.secondary/card (#161628): Dark indigo panel for content blocks
+ * - background.tertiary (#252540): Elevated surface for nested elements
+ */
+```
 
 ## Function Design
 
 **Size:**
 
-- Keep functions focused on single responsibility
-- Extract helpers for complex logic
-- No strict line limit enforced
+- Target: 30-50 lines max for readability
+- Rationale: React Native/gesture code can be longer (50-100 for complex animations)
+- Break into sub-functions if exceeding 100 lines
+- Helper functions can live in same file (above main export)
 
 **Parameters:**
 
-- Destructure objects in parameters where appropriate
-- Use options object for functions with many parameters
+- Limit to 3-4 positional params
+- Use object destructuring for options: `const { clipStart = 0, clipEnd = 30 } = options`
+- Always provide defaults for optional params
+- Destructure in function signature for better readability
 
 **Return Values:**
 
-- Consistent `{ success, data/error }` pattern for services
-- Return early for guard clauses
-- Explicit returns (no implicit undefined)
+- Services: Return `{ success, data/error }` objects
+- Hooks: Return state + handlers in object or array (depends on usage pattern)
+- Components: Return JSX (implicit React.Fragment rules apply)
+- Utilities: Return single value or destructurable object
+
+**Example from Button.js:**
+
+```javascript
+const Button = ({
+  title,
+  onPress,
+  variant = 'primary', // Destructured with default
+  disabled = false,
+  loading = false,
+  style,
+  testID,
+}) => {
+  const getButtonStyle = () => {
+    switch (variant) {
+      case 'primary':
+        return [styles.button, styles.primaryButton];
+      case 'secondary':
+        return [styles.button, styles.secondaryButton];
+      default:
+        return [styles.button, styles.primaryButton];
+    }
+  };
+
+  return (
+    <TouchableOpacity style={[...getButtonStyle(), style]} onPress={onPress}>
+      {loading ? <PixelSpinner /> : <Text>{title?.toUpperCase()}</Text>}
+    </TouchableOpacity>
+  );
+};
+```
 
 ## Module Design
 
 **Exports:**
 
-- Named exports preferred
-- Default exports for React components
-- Barrel files (`index.js`) for directory exports
+- Named exports: Preferred for utilities and services
+- Default export: Components only (one default export per file)
+- Barrel files: Used in `src/components/index.js` and `src/context/index.js`
 
-**Services:**
-
-- Export individual functions, not classes
-- Functions are stateless (state in Firestore)
-
-**Components:**
-
-- One component per file (main component)
-- Helper components can be in same file if small
-- Export default for main component
-
-## Firestore Service Patterns
-
-**Query Construction:**
-
-- Use server-side `where()` clauses for filtering - don't fetch all data and filter client-side
-- Composite indexes are defined in `firestore.indexes.json` for multi-field queries
-- Use `Timestamp.fromDate()` for date comparisons in queries
-
-**Example (correct):**
+**Barrel file example (src/components/index.js):**
 
 ```javascript
-// Server-side filtering with composite index
-const cutoff = Timestamp.fromDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-const q = query(
-  collection(db, 'photos'),
-  where('userId', '==', userId),
-  where('photoState', '==', 'journal'),
-  where('capturedAt', '>=', cutoff)
-);
+export { default as Button } from './Button';
+export { default as Card } from './Card';
+export { FriendStoryCard } from './FriendStoryCard';
+export { GifPicker } from './comments/GifPicker';
 ```
 
-**Anti-pattern (avoid):**
+**File structure:**
+
+- One component/hook/service per file (single responsibility)
+- Exception: Tightly-coupled utilities may live in same file (e.g., helper functions above main export)
+- Large modules (500+ lines) should be split: `PhotoDetail.js` + `PhotoDetail.styles.js`
+
+**Platform-specific files:**
+
+- Used for significant platform differences (not just style tweaks)
+- Extensions: `.ios.js`, `.android.js`, `.web.js` (in that precedence order)
+- Fallback: Base `.js` file auto-selected if platform-specific unavailable
+- Metro resolver automatically picks correct file — **no import changes needed**
+
+**Example from useCamera:**
+
+```
+useCamera.ios.js       ← iOS-specific (lens detection, AVFoundation)
+useCamera.android.js   ← Android-specific (different zoom levels)
+useCameraBase.js       ← Shared base logic
+useCamera.js           ← Not present; Metro resolves platform-specific
+```
+
+**Usage:**
 
 ```javascript
-// DON'T: Fetch all data then filter client-side
-const snapshot = await getDocs(collection(db, 'photos'));
-const filtered = snapshot.docs.filter(doc => doc.data().capturedAt >= cutoff);
+// Same import works for both platforms — Metro picks the right file
+import useCamera from '../hooks/useCamera';
 ```
 
-**Client-Side Filtering:**
+**Re-exports from platform files:**
 
-- Only for user-specific logic that can't be expressed in Firestore (e.g., `userId !== currentUserId`)
-- Only for small result sets where index complexity isn't justified
+- Export constants from base file to avoid duplication:
 
-## React/React Native Patterns
+```javascript
+// useCamera.ios.js
+import useCameraBase, {
+  TAB_BAR_HEIGHT,
+  FOOTER_HEIGHT,
+  CAMERA_HEIGHT,
+  FLOATING_BUTTON_SIZE,
+} from './useCameraBase';
 
-**State Management:**
+// Re-export so CameraScreen can import from single path
+export { TAB_BAR_HEIGHT, FOOTER_HEIGHT, CAMERA_HEIGHT, FLOATING_BUTTON_SIZE };
 
-- useState for local UI state
-- useContext for global state (auth, theme)
-- No external state library (Redux, MobX)
+const useCamera = () => {
+  /* iOS implementation */
+};
+export default useCamera;
+```
 
-**Effects:**
+## StyleSheet & Styles
 
-- useEffect for side effects and subscriptions
-- Cleanup functions for listeners/intervals
-- Dependency arrays always specified
+**Organization:**
 
-**Navigation:**
+- Separate `.styles.js` files for screens and large/complex components
+- Define StyleSheet at bottom of component file for simple components
+- Reference design system constants: `colors.js`, `spacing.js`, `typography.js`, `layout.js`
+- Never hardcode values — always use constants
 
-- React Navigation hooks: useNavigation, useRoute
-- navigationRef for programmatic navigation
+**Naming:**
 
-## Color System
+- StyleSheet object: `styles`
+- Style properties: camelCase matching React Native props
+- Classes/variants: Descriptive names (`primaryButton`, `disabledButton`, `zoomButtonActive`)
 
-**Source of Truth:** `src/constants/colors.js`
-**Reference Documentation:** `src/constants/COLOR_REFERENCE.md`
+**Example from CameraScreen.styles.js:**
 
-**Rule:** ALWAYS use color constants from `colors.js`. NEVER hardcode hex, rgb, or rgba values.
+```javascript
+import { Platform, StyleSheet, Dimensions } from 'react-native';
+import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
+import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
 
-**Import Pattern:**
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const TAB_BAR_HEIGHT = layout.dimensions.tabBarHeight;
+const FOOTER_HEIGHT = layout.dimensions.footerHeight;
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background.primary,
+  },
+  cameraContainer: {
+    position: 'absolute',
+    height: CAMERA_HEIGHT,
+    borderBottomLeftRadius: CAMERA_BORDER_RADIUS,
+  },
+  floatingButton: {
+    backgroundColor: colors.overlay.dark,
+    width: FLOATING_BUTTON_SIZE,
+    borderRadius: FLOATING_BUTTON_SIZE / 2,
+  },
+  zoomButtonActive: {
+    backgroundColor: colors.overlay.lightBorder,
+  },
+});
+```
+
+**Platform-specific styles:**
+
+- Use `Platform.select()` for small inline differences
+- Separate `.styles.js` files if major divergence (rarely needed)
+- Always use design system colors/spacing — never hardcoded values
+- Always use `Platform.OS === 'android'` guards for Android-specific code
+
+```javascript
+import { Platform } from 'react-native';
+
+const behavior = Platform.select({ ios: 'padding', android: 'height' });
+const paddingTop = Platform.OS === 'android' ? 24 : 0;
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop,
+  },
+});
+```
+
+## Design System Constants
+
+**Location:** `src/constants/`
+
+**Files & Purpose:**
+
+- `colors.js`: Color palette (backgrounds, text, icons, status, brand, overlays)
+- `spacing.js`: Margin/padding scale (xs, sm, md, lg, xl, xxl)
+- `typography.js`: Font families, sizes, weights
+- `layout.js`: Border radius, dimensions (screen heights, button sizes, borders)
+
+**Usage pattern:**
 
 ```javascript
 import { colors } from '../constants/colors';
-// or from deeper directories:
-import { colors } from '../../constants/colors';
+import { spacing } from '../constants/spacing';
+import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
+
+const styles = StyleSheet.create({
+  button: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.interactive.primary,
+    borderRadius: layout.borderRadius.sm,
+    fontFamily: typography.fontFamily.bodyBold,
+    fontSize: typography.size.md,
+  },
+});
 ```
 
-**Background Hierarchy:**
-
-| Constant                      | Usage                                       |
-| ----------------------------- | ------------------------------------------- |
-| `colors.background.primary`   | All screen backgrounds (pure black #000000) |
-| `colors.background.secondary` | Cards, sheets, bottom sheets, modals        |
-| `colors.background.card`      | Alias for secondary (explicit card usage)   |
-| `colors.background.tertiary`  | Nested elements needing more contrast       |
-
-**Text Hierarchy:**
-
-| Constant                | Usage                            |
-| ----------------------- | -------------------------------- |
-| `colors.text.primary`   | Main text, headings, titles      |
-| `colors.text.secondary` | Labels, descriptions, muted text |
-| `colors.text.tertiary`  | Very muted helper text           |
-
-**Icon Colors (NOT purple):**
-
-| Constant                | Usage                   |
-| ----------------------- | ----------------------- |
-| `colors.icon.primary`   | Default icons (white)   |
-| `colors.icon.secondary` | Muted/secondary icons   |
-| `colors.icon.tertiary`  | Very muted icons        |
-| `colors.icon.inactive`  | Disabled/inactive icons |
-
-**Interactive Elements:**
-
-| Constant                       | Usage                                        |
-| ------------------------------ | -------------------------------------------- |
-| `colors.interactive.primary`   | Primary buttons, active tabs, focused inputs |
-| `colors.brand.purple`          | Accent color for highlights                  |
-| `colors.interactive.secondary` | Secondary buttons                            |
-
-**Correct Usage Examples:**
-
-```javascript
-// Screen container - REQUIRED for all screens
-container: {
-  flex: 1,
-  backgroundColor: colors.background.primary, // ✓ Pure black
-}
-
-// Card or bottom sheet
-cardContainer: {
-  backgroundColor: colors.background.secondary, // ✓ Subtle lift
-  borderRadius: 12,
-}
-
-// Text
-titleText: {
-  color: colors.text.primary, // ✓ White text
-}
-
-// Icon - use icon colors, NOT purple
-<Ionicons
-  name="settings-outline"
-  size={24}
-  color={colors.icon.primary} // ✓ White icon
-/>
-```
-
-**Anti-patterns (DO NOT DO):**
-
-```javascript
-// ✗ WRONG: Hardcoded hex values
-container: {
-  backgroundColor: '#000000', // ✗ Use colors.background.primary
-}
-
-cardContainer: {
-  backgroundColor: '#111111', // ✗ Use colors.background.secondary
-}
-
-titleText: {
-  color: '#FFFFFF', // ✗ Use colors.text.primary
-}
-
-// ✗ WRONG: Purple icons
-<Ionicons
-  name="settings-outline"
-  color="#8B5CF6" // ✗ Icons use colors.icon.*, NOT purple
-/>
-
-// ✗ WRONG: Inline rgba
-overlay: {
-  backgroundColor: 'rgba(0, 0, 0, 0.5)', // ✗ Use colors.overlay.dark
-}
-```
-
-**Key Rules:**
-
-1. Every screen must have `backgroundColor: colors.background.primary`
-2. Cards/sheets use `colors.background.secondary`
-3. Icons use `colors.icon.*` (white/gray), NEVER purple
-4. Purple is reserved for interactive elements and highlights only
-5. No hardcoded color values anywhere - always use constants
+**Key rule:** NEVER hardcode colors, spacing, or dimensions. Always reference constants.
 
 ---
 
-_Convention analysis: 2026-01-26_
-_Update when patterns change_
+_Convention analysis: 2026-02-23_

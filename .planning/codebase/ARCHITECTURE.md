@@ -1,210 +1,202 @@
 # Architecture
 
-**Analysis Date:** 2026-01-26
+**Analysis Date:** 2026-02-23
 
 ## Pattern Overview
 
-**Overall:** Mobile App with Firebase Backend-as-a-Service (BaaS)
+**Overall:** Layered + Service-Oriented with Context-based Global State
+
+The app follows a clear separation of concerns with distinct layers for navigation, screens/UI, business logic (services), and state management (contexts). The service layer abstracts all Firebase operations, allowing screens to remain focused on presentation.
 
 **Key Characteristics:**
 
-- Single React Native mobile application
-- Firebase for all backend services (auth, database, storage, functions)
-- Context-based state management (no Redux/MobX)
-- Service layer for Firebase operations
-- Presentation layer with screens and components
+- Abstraction of Firebase operations isolated in src/services/firebase/
+- Stateless services export pure functions returning { success, error } objects
+- Custom hooks encapsulate business logic (darkroom, feed, comments, photos)
+- Context for global state (Auth, PhotoDetail, Theme)
+- Deep navigation structure with nested navigators
+- Async-first photo lifecycle: queue immediately, upload in background, reveal on schedule
 
 ## Layers
 
-**Presentation Layer (Screens):**
+**Entry Point & Setup:**
 
-- Purpose: UI screens for user interaction
-- Contains: Full-screen components, navigation handlers, state management
-- Location: `src/screens/*.js`
-- Depends on: Context providers, hooks, services, components
-- Used by: AppNavigator
+- Purpose: Bootstrap the app, initialize services, listen for lifecycle events
+- Location: /App.js
+- Contains: Splash screen, font loading, notification listeners, OTA updates, app state listeners
+
+**Navigation Layer:**
+
+- Purpose: Route management and screen orchestration
+- Location: src/navigation/AppNavigator.js
+- Contains: Stack navigators, tab navigators, modal presentations, deep linking config
+
+**Screens/UI Layer:**
+
+- Purpose: User-facing components that consume state and dispatch actions
+- Location: src/screens/
+- Contains: ~30 screen components (FeedScreen, CameraScreen, ProfileScreen, etc.)
 
 **Component Layer:**
 
-- Purpose: Reusable UI elements
-- Contains: Cards, modals, buttons, inputs, comment components
-- Location: `src/components/*.js`, `src/components/comments/*.js`
-- Depends on: Styles, constants, utilities
-- Used by: Screens
+- Purpose: Reusable UI elements (buttons, cards, modals, input fields)
+- Location: src/components/
+- Contains: PressStart2P pixel font UI, animations, form inputs, cards
 
-**Context Layer (State Management):**
+**Custom Hooks Layer:**
 
-- Purpose: Global state and authentication
-- Contains: AuthContext (user state), PhoneAuthContext (auth flow), ThemeContext
-- Location: `src/context/*.js`
-- Depends on: Firebase auth services
-- Used by: Screens, components
+- Purpose: Extract and share business logic across screens
+- Location: src/hooks/
+- Contains: useCamera, useDarkroom, useFeedPhotos, useComments, usePhotoDetailModal, useSwipeableCard
 
-**Hooks Layer:**
+**Context/Global State Layer:**
 
-- Purpose: Reusable stateful logic
-- Contains: useFeedPhotos, useDarkroom, useCamera, useComments, useSwipeableCard
-- Location: `src/hooks/*.js`
-- Depends on: Services, context
-- Used by: Screens
+- Purpose: Manage app-wide state without prop drilling
+- Location: src/context/
+- Contains: AuthContext, PhoneAuthContext, PhotoDetailContext, ThemeProvider
 
 **Service Layer:**
 
-- Purpose: Firebase operations and business logic
-- Contains: photoService, darkroomService, feedService, friendshipService, etc.
-- Location: `src/services/firebase/*.js`
-- Depends on: Firebase SDK, validation utilities
-- Used by: Hooks, screens, context
+- Purpose: Abstract Firebase operations and external integrations
+- Location: src/services/ and src/services/firebase/
+- Contains: 20+ specialized services for photos, feeds, auth, notifications, albums, comments
 
-**Cloud Functions (Server):**
+**Utilities & Constants:**
 
-- Purpose: Server-side logic, scheduled tasks, notifications
-- Contains: Scheduled reveals, push notifications, account deletion
-- Location: `functions/index.js`
-- Depends on: Firebase Admin SDK, Expo Push API
-- Triggers: Firestore events, scheduled (pub/sub)
+- Purpose: Shared helpers, constants, logging
+- Location: src/utils/, src/constants/, src/config/
 
 ## Data Flow
 
-**Photo Capture Flow:**
+**Authentication Flow:**
 
-1. User opens CameraScreen, camera initializes
-2. User captures photo via expo-camera
-3. Photo compressed via expo-image-manipulator
-4. uploadPhoto() uploads to Firebase Storage
-5. Photo document created in Firestore with status='developing'
-6. Darkroom badge count updates
+1. App.js checks Firebase Auth state via onAuthStateChanged
+2. AuthProvider loads user profile from Firestore
+3. Navigation updates: unauthenticated → onboarding → main app
+4. PhoneAuthContext shares ConfirmationResult between PhoneInputScreen and VerificationScreen
+5. ProfileSetup → Selects → ContactsSync → NotificationPermission (onboarding stack)
 
-**Darkroom Reveal Flow:**
+**Photo Capture & Upload Flow:**
 
-1. processDarkroomReveals Cloud Function runs every 2 minutes
-2. Queries darkrooms where nextRevealAt <= now
-3. Updates all 'developing' photos to 'revealed'
-4. Schedules next reveal (0-5 minutes)
-5. sendPhotoRevealNotification triggers push notification
+1. CameraScreen captures photo, calls addToUploadQueue()
+2. uploadQueueService stores queue item in AsyncStorage, returns immediately
+3. Camera returns to ready state
+4. uploadQueueService processes queue sequentially in background with retry logic
+5. Upload persists across app restarts
 
-**Feed Display Flow:**
+**Photo Reveal Flow:**
 
-1. FeedScreen mounts, useFeedPhotos hook initializes
-2. Hook subscribes to Firestore photos collection via feedService
-3. Server-side Firestore queries filter by photoState, capturedAt (visibility window), and other fields using composite indexes
-4. Additional client-side filtering for user-specific logic (e.g., excluding own photos from feed)
-5. FeedPhotoCard components render with reactions
-6. PhotoDetailModal opens on card tap
-7. Reactions update via toggleReaction in feedService
+1. Darkroom stores nextRevealAt timestamp (0-5 minutes random)
+2. Three reveal triggers: App.js on foreground, DarkroomScreen on focus, Cloud Function every 2 minutes
+3. revealPhotos batch-updates status developing → revealed
+4. Clients listen in real-time via Firestore subscriptions
+
+**Feed Loading & Real-time Updates:**
+
+1. FeedScreen mounts, calls useFeedPhotos()
+2. feedService.getFeedPhotos() chunks friend IDs, server-side filters journaled photos from last day
+3. User data batch-fetched in single query (avoids N+1)
+4. Feed curated by engagement: top 5 photos per friend ranked by reactionCount
+5. Real-time listener updates feed incrementally via subscribeFeedPhotos()
+
+**Photo Detail Modal Flow:**
+
+1. FeedScreen registers callbacks via usePhotoDetailActions()
+2. User taps photo card, calls openPhotoDetail()
+3. PhotoDetailContext stores state, navigation navigates to PhotoDetail modal
+4. Swipe left/right/down navigates and dismisses
+5. Callbacks propagate optimistic updates back to FeedScreen
 
 **State Management:**
 
-- AuthContext: User authentication state, persisted via AsyncStorage
-- Local state in screens/hooks for UI state
-- Firestore for persistent data (no local database)
+- Global (Context): Auth, PhotoDetail, Theme
+- Local (Hooks): Feed photos, camera permissions, comments, darkroom countdown
+- Persistent (AsyncStorage): Upload queue, "Whats New" modal dismissal
+- Real-time (Firestore subscriptions): Feed, comments, reactions, notifications
 
 ## Key Abstractions
 
-**Service:**
+**Service Functions:**
 
-- Purpose: Encapsulate Firebase operations
-- Examples: `src/services/firebase/photoService.js`, `src/services/firebase/feedService.js`
-- Pattern: Exported async functions, no classes
+- Isolate Firebase operations from screens
+- All services export async functions returning { success, error }
+- Examples: src/services/firebase/photoService.js, feedService.js, darkroomService.js
 
-**Context Provider:**
+**Custom Hooks:**
 
-- Purpose: Share state across component tree
-- Examples: `AuthProvider`, `PhoneAuthProvider`, `ThemeProvider`
-- Pattern: React Context with useContext hook
+- Encapsulate business logic for reuse
+- Examples: useCamera(), useFeedPhotos(), useDarkroom()
+- Manage state, effects, subscriptions internally
 
-**Custom Hook:**
+**Context Providers:**
 
-- Purpose: Encapsulate reusable stateful logic
-- Examples: `useFeedPhotos`, `useDarkroom`, `useComments`
-- Pattern: useState + useEffect + service calls
-
-**Screen:**
-
-- Purpose: Full-screen UI component
-- Examples: `FeedScreen`, `CameraScreen`, `DarkroomScreen`
-- Pattern: Functional component with hooks
+- Share state without prop drilling
+- Examples: AuthContext, PhotoDetailContext
+- Separate state context from actions context to avoid unnecessary re-renders
 
 ## Entry Points
 
-**App Entry:**
+**App.js:**
 
-- Location: `App.js`
-- Triggers: App launch
-- Responsibilities: Initialize notifications, Giphy SDK, wrap with providers, render AppNavigator
+- Location: /App.js
+- Responsibilities: OTA updates, font loading, splash screen, notification listeners, foreground reveal check
 
-**Navigation Entry:**
+**AppNavigator.js:**
 
-- Location: `src/navigation/AppNavigator.js`
-- Triggers: App.js render
-- Responsibilities: Auth flow routing, tab navigation, deep linking
+- Location: src/navigation/AppNavigator.js
+- Responsibilities: Conditional auth/onboarding/main app navigation, deep linking, permissions reconciliation
 
-**Cloud Functions Entry:**
+**Key Screens:**
 
-- Location: `functions/index.js`
-- Triggers: Firestore events, scheduled pub/sub, callable functions
-- Responsibilities: Photo reveals, notifications, account deletion
+- FeedScreen (src/screens/FeedScreen.js): Real-time feed, photo detail modal
+- CameraScreen (src/screens/CameraScreen.js): Photo capture, upload queue, darkroom nav
+- DarkroomScreen (src/screens/DarkroomScreen.js): Triage, captions, reveal countdown
+- PhotoDetailScreen (src/screens/PhotoDetailScreen.js): Swipe nav, reactions, comments
+- ProfileScreen (src/screens/ProfileScreen.js): User profile, photo grid, albums
 
 ## Error Handling
 
-**Strategy:** Try/catch in services, error logging via logger utility, user-facing alerts
+**Strategy:** Layered error handling with logging, user feedback, graceful degradation
 
 **Patterns:**
 
-- Services return `{ success: true/false, data/error }` objects
-- Screens/hooks check success and show appropriate UI
-- ErrorBoundary component catches React render errors
-- Logger utility sanitizes and logs errors (console in dev, future Sentry)
-
-## Firestore Query Patterns
-
-**Server-Side Filtering:**
-
-- Use Firestore `where()` clauses for filtering whenever possible
-- Composite indexes are defined in `firestore.indexes.json` and deployed to Firebase
-- Time-based queries (e.g., `where('capturedAt', '>=', cutoffTimestamp)`) are server-side
-- This is more efficient than fetching all data and filtering client-side
-
-**When to Use Client-Side Filtering:**
-
-- User-specific exclusions (e.g., excluding current user's own photos from feed)
-- Complex logic that can't be expressed in Firestore queries
-- Small result sets where performance difference is negligible
-
-**Index Management:**
-
-- Composite indexes defined in `firestore.indexes.json`
-- Deploy with `firebase deploy --only firestore:indexes`
-- Required for queries with multiple `where()` clauses or `where()` + `orderBy()`
+- Service layer: All services return { success: boolean, error: string, data?: T }
+- Hook level: Handle success/error, log, update UI state
+- Screen level: User-facing error alerts for critical failures
+- Error Boundary: Catches render errors at src/components/ErrorBoundary.js
+- Logging: Centralized logger sanitizes sensitive data at src/utils/logger.js
 
 ## Cross-Cutting Concerns
 
-**Logging:**
+**Logging:** src/utils/logger.js
 
-- Custom logger utility: `src/utils/logger.js`
-- Levels: debug, info, warn, error
-- Sanitizes sensitive data automatically
-- TODO: Sentry integration planned
+- Levels: DEBUG (dev only), INFO, WARN, ERROR
+- Sanitizes tokens, passwords, API keys
 
-**Authentication:**
+**Validation:** src/utils/validation.js
 
-- Phone-based auth via Firebase Auth
-- AuthContext provides user state globally
-- Protected routes via AppNavigator conditional rendering
+- Phone number, username, caption length, email format
 
-**Notifications:**
+**Performance Monitoring:** src/services/firebase/performanceService.js
 
-- expo-notifications for device permissions and tokens
-- Cloud Functions send via Expo Push API
-- Deep linking for notification tap navigation
+- withTrace() wrapper, useScreenTrace() hook
+- Disabled in **DEV** to avoid polluting production metrics
 
-**Styling:**
+**Haptics & Sound:** src/utils/haptics.js, src/utils/soundUtils.js
 
-- Separate style files: `src/styles/*.js`
-- Constants for colors, spacing, typography: `src/constants/`
-- No CSS-in-JS library (StyleSheet.create)
+- Feedback on button press, photo capture, errors
+
+**Secure Storage:** src/services/secureStorageService.js
+
+- Stores sensitive data (auth tokens)
+- Uses react-native-keychain
+
+**Theme & Styling:**
+
+- Constants: src/constants/colors.js, spacing.js, typography.js, layout.js
+- Provider: ThemeProvider in src/context/ThemeContext.js (dark-only)
+- All styles reference constants; no magic numbers
 
 ---
 
-_Architecture analysis: 2026-01-26_
-_Update when major patterns change_
+_Architecture analysis: 2026-02-23_
