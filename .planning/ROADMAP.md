@@ -10,7 +10,7 @@
 | ----- | -------------------------------------- | ---------------------------------------------------------------- | -------------------------------------- | ----------- |
 | 1     | Message Infrastructure & Read Receipts | Extend message schema, update Firestore rules, add read receipts | READ-01..03, INFRA-01..02              | Not Started |
 | 2     | Message Interactions                   | Reactions, replies, and message deletion                         | REACT-01..05, REPLY-01..04, DEL-01..03 | Not Started |
-| 3     | Snap Messages                          | Ephemeral photo DMs with screenshot detection                    | SNAP-01..08, SCRN-01..04, INFRA-03..05 | Not Started |
+| 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic                      | SNAP-01..08, INFRA-03..04              | Not Started |
 | 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators                | STRK-01..07                            | Not Started |
 | 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed                  | TAG-01..04                             | Not Started |
 
@@ -79,18 +79,17 @@
 
 ## Phase 3: Snap Messages
 
-**Goal:** Ship ephemeral photo DMs — camera-only snaps that disappear after viewing, with screenshot detection and server-side cleanup.
+**Goal:** Ship ephemeral photo DMs — camera-only snaps that disappear after viewing, with server-side cleanup.
 
-**Why this order:** Most complex feature. Depends on Phase 1 for message type support. Independent of Phase 2. Requires native build (expo-screen-capture). Must ship before Phase 4 (streaks depend on snaps).
+**Why this order:** Most complex feature. Depends on Phase 1 for message type support. Independent of Phase 2. Must ship before Phase 4 (streaks depend on snaps). No native build required — screenshot detection deferred to v2.
 
-**Requirements:** SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, SCRN-01, SCRN-02, SCRN-03, SCRN-04, INFRA-03, INFRA-04, INFRA-05
+**Requirements:** SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, INFRA-03, INFRA-04
 
 **Key deliverables:**
 
-- `expo-screen-capture` installed + new native EAS build for both platforms
 - Camera button in DMInput bar that opens snap capture flow
 - `snapService.js`: upload snap to `snap-photos/` Storage path, send snap message, mark as viewed
-- `SnapViewer` component: full-screen display, screen capture prevention, screenshot listener, auto-dismiss
+- `SnapViewer` component: full-screen display, auto-dismiss on close
 - Snap message bubble (generic camera icon, "Snap" label, "Opened"/"Delivered" status)
 - Optional caption input before sending snap
 - Short-lived signed URLs for snap photos (2-5 min, separate from 7-day feed URLs)
@@ -99,8 +98,6 @@
 - `cleanupExpiredSnaps` scheduled Cloud Function: catch orphaned snaps after 48h
 - Firestore TTL policy on messages collection group (`expiresAt` field)
 - Firebase Storage lifecycle rule on `snap-photos/` path (7-day auto-delete)
-- Screenshot detection system message ("[Name] took a screenshot")
-- Push notification to sender on screenshot
 
 **Success criteria:**
 
@@ -108,12 +105,11 @@
 - Recipient sees generic "Snap" icon, taps to view full-screen
 - Snap disappears after closing viewer (cannot reopen)
 - Sender sees "Opened" after recipient views
-- Screenshot triggers notification to sender
 - Snap photo deleted from Storage within minutes of viewing
 - Orphaned snaps auto-deleted after 48h
 - Snap images do not persist in device cache
 
-**Estimated plans:** 8-10
+**Estimated plans:** 6-8
 
 ---
 
@@ -199,15 +195,13 @@ Phase 5 is independent of Phases 2, 3, and 4.
 
 ## Risk Register
 
-| Risk                                                    | Likelihood | Impact | Mitigation                                                                                |
-| ------------------------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------- |
-| expo-screen-capture Android 14+ bug not fixed in SDK 54 | MEDIUM     | LOW    | Documented workaround exists; screenshot detection is a deterrent, not security           |
-| Snap photo persistence in device cache                  | HIGH       | MEDIUM | `cachePolicy: 'none'`, short-lived URLs, explicit cleanup — designed from day one         |
-| Firestore cost increase from reactions                  | LOW        | MEDIUM | Reactions are separate docs, but 1-on-1 DMs have low volume; monitor billing alerts       |
-| Streak timezone edge cases                              | MEDIUM     | HIGH   | Server-authoritative 24h rolling window; no client timestamps; extensive timezone testing |
-| Native build required for Phase 3                       | LOW        | MEDIUM | Plan the EAS build early; consolidate any other native changes into same build            |
+| Risk                                   | Likelihood | Impact | Mitigation                                                                                |
+| -------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------- |
+| Snap photo persistence in device cache | HIGH       | MEDIUM | `cachePolicy: 'none'`, short-lived URLs, explicit cleanup — designed from day one         |
+| Firestore cost increase from reactions | LOW        | MEDIUM | Reactions are separate docs, but 1-on-1 DMs have low volume; monitor billing alerts       |
+| Streak timezone edge cases             | MEDIUM     | HIGH   | Server-authoritative 24h rolling window; no client timestamps; extensive timezone testing |
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-23 after initial creation_
+_Last updated: 2026-02-23 — deferred screenshot detection to v2, no native build required for any phase_

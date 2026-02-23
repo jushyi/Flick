@@ -45,13 +45,6 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 - [ ] **SNAP-07**: Snap photos use `cachePolicy: 'none'` and short-lived signed URLs (2-5 min)
 - [ ] **SNAP-08**: Cloud Function deletes snap photo from Storage after viewing; Firestore TTL as safety net for unopened snaps
 
-### Screenshot Detection
-
-- [ ] **SCRN-01**: App detects screenshots while recipient is viewing a snap (using `expo-screen-capture`)
-- [ ] **SCRN-02**: Sender is notified when recipient screenshots a snap (push notification + in-conversation indicator)
-- [ ] **SCRN-03**: Screen capture is prevented while viewing snaps (`preventScreenCaptureAsync`)
-- [ ] **SCRN-04**: Screenshot detection works on iOS and Android 14+ (with documented workaround for older Android)
-
 ### Snap Streaks
 
 - [ ] **STRK-01**: Streak tracking begins when both users send at least one snap to each other within 24 hours
@@ -71,15 +64,22 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Firestore security rules updated to allow snap `viewedAt`/`screenshotted` updates by recipient
+- [ ] **INFRA-01**: Firestore security rules updated to allow snap `viewedAt` updates by recipient
 - [ ] **INFRA-02**: Firestore security rules updated to allow `readReceipts` field updates on conversation documents
-- [ ] **INFRA-03**: `expo-screen-capture` installed and native EAS build created for both platforms
-- [ ] **INFRA-04**: Firestore TTL policy configured on messages collection group for `expiresAt` field
-- [ ] **INFRA-05**: Firebase Storage lifecycle rule configured on `snap-photos/` path (7-day auto-delete)
+- [ ] **INFRA-03**: Firestore TTL policy configured on messages collection group for `expiresAt` field
+- [ ] **INFRA-04**: Firebase Storage lifecycle rule configured on `snap-photos/` path (7-day auto-delete)
 
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
+
+### Screenshot Detection
+
+- **SCRN-V2-01**: App detects screenshots while recipient is viewing a snap (using `expo-screen-capture`)
+- **SCRN-V2-02**: Sender is notified when recipient screenshots a snap (push notification + in-conversation indicator)
+- **SCRN-V2-03**: Screen capture is prevented while viewing snaps (`preventScreenCaptureAsync`)
+- **SCRN-V2-04**: Screenshot detection works on iOS and Android 14+ (with documented workaround for older Android)
+- **SCRN-V2-05**: `expo-screen-capture` installed and native EAS build created for both platforms
 
 ### Enhanced Snaps
 
@@ -141,13 +141,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | SNAP-06     | Phase 3 | Pending |
 | SNAP-07     | Phase 3 | Pending |
 | SNAP-08     | Phase 3 | Pending |
-| SCRN-01     | Phase 3 | Pending |
-| SCRN-02     | Phase 3 | Pending |
-| SCRN-03     | Phase 3 | Pending |
-| SCRN-04     | Phase 3 | Pending |
 | INFRA-03    | Phase 3 | Pending |
 | INFRA-04    | Phase 3 | Pending |
-| INFRA-05    | Phase 3 | Pending |
 | STRK-01     | Phase 4 | Pending |
 | STRK-02     | Phase 4 | Pending |
 | STRK-03     | Phase 4 | Pending |
@@ -162,11 +157,11 @@ Explicitly excluded. Documented to prevent scope creep.
 
 **Coverage:**
 
-- v1 requirements: 42 total
-- Mapped to phases: 42
+- v1 requirements: 37 total
+- Mapped to phases: 37
 - Unmapped: 0
 
 ---
 
 _Requirements defined: 2026-02-23_
-_Last updated: 2026-02-23 after initial definition_
+_Last updated: 2026-02-23 — deferred screenshot detection (SCRN) to v2, removed native build requirement_

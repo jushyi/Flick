@@ -15,10 +15,11 @@
 
 ## Requirements Coverage
 
-- Total v1 requirements: 42
+- Total v1 requirements: 37
 - Completed: 0
 - In progress: 0
-- Remaining: 42
+- Remaining: 37
+- Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
 
@@ -35,6 +36,7 @@
 | 2026-02-23 | Reactions as separate message docs       | Preserves message immutability                       |
 | 2026-02-23 | Conversation-level read receipts         | 1 write per open vs N per-message writes             |
 | 2026-02-23 | Server-authoritative streaks             | Cloud Functions only, never client-side              |
+| 2026-02-23 | Defer screenshot detection to v2         | Avoids native rebuild; iterate on messaging first    |
 
 ## Blockers
 
@@ -42,8 +44,9 @@ None currently.
 
 ## Notes
 
-- Only 1 new dependency needed: `expo-screen-capture` (requires native build in Phase 3)
-- Existing stack covers ~90% of requirements
+- No new dependencies needed — `expo-screen-capture` deferred to v2 (avoids native rebuild)
+- Existing stack covers 100% of v1 requirements
+- All v1 changes are JS-only (deployable via OTA update)
 - Phase 2 and 3 are independent; Phase 4 depends on Phase 3; Phase 5 depends only on Phase 1
 
 ---

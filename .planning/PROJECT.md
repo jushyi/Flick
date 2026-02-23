@@ -41,6 +41,7 @@ Snaps and streaks make messaging a daily habit — ephemeral photo messages that
 - Message search — separate effort, deferred
 - Gallery photo picks in snaps — camera-only keeps it authentic
 - Drawing/doodle on snaps — caption text is sufficient for v1
+- Screenshot detection — deferred to v2 to avoid native rebuild; iterate on messaging first
 
 ## Context
 
@@ -69,8 +70,8 @@ The app uses React Native Firebase SDK (not web SDK), react-native-reanimated fo
 | Streak warning on button + push | Warning color with "!" on button plus push notification before streak expires                | — Pending |
 | Caption text only on snaps      | Lightweight — no drawing/doodle complexity for v1                                            | — Pending |
 | Photo attribution on reshare    | "Photo by @user" when adding tagged photo to feed — respects the photographer                | — Pending |
-| Screenshot detection + alert    | Sender is notified if recipient screenshots a snap — reinforces ephemeral trust              | — Pending |
+| Screenshot detection (deferred) | Deferred to v2 — avoids native rebuild, iterate on messaging features first                  | — v2      |
 
 ---
 
-_Last updated: 2026-02-23 after initialization_
+_Last updated: 2026-02-23 — deferred screenshot detection to v2_
