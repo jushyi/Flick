@@ -66,6 +66,7 @@ None currently.
 | 11  | Restyle DM message bubbles and input to retro 16-bit pixel art aesthetic         | 2026-02-23 | c854c0e | [11-the-message-bubbles-don-t-match-the-16-b](./quick/11-the-message-bubbles-don-t-match-the-16-b/) |
 | 12  | Fix Android DM input bar not returning to bottom on keyboard dismiss             | 2026-02-23 | 4f1cee0 | [12-fix-android-dm-input-bar-not-going-to-bo](./quick/12-fix-android-dm-input-bar-not-going-to-bo/) |
 | 13  | Restyle DM input bar to full retro 16-bit pixel aesthetic                        | 2026-02-23 | 4b2453e | [13-the-input-pill-on-messages-doesn-t-match](./quick/13-the-input-pill-on-messages-doesn-t-match/) |
+| 14  | Fix DM GIF button height and add photo picker for image messages                 | 2026-02-23 | f75ad69 | [14-fix-dm-gif-button-height-and-add-photo-i](./quick/14-fix-dm-gif-button-height-and-add-photo-i/) |
 
 ## Notes
 
@@ -76,6 +77,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:55:45Z
-Stopped at: Completed quick task 13 (restyle DM input bar to retro 16-bit aesthetic)
-Resume file: .planning/quick/13-the-input-pill-on-messages-doesn-t-match/13-SUMMARY.md
+Last session: 2026-02-23T21:04:07Z
+Stopped at: Completed quick task 14 (fix DM GIF button height and add photo picker)
+Resume file: .planning/quick/14-fix-dm-gif-button-height-and-add-photo-i/14-SUMMARY.md
