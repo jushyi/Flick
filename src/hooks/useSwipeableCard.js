@@ -435,6 +435,7 @@ const useSwipeableCard = ({
     })
     .onEnd(event => {
       'worklet';
+      if (!gestureActive.value) return;
       if (actionInProgress.value) return;
 
       const velY = event.velocityY;
