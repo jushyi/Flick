@@ -254,7 +254,7 @@ const ConversationScreen = () => {
         />
         <KeyboardAvoidingView
           style={styles.flex}
-          behavior={Platform.select({ ios: 'padding', android: 'height' })}
+          behavior="padding"
           keyboardVerticalOffset={Platform.select({ ios: 0, android: 0 })}
         >
           <View style={styles.loadingContainer}>
@@ -290,7 +290,7 @@ const ConversationScreen = () => {
       />
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.select({ ios: 'padding', android: 'height' })}
+        behavior="padding"
         keyboardVerticalOffset={Platform.select({ ios: 0, android: 0 })}
       >
         {messages.length === 0 && !loading ? (

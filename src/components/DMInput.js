@@ -38,12 +38,15 @@ const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Messa
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
-  // iOS-only: track keyboard visibility to reduce bottom padding when keyboard covers home indicator
+  // Track keyboard visibility to adjust bottom padding per platform
+  // iOS: keyboardWillShow/Hide fires before animation for smooth transitions
+  // Android: keyboardDidShow/Hide (Android does not support keyboardWill* events)
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
-    const showSub = Keyboard.addListener('keyboardWillShow', () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false));
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
 
     return () => {
       showSub.remove();
@@ -84,7 +87,13 @@ const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Messa
 
   const hasText = text.trim().length > 0;
 
-  const bottomPadding = Platform.OS === 'ios' && keyboardVisible ? 8 : Math.max(insets.bottom, 8);
+  const bottomPadding = keyboardVisible
+    ? Platform.OS === 'ios'
+      ? 8
+      : 4
+    : Platform.OS === 'android'
+      ? Math.max(insets.bottom - 4, 8)
+      : Math.max(insets.bottom, 8);
 
   if (disabled) {
     return (
