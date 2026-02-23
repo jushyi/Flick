@@ -69,6 +69,7 @@ None currently.
 | 14  | Fix DM GIF button height and add photo picker for image messages                 | 2026-02-23 | f75ad69 | [14-fix-dm-gif-button-height-and-add-photo-i](./quick/14-fix-dm-gif-button-height-and-add-photo-i/) |
 | 15  | Move read receipts toggle from Settings to dedicated screen                      | 2026-02-23 | 555f513 | [15-move-read-receipts-toggle-from-settings-](./quick/15-move-read-receipts-toggle-from-settings-/) |
 | 16  | Fix send button height on iOS to match input wrapper                             | 2026-02-23 | 52150d9 | [16-fix-send-button-height-on-ios-to-match-i](./quick/16-fix-send-button-height-on-ios-to-match-i/) |
+| 17  | Fix photo sending in DM conversations (preview, notification, crop, aspect)      | 2026-02-23 | 90d41e0 | [17-fix-photo-sending-in-dm-conversations-se](./quick/17-fix-photo-sending-in-dm-conversations-se/) |
 
 ## Notes
 
@@ -79,6 +80,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T21:07:37Z
-Stopped at: Completed quick task 16 (fix send button height on iOS to match input wrapper)
-Resume file: .planning/quick/16-fix-send-button-height-on-ios-to-match-i/16-SUMMARY.md
+Last session: 2026-02-23T21:09:06Z
+Stopped at: Completed quick task 17 (fix photo sending in DM conversations)
+Resume file: .planning/quick/17-fix-photo-sending-in-dm-conversations-se/17-SUMMARY.md
