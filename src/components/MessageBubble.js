@@ -68,15 +68,19 @@ const styles = StyleSheet.create({
     maxWidth: '75%',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 4,
   },
   bubbleUser: {
     backgroundColor: colors.interactive.primary,
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 212, 255, 0.3)',
   },
   bubbleFriend: {
     backgroundColor: colors.background.tertiary,
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: 1,
+    borderWidth: 1,
+    borderColor: colors.border.default,
   },
   bubbleGif: {
     paddingHorizontal: 4,
@@ -96,12 +100,12 @@ const styles = StyleSheet.create({
   gifImage: {
     width: 200,
     height: 150,
-    borderRadius: 12,
+    borderRadius: 3,
   },
   timestamp: {
     fontSize: 10,
     color: colors.text.secondary,
-    fontFamily: typography.fontFamily.readable,
+    fontFamily: typography.fontFamily.body,
     marginTop: 4,
   },
   timestampRight: {
