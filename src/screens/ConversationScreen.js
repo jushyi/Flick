@@ -294,11 +294,11 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+    backgroundColor: colors.background.secondary,
   },
   emptyStateWrapper: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   emptyText: {
     color: colors.text.secondary,

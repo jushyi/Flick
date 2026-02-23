@@ -11,8 +11,16 @@
  * Intentionally separate from CommentInput — DM input will
  * diverge over time with DM-specific features.
  */
-import React, { useState, useCallback } from 'react';
-import { View, TextInput, TouchableOpacity, Text, Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  Platform,
+  Keyboard,
+  StyleSheet,
+} from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,7 +35,21 @@ const MAX_LENGTH = 2000;
 
 const DMInput = ({ onSendMessage, disabled = false, placeholder = 'Message...' }) => {
   const [text, setText] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const insets = useSafeAreaInsets();
+
+  // iOS-only: track keyboard visibility to reduce bottom padding when keyboard covers home indicator
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+
+    const showSub = Keyboard.addListener('keyboardWillShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const handleGifSelected = useCallback(
     gifUrl => {
@@ -60,9 +82,11 @@ const DMInput = ({ onSendMessage, disabled = false, placeholder = 'Message...' }
 
   const hasText = text.trim().length > 0;
 
+  const bottomPadding = Platform.OS === 'ios' && keyboardVisible ? 4 : Math.max(insets.bottom, 8);
+
   if (disabled) {
     return (
-      <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+      <View style={[styles.container, { paddingBottom: bottomPadding }]}>
         <View style={styles.disabledContainer}>
           <Text style={styles.disabledText}>You can no longer message this person</Text>
         </View>
@@ -71,7 +95,7 @@ const DMInput = ({ onSendMessage, disabled = false, placeholder = 'Message...' }
   }
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
       <View style={styles.inputRow}>
         {/* GIF Button */}
         <TouchableOpacity style={styles.gifButton} onPress={handleGifPress}>
