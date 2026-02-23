@@ -81,6 +81,4 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T21:27:34Z
-Stopped at: Completed quick task 18 (change read receipt font to pixel font)
-Resume file: .planning/quick/18-the-read-receipts-and-delivered-text-sho/18-SUMMARY.md
+Last activity: 2026-02-23 - Completed quick task 18: the read receipts and delivered text should be the blocky text
