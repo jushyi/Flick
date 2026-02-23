@@ -84,6 +84,9 @@ const useMessages = userId => {
     logger.debug('useMessages: Setting up subscription', { userId });
     setLoading(true);
 
+    let recoveryTimer = null;
+    let hasReceivedData = false;
+
     unsubscribeRef.current = subscribeToConversations(userId, async result => {
       logger.debug('useMessages: Subscription callback', {
         success: result.success,
@@ -91,6 +94,12 @@ const useMessages = userId => {
       });
 
       if (result.success) {
+        hasReceivedData = true;
+        if (recoveryTimer) {
+          clearTimeout(recoveryTimer);
+          recoveryTimer = null;
+        }
+
         const rawConversations = result.conversations || [];
 
         // Filter out soft-deleted conversations:
@@ -151,16 +160,38 @@ const useMessages = userId => {
 
         setConversations(enrichedConversations);
         setTotalUnreadCount(unreadTotal);
+        setLoading(false);
       } else {
-        logger.error('useMessages: Subscription error', { error: result.error });
-      }
+        const isPermissionError = result.error?.includes('permission-denied');
 
-      setLoading(false);
+        if (isPermissionError && !hasReceivedData) {
+          // Transient error: Firestore auth token may not have propagated yet.
+          // The onSnapshot listener typically self-recovers within milliseconds.
+          // Keep loading=true so the UI shows a loading state instead of empty.
+          logger.warn('useMessages: Transient permission error, awaiting recovery', {
+            error: result.error,
+          });
+
+          // Safety net: if listener doesn't recover within 5s, stop loading
+          if (!recoveryTimer) {
+            recoveryTimer = setTimeout(() => {
+              if (!hasReceivedData) {
+                logger.error('useMessages: Permission error did not recover', { userId });
+                setLoading(false);
+              }
+            }, 5000);
+          }
+        } else {
+          logger.error('useMessages: Subscription error', { error: result.error });
+          setLoading(false);
+        }
+      }
     });
 
     // Cleanup subscription on unmount
     return () => {
       logger.debug('useMessages: Cleaning up subscription', { userId });
+      if (recoveryTimer) clearTimeout(recoveryTimer);
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
         unsubscribeRef.current = null;
