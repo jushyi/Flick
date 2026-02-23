@@ -35,8 +35,10 @@ jest.mock('expo-application', () => ({
 
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => {
-  const MockSafeAreaView = function MockSafeAreaView({ children }) {
-    return children;
+  const React = require('react');
+  const RN = require('react-native');
+  const MockSafeAreaView = function MockSafeAreaView(props) {
+    return React.createElement(RN.View, null, props.children);
   };
   MockSafeAreaView.displayName = 'MockSafeAreaView';
   return {
@@ -50,12 +52,13 @@ jest.mock('../../src/components/PixelIcon', () => 'PixelIcon');
 
 // Mock PixelToggle - render as a touchable element that calls onValueChange
 jest.mock('../../src/components/PixelToggle', () => {
-  const { TouchableOpacity, Text } = require('react-native');
-  const MockPixelToggle = function MockPixelToggle({ value, onValueChange, ...props }) {
-    return (
-      <TouchableOpacity testID="pixel-toggle" onPress={() => onValueChange(!value)} {...props}>
-        <Text>{value ? 'ON' : 'OFF'}</Text>
-      </TouchableOpacity>
+  const React = require('react');
+  const RN = require('react-native');
+  const MockPixelToggle = function MockPixelToggle(props) {
+    return React.createElement(
+      RN.TouchableOpacity,
+      { testID: 'pixel-toggle', onPress: () => props.onValueChange(!props.value) },
+      React.createElement(RN.Text, null, props.value ? 'ON' : 'OFF')
     );
   };
   MockPixelToggle.displayName = 'MockPixelToggle';

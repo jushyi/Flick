@@ -10,8 +10,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Application from 'expo-application';
 import { useNavigation } from '@react-navigation/native';
+
+import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
+
 import PixelIcon from '../components/PixelIcon';
+import PixelToggle from '../components/PixelToggle';
+
 import { useAuth } from '../context/AuthContext';
+
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
@@ -27,7 +33,50 @@ import logger from '../utils/logger';
  */
 const SettingsScreen = () => {
   const navigation = useNavigation();
-  const { signOut } = useAuth();
+  const { user, userProfile, signOut, updateUserProfile } = useAuth();
+
+  /**
+   * Handle the Read Receipts privacy toggle.
+   * Toggling OFF shows a confirmation Alert. Toggling ON writes directly.
+   */
+  const handleReadReceiptsToggle = newValue => {
+    if (newValue === false) {
+      // Toggling OFF — show confirmation
+      Alert.alert(
+        'Turn Off Read Receipts',
+        "When you turn off read receipts, you also won't see when others read your messages.",
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Turn Off',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const db = getFirestore();
+                await updateDoc(doc(db, 'users', user.uid), { readReceiptsEnabled: false });
+                updateUserProfile({ ...userProfile, readReceiptsEnabled: false });
+                logger.info('SettingsScreen: Read receipts disabled');
+              } catch (error) {
+                logger.error('SettingsScreen: Failed to update read receipts', {
+                  error: error.message,
+                });
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      // Toggling ON — write directly, no confirmation
+      const db = getFirestore();
+      updateDoc(doc(db, 'users', user.uid), { readReceiptsEnabled: true }).catch(error => {
+        logger.error('SettingsScreen: Failed to update read receipts', {
+          error: error.message,
+        });
+      });
+      updateUserProfile({ ...userProfile, readReceiptsEnabled: true });
+      logger.info('SettingsScreen: Read receipts enabled');
+    }
+  };
 
   const handleSignOut = () => {
     logger.info('SettingsScreen: Sign out pressed');
@@ -109,6 +158,15 @@ const SettingsScreen = () => {
           label: 'Sync Contacts',
           icon: 'people-outline',
           onPress: () => handleNavigate('ContactsSettings'),
+        },
+        {
+          id: 'readReceipts',
+          label: 'Read Receipts',
+          icon: 'eye-outline',
+          isToggle: true,
+          value: userProfile?.readReceiptsEnabled !== false,
+          onToggle: handleReadReceiptsToggle,
+          subtitle: "When off, you won't send or receive read receipts",
         },
         {
           id: 'blockedUsers',
@@ -199,26 +257,43 @@ const SettingsScreen = () => {
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionHeaderText}>{section.title}</Text>
               </View>
-              {section.items.map(item => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.menuItem}
-                  onPress={item.onPress}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.menuItemLeft}>
-                    <PixelIcon
-                      name={item.icon}
-                      size={22}
-                      color={item.danger ? colors.status.danger : colors.icon.primary}
-                    />
-                    <Text style={[styles.menuItemLabel, item.danger && styles.menuItemLabelDanger]}>
-                      {item.label}
-                    </Text>
+              {section.items.map(item =>
+                item.isToggle ? (
+                  <View key={item.id} style={styles.menuItem}>
+                    <View style={styles.menuItemLeft}>
+                      <PixelIcon name={item.icon} size={22} color={colors.icon.primary} />
+                      <View style={styles.toggleLabelBlock}>
+                        <Text style={styles.menuItemLabel}>{item.label}</Text>
+                        {item.subtitle && (
+                          <Text style={styles.toggleSubtitle}>{item.subtitle}</Text>
+                        )}
+                      </View>
+                    </View>
+                    <PixelToggle value={item.value} onValueChange={item.onToggle} />
                   </View>
-                  <PixelIcon name="chevron-forward" size={20} color={colors.icon.tertiary} />
-                </TouchableOpacity>
-              ))}
+                ) : (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.menuItem}
+                    onPress={item.onPress}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.menuItemLeft}>
+                      <PixelIcon
+                        name={item.icon}
+                        size={22}
+                        color={item.danger ? colors.status.danger : colors.icon.primary}
+                      />
+                      <Text
+                        style={[styles.menuItemLabel, item.danger && styles.menuItemLabelDanger]}
+                      >
+                        {item.label}
+                      </Text>
+                    </View>
+                    <PixelIcon name="chevron-forward" size={20} color={colors.icon.tertiary} />
+                  </TouchableOpacity>
+                )
+              )}
             </View>
           ))}
 
@@ -329,6 +404,16 @@ const styles = StyleSheet.create({
   },
   menuItemLabelDanger: {
     color: colors.status.danger,
+  },
+  toggleLabelBlock: {
+    marginLeft: spacing.md,
+    flex: 1,
+  },
+  toggleSubtitle: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.readable,
+    color: colors.text.tertiary,
+    marginTop: 2,
   },
   versionContainer: {
     paddingHorizontal: 20,
