@@ -29,6 +29,7 @@ import {
   Easing,
   Platform,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -97,6 +98,7 @@ const PhotoDetailScreen = () => {
     handleClose: contextClose,
     handlePhotoStateChanged,
     updateCurrentPhoto,
+    updatePhotoAtIndex,
     getCallbacks,
   } = usePhotoDetail();
 
@@ -130,6 +132,25 @@ const PhotoDetailScreen = () => {
   const [captionText, setCaptionText] = useState('');
   const captionInputRef = useRef(null);
   const lastSavedCaptionRef = useRef('');
+
+  // Keyboard tracking for caption input offset
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, e => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // Image loading state - shows spinner when photo is loading from network
   const [imageLoading, setImageLoading] = useState(true);
@@ -574,18 +595,38 @@ const PhotoDetailScreen = () => {
     if (!isEditingCaption) return;
     const trimmed = captionText.trim();
     const savedCaption = lastSavedCaptionRef.current || '';
-    if (trimmed === savedCaption) {
-      setIsEditingCaption(false);
-      return;
-    }
-    const result = await updateCaption(currentPhoto?.id, trimmed);
-    if (result.success) {
-      lastSavedCaptionRef.current = trimmed || '';
-    } else {
-      logger.warn('Failed to save caption', { error: result.error });
-    }
     setIsEditingCaption(false);
-  }, [isEditingCaption, captionText, currentPhoto?.id]);
+    if (trimmed === savedCaption) return;
+
+    const updatedPhoto = { ...currentPhoto, caption: trimmed || null };
+    const rollbackPhoto = { ...currentPhoto, caption: savedCaption || null };
+
+    // Optimistic update — show new caption immediately
+    lastSavedCaptionRef.current = trimmed || '';
+    if (contextMode === 'stories') {
+      updatePhotoAtIndex(currentIndex, updatedPhoto);
+    }
+    updateCurrentPhoto(updatedPhoto);
+
+    const result = await updateCaption(currentPhoto?.id, trimmed);
+    if (!result.success) {
+      // Rollback on failure
+      logger.warn('Failed to save caption', { error: result.error });
+      lastSavedCaptionRef.current = savedCaption;
+      if (contextMode === 'stories') {
+        updatePhotoAtIndex(currentIndex, rollbackPhoto);
+      }
+      updateCurrentPhoto(rollbackPhoto);
+    }
+  }, [
+    isEditingCaption,
+    captionText,
+    currentPhoto,
+    currentIndex,
+    contextMode,
+    updateCurrentPhoto,
+    updatePhotoAtIndex,
+  ]);
 
   /**
    * Trigger inline caption editing from menu
@@ -870,7 +911,16 @@ const PhotoDetailScreen = () => {
 
           {/* Photo - TouchableWithoutFeedback for swipe-to-close gesture support */}
           <TouchableWithoutFeedback
-            onPress={contextMode === 'stories' ? handleTapNavigation : undefined}
+            onPress={
+              isEditingCaption
+                ? () => {
+                    Keyboard.dismiss();
+                    handleSaveCaption();
+                  }
+                : contextMode === 'stories'
+                  ? handleTapNavigation
+                  : undefined
+            }
           >
             <View style={styles.photoScrollView}>
               <Image
@@ -923,8 +973,10 @@ const PhotoDetailScreen = () => {
               styles.userInfoOverlay,
               {
                 bottom:
-                  (contextMode === 'stories' ? 110 : 100) +
-                  (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0),
+                  isEditingCaption && keyboardHeight > 0
+                    ? keyboardHeight + 16
+                    : (contextMode === 'stories' ? 110 : 100) +
+                      (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0),
               },
             ]}
           >
@@ -939,22 +991,34 @@ const PhotoDetailScreen = () => {
               <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
             </View>
             {isEditingCaption ? (
-              <TextInput
-                ref={captionInputRef}
-                style={styles.captionEditInput}
-                value={captionText}
-                onChangeText={text => setCaptionText(text.slice(0, 100))}
-                onBlur={handleSaveCaption}
-                onEndEditing={handleSaveCaption}
-                maxLength={100}
-                multiline
-                scrollEnabled={false}
-                keyboardAppearance="dark"
-                cursorColor={colors.interactive.primary}
-                selectionColor={colors.interactive.primary}
-                placeholder="Add a caption..."
-                placeholderTextColor={colors.text.tertiary}
-              />
+              <View style={localStyles.captionEditRow}>
+                <TextInput
+                  ref={captionInputRef}
+                  style={[styles.captionEditInput, { flex: 1 }]}
+                  value={captionText}
+                  onChangeText={text => setCaptionText(text.slice(0, 100))}
+                  onBlur={handleSaveCaption}
+                  onEndEditing={handleSaveCaption}
+                  maxLength={100}
+                  multiline
+                  scrollEnabled={false}
+                  keyboardAppearance="dark"
+                  cursorColor={colors.interactive.primary}
+                  selectionColor={colors.interactive.primary}
+                  placeholder="Add a caption..."
+                  placeholderTextColor={colors.text.tertiary}
+                />
+                <TouchableOpacity
+                  style={localStyles.captionDoneButton}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    handleSaveCaption();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <PixelIcon name="checkmark" size={18} color={colors.text.primary} />
+                </TouchableOpacity>
+              </View>
             ) : currentPhoto?.caption ? (
               <Text style={styles.captionText} numberOfLines={3}>
                 {currentPhoto.caption}
@@ -1028,14 +1092,16 @@ const PhotoDetailScreen = () => {
             </ScrollView>
           )}
 
-          {/* Footer - Comment Input + Emoji Pills */}
+          {/* Footer - Comment Input + Emoji Pills (hidden when caption keyboard is open) */}
           <View
             style={[
               styles.footer,
               Platform.OS === 'android' && {
                 paddingBottom: styles.footer.paddingBottom + insets.bottom,
               },
+              isEditingCaption && keyboardHeight > 0 && { opacity: 0 },
             ]}
+            pointerEvents={isEditingCaption && keyboardHeight > 0 ? 'none' : 'auto'}
           >
             {/* Comment input trigger - left side */}
             <TouchableOpacity
@@ -1386,6 +1452,19 @@ const localStyles = StyleSheet.create({
     left: '50%',
     marginTop: -10,
     marginLeft: -10,
+  },
+  captionEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  captionDoneButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.overlay.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
