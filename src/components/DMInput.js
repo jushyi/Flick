@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 212, 255, 0.3)',
     borderRadius: 2,
     paddingHorizontal: 8,
-    minHeight: 36,
+    alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
