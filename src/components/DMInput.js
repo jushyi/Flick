@@ -90,9 +90,9 @@ const DMInput = ({ onSendMessage, onSend, disabled = false, placeholder = 'Messa
   const bottomPadding = keyboardVisible
     ? Platform.OS === 'ios'
       ? 8
-      : 4
+      : 7
     : Platform.OS === 'android'
-      ? Math.max(insets.bottom - 4, 8)
+      ? Math.max(insets.bottom + 3, 12)
       : Math.max(insets.bottom, 8);
 
   if (disabled) {
