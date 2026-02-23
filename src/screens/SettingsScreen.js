@@ -11,8 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Application from 'expo-application';
 import { useNavigation } from '@react-navigation/native';
 
-import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
-
 import PixelIcon from '../components/PixelIcon';
 import PixelToggle from '../components/PixelToggle';
 
@@ -33,50 +31,7 @@ import logger from '../utils/logger';
  */
 const SettingsScreen = () => {
   const navigation = useNavigation();
-  const { user, userProfile, signOut, updateUserProfile } = useAuth();
-
-  /**
-   * Handle the Read Receipts privacy toggle.
-   * Toggling OFF shows a confirmation Alert. Toggling ON writes directly.
-   */
-  const handleReadReceiptsToggle = newValue => {
-    if (newValue === false) {
-      // Toggling OFF — show confirmation
-      Alert.alert(
-        'Turn Off Read Receipts',
-        "When you turn off read receipts, you also won't see when others read your messages.",
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Turn Off',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                const db = getFirestore();
-                await updateDoc(doc(db, 'users', user.uid), { readReceiptsEnabled: false });
-                updateUserProfile({ ...userProfile, readReceiptsEnabled: false });
-                logger.info('SettingsScreen: Read receipts disabled');
-              } catch (error) {
-                logger.error('SettingsScreen: Failed to update read receipts', {
-                  error: error.message,
-                });
-              }
-            },
-          },
-        ]
-      );
-    } else {
-      // Toggling ON — write directly, no confirmation
-      const db = getFirestore();
-      updateDoc(doc(db, 'users', user.uid), { readReceiptsEnabled: true }).catch(error => {
-        logger.error('SettingsScreen: Failed to update read receipts', {
-          error: error.message,
-        });
-      });
-      updateUserProfile({ ...userProfile, readReceiptsEnabled: true });
-      logger.info('SettingsScreen: Read receipts enabled');
-    }
-  };
+  const { signOut } = useAuth();
 
   const handleSignOut = () => {
     logger.info('SettingsScreen: Sign out pressed');
@@ -163,10 +118,7 @@ const SettingsScreen = () => {
           id: 'readReceipts',
           label: 'Read Receipts',
           icon: 'eye-outline',
-          isToggle: true,
-          value: userProfile?.readReceiptsEnabled !== false,
-          onToggle: handleReadReceiptsToggle,
-          subtitle: "When off, you won't send or receive read receipts",
+          onPress: () => handleNavigate('ReadReceiptsSettings'),
         },
         {
           id: 'blockedUsers',

@@ -62,6 +62,7 @@ import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import ContactsSettingsScreen from '../screens/ContactsSettingsScreen';
 import ContributionsScreen from '../screens/ContributionsScreen';
 import SoundSettingsScreen from '../screens/SoundSettingsScreen';
+import ReadReceiptsSettingsScreen from '../screens/ReadReceiptsSettingsScreen';
 import MessagesScreen from '../screens/MessagesScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import NewMessageScreen from '../screens/NewMessageScreen';
@@ -183,6 +184,11 @@ const ProfileStackNavigator = () => {
       <Stack.Screen
         name="SoundSettings"
         component={SoundSettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ReadReceiptsSettings"
+        component={ReadReceiptsSettingsScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
