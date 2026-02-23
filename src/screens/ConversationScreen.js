@@ -24,9 +24,11 @@ import { colors } from '../constants/colors';
 
 /**
  * Empty state shown when no messages exist in the conversation.
+ * Wrapped with scaleY: -1 to counter the inverted FlatList's transform,
+ * so the text renders right-side-up.
  */
 const EmptyConversation = ({ displayName }) => (
-  <View style={styles.emptyContainer}>
+  <View style={styles.emptyStateWrapper}>
     <Text style={styles.emptyText}>Say hi to {displayName}!</Text>
   </View>
 );
@@ -225,7 +227,7 @@ const ConversationScreen = () => {
               <EmptyConversation displayName={friendProfile?.displayName || 'them'} />
             ) : null
           }
-          contentContainerStyle={messages.length === 0 ? styles.emptyContainer : undefined}
+          contentContainerStyle={messages.length === 0 ? styles.emptyListContent : undefined}
           keyboardDismissMode="interactive"
           removeClippedSubviews={true}
           maintainVisibleContentPosition={
@@ -246,10 +248,16 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  emptyContainer: {
+  emptyListContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyStateWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    transform: [{ scaleY: -1 }],
   },
   emptyText: {
     color: colors.text.secondary,
