@@ -158,7 +158,9 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flex: 1,
     backgroundColor: colors.background.tertiary,
-    borderRadius: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.border.default,
     paddingHorizontal: 12,
     paddingVertical: Platform.select({ ios: 8, android: 4 }),
   },
