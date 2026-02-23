@@ -2,8 +2,12 @@
  * ConversationScreen — Chat Thread
  *
  * The core DM experience: displays message history with real-time updates,
- * supports text and GIF sending, handles keyboard interaction, and provides
+ * supports text, GIF, and image sending, handles keyboard interaction, and provides
  * pagination for older messages via an inverted FlatList.
+ *
+ * Phase 2 additions: reactions (double-tap heart, long-press picker),
+ * replies (swipe-to-reply, reply preview above input), deletion (unsend, delete for me),
+ * scroll-to-message on reply tap, highlighted message flash.
  */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { View, Text, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
@@ -17,9 +21,12 @@ import ReadReceiptIndicator from '../components/ReadReceiptIndicator';
 import TimeDivider from '../components/TimeDivider';
 import DMInput from '../components/DMInput';
 import PixelSpinner from '../components/PixelSpinner';
+import ReactionPicker from '../components/ReactionPicker';
+import PixelConfirmDialog from '../components/PixelConfirmDialog';
 
 import { useAuth } from '../context/AuthContext';
 import useConversation from '../hooks/useConversation';
+import useMessageActions from '../hooks/useMessageActions';
 
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
@@ -74,14 +81,57 @@ const ConversationScreen = () => {
     };
   }, [friendId, friendProfile?.username, friendProfile?.displayName]);
 
-  const { messages, conversationDoc, loading, loadingMore, hasMore, loadMore, handleSendMessage } =
-    useConversation(conversationId, user.uid, deletedAt);
+  // --- Data hooks ---
+  const {
+    messages,
+    reactionMap,
+    conversationDoc,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    handleSendMessage,
+    handleSendReaction,
+    handleRemoveReaction,
+    handleSendReply,
+    handleDeleteForMe,
+  } = useConversation(conversationId, user.uid, deletedAt);
 
   const flatListRef = useRef(null);
   const isNearBottomRef = useRef(true);
   const prevMessageCountRef = useRef(0);
   const [visibleTimestamps, setVisibleTimestamps] = useState(new Set());
   const isReadOnly = route.params?.readOnly || false;
+
+  // --- Message actions hook ---
+  const {
+    actionMenuVisible,
+    actionMenuMessage,
+    actionMenuPosition,
+    replyToMessage,
+    openActionMenu,
+    closeActionMenu,
+    handleReaction,
+    handleDoubleTapHeart,
+    startReply,
+    cancelReply,
+    handleUnsend,
+    handleDeleteForMe: triggerDeleteForMe,
+  } = useMessageActions({
+    conversationId,
+    currentUserId: user.uid,
+    onSendReaction: handleSendReaction,
+    onRemoveReaction: handleRemoveReaction,
+    onSendReply: handleSendReply,
+    onDeleteForMe: handleDeleteForMe,
+  });
+
+  // --- Delete confirmation dialog state ---
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [pendingDeleteMessageId, setPendingDeleteMessageId] = useState(null);
+
+  // --- Scroll-to-message highlight state ---
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
 
   /**
    * Scroll the inverted FlatList to offset 0 (newest messages).
@@ -150,6 +200,48 @@ const ConversationScreen = () => {
   }, []);
 
   /**
+   * Scroll to the original message when a reply mini bubble is tapped.
+   * Uses flatListRef to scroll the inverted FlatList to the target index
+   * and briefly highlights the message with a background flash.
+   */
+  const scrollToMessage = useCallback(
+    messageId => {
+      const index = messages.findIndex(m => m.id === messageId);
+      if (index !== -1 && flatListRef.current) {
+        flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+        // Brief highlight: set highlightedMessageId for 1.5 seconds
+        setHighlightedMessageId(messageId);
+        setTimeout(() => setHighlightedMessageId(null), 1500);
+      }
+    },
+    [messages]
+  );
+
+  /**
+   * Edge case: if replyToMessage gets unsent while composing,
+   * clear reply mode but keep typed text.
+   */
+  useEffect(() => {
+    if (!replyToMessage) return;
+    const replyMsg = messages.find(m => m.id === replyToMessage.id);
+    if (replyMsg?._isUnsent) {
+      cancelReply();
+    }
+  }, [messages, replyToMessage, cancelReply]);
+
+  /**
+   * Edge case: if actionMenuMessage gets unsent while picker is open,
+   * auto-close the action menu.
+   */
+  useEffect(() => {
+    if (!actionMenuMessage || !actionMenuVisible) return;
+    const targetMsg = messages.find(m => m.id === actionMenuMessage.id);
+    if (targetMsg?._isUnsent) {
+      closeActionMenu();
+    }
+  }, [messages, actionMenuMessage, actionMenuVisible, closeActionMenu]);
+
+  /**
    * Process messages array to insert TimeDivider items between
    * messages from different dates. Messages are newest-first
    * (for inverted list), so we process in reverse to group by date,
@@ -184,6 +276,31 @@ const ConversationScreen = () => {
   }, [messages]);
 
   /**
+   * Handle sending a message with reply support.
+   * If replyToMessage is set, sends as a reply; otherwise normal send.
+   */
+  const handleSend = useCallback(
+    async (text, gifUrl, imageUrl) => {
+      if (replyToMessage) {
+        await handleSendReply(text, gifUrl, imageUrl, replyToMessage);
+        cancelReply();
+      } else {
+        await handleSendMessage(text, gifUrl, imageUrl);
+      }
+    },
+    [replyToMessage, handleSendReply, cancelReply, handleSendMessage]
+  );
+
+  /**
+   * Compute the reply-to sender name for DMInput's ReplyPreview.
+   */
+  const replyToSenderName = useMemo(() => {
+    if (!replyToMessage) return '';
+    if (replyToMessage.senderId === user.uid) return 'You';
+    return liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend';
+  }, [replyToMessage, user.uid, liveFriendProfile]);
+
+  /**
    * Render a single item — either a TimeDivider or a MessageBubble
    * wrapped with consistent spacing. Includes ReadReceiptIndicator
    * below the current user's most recent sent message.
@@ -194,15 +311,27 @@ const ConversationScreen = () => {
         return <TimeDivider timestamp={item.timestamp} />;
       }
 
+      const isCurrentUser = item.senderId === user.uid;
       const isLastSent = showIndicator && lastSentMessage && item.id === lastSentMessage.id;
+      const messageReactions = reactionMap.get(item.id) || null;
 
       return (
         <View style={styles.messageWrapper}>
           <MessageBubble
             message={item}
-            isCurrentUser={item.senderId === user.uid}
+            isCurrentUser={isCurrentUser}
             showTimestamp={visibleTimestamps.has(item.id)}
             onPress={() => toggleTimestamp(item.id)}
+            reactions={messageReactions}
+            onDoubleTap={msg => handleDoubleTapHeart(msg.id, reactionMap)}
+            onLongPress={(message, layout) => openActionMenu(message, layout)}
+            onSwipeReply={msg => startReply(msg)}
+            onReactionPress={emoji => handleReaction(emoji, reactionMap)}
+            onScrollToMessage={scrollToMessage}
+            replyTo={item.replyTo}
+            currentUserId={user.uid}
+            senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
+            highlighted={highlightedMessageId === item.id}
           />
           {isLastSent && (
             <ReadReceiptIndicator isRead={isRead} readAt={friendReadAt} visible={showIndicator} />
@@ -218,6 +347,14 @@ const ConversationScreen = () => {
       lastSentMessage,
       isRead,
       friendReadAt,
+      reactionMap,
+      handleDoubleTapHeart,
+      openActionMenu,
+      startReply,
+      handleReaction,
+      scrollToMessage,
+      highlightedMessageId,
+      liveFriendProfile,
     ]
   );
 
@@ -231,6 +368,32 @@ const ConversationScreen = () => {
   }, [loadingMore, hasMore, loadMore]);
 
   const keyExtractor = useCallback(item => item.id || item.dividerKey, []);
+
+  /**
+   * Compute canUnsend for the currently-focused action menu message.
+   */
+  const actionMenuCanUnsend = useMemo(() => {
+    if (!actionMenuMessage || actionMenuMessage.senderId !== user.uid) return false;
+    if (!actionMenuMessage.createdAt) return false;
+    const msgTime = actionMenuMessage.createdAt.toDate
+      ? actionMenuMessage.createdAt.toDate()
+      : new Date(actionMenuMessage.createdAt);
+    return Date.now() - msgTime.getTime() < 15 * 60 * 1000;
+  }, [actionMenuMessage, user.uid]);
+
+  /**
+   * Handle scrollToIndex failures gracefully (e.g., index out of range).
+   */
+  const onScrollToIndexFailed = useCallback(info => {
+    logger.warn('ConversationScreen: scrollToIndex failed', { index: info.index });
+    // Fall back to scrolling to approximate offset
+    setTimeout(() => {
+      flatListRef.current?.scrollToOffset({
+        offset: info.averageItemLength * info.index,
+        animated: true,
+      });
+    }, 100);
+  }, []);
 
   // Show loading spinner while initial data loads
   if (loading) {
@@ -312,15 +475,63 @@ const ConversationScreen = () => {
             removeClippedSubviews={true}
             onScroll={handleScroll}
             scrollEventThrottle={100}
+            onScrollToIndexFailed={onScrollToIndexFailed}
           />
         )}
         <DMInput
-          onSendMessage={handleSendMessage}
+          onSendMessage={handleSend}
           onSend={scrollToBottom}
           disabled={isReadOnly}
           placeholder="Message..."
+          replyToMessage={replyToMessage}
+          replyToSenderName={replyToSenderName}
+          onCancelReply={cancelReply}
         />
       </KeyboardAvoidingView>
+
+      {/* Reaction picker / action menu overlay */}
+      <ReactionPicker
+        visible={actionMenuVisible}
+        message={actionMenuMessage}
+        position={actionMenuPosition}
+        isCurrentUser={actionMenuMessage?.senderId === user.uid}
+        canUnsend={actionMenuCanUnsend}
+        onReaction={emoji => {
+          handleReaction(emoji, reactionMap);
+        }}
+        onReply={() => {
+          startReply(actionMenuMessage);
+          closeActionMenu();
+        }}
+        onUnsend={() => {
+          handleUnsend(actionMenuMessage.id);
+        }}
+        onDeleteForMe={() => {
+          setPendingDeleteMessageId(actionMenuMessage.id);
+          closeActionMenu();
+          setDeleteConfirmVisible(true);
+        }}
+        onClose={closeActionMenu}
+      />
+
+      {/* Delete for me confirmation dialog */}
+      <PixelConfirmDialog
+        visible={deleteConfirmVisible}
+        title="Delete Message"
+        message="This will only remove it from your view. The other person can still see it."
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        onConfirm={() => {
+          triggerDeleteForMe(pendingDeleteMessageId);
+          setDeleteConfirmVisible(false);
+          setPendingDeleteMessageId(null);
+        }}
+        onCancel={() => {
+          setDeleteConfirmVisible(false);
+          setPendingDeleteMessageId(null);
+        }}
+      />
     </View>
   );
 };

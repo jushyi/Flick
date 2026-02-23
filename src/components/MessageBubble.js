@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, Pressable, Animated as RNAnimated, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -36,6 +36,7 @@ const MessageBubble = ({
   currentUserId,
   senderName,
   onScrollToMessage,
+  highlighted,
 }) => {
   const isGif = message.type === 'gif';
   const isImage = message.type === 'image';
@@ -44,6 +45,19 @@ const MessageBubble = ({
   const translateX = useSharedValue(0);
   const hasTriggeredHaptic = useSharedValue(false);
   const bubbleRef = useRef(null);
+
+  // Highlight flash animation when scroll-to-message targets this bubble
+  const highlightOpacity = useRef(new RNAnimated.Value(0)).current;
+  useEffect(() => {
+    if (highlighted) {
+      highlightOpacity.setValue(0.4);
+      RNAnimated.timing(highlightOpacity, {
+        toValue: 0,
+        duration: 1500,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [highlighted, highlightOpacity]);
 
   const formatTimestamp = () => {
     if (!message.createdAt) return '';
@@ -172,6 +186,13 @@ const MessageBubble = ({
 
   return (
     <View style={[styles.container, isCurrentUser ? styles.containerRight : styles.containerLeft]}>
+      {/* Highlight flash overlay for scroll-to-message */}
+      {highlighted && (
+        <RNAnimated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, styles.highlightOverlay, { opacity: highlightOpacity }]}
+        />
+      )}
       <View style={styles.swipeContainer}>
         <Animated.View style={[styles.replyArrowContainer, replyIconAnimatedStyle]}>
           <Ionicons name="return-up-back" size={20} color={colors.text.secondary} />
@@ -346,6 +367,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.readable,
     fontStyle: 'italic',
     color: '#7B7B9E',
+  },
+  // Highlight overlay for scroll-to-message flash
+  highlightOverlay: {
+    backgroundColor: 'rgba(0, 212, 255, 0.25)',
+    borderRadius: 4,
+    zIndex: 10,
   },
   // Reply mini bubble styles
   replyPreviewInBubble: {
