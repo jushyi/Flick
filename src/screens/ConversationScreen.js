@@ -26,8 +26,7 @@ import logger from '../utils/logger';
 
 /**
  * Empty state shown when no messages exist in the conversation.
- * On iOS, wrapped with scaleY: -1 to counter the inverted FlatList's CSS transform.
- * On Android, no counter-transform needed — FlatList inversion uses native scroll reversal.
+ * Rendered outside the inverted FlatList to avoid cross-platform transform issues.
  */
 const EmptyConversation = ({ displayName }) => (
   <View style={styles.emptyStateWrapper}>
@@ -260,27 +259,27 @@ const ConversationScreen = () => {
         behavior={Platform.select({ ios: 'padding', android: 'height' })}
         keyboardVerticalOffset={Platform.select({ ios: 0, android: 0 })}
       >
-        <FlatList
-          ref={flatListRef}
-          data={messagesWithDividers}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          inverted
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={loadingMore ? <PixelSpinner size="small" /> : null}
-          ListEmptyComponent={
-            !loading ? (
-              <EmptyConversation displayName={liveFriendProfile?.displayName || 'them'} />
-            ) : null
-          }
-          contentContainerStyle={messages.length === 0 ? styles.emptyListContent : undefined}
-          keyboardDismissMode="interactive"
-          removeClippedSubviews={true}
-          maintainVisibleContentPosition={
-            Platform.OS === 'ios' ? { minIndexForVisible: 0 } : undefined
-          }
-        />
+        {messages.length === 0 && !loading ? (
+          <EmptyConversation
+            displayName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'them'}
+          />
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messagesWithDividers}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            inverted
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={loadingMore ? <PixelSpinner size="small" /> : null}
+            keyboardDismissMode="interactive"
+            removeClippedSubviews={true}
+            maintainVisibleContentPosition={
+              Platform.OS === 'ios' ? { minIndexForVisible: 0 } : undefined
+            }
+          />
+        )}
         <DMInput onSendMessage={handleSendMessage} disabled={isReadOnly} placeholder="Message..." />
       </KeyboardAvoidingView>
     </View>
@@ -295,16 +294,10 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  emptyListContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyStateWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    transform: Platform.OS === 'ios' ? [{ scaleY: -1 }] : undefined,
   },
   emptyText: {
     color: colors.text.secondary,
