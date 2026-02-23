@@ -9,7 +9,7 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 ### Read Receipts
 
-- [ ] **READ-01**: Sender can see "Read" status on their last message when the recipient has opened the conversation
+- [x] **READ-01**: Sender can see "Read" status on their last message when the recipient has opened the conversation
 - [x] **READ-02**: Read receipt uses a conversation-level `readReceipts` timestamp (not per-message writes) to minimize Firestore costs
 - [x] **READ-03**: Read indicator updates in real-time via existing conversation document subscription
 
@@ -116,7 +116,7 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Requirement | Phase   | Status   |
 | ----------- | ------- | -------- |
-| READ-01     | Phase 1 | Pending  |
+| READ-01     | Phase 1 | Complete |
 | READ-02     | Phase 1 | Complete |
 | READ-03     | Phase 1 | Complete |
 | INFRA-01    | Phase 1 | Complete |

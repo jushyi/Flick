@@ -6,13 +6,13 @@
 
 ## Phase Overview
 
-| Phase | Name                                   | Goal                                                             | Requirements                           | Status                  |
-| ----- | -------------------------------------- | ---------------------------------------------------------------- | -------------------------------------- | ----------------------- |
-| 1     | Message Infrastructure & Read Receipts | Extend message schema, update Firestore rules, add read receipts | READ-01..03, INFRA-01..02              | In Progress (1/4 plans) |
-| 2     | Message Interactions                   | Reactions, replies, and message deletion                         | REACT-01..05, REPLY-01..04, DEL-01..03 | Not Started             |
-| 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic                      | SNAP-01..08, INFRA-03..04              | Not Started             |
-| 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators                | STRK-01..07                            | Not Started             |
-| 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed                  | TAG-01..04                             | Not Started             |
+| Phase | Name                                   | Goal                                              | Requirements                           | Status                  |
+| ----- | -------------------------------------- | ------------------------------------------------- | -------------------------------------- | ----------------------- |
+| 1     | Message Infrastructure & Read Receipts | Extended message schema + read receipts UI        | READ-01..03, INFRA-01..02              | In Progress (2/4 plans) |
+| 2     | Message Interactions                   | Reactions, replies, and message deletion          | REACT-01..05, REPLY-01..04, DEL-01..03 | Not Started             |
+| 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic       | SNAP-01..08, INFRA-03..04              | Not Started             |
+| 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07                            | Not Started             |
+| 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed   | TAG-01..04                             | Not Started             |
 
 ## Phase 1: Message Infrastructure & Read Receipts
 
@@ -38,12 +38,12 @@
 - Firestore rules allow narrow updates for snap fields and readReceipts (verified with rules tests)
 - No per-message write operations for read tracking
 
-**Plans:** 2 plans
+**Plans:** 2/4 plans complete
 
 Plans:
 
 - [x] 01-01-PLAN.md — Backend infrastructure: Firestore rules, messageService readReceipts, useConversation subscription, Cloud Function extension, tests
-- [ ] 01-02-PLAN.md — Read receipt UI: ReadReceiptIndicator component, ConversationScreen integration, ConversationRow status previews + count badge, privacy toggle
+- [x] 01-02-PLAN.md — Read receipt UI: ReadReceiptIndicator component, ConversationScreen integration, ConversationRow status previews + count badge, privacy toggle
 
 ---
 
