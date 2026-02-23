@@ -67,6 +67,7 @@ None currently.
 | 12  | Fix Android DM input bar not returning to bottom on keyboard dismiss             | 2026-02-23 | 4f1cee0 | [12-fix-android-dm-input-bar-not-going-to-bo](./quick/12-fix-android-dm-input-bar-not-going-to-bo/) |
 | 13  | Restyle DM input bar to full retro 16-bit pixel aesthetic                        | 2026-02-23 | 4b2453e | [13-the-input-pill-on-messages-doesn-t-match](./quick/13-the-input-pill-on-messages-doesn-t-match/) |
 | 14  | Fix DM GIF button height and add photo picker for image messages                 | 2026-02-23 | f75ad69 | [14-fix-dm-gif-button-height-and-add-photo-i](./quick/14-fix-dm-gif-button-height-and-add-photo-i/) |
+| 15  | Move read receipts toggle from Settings to dedicated screen                      | 2026-02-23 | 555f513 | [15-move-read-receipts-toggle-from-settings-](./quick/15-move-read-receipts-toggle-from-settings-/) |
 
 ## Notes
 
@@ -77,6 +78,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T21:04:07Z
-Stopped at: Completed quick task 14 (fix DM GIF button height and add photo picker)
-Resume file: .planning/quick/14-fix-dm-gif-button-height-and-add-photo-i/14-SUMMARY.md
+Last session: 2026-02-23T21:06:02Z
+Stopped at: Completed quick task 15 (move read receipts toggle to dedicated settings screen)
+Resume file: .planning/quick/15-move-read-receipts-toggle-from-settings-/15-SUMMARY.md
