@@ -54,6 +54,7 @@ None currently.
 | #   | Description                                                                     | Date       | Commit  | Directory                                                                                         |
 | --- | ------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
 | 1   | Fix notification badge persisting on Activity tab when all notifications viewed | 2026-02-23 | d72ed7d | [1-fix-notification-badge-persisting-on-act](./quick/1-fix-notification-badge-persisting-on-act/) |
+| 2   | Fix DM conversation empty state, missing input bar, and profile photos          | 2026-02-23 | b7cb2bc | [2-fix-new-conversation-missing-input-bar-u](./quick/2-fix-new-conversation-missing-input-bar-u/) |
 
 ## Notes
 
@@ -64,6 +65,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T19:46:32Z
-Stopped at: Completed 01-02-PLAN.md (read receipt UI, conversation status, privacy toggle)
-Resume file: .planning/phases/01-message-infrastructure-read-receipts/01-02-SUMMARY.md
+Last session: 2026-02-23T20:09:41Z
+Stopped at: Completed quick task 2 (fix DM conversation empty state, input bar, profile photos)
+Resume file: .planning/quick/2-fix-new-conversation-missing-input-bar-u/2-SUMMARY.md
