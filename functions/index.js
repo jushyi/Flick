@@ -2653,7 +2653,12 @@ exports.onNewMessage = functions
       const convRef = db.doc(`conversations/${conversationId}`);
 
       // 1. Update conversation metadata atomically
-      const lastMessagePreview = message.type === 'gif' ? 'Sent a GIF' : message.text || '';
+      const lastMessagePreview =
+        message.type === 'gif'
+          ? 'Sent a GIF'
+          : message.type === 'image'
+            ? 'Sent a photo'
+            : message.text || '';
       await convRef.update({
         lastMessage: {
           text: lastMessagePreview,
@@ -2703,7 +2708,12 @@ exports.onNewMessage = functions
           : 'Someone';
         const senderPhotoURL = senderDoc.exists ? senderDoc.data().photoURL : null;
 
-        const body = message.type === 'gif' ? 'Sent a GIF' : message.text;
+        const body =
+          message.type === 'gif'
+            ? 'Sent a GIF'
+            : message.type === 'image'
+              ? 'Sent a photo'
+              : message.text;
 
         await sendPushNotification(
           fcmToken,
