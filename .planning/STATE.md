@@ -63,6 +63,7 @@ None currently.
 | 8   | Fix incoming message spacing near input bar (paddingTop on inverted FlatList)    | 2026-02-23 | 8ad69fd | [8-fix-incoming-message-spacing-near-input-](./quick/8-fix-incoming-message-spacing-near-input-/)   |
 | 9   | Fix iOS DM input bar padding when keyboard open and background color mismatch    | 2026-02-23 | e9b700b | [9-fix-ios-dm-input-bar-padding-and-backgro](./quick/9-fix-ios-dm-input-bar-padding-and-backgro/)   |
 | 10  | Fix iOS conversation scroll on send/receive (auto-scroll inverted FlatList)      | 2026-02-23 | 57c6090 | [10-fix-ios-conversation-scroll-on-send-rece](./quick/10-fix-ios-conversation-scroll-on-send-rece/) |
+| 11  | Restyle DM message bubbles and input to retro 16-bit pixel art aesthetic         | 2026-02-23 | c854c0e | [11-the-message-bubbles-don-t-match-the-16-b](./quick/11-the-message-bubbles-don-t-match-the-16-b/) |
 
 ## Notes
 
@@ -73,6 +74,6 @@ None currently.
 
 ---
 
-Last session: 2026-02-23T20:49:25Z
-Stopped at: Completed quick task 10 (fix iOS conversation scroll on send/receive)
-Resume file: .planning/quick/10-fix-ios-conversation-scroll-on-send-rece/10-SUMMARY.md
+Last session: 2026-02-23T20:51:45Z
+Stopped at: Completed quick task 11 (restyle DM bubbles to retro 16-bit aesthetic)
+Resume file: .planning/quick/11-the-message-bubbles-don-t-match-the-16-b/11-SUMMARY.md
