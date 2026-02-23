@@ -11,16 +11,10 @@
  */
 
 import { useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import ReanimatedAnimated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import useDarkroom from '../hooks/useDarkroom';
@@ -56,10 +50,12 @@ const DarkroomScreen = () => {
     // Tagging state
     tagModalVisible,
 
-    // Caption state
+    // Caption / keyboard state
     getCaptionForPhoto,
     handleCaptionChange,
     keyboardVisible,
+    keyboardHeight,
+    isKeyboardOpen,
 
     // Handlers
     handleDone,
@@ -78,6 +74,19 @@ const DarkroomScreen = () => {
     handleOpenTagModal,
     handleCloseTagModal,
   } = useDarkroom();
+
+  // Keyboard offset for card container
+  // useAnimatedKeyboard provides native tracking (works on iOS);
+  // keyboardHeight SharedValue from JS events is the fallback (Android with edgeToEdgeEnabled)
+  const keyboard = useAnimatedKeyboard();
+  const cardContainerKeyboardStyle = useAnimatedStyle(() => {
+    const nativeHeight = keyboard.height.value;
+    const jsHeight = keyboardHeight.value;
+    const kbHeight = nativeHeight > 0 ? nativeHeight : jsHeight;
+    return {
+      transform: [{ translateY: -kbHeight * 0.52 }],
+    };
+  });
 
   // Mark screen trace as loaded after darkroom photos load (once only)
   useEffect(() => {
@@ -243,12 +252,9 @@ const DarkroomScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* KeyboardAvoidingView shifts cards up when caption input is focused */}
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.select({ ios: 'padding', android: 'height' })}
-            keyboardVerticalOffset={Platform.select({ ios: 0, android: insets.top + 60 })}
-          >
+          {/* Card container translates up when keyboard opens via Reanimated
+              (replaces KeyboardAvoidingView which had Android reset issues) */}
+          <ReanimatedAnimated.View style={[{ flex: 1 }, cardContainerKeyboardStyle]}>
             {/* Stacked Photo Cards */}
             <View style={styles.photoCardContainer}>
               {visiblePhotos
@@ -288,34 +294,38 @@ const DarkroomScreen = () => {
                   );
                 })}
             </View>
+          </ReanimatedAnimated.View>
 
-            {/* Triage Button Bar */}
-            <View style={styles.triageButtonBar}>
-              {/* Archive Button */}
-              <TouchableOpacity style={styles.archiveButton} onPress={handleArchiveButton}>
-                <PixelIcon
-                  name="archive-outline"
-                  size={18}
-                  color={colors.text.primary}
-                  style={{ marginRight: spacing.xxs }}
-                />
-                <Text style={styles.archiveButtonText}>Archive</Text>
+          {/* Triage Button Bar - invisible (not unmounted) when keyboard is open
+              to keep layout stable so card doesn't shift during keyboard offset */}
+          <View
+            style={[styles.triageButtonBar, isKeyboardOpen && { opacity: 0 }]}
+            pointerEvents={isKeyboardOpen ? 'none' : 'auto'}
+          >
+            {/* Archive Button */}
+            <TouchableOpacity style={styles.archiveButton} onPress={handleArchiveButton}>
+              <PixelIcon
+                name="archive-outline"
+                size={18}
+                color={colors.text.primary}
+                style={{ marginRight: spacing.xxs }}
+              />
+              <Text style={styles.archiveButtonText}>Archive</Text>
+            </TouchableOpacity>
+
+            {/* Delete Button */}
+            <Animated.View style={{ transform: [{ scale: deleteButtonScale }] }}>
+              <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteButton}>
+                <Text style={styles.deleteButtonIcon}>{'✕'}</Text>
               </TouchableOpacity>
+            </Animated.View>
 
-              {/* Delete Button */}
-              <Animated.View style={{ transform: [{ scale: deleteButtonScale }] }}>
-                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteButton}>
-                  <Text style={styles.deleteButtonIcon}>{'✕'}</Text>
-                </TouchableOpacity>
-              </Animated.View>
-
-              {/* Journal Button */}
-              <TouchableOpacity style={styles.journalButton} onPress={handleJournalButton}>
-                <Text style={styles.triageButtonIcon}>{'✓'}</Text>
-                <Text style={styles.journalButtonText}>Journal</Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
+            {/* Journal Button */}
+            <TouchableOpacity style={styles.journalButton} onPress={handleJournalButton}>
+              <Text style={styles.triageButtonIcon}>{'✓'}</Text>
+              <Text style={styles.journalButtonText}>Journal</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </View>
 

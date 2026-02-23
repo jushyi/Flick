@@ -16,7 +16,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Animated, Alert, Keyboard } from 'react-native';
+import { Animated, Alert, Keyboard, Platform } from 'react-native';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
@@ -70,8 +70,12 @@ const useDarkroom = () => {
   // { [photoId]: string } mapping photoId to caption text (max 100 chars)
   const [photoCaptions, setPhotoCaptions] = useState({});
 
-  // Keyboard visibility tracking (SharedValue = zero re-renders on keyboard show/hide)
+  // Keyboard tracking
+  // SharedValues for gesture worklets (zero re-renders)
   const keyboardVisible = useSharedValue(false);
+  const keyboardHeight = useSharedValue(0);
+  // React state for conditional rendering (e.g. hiding triage bar)
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   // Refs
   const cardRef = useRef(null);
@@ -603,19 +607,29 @@ const useDarkroom = () => {
     navigation.goBack();
   }, [navigation]);
 
-  // Track keyboard visibility via SharedValue (no React re-renders)
+  // Track keyboard visibility + height
+  // SharedValues drive animations/gestures; React state drives conditional rendering
+  // iOS: keyboardWillShow/Hide fires before animation for smoother sync
+  // Android: only keyboardDidShow/Hide is reliable
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, e => {
       keyboardVisible.value = true;
+      keyboardHeight.value = e.endCoordinates.height;
+      setIsKeyboardOpen(true);
     });
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+    const hideSub = Keyboard.addListener(hideEvent, () => {
       keyboardVisible.value = false;
+      keyboardHeight.value = 0;
+      setIsKeyboardOpen(false);
     });
     return () => {
       showSub.remove();
       hideSub.remove();
     };
-  }, [keyboardVisible]);
+  }, [keyboardVisible, keyboardHeight]);
 
   // Trigger fade-in animation when success state is shown
   useEffect(() => {
@@ -680,6 +694,8 @@ const useDarkroom = () => {
     successFadeAnim,
     deleteButtonScale,
     keyboardVisible,
+    keyboardHeight,
+    isKeyboardOpen,
 
     // Handlers
     handleTriage,
