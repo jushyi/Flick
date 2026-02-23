@@ -26,8 +26,8 @@ import logger from '../utils/logger';
 
 /**
  * Empty state shown when no messages exist in the conversation.
- * Wrapped with scaleY: -1 to counter the inverted FlatList's transform,
- * so the text renders right-side-up.
+ * On iOS, wrapped with scaleY: -1 to counter the inverted FlatList's CSS transform.
+ * On Android, no counter-transform needed — FlatList inversion uses native scroll reversal.
  */
 const EmptyConversation = ({ displayName }) => (
   <View style={styles.emptyStateWrapper}>
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    transform: [{ scaleY: -1 }],
+    transform: Platform.OS === 'ios' ? [{ scaleY: -1 }] : undefined,
   },
   emptyText: {
     color: colors.text.secondary,
