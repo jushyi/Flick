@@ -21,6 +21,9 @@ import logger from '../utils/logger';
 
 const db = getFirestore();
 
+/** Cache TTL: friend profiles are re-fetched after this duration (5 minutes). */
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
 /**
  * useMessages Hook
  *
@@ -45,7 +48,12 @@ const useMessages = userId => {
    */
   const fetchFriendProfiles = useCallback(async friendIds => {
     const cache = friendProfileCacheRef.current;
-    const uncachedIds = friendIds.filter(id => !cache.has(id));
+    const now = Date.now();
+    const uncachedIds = friendIds.filter(id => {
+      const entry = cache.get(id);
+      if (!entry) return true;
+      return now - entry.fetchedAt > CACHE_TTL_MS;
+    });
 
     if (uncachedIds.length > 0) {
       logger.debug('useMessages: Fetching uncached friend profiles', {
@@ -59,12 +67,15 @@ const useMessages = userId => {
         const id = uncachedIds[index];
         const data = profileSnap.exists() ? profileSnap.data() : {};
         cache.set(id, {
-          uid: id,
-          username: data.username || 'unknown',
-          displayName: data.displayName || 'Unknown User',
-          profilePhotoURL: data.profilePhotoURL || data.photoURL || null,
-          nameColor: data.nameColor || null,
-          readReceiptsEnabled: data.readReceiptsEnabled,
+          data: {
+            uid: id,
+            username: data.username || 'unknown',
+            displayName: data.displayName || 'Unknown User',
+            profilePhotoURL: data.profilePhotoURL || data.photoURL || null,
+            nameColor: data.nameColor || null,
+            readReceiptsEnabled: data.readReceiptsEnabled,
+          },
+          fetchedAt: Date.now(),
         });
       });
     }
@@ -134,7 +145,7 @@ const useMessages = userId => {
         const enrichedConversations = visibleConversations.map(conv => {
           const participants = conv.participants || [];
           const friendId = participants.find(p => p !== userId);
-          const friendProfile = friendId ? profileCache.get(friendId) : null;
+          const friendProfile = friendId ? profileCache.get(friendId)?.data : null;
 
           return {
             id: conv.id,
