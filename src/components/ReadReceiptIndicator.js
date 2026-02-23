@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 10,
     color: '#7B7B9E',
-    fontFamily: typography.fontFamily.readable,
+    fontFamily: typography.fontFamily.body,
   },
 });
 
