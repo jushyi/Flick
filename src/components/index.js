@@ -36,3 +36,7 @@ export { default as PixelDissolveOverlay } from './PixelDissolveOverlay';
 export { default as StrokedNameText } from './StrokedNameText';
 export { default as WhatsNewModal } from './WhatsNewModal';
 export { default as ReadReceiptIndicator } from './ReadReceiptIndicator';
+export { default as ReactionBadges } from './ReactionBadges';
+export { default as ReactionPicker } from './ReactionPicker';
+export { default as ReplyPreview } from './ReplyPreview';
+export { default as PixelConfirmDialog } from './PixelConfirmDialog';
