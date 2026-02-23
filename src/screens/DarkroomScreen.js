@@ -14,6 +14,7 @@ import { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import ReanimatedAnimated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import useDarkroom from '../hooks/useDarkroom';
@@ -49,6 +50,13 @@ const DarkroomScreen = () => {
     // Tagging state
     tagModalVisible,
 
+    // Caption / keyboard state
+    getCaptionForPhoto,
+    handleCaptionChange,
+    keyboardVisible,
+    keyboardHeight,
+    isKeyboardOpen,
+
     // Handlers
     handleDone,
     handleExitClearance,
@@ -66,6 +74,19 @@ const DarkroomScreen = () => {
     handleOpenTagModal,
     handleCloseTagModal,
   } = useDarkroom();
+
+  // Keyboard offset for card container
+  // useAnimatedKeyboard provides native tracking (works on iOS);
+  // keyboardHeight SharedValue from JS events is the fallback (Android with edgeToEdgeEnabled)
+  const keyboard = useAnimatedKeyboard();
+  const cardContainerKeyboardStyle = useAnimatedStyle(() => {
+    const nativeHeight = keyboard.height.value;
+    const jsHeight = keyboardHeight.value;
+    const kbHeight = nativeHeight > 0 ? nativeHeight : jsHeight;
+    return {
+      transform: [{ translateY: -kbHeight * 0.52 }],
+    };
+  });
 
   // Mark screen trace as loaded after darkroom photos load (once only)
   useEffect(() => {
@@ -231,43 +252,56 @@ const DarkroomScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Stacked Photo Cards */}
-          <View style={styles.photoCardContainer}>
-            {visiblePhotos
-              .slice(0, 3)
-              .reverse()
-              .map((photo, reverseIndex) => {
-                const stackIndex = 2 - reverseIndex - (3 - Math.min(visiblePhotos.length, 3));
-                const isActive = stackIndex === 0;
-                const isNewlyVisible = newlyVisibleIds.has(photo.id) && stackIndex === 2;
+          {/* Card container translates up when keyboard opens via Reanimated
+              (replaces KeyboardAvoidingView which had Android reset issues) */}
+          <ReanimatedAnimated.View style={[{ flex: 1 }, cardContainerKeyboardStyle]}>
+            {/* Stacked Photo Cards */}
+            <View style={styles.photoCardContainer}>
+              {visiblePhotos
+                .slice(0, 3)
+                .reverse()
+                .map((photo, reverseIndex) => {
+                  const stackIndex = 2 - reverseIndex - (3 - Math.min(visiblePhotos.length, 3));
+                  const isActive = stackIndex === 0;
+                  const isNewlyVisible = newlyVisibleIds.has(photo.id) && stackIndex === 2;
 
-                return (
-                  <SwipeablePhotoCard
-                    ref={isActive ? cardRef : undefined}
-                    key={photo.id}
-                    photo={photo}
-                    stackIndex={stackIndex}
-                    isActive={isActive}
-                    isNewlyVisible={isNewlyVisible}
-                    enterFrom={
-                      isActive && undoingPhoto?.photo.id === photo.id
-                        ? undoingPhoto.enterFrom
-                        : null
-                    }
-                    onSwipeLeft={isActive ? handleArchiveSwipe : undefined}
-                    onSwipeRight={isActive ? handleJournalSwipe : undefined}
-                    onSwipeDown={isActive ? handleDeleteSwipe : undefined}
-                    onDeleteComplete={isActive ? handleDeletePulse : undefined}
-                    onExitClearance={isActive ? () => handleExitClearance(photo.id) : undefined}
-                    onTagPress={isActive ? handleOpenTagModal : undefined}
-                    hasTagged={isActive ? getTagsForPhoto(photo.id).length > 0 : false}
-                  />
-                );
-              })}
-          </View>
+                  return (
+                    <SwipeablePhotoCard
+                      ref={isActive ? cardRef : undefined}
+                      key={photo.id}
+                      photo={photo}
+                      stackIndex={stackIndex}
+                      isActive={isActive}
+                      isNewlyVisible={isNewlyVisible}
+                      enterFrom={
+                        isActive && undoingPhoto?.photo.id === photo.id
+                          ? undoingPhoto.enterFrom
+                          : null
+                      }
+                      onSwipeLeft={isActive ? handleArchiveSwipe : undefined}
+                      onSwipeRight={isActive ? handleJournalSwipe : undefined}
+                      onSwipeDown={isActive ? handleDeleteSwipe : undefined}
+                      onDeleteComplete={isActive ? handleDeletePulse : undefined}
+                      onExitClearance={isActive ? () => handleExitClearance(photo.id) : undefined}
+                      onTagPress={isActive ? handleOpenTagModal : undefined}
+                      hasTagged={isActive ? getTagsForPhoto(photo.id).length > 0 : false}
+                      caption={isActive ? getCaptionForPhoto(photo.id) : undefined}
+                      onCaptionChange={
+                        isActive ? text => handleCaptionChange(photo.id, text) : undefined
+                      }
+                      keyboardVisible={isActive ? keyboardVisible : undefined}
+                    />
+                  );
+                })}
+            </View>
+          </ReanimatedAnimated.View>
 
-          {/* Triage Button Bar */}
-          <View style={styles.triageButtonBar}>
+          {/* Triage Button Bar - invisible (not unmounted) when keyboard is open
+              to keep layout stable so card doesn't shift during keyboard offset */}
+          <View
+            style={[styles.triageButtonBar, isKeyboardOpen && { opacity: 0 }]}
+            pointerEvents={isKeyboardOpen ? 'none' : 'auto'}
+          >
             {/* Archive Button */}
             <TouchableOpacity style={styles.archiveButton} onPress={handleArchiveButton}>
               <PixelIcon

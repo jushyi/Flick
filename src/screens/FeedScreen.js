@@ -135,6 +135,7 @@ const FeedScreen = () => {
     markPhotosAsViewed,
     getFirstUnviewedIndex,
     hasViewedAllPhotos,
+    reloadViewedState,
     loading: viewedStoriesLoading,
     viewedPhotoCount, // Forces re-render when count changes (updates ring indicators)
   } = useViewedStories();
@@ -176,7 +177,7 @@ const FeedScreen = () => {
 
     logger.debug('FeedScreen: Loading own stories data');
     setMyStoriesLoading(true);
-    const result = await getUserStoriesData(user.uid);
+    const result = await getUserStoriesData(user.uid, userProfile);
     if (result.success) {
       logger.info('FeedScreen: Own stories loaded', {
         photoCount: result.userStory?.totalPhotoCount || 0,
@@ -386,7 +387,7 @@ const FeedScreen = () => {
   const handleRefresh = async () => {
     logger.debug('FeedScreen: Pull-to-refresh triggered');
     // Refresh all data sources in parallel
-    await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories()]);
+    await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories(), reloadViewedState()]);
   };
 
   // Auto-reload feed when returning from background after 10+ minutes of inactivity
@@ -487,14 +488,28 @@ const FeedScreen = () => {
       ? nextFriendAtOpen !== undefined
       : nextFriendAtOpen !== undefined && !hasViewedAllPhotos(nextFriendAtOpen.topPhotos || []);
 
-    // Prefetch next friend's first photo for seamless cube transition
+    // Prefetch current friend's opening photo + next photo for instant display
+    const currentPhotos = friend.topPhotos || [];
+    const prefetchUrls = [];
+    if (currentPhotos[startIndex]?.imageURL) {
+      prefetchUrls.push(currentPhotos[startIndex].imageURL);
+    }
+    if (startIndex + 1 < currentPhotos.length && currentPhotos[startIndex + 1]?.imageURL) {
+      prefetchUrls.push(currentPhotos[startIndex + 1].imageURL);
+    }
+
+    // Also prefetch next friend's first photo for seamless cube transition
     if (hasNextAtOpen && nextFriendAtOpen) {
       const nextFriendPhotos = nextFriendAtOpen.topPhotos || [];
       const nextFirstIdx = getFirstUnviewedIndex(nextFriendPhotos);
       const nextFirstPhoto = nextFriendPhotos[nextFirstIdx];
       if (nextFirstPhoto?.imageURL) {
-        Image.prefetch(nextFirstPhoto.imageURL, 'memory-disk').catch(() => {});
+        prefetchUrls.push(nextFirstPhoto.imageURL);
       }
+    }
+
+    if (prefetchUrls.length > 0) {
+      Image.prefetch(prefetchUrls, 'memory-disk').catch(() => {});
     }
 
     // Open via context and navigate
@@ -533,6 +548,19 @@ const FeedScreen = () => {
     // Set mode flags
     isInStoriesModeRef.current = true;
     isOwnStoriesRef.current = true;
+
+    // Prefetch opening photo + next for instant display
+    const ownPhotos = myStories.topPhotos || [];
+    const ownPrefetchUrls = [];
+    if (ownPhotos[startIndex]?.imageURL) {
+      ownPrefetchUrls.push(ownPhotos[startIndex].imageURL);
+    }
+    if (startIndex + 1 < ownPhotos.length && ownPhotos[startIndex + 1]?.imageURL) {
+      ownPrefetchUrls.push(ownPhotos[startIndex + 1].imageURL);
+    }
+    if (ownPrefetchUrls.length > 0) {
+      Image.prefetch(ownPrefetchUrls, 'memory-disk').catch(() => {});
+    }
 
     // Open via context and navigate
     openPhotoDetail({
@@ -1198,6 +1226,7 @@ const FeedScreen = () => {
                 onPress={handleOpenMyStories}
                 isFirst={true}
                 isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+                firstUnviewedIndex={getFirstUnviewedIndex(myStories.topPhotos || [])}
               />
             )}
             <AddFriendsPromptCard
@@ -1226,6 +1255,7 @@ const FeedScreen = () => {
                 onPress={handleOpenMyStories}
                 isFirst={true}
                 isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+                firstUnviewedIndex={getFirstUnviewedIndex(myStories.topPhotos || [])}
               />
             </ScrollView>
           </View>
@@ -1250,6 +1280,7 @@ const FeedScreen = () => {
               onAvatarPress={handleOwnAvatarPress}
               isFirst={true}
               isViewed={hasViewedAllPhotos(myStories.topPhotos)}
+              firstUnviewedIndex={getFirstUnviewedIndex(myStories.topPhotos || [])}
             />
           )}
           {/* Friend cards after MeStoryCard */}
@@ -1261,6 +1292,7 @@ const FeedScreen = () => {
               onAvatarPress={handleAvatarPress}
               isFirst={false}
               isViewed={hasViewedAllPhotos(friend.topPhotos)}
+              firstUnviewedIndex={getFirstUnviewedIndex(friend.topPhotos || [])}
             />
           ))}
         </ScrollView>

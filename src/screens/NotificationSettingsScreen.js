@@ -165,7 +165,7 @@ const NotificationSettingsScreen = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {permissionStatus !== 'granted' && (
           <View style={styles.permissionBanner}>
             <View style={styles.permissionBannerContent}>

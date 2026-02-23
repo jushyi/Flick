@@ -100,6 +100,7 @@ const useSwipeableCard = ({
   isActive = true,
   enterFrom = null,
   isNewlyVisible = false,
+  keyboardVisible = null,
   ref,
 }) => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
@@ -392,13 +393,16 @@ const useSwipeableCard = ({
   );
 
   // Pan gesture — vertical: up = journal, down = archive
-  // .enabled(isActive) prevents gesture from firing on stack cards.
-  // This keeps GestureDetector always in the tree (avoids remount on isActive change).
+  // .enabled() prevents gesture from firing on stack cards.
+  // Keyboard visibility is checked inside worklets to avoid the Android native cast error
+  // that occurs when passing a SharedValue/DerivedValue to .enabled().
   const panGesture = Gesture.Pan()
     .enabled(isActive)
     .activeOffsetY([-5, 5])
     .onStart(() => {
       'worklet';
+      // Block gesture when keyboard is open (prevents accidental swipes while typing captions)
+      if (keyboardVisible?.value) return;
       gestureActive.value = 1;
       startY.value = translateY.value;
       lockedDirection.value = 0;
@@ -409,6 +413,7 @@ const useSwipeableCard = ({
     })
     .onUpdate(event => {
       'worklet';
+      if (!gestureActive.value) return;
       const rawY = event.translationY;
 
       // Lock direction on first significant movement
@@ -430,6 +435,7 @@ const useSwipeableCard = ({
     })
     .onEnd(event => {
       'worklet';
+      if (!gestureActive.value) return;
       if (actionInProgress.value) return;
 
       const velY = event.velocityY;

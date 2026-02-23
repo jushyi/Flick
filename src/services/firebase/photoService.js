@@ -509,13 +509,15 @@ export const getPhotosByIds = async photoIds => {
  * Used by darkroom when user taps Done to save all decisions
  * @param {Array} decisions - Array of { photoId, action } objects
  * @param {Object} [photoTags] - Optional mapping of photoId to taggedUserIds array
+ * @param {Object} [photoCaptions] - Optional mapping of photoId to caption string
  * @returns {Promise<{success: boolean, journaledCount?: number, error?: string}>}
  */
-export const batchTriagePhotos = async (decisions, photoTags = {}) => {
+export const batchTriagePhotos = async (decisions, photoTags = {}, photoCaptions = {}) => {
   try {
     logger.debug('PhotoService.batchTriagePhotos: Starting batch', {
       count: decisions.length,
       taggedPhotoCount: Object.keys(photoTags).length,
+      captionedPhotoCount: Object.keys(photoCaptions).length,
     });
 
     // Count how many photos are being journaled (posted to story)
@@ -533,6 +535,18 @@ export const batchTriagePhotos = async (decisions, photoTags = {}) => {
         logger.debug('PhotoService.batchTriagePhotos: Wrote tags for photo', {
           photoId,
           tagCount: tags.length,
+        });
+      }
+
+      // Write caption before triaging if photo has a caption
+      const caption = photoCaptions[photoId];
+      if (caption && caption.trim().length > 0) {
+        const photoRef = doc(db, 'photos', photoId);
+        await updateDoc(photoRef, {
+          caption: caption.trim(),
+        });
+        logger.debug('PhotoService.batchTriagePhotos: Wrote caption for photo', {
+          photoId,
         });
       }
 
@@ -1155,6 +1169,46 @@ export const updatePhotoTags = async (photoId, taggedUserIds) => {
     logger.error('PhotoService.updatePhotoTags: Failed', { photoId, error: error.message });
     return { success: false, error: error.message };
   }
+};
+
+/**
+ * Update caption on a photo document
+ * Normalizes empty/whitespace-only strings to null (never stores "")
+ *
+ * @param {string} photoId - Photo document ID
+ * @param {string|null} caption - Caption text (max 100 chars) or null to remove
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const updateCaption = async (photoId, caption) => {
+  return withTrace('photo/updateCaption', async () => {
+    try {
+      if (!photoId) {
+        return { success: false, error: 'Missing photoId' };
+      }
+
+      const trimmed = caption ? caption.trim() : '';
+      if (trimmed.length > 100) {
+        return { success: false, error: 'Caption exceeds 100 characters' };
+      }
+
+      const photoRef = doc(db, 'photos', photoId);
+      await updateDoc(photoRef, {
+        caption: trimmed.length > 0 ? trimmed : null,
+      });
+
+      logger.info('PhotoService.updateCaption: Caption updated', {
+        photoId,
+        hasCaption: trimmed.length > 0,
+      });
+      return { success: true };
+    } catch (error) {
+      logger.error('PhotoService.updateCaption: Failed', {
+        photoId,
+        error: error.message,
+      });
+      return { success: false, error: error.message };
+    }
+  });
 };
 
 /**

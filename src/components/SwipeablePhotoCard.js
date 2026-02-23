@@ -22,7 +22,7 @@
  */
 
 import { forwardRef } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
@@ -43,6 +43,9 @@ const SwipeablePhotoCard = forwardRef(
       onExitClearance,
       onTagPress,
       hasTagged,
+      caption,
+      onCaptionChange,
+      keyboardVisible,
       stackIndex = 0,
       isActive = true,
       enterFrom = null,
@@ -62,6 +65,7 @@ const SwipeablePhotoCard = forwardRef(
         isActive,
         enterFrom,
         isNewlyVisible,
+        keyboardVisible,
         ref,
       });
 
@@ -103,6 +107,31 @@ const SwipeablePhotoCard = forwardRef(
             })
           }
         />
+
+        {/* Caption input - only on active front card */}
+        {stackIndex === 0 && onCaptionChange && (
+          <View style={styles.captionInputContainer}>
+            <TextInput
+              style={styles.captionInput}
+              placeholder="Add a caption..."
+              placeholderTextColor={colors.text.tertiary}
+              value={caption || ''}
+              onChangeText={onCaptionChange}
+              maxLength={100}
+              multiline
+              scrollEnabled={false}
+              keyboardAppearance="dark"
+              returnKeyType="done"
+              blurOnSubmit={true}
+              cursorColor={colors.interactive.primary}
+              selectionColor={colors.interactive.primary}
+              includeFontPadding={false}
+            />
+            {(caption || '').length >= 80 && (
+              <Text style={styles.captionCounter}>{(caption || '').length}/100</Text>
+            )}
+          </View>
+        )}
 
         {/* Tag Button Overlay - only on active card when onTagPress provided */}
         {onTagPress && (

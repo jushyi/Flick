@@ -51,7 +51,6 @@ tmpclaude-*
 nul
 CLAUDE.md
 .work/
-.planning/
 
 # Firebase config files (never commit)
 GoogleService-Info.plist
@@ -62,5 +61,3 @@ google-services.json
 google-services-prod.json
 **/google-services.json
 **/google-services-prod.json
-
-.work/

@@ -26,7 +26,7 @@ import logger from '../../utils/logger';
 import { withTrace } from './performanceService';
 
 const db = getFirestore();
-const EXPIRY_HOURS = 24;
+const EXPIRY_HOURS = 168; // 7 days — matches STORIES_VISIBILITY_DAYS in feedService
 
 /**
  * Get the viewed photos collection reference for a user

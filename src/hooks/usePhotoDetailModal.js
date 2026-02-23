@@ -84,6 +84,10 @@ export const usePhotoDetailModal = ({
   const lastTapTimeRef = useRef(0);
   const MIN_DISPLAY_TIME = 30; // ms - minimum time each photo is displayed
 
+  // Tap queue: instead of dropping rapid taps, defer them so every tap navigates
+  const queuedTapRef = useRef(null); // timeout ID for pending deferred tap
+  const queuedTapDirectionRef = useRef(null); // 'next' | 'prev' - direction of queued tap
+
   // Animated values for swipe gesture
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current; // Start invisible to prevent first-frame flash
@@ -450,6 +454,17 @@ export const usePhotoDetailModal = ({
    * Returns true if navigated, false if at first photo (caller should close)
    * Uses minimum display time to ensure each photo is briefly visible during rapid tapping
    */
+  /**
+   * Clear any pending queued tap (used on close, transition, or new tap executing)
+   */
+  const clearQueuedTap = useCallback(() => {
+    if (queuedTapRef.current) {
+      clearTimeout(queuedTapRef.current);
+      queuedTapRef.current = null;
+      queuedTapDirectionRef.current = null;
+    }
+  }, []);
+
   const goPrev = useCallback(() => {
     if (mode !== 'stories') return false;
 
@@ -457,10 +472,19 @@ export const usePhotoDetailModal = ({
     const now = Date.now();
     const timeSinceLastTap = now - lastTapTimeRef.current;
     if (timeSinceLastTap < MIN_DISPLAY_TIME) {
-      // Too fast - ignore this tap to ensure current photo is visible
-      return true; // Return true to prevent close, but don't navigate
+      // Queue this tap to fire after remaining wait time instead of dropping it
+      clearQueuedTap();
+      const remaining = MIN_DISPLAY_TIME - timeSinceLastTap;
+      queuedTapDirectionRef.current = 'prev';
+      queuedTapRef.current = setTimeout(() => {
+        queuedTapRef.current = null;
+        queuedTapDirectionRef.current = null;
+        goPrev();
+      }, remaining);
+      return true; // Return true to prevent close
     }
     lastTapTimeRef.current = now;
+    clearQueuedTap(); // Clear any pending queued tap
 
     if (currentIndex === 0) {
       logger.debug('usePhotoDetailModal: At first photo');
@@ -474,7 +498,7 @@ export const usePhotoDetailModal = ({
       onPhotoChange(photos[newIndex], newIndex);
     }
     return true;
-  }, [mode, currentIndex, photos, onPhotoChange]);
+  }, [mode, currentIndex, photos, onPhotoChange, clearQueuedTap]);
 
   /**
    * Navigate to next photo in stories mode
@@ -489,10 +513,19 @@ export const usePhotoDetailModal = ({
     const now = Date.now();
     const timeSinceLastTap = now - lastTapTimeRef.current;
     if (timeSinceLastTap < MIN_DISPLAY_TIME) {
-      // Too fast - ignore this tap to ensure current photo is visible
-      return true; // Return true to prevent close, but don't navigate
+      // Queue this tap to fire after remaining wait time instead of dropping it
+      clearQueuedTap();
+      const remaining = MIN_DISPLAY_TIME - timeSinceLastTap;
+      queuedTapDirectionRef.current = 'next';
+      queuedTapRef.current = setTimeout(() => {
+        queuedTapRef.current = null;
+        queuedTapDirectionRef.current = null;
+        goNext();
+      }, remaining);
+      return true; // Return true to prevent close
     }
     lastTapTimeRef.current = now;
+    clearQueuedTap(); // Clear any pending queued tap
 
     if (currentIndex >= photos.length - 1) {
       logger.debug('usePhotoDetailModal: At last photo');
@@ -514,7 +547,7 @@ export const usePhotoDetailModal = ({
       onPhotoChange(photos[newIndex], newIndex);
     }
     return true;
-  }, [mode, currentIndex, photos, onPhotoChange, onFriendTransition]);
+  }, [mode, currentIndex, photos, onPhotoChange, onFriendTransition, clearQueuedTap]);
 
   /**
    * Close modal with animation
@@ -522,6 +555,7 @@ export const usePhotoDetailModal = ({
    * Fallback: simple slide-down + fade
    */
   const closeWithAnimation = useCallback(() => {
+    clearQueuedTap(); // Cancel any pending tap navigation
     const source = sourceRectRef.current;
     const transform = source
       ? {
@@ -594,7 +628,7 @@ export const usePhotoDetailModal = ({
       onClose();
       resetAll();
     });
-  }, [translateY, opacity, openProgress, dismissScale, suckTranslateX, onClose]);
+  }, [translateY, opacity, openProgress, dismissScale, suckTranslateX, onClose, clearQueuedTap]);
 
   /**
    * Handle tap navigation on photo area (stories mode only)
@@ -989,14 +1023,15 @@ export const usePhotoDetailModal = ({
     })
   ).current;
 
-  // Cleanup timer on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (sortTimerRef.current) {
         clearTimeout(sortTimerRef.current);
       }
+      clearQueuedTap();
     };
-  }, []);
+  }, [clearQueuedTap]);
 
   return {
     // Mode

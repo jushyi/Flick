@@ -168,6 +168,13 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
         </View>
       </View>
 
+      {/* Caption (if present) */}
+      {photo.caption ? (
+        <Text style={styles.captionText} numberOfLines={3}>
+          {photo.caption}
+        </Text>
+      ) : null}
+
       {/* Reactions row (if present) */}
       {reactionCount > 0 && (
         <View style={styles.reactions}>

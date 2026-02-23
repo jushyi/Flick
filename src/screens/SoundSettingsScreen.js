@@ -106,7 +106,7 @@ const SoundSettingsScreen = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.menuContainer}>
           {/* Sound Effects Toggle */}
           <View style={[styles.toggleItem, styles.masterToggleItem]}>

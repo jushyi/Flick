@@ -11,13 +11,13 @@ import logger from '../utils/logger';
  *
  * Features:
  * - Persists viewed state to Firestore per-user (users/{userId}/viewedPhotos/{photoId})
- * - 24-hour expiry for viewed state (filtered on query)
+ * - 7-day expiry for viewed state (matches story visibility window)
  * - Loading state for initial hydration
  * - Get first unviewed photo index for starting position
  * - Uses ref for immediate sync access (avoids React state async issues)
  * - Account switching loads correct user's viewed state
  *
- * @returns {Object} { isViewed, markAsViewed, markPhotosAsViewed, getFirstUnviewedIndex, hasViewedAllPhotos, loading }
+ * @returns {Object} { isViewed, markAsViewed, markPhotosAsViewed, getFirstUnviewedIndex, hasViewedAllPhotos, reloadViewedState, loading }
  */
 export const useViewedStories = () => {
   const { user } = useAuth();
@@ -31,10 +31,12 @@ export const useViewedStories = () => {
   const viewedPhotosRef = useRef(new Set());
 
   /**
-   * Load viewed state from Firestore on mount or user change
+   * Shared loader — fetches viewed photos from Firestore and merges with in-memory state.
+   * On failure, preserves whatever is already in the ref so viewed rings don't flash.
+   * @param {boolean} isInitial - true on first mount (shows loading skeleton)
    */
-  useEffect(() => {
-    const loadViewedState = async () => {
+  const fetchAndApplyViewedPhotos = useCallback(
+    async isInitial => {
       if (!userId) {
         logger.debug('useViewedStories: No userId, clearing viewed state');
         setViewedPhotos(new Set());
@@ -46,30 +48,48 @@ export const useViewedStories = () => {
 
       try {
         logger.debug('useViewedStories: Loading viewed photos from Firestore', { userId });
-        setLoading(true);
+        if (isInitial) setLoading(true);
 
         const result = await loadViewedPhotos(userId);
         if (result.success && result.photoIds) {
-          setViewedPhotos(result.photoIds);
-          viewedPhotosRef.current = result.photoIds;
-          logger.info('useViewedStories: Loaded viewed photos', { count: result.photoIds.size });
+          // Merge Firestore data with any in-memory viewed IDs (covers photos marked
+          // during this session that may not have synced yet or were written after
+          // the Firestore expiry query cutoff)
+          const merged = new Set([...viewedPhotosRef.current, ...result.photoIds]);
+          setViewedPhotos(merged);
+          viewedPhotosRef.current = merged;
+          logger.info('useViewedStories: Loaded viewed photos', {
+            firestoreCount: result.photoIds.size,
+            mergedCount: merged.size,
+          });
         } else {
           logger.warn('useViewedStories: Failed to load viewed photos', { error: result.error });
-          // Start with empty set on error
-          setViewedPhotos(new Set());
-          viewedPhotosRef.current = new Set();
+          // Keep existing in-memory data instead of resetting to empty
         }
       } catch (error) {
         logger.error('useViewedStories: Error loading viewed state', { error: error.message });
-        setViewedPhotos(new Set());
-        viewedPhotosRef.current = new Set();
+        // Keep existing in-memory data instead of resetting to empty
       } finally {
-        setLoading(false);
+        if (isInitial) setLoading(false);
       }
-    };
+    },
+    [userId]
+  );
 
-    loadViewedState();
-  }, [userId]);
+  /**
+   * Load viewed state from Firestore on mount or user change
+   */
+  useEffect(() => {
+    fetchAndApplyViewedPhotos(true);
+  }, [fetchAndApplyViewedPhotos]);
+
+  /**
+   * Reload viewed state from Firestore (call during pull-to-refresh)
+   * Merges with in-memory state so no viewed rings flash during reload.
+   */
+  const reloadViewedState = useCallback(() => {
+    return fetchAndApplyViewedPhotos(false);
+  }, [fetchAndApplyViewedPhotos]);
 
   /**
    * Mark a friend's stories as viewed
@@ -190,6 +210,7 @@ export const useViewedStories = () => {
     markPhotosAsViewed,
     getFirstUnviewedIndex,
     hasViewedAllPhotos,
+    reloadViewedState,
     loading,
     viewedPhotoCount: viewedPhotos.size, // Exposes count to trigger re-renders in consumers
   };

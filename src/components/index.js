@@ -34,3 +34,4 @@ export { default as PixelSpinner } from './PixelSpinner';
 export { default as PixelToggle } from './PixelToggle';
 export { default as PixelDissolveOverlay } from './PixelDissolveOverlay';
 export { default as StrokedNameText } from './StrokedNameText';
+export { default as WhatsNewModal } from './WhatsNewModal';

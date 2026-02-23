@@ -13,7 +13,13 @@ import * as SplashScreen from 'expo-splash-screen';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { AuthProvider, ThemeProvider } from './src/context';
 import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
-import { ErrorBoundary, AnimatedSplash, InAppNotificationBanner } from './src/components';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  ErrorBoundary,
+  AnimatedSplash,
+  InAppNotificationBanner,
+  WhatsNewModal,
+} from './src/components';
 import {
   initializeNotifications,
   handleNotificationReceived,
@@ -32,7 +38,10 @@ import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
+import { WHATS_NEW } from './src/config/whatsNew';
 import { GIPHY_API_KEY } from '@env';
+
+const WHATS_NEW_STORAGE_KEY = '@whats_new_last_seen_id';
 
 // Prevent the native splash screen from auto-hiding
 // This keeps it visible while our animated splash runs
@@ -67,6 +76,7 @@ export default function App() {
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
   const [animationDone, setAnimationDone] = useState(false);
   const [bannerData, setBannerData] = useState(null);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   // Load retro pixel fonts - gate splash screen on this
   const [fontsLoaded] = useFonts({
@@ -98,6 +108,53 @@ export default function App() {
     };
     hideSplash();
   }, [fontsLoaded, animationDone]);
+
+  // Show "What's New" modal once per OTA update after splash finishes
+  useEffect(() => {
+    if (showAnimatedSplash) return;
+    if (__DEV__) return;
+
+    const updateId = Updates.updateId;
+    if (!updateId) return;
+
+    const checkWhatsNew = async () => {
+      try {
+        const lastSeenId = await AsyncStorage.getItem(WHATS_NEW_STORAGE_KEY);
+
+        if (!lastSeenId) {
+          // First install — store current ID without showing modal
+          await AsyncStorage.setItem(WHATS_NEW_STORAGE_KEY, updateId);
+          return;
+        }
+
+        if (lastSeenId === updateId) return;
+
+        if (WHATS_NEW.items.length === 0) {
+          // Silent patch — store ID without showing modal
+          await AsyncStorage.setItem(WHATS_NEW_STORAGE_KEY, updateId);
+          return;
+        }
+
+        setShowWhatsNew(true);
+      } catch (err) {
+        logger.warn("App: Failed to check what's new", { error: err.message });
+      }
+    };
+
+    checkWhatsNew();
+  }, [showAnimatedSplash]);
+
+  const handleDismissWhatsNew = async () => {
+    setShowWhatsNew(false);
+    try {
+      const updateId = Updates.updateId;
+      if (updateId) {
+        await AsyncStorage.setItem(WHATS_NEW_STORAGE_KEY, updateId);
+      }
+    } catch (err) {
+      logger.warn("App: Failed to store what's new dismissal", { error: err.message });
+    }
+  };
 
   /**
    * Shared navigation helper for notification taps
@@ -359,6 +416,12 @@ export default function App() {
               </AuthProvider>
             </ThemeProvider>
           </ErrorBoundary>
+          <WhatsNewModal
+            visible={showWhatsNew}
+            title={WHATS_NEW.title}
+            items={WHATS_NEW.items}
+            onDismiss={handleDismissWhatsNew}
+          />
           <InAppNotificationBanner
             visible={!!bannerData}
             title={bannerData?.title || ''}

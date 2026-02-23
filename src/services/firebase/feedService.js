@@ -624,10 +624,11 @@ export const getTopPhotosByEngagement = async (userId, maxCount = 5) => {
  * Fetches journaled photos from the last 7 days (STORIES_VISIBILITY_DAYS)
  *
  * @param {string} userId - User's ID
+ * @param {Object} [userProfile] - Optional user profile from AuthContext (skips Firestore read)
  * @returns {Promise<{success: boolean, userStory?: Object, error?: string}>}
  */
-export const getUserStoriesData = async userId => {
-  logger.debug('feedService.getUserStoriesData: Starting', { userId });
+export const getUserStoriesData = async (userId, userProfile = null) => {
+  logger.debug('feedService.getUserStoriesData: Starting', { userId, hasProfile: !!userProfile });
 
   try {
     if (!userId) {
@@ -635,10 +636,15 @@ export const getUserStoriesData = async userId => {
       return { success: false, error: 'Invalid user ID' };
     }
 
-    // Fetch user profile data
-    const userDocRef = doc(db, 'users', userId);
-    const userDocSnap = await getDoc(userDocRef);
-    const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+    // Use provided profile if available, otherwise fetch from Firestore
+    let userData;
+    if (userProfile) {
+      userData = userProfile;
+    } else {
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
+      userData = userDocSnap.exists() ? userDocSnap.data() : {};
+    }
 
     // Query photos where userId matches AND photoState == 'journal' AND within visibility window
     // Uses triagedAt so visibility window starts from when user shared the photo

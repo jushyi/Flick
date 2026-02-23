@@ -39,6 +39,7 @@ export const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
+    paddingBottom: 100,
     flexGrow: 1,
   },
   sectionTitle: {
