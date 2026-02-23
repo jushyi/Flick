@@ -405,11 +405,11 @@ service cloud.firestore {
                        request.resource.data.keys().hasAll(['participants', 'createdAt', 'updatedAt', 'deletedAt', 'unreadCount']);
 
       // Update: Only participants can update (for markAsRead, softDelete, metadata)
-      // Restrict to specific fields: deletedAt, unreadCount (user-initiated)
+      // Restrict to specific fields: deletedAt, unreadCount, readReceipts (user-initiated)
       // Cloud Functions use admin SDK and bypass rules for lastMessage/updatedAt updates
       allow update: if isConversationMemberById(conversationId) &&
                        request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['deletedAt', 'unreadCount']);
+                         .hasOnly(['deletedAt', 'unreadCount', 'readReceipts']);
 
       // Delete: Never — conversations are permanent
       allow delete: if false;
@@ -424,8 +424,15 @@ service cloud.firestore {
                          request.resource.data.senderId == request.auth.uid &&
                          request.resource.data.keys().hasAll(['senderId', 'type', 'createdAt']);
 
-        // Update/Delete: Never — messages are permanent (retained for moderation)
-        allow update, delete: if false;
+        // Update: Only conversation participants who are NOT the message sender
+        // can update viewedAt and screenshotted fields (for snap read receipts)
+        allow update: if isConversationMemberById(conversationId) &&
+                         resource.data.senderId != request.auth.uid &&
+                         request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['viewedAt', 'screenshotted']);
+
+        // Delete: Never — messages are permanent (retained for moderation)
+        allow delete: if false;
       }
     }
 

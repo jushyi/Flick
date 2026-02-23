@@ -202,7 +202,8 @@ export const sendMessage = async (conversationId, senderId, text, gifUrl = null)
 
 /**
  * Mark a conversation as read for a user.
- * Resets the unread count to 0.
+ * Atomically resets the unread count to 0 and writes a readReceipts timestamp.
+ * The readReceipts timestamp is used for real-time read receipt indicators.
  *
  * @param {string} conversationId - Conversation document ID
  * @param {string} userId - User ID marking as read
@@ -227,6 +228,7 @@ export const markConversationRead = async (conversationId, userId) => {
 
     await updateDoc(conversationRef, {
       [`unreadCount.${userId}`]: 0,
+      [`readReceipts.${userId}`]: serverTimestamp(),
     });
 
     logger.info('messageService.markConversationRead: Success', {
