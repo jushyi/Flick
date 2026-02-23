@@ -11,6 +11,13 @@ const CustomBottomTabBar = ({ state, navigation, userProfile, totalUnreadCount =
   const insets = useSafeAreaInsets();
   const androidBottomPadding = Platform.OS === 'android' ? insets.bottom : 0;
 
+  // Hide tab bar when navigating into nested stack screens (Conversation, NewMessage,
+  // Settings, etc.) — only show on root screens of each tab's stack.
+  const focusedRoute = state.routes[state.index];
+  const nestedState = focusedRoute.state;
+  const isOnRootScreen = !nestedState || nestedState.index === 0;
+  if (!isOnRootScreen) return null;
+
   return (
     <View
       style={[
