@@ -5,9 +5,10 @@
  * supports text and GIF sending, handles keyboard interaction, and provides
  * pagination for older messages via an inverted FlatList.
  */
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { View, Text, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 
+import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import ConversationHeader from '../components/ConversationHeader';
@@ -21,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import useConversation from '../hooks/useConversation';
 
 import { colors } from '../constants/colors';
+import logger from '../utils/logger';
 
 /**
  * Empty state shown when no messages exist in the conversation.
@@ -39,6 +41,40 @@ const ConversationScreen = () => {
   const route = useRoute();
   const { conversationId, friendId, friendProfile, deletedAt } = route.params;
 
+  const [liveFriendProfile, setLiveFriendProfile] = useState(friendProfile);
+
+  useEffect(() => {
+    if (!friendId) return;
+    let cancelled = false;
+    const fetchProfile = async () => {
+      try {
+        const db = getFirestore();
+        const snap = await getDoc(doc(db, 'users', friendId));
+        if (snap.exists() && !cancelled) {
+          const data = snap.data();
+          setLiveFriendProfile({
+            uid: friendId,
+            username: data.username || friendProfile?.username || 'unknown',
+            displayName: data.displayName || friendProfile?.displayName || 'Unknown User',
+            profilePhotoURL: data.profilePhotoURL || data.photoURL || null,
+            nameColor: data.nameColor || null,
+            readReceiptsEnabled: data.readReceiptsEnabled,
+          });
+        }
+      } catch (err) {
+        // Silently fall back to navigation param profile on error
+        logger.warn('ConversationScreen: Failed to fetch fresh friend profile', {
+          friendId,
+          error: err.message,
+        });
+      }
+    };
+    fetchProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [friendId, friendProfile?.username, friendProfile?.displayName]);
+
   const { messages, conversationDoc, loading, loadingMore, hasMore, loadMore, handleSendMessage } =
     useConversation(conversationId, user.uid, deletedAt);
 
@@ -56,7 +92,7 @@ const ConversationScreen = () => {
   );
   const friendReadAt = conversationDoc?.readReceipts?.[friendId];
   const senderEnabled = userProfile?.readReceiptsEnabled !== false;
-  const recipientEnabled = friendProfile?.readReceiptsEnabled !== false;
+  const recipientEnabled = liveFriendProfile?.readReceiptsEnabled !== false;
   const showReadStatus = senderEnabled && recipientEnabled;
   const isRead =
     showReadStatus &&
@@ -168,24 +204,35 @@ const ConversationScreen = () => {
     return (
       <View style={styles.container}>
         <ConversationHeader
-          friendProfile={friendProfile}
+          friendProfile={liveFriendProfile}
           onBackPress={() => navigation.goBack()}
           onProfilePress={() =>
             navigation.navigate('OtherUserProfile', {
               userId: friendId,
-              username: friendProfile.username,
+              username: liveFriendProfile?.username,
             })
           }
           onReportPress={() =>
             navigation.navigate('ReportUser', {
               userId: friendId,
-              username: friendProfile.username,
+              username: liveFriendProfile?.username,
             })
           }
         />
-        <View style={styles.loadingContainer}>
-          <PixelSpinner size="large" />
-        </View>
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.select({ ios: 'padding', android: 'height' })}
+          keyboardVerticalOffset={Platform.select({ ios: 0, android: 0 })}
+        >
+          <View style={styles.loadingContainer}>
+            <PixelSpinner size="large" />
+          </View>
+          <DMInput
+            onSendMessage={handleSendMessage}
+            disabled={isReadOnly}
+            placeholder="Message..."
+          />
+        </KeyboardAvoidingView>
       </View>
     );
   }
@@ -193,18 +240,18 @@ const ConversationScreen = () => {
   return (
     <View style={styles.container}>
       <ConversationHeader
-        friendProfile={friendProfile}
+        friendProfile={liveFriendProfile}
         onBackPress={() => navigation.goBack()}
         onProfilePress={() =>
           navigation.navigate('OtherUserProfile', {
             userId: friendId,
-            username: friendProfile.username,
+            username: liveFriendProfile?.username,
           })
         }
         onReportPress={() =>
           navigation.navigate('ReportUser', {
             userId: friendId,
-            username: friendProfile.username,
+            username: liveFriendProfile?.username,
           })
         }
       />
@@ -224,7 +271,7 @@ const ConversationScreen = () => {
           ListFooterComponent={loadingMore ? <PixelSpinner size="small" /> : null}
           ListEmptyComponent={
             !loading ? (
-              <EmptyConversation displayName={friendProfile?.displayName || 'them'} />
+              <EmptyConversation displayName={liveFriendProfile?.displayName || 'them'} />
             ) : null
           }
           contentContainerStyle={messages.length === 0 ? styles.emptyListContent : undefined}
