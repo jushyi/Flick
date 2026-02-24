@@ -463,6 +463,9 @@ const snapStyles = StyleSheet.create({
     height: 120,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.background.primary,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   footerControls: {
     justifyContent: 'center',

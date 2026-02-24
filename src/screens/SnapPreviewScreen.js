@@ -24,6 +24,7 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   Keyboard,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -160,35 +161,40 @@ const SnapPreviewScreen = () => {
         </View>
 
         {/* Polaroid frame with swipe-down gesture */}
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[screenStyles.polaroidOuter, animatedStyle]}>
-            <View style={[screenStyles.polaroidFrame, { width: polaroidWidth }]}>
-              {/* Photo inside Polaroid */}
-              <Image
-                source={{ uri: photoUri }}
-                style={[screenStyles.photo, { width: photoWidth, height: photoHeight }]}
-                contentFit="cover"
-              />
-
-              {/* Thick bottom strip with caption input */}
-              <View style={screenStyles.captionStrip}>
-                <TextInput
-                  style={screenStyles.captionInput}
-                  value={caption}
-                  onChangeText={setCaption}
-                  placeholder="Write something!"
-                  placeholderTextColor="#999999"
-                  maxLength={150}
-                  multiline={false}
-                  returnKeyType="done"
-                  blurOnSubmit
-                  onSubmitEditing={() => Keyboard.dismiss()}
-                  editable={!isSending}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.select({ ios: 'padding', android: undefined })}
+        >
+          <GestureDetector gesture={panGesture}>
+            <Animated.View style={[screenStyles.polaroidOuter, animatedStyle]}>
+              <View style={[screenStyles.polaroidFrame, { width: polaroidWidth }]}>
+                {/* Photo inside Polaroid */}
+                <Image
+                  source={{ uri: photoUri }}
+                  style={[screenStyles.photo, { width: photoWidth, height: photoHeight }]}
+                  contentFit="cover"
                 />
+
+                {/* Thick bottom strip with caption input */}
+                <View style={screenStyles.captionStrip}>
+                  <TextInput
+                    style={screenStyles.captionInput}
+                    value={caption}
+                    onChangeText={setCaption}
+                    placeholder="Write something!"
+                    placeholderTextColor="#999999"
+                    maxLength={150}
+                    multiline={false}
+                    returnKeyType="done"
+                    blurOnSubmit
+                    onSubmitEditing={() => Keyboard.dismiss()}
+                    editable={!isSending}
+                  />
+                </View>
               </View>
-            </View>
-          </Animated.View>
-        </GestureDetector>
+            </Animated.View>
+          </GestureDetector>
+        </KeyboardAvoidingView>
 
         {/* Footer: wide send button */}
         <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>

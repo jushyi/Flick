@@ -189,7 +189,7 @@ const ConversationRow = ({
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
-              <PixelIcon name="camera" size={16} color={SNAP_AMBER} />
+              <PixelIcon name="snap-polaroid" size={18} color={SNAP_AMBER} />
             </TouchableOpacity>
           )}
         </View>

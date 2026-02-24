@@ -755,7 +755,7 @@ const ICON_GRIDS = {
   // Polaroid frame with lightning bolt flash — snap camera icon for DM input
   'snap-polaroid': {
     width: 12,
-    height: 14,
+    height: 12,
     pixels: [
       // Top border (row 0)
       [0, 0],
@@ -785,22 +785,20 @@ const ICON_GRIDS = {
       [11, 6],
       [0, 7],
       [11, 7],
-      // Lightning bolt flash (centered)
-      [5, 1],
-      [6, 1],
-      [4, 2],
+      // Lightning bolt flash (centered, rows 2-6 with gap at rows 1 and 7)
       [5, 2],
-      [3, 3],
+      [6, 2],
       [4, 3],
       [5, 3],
-      [6, 3],
-      [7, 3],
+      [3, 4],
+      [4, 4],
+      [5, 4],
       [6, 4],
       [7, 4],
-      [5, 5],
       [6, 5],
-      [4, 6],
+      [7, 5],
       [5, 6],
+      [6, 6],
       // Divider (row 8)
       [0, 8],
       [1, 8],
@@ -814,7 +812,7 @@ const ICON_GRIDS = {
       [9, 8],
       [10, 8],
       [11, 8],
-      // Thick bottom strip (rows 9-11)
+      // Bottom strip (rows 9-11)
       [0, 9],
       [1, 9],
       [2, 9],
@@ -851,19 +849,6 @@ const ICON_GRIDS = {
       [9, 11],
       [10, 11],
       [11, 11],
-      // Bottom row closes frame (row 12)
-      [0, 12],
-      [1, 12],
-      [2, 12],
-      [3, 12],
-      [4, 12],
-      [5, 12],
-      [6, 12],
-      [7, 12],
-      [8, 12],
-      [9, 12],
-      [10, 12],
-      [11, 12],
     ],
   },
 
