@@ -80,6 +80,7 @@ const SnapViewer = ({
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [selectedReaction, setSelectedReaction] = useState(null);
 
   // Gesture shared values
   const translateY = useSharedValue(0);
@@ -98,6 +99,7 @@ const SnapViewer = ({
       setImageUrl(null);
       setLoading(true);
       setImageError(false);
+      setSelectedReaction(null);
       return;
     }
 
@@ -215,6 +217,7 @@ const SnapViewer = ({
   const handleReactionPress = useCallback(
     emojiKey => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setSelectedReaction(emojiKey);
       onReaction?.(emojiKey);
     },
     [onReaction]
@@ -291,6 +294,7 @@ const SnapViewer = ({
                     key={emoji.key}
                     style={({ pressed }) => [
                       styles.reactionButton,
+                      selectedReaction === emoji.key && styles.reactionButtonSelected,
                       pressed && styles.reactionButtonPressed,
                     ]}
                     onPress={() => handleReactionPress(emoji.key)}
@@ -408,6 +412,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 4,
+  },
+  reactionButtonSelected: {
+    backgroundColor: colors.background.tertiary,
+    borderWidth: 2,
+    borderColor: colors.interactive.primary,
   },
   reactionButtonPressed: {
     backgroundColor: colors.background.tertiary,
