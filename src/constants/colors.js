@@ -142,6 +142,17 @@ export const colors = {
     segmentBorder: 'rgba(255, 255, 255, 0.15)', // Empty segment outline
   },
 
+  // Streak indicator colors — tier-based deepening
+  streak: {
+    default: '#7B7B9E', // Muted gray (matches colors.icon.secondary)
+    building: '#D4A574', // Subtle warm tint
+    pending: '#D4A574', // Same as building (per user decision)
+    activeTier1: '#F5A623', // Light amber (day 3-9, matches SNAP_AMBER)
+    activeTier2: '#FF8C00', // Orange (day 10-49, matches colors.status.developing)
+    activeTier3: '#E65100', // Deep orange (day 50+)
+    warning: '#FF3333', // Red (matches colors.status.danger)
+  },
+
   // Story card styling (retro mini-cards)
   storyCard: {
     frame: '#1E1E35', // Dark indigo frame
