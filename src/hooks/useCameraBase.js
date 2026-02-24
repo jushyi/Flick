@@ -223,7 +223,6 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
 
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
-        skipProcessing: true,
       });
 
       logger.debug('useCameraBase: Photo captured', { uri: photo.uri });
