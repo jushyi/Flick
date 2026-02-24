@@ -208,7 +208,12 @@ const ConversationScreen = () => {
     messageId => {
       const index = messages.findIndex(m => m.id === messageId);
       if (index !== -1 && flatListRef.current) {
-        flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+        try {
+          flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+        } catch {
+          // scrollToIndex can throw on Android when index is outside render window;
+          // onScrollToIndexFailed handler will retry via approximate offset.
+        }
         // Brief highlight: set highlightedMessageId for 1.5 seconds
         setHighlightedMessageId(messageId);
         setTimeout(() => setHighlightedMessageId(null), 1500);
@@ -405,14 +410,18 @@ const ConversationScreen = () => {
       offset: info.averageItemLength * info.index,
       animated: true,
     });
-    // Then retry the precise scrollToIndex after the list has rendered the target area
+    // Retry with longer delay to ensure the target area has rendered
     setTimeout(() => {
-      flatListRef.current?.scrollToIndex({
-        index: info.index,
-        animated: true,
-        viewPosition: 0.5,
-      });
-    }, 200);
+      try {
+        flatListRef.current?.scrollToIndex({
+          index: info.index,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      } catch {
+        // Silently fail if still outside render window after retry
+      }
+    }, 500);
   }, []);
 
   // Show loading spinner while initial data loads

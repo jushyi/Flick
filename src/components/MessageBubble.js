@@ -1,13 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  Animated as RNAnimated,
-  StyleSheet,
-  Platform,
-  StatusBar,
-} from 'react-native';
+import { View, Text, Pressable, Animated as RNAnimated, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -85,11 +77,7 @@ const MessageBubble = ({
   const handleLongPress = () => {
     if (onLongPress && bubbleRef.current) {
       bubbleRef.current.measureInWindow((x, y, width, height) => {
-        // On Android, measureInWindow includes the status bar offset but the Modal
-        // overlay with statusBarTranslucent draws from the very top of the screen.
-        // Subtract status bar height to align the picker correctly.
-        const adjustedY = Platform.OS === 'android' ? y - (StatusBar.currentHeight || 0) : y;
-        onLongPress(message, { x, y: adjustedY, width, height });
+        onLongPress(message, { x, y, width, height });
       });
     }
   };
@@ -300,12 +288,10 @@ const MessageBubble = ({
       {/* Muted original message rendered above the reply bubble */}
       {renderOriginalMessage()}
 
-      <View
-        style={[
-          styles.swipeContainer,
-          isCurrentUser ? styles.swipeContainerRight : styles.swipeContainerLeft,
-        ]}
-      >
+      {/* Message bubble with gesture support — bubbleRow is constrained by
+          the container's alignItems (flex-end / flex-start), so it hugs the
+          correct side without needing a full-width swipeContainer. */}
+      <View style={styles.bubbleRow}>
         <Animated.View style={[styles.replyArrowContainer, replyIconAnimatedStyle]}>
           <Ionicons name="return-up-back" size={20} color={colors.text.secondary} />
         </Animated.View>
@@ -321,14 +307,12 @@ const MessageBubble = ({
               ]}
             >
               {isGif || isImage ? (
-                <View style={isCurrentUser ? styles.mediaAlignRight : styles.mediaAlignLeft}>
-                  <Image
-                    source={{ uri: message.gifUrl || message.imageUrl }}
-                    style={isImage ? styles.messageImage : styles.gifImage}
-                    contentFit={isImage ? 'cover' : 'contain'}
-                    transition={200}
-                  />
-                </View>
+                <Image
+                  source={{ uri: message.gifUrl || message.imageUrl }}
+                  style={isImage ? styles.messageImage : styles.gifImage}
+                  contentFit={isImage ? 'cover' : 'contain'}
+                  transition={200}
+                />
               ) : (
                 <Text style={[styles.text, isCurrentUser ? styles.textUser : styles.textFriend]}>
                   {message.text}
@@ -369,25 +353,20 @@ const styles = StyleSheet.create({
   containerLeft: {
     alignItems: 'flex-start',
   },
-  swipeContainer: {
+  bubbleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-  },
-  swipeContainerRight: {
-    justifyContent: 'flex-end',
-  },
-  swipeContainerLeft: {
-    justifyContent: 'flex-start',
+    maxWidth: '75%',
   },
   replyArrowContainer: {
     position: 'absolute',
-    left: -30,
+    left: -28,
+    top: '50%',
+    marginTop: -10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   bubble: {
-    maxWidth: '75%',
     minWidth: 32,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -422,12 +401,6 @@ const styles = StyleSheet.create({
   },
   textFriend: {
     color: colors.text.primary,
-  },
-  mediaAlignRight: {
-    alignItems: 'flex-end',
-  },
-  mediaAlignLeft: {
-    alignItems: 'flex-start',
   },
   gifImage: {
     width: 200,
