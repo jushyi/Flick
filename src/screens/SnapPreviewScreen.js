@@ -12,7 +12,7 @@
  *   friendDisplayName - Recipient display name (shown in "To:" header)
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,7 +24,6 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   Keyboard,
-  KeyboardAvoidingView,
 } from 'react-native';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -34,6 +33,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedKeyboard,
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
@@ -73,6 +73,37 @@ const SnapPreviewScreen = () => {
   const polaroidWidth = screenWidth - 48; // 24px margin on each side
   const photoWidth = polaroidWidth - POLAROID_BORDER * 2;
   const photoHeight = photoWidth * (4 / 3); // 4:3 aspect ratio
+
+  // Keyboard offset — replaces KAV which doesn't account for suggestions/autocomplete bar.
+  // useAnimatedKeyboard provides native tracking (iOS);
+  // JS keyboard events are the fallback (Android with edgeToEdgeEnabled).
+  const keyboard = useAnimatedKeyboard();
+  const jsKeyboardHeight = useSharedValue(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, e => {
+      jsKeyboardHeight.value = e.endCoordinates.height;
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      jsKeyboardHeight.value = 0;
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [jsKeyboardHeight]);
+
+  const keyboardOffsetStyle = useAnimatedStyle(() => {
+    const nativeHeight = keyboard.height.value;
+    const jsHeight = jsKeyboardHeight.value;
+    const kbHeight = nativeHeight > 0 ? nativeHeight : jsHeight;
+    return {
+      transform: [{ translateY: -kbHeight * 0.52 }],
+    };
+  });
 
   // Handle retake / dismiss — go back to camera (stays in snap mode)
   const handleDismiss = useCallback(() => {
@@ -189,12 +220,9 @@ const SnapPreviewScreen = () => {
           <View style={screenStyles.headerSpacer} />
         </View>
 
-        {/* Polaroid frame wrapped in KAV so caption lifts above keyboard; footer stays fixed below */}
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.select({ ios: 'padding', android: 'padding' })}
-          keyboardVerticalOffset={Platform.select({ ios: insets.top + 56, android: 0 })}
-        >
+        {/* Polaroid frame — Reanimated keyboard offset replaces KAV which doesn't
+            account for suggestions/autocomplete bar on either platform */}
+        <Animated.View style={[{ flex: 1 }, keyboardOffsetStyle]}>
           <GestureDetector gesture={panGesture}>
             <Animated.View style={[screenStyles.polaroidOuter, animatedStyle]}>
               <View style={[screenStyles.polaroidFrame, { width: polaroidWidth }]}>
@@ -227,7 +255,7 @@ const SnapPreviewScreen = () => {
               </View>
             </Animated.View>
           </GestureDetector>
-        </KeyboardAvoidingView>
+        </Animated.View>
 
         {/* Footer: wide send button — outside KAV so it stays fixed at screen bottom */}
         <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
@@ -282,10 +310,7 @@ const screenStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     textAlign: 'center',
-    height: 36,
-    lineHeight: 36,
     includeFontPadding: false,
-    textAlignVertical: 'center',
   },
   headerSpacer: {
     width: 36,
