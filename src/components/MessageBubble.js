@@ -188,6 +188,9 @@ const MessageBubble = ({
         isPending={message._isPending}
         hasError={message._hasError}
         onRetry={message._onRetry}
+        reactions={reactions}
+        onReactionPress={onReactionPress}
+        currentUserId={currentUserId}
       />
     );
   }

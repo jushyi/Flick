@@ -16,6 +16,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { format } from 'date-fns';
 
 import PixelIcon from './PixelIcon';
+import ReactionBadges from './ReactionBadges';
 import SnapProgressRing from './SnapProgressRing';
 
 import { colors } from '../constants/colors';
@@ -35,6 +36,9 @@ const SnapBubble = ({
   isPending = false,
   hasError = false,
   onRetry,
+  reactions,
+  onReactionPress,
+  currentUserId,
 }) => {
   const isOpened = message.viewedAt !== null && message.viewedAt !== undefined;
   const isSending = isPending && !hasError;
@@ -134,6 +138,15 @@ const SnapBubble = ({
         </TouchableOpacity>
       ) : (
         <View style={getBubbleStyle()}>{renderContent()}</View>
+      )}
+
+      {reactions && Object.keys(reactions).length > 0 && (
+        <ReactionBadges
+          reactions={reactions}
+          isCurrentUser={isCurrentUser}
+          currentUserId={currentUserId}
+          onReactionPress={onReactionPress}
+        />
       )}
 
       {showTimestamp && (
