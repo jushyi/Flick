@@ -17,9 +17,9 @@
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 23 (INFRA-01, INFRA-02, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08)
+- Completed: 25 (INFRA-01, INFRA-02, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08)
 - In progress: 0
-- Remaining: 15
+- Remaining: 13
 - Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
@@ -67,6 +67,9 @@
 | 2026-02-24 | Amber #F5A623 accent for snap UI elements         | Consistent with colors.status.developing for developing metaphor   |
 | 2026-02-24 | Polaroid frame: 4:3 photo, 8px border, 64px strip | Standard Polaroid aesthetic for snap viewing experience            |
 | 2026-02-24 | BackHandler for SnapViewer on Android             | Hardware back button dismisses snap viewer modal properly          |
+| 2026-02-24 | CameraScreen reused with mode param for snaps     | No separate SnapCameraModal; mode='snap' hides darkroom UI         |
+| 2026-02-24 | Zoom hidden in snap mode                          | Keeps snap camera simple per user decision                         |
+| 2026-02-24 | navigation.pop(2) for snap send return            | Returns past SnapPreview and SnapCamera to conversation            |
 
 ## Blockers
 
@@ -110,4 +113,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed Phase 3 Plan 03: Snap viewer components (SnapBubble + SnapViewer + SnapProgressRing)
+Last activity: 2026-02-24 - Completed Phase 3 Plan 02: Snap camera and preview UI (CameraScreen snap mode + SnapPreviewScreen)

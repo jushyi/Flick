@@ -36,8 +36,8 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 ### Snap Messages
 
-- [ ] **SNAP-01**: Camera button in the DM input bar opens Flick's camera for snap capture
-- [ ] **SNAP-02**: User can add an optional caption to a snap before sending
+- [x] **SNAP-01**: Camera button in the DM input bar opens Flick's camera for snap capture
+- [x] **SNAP-02**: User can add an optional caption to a snap before sending
 - [x] **SNAP-03**: Snap is uploaded to Firebase Storage and delivered instantly (no darkroom delay)
 - [x] **SNAP-04**: Unopened snap shows as a generic camera icon with "Snap" label in the conversation
 - [x] **SNAP-05**: Recipient taps to view snap full-screen; snap disappears after closing (view once)
@@ -133,8 +133,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | REPLY-02    | Phase 2 | Complete |
 | REPLY-03    | Phase 2 | Complete |
 | REPLY-04    | Phase 2 | Complete |
-| SNAP-01     | Phase 3 | Pending  |
-| SNAP-02     | Phase 3 | Pending  |
+| SNAP-01     | Phase 3 | Complete |
+| SNAP-02     | Phase 3 | Complete |
 | SNAP-03     | Phase 3 | Complete |
 | SNAP-04     | Phase 3 | Complete |
 | SNAP-05     | Phase 3 | Complete |
