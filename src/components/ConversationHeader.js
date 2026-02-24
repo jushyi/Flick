@@ -14,12 +14,20 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PixelIcon from './PixelIcon';
+import StreakIndicator from './StreakIndicator';
 import DropdownMenu from './DropdownMenu';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
-const ConversationHeader = ({ friendProfile, onBackPress, onProfilePress, onReportPress }) => {
+const ConversationHeader = ({
+  friendProfile,
+  onBackPress,
+  onProfilePress,
+  onReportPress,
+  streakState = 'default',
+  streakDayCount = 0,
+}) => {
   const insets = useSafeAreaInsets();
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState(null);
@@ -64,6 +72,11 @@ const ConversationHeader = ({ friendProfile, onBackPress, onProfilePress, onRepo
             {friendProfile?.displayName || 'Unknown'}
           </Text>
         </TouchableOpacity>
+
+        {/* Streak Indicator */}
+        <View style={styles.streakWrapper}>
+          <StreakIndicator streakState={streakState} dayCount={streakDayCount} size={18} />
+        </View>
 
         {/* Three-dot Menu */}
         <TouchableOpacity ref={menuButtonRef} style={styles.menuButton} onPress={handleMenuPress}>
@@ -125,6 +138,9 @@ const styles = StyleSheet.create({
   },
   nameWrapper: {
     flex: 1,
+    marginRight: 8,
+  },
+  streakWrapper: {
     marginRight: 8,
   },
   displayName: {

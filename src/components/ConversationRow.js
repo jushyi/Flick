@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { isYesterday, format } from 'date-fns';
 
 import PixelIcon from './PixelIcon';
+import StreakIndicator from './StreakIndicator';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -190,7 +191,11 @@ const ConversationRow = ({
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
-              <PixelIcon name="snap-polaroid" size={18} color={SNAP_AMBER} />
+              <StreakIndicator
+                streakState={conversation.streakState || 'default'}
+                dayCount={conversation.streakDayCount || 0}
+                size={18}
+              />
             </TouchableOpacity>
           )}
         </View>

@@ -8,7 +8,7 @@
  * - Total unread count aggregation
  * - Optimistic soft delete with revert on failure
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 
@@ -16,6 +16,9 @@ import {
   subscribeToConversations,
   softDeleteConversation,
 } from '../services/firebase/messageService';
+import { generateStreakId } from '../services/firebase/streakService';
+
+import { useStreakMap } from './useStreaks';
 
 import logger from '../utils/logger';
 
@@ -36,6 +39,7 @@ const useMessages = userId => {
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const unsubscribeRef = useRef(null);
   const friendProfileCacheRef = useRef(new Map());
+  const { streakMap } = useStreakMap(userId);
 
   logger.debug('useMessages: Hook initialized', { userId });
 
@@ -261,11 +265,30 @@ const useMessages = userId => {
     [userId, conversations, totalUnreadCount]
   );
 
+  // Merge streak data into conversations at render time via useMemo.
+  // This ensures streak updates (from useStreakMap) are reflected immediately
+  // without waiting for a Firestore conversation update to re-trigger enrichment.
+  const conversationsWithStreaks = useMemo(() => {
+    return conversations.map(conv => {
+      const friendId = conv.participants?.find(p => p !== userId);
+      const streakId = friendId ? generateStreakId(userId, friendId) : null;
+      const streakInfo = streakId ? streakMap[streakId] : null;
+
+      return {
+        ...conv,
+        streakState: streakInfo?.streakState || 'default',
+        streakDayCount: streakInfo?.dayCount || 0,
+        streakColor: streakInfo?.streakColor || null,
+      };
+    });
+  }, [conversations, streakMap, userId]);
+
   return {
-    conversations,
+    conversations: conversationsWithStreaks,
     loading,
     totalUnreadCount,
     handleDeleteConversation,
+    streakMap,
   };
 };
 

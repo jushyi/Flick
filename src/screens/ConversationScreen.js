@@ -33,6 +33,7 @@ import SnapViewer from '../components/SnapViewer';
 import { useAuth } from '../context/AuthContext';
 import useConversation from '../hooks/useConversation';
 import useMessageActions from '../hooks/useMessageActions';
+import { useStreak } from '../hooks/useStreaks';
 
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
@@ -86,6 +87,9 @@ const ConversationScreen = () => {
       cancelled = true;
     };
   }, [friendId, friendProfile?.username, friendProfile?.displayName]);
+
+  // --- Streak data for header and DMInput ---
+  const { streakState, dayCount: streakDayCount } = useStreak(user?.uid, friendId);
 
   // --- Data hooks ---
   const {
@@ -519,6 +523,8 @@ const ConversationScreen = () => {
               username: liveFriendProfile?.username,
             })
           }
+          streakState={streakState}
+          streakDayCount={streakDayCount}
         />
         <KeyboardAvoidingView
           style={styles.flex}
@@ -533,6 +539,8 @@ const ConversationScreen = () => {
             onOpenSnapCamera={handleOpenSnapCamera}
             disabled={isReadOnly}
             placeholder="Message..."
+            streakState={streakState}
+            streakDayCount={streakDayCount}
           />
         </KeyboardAvoidingView>
       </View>
@@ -556,6 +564,8 @@ const ConversationScreen = () => {
             username: liveFriendProfile?.username,
           })
         }
+        streakState={streakState}
+        streakDayCount={streakDayCount}
       />
       <KeyboardAvoidingView
         style={styles.flex}
@@ -593,6 +603,8 @@ const ConversationScreen = () => {
           replyToMessage={replyToMessage}
           replyToSenderName={replyToSenderName}
           onCancelReply={cancelReply}
+          streakState={streakState}
+          streakDayCount={streakDayCount}
         />
       </KeyboardAvoidingView>
 
