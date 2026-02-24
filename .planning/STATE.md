@@ -11,15 +11,15 @@
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —          |
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
 | 3 — Snap Messages                          | Complete (8/8 plans)    | 2026-02-24 | 2026-02-24 |
-| 4 — Snap Streaks                           | In Progress (1/4 plans) | 2026-02-24 | —          |
+| 4 — Snap Streaks                           | In Progress (2/4 plans) | 2026-02-24 | —          |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —          |
 
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 30 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-03, STRK-04, STRK-07)
+- Completed: 34 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-01, STRK-02, STRK-03, STRK-04, STRK-05, STRK-06, STRK-07)
 - In progress: 0
-- Remaining: 8
+- Remaining: 4
 - Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
@@ -88,6 +88,8 @@
 | 2026-02-24 | Duplicated generateStreakId to avoid circular deps       | 3-line function copied from messageService pattern                            |
 | 2026-02-24 | Instant streak state transitions (no animation)          | Per user decision from planning phase                                         |
 | 2026-02-24 | StreakIndicator as drop-in PixelIcon replacement         | Same component across ConversationRow, Header, DMInput                        |
+| 2026-02-24 | warningAt pre-computed field for efficient queries       | Firestore cannot do arithmetic in queries; store expiresAt - 4h as field      |
+| 2026-02-24 | Best-effort streak updates in onNewMessage               | Streak errors logged but do not fail message delivery                         |
 
 ## Blockers
 
@@ -140,4 +142,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 04-02-PLAN.md: client streak service and StreakIndicator component
+Last activity: 2026-02-24 - Completed 04-01-PLAN.md: server-side streak engine with Cloud Functions and tests

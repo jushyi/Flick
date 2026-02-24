@@ -47,12 +47,12 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 ### Snap Streaks
 
-- [ ] **STRK-01**: Streak tracking begins when both users send at least one snap to each other within 24 hours
-- [ ] **STRK-02**: Streak activates (visible) after 3 consecutive days of mutual snaps
+- [x] **STRK-01**: Streak tracking begins when both users send at least one snap to each other within 24 hours
+- [x] **STRK-02**: Streak activates (visible) after 3 consecutive days of mutual snaps
 - [x] **STRK-03**: Snap button in DM input changes color and shows day count when streak is active
 - [x] **STRK-04**: Snap button shows warning color with "!" when streak is about to expire (within 4 hours)
-- [ ] **STRK-05**: Push notification sent when a streak is about to expire
-- [ ] **STRK-06**: Streak resets to 0 if 24 hours pass without mutual snaps
+- [x] **STRK-05**: Push notification sent when a streak is about to expire
+- [x] **STRK-06**: Streak resets to 0 if 24 hours pass without mutual snaps
 - [x] **STRK-07**: All streak calculations are server-authoritative (Cloud Functions only, never client-side)
 
 ### Photo Tag Integration
@@ -143,12 +143,12 @@ Explicitly excluded. Documented to prevent scope creep.
 | SNAP-08     | Phase 3 | Complete |
 | INFRA-03    | Phase 3 | Complete |
 | INFRA-04    | Phase 3 | Complete |
-| STRK-01     | Phase 4 | Pending  |
-| STRK-02     | Phase 4 | Pending  |
+| STRK-01     | Phase 4 | Complete |
+| STRK-02     | Phase 4 | Complete |
 | STRK-03     | Phase 4 | Complete |
 | STRK-04     | Phase 4 | Complete |
-| STRK-05     | Phase 4 | Pending  |
-| STRK-06     | Phase 4 | Pending  |
+| STRK-05     | Phase 4 | Complete |
+| STRK-06     | Phase 4 | Complete |
 | STRK-07     | Phase 4 | Complete |
 | TAG-01      | Phase 5 | Pending  |
 | TAG-02      | Phase 5 | Pending  |
