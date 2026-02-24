@@ -122,6 +122,7 @@ None currently.
 | 27  | Fix snap send navigation to return to Conversation instead of MessagesList       | 2026-02-24 | 7368ce4 |          | [27-after-sending-a-snap-from-messages-tab-n](./quick/27-after-sending-a-snap-from-messages-tab-n/) |
 | 28  | Fix SnapPreviewScreen header X button and recipient label vertical alignment     | 2026-02-24 | 6b2d3e1 |          | [28-on-android-and-ios-the-x-button-and-the-](./quick/28-on-android-and-ios-the-x-button-and-the-/) |
 | 29  | Fix snap caption KAV so footer stays fixed when keyboard opens                   | 2026-02-24 | 3688dd8 |          | [29-fix-snap-caption-keyboardavoidingview-fo](./quick/29-fix-snap-caption-keyboardavoidingview-fo/) |
+| 30  | Reposition unread badge inline between snap icon and timestamp                   | 2026-02-24 | 7c415f8 |          | [30-the-icon-badge-for-unread-messages-in-a-](./quick/30-the-icon-badge-for-unread-messages-in-a-/) |
 
 ## Notes
 
