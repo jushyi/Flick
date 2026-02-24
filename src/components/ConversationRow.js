@@ -181,7 +181,6 @@ const ConversationRow = ({
 
       <View style={styles.rightColumn}>
         <View style={styles.rightTopRow}>
-          <Text style={styles.timestamp}>{formatMessageTime(updatedAt)}</Text>
           {onSnapCamera && (
             <TouchableOpacity
               style={styles.snapCameraButton}
@@ -192,8 +191,9 @@ const ConversationRow = ({
               <PixelIcon name="snap-polaroid" size={18} color={SNAP_AMBER} />
             </TouchableOpacity>
           )}
+          <UnreadBadge count={unreadCount} isSnap={isSnapLastMessage && hasUnread} />
+          <Text style={styles.timestamp}>{formatMessageTime(updatedAt)}</Text>
         </View>
-        <UnreadBadge count={unreadCount} isSnap={isSnapLastMessage && hasUnread} />
       </View>
     </TouchableOpacity>
   );
@@ -241,10 +241,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rightColumn: {
-    position: 'relative',
     alignItems: 'flex-end',
     marginLeft: 8,
-    minHeight: 24,
   },
   timestamp: {
     fontSize: 10,
@@ -252,14 +250,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.readable,
   },
   unreadBadge: {
-    position: 'absolute',
-    top: 22,
-    right: 0,
     minWidth: 18,
     height: 18,
     borderRadius: 9,
     backgroundColor: colors.interactive.primary,
     paddingHorizontal: 4,
+    marginHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
