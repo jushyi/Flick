@@ -293,7 +293,7 @@ const DMInput = ({
 
         {/* Camera / Send Button — morphs between snap camera and send arrow */}
         {canSend ? (
-          <Animated.View style={{ opacity: morphAnim }}>
+          <Animated.View style={{ opacity: morphAnim, alignSelf: 'stretch' }}>
             <TouchableOpacity
               style={styles.sendButton}
               onPress={handleSend}
@@ -308,7 +308,7 @@ const DMInput = ({
             </TouchableOpacity>
           </Animated.View>
         ) : !disabled && onOpenSnapCamera ? (
-          <Animated.View style={{ opacity: Animated.subtract(1, morphAnim) }}>
+          <Animated.View style={{ opacity: Animated.subtract(1, morphAnim), alignSelf: 'stretch' }}>
             <TouchableOpacity
               style={styles.sendButton}
               onPress={onOpenSnapCamera}
@@ -373,14 +373,13 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
   },
   sendButton: {
+    flex: 1,
     backgroundColor: colors.background.tertiary,
     borderWidth: 1,
     borderColor: 'rgba(0, 212, 255, 0.3)',
     borderRadius: 2,
     paddingHorizontal: 8,
     paddingVertical: 8,
-    minHeight: 40,
-    alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
