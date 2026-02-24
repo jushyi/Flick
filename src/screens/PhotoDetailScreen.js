@@ -36,7 +36,7 @@ import { Image } from 'expo-image';
 import PixelIcon from '../components/PixelIcon';
 import StrokedNameText from '../components/StrokedNameText';
 import EmojiPicker from 'rn-emoji-keyboard';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { getTimeAgo } from '../utils/timeUtils';
 import { usePhotoDetailModal } from '../hooks/usePhotoDetailModal';
 import { usePhotoDetail } from '../context/PhotoDetailContext';
@@ -54,6 +54,7 @@ import DropdownMenu from '../components/DropdownMenu';
 import { TagFriendsModal, TaggedPeopleModal } from '../components';
 import { colors } from '../constants/colors';
 import { profileCacheKey } from '../utils/imageUtils';
+import { addTaggedPhotoToFeed } from '../services/firebase/photoTagService';
 import logger from '../utils/logger';
 
 // Progress bar constants - matches photo marginHorizontal (8px)
@@ -72,7 +73,11 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
  */
 const PhotoDetailScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
+
+  // Read taggedPhotoContext from route params (passed by ConversationScreen for tagged photo messages)
+  const { taggedPhotoContext } = route.params || {};
 
   // Get state and callbacks from context
   const {
@@ -537,6 +542,52 @@ const PhotoDetailScreen = () => {
   }, [contextAvatarPress, currentPhoto, displayName, isOwnPhoto]);
 
   /**
+   * Handle attribution press - navigate to photographer's profile
+   */
+  const handlePhotographerPress = useCallback(
+    (photographerId, photographerDisplayName) => {
+      navigation.navigate('OtherUserProfile', {
+        userId: photographerId,
+        username: photographerDisplayName,
+      });
+    },
+    [navigation]
+  );
+
+  // Tagged photo "Add to feed" state
+  const [isAddingToFeed, setIsAddingToFeed] = useState(false);
+  const [hasAddedToFeed, setHasAddedToFeed] = useState(
+    () => !!taggedPhotoContext?.addedToFeedBy?.[contextUserId]
+  );
+
+  // Determine if Add to feed button should be shown
+  const showAddToFeedButton = taggedPhotoContext && currentPhoto?.userId !== contextUserId;
+
+  /**
+   * Handle "Add to feed" button press for tagged photo context
+   */
+  const handleAddToFeed = useCallback(async () => {
+    if (!taggedPhotoContext || isAddingToFeed || hasAddedToFeed) return;
+    setIsAddingToFeed(true);
+    try {
+      const result = await addTaggedPhotoToFeed(
+        taggedPhotoContext.photoId,
+        taggedPhotoContext.conversationId,
+        taggedPhotoContext.messageId
+      );
+      if (result.success) {
+        setHasAddedToFeed(true);
+      } else {
+        logger.warn('Failed to add tagged photo to feed', { error: result.error });
+      }
+    } catch (error) {
+      logger.error('Error adding tagged photo to feed', { error: error.message });
+    } finally {
+      setIsAddingToFeed(false);
+    }
+  }, [taggedPhotoContext, isAddingToFeed, hasAddedToFeed]);
+
+  /**
    * Handle avatar press from comments - navigate to user's profile
    * Keep comments open - when user returns they'll be right where they were
    */
@@ -990,6 +1041,23 @@ const PhotoDetailScreen = () => {
               </StrokedNameText>
               <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
             </View>
+            {currentPhoto?.attribution && (
+              <TouchableOpacity
+                onPress={() =>
+                  handlePhotographerPress(
+                    currentPhoto.attribution.photographerId,
+                    currentPhoto.attribution.photographerDisplayName
+                  )
+                }
+                activeOpacity={0.7}
+                style={localStyles.attributionRow}
+              >
+                <PixelIcon name="camera" size={14} color={colors.text.tertiary} />
+                <Text style={localStyles.attributionText}>
+                  Photo by @{currentPhoto.attribution.photographerUsername}
+                </Text>
+              </TouchableOpacity>
+            )}
             {isEditingCaption ? (
               <View style={localStyles.captionEditRow}>
                 <TextInput
@@ -1064,6 +1132,34 @@ const PhotoDetailScreen = () => {
               activeOpacity={0.7}
             >
               <PixelIcon name="ellipsis-vertical" size={28} color={colors.text.primary} />
+            </TouchableOpacity>
+          )}
+
+          {/* Add to feed button - visible when viewing tagged photo as recipient */}
+          {showAddToFeedButton && (
+            <TouchableOpacity
+              style={[
+                localStyles.addToFeedButton,
+                (hasAddedToFeed || isAddingToFeed) && localStyles.addToFeedButtonDisabled,
+                Platform.OS === 'android' && { bottom: 150 + insets.bottom },
+              ]}
+              onPress={handleAddToFeed}
+              disabled={hasAddedToFeed || isAddingToFeed}
+              activeOpacity={0.7}
+            >
+              <PixelIcon
+                name="image-outline"
+                size={16}
+                color={hasAddedToFeed ? colors.text.tertiary : colors.text.primary}
+              />
+              <Text
+                style={[
+                  localStyles.addToFeedText,
+                  hasAddedToFeed && localStyles.addToFeedTextDisabled,
+                ]}
+              >
+                {isAddingToFeed ? 'Adding...' : hasAddedToFeed ? 'Added to feed' : 'Add to feed'}
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -1465,6 +1561,46 @@ const localStyles = StyleSheet.create({
     backgroundColor: colors.overlay.dark,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Attribution row for reshared photos
+  attributionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 2,
+  },
+  attributionText: {
+    fontSize: 11,
+    fontFamily: 'Silkscreen_400Regular',
+    color: colors.text.tertiary,
+    textShadowColor: colors.overlay.darker,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  // Add to feed button for tagged photo context
+  addToFeedButton: {
+    position: 'absolute',
+    bottom: 150,
+    left: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.overlay.dark,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 10,
+  },
+  addToFeedButtonDisabled: {
+    opacity: 0.5,
+  },
+  addToFeedText: {
+    fontSize: 12,
+    fontFamily: 'Silkscreen_700Bold',
+    color: colors.text.primary,
+  },
+  addToFeedTextDisabled: {
+    color: colors.text.tertiary,
   },
 });
 

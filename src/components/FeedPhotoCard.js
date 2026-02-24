@@ -168,6 +168,25 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
         </View>
       </View>
 
+      {/* Attribution line (for reshared photos) */}
+      {photo.attribution && (
+        <TouchableOpacity
+          onPress={() =>
+            onAvatarPress(
+              photo.attribution.photographerId,
+              photo.attribution.photographerDisplayName
+            )
+          }
+          activeOpacity={0.7}
+          style={styles.attributionRow}
+        >
+          <PixelIcon name="camera" size={14} color={colors.text.tertiary} />
+          <Text style={styles.attributionText}>
+            Photo by @{photo.attribution.photographerUsername}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* Caption (if present) */}
       {photo.caption ? (
         <Text style={styles.captionText} numberOfLines={3}>

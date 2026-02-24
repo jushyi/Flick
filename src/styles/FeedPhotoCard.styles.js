@@ -72,6 +72,21 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  // Attribution row for reshared photos
+  attributionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingTop: 4,
+    gap: 6,
+  },
+
+  attributionText: {
+    fontSize: 11,
+    fontFamily: typography.fontFamily.body,
+    color: colors.text.tertiary,
+  },
+
   // Caption text below info row
   captionText: {
     fontSize: typography.size.sm,
