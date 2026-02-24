@@ -950,17 +950,44 @@ async function sendBatchedTagNotification(pendingKey) {
 }
 
 /**
+ * Server-side helper: Get or create a DM conversation between two users.
+ * Uses deterministic ID: [lowerUserId]_[higherUserId]
+ * Creates conversation doc if it does not exist.
+ *
+ * @param {string} userId1 - First user ID
+ * @param {string} userId2 - Second user ID
+ * @returns {Promise<string>} - The conversation ID
+ */
+async function getOrCreateConversationServer(userId1, userId2) {
+  const [lower, higher] = [userId1, userId2].sort();
+  const conversationId = `${lower}_${higher}`;
+  const convRef = db.doc(`conversations/${conversationId}`);
+  const convSnap = await convRef.get();
+
+  if (!convSnap.exists) {
+    await convRef.set({
+      participants: [lower, higher],
+      lastMessage: null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      deletedAt: { [userId1]: null, [userId2]: null },
+      unreadCount: { [userId1]: 0, [userId2]: 0 },
+    });
+  }
+
+  return conversationId;
+}
+
 /**
- * Cloud Function: Send notification when someone is tagged in a photo
- * Triggered when photo document is updated with new taggedUserIds
- * Sends notifications immediately (no debouncing)
+ * Cloud Function: Send tagged photo as DM message when someone is tagged in a photo
+ * Triggered when photo document is updated with new taggedUserIds.
+ * Creates a type:tagged_photo message in the DM conversation between tagger and each tagged user.
+ * The onNewMessage trigger handles conversation metadata (lastMessage, unreadCount) and push notifications.
  */
 exports.sendTaggedPhotoNotification = functions
   .runWith({ memory: '256MB', timeoutSeconds: 60 })
   .firestore.document('photos/{photoId}')
   .onUpdate(async (change, context) => {
-    const { sendPushNotification } = require('./notifications/sender');
-
     try {
       const photoId = context.params.photoId;
       const before = change.before.data();
@@ -1017,93 +1044,73 @@ exports.sendTaggedPhotoNotification = functions
         newlyTaggedUserIds,
       });
 
-      // Get tagger's info for notification
+      // Get tagger's info
       const taggerDoc = await db.collection('users').doc(taggerId).get();
       if (!taggerDoc.exists) {
         logger.error('sendTaggedPhotoNotification: Tagger not found:', taggerId);
         return null;
       }
 
-      const taggerData = taggerDoc.data();
-      const taggerName = taggerData.displayName || taggerData.username || 'Someone';
-      const taggerProfilePhotoURL = taggerData.profilePhotoURL || taggerData.photoURL || null;
+      // Process all tagged users concurrently with Promise.allSettled
+      const results = await Promise.allSettled(
+        newlyTaggedUserIds.map(async taggedUserId => {
+          // Check block status: skip if tagged user has blocked the tagger
+          const blockQuery = await db
+            .collection('blocks')
+            .where('blockerId', '==', taggedUserId)
+            .where('blockedId', '==', taggerId)
+            .limit(1)
+            .get();
 
-      // Send immediate notification to each newly tagged user
-      for (const taggedUserId of newlyTaggedUserIds) {
-        try {
-          // Get tagged user's FCM token and preferences
-          const taggedUserDoc = await db.collection('users').doc(taggedUserId).get();
-          if (!taggedUserDoc.exists) {
-            logger.debug('sendTaggedPhotoNotification: Tagged user not found', { taggedUserId });
-            continue;
-          }
-
-          const taggedUserData = taggedUserDoc.data();
-          const fcmToken = taggedUserData.fcmToken;
-
-          if (!fcmToken) {
-            logger.debug('sendTaggedPhotoNotification: Tagged user has no FCM token', {
+          if (!blockQuery.empty) {
+            logger.debug('sendTaggedPhotoNotification: Tagger is blocked by tagged user', {
+              taggerId,
               taggedUserId,
             });
-            continue;
+            return { skipped: true, reason: 'blocked' };
           }
 
-          // Check notification preferences
-          const prefs = taggedUserData.notificationPreferences || {};
-          const masterEnabled = prefs.enabled !== false;
-          const tagsEnabled = prefs.tags !== false;
+          // Get or create conversation
+          const conversationId = await getOrCreateConversationServer(taggerId, taggedUserId);
 
-          if (!masterEnabled || !tagsEnabled) {
-            logger.debug('sendTaggedPhotoNotification: Notifications disabled by preferences', {
-              taggedUserId,
-              masterEnabled,
-              tagsEnabled,
-            });
-            continue;
-          }
-
-          // Send push notification immediately
-          const title = 'Flick';
-          const body = `${taggerName} tagged you in a photo`;
-
-          await sendPushNotification(
-            fcmToken,
-            title,
-            body,
-            {
-              type: 'tagged',
+          // Create tagged_photo message in the conversation
+          // onNewMessage trigger will handle lastMessage, unreadCount, and push notification
+          await db
+            .collection('conversations')
+            .doc(conversationId)
+            .collection('messages')
+            .add({
+              senderId: taggerId,
+              type: 'tagged_photo',
+              text: null,
+              gifUrl: null,
+              imageUrl: null,
               photoId: photoId,
-              taggerId: taggerId,
-            },
-            taggedUserId
-          );
+              photoURL: after.imageURL || null,
+              photoOwnerId: taggerId,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
 
-          // Write to notifications collection for in-app display
-          await db.collection('notifications').add({
-            recipientId: taggedUserId,
-            type: 'tagged',
-            senderId: taggerId,
-            senderName: taggerName,
-            senderProfilePhotoURL: taggerProfilePhotoURL || null,
-            photoId: photoId,
-            message: body,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            read: false,
-          });
-
-          logger.info('sendTaggedPhotoNotification: Notification sent', {
+          logger.info('sendTaggedPhotoNotification: DM message created', {
             photoId,
             taggerId,
             taggedUserId,
+            conversationId,
           });
-        } catch (error) {
-          logger.error('sendTaggedPhotoNotification: Error sending to user', {
-            taggedUserId,
-            error: error.message,
+
+          return { success: true, taggedUserId, conversationId };
+        })
+      );
+
+      // Log any rejected promises
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          logger.error('sendTaggedPhotoNotification: Failed to process tagged user', {
+            taggedUserId: newlyTaggedUserIds[index],
+            error: result.reason?.message || String(result.reason),
           });
-          // Continue to next user even if one fails
         }
-      }
+      });
 
       return null;
     } catch (error) {
@@ -2972,13 +2979,15 @@ exports.onNewMessage = functions
         const lastMessagePreview =
           messageType === 'snap'
             ? null
-            : messageType === 'gif'
-              ? 'Sent a GIF'
-              : messageType === 'image'
-                ? 'Sent a photo'
-                : messageType === 'reaction'
-                  ? 'Reacted'
-                  : message.text || '';
+            : messageType === 'tagged_photo'
+              ? 'Tagged you in a photo'
+              : messageType === 'gif'
+                ? 'Sent a GIF'
+                : messageType === 'image'
+                  ? 'Sent a photo'
+                  : messageType === 'reaction'
+                    ? 'Reacted'
+                    : message.text || '';
 
         const lastMessageData = {
           text: lastMessagePreview,
@@ -3059,6 +3068,8 @@ exports.onNewMessage = functions
         let body;
         if (messageType === 'snap') {
           body = getRandomTemplate(SNAP_BODY_TEMPLATES);
+        } else if (messageType === 'tagged_photo') {
+          body = 'Tagged you in a photo';
         } else if (messageType === 'reaction' && message.emoji) {
           const emojiMap = {
             heart: '\u2764\uFE0F',
@@ -3080,7 +3091,12 @@ exports.onNewMessage = functions
         }
 
         const notificationData = {
-          type: messageType === 'snap' ? 'snap' : 'direct_message',
+          type:
+            messageType === 'snap'
+              ? 'snap'
+              : messageType === 'tagged_photo'
+                ? 'tagged_photo'
+                : 'direct_message',
           conversationId,
           senderId,
           senderName,
@@ -3111,6 +3127,189 @@ exports.onNewMessage = functions
       return null;
     }
   });
+
+// =============================================================================
+// TAGGED PHOTO - ADD TO FEED
+// =============================================================================
+
+/**
+ * addTaggedPhotoToFeed - Callable function for recipients to reshare a tagged photo to their feed.
+ * 1. Validates auth, inputs, and conversation participation
+ * 2. Verifies the message is type:tagged_photo and the original photo exists
+ * 3. Idempotency: if already added, returns existing newPhotoId
+ * 4. Creates a new photo document for the recipient with attribution
+ * 5. Updates the message with addedToFeedBy map
+ * 6. Sends push notification to the photographer
+ */
+exports.addTaggedPhotoToFeed = onCall({ memory: '256MiB', timeoutSeconds: 60 }, async request => {
+  const { sendPushNotification } = require('./notifications/sender');
+
+  // 1. Auth check
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be authenticated');
+  }
+  const recipientId = request.auth.uid;
+  const { photoId, messageId, conversationId } = request.data || {};
+
+  // 2. Validate inputs (strings, non-empty)
+  if (
+    !photoId ||
+    typeof photoId !== 'string' ||
+    !messageId ||
+    typeof messageId !== 'string' ||
+    !conversationId ||
+    typeof conversationId !== 'string'
+  ) {
+    throw new HttpsError(
+      'invalid-argument',
+      'photoId, messageId, and conversationId are required strings'
+    );
+  }
+
+  // 3. Verify recipient is a participant in the conversation
+  const convRef = db.doc(`conversations/${conversationId}`);
+  const convSnap = await convRef.get();
+  if (!convSnap.exists) {
+    throw new HttpsError('not-found', 'Conversation not found');
+  }
+  const convData = convSnap.data();
+  if (!convData.participants || !convData.participants.includes(recipientId)) {
+    throw new HttpsError('permission-denied', 'Not a participant in this conversation');
+  }
+
+  // 4. Read the message doc, verify type === 'tagged_photo'
+  const messageRef = db
+    .collection('conversations')
+    .doc(conversationId)
+    .collection('messages')
+    .doc(messageId);
+  const messageSnap = await messageRef.get();
+  if (!messageSnap.exists) {
+    throw new HttpsError('not-found', 'Message not found');
+  }
+  const messageData = messageSnap.data();
+  if (messageData.type !== 'tagged_photo') {
+    throw new HttpsError('failed-precondition', 'Message is not a tagged photo');
+  }
+
+  // 5. Idempotency: check message.addedToFeedBy?.[recipientId]
+  if (messageData.addedToFeedBy && messageData.addedToFeedBy[recipientId]) {
+    const existing = messageData.addedToFeedBy[recipientId];
+    logger.info('addTaggedPhotoToFeed: Already added, returning existing', {
+      recipientId,
+      newPhotoId: existing.newPhotoId,
+    });
+    return { success: true, newPhotoId: existing.newPhotoId };
+  }
+
+  // 6. Read original photo doc
+  const originalPhotoRef = db.collection('photos').doc(photoId);
+  const originalPhotoSnap = await originalPhotoRef.get();
+  if (!originalPhotoSnap.exists) {
+    throw new HttpsError('not-found', 'Original photo not found');
+  }
+  const originalPhoto = originalPhotoSnap.data();
+
+  // 7. Verify original photo is not deleted
+  if (originalPhoto.photoState === 'deleted') {
+    throw new HttpsError('not-found', 'Original photo has been deleted');
+  }
+
+  // Look up photographer info for attribution
+  const photographerId = originalPhoto.userId;
+  const photographerDoc = await db.collection('users').doc(photographerId).get();
+  const photographerData = photographerDoc.exists ? photographerDoc.data() : {};
+  const photographerUsername = photographerData.username || 'unknown';
+  const photographerDisplayName = photographerData.displayName || 'Unknown';
+
+  // 8. Create new photo document for recipient
+  // Compute month string from capturedAt or use current month
+  let month;
+  if (originalPhoto.capturedAt && typeof originalPhoto.capturedAt.toDate === 'function') {
+    const capturedDate = originalPhoto.capturedAt.toDate();
+    month = `${capturedDate.getFullYear()}-${String(capturedDate.getMonth() + 1).padStart(2, '0')}`;
+  } else {
+    const now = new Date();
+    month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  const newPhotoRef = await db.collection('photos').add({
+    userId: recipientId,
+    imageURL: originalPhoto.imageURL || null,
+    storagePath: originalPhoto.storagePath || null,
+    capturedAt: originalPhoto.capturedAt || null,
+    status: 'triaged',
+    photoState: 'journal',
+    visibility: 'friends-only',
+    month: month,
+    reactions: {},
+    reactionCount: 0,
+    triagedAt: admin.firestore.FieldValue.serverTimestamp(),
+    attribution: {
+      originalPhotoId: photoId,
+      photographerId: photographerId,
+      photographerUsername: photographerUsername,
+      photographerDisplayName: photographerDisplayName,
+    },
+    caption: originalPhoto.caption || null,
+    taggedUserIds: [],
+  });
+
+  // 9. Update message doc with addedToFeedBy
+  await messageRef.update({
+    [`addedToFeedBy.${recipientId}`]: {
+      newPhotoId: newPhotoRef.id,
+      addedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+  });
+
+  // 10. Send push notification to photographer (only if photographer !== recipientId)
+  if (photographerId !== recipientId) {
+    try {
+      const recipientDoc = await db.collection('users').doc(recipientId).get();
+      const recipientData = recipientDoc.exists ? recipientDoc.data() : {};
+      const recipientName = recipientData.displayName || recipientData.username || 'Someone';
+
+      const photographerFcmToken = photographerData.fcmToken;
+      if (photographerFcmToken) {
+        // Check photographer notification preferences
+        const prefs = photographerData.notificationPreferences || {};
+        const masterEnabled = prefs.enabled !== false;
+        const tagsEnabled = prefs.tags !== false;
+
+        if (masterEnabled && tagsEnabled) {
+          await sendPushNotification(
+            photographerFcmToken,
+            'Flick',
+            `${recipientName} added your photo to their feed`,
+            {
+              type: 'photo_reshared',
+              photoId: newPhotoRef.id,
+              originalPhotoId: photoId,
+              resharerId: recipientId,
+            },
+            photographerId
+          );
+        }
+      }
+    } catch (notifError) {
+      // Best-effort: log but don't fail the function
+      logger.error('addTaggedPhotoToFeed: Failed to notify photographer', {
+        error: notifError.message,
+        photographerId,
+      });
+    }
+  }
+
+  logger.info('addTaggedPhotoToFeed: Photo added to feed', {
+    recipientId,
+    newPhotoId: newPhotoRef.id,
+    originalPhotoId: photoId,
+  });
+
+  // 11. Return success
+  return { success: true, newPhotoId: newPhotoRef.id };
+});
 
 // =============================================================================
 // SNAP MESSAGE INFRASTRUCTURE
