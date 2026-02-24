@@ -125,6 +125,7 @@ None currently.
 | 30  | Reposition unread badge inline between snap icon and timestamp                   | 2026-02-24 | 7c415f8 |          | [30-the-icon-badge-for-unread-messages-in-a-](./quick/30-the-icon-badge-for-unread-messages-in-a-/) |
 | 31  | Fix snap viewer reaction bar and header (unified bar, remove sender name)        | 2026-02-24 | 8ae7770 |          | [31-fix-snap-viewer-reaction-bar-and-header-](./quick/31-fix-snap-viewer-reaction-bar-and-header-/) |
 | 32  | Fix send/snap button height to match input bar on both platforms                 | 2026-02-24 | bbfcec2 |          | [32-on-both-android-and-ios-the-send-or-snap](./quick/32-on-both-android-and-ios-the-send-or-snap/) |
+| 33  | Fix snap photo black bars on iOS (contentFit contain to cover)                   | 2026-02-24 | 79b1e39 |          | [33-on-ios-only-the-photo-you-take-for-a-sna](./quick/33-on-ios-only-the-photo-you-take-for-a-sna/) |
 
 ## Notes
 
@@ -135,4 +136,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick task 31: fix snap viewer reaction bar and header (unified bar, remove sender name)
+Last activity: 2026-02-24 - Completed quick task 33: fix snap photo black bars on iOS (contentFit contain to cover)
