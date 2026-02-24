@@ -202,7 +202,7 @@ const SnapPreviewScreen = () => {
                 <Image
                   source={{ uri: photoUri }}
                   style={[screenStyles.photo, { width: photoWidth, height: photoHeight }]}
-                  contentFit="cover"
+                  contentFit="contain"
                 />
 
                 {/* Thick bottom strip with caption input */}
@@ -313,6 +313,7 @@ const screenStyles = StyleSheet.create({
   },
   photo: {
     borderRadius: 1,
+    backgroundColor: '#1A1A1A',
   },
   // Caption strip at bottom of Polaroid — uses frame padding for horizontal inset
   captionStrip: {

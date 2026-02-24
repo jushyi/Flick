@@ -65,10 +65,19 @@ const uriToFilePath = uri => {
  */
 const compressSnapImage = async uri => {
   try {
-    const manipResult = await ImageManipulator.manipulateAsync(uri, [{ resize: { width: 1080 } }], {
-      compress: 0.7,
+    // Step 1: Normalize EXIF orientation (bake rotation into pixels).
+    // Back camera photos retain raw EXIF from sensor; this ensures
+    // orientation is consistent across platforms before upload.
+    const normalized = await ImageManipulator.manipulateAsync(uri, [], {
       format: ImageManipulator.SaveFormat.JPEG,
     });
+
+    // Step 2: Resize and compress
+    const manipResult = await ImageManipulator.manipulateAsync(
+      normalized.uri,
+      [{ resize: { width: 1080 } }],
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
     return manipResult.uri;
   } catch (error) {
     logger.error('snapService.compressSnapImage: Compression failed, using original', {
