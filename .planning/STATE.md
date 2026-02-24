@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 3
-**Current Plan:** 3 of 6
+**Current Plan:** 4 of 6
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -10,7 +10,7 @@
 | ------------------------------------------ | ----------------------- | ---------- | ---------- |
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —          |
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
-| 3 — Snap Messages                          | In Progress (3/6 plans) | 2026-02-24 | —          |
+| 3 — Snap Messages                          | In Progress (4/6 plans) | 2026-02-24 | —          |
 | 4 — Snap Streaks                           | Not Started             | —          | —          |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —          |
 
@@ -70,6 +70,9 @@
 | 2026-02-24 | CameraScreen reused with mode param for snaps     | No separate SnapCameraModal; mode='snap' hides darkroom UI         |
 | 2026-02-24 | Zoom hidden in snap mode                          | Keeps snap camera simple per user decision                         |
 | 2026-02-24 | navigation.pop(2) for snap send return            | Returns past SnapPreview and SnapCamera to conversation            |
+| 2026-02-24 | Snap delegation after hooks in MessageBubble      | Early return before hooks violates Rules of Hooks                  |
+| 2026-02-24 | 300ms delay for autoOpenSnapId SnapViewer         | Allows conversation FlatList to render before snap viewer opens    |
+| 2026-02-24 | Snap notification shares Conversation nav handler | snap type returns screen:'Conversation' with autoOpenSnapId param  |
 
 ## Blockers
 
@@ -113,4 +116,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed Phase 3 Plan 02: Snap camera and preview UI (CameraScreen snap mode + SnapPreviewScreen)
+Last activity: 2026-02-24 - Completed Phase 3 Plan 04: Conversation UI integration (DMInput camera morph, SnapViewer overlay, snap notification deep linking)
