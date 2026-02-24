@@ -519,7 +519,8 @@ describe('Snap Cloud Functions', () => {
       // Body should be one of the snap templates
       const validBodies = ['sent you a snap', 'just snapped you', 'New snap'];
       expect(validBodies).toContain(body);
-      expect(data.type).toBe('direct_message');
+      expect(data.type).toBe('snap');
+      expect(data.messageId).toBe('msg-123');
       expect(data.conversationId).toBe('user-a_user-b');
     });
   });
