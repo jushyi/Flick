@@ -656,7 +656,9 @@ describe('sendTaggedPhotoNotification', () => {
     jest.useRealTimers();
   });
 
-  it('should send notification immediately when user is tagged', async () => {
+  it('should create DM message when user is tagged (no direct push notification)', async () => {
+    // The refactored function creates DM messages; onNewMessage handles push.
+    // We verify it does NOT call sendPushNotification directly.
     setupMockDb({
       users: {
         'tagger-1': {
@@ -683,6 +685,7 @@ describe('sendTaggedPhotoNotification', () => {
         data: () => ({
           userId: 'tagger-1',
           taggedUserIds: ['tagged-1'],
+          imageURL: 'https://photo.url/test.jpg',
         }),
       },
     };
@@ -691,14 +694,8 @@ describe('sendTaggedPhotoNotification', () => {
 
     await sendTaggedPhotoNotification(change, context);
 
-    // Notification is sent immediately (no debouncing)
-    expect(mockSendPushNotification).toHaveBeenCalledWith(
-      VALID_TOKEN,
-      'Flick',
-      expect.stringContaining('Tagger'),
-      expect.objectContaining({ type: 'tagged', photoId: 'photo-tag-1' }),
-      'tagged-1'
-    );
+    // sendPushNotification should NOT be called directly (onNewMessage handles it)
+    expect(mockSendPushNotification).not.toHaveBeenCalled();
   });
 
   it('should skip when no new tags are added', async () => {
@@ -1534,5 +1531,572 @@ describe('onNewMessage - reaction handling', () => {
 
     expect(result).toBeNull();
     expect(mockSendPushNotification).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================================
+// sendTaggedPhotoNotification - DM message creation (Phase 05)
+// ============================================================================
+describe('sendTaggedPhotoNotification - DM message creation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Helper: set up mockDb for the refactored sendTaggedPhotoNotification.
+   * The function now creates DM messages instead of activity notifications.
+   * It queries blocks, gets/creates conversations, and adds messages to subcollections.
+   */
+  function setupTagDmMockDb(config = {}) {
+    const {
+      users = {},
+      blockQueryResult = { empty: true, docs: [] },
+      conversationExists = false,
+    } = config;
+
+    // Track message creation calls
+    const mockMessageAdd = jest.fn().mockResolvedValue({ id: 'mock-message-id' });
+    const mockConvSet = jest.fn().mockResolvedValue();
+
+    // Track conversation doc refs for assertion
+    const convDocRef = {
+      get: jest.fn().mockResolvedValue({
+        exists: conversationExists,
+        data: () => (conversationExists ? { participants: [] } : null),
+      }),
+      set: mockConvSet,
+      update: jest.fn().mockResolvedValue(),
+    };
+
+    // Mock db.doc() for conversation path
+    mockDb.doc.mockImplementation(path => {
+      if (path.startsWith('conversations/')) {
+        return convDocRef;
+      }
+      return {
+        get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+        set: jest.fn().mockResolvedValue(),
+        update: jest.fn().mockResolvedValue(),
+      };
+    });
+
+    // Track where().where().limit().get() for blocks collection
+    let currentCollection = null;
+
+    mockDb.collection.mockImplementation(collectionName => {
+      currentCollection = collectionName;
+
+      const mockMessagesSubcollection = {
+        add: mockMessageAdd,
+      };
+
+      const collectionRef = {
+        doc: jest.fn(docId => {
+          if (collectionName === 'users' && users[docId]) {
+            return {
+              get: jest.fn().mockResolvedValue({
+                exists: true,
+                id: docId,
+                data: () => users[docId],
+              }),
+            };
+          }
+          if (collectionName === 'conversations') {
+            return {
+              get: convDocRef.get,
+              set: mockConvSet,
+              update: jest.fn().mockResolvedValue(),
+              collection: jest.fn(subName => {
+                if (subName === 'messages') {
+                  return mockMessagesSubcollection;
+                }
+                return { add: jest.fn().mockResolvedValue({ id: 'mock-id' }) };
+              }),
+            };
+          }
+          return {
+            get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+          };
+        }),
+        add: jest.fn().mockResolvedValue({ id: 'mock-id' }),
+        where: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        get: jest.fn(() => {
+          if (currentCollection === 'blocks') {
+            return Promise.resolve(blockQueryResult);
+          }
+          return Promise.resolve({ empty: true, docs: [] });
+        }),
+      };
+
+      return collectionRef;
+    });
+
+    return { mockMessageAdd, mockConvSet };
+  }
+
+  it('creates DM message for each newly tagged user', async () => {
+    const { mockMessageAdd } = setupTagDmMockDb({
+      users: {
+        'tagger-1': {
+          displayName: 'Tagger',
+          username: 'tagger',
+          profilePhotoURL: 'https://tagger.photo',
+        },
+        'tagged-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Tagged User',
+          notificationPreferences: {},
+        },
+      },
+    });
+
+    const change = {
+      before: {
+        data: () => ({
+          userId: 'tagger-1',
+          taggedUserIds: [],
+        }),
+      },
+      after: {
+        data: () => ({
+          userId: 'tagger-1',
+          taggedUserIds: ['tagged-1'],
+          imageURL: 'https://photo.url/test.jpg',
+        }),
+      },
+    };
+
+    const context = { params: { photoId: 'photo-dm-1' } };
+
+    await sendTaggedPhotoNotification(change, context);
+
+    // Should create a message in the conversation
+    expect(mockMessageAdd).toHaveBeenCalledWith(
+      expect.objectContaining({
+        senderId: 'tagger-1',
+        type: 'tagged_photo',
+        text: null,
+        gifUrl: null,
+        imageUrl: null,
+        photoId: 'photo-dm-1',
+        photoURL: 'https://photo.url/test.jpg',
+        photoOwnerId: 'tagger-1',
+      })
+    );
+  });
+
+  it('auto-creates conversation if none exists', async () => {
+    const { mockConvSet } = setupTagDmMockDb({
+      users: {
+        'tagger-1': {
+          displayName: 'Tagger',
+          username: 'tagger',
+        },
+        'tagged-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Tagged User',
+          notificationPreferences: {},
+        },
+      },
+      conversationExists: false,
+    });
+
+    const change = {
+      before: { data: () => ({ userId: 'tagger-1', taggedUserIds: [] }) },
+      after: {
+        data: () => ({ userId: 'tagger-1', taggedUserIds: ['tagged-1'], imageURL: null }),
+      },
+    };
+
+    const context = { params: { photoId: 'photo-conv-create' } };
+
+    await sendTaggedPhotoNotification(change, context);
+
+    // Should create the conversation doc since it does not exist
+    expect(mockConvSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        participants: expect.arrayContaining(['tagger-1', 'tagged-1']),
+        lastMessage: null,
+      })
+    );
+  });
+
+  it('skips blocked users', async () => {
+    const { mockMessageAdd } = setupTagDmMockDb({
+      users: {
+        'tagger-1': {
+          displayName: 'Tagger',
+          username: 'tagger',
+        },
+        'tagged-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Tagged User',
+          notificationPreferences: {},
+        },
+      },
+      blockQueryResult: {
+        empty: false,
+        docs: [{ id: 'block-1', data: () => ({ blockerId: 'tagged-1', blockedId: 'tagger-1' }) }],
+      },
+    });
+
+    const change = {
+      before: { data: () => ({ userId: 'tagger-1', taggedUserIds: [] }) },
+      after: {
+        data: () => ({ userId: 'tagger-1', taggedUserIds: ['tagged-1'], imageURL: null }),
+      },
+    };
+
+    const context = { params: { photoId: 'photo-blocked' } };
+
+    await sendTaggedPhotoNotification(change, context);
+
+    // Should NOT create a message for blocked user
+    expect(mockMessageAdd).not.toHaveBeenCalled();
+  });
+
+  it('does NOT write to notifications collection', async () => {
+    const notifAdd = jest.fn().mockResolvedValue({ id: 'notif-id' });
+
+    setupTagDmMockDb({
+      users: {
+        'tagger-1': {
+          displayName: 'Tagger',
+          username: 'tagger',
+        },
+        'tagged-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Tagged User',
+          notificationPreferences: {},
+        },
+      },
+    });
+
+    // Override the notifications collection to track add calls
+    const originalImpl = mockDb.collection.getMockImplementation();
+    mockDb.collection.mockImplementation(name => {
+      if (name === 'notifications') {
+        return { add: notifAdd };
+      }
+      return originalImpl(name);
+    });
+
+    const change = {
+      before: { data: () => ({ userId: 'tagger-1', taggedUserIds: [] }) },
+      after: {
+        data: () => ({ userId: 'tagger-1', taggedUserIds: ['tagged-1'], imageURL: null }),
+      },
+    };
+
+    const context = { params: { photoId: 'photo-no-notif' } };
+
+    await sendTaggedPhotoNotification(change, context);
+
+    // notifications.add should NOT be called (DM messages replace activity notifications)
+    expect(notifAdd).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call sendPushNotification directly', async () => {
+    setupTagDmMockDb({
+      users: {
+        'tagger-1': {
+          displayName: 'Tagger',
+          username: 'tagger',
+        },
+        'tagged-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Tagged User',
+          notificationPreferences: {},
+        },
+      },
+    });
+
+    const change = {
+      before: { data: () => ({ userId: 'tagger-1', taggedUserIds: [] }) },
+      after: {
+        data: () => ({ userId: 'tagger-1', taggedUserIds: ['tagged-1'], imageURL: null }),
+      },
+    };
+
+    const context = { params: { photoId: 'photo-no-push' } };
+
+    await sendTaggedPhotoNotification(change, context);
+
+    // sendPushNotification should NOT be called (onNewMessage handles it)
+    expect(mockSendPushNotification).not.toHaveBeenCalled();
+  });
+
+  it('processes tagged users concurrently with Promise.allSettled', async () => {
+    // Set up two tagged users, one of which will fail
+    const mockMessageAdd = jest.fn();
+    let callCount = 0;
+    mockMessageAdd.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.reject(new Error('Simulated failure'));
+      }
+      return Promise.resolve({ id: 'mock-message-id' });
+    });
+
+    const users = {
+      'tagger-1': { displayName: 'Tagger', username: 'tagger' },
+      'tagged-1': {
+        fcmToken: VALID_TOKEN,
+        displayName: 'Tagged 1',
+        notificationPreferences: {},
+      },
+      'tagged-2': {
+        fcmToken: VALID_TOKEN,
+        displayName: 'Tagged 2',
+        notificationPreferences: {},
+      },
+    };
+
+    // Manual mock setup for concurrent test
+    mockDb.doc.mockImplementation(path => ({
+      get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+      set: jest.fn().mockResolvedValue(),
+      update: jest.fn().mockResolvedValue(),
+    }));
+
+    mockDb.collection.mockImplementation(collectionName => ({
+      doc: jest.fn(docId => {
+        if (collectionName === 'users' && users[docId]) {
+          return {
+            get: jest.fn().mockResolvedValue({
+              exists: true,
+              id: docId,
+              data: () => users[docId],
+            }),
+          };
+        }
+        if (collectionName === 'conversations') {
+          return {
+            get: jest.fn().mockResolvedValue({ exists: true, data: () => ({}) }),
+            set: jest.fn().mockResolvedValue(),
+            update: jest.fn().mockResolvedValue(),
+            collection: jest.fn(() => ({
+              add: mockMessageAdd,
+            })),
+          };
+        }
+        return {
+          get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+        };
+      }),
+      where: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      get: jest.fn().mockResolvedValue({ empty: true, docs: [] }),
+    }));
+
+    const change = {
+      before: { data: () => ({ userId: 'tagger-1', taggedUserIds: [] }) },
+      after: {
+        data: () => ({
+          userId: 'tagger-1',
+          taggedUserIds: ['tagged-1', 'tagged-2'],
+          imageURL: null,
+        }),
+      },
+    };
+
+    const context = { params: { photoId: 'photo-concurrent' } };
+
+    // Should not throw even though one user fails
+    await sendTaggedPhotoNotification(change, context);
+
+    // Both users should have been attempted (Promise.allSettled processes all)
+    expect(mockMessageAdd).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ============================================================================
+// onNewMessage - tagged_photo handling (Phase 05)
+// ============================================================================
+describe('onNewMessage - tagged_photo handling', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Helper: set up mockDb for onNewMessage tagged_photo tests.
+   */
+  function setupOnNewMessageTaggedMockDb({ users = {} } = {}) {
+    const mockConvUpdate = jest.fn().mockResolvedValue();
+    const mockConvRef = {
+      get: jest.fn().mockResolvedValue({ exists: true, data: () => ({}) }),
+      update: mockConvUpdate,
+    };
+
+    mockDb.doc.mockImplementation(path => {
+      if (path.startsWith('conversations/')) {
+        return mockConvRef;
+      }
+      return {
+        get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+      };
+    });
+
+    mockDb.collection.mockImplementation(collectionName => ({
+      doc: jest.fn(docId => {
+        if (collectionName === 'users' && users[docId]) {
+          return {
+            get: jest.fn().mockResolvedValue({
+              exists: true,
+              id: docId,
+              data: () => users[docId],
+            }),
+          };
+        }
+        return {
+          get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+        };
+      }),
+    }));
+
+    return { mockConvUpdate };
+  }
+
+  it('sets lastMessage text to "Tagged you in a photo" for tagged_photo type', async () => {
+    const { mockConvUpdate } = setupOnNewMessageTaggedMockDb({
+      users: {
+        'recipient-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Recipient',
+          notificationPreferences: {},
+        },
+        'sender-1': {
+          displayName: 'Sender',
+          username: 'sender',
+          photoURL: null,
+        },
+      },
+    });
+
+    const snapshot = {
+      data: () => ({
+        senderId: 'sender-1',
+        type: 'tagged_photo',
+        text: null,
+        photoId: 'photo-123',
+        photoURL: 'https://photo.url',
+        photoOwnerId: 'sender-1',
+        createdAt: { toDate: () => new Date() },
+      }),
+    };
+
+    const context = {
+      params: {
+        conversationId: 'recipient-1_sender-1',
+        messageId: 'tagged-msg-1',
+      },
+    };
+
+    await onNewMessage(snapshot, context);
+
+    expect(mockConvUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastMessage: expect.objectContaining({
+          text: 'Tagged you in a photo',
+          type: 'tagged_photo',
+          senderId: 'sender-1',
+        }),
+      })
+    );
+  });
+
+  it('sends push notification with "Tagged you in a photo" body for tagged_photo type', async () => {
+    setupOnNewMessageTaggedMockDb({
+      users: {
+        'recipient-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Recipient',
+          notificationPreferences: {},
+        },
+        'sender-1': {
+          displayName: 'Sender',
+          username: 'sender',
+          photoURL: 'https://sender.photo',
+        },
+      },
+    });
+
+    const snapshot = {
+      data: () => ({
+        senderId: 'sender-1',
+        type: 'tagged_photo',
+        text: null,
+        photoId: 'photo-123',
+        photoURL: 'https://photo.url',
+        photoOwnerId: 'sender-1',
+        createdAt: { toDate: () => new Date() },
+      }),
+    };
+
+    const context = {
+      params: {
+        conversationId: 'recipient-1_sender-1',
+        messageId: 'tagged-msg-2',
+      },
+    };
+
+    await onNewMessage(snapshot, context);
+
+    expect(mockSendPushNotification).toHaveBeenCalledWith(
+      VALID_TOKEN,
+      'Sender',
+      'Tagged you in a photo',
+      expect.objectContaining({
+        type: 'tagged_photo',
+        conversationId: 'recipient-1_sender-1',
+      }),
+      'recipient-1'
+    );
+  });
+
+  it('sets notification data type to "tagged_photo"', async () => {
+    setupOnNewMessageTaggedMockDb({
+      users: {
+        'recipient-1': {
+          fcmToken: VALID_TOKEN,
+          displayName: 'Recipient',
+          notificationPreferences: {},
+        },
+        'sender-1': {
+          displayName: 'Sender',
+          username: 'sender',
+          photoURL: null,
+        },
+      },
+    });
+
+    const snapshot = {
+      data: () => ({
+        senderId: 'sender-1',
+        type: 'tagged_photo',
+        text: null,
+        photoId: 'photo-456',
+        createdAt: { toDate: () => new Date() },
+      }),
+    };
+
+    const context = {
+      params: {
+        conversationId: 'recipient-1_sender-1',
+        messageId: 'tagged-msg-3',
+      },
+    };
+
+    await onNewMessage(snapshot, context);
+
+    // Verify the notification data has type 'tagged_photo' (not 'direct_message')
+    expect(mockSendPushNotification).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ type: 'tagged_photo' }),
+      expect.anything()
+    );
   });
 });
