@@ -18,6 +18,8 @@ import { View, Text, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from
 import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
+import { sendReaction } from '../services/firebase/messageService';
+
 import ConversationHeader from '../components/ConversationHeader';
 import MessageBubble from '../components/MessageBubble';
 import ReadReceiptIndicator from '../components/ReadReceiptIndicator';
@@ -645,6 +647,10 @@ const ConversationScreen = () => {
         conversationId={conversationId}
         senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
         onClose={() => setSnapViewerMessage(null)}
+        currentUserId={user.uid}
+        onReaction={emojiKey => {
+          sendReaction(conversationId, user.uid, snapViewerMessage.id, emojiKey);
+        }}
       />
     </View>
   );

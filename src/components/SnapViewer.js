@@ -2,8 +2,9 @@
  * SnapViewer - Full-screen view-once snap display with Polaroid frame
  *
  * Displays a snap message in an immersive full-screen overlay with:
- * - Black background
+ * - Semi-transparent background (conversation visible behind)
  * - Centered Polaroid frame (white border, photo, caption strip)
+ * - Reaction bar below Polaroid for recipients (6 emoji buttons)
  * - X close button in top-right corner
  * - Swipe-down dismiss gesture with haptic feedback
  * - Image loaded via short-lived signed URL (cachePolicy="none")
@@ -54,7 +55,24 @@ const DISMISS_THRESHOLD = 100;
 const POLAROID_BORDER = 8;
 const POLAROID_BOTTOM_STRIP = 64;
 
-const SnapViewer = ({ visible, snapMessage, conversationId, onClose, senderName }) => {
+const REACTION_EMOJIS = [
+  { key: 'heart', char: '\u2764\uFE0F' },
+  { key: 'laugh', char: '\uD83D\uDE02' },
+  { key: 'surprise', char: '\uD83D\uDE2E' },
+  { key: 'sad', char: '\uD83D\uDE22' },
+  { key: 'angry', char: '\uD83D\uDE21' },
+  { key: 'thumbs_up', char: '\uD83D\uDC4D' },
+];
+
+const SnapViewer = ({
+  visible,
+  snapMessage,
+  conversationId,
+  onClose,
+  senderName,
+  onReaction,
+  currentUserId,
+}) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -189,6 +207,18 @@ const SnapViewer = ({ visible, snapMessage, conversationId, onClose, senderName 
     opacity: opacity.value,
   }));
 
+  // Determine if reaction bar should be shown (only for recipients, not senders)
+  const isRecipient = currentUserId && snapMessage?.senderId !== currentUserId;
+  const showReactionBar = onReaction && isRecipient;
+
+  const handleReactionPress = useCallback(
+    emojiKey => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      onReaction?.(emojiKey);
+    },
+    [onReaction]
+  );
+
   if (!visible || !snapMessage) return null;
 
   return (
@@ -255,6 +285,22 @@ const SnapViewer = ({ visible, snapMessage, conversationId, onClose, senderName 
                   ) : null}
                 </View>
               </View>
+
+              {/* Reaction bar — shown to recipients only */}
+              {showReactionBar && (
+                <View style={styles.reactionBar}>
+                  {REACTION_EMOJIS.map(emoji => (
+                    <GHTouchableOpacity
+                      key={emoji.key}
+                      style={styles.reactionButton}
+                      onPress={() => handleReactionPress(emoji.key)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.reactionEmoji}>{emoji.char}</Text>
+                    </GHTouchableOpacity>
+                  ))}
+                </View>
+              )}
             </Animated.View>
           </GestureDetector>
         </Animated.View>
@@ -269,7 +315,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -351,6 +397,24 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: '#0A0A1A',
     textAlign: 'center',
+  },
+  reactionBar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    gap: 16,
+  },
+  reactionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reactionEmoji: {
+    fontSize: 22,
   },
 });
 
