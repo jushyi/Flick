@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 3
-**Current Plan:** 4 of 6
+**Current Plan:** 5 of 6
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -10,69 +10,70 @@
 | ------------------------------------------ | ----------------------- | ---------- | ---------- |
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —          |
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
-| 3 — Snap Messages                          | In Progress (4/6 plans) | 2026-02-24 | —          |
+| 3 — Snap Messages                          | In Progress (5/6 plans) | 2026-02-24 | —          |
 | 4 — Snap Streaks                           | Not Started             | —          | —          |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —          |
 
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 25 (INFRA-01, INFRA-02, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08)
+- Completed: 27 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08)
 - In progress: 0
-- Remaining: 13
+- Remaining: 11
 - Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
 
-| Date       | Decision                                          | Context                                                            |
-| ---------- | ------------------------------------------------- | ------------------------------------------------------------------ |
-| 2026-02-23 | Camera-only snaps (no gallery)                    | Keeps authentic, in-the-moment feel                                |
-| 2026-02-23 | View once then gone                               | Ephemeral by design                                                |
-| 2026-02-23 | 3-day streak threshold                            | Low enough to achieve, high enough to mean something               |
-| 2026-02-23 | Streak visual on snap button                      | Button changes color + day count                                   |
-| 2026-02-23 | Warning color + "!" + push                        | Multi-signal before streak expires                                 |
-| 2026-02-23 | Caption text only on snaps                        | No drawing/doodle for v1                                           |
-| 2026-02-23 | Photo attribution on reshare                      | "Photo by @user" respects photographer                             |
-| 2026-02-23 | Screenshot notification (not protection)          | Deterrent, not security guarantee                                  |
-| 2026-02-23 | Reactions as separate message docs                | Preserves message immutability                                     |
-| 2026-02-23 | Conversation-level read receipts                  | 1 write per open vs N per-message writes                           |
-| 2026-02-23 | Server-authoritative streaks                      | Cloud Functions only, never client-side                            |
-| 2026-02-23 | Defer screenshot detection to v2                  | Avoids native rebuild; iterate on messaging first                  |
-| 2026-02-23 | readReceipts at conversation level                | Map field on conversation doc, 1 write per open                    |
-| 2026-02-23 | First-read-only guard in hook layer               | Service always writes; hook checks unreadCount > 0                 |
-| 2026-02-23 | Foreground-only read receipt writes               | AppState check prevents backgrounded writes                        |
-| 2026-02-23 | RN core Animated for read receipt fades           | Simple fades don't need reanimated complexity                      |
-| 2026-02-23 | Mutual privacy model for read receipts            | Both users must have receipts enabled for Read to show             |
-| 2026-02-23 | UnreadBadge with 99+ cap                          | Numeric count replaces plain dot, capped for display               |
-| 2026-02-23 | Null-emoji sentinel for reaction removal          | Avoids Cloud Function; works within existing rules                 |
-| 2026-02-23 | Reply text truncated to 100 chars                 | Keeps denormalized preview compact in Firestore docs               |
-| 2026-02-23 | No image URLs in replyTo                          | Avoids signed URL expiry issues; stores type label only            |
-| 2026-02-23 | arrayUnion for deleteMessageForMe                 | Atomic per-user array updates on conversation doc                  |
-| 2026-02-23 | Batch writes for unsend cascade                   | Atomic soft-delete across message, reactions, replies              |
-| 2026-02-23 | Reaction messages skip conversation meta          | No lastMessage/unreadCount update for type:reaction                |
-| 2026-02-23 | Early return for reaction removal sentinel        | emoji:null triggers skip all processing in onNewMessage            |
-| 2026-02-23 | Compound key for reaction-per-user                | targetMessageId_senderId key enforces one reaction per user        |
-| 2026-02-23 | Placeholder flags for unsent/deleted              | \_isUnsent/\_isDeletedForMe flags keep messages in list            |
-| 2026-02-23 | reactionMap as parameter to handleReaction        | Avoids data duplication; useConversation owns the data             |
-| 2026-02-23 | PixelIcon for ReplyPreview cancel button          | Consistent with project-wide icon system, not Ionicons             |
-| 2026-02-23 | runOnJS for gesture worklet callbacks             | Thread-safe JS callbacks from reanimated gesture handlers          |
-| 2026-02-23 | Gesture.Race with Gesture.Exclusive               | Prevents double-tap from triggering single-tap timestamp           |
-| 2026-02-23 | Simplified gesture for deleted messages           | Single-tap only on unsent/deleted prevents invalid actions         |
-| 2026-02-23 | RN core Animated for ReactionBadges fade          | Simple fades don't need reanimated per user decision               |
-| 2026-02-24 | 5-min signed URL expiry for snap photos           | Shorter than 24h for regular photos; matches ephemeral snap nature |
-| 2026-02-24 | Auto-retry 3x with exponential backoff            | 1s/2s/4s delays; returns retriesExhausted flag for tap-to-retry UI |
-| 2026-02-24 | Snap lastMessage preview: text null, type snap    | Client renders camera icon + "Snap" label for conversation list    |
-| 2026-02-24 | Randomized snap push templates (no emojis)        | Three templates per user decision: "sent you a snap", etc.         |
-| 2026-02-24 | Best-effort cleanup in onSnapViewed               | Logs errors but does not throw; scheduled cleanup as safety net    |
-| 2026-02-24 | Amber #F5A623 accent for snap UI elements         | Consistent with colors.status.developing for developing metaphor   |
-| 2026-02-24 | Polaroid frame: 4:3 photo, 8px border, 64px strip | Standard Polaroid aesthetic for snap viewing experience            |
-| 2026-02-24 | BackHandler for SnapViewer on Android             | Hardware back button dismisses snap viewer modal properly          |
-| 2026-02-24 | CameraScreen reused with mode param for snaps     | No separate SnapCameraModal; mode='snap' hides darkroom UI         |
-| 2026-02-24 | Zoom hidden in snap mode                          | Keeps snap camera simple per user decision                         |
-| 2026-02-24 | navigation.pop(2) for snap send return            | Returns past SnapPreview and SnapCamera to conversation            |
-| 2026-02-24 | Snap delegation after hooks in MessageBubble      | Early return before hooks violates Rules of Hooks                  |
-| 2026-02-24 | 300ms delay for autoOpenSnapId SnapViewer         | Allows conversation FlatList to render before snap viewer opens    |
-| 2026-02-24 | Snap notification shares Conversation nav handler | snap type returns screen:'Conversation' with autoOpenSnapId param  |
+| Date       | Decision                                          | Context                                                             |
+| ---------- | ------------------------------------------------- | ------------------------------------------------------------------- |
+| 2026-02-23 | Camera-only snaps (no gallery)                    | Keeps authentic, in-the-moment feel                                 |
+| 2026-02-23 | View once then gone                               | Ephemeral by design                                                 |
+| 2026-02-23 | 3-day streak threshold                            | Low enough to achieve, high enough to mean something                |
+| 2026-02-23 | Streak visual on snap button                      | Button changes color + day count                                    |
+| 2026-02-23 | Warning color + "!" + push                        | Multi-signal before streak expires                                  |
+| 2026-02-23 | Caption text only on snaps                        | No drawing/doodle for v1                                            |
+| 2026-02-23 | Photo attribution on reshare                      | "Photo by @user" respects photographer                              |
+| 2026-02-23 | Screenshot notification (not protection)          | Deterrent, not security guarantee                                   |
+| 2026-02-23 | Reactions as separate message docs                | Preserves message immutability                                      |
+| 2026-02-23 | Conversation-level read receipts                  | 1 write per open vs N per-message writes                            |
+| 2026-02-23 | Server-authoritative streaks                      | Cloud Functions only, never client-side                             |
+| 2026-02-23 | Defer screenshot detection to v2                  | Avoids native rebuild; iterate on messaging first                   |
+| 2026-02-23 | readReceipts at conversation level                | Map field on conversation doc, 1 write per open                     |
+| 2026-02-23 | First-read-only guard in hook layer               | Service always writes; hook checks unreadCount > 0                  |
+| 2026-02-23 | Foreground-only read receipt writes               | AppState check prevents backgrounded writes                         |
+| 2026-02-23 | RN core Animated for read receipt fades           | Simple fades don't need reanimated complexity                       |
+| 2026-02-23 | Mutual privacy model for read receipts            | Both users must have receipts enabled for Read to show              |
+| 2026-02-23 | UnreadBadge with 99+ cap                          | Numeric count replaces plain dot, capped for display                |
+| 2026-02-23 | Null-emoji sentinel for reaction removal          | Avoids Cloud Function; works within existing rules                  |
+| 2026-02-23 | Reply text truncated to 100 chars                 | Keeps denormalized preview compact in Firestore docs                |
+| 2026-02-23 | No image URLs in replyTo                          | Avoids signed URL expiry issues; stores type label only             |
+| 2026-02-23 | arrayUnion for deleteMessageForMe                 | Atomic per-user array updates on conversation doc                   |
+| 2026-02-23 | Batch writes for unsend cascade                   | Atomic soft-delete across message, reactions, replies               |
+| 2026-02-23 | Reaction messages skip conversation meta          | No lastMessage/unreadCount update for type:reaction                 |
+| 2026-02-23 | Early return for reaction removal sentinel        | emoji:null triggers skip all processing in onNewMessage             |
+| 2026-02-23 | Compound key for reaction-per-user                | targetMessageId_senderId key enforces one reaction per user         |
+| 2026-02-23 | Placeholder flags for unsent/deleted              | \_isUnsent/\_isDeletedForMe flags keep messages in list             |
+| 2026-02-23 | reactionMap as parameter to handleReaction        | Avoids data duplication; useConversation owns the data              |
+| 2026-02-23 | PixelIcon for ReplyPreview cancel button          | Consistent with project-wide icon system, not Ionicons              |
+| 2026-02-23 | runOnJS for gesture worklet callbacks             | Thread-safe JS callbacks from reanimated gesture handlers           |
+| 2026-02-23 | Gesture.Race with Gesture.Exclusive               | Prevents double-tap from triggering single-tap timestamp            |
+| 2026-02-23 | Simplified gesture for deleted messages           | Single-tap only on unsent/deleted prevents invalid actions          |
+| 2026-02-23 | RN core Animated for ReactionBadges fade          | Simple fades don't need reanimated per user decision                |
+| 2026-02-24 | 5-min signed URL expiry for snap photos           | Shorter than 24h for regular photos; matches ephemeral snap nature  |
+| 2026-02-24 | Auto-retry 3x with exponential backoff            | 1s/2s/4s delays; returns retriesExhausted flag for tap-to-retry UI  |
+| 2026-02-24 | Snap lastMessage preview: text null, type snap    | Client renders camera icon + "Snap" label for conversation list     |
+| 2026-02-24 | Randomized snap push templates (no emojis)        | Three templates per user decision: "sent you a snap", etc.          |
+| 2026-02-24 | Best-effort cleanup in onSnapViewed               | Logs errors but does not throw; scheduled cleanup as safety net     |
+| 2026-02-24 | Amber #F5A623 accent for snap UI elements         | Consistent with colors.status.developing for developing metaphor    |
+| 2026-02-24 | Polaroid frame: 4:3 photo, 8px border, 64px strip | Standard Polaroid aesthetic for snap viewing experience             |
+| 2026-02-24 | BackHandler for SnapViewer on Android             | Hardware back button dismisses snap viewer modal properly           |
+| 2026-02-24 | CameraScreen reused with mode param for snaps     | No separate SnapCameraModal; mode='snap' hides darkroom UI          |
+| 2026-02-24 | Zoom hidden in snap mode                          | Keeps snap camera simple per user decision                          |
+| 2026-02-24 | navigation.pop(2) for snap send return            | Returns past SnapPreview and SnapCamera to conversation             |
+| 2026-02-24 | Snap delegation after hooks in MessageBubble      | Early return before hooks violates Rules of Hooks                   |
+| 2026-02-24 | 300ms delay for autoOpenSnapId SnapViewer         | Allows conversation FlatList to render before snap viewer opens     |
+| 2026-02-24 | Snap notification shares Conversation nav handler | snap type returns screen:'Conversation' with autoOpenSnapId param   |
+| 2026-02-24 | Infrastructure configs (TTL, lifecycle) deferred  | Safety nets only; app works without them, user will configure later |
 
 ## Blockers
 
@@ -116,4 +117,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed Phase 3 Plan 04: Conversation UI integration (DMInput camera morph, SnapViewer overlay, snap notification deep linking)
+Last activity: 2026-02-24 - Completed Phase 3 Plan 05: Infrastructure (Storage rules, Firestore rules, TTL/lifecycle documentation; infra configs deferred by user)

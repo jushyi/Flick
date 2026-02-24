@@ -66,8 +66,8 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 - [x] **INFRA-01**: Firestore security rules updated to allow snap `viewedAt` updates by recipient
 - [x] **INFRA-02**: Firestore security rules updated to allow `readReceipts` field updates on conversation documents
-- [ ] **INFRA-03**: Firestore TTL policy configured on messages collection group for `expiresAt` field
-- [ ] **INFRA-04**: Firebase Storage lifecycle rule configured on `snap-photos/` path (7-day auto-delete)
+- [x] **INFRA-03**: Firestore TTL policy configured on messages collection group for `expiresAt` field
+- [x] **INFRA-04**: Firebase Storage lifecycle rule configured on `snap-photos/` path (7-day auto-delete)
 
 ## v2 Requirements
 

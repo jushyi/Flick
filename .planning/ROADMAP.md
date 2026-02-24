@@ -10,7 +10,7 @@
 | ----- | -------------------------------------- | ------------------------------------------------- | ------------------------- | ----------------------- |
 | 1     | Message Infrastructure & Read Receipts | Extended message schema + read receipts UI        | READ-01..03, INFRA-01..02 | In Progress (2/4 plans) |
 | 2     | Message Interactions                   | Complete                                          | 2026-02-24                | Complete (6/6 plans)    |
-| 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic       | SNAP-01..08, INFRA-03..04 | Not Started             |
+| 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic       | SNAP-01..08, INFRA-03..04 | In Progress (5/6 plans) |
 | 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07               | Not Started             |
 | 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed   | TAG-01..04                | Not Started             |
 
@@ -127,11 +127,11 @@ Plans:
 
 Plans:
 
-- [ ] 03-01-PLAN.md — Snap service layer + Cloud Functions (upload, send, mark viewed, signed URLs, cleanup)
-- [ ] 03-02-PLAN.md — Snap capture flow (SnapCameraModal + SnapPreviewScreen with Polaroid frame and caption)
-- [ ] 03-03-PLAN.md — Snap viewing experience (SnapBubble states + SnapViewer full-screen Polaroid viewer)
-- [ ] 03-04-PLAN.md — Integration (DMInput camera morph, MessageBubble delegation, ConversationScreen wiring, ConversationRow updates)
-- [ ] 03-05-PLAN.md — Infrastructure (Storage rules, Firestore rules, TTL/lifecycle documentation)
+- [x] 03-01-PLAN.md — Snap service layer + Cloud Functions (upload, send, mark viewed, signed URLs, cleanup)
+- [x] 03-02-PLAN.md — Snap capture flow (SnapCameraModal + SnapPreviewScreen with Polaroid frame and caption)
+- [x] 03-03-PLAN.md — Snap viewing experience (SnapBubble states + SnapViewer full-screen Polaroid viewer)
+- [x] 03-04-PLAN.md — Integration (DMInput camera morph, MessageBubble delegation, ConversationScreen wiring, ConversationRow updates)
+- [x] 03-05-PLAN.md — Infrastructure (Storage rules, Firestore rules, TTL/lifecycle documentation)
 - [ ] 03-06-PLAN.md — Test suite validation + visual verification checkpoint
 
 ---
