@@ -100,6 +100,7 @@ const ConversationScreen = () => {
   const flatListRef = useRef(null);
   const isNearBottomRef = useRef(true);
   const prevMessageCountRef = useRef(0);
+  const messagesWithDividersRef = useRef([]);
   const [visibleTimestamps, setVisibleTimestamps] = useState(new Set());
   const isReadOnly = route.params?.readOnly || false;
 
@@ -204,25 +205,23 @@ const ConversationScreen = () => {
    * Uses flatListRef to scroll the inverted FlatList to the target index
    * and briefly highlights the message with a background flash.
    */
-  const scrollToMessage = useCallback(
-    messageId => {
-      const index = messagesWithDividers.findIndex(m => m.id === messageId);
-      if (index !== -1 && flatListRef.current) {
-        try {
-          flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
-        } catch {
-          // scrollToIndex can throw on Android when index is outside render window;
-          // onScrollToIndexFailed handler will retry via approximate offset.
-        }
-        // Defer highlight: 600ms covers normal scroll (~300ms) and retry path (500ms + scroll)
-        setTimeout(() => {
-          setHighlightedMessageId(messageId);
-          setTimeout(() => setHighlightedMessageId(null), 1800);
-        }, 600);
+  const scrollToMessage = useCallback(messageId => {
+    const items = messagesWithDividersRef.current;
+    const index = items.findIndex(m => m.id === messageId);
+    if (index !== -1 && flatListRef.current) {
+      try {
+        flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+      } catch {
+        // scrollToIndex can throw on Android when index is outside render window;
+        // onScrollToIndexFailed handler will retry via approximate offset.
       }
-    },
-    [messagesWithDividers]
-  );
+      // Defer highlight: 600ms covers normal scroll (~300ms) and retry path (500ms + scroll)
+      setTimeout(() => {
+        setHighlightedMessageId(messageId);
+        setTimeout(() => setHighlightedMessageId(null), 1800);
+      }, 600);
+    }
+  }, []);
 
   /**
    * Edge case: if replyToMessage gets unsent while composing,
@@ -281,6 +280,9 @@ const ConversationScreen = () => {
 
     return result.reverse(); // Back to newest-first for inverted list
   }, [messages]);
+
+  // Keep ref in sync so scrollToMessage always has latest data (avoids stale closure on Android)
+  messagesWithDividersRef.current = messagesWithDividers;
 
   /**
    * Handle sending a message with reply support.
