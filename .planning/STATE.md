@@ -107,6 +107,7 @@ None currently.
 | 22  | Add cachePolicy to MessageBubble Image components for instant repeat loads       | 2026-02-24 | 01dddf5 |          | [22-when-opening-a-convo-the-reply-photos-do](./quick/22-when-opening-a-convo-the-reply-photos-do/) |
 | 23  | Fix reaction badges overlapping on photo/GIF messages in DM conversations        | 2026-02-24 | f601c02 |          | [23-reaction-badges-dont-overlap-on-photos-l](./quick/23-reaction-badges-dont-overlap-on-photos-l/) |
 | 24  | Fix push notification logging and stale token detection for dev app              | 2026-02-24 | 381f4e6 |          | [24-push-notifs-for-dev-app-doesn-t-seem-to-](./quick/24-push-notifs-for-dev-app-doesn-t-seem-to-/) |
+| 25  | Fix selfie camera auto-mirror (remove skipProcessing from takePictureAsync)      | 2026-02-24 | b791dab |          | [25-fix-selfie-cam-auto-mirror](./quick/25-fix-selfie-cam-auto-mirror/)                             |
 
 ## Notes
 
@@ -117,4 +118,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed Phase 3 Plan 05: Infrastructure (Storage rules, Firestore rules, TTL/lifecycle documentation; infra configs deferred by user)
+Last activity: 2026-02-24 - Completed Quick Task 25: Fix selfie camera auto-mirror (removed skipProcessing from takePictureAsync)
