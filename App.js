@@ -317,9 +317,12 @@ export default function App() {
     // Listener for notifications received while app is in foreground
     // Shows custom InAppNotificationBanner instead of system notification
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      // Suppress DM notifications if user is currently viewing that conversation
+      // Suppress DM and snap notifications if user is currently viewing that conversation
       const notifData = notification.request.content.data;
-      if (notifData?.type === 'direct_message' && notifData?.conversationId) {
+      if (
+        (notifData?.type === 'direct_message' || notifData?.type === 'snap') &&
+        notifData?.conversationId
+      ) {
         const currentRoute = navigationRef.current?.getCurrentRoute?.();
         if (
           currentRoute?.name === 'Conversation' &&

@@ -72,6 +72,18 @@ const MessagesScreen = () => {
     navigation.navigate('NewMessage');
   }, [navigation]);
 
+  const handleSnapCamera = useCallback(
+    (convId, fId, fDisplayName) => {
+      navigation.navigate('SnapCamera', {
+        mode: 'snap',
+        conversationId: convId,
+        friendId: fId,
+        friendDisplayName: fDisplayName,
+      });
+    },
+    [navigation]
+  );
+
   const renderConversation = useCallback(
     ({ item }) => (
       <ConversationRow
@@ -80,9 +92,10 @@ const MessagesScreen = () => {
         currentUserId={user?.uid}
         onPress={() => handleOpenConversation(item)}
         onLongPress={() => handleDeletePress(item)}
+        onSnapCamera={handleSnapCamera}
       />
     ),
-    [user?.uid, handleOpenConversation, handleDeletePress]
+    [user?.uid, handleOpenConversation, handleDeletePress, handleSnapCamera]
   );
 
   const renderEmptyState = useCallback(() => {

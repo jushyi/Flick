@@ -8,6 +8,9 @@
  * Phase 2 additions: reactions (double-tap heart, long-press picker),
  * replies (swipe-to-reply, reply preview above input), deletion (unsend, delete for me),
  * scroll-to-message on reply tap, highlighted message flash.
+ *
+ * Phase 3 additions: snap message support (SnapBubble delegation via MessageBubble,
+ * SnapViewer overlay, camera button in DMInput, autoOpenSnapId from notifications).
  */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { View, Text, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
@@ -23,6 +26,7 @@ import DMInput from '../components/DMInput';
 import PixelSpinner from '../components/PixelSpinner';
 import ReactionPicker from '../components/ReactionPicker';
 import PixelConfirmDialog from '../components/PixelConfirmDialog';
+import SnapViewer from '../components/SnapViewer';
 
 import { useAuth } from '../context/AuthContext';
 import useConversation from '../hooks/useConversation';
@@ -104,6 +108,10 @@ const ConversationScreen = () => {
   const [visibleTimestamps, setVisibleTimestamps] = useState(new Set());
   const isReadOnly = route.params?.readOnly || false;
 
+  // --- SnapViewer state ---
+  const [snapViewerMessage, setSnapViewerMessage] = useState(null);
+  const autoOpenSnapHandled = useRef(false);
+
   // --- Message actions hook ---
   const {
     actionMenuVisible,
@@ -165,6 +173,26 @@ const ConversationScreen = () => {
     }
     prevMessageCountRef.current = currentCount;
   }, [messages.length, scrollToBottom]);
+
+  /**
+   * Auto-open SnapViewer from notification deep link.
+   * When route.params.autoOpenSnapId is set, find the snap message in the
+   * messages list and auto-open the SnapViewer once found.
+   */
+  useEffect(() => {
+    const autoOpenSnapId = route.params?.autoOpenSnapId;
+    if (!autoOpenSnapId || autoOpenSnapHandled.current) return;
+    if (!messages.length) return;
+
+    const snapMsg = messages.find(m => m.id === autoOpenSnapId && m.type === 'snap');
+    if (snapMsg) {
+      autoOpenSnapHandled.current = true;
+      // Delay to allow conversation to render first
+      setTimeout(() => {
+        setSnapViewerMessage(snapMsg);
+      }, 300);
+    }
+  }, [messages, route.params?.autoOpenSnapId]);
 
   /**
    * Derive read receipt state for the sender's last message.
@@ -320,9 +348,42 @@ const ConversationScreen = () => {
   );
 
   /**
+   * Handle snap camera button press from DMInput.
+   * Navigates to SnapCamera (modal CameraScreen in snap mode).
+   */
+  const handleOpenSnapCamera = useCallback(() => {
+    navigation.navigate('SnapCamera', {
+      mode: 'snap',
+      conversationId,
+      friendId,
+      friendDisplayName: liveFriendProfile?.displayName || 'Friend',
+    });
+  }, [navigation, conversationId, friendId, liveFriendProfile?.displayName]);
+
+  /**
+   * Handle snap bubble press — opens SnapViewer for unopened snaps from friend.
+   * Sender's own snaps and already-viewed snaps are non-interactive.
+   */
+  const handleSnapPress = useCallback(
+    message => {
+      const isCurrentUser = message.senderId === user.uid;
+      const isViewed = message.viewedAt !== null && message.viewedAt !== undefined;
+
+      // Only allow opening unviewed snaps from the friend
+      if (!isCurrentUser && !isViewed) {
+        setSnapViewerMessage(message);
+      }
+    },
+    [user.uid]
+  );
+
+  /**
    * Render a single item — either a TimeDivider or a MessageBubble
    * wrapped with consistent spacing. Includes ReadReceiptIndicator
    * below the current user's most recent sent message.
+   *
+   * For snap messages: overrides onPress to open SnapViewer instead of
+   * toggling timestamp (for unopened snaps from friend).
    */
   const renderItem = useCallback(
     ({ item }) => {
@@ -334,13 +395,21 @@ const ConversationScreen = () => {
       const isLastSent = showIndicator && lastSentMessage && item.id === lastSentMessage.id;
       const messageReactions = reactionMap.get(item.id) || null;
 
+      // For snap messages: override onPress to open SnapViewer
+      const isSnapMessage = item.type === 'snap';
+      const isSnapUnopened = isSnapMessage && !isCurrentUser && !item.viewedAt;
+
+      const pressHandler = isSnapUnopened
+        ? () => handleSnapPress(item)
+        : () => toggleTimestamp(item.id);
+
       return (
         <View style={styles.messageWrapper}>
           <MessageBubble
             message={item}
             isCurrentUser={isCurrentUser}
             showTimestamp={visibleTimestamps.has(item.id)}
-            onPress={() => toggleTimestamp(item.id)}
+            onPress={pressHandler}
             reactions={messageReactions}
             onDoubleTap={msg => handleDoubleTapHeart(msg.id, reactionMap)}
             onLongPress={(message, layout) => openActionMenu(message, layout)}
@@ -376,6 +445,7 @@ const ConversationScreen = () => {
       highlightedMessageId,
       liveFriendProfile,
       findMessageById,
+      handleSnapPress,
     ]
   );
 
@@ -458,6 +528,7 @@ const ConversationScreen = () => {
           </View>
           <DMInput
             onSendMessage={handleSendMessage}
+            onOpenSnapCamera={handleOpenSnapCamera}
             disabled={isReadOnly}
             placeholder="Message..."
           />
@@ -505,7 +576,7 @@ const ConversationScreen = () => {
             onEndReachedThreshold={0.3}
             ListFooterComponent={loadingMore ? <PixelSpinner size="small" /> : null}
             keyboardDismissMode="interactive"
-            removeClippedSubviews={true}
+            removeClippedSubviews={false}
             onScroll={handleScroll}
             scrollEventThrottle={100}
             onScrollToIndexFailed={onScrollToIndexFailed}
@@ -514,6 +585,7 @@ const ConversationScreen = () => {
         <DMInput
           onSendMessage={handleSend}
           onSend={scrollToBottom}
+          onOpenSnapCamera={handleOpenSnapCamera}
           disabled={isReadOnly}
           placeholder="Message..."
           replyToMessage={replyToMessage}
@@ -564,6 +636,15 @@ const ConversationScreen = () => {
           setDeleteConfirmVisible(false);
           setPendingDeleteMessageId(null);
         }}
+      />
+
+      {/* SnapViewer overlay — shown when user taps an unopened snap */}
+      <SnapViewer
+        visible={!!snapViewerMessage}
+        snapMessage={snapViewerMessage}
+        conversationId={conversationId}
+        senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
+        onClose={() => setSnapViewerMessage(null)}
       />
     </View>
   );

@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 
 import PixelIcon from './PixelIcon';
 import ReactionBadges from './ReactionBadges';
+import SnapBubble from './SnapBubble';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
@@ -43,6 +44,7 @@ const MessageBubble = ({
   highlighted,
   findMessageById,
 }) => {
+  const isSnap = message.type === 'snap';
   const isGif = message.type === 'gif';
   const isImage = message.type === 'image';
   const isMediaMessage = isGif || isImage;
@@ -173,6 +175,22 @@ const MessageBubble = ({
   const replyIconAnimatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(translateX.value, [0, REPLY_THRESHOLD], [0, 1]),
   }));
+
+  // Delegate snap messages to dedicated SnapBubble component
+  // Placed after all hooks to satisfy Rules of Hooks
+  if (isSnap) {
+    return (
+      <SnapBubble
+        message={message}
+        isCurrentUser={isCurrentUser}
+        showTimestamp={showTimestamp}
+        onPress={onPress}
+        isPending={message._isPending}
+        hasError={message._hasError}
+        onRetry={message._onRetry}
+      />
+    );
+  }
 
   // Render deleted/unsent state
   if (isDeleted) {

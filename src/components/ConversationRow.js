@@ -40,17 +40,31 @@ const formatMessageTime = timestamp => {
  * UnreadBadge — Cyan circle with white count number.
  * Shows "99+" for counts above 99.
  */
-const UnreadBadge = ({ count }) => {
+const SNAP_AMBER = '#F5A623';
+
+/**
+ * UnreadBadge — Circle with white count number.
+ * Default cyan for regular messages, amber for snap messages.
+ * Shows "99+" for counts above 99.
+ */
+const UnreadBadge = ({ count, isSnap = false }) => {
   if (!count || count <= 0) return null;
   const displayText = count > 99 ? '99+' : String(count);
   return (
-    <View style={styles.unreadBadge}>
+    <View style={[styles.unreadBadge, isSnap && styles.unreadBadgeSnap]}>
       <Text style={styles.unreadBadgeText}>{displayText}</Text>
     </View>
   );
 };
 
-const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, onLongPress }) => {
+const ConversationRow = ({
+  conversation,
+  friendProfile,
+  currentUserId,
+  onPress,
+  onLongPress,
+  onSnapCamera,
+}) => {
   const { userProfile: currentUserProfile } = useAuth();
   const { lastMessage, updatedAt, unreadCount, readReceipts } = conversation;
   const { displayName } = friendProfile;
@@ -58,6 +72,9 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
 
   // unreadCount comes as a number from useMessages (already extracted for current user)
   const hasUnread = unreadCount > 0;
+
+  // Detect snap-type last message for amber unread badge styling
+  const isSnapLastMessage = lastMessage?.type === 'snap' && lastMessage?.senderId !== currentUserId;
 
   // Derive friend ID from participants
   const friendId = conversation.participants?.find(p => p !== currentUserId);
@@ -163,8 +180,20 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
       </View>
 
       <View style={styles.rightColumn}>
-        <Text style={styles.timestamp}>{formatMessageTime(updatedAt)}</Text>
-        <UnreadBadge count={unreadCount} />
+        <View style={styles.rightTopRow}>
+          <Text style={styles.timestamp}>{formatMessageTime(updatedAt)}</Text>
+          {onSnapCamera && (
+            <TouchableOpacity
+              style={styles.snapCameraButton}
+              onPress={() => onSnapCamera(conversation.id, friendId, displayName)}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
+              <PixelIcon name="camera" size={16} color={SNAP_AMBER} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <UnreadBadge count={unreadCount} isSnap={isSnapLastMessage && hasUnread} />
       </View>
     </TouchableOpacity>
   );
@@ -230,11 +259,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  unreadBadgeSnap: {
+    backgroundColor: SNAP_AMBER,
+  },
   unreadBadgeText: {
     fontSize: 10,
     color: colors.text.inverse,
     fontFamily: typography.fontFamily.readableBold,
     textAlign: 'center',
+  },
+  rightTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  snapCameraButton: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

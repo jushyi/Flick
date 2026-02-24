@@ -279,6 +279,7 @@ export const handleNotificationTapped = notification => {
       senderId,
       senderName,
       senderProfilePhotoURL,
+      messageId,
     } = data || {};
 
     logger.debug('Notification tapped', {
@@ -397,6 +398,25 @@ export const handleNotificationTapped = notification => {
               photoId,
               shouldOpenPhoto: true,
               notifType: 'tagged',
+            },
+          },
+        };
+
+      case 'snap':
+        return {
+          success: true,
+          data: {
+            type: 'snap',
+            screen: 'Conversation',
+            params: {
+              conversationId: conversationId,
+              friendId: senderId,
+              friendProfile: {
+                uid: senderId,
+                displayName: senderName || 'Unknown',
+                photoURL: senderProfilePhotoURL || null,
+              },
+              autoOpenSnapId: messageId || null,
             },
           },
         };
