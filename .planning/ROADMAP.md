@@ -209,7 +209,13 @@ Plans:
 - Photographer receives notification of reshare
 - Multiple tags create messages in multiple conversations
 
-**Estimated plans:** 5-7
+**Plans:** 3 plans
+
+Plans:
+
+- [ ] 05-01-PLAN.md — Server-side pipeline: sendTaggedPhotoNotification DM message creation, onNewMessage tagged_photo handling, addTaggedPhotoToFeed callable
+- [ ] 05-02-PLAN.md — Client-side rendering: TaggedPhotoBubble component, photoTagService, MessageBubble delegation
+- [ ] 05-03-PLAN.md — Attribution display + integration: FeedPhotoCard and PhotoDetailScreen attribution, notification navigation update
 
 ---
 
@@ -236,4 +242,4 @@ Phase 5 is independent of Phases 2, 3, and 4.
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-24 — Phase 4 Plan 02 complete: client streak service + StreakIndicator component_
+_Last updated: 2026-02-24 — Phase 5 planned: 3 plans for photo tag integration_
