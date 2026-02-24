@@ -88,6 +88,7 @@ None currently.
 | 18  | Change read receipt font from SpaceMono to Silkscreen pixel font                 | 2026-02-23 | 8bf776f |          | [18-the-read-receipts-and-delivered-text-sho](./quick/18-the-read-receipts-and-delivered-text-sho/) |
 | 19  | Fix iOS darkroom card text clipping with explicit lineHeight for PressStart2P    | 2026-02-24 | dc02635 |          | [19-the-2-in-the-ios-darkroom-button-looks-c](./quick/19-the-2-in-the-ios-darkroom-button-looks-c/) |
 | 20  | Fix reply scroll-to-message index and highlight timing in DM conversations       | 2026-02-24 | b9744b6 | Verified | [20-fix-reply-scroll-to-message-and-highligh](./quick/20-fix-reply-scroll-to-message-and-highligh/) |
+| 21  | Fix convo preview reactions and replace emoji icons with PixelIcon               | 2026-02-24 | f9675d9 |          | [21-fix-convo-preview-reactions-and-replace-](./quick/21-fix-convo-preview-reactions-and-replace-/) |
 
 ## Notes
 
@@ -98,4 +99,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick task 20: Fix reply scroll-to-message and highlight timing
+Last activity: 2026-02-24 - Completed quick task 21: Fix convo preview reactions and replace emoji icons with PixelIcon
