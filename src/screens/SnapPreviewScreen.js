@@ -101,7 +101,7 @@ const SnapPreviewScreen = () => {
     const jsHeight = jsKeyboardHeight.value;
     const kbHeight = nativeHeight > 0 ? nativeHeight : jsHeight;
     return {
-      transform: [{ translateY: -kbHeight * 0.52 }],
+      transform: [{ translateY: -kbHeight * 0.56 }],
     };
   });
 
@@ -246,7 +246,7 @@ const SnapPreviewScreen = () => {
                     returnKeyType="done"
                     blurOnSubmit
                     onSubmitEditing={() => Keyboard.dismiss()}
-                    autoCorrect={false}
+                    autoCorrect
                     autoComplete="off"
                     keyboardAppearance="dark"
                     editable={!isSending}
@@ -304,13 +304,20 @@ const screenStyles = StyleSheet.create({
     backgroundColor: colors.overlay.dark,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      android: { marginTop: -2 },
+      ios: {},
+    }),
   },
   recipientLabel: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     textAlign: 'center',
+    height: 36,
+    lineHeight: 36,
     includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   headerSpacer: {
     width: 36,
