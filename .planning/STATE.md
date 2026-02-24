@@ -87,6 +87,7 @@ None currently.
 | 17  | Fix photo sending in DM conversations (preview, notification, crop, aspect)      | 2026-02-23 | 90d41e0 | [17-fix-photo-sending-in-dm-conversations-se](./quick/17-fix-photo-sending-in-dm-conversations-se/) |
 | 18  | Change read receipt font from SpaceMono to Silkscreen pixel font                 | 2026-02-23 | 8bf776f | [18-the-read-receipts-and-delivered-text-sho](./quick/18-the-read-receipts-and-delivered-text-sho/) |
 | 19  | Fix iOS darkroom card text clipping with explicit lineHeight for PressStart2P    | 2026-02-24 | dc02635 | [19-the-2-in-the-ios-darkroom-button-looks-c](./quick/19-the-2-in-the-ios-darkroom-button-looks-c/) |
+| 20  | Fix reply scroll-to-message index and highlight timing in DM conversations       | 2026-02-24 | b9744b6 | [20-fix-reply-scroll-to-message-and-highligh](./quick/20-fix-reply-scroll-to-message-and-highligh/) |
 
 ## Notes
 
@@ -97,4 +98,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick task 19: Fix iOS darkroom card text clipping
+Last activity: 2026-02-24 - Completed quick task 20: Fix reply scroll-to-message and highlight timing
