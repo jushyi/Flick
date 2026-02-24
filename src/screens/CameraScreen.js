@@ -3,9 +3,11 @@ import { View, Text, TouchableOpacity, Pressable, Animated, StyleSheet } from 'r
 import { CameraView } from 'expo-camera';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 
 import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 
@@ -213,6 +215,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim, hasRevea
 const CameraScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
 
   // Read snap mode params from route (default to normal camera mode)
   const { mode = 'normal', conversationId, friendId, friendDisplayName } = route.params || {};
@@ -330,6 +333,13 @@ const CameraScreen = () => {
         </TouchableOpacity>
       )}
 
+      {/* Snap mode: Recipient name header pill */}
+      {isSnapMode && (
+        <View style={[snapStyles.recipientHeader, { top: insets.top + 8 }]}>
+          <Text style={snapStyles.recipientHeaderText}>To: {friendDisplayName || 'Friend'}</Text>
+        </View>
+      )}
+
       {/* Floating Controls Row */}
       <View style={isSnapMode ? styles.floatingControlsSnap : styles.floatingControls}>
         {/* Flash Button (far left) */}
@@ -378,7 +388,13 @@ const CameraScreen = () => {
 
       {/* Footer Bar */}
       <View style={isSnapMode ? styles.footerBarSnap : styles.footerBar}>
-        <View style={isSnapMode ? styles.footerControlsSnap : styles.footerControls}>
+        <View
+          style={
+            isSnapMode
+              ? [styles.footerControlsSnap, { paddingBottom: Math.max(insets.bottom, 16) }]
+              : styles.footerControls
+          }
+        >
           {/* Darkroom Card Stack Button - hidden in snap mode */}
           {!isSnapMode && (
             <DarkroomCardButton
@@ -444,6 +460,24 @@ const snapStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+  },
+  recipientHeader: {
+    position: 'absolute',
+    alignSelf: 'center',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  recipientHeaderText: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
+    color: colors.text.primary,
+    backgroundColor: colors.overlay.dark,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    overflow: 'hidden',
   },
 });
 

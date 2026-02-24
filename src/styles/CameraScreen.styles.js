@@ -121,11 +121,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   // Snap mode footer controls - centered capture button (no darkroom card or spacer)
+  // Note: paddingBottom is applied dynamically via inline style in CameraScreen.js
+  // using safe area insets (snap mode has no tab bar below, so insets vary per device)
   footerControlsSnap: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 20,
     paddingHorizontal: spacing.xxl,
     width: '100%',
   },
