@@ -206,7 +206,7 @@ const ConversationScreen = () => {
    */
   const scrollToMessage = useCallback(
     messageId => {
-      const index = messages.findIndex(m => m.id === messageId);
+      const index = messagesWithDividers.findIndex(m => m.id === messageId);
       if (index !== -1 && flatListRef.current) {
         try {
           flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
@@ -214,12 +214,14 @@ const ConversationScreen = () => {
           // scrollToIndex can throw on Android when index is outside render window;
           // onScrollToIndexFailed handler will retry via approximate offset.
         }
-        // Brief highlight: set highlightedMessageId for 1.5 seconds
-        setHighlightedMessageId(messageId);
-        setTimeout(() => setHighlightedMessageId(null), 1500);
+        // Defer highlight: 600ms covers normal scroll (~300ms) and retry path (500ms + scroll)
+        setTimeout(() => {
+          setHighlightedMessageId(messageId);
+          setTimeout(() => setHighlightedMessageId(null), 1800);
+        }, 600);
       }
     },
-    [messages]
+    [messagesWithDividers]
   );
 
   /**
