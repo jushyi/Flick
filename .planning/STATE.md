@@ -74,6 +74,7 @@
 | 2026-02-24 | 300ms delay for autoOpenSnapId SnapViewer         | Allows conversation FlatList to render before snap viewer opens     |
 | 2026-02-24 | Snap notification shares Conversation nav handler | snap type returns screen:'Conversation' with autoOpenSnapId param   |
 | 2026-02-24 | Infrastructure configs (TTL, lifecycle) deferred  | Safety nets only; app works without them, user will configure later |
+| 2026-02-24 | Snap camera matches main Camera tab layout        | Supersedes "zoom hidden in snap mode"; full parity minus darkroom   |
 
 ## Blockers
 
@@ -108,6 +109,7 @@ None currently.
 | 23  | Fix reaction badges overlapping on photo/GIF messages in DM conversations        | 2026-02-24 | f601c02 |          | [23-reaction-badges-dont-overlap-on-photos-l](./quick/23-reaction-badges-dont-overlap-on-photos-l/) |
 | 24  | Fix push notification logging and stale token detection for dev app              | 2026-02-24 | 381f4e6 |          | [24-push-notifs-for-dev-app-doesn-t-seem-to-](./quick/24-push-notifs-for-dev-app-doesn-t-seem-to-/) |
 | 25  | Fix selfie camera auto-mirror (remove skipProcessing from takePictureAsync)      | 2026-02-24 | b791dab |          | [25-fix-selfie-cam-auto-mirror](./quick/25-fix-selfie-cam-auto-mirror/)                             |
+| 26  | Fix snap camera to match main Camera tab layout                                  | 2026-02-24 | 42a89ba |          | [26-fix-snap-camera-to-match-main-camera-tab](./quick/26-fix-snap-camera-to-match-main-camera-tab/) |
 
 ## Notes
 
@@ -118,4 +120,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed Quick Task 25: Fix selfie camera auto-mirror (removed skipProcessing from takePictureAsync)
+Last activity: 2026-02-24 - Completed Quick Task 26: Fix snap camera to match main Camera tab layout (shared styles, centered capture button)
