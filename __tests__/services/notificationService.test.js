@@ -593,7 +593,7 @@ describe('notificationService', () => {
       expect(result.data.screen).toBe('Feed');
     });
 
-    it('should navigate to Activity for tagged', () => {
+    it('should navigate to Conversation for tagged (Phase 5 migration)', () => {
       const notification = {
         request: {
           content: {
@@ -601,6 +601,10 @@ describe('notificationService', () => {
               type: 'tagged',
               taggerId: 'tagger-123',
               photoId: 'photo-tagged',
+              conversationId: 'conv-123',
+              senderId: 'tagger-123',
+              senderName: 'Tagger',
+              senderProfilePhotoURL: 'https://example.com/tagger.jpg',
             },
           },
         },
@@ -609,10 +613,11 @@ describe('notificationService', () => {
       const result = handleNotificationTapped(notification);
 
       expect(result.success).toBe(true);
-      expect(result.data.type).toBe('tagged');
-      expect(result.data.screen).toBe('Activity');
-      expect(result.data.params.photoId).toBe('photo-tagged');
-      expect(result.data.params.shouldOpenPhoto).toBe(true);
+      expect(result.data.type).toBe('tagged_photo');
+      expect(result.data.screen).toBe('Conversation');
+      expect(result.data.params.conversationId).toBe('conv-123');
+      expect(result.data.params.friendId).toBe('tagger-123');
+      expect(result.data.params.friendProfile.displayName).toBe('Tagger');
     });
 
     it('should navigate to Feed for unknown notification type', () => {

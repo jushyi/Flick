@@ -388,16 +388,21 @@ export const handleNotificationTapped = notification => {
         };
 
       case 'tagged':
-        // Navigate to Activity screen for tag notifications
+      case 'tagged_photo':
+        // Navigate to DM conversation for tag notifications (Phase 5 migration)
         return {
           success: true,
           data: {
-            type: 'tagged',
-            screen: 'Activity',
+            type: 'tagged_photo',
+            screen: 'Conversation',
             params: {
-              photoId,
-              shouldOpenPhoto: true,
-              notifType: 'tagged',
+              conversationId: conversationId,
+              friendId: senderId,
+              friendProfile: {
+                uid: senderId,
+                displayName: senderName || 'Unknown',
+                photoURL: senderProfilePhotoURL || null,
+              },
             },
           },
         };
