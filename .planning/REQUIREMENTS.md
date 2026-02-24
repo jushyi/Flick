@@ -141,8 +141,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | SNAP-06     | Phase 3 | Complete |
 | SNAP-07     | Phase 3 | Complete |
 | SNAP-08     | Phase 3 | Complete |
-| INFRA-03    | Phase 3 | Pending  |
-| INFRA-04    | Phase 3 | Pending  |
+| INFRA-03    | Phase 3 | Complete |
+| INFRA-04    | Phase 3 | Complete |
 | STRK-01     | Phase 4 | Pending  |
 | STRK-02     | Phase 4 | Pending  |
 | STRK-03     | Phase 4 | Pending  |
