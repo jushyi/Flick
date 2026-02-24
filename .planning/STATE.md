@@ -110,6 +110,7 @@ None currently.
 | 24  | Fix push notification logging and stale token detection for dev app              | 2026-02-24 | 381f4e6 |          | [24-push-notifs-for-dev-app-doesn-t-seem-to-](./quick/24-push-notifs-for-dev-app-doesn-t-seem-to-/) |
 | 25  | Fix selfie camera auto-mirror (remove skipProcessing from takePictureAsync)      | 2026-02-24 | b791dab |          | [25-fix-selfie-cam-auto-mirror](./quick/25-fix-selfie-cam-auto-mirror/)                             |
 | 26  | Fix snap camera to match main Camera tab layout                                  | 2026-02-24 | 42a89ba |          | [26-fix-snap-camera-to-match-main-camera-tab](./quick/26-fix-snap-camera-to-match-main-camera-tab/) |
+| 27  | Fix snap send navigation to return to Conversation instead of MessagesList       | 2026-02-24 | 7368ce4 |          | [27-after-sending-a-snap-from-messages-tab-n](./quick/27-after-sending-a-snap-from-messages-tab-n/) |
 
 ## Notes
 
@@ -120,4 +121,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 03-06-PLAN.md: Test suite validation and visual verification of snap flow (Phase 3 complete)
+Last activity: 2026-02-24 - Completed quick-27: Fix snap send navigation to return to Conversation instead of MessagesList
