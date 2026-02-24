@@ -285,6 +285,7 @@ const MessageBubble = ({
                 styles.bubble,
                 isCurrentUser ? styles.bubbleUser : styles.bubbleFriend,
                 (isGif || isImage) && styles.bubbleMedia,
+                reactions && Object.keys(reactions).length > 0 && styles.bubbleWithReactions,
               ]}
             >
               {isGif || isImage ? (
@@ -305,14 +306,12 @@ const MessageBubble = ({
       </View>
 
       {reactions && Object.keys(reactions).length > 0 && (
-        <View style={styles.reactionSpacing}>
-          <ReactionBadges
-            reactions={reactions}
-            isCurrentUser={isCurrentUser}
-            currentUserId={currentUserId}
-            onReactionPress={onReactionPress}
-          />
-        </View>
+        <ReactionBadges
+          reactions={reactions}
+          isCurrentUser={isCurrentUser}
+          currentUserId={currentUserId}
+          onReactionPress={onReactionPress}
+        />
       )}
 
       {showTimestamp && (
@@ -329,10 +328,6 @@ const MessageBubble = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 2,
-    marginBottom: 4,
-  },
-  reactionSpacing: {
-    marginBottom: 6,
   },
   containerRight: {
     alignItems: 'flex-end',
@@ -358,6 +353,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 4,
+  },
+  bubbleWithReactions: {
+    paddingBottom: 14,
   },
   bubbleUser: {
     backgroundColor: colors.interactive.primary,
@@ -450,9 +448,7 @@ const styles = StyleSheet.create({
   originalMessageBlockLeft: {
     alignSelf: 'flex-start',
   },
-  originalMessageContent: {
-    flex: 1,
-  },
+  originalMessageContent: {},
   originalAuthorText: {
     fontSize: 10,
     fontFamily: typography.fontFamily.body,
