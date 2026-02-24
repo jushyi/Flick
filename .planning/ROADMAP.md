@@ -11,7 +11,7 @@
 | 1     | Message Infrastructure & Read Receipts | Extended message schema + read receipts UI        | READ-01..03, INFRA-01..02 | In Progress (2/4 plans)     |
 | 2     | Message Interactions                   | Complete                                          | 2026-02-24                | Complete (6/6 plans)        |
 | 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic       | SNAP-01..08, INFRA-03..04 | UAT Gap Closure (6/8 plans) |
-| 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07               | Not Started                 |
+| 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07               | Planned (0/4 plans)         |
 | 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed   | TAG-01..04                | Not Started                 |
 
 ## Phase 1: Message Infrastructure & Read Receipts
@@ -169,7 +169,14 @@ Plans:
 - Streak resets to 0 after 24h without mutual snaps
 - Streak state cannot be manipulated by client (verified with security rules)
 
-**Estimated plans:** 5-7
+**Plans:** 4 plans
+
+Plans:
+
+- [ ] 04-01-PLAN.md — Server-side streak engine: onNewMessage streak tracking, processStreakExpiry, Firestore rules
+- [ ] 04-02-PLAN.md — Client streak service (state derivation, subscriptions) + StreakIndicator component
+- [ ] 04-03-PLAN.md — useStreak/useStreakMap hooks + notification settings toggle
+- [ ] 04-04-PLAN.md — UI integration: wire StreakIndicator into ConversationRow, ConversationHeader, DMInput
 
 ---
 
