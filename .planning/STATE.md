@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 04
-**Current Plan:** 02 of 4 complete
+**Current Plan:** 03 of 4 complete
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -11,7 +11,7 @@
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —          |
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
 | 3 — Snap Messages                          | Complete (8/8 plans)    | 2026-02-24 | 2026-02-24 |
-| 4 — Snap Streaks                           | In Progress (2/4 plans) | 2026-02-24 | —          |
+| 4 — Snap Streaks                           | In Progress (3/4 plans) | 2026-02-24 | —          |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —          |
 
 ## Requirements Coverage
@@ -90,6 +90,8 @@
 | 2026-02-24 | StreakIndicator as drop-in PixelIcon replacement         | Same component across ConversationRow, Header, DMInput                        |
 | 2026-02-24 | warningAt pre-computed field for efficient queries       | Firestore cannot do arithmetic in queries; store expiresAt - 4h as field      |
 | 2026-02-24 | Best-effort streak updates in onNewMessage               | Streak errors logged but do not fail message delivery                         |
+| 2026-02-24 | warning-outline icon for streak toggle                   | flame-outline does not exist in PixelIcon set; warning-outline fits label     |
+| 2026-02-24 | Messaging section for streak notification toggle         | Groups streak toggle separately from photo notification types                 |
 
 ## Blockers
 
@@ -142,4 +144,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 04-01-PLAN.md: server-side streak engine with Cloud Functions and tests
+Last activity: 2026-02-24 - Completed 04-03-PLAN.md: streak hooks and notification toggle
