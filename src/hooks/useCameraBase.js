@@ -13,6 +13,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Animated, Dimensions, Platform } from 'react-native';
 import { useCameraPermissions } from 'expo-camera';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
+import * as ImageManipulator from 'expo-image-manipulator';
+
 import { useAuth } from '../context/AuthContext';
 import { getDarkroomCounts } from '../services/firebase/photoService';
 import { addToQueue, initializeQueue } from '../services/uploadQueueService';
@@ -225,16 +227,32 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
         quality: 0.8,
       });
 
-      logger.debug('useCameraBase: Photo captured', { uri: photo.uri });
+      logger.debug('useCameraBase: Photo captured', { uri: photo.uri, facing });
+
+      // Front camera photos come out mirrored — flip horizontally to correct
+      let photoUri = photo.uri;
+      if (facing === 'front') {
+        try {
+          const flipped = await ImageManipulator.manipulateAsync(
+            photo.uri,
+            [{ flip: ImageManipulator.FlipType.Horizontal }],
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+          );
+          photoUri = flipped.uri;
+          logger.debug('useCameraBase: Front camera photo flipped', { uri: photoUri });
+        } catch (flipError) {
+          logger.warn('useCameraBase: Failed to flip front camera photo', { error: flipError.message });
+        }
+      }
 
       // In snap mode, return photo URI directly without queueing
       if (isSnapMode) {
         logger.info('useCameraBase: Snap mode capture, returning URI directly');
-        return photo.uri;
+        return photoUri;
       }
 
       // Queue for background upload (non-blocking)
-      addToQueue(user.uid, photo.uri);
+      addToQueue(user.uid, photoUri);
 
       // Play card stack animation (fan out + scale)
       playCardCaptureAnimation();
@@ -252,7 +270,7 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
     } finally {
       setIsCapturing(false);
     }
-  }, [isCapturing, user, playFlashEffect, playCardCaptureAnimation, isSnapMode]);
+  }, [isCapturing, user, facing, playFlashEffect, playCardCaptureAnimation, isSnapMode]);
 
   const openBottomSheet = useCallback(() => {
     setIsBottomSheetVisible(true);
