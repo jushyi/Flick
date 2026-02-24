@@ -79,13 +79,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 4,
-    marginTop: 2,
+    marginTop: -10,
+    zIndex: 1,
   },
   containerRight: {
     alignSelf: 'flex-end',
+    marginRight: 8,
   },
   containerLeft: {
     alignSelf: 'flex-start',
+    marginLeft: 8,
   },
   pill: {
     flexDirection: 'row',

@@ -20,6 +20,8 @@
 import React, { useEffect } from 'react';
 import { View, Text, Pressable, Modal, StyleSheet, useWindowDimensions } from 'react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -58,6 +60,7 @@ const ReactionPicker = ({
   onClose,
 }) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   // Animation values
   const backdropOpacity = useSharedValue(0);
@@ -97,27 +100,18 @@ const ReactionPicker = ({
 
   const actionMenuHeight = actions.length * ACTION_ITEM_HEIGHT;
 
-  // Determine positioning: is message in top or bottom half?
-  const msgCenterY = position ? position.y + position.height / 2 : screenHeight / 2;
-  const isTopHalf = msgCenterY < screenHeight / 2;
+  // Always position emoji row ABOVE the message, action menu BELOW
+  const minEmojiTop = insets.top + 10; // never clip into safe area / notch
 
-  // Calculate positions
-  let emojiRowTop;
-  let actionMenuTop;
+  // Emoji row: above the message bubble, clamped to safe area top
+  let emojiRowTop = (position?.y ?? 0) - EMOJI_ROW_HEIGHT - MENU_VERTICAL_GAP;
+  emojiRowTop = Math.max(minEmojiTop, emojiRowTop);
 
-  if (isTopHalf) {
-    // Default: emoji above message, actions below
-    emojiRowTop = Math.max(8, (position?.y ?? 0) - EMOJI_ROW_HEIGHT - MENU_VERTICAL_GAP);
-    actionMenuTop = (position?.y ?? 0) + (position?.height ?? 0) + MENU_VERTICAL_GAP;
-  } else {
-    // Flipped: actions above message, emoji below
-    actionMenuTop = Math.max(8, (position?.y ?? 0) - actionMenuHeight - MENU_VERTICAL_GAP);
-    emojiRowTop = (position?.y ?? 0) + (position?.height ?? 0) + MENU_VERTICAL_GAP;
-  }
+  // Action menu: below the message bubble
+  let actionMenuTop = (position?.y ?? 0) + (position?.height ?? 0) + MENU_VERTICAL_GAP;
 
-  // Clamp to screen bounds
-  emojiRowTop = Math.max(8, Math.min(emojiRowTop, screenHeight - EMOJI_ROW_HEIGHT - 8));
-  actionMenuTop = Math.max(8, Math.min(actionMenuTop, screenHeight - actionMenuHeight - 8));
+  // Clamp action menu to screen bottom
+  actionMenuTop = Math.min(actionMenuTop, screenHeight - actionMenuHeight - 8);
 
   // Horizontal positioning: center on message, clamped to screen
   const emojiRowWidth = REACTION_EMOJIS.length * 48 + 16;
