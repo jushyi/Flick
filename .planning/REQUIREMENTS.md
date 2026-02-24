@@ -38,12 +38,12 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 
 - [ ] **SNAP-01**: Camera button in the DM input bar opens Flick's camera for snap capture
 - [ ] **SNAP-02**: User can add an optional caption to a snap before sending
-- [ ] **SNAP-03**: Snap is uploaded to Firebase Storage and delivered instantly (no darkroom delay)
+- [x] **SNAP-03**: Snap is uploaded to Firebase Storage and delivered instantly (no darkroom delay)
 - [ ] **SNAP-04**: Unopened snap shows as a generic camera icon with "Snap" label in the conversation
 - [ ] **SNAP-05**: Recipient taps to view snap full-screen; snap disappears after closing (view once)
-- [ ] **SNAP-06**: Sender sees "Opened" status after recipient views the snap
-- [ ] **SNAP-07**: Snap photos use `cachePolicy: 'none'` and short-lived signed URLs (2-5 min)
-- [ ] **SNAP-08**: Cloud Function deletes snap photo from Storage after viewing; Firestore TTL as safety net for unopened snaps
+- [x] **SNAP-06**: Sender sees "Opened" status after recipient views the snap
+- [x] **SNAP-07**: Snap photos use `cachePolicy: 'none'` and short-lived signed URLs (2-5 min)
+- [x] **SNAP-08**: Cloud Function deletes snap photo from Storage after viewing; Firestore TTL as safety net for unopened snaps
 
 ### Snap Streaks
 
@@ -135,12 +135,12 @@ Explicitly excluded. Documented to prevent scope creep.
 | REPLY-04    | Phase 2 | Complete |
 | SNAP-01     | Phase 3 | Pending  |
 | SNAP-02     | Phase 3 | Pending  |
-| SNAP-03     | Phase 3 | Pending  |
+| SNAP-03     | Phase 3 | Complete |
 | SNAP-04     | Phase 3 | Pending  |
 | SNAP-05     | Phase 3 | Pending  |
-| SNAP-06     | Phase 3 | Pending  |
-| SNAP-07     | Phase 3 | Pending  |
-| SNAP-08     | Phase 3 | Pending  |
+| SNAP-06     | Phase 3 | Complete |
+| SNAP-07     | Phase 3 | Complete |
+| SNAP-08     | Phase 3 | Complete |
 | INFRA-03    | Phase 3 | Pending  |
 | INFRA-04    | Phase 3 | Pending  |
 | STRK-01     | Phase 4 | Pending  |
