@@ -282,6 +282,10 @@ const screenStyles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
     color: colors.text.primary,
     textAlign: 'center',
+    height: 36,
+    lineHeight: 36,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   headerSpacer: {
     width: 36,
