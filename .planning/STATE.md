@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 05
-**Current Plan:** 3 of 3
+**Current Plan:** 3 of 3 (COMPLETE)
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -12,14 +12,14 @@
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
 | 3 — Snap Messages                          | Complete (8/8 plans)    | 2026-02-24 | 2026-02-24 |
 | 4 — Snap Streaks                           | Complete (4/4 plans)    | 2026-02-24 | 2026-02-24 |
-| 5 — Photo Tag Integration                  | In Progress (2/3 plans) | 2026-02-24 | —          |
+| 5 — Photo Tag Integration                  | Complete (3/3 plans)    | 2026-02-24 | 2026-02-24 |
 
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 37 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-01, STRK-02, STRK-03, STRK-04, STRK-05, STRK-06, STRK-07, TAG-01, TAG-02, TAG-03)
+- Completed: 38 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-01, STRK-02, STRK-03, STRK-04, STRK-05, STRK-06, STRK-07, TAG-01, TAG-02, TAG-03, TAG-04)
 - In progress: 0
-- Remaining: 3
+- Remaining: 2
 - Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
@@ -101,6 +101,10 @@
 | 2026-02-24 | Tagged photo delegation after hooks in MessageBubble     | Same pattern as SnapBubble to satisfy Rules of Hooks                          |
 | 2026-02-24 | conversationId threaded through MessageBubble prop       | Enables TaggedPhotoBubble to call addTaggedPhotoToFeed callable               |
 | 2026-02-24 | taggedPhotoContext params for PhotoDetail navigation     | messageId, conversationId, photoId, addedToFeedBy passed for Plan 03          |
+| 2026-02-24 | colors.text.tertiary for attribution text                | Dimmer than secondary to differentiate from display name                      |
+| 2026-02-24 | useRoute for taggedPhotoContext in PhotoDetailScreen     | Route params from ConversationScreen, not PhotoDetailContext                  |
+| 2026-02-24 | image-outline PixelIcon for Add to feed button           | No add-circle-outline available; image-outline fits the action                |
+| 2026-02-24 | tagged/tagged_photo notifications route to Conversation  | Phase 5 migration from Activity screen routing                                |
 
 ## Blockers
 
@@ -153,4 +157,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 05-02-PLAN.md: TaggedPhotoBubble component with teal-accented photo card, photoTagService callable wrapper, MessageBubble delegation, ConversationScreen wiring with PhotoDetail navigation
+Last activity: 2026-02-24 - Completed 05-03-PLAN.md: Attribution display on FeedPhotoCard and PhotoDetailScreen, Add to feed button, tagged_photo notification routing to Conversation, 12 new tests
