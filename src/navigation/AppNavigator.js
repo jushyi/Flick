@@ -66,6 +66,7 @@ import ReadReceiptsSettingsScreen from '../screens/ReadReceiptsSettingsScreen';
 import MessagesScreen from '../screens/MessagesScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import NewMessageScreen from '../screens/NewMessageScreen';
+import SnapPreviewScreen from '../screens/SnapPreviewScreen';
 
 // Create navigation reference for programmatic navigation
 export const navigationRef = createRef();
@@ -638,6 +639,28 @@ const AppNavigator = () => {
                   options={{
                     presentation: 'modal',
                     headerShown: false,
+                    contentStyle: { backgroundColor: colors.background.primary },
+                  }}
+                />
+                <Stack.Screen
+                  name="SnapCamera"
+                  component={CameraScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_bottom',
+                    headerShown: false,
+                    gestureEnabled: false,
+                    contentStyle: { backgroundColor: colors.background.primary },
+                  }}
+                />
+                <Stack.Screen
+                  name="SnapPreviewScreen"
+                  component={SnapPreviewScreen}
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                    headerShown: false,
+                    gestureEnabled: false,
                     contentStyle: { backgroundColor: colors.background.primary },
                   }}
                 />
