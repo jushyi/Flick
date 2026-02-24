@@ -56,7 +56,7 @@ const ReplyPreview = ({ message, senderName, onCancel }) => {
   // Determine preview text based on message type
   const getPreviewText = () => {
     if (!message) return '';
-    if (message.type === 'image') return '\uD83D\uDCF7 Photo';
+    if (message.type === 'image') return 'Photo';
     if (message.type === 'gif') return 'GIF';
     return message.text || '';
   };
