@@ -52,8 +52,8 @@ export {
  * Wraps useCameraBase with Android-appropriate zoom handling.
  * Digital zoom only — [1, 2, 3] on both front and back cameras.
  */
-const useCamera = () => {
-  const base = useCameraBase();
+const useCamera = options => {
+  const base = useCameraBase(options);
   const { facing, setFacing, zoom, setZoom } = base;
 
   // Android uses digital zoom only — same levels for front and back

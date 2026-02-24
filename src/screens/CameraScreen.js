@@ -1,7 +1,10 @@
-import { View, Text, TouchableOpacity, Pressable, Animated } from 'react-native';
+import { useCallback } from 'react';
+import { View, Text, TouchableOpacity, Pressable, Animated, StyleSheet } from 'react-native';
 import { CameraView } from 'expo-camera';
 
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+
 import { colors } from '../constants/colors';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
@@ -15,6 +18,7 @@ import useCamera, {
 import { styles } from '../styles/CameraScreen.styles';
 import { DarkroomBottomSheet } from '../components';
 import { lightImpact } from '../utils/haptics';
+
 import logger from '../utils/logger';
 
 // Flash icon - pixel art lightning bolt
@@ -207,6 +211,13 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim, hasRevea
 };
 
 const CameraScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  // Read snap mode params from route (default to normal camera mode)
+  const { mode = 'normal', conversationId, friendId, friendDisplayName } = route.params || {};
+  const isSnapMode = mode === 'snap';
+
   const {
     // Camera permissions
     permission,
@@ -246,7 +257,29 @@ const CameraScreen = () => {
     openBottomSheet,
     closeBottomSheet,
     handleBottomSheetComplete,
-  } = useCamera();
+  } = useCamera({ mode });
+
+  // Handle capture in snap mode: navigate to SnapPreviewScreen with photo URI
+  const handleSnapCapture = useCallback(async () => {
+    const photoUri = await takePicture();
+    if (photoUri) {
+      logger.info('CameraScreen: Snap captured, navigating to preview', {
+        conversationId,
+        friendId,
+      });
+      navigation.navigate('SnapPreviewScreen', {
+        photoUri,
+        conversationId,
+        friendId,
+        friendDisplayName,
+      });
+    }
+  }, [takePicture, navigation, conversationId, friendId, friendDisplayName]);
+
+  // Handle close button in snap mode
+  const handleSnapClose = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
   // Handle permission request
   if (!permission) {
@@ -272,7 +305,7 @@ const CameraScreen = () => {
   return (
     <View style={styles.container}>
       {/* Camera Preview Container - with rounded corners */}
-      <View style={styles.cameraContainer}>
+      <View style={isSnapMode ? styles.cameraContainerSnap : styles.cameraContainer}>
         <CameraView
           ref={cameraRef}
           style={styles.camera}
@@ -286,45 +319,63 @@ const CameraScreen = () => {
         {showFlash && <Animated.View style={[styles.flashOverlay, { opacity: flashOpacity }]} />}
       </View>
 
-      {/* Floating Controls Row - Flash (left), Zoom (center), Flip (right) - positioned above footer */}
-      <View style={styles.floatingControls}>
+      {/* Snap mode: X close button (top-left) */}
+      {isSnapMode && (
+        <TouchableOpacity
+          style={snapStyles.closeButton}
+          onPress={handleSnapClose}
+          activeOpacity={0.7}
+        >
+          <PixelIcon name="close" size={22} color={colors.icon.primary} />
+        </TouchableOpacity>
+      )}
+
+      {/* Floating Controls Row */}
+      <View style={isSnapMode ? snapStyles.floatingControls : styles.floatingControls}>
         {/* Flash Button (far left) */}
         <TouchableOpacity style={styles.floatingButton} onPress={toggleFlash}>
           <FlashIcon color={colors.icon.primary} mode={flash} />
           {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
         </TouchableOpacity>
 
-        {/* Zoom Control Bar - centered */}
-        <View style={styles.zoomBar}>
-          {zoomLevels.map(level => {
-            const isSelected = zoom.value === level.value;
-            return (
-              <TouchableOpacity
-                key={level.value}
-                style={[styles.zoomButton, isSelected && styles.zoomButtonActive]}
-                onPress={() => handleZoomChange(level)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.zoomLabelContainer}>
-                  <Text style={[styles.zoomButtonText, isSelected && styles.zoomButtonTextActive]}>
-                    {level.label}
-                  </Text>
-                  {isSelected && (
+        {/* Zoom Control Bar - hidden in snap mode (keep camera simple) */}
+        {!isSnapMode && (
+          <View style={styles.zoomBar}>
+            {zoomLevels.map(level => {
+              const isSelected = zoom.value === level.value;
+              return (
+                <TouchableOpacity
+                  key={level.value}
+                  style={[styles.zoomButton, isSelected && styles.zoomButtonActive]}
+                  onPress={() => handleZoomChange(level)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.zoomLabelContainer}>
                     <Text
-                      style={[
-                        styles.zoomButtonText,
-                        styles.zoomButtonTextActive,
-                        styles.zoomSuffix,
-                      ]}
+                      style={[styles.zoomButtonText, isSelected && styles.zoomButtonTextActive]}
                     >
-                      x
+                      {level.label}
                     </Text>
-                  )}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                    {isSelected && (
+                      <Text
+                        style={[
+                          styles.zoomButtonText,
+                          styles.zoomButtonTextActive,
+                          styles.zoomSuffix,
+                        ]}
+                      >
+                        x
+                      </Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Spacer to balance layout when zoom is hidden in snap mode */}
+        {isSnapMode && <View style={{ flex: 1 }} />}
 
         {/* Flip Camera Button (far right) */}
         <TouchableOpacity style={styles.floatingButton} onPress={toggleCameraFacing}>
@@ -332,20 +383,21 @@ const CameraScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Footer Bar - solid dark background */}
-      <View style={styles.footerBar}>
-        {/* Main Controls Row: Darkroom, Capture */}
-        <View style={styles.footerControls}>
-          {/* Darkroom Card Stack Button */}
-          <DarkroomCardButton
-            count={darkroomCounts.totalCount}
-            onPress={openBottomSheet}
-            scaleAnim={cardScale}
-            fanSpreadAnim={cardFanSpread}
-            hasRevealedPhotos={darkroomCounts.revealedCount > 0}
-          />
+      {/* Footer Bar */}
+      <View style={isSnapMode ? snapStyles.footerBar : styles.footerBar}>
+        <View style={isSnapMode ? snapStyles.footerControls : styles.footerControls}>
+          {/* Darkroom Card Stack Button - hidden in snap mode */}
+          {!isSnapMode && (
+            <DarkroomCardButton
+              count={darkroomCounts.totalCount}
+              onPress={openBottomSheet}
+              scaleAnim={cardScale}
+              fanSpreadAnim={cardFanSpread}
+              hasRevealedPhotos={darkroomCounts.revealedCount > 0}
+            />
+          )}
 
-          {/* Capture Button (center) - 10% larger with spaced ring, two-stage haptic */}
+          {/* Capture Button (center) */}
           <Pressable
             style={({ pressed }) => [
               styles.captureButtonOuter,
@@ -353,10 +405,9 @@ const CameraScreen = () => {
               pressed && styles.captureButtonPressed,
             ]}
             onPressIn={() => {
-              // First stage: light haptic on finger down (like half-press shutter)
               lightImpact();
             }}
-            onPressOut={takePicture}
+            onPressOut={isSnapMode ? handleSnapCapture : takePicture}
             disabled={isCapturing}
           >
             <View style={styles.captureButton}>
@@ -365,20 +416,66 @@ const CameraScreen = () => {
           </Pressable>
 
           {/* Invisible spacer to balance darkroom button and center capture button */}
-          <View style={styles.footerSpacer} />
+          {!isSnapMode && <View style={styles.footerSpacer} />}
         </View>
       </View>
 
-      {/* Darkroom Bottom Sheet */}
-      <DarkroomBottomSheet
-        visible={isBottomSheetVisible}
-        revealedCount={darkroomCounts.revealedCount}
-        developingCount={darkroomCounts.developingCount}
-        onClose={closeBottomSheet}
-        onComplete={handleBottomSheetComplete}
-      />
+      {/* Darkroom Bottom Sheet - hidden in snap mode */}
+      {!isSnapMode && (
+        <DarkroomBottomSheet
+          visible={isBottomSheetVisible}
+          revealedCount={darkroomCounts.revealedCount}
+          developingCount={darkroomCounts.developingCount}
+          onClose={closeBottomSheet}
+          onComplete={handleBottomSheetComplete}
+        />
+      )}
     </View>
   );
 };
+
+/**
+ * Snap mode specific styles.
+ * In snap mode, the camera is full-screen (no tab bar, no darkroom footer)
+ * with minimal controls: close (X), flash, flip, capture.
+ */
+const snapStyles = StyleSheet.create({
+  closeButton: {
+    position: 'absolute',
+    top: 56,
+    left: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.overlay.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  floatingControls: {
+    position: 'absolute',
+    bottom: 120,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  footerBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerControls: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 24,
+  },
+});
 
 export default CameraScreen;

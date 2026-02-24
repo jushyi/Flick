@@ -14,7 +14,6 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Platform } from 'react-native';
 import useCameraBase, {
   ZOOM_LEVELS_BASE,
   ULTRA_WIDE_LEVEL,
@@ -56,8 +55,8 @@ export {
  *
  * Wraps useCameraBase and adds iOS-specific lens detection + zoom levels.
  */
-const useCamera = () => {
-  const base = useCameraBase();
+const useCamera = options => {
+  const base = useCameraBase(options);
   const { facing, setFacing, zoom, setZoom, cameraRef } = base;
 
   // iOS lens state

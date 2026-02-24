@@ -65,7 +65,8 @@ export const SPREAD_OFFSET_MULTIPLIER = 2;
  * Exposes setFacing and setZoom so platform hooks can manage state transitions
  * during camera flips and zoom changes.
  */
-const useCameraBase = () => {
+const useCameraBase = ({ mode = 'normal' } = {}) => {
+  const isSnapMode = mode === 'snap';
   const { user } = useAuth();
   const navigation = useNavigation();
   const route = useRoute();
@@ -90,10 +91,12 @@ const useCameraBase = () => {
   const cardScale = useRef(new Animated.Value(1)).current;
   const cardFanSpread = useRef(new Animated.Value(0)).current;
 
-  // Initialize upload queue on app start
+  // Initialize upload queue on app start (skip in snap mode)
   useEffect(() => {
-    initializeQueue();
-  }, []);
+    if (!isSnapMode) {
+      initializeQueue();
+    }
+  }, [isSnapMode]);
 
   // Load darkroom counts on mount and poll every 30s
   useEffect(() => {
@@ -225,6 +228,12 @@ const useCameraBase = () => {
 
       logger.debug('useCameraBase: Photo captured', { uri: photo.uri });
 
+      // In snap mode, return photo URI directly without queueing
+      if (isSnapMode) {
+        logger.info('useCameraBase: Snap mode capture, returning URI directly');
+        return photo.uri;
+      }
+
       // Queue for background upload (non-blocking)
       addToQueue(user.uid, photo.uri);
 
@@ -244,7 +253,7 @@ const useCameraBase = () => {
     } finally {
       setIsCapturing(false);
     }
-  }, [isCapturing, user, playFlashEffect, playCardCaptureAnimation]);
+  }, [isCapturing, user, playFlashEffect, playCardCaptureAnimation, isSnapMode]);
 
   const openBottomSheet = useCallback(() => {
     setIsBottomSheetVisible(true);
@@ -268,6 +277,9 @@ const useCameraBase = () => {
   return {
     // User
     user,
+
+    // Mode
+    isSnapMode,
 
     // Camera permissions
     permission,
