@@ -41,13 +41,6 @@ export const styles = StyleSheet.create({
     borderWidth: 0, // Explicitly remove any border
     backgroundColor: colors.background.primary, // Match container background to prevent outline artifacts
   },
-  // Camera container for snap mode - full screen, no tab bar or footer offset
-  cameraContainerSnap: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-    borderWidth: 0,
-    backgroundColor: colors.background.primary,
-  },
   // Camera - fills the container
   camera: {
     flex: 1,
@@ -86,6 +79,15 @@ export const styles = StyleSheet.create({
   footerControls: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 20,
+    paddingHorizontal: spacing.xxl,
+    width: '100%',
+  },
+  // Snap mode footer controls - centered capture button (no darkroom card or spacer)
+  footerControlsSnap: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: 20,
     paddingHorizontal: spacing.xxl,

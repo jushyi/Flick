@@ -305,7 +305,7 @@ const CameraScreen = () => {
   return (
     <View style={styles.container}>
       {/* Camera Preview Container - with rounded corners */}
-      <View style={isSnapMode ? styles.cameraContainerSnap : styles.cameraContainer}>
+      <View style={styles.cameraContainer}>
         <CameraView
           ref={cameraRef}
           style={styles.camera}
@@ -331,7 +331,7 @@ const CameraScreen = () => {
       )}
 
       {/* Floating Controls Row */}
-      <View style={isSnapMode ? snapStyles.floatingControls : styles.floatingControls}>
+      <View style={styles.floatingControls}>
         {/* Flash Button (far left) */}
         <TouchableOpacity style={styles.floatingButton} onPress={toggleFlash}>
           <FlashIcon color={colors.icon.primary} mode={flash} />
@@ -377,8 +377,8 @@ const CameraScreen = () => {
       </View>
 
       {/* Footer Bar */}
-      <View style={isSnapMode ? snapStyles.footerBar : styles.footerBar}>
-        <View style={isSnapMode ? snapStyles.footerControls : styles.footerControls}>
+      <View style={styles.footerBar}>
+        <View style={isSnapMode ? styles.footerControlsSnap : styles.footerControls}>
           {/* Darkroom Card Stack Button - hidden in snap mode */}
           {!isSnapMode && (
             <DarkroomCardButton
@@ -429,8 +429,8 @@ const CameraScreen = () => {
 
 /**
  * Snap mode specific styles.
- * In snap mode, the camera is full-screen (no tab bar, no darkroom footer)
- * with minimal controls: close (X), flash, flip, capture.
+ * Only the close button overlay is snap-specific; all other camera layout
+ * styles are shared with the main Camera tab via styles/CameraScreen.styles.js.
  */
 const snapStyles = StyleSheet.create({
   closeButton: {
@@ -444,33 +444,6 @@ const snapStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-  },
-  floatingControls: {
-    position: 'absolute',
-    bottom: 120,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  footerBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background.primary,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  footerControls: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 24,
   },
 });
 
