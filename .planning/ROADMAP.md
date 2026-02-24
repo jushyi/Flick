@@ -11,7 +11,7 @@
 | 1     | Message Infrastructure & Read Receipts | Extended message schema + read receipts UI        | READ-01..03, INFRA-01..02 | In Progress (2/4 plans)     |
 | 2     | Message Interactions                   | Complete                                          | 2026-02-24                | Complete (6/6 plans)        |
 | 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic       | SNAP-01..08, INFRA-03..04 | UAT Gap Closure (6/8 plans) |
-| 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07               | Planned (0/4 plans)         |
+| 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07               | In Progress (1/4 plans)     |
 | 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed   | TAG-01..04                | Not Started                 |
 
 ## Phase 1: Message Infrastructure & Read Receipts
@@ -174,7 +174,7 @@ Plans:
 Plans:
 
 - [ ] 04-01-PLAN.md — Server-side streak engine: onNewMessage streak tracking, processStreakExpiry, Firestore rules
-- [ ] 04-02-PLAN.md — Client streak service (state derivation, subscriptions) + StreakIndicator component
+- [x] 04-02-PLAN.md — Client streak service (state derivation, subscriptions) + StreakIndicator component
 - [ ] 04-03-PLAN.md — useStreak/useStreakMap hooks + notification settings toggle
 - [ ] 04-04-PLAN.md — UI integration: wire StreakIndicator into ConversationRow, ConversationHeader, DMInput
 
@@ -236,4 +236,4 @@ Phase 5 is independent of Phases 2, 3, and 4.
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-24 — Phase 3 UAT gap closure: 2 plans created for 6 diagnosed issues_
+_Last updated: 2026-02-24 — Phase 4 Plan 02 complete: client streak service + StreakIndicator component_
