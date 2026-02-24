@@ -245,14 +245,9 @@ const SnapViewer = ({
             </GHTouchableOpacity>
           </View>
 
-          {/* Sender name */}
-          {senderName && (
-            <Text style={[styles.senderName, { top: insets.top + 20 }]}>{senderName}</Text>
-          )}
-
           {/* Polaroid frame with gesture */}
-          <GestureDetector gesture={panGesture}>
-            <Animated.View style={[styles.polaroidContainer, animatedPolaroidStyle]}>
+          <Animated.View style={[styles.polaroidContainer, animatedPolaroidStyle]}>
+            <GestureDetector gesture={panGesture}>
               <View style={[styles.polaroid, { width: polaroidWidth, height: polaroidHeight }]}>
                 {/* Photo area */}
                 <View style={[styles.photoContainer, { width: photoWidth, height: photoHeight }]}>
@@ -285,24 +280,24 @@ const SnapViewer = ({
                   ) : null}
                 </View>
               </View>
+            </GestureDetector>
 
-              {/* Reaction bar — shown to recipients only */}
-              {showReactionBar && (
-                <View style={styles.reactionBar}>
-                  {REACTION_EMOJIS.map(emoji => (
-                    <GHTouchableOpacity
-                      key={emoji.key}
-                      style={styles.reactionButton}
-                      onPress={() => handleReactionPress(emoji.key)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.reactionEmoji}>{emoji.char}</Text>
-                    </GHTouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </Animated.View>
-          </GestureDetector>
+            {/* Reaction bar — OUTSIDE GestureDetector so taps work */}
+            {showReactionBar && (
+              <View style={styles.reactionBar}>
+                {REACTION_EMOJIS.map(emoji => (
+                  <GHTouchableOpacity
+                    key={emoji.key}
+                    style={styles.reactionButton}
+                    onPress={() => handleReactionPress(emoji.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.reactionEmoji}>{emoji.char}</Text>
+                  </GHTouchableOpacity>
+                ))}
+              </View>
+            )}
+          </Animated.View>
         </Animated.View>
       </GestureHandlerRootView>
     </Modal>
@@ -331,13 +326,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  senderName: {
-    position: 'absolute',
-    left: 16,
-    fontSize: 14,
-    fontFamily: typography.fontFamily.body,
-    color: colors.text.primary,
   },
   polaroidContainer: {
     justifyContent: 'center',
@@ -403,13 +391,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
-    gap: 16,
+    gap: 12,
+    backgroundColor: colors.background.tertiary,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.border.default,
   },
   reactionButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    padding: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
