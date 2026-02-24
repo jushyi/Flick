@@ -206,15 +206,6 @@ const MessageBubble = ({
 
     const replyAuthor = message.replyTo.senderId === currentUserId ? 'You' : senderName || 'Friend';
 
-    const connectingLine = (
-      <View
-        style={[
-          styles.originalConnectingLine,
-          isCurrentUser ? styles.connectingLineRight : styles.connectingLineLeft,
-        ]}
-      />
-    );
-
     const contentBlock = (
       <View style={styles.originalMessageContent}>
         {message.replyTo.deleted ? (
@@ -260,17 +251,7 @@ const MessageBubble = ({
           isCurrentUser ? styles.originalMessageBlockRight : styles.originalMessageBlockLeft,
         ]}
       >
-        {isCurrentUser ? (
-          <>
-            {contentBlock}
-            {connectingLine}
-          </>
-        ) : (
-          <>
-            {connectingLine}
-            {contentBlock}
-          </>
-        )}
+        {contentBlock}
       </Pressable>
     );
   };
@@ -324,12 +305,14 @@ const MessageBubble = ({
       </View>
 
       {reactions && Object.keys(reactions).length > 0 && (
-        <ReactionBadges
-          reactions={reactions}
-          isCurrentUser={isCurrentUser}
-          currentUserId={currentUserId}
-          onReactionPress={onReactionPress}
-        />
+        <View style={styles.reactionSpacing}>
+          <ReactionBadges
+            reactions={reactions}
+            isCurrentUser={isCurrentUser}
+            currentUserId={currentUserId}
+            onReactionPress={onReactionPress}
+          />
+        </View>
       )}
 
       {showTimestamp && (
@@ -346,6 +329,10 @@ const MessageBubble = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 2,
+    marginBottom: 4,
+  },
+  reactionSpacing: {
+    marginBottom: 6,
   },
   containerRight: {
     alignItems: 'flex-end',
@@ -444,33 +431,24 @@ const styles = StyleSheet.create({
   },
   // Muted original message block (shown above reply bubble) — retro "quoted text" panel
   originalMessageBlock: {
-    maxWidth: '75%',
+    maxWidth: '60%',
     marginBottom: 2,
-    flexDirection: 'row',
-    opacity: 0.65,
-    backgroundColor: colors.background.secondary,
-    borderWidth: 1,
-    borderColor: colors.border.default,
-    borderRadius: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
+    opacity: 0.6,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.text.secondary,
+    paddingLeft: 6,
+    paddingVertical: 2,
   },
   originalMessageBlockRight: {
     alignSelf: 'flex-end',
+    borderLeftWidth: 0,
+    borderRightWidth: 2,
+    borderRightColor: colors.text.secondary,
+    paddingLeft: 0,
+    paddingRight: 6,
   },
   originalMessageBlockLeft: {
     alignSelf: 'flex-start',
-  },
-  originalConnectingLine: {
-    width: 3,
-    backgroundColor: colors.text.secondary,
-    borderRadius: 0,
-  },
-  connectingLineRight: {
-    marginLeft: 8,
-  },
-  connectingLineLeft: {
-    marginRight: 8,
   },
   originalMessageContent: {
     flex: 1,
@@ -498,20 +476,19 @@ const styles = StyleSheet.create({
   },
   originalMediaContainer: {
     borderRadius: 3,
-    overflow: 'hidden',
     marginTop: 2,
   },
   originalMediaRight: {
     alignItems: 'flex-end',
   },
   originalImage: {
-    width: 180,
-    height: 220,
+    width: 120,
+    height: 150,
     borderRadius: 3,
   },
   originalGif: {
-    width: 180,
-    height: 135,
+    width: 120,
+    height: 90,
     borderRadius: 3,
   },
 });
