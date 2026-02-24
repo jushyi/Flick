@@ -58,7 +58,7 @@ Requirements for the messaging upgrade. Each maps to roadmap phases.
 ### Photo Tag Integration
 
 - [x] **TAG-01**: When a user tags a friend in a photo, that photo auto-sends as a message in their DM conversation
-- [ ] **TAG-02**: Tagged photo message renders as a photo card with "tagged you in a photo" context
+- [x] **TAG-02**: Tagged photo message renders as a photo card with "tagged you in a photo" context
 - [x] **TAG-03**: Recipient can tap "Add to feed" on a tagged photo message to add it to their own feed
 - [ ] **TAG-04**: Reshared photo shows "Photo by @username" attribution on the recipient's feed
 
@@ -151,7 +151,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | STRK-06     | Phase 4 | Complete |
 | STRK-07     | Phase 4 | Complete |
 | TAG-01      | Phase 5 | Complete |
-| TAG-02      | Phase 5 | Pending  |
+| TAG-02      | Phase 5 | Complete |
 | TAG-03      | Phase 5 | Complete |
 | TAG-04      | Phase 5 | Pending  |
 

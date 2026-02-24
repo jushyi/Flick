@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 05
-**Current Plan:** 2 of 3
+**Current Plan:** 3 of 3
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -12,14 +12,14 @@
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
 | 3 — Snap Messages                          | Complete (8/8 plans)    | 2026-02-24 | 2026-02-24 |
 | 4 — Snap Streaks                           | Complete (4/4 plans)    | 2026-02-24 | 2026-02-24 |
-| 5 — Photo Tag Integration                  | In Progress (1/3 plans) | 2026-02-24 | —          |
+| 5 — Photo Tag Integration                  | In Progress (2/3 plans) | 2026-02-24 | —          |
 
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 36 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-01, STRK-02, STRK-03, STRK-04, STRK-05, STRK-06, STRK-07, TAG-01, TAG-03)
+- Completed: 37 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-01, STRK-02, STRK-03, STRK-04, STRK-05, STRK-06, STRK-07, TAG-01, TAG-02, TAG-03)
 - In progress: 0
-- Remaining: 4
+- Remaining: 3
 - Deferred to v2: 5 (screenshot detection)
 
 ## Key Decisions Log
@@ -97,6 +97,10 @@
 | 2026-02-24 | Promise.allSettled for concurrent tag processing         | One user failure does not block other tagged users from receiving DMs         |
 | 2026-02-24 | Exact text for photographer reshare notification         | "[Name] added your photo to their feed" (not randomized) per user decision    |
 | 2026-02-24 | Idempotency via addedToFeedBy map on message doc         | Calling addTaggedPhotoToFeed twice returns existing newPhotoId without dupes  |
+| 2026-02-24 | Teal accent (#00B8D4) for tagged photo cards             | Distinct from snap amber (#F5A623) and interactive cyan (#00D4FF)             |
+| 2026-02-24 | Tagged photo delegation after hooks in MessageBubble     | Same pattern as SnapBubble to satisfy Rules of Hooks                          |
+| 2026-02-24 | conversationId threaded through MessageBubble prop       | Enables TaggedPhotoBubble to call addTaggedPhotoToFeed callable               |
+| 2026-02-24 | taggedPhotoContext params for PhotoDetail navigation     | messageId, conversationId, photoId, addedToFeedBy passed for Plan 03          |
 
 ## Blockers
 
@@ -149,4 +153,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 05-01-PLAN.md: Server-side photo tag pipeline (sendTaggedPhotoNotification creates DM messages, onNewMessage handles tagged_photo, addTaggedPhotoToFeed callable with attribution)
+Last activity: 2026-02-24 - Completed 05-02-PLAN.md: TaggedPhotoBubble component with teal-accented photo card, photoTagService callable wrapper, MessageBubble delegation, ConversationScreen wiring with PhotoDetail navigation
