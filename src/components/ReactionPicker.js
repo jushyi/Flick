@@ -94,9 +94,8 @@ const ReactionPicker = ({
   if (isCurrentUser && canUnsend) {
     actions.push({ label: 'Unsend', onPress: onUnsend });
   }
-  if (isCurrentUser) {
-    actions.push({ label: 'Delete for me', onPress: onDeleteForMe });
-  }
+  // Delete for me is always available — any participant can hide any message from their own view
+  actions.push({ label: 'Delete for me', onPress: onDeleteForMe });
 
   const actionMenuHeight = actions.length * ACTION_ITEM_HEIGHT;
 
