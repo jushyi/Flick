@@ -9,7 +9,7 @@
 | Phase | Name                                   | Goal                                              | Requirements                           | Status                  |
 | ----- | -------------------------------------- | ------------------------------------------------- | -------------------------------------- | ----------------------- |
 | 1     | Message Infrastructure & Read Receipts | Extended message schema + read receipts UI        | READ-01..03, INFRA-01..02              | In Progress (2/4 plans) |
-| 2     | Message Interactions                   | Reactions, replies, and message deletion          | REACT-01..05, REPLY-01..04, DEL-01..03 | In Progress (2/6 plans) |
+| 2     | Message Interactions                   | Reactions, replies, and message deletion          | REACT-01..05, REPLY-01..04, DEL-01..03 | Complete (6/6 plans)    |
 | 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic       | SNAP-01..08, INFRA-03..04              | Not Started             |
 | 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07                            | Not Started             |
 | 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed   | TAG-01..04                             | Not Started             |
@@ -78,16 +78,16 @@ Plans:
 - User can delete own messages; both users see "deleted" state
 - Reaction notifications delivered to recipient
 
-**Plans:** 2/6 plans complete
+**Plans:** 6/6 plans complete
 
 Plans:
 
 - [x] 02-01-PLAN.md — Service layer: sendReaction, removeReaction, sendReply, deleteMessageForMe
 - [x] 02-02-PLAN.md — Cloud Functions: unsendMessage callable, onNewMessage reaction/reply handling, Firestore rules
-- [ ] 02-03-PLAN.md — Hook layer: useConversation reaction aggregation + useMessageActions state management
-- [ ] 02-04-PLAN.md — MessageBubble refactor: gesture composition, ReactionBadges, reply rendering, deleted states
-- [ ] 02-05-PLAN.md — Overlay components: ReactionPicker, ReplyPreview, PixelConfirmDialog
-- [ ] 02-06-PLAN.md — Integration: ConversationScreen wiring, DMInput reply support, visual verification
+- [x] 02-03-PLAN.md — Hook layer: useConversation reaction aggregation + useMessageActions state management
+- [x] 02-04-PLAN.md — MessageBubble refactor: gesture composition, ReactionBadges, reply rendering, deleted states
+- [x] 02-05-PLAN.md — Overlay components: ReactionPicker, ReplyPreview, PixelConfirmDialog
+- [x] 02-06-PLAN.md — Integration: ConversationScreen wiring, DMInput reply support, visual verification
 
 ---
 

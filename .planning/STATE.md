@@ -1,18 +1,18 @@
 # Project State: Flick Messaging Upgrade
 
-**Current Phase:** 02
-**Current Plan:** 02-06 (5/6 complete)
-**Last Updated:** 2026-02-23
+**Current Phase:** 02 (complete)
+**Current Plan:** 02-06 (6/6 complete)
+**Last Updated:** 2026-02-24
 
 ## Progress
 
-| Phase                                      | Status                  | Started    | Completed |
-| ------------------------------------------ | ----------------------- | ---------- | --------- |
-| 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —         |
-| 2 — Message Interactions                   | In Progress (5/6 plans) | 2026-02-23 | —         |
-| 3 — Snap Messages                          | Not Started             | —          | —         |
-| 4 — Snap Streaks                           | Not Started             | —          | —         |
-| 5 — Photo Tag Integration                  | Not Started             | —          | —         |
+| Phase                                      | Status                  | Started    | Completed  |
+| ------------------------------------------ | ----------------------- | ---------- | ---------- |
+| 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —          |
+| 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
+| 3 — Snap Messages                          | Not Started             | —          | —          |
+| 4 — Snap Streaks                           | Not Started             | —          | —          |
+| 5 — Photo Tag Integration                  | Not Started             | —          | —          |
 
 ## Requirements Coverage
 
@@ -96,4 +96,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-23 - Completed 02-04-PLAN.md: MessageBubble gesture refactor with ReactionBadges, reply mini bubble, deleted states
+Last activity: 2026-02-24 - Completed 02-06-PLAN.md: ConversationScreen integration with reactions, replies, and deletion (Phase 2 complete)
