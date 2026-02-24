@@ -305,7 +305,7 @@ const CameraScreen = () => {
   return (
     <View style={styles.container}>
       {/* Camera Preview Container - with rounded corners */}
-      <View style={styles.cameraContainer}>
+      <View style={isSnapMode ? styles.cameraContainerSnap : styles.cameraContainer}>
         <CameraView
           ref={cameraRef}
           style={styles.camera}
@@ -331,7 +331,7 @@ const CameraScreen = () => {
       )}
 
       {/* Floating Controls Row */}
-      <View style={styles.floatingControls}>
+      <View style={isSnapMode ? styles.floatingControlsSnap : styles.floatingControls}>
         {/* Flash Button (far left) */}
         <TouchableOpacity style={styles.floatingButton} onPress={toggleFlash}>
           <FlashIcon color={colors.icon.primary} mode={flash} />
@@ -377,7 +377,7 @@ const CameraScreen = () => {
       </View>
 
       {/* Footer Bar */}
-      <View style={styles.footerBar}>
+      <View style={isSnapMode ? styles.footerBarSnap : styles.footerBar}>
         <View style={isSnapMode ? styles.footerControlsSnap : styles.footerControls}>
           {/* Darkroom Card Stack Button - hidden in snap mode */}
           {!isSnapMode && (

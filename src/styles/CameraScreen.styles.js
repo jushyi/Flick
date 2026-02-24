@@ -15,6 +15,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const TAB_BAR_HEIGHT = layout.dimensions.tabBarHeight; // Bottom tab navigator height (includes safe area)
 const FOOTER_HEIGHT = layout.dimensions.footerHeight; // Covers ~1/4 of screen for iOS-native camera feel
 const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
+const CAMERA_HEIGHT_SNAP = SCREEN_HEIGHT - FOOTER_HEIGHT; // Snap mode has no tab bar
 const CAMERA_BORDER_RADIUS = layout.dimensions.cameraBorderRadius; // Rounded corners for camera preview
 const FLOATING_BUTTON_SIZE = 45; // Flash, flip buttons (10% smaller, floating above footer)
 const FLOATING_BUTTON_OFFSET = 8; // Distance above footer edge
@@ -83,6 +84,41 @@ export const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: spacing.xxl,
     width: '100%',
+  },
+  // Snap mode camera container - no tab bar offset, taller preview
+  cameraContainerSnap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: CAMERA_HEIGHT_SNAP,
+    borderBottomLeftRadius: CAMERA_BORDER_RADIUS,
+    borderBottomRightRadius: CAMERA_BORDER_RADIUS,
+    overflow: 'hidden',
+    borderWidth: 0,
+    backgroundColor: colors.background.primary,
+  },
+  // Snap mode floating controls - no tab bar offset
+  floatingControlsSnap: {
+    position: 'absolute',
+    bottom: FOOTER_HEIGHT + FLOATING_BUTTON_OFFSET,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  // Snap mode footer bar - sits at bottom (no tab bar below)
+  footerBarSnap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: FOOTER_HEIGHT,
+    backgroundColor: colors.background.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // Snap mode footer controls - centered capture button (no darkroom card or spacer)
   footerControlsSnap: {
