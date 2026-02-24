@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 05
-**Current Plan:** Not started
+**Current Plan:** 2 of 3
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -12,12 +12,12 @@
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
 | 3 — Snap Messages                          | Complete (8/8 plans)    | 2026-02-24 | 2026-02-24 |
 | 4 — Snap Streaks                           | Complete (4/4 plans)    | 2026-02-24 | 2026-02-24 |
-| 5 — Photo Tag Integration                  | Not Started             | —          | —          |
+| 5 — Photo Tag Integration                  | In Progress (1/3 plans) | 2026-02-24 | —          |
 
 ## Requirements Coverage
 
 - Total v1 requirements: 37
-- Completed: 34 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-01, STRK-02, STRK-03, STRK-04, STRK-05, STRK-06, STRK-07)
+- Completed: 36 (INFRA-01, INFRA-02, INFRA-03, INFRA-04, READ-01, READ-02, READ-03, REACT-01, REACT-02, REACT-03, REACT-04, REACT-05, REPLY-01, REPLY-02, REPLY-03, REPLY-04, DEL-01, DEL-02, DEL-03, SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, SNAP-08, STRK-01, STRK-02, STRK-03, STRK-04, STRK-05, STRK-06, STRK-07, TAG-01, TAG-03)
 - In progress: 0
 - Remaining: 4
 - Deferred to v2: 5 (screenshot detection)
@@ -92,6 +92,11 @@
 | 2026-02-24 | Best-effort streak updates in onNewMessage               | Streak errors logged but do not fail message delivery                         |
 | 2026-02-24 | warning-outline icon for streak toggle                   | flame-outline does not exist in PixelIcon set; warning-outline fits label     |
 | 2026-02-24 | Messaging section for streak notification toggle         | Groups streak toggle separately from photo notification types                 |
+| 2026-02-24 | DM messages replace activity notifications for tags      | New tags only create DM messages; existing activity notifications left as-is  |
+| 2026-02-24 | Block check before tag DM creation                       | Queries blocks collection to skip users who blocked the tagger                |
+| 2026-02-24 | Promise.allSettled for concurrent tag processing         | One user failure does not block other tagged users from receiving DMs         |
+| 2026-02-24 | Exact text for photographer reshare notification         | "[Name] added your photo to their feed" (not randomized) per user decision    |
+| 2026-02-24 | Idempotency via addedToFeedBy map on message doc         | Calling addTaggedPhotoToFeed twice returns existing newPhotoId without dupes  |
 
 ## Blockers
 
@@ -144,4 +149,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 04-04-PLAN.md: StreakIndicator wired into ConversationRow, ConversationHeader, and DMInput; Phase 04 Snap Streaks fully complete
+Last activity: 2026-02-24 - Completed 05-01-PLAN.md: Server-side photo tag pipeline (sendTaggedPhotoNotification creates DM messages, onNewMessage handles tagged_photo, addTaggedPhotoToFeed callable with attribution)
