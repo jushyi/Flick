@@ -91,6 +91,7 @@ None currently.
 | 21  | Fix convo preview reactions and replace emoji icons with PixelIcon               | 2026-02-24 | f9675d9 |          | [21-fix-convo-preview-reactions-and-replace-](./quick/21-fix-convo-preview-reactions-and-replace-/) |
 | 22  | Add cachePolicy to MessageBubble Image components for instant repeat loads       | 2026-02-24 | 01dddf5 |          | [22-when-opening-a-convo-the-reply-photos-do](./quick/22-when-opening-a-convo-the-reply-photos-do/) |
 | 23  | Fix reaction badges overlapping on photo/GIF messages in DM conversations        | 2026-02-24 | f601c02 |          | [23-reaction-badges-dont-overlap-on-photos-l](./quick/23-reaction-badges-dont-overlap-on-photos-l/) |
+| 24  | Fix push notification logging and stale token detection for dev app              | 2026-02-24 | 381f4e6 |          | [24-push-notifs-for-dev-app-doesn-t-seem-to-](./quick/24-push-notifs-for-dev-app-doesn-t-seem-to-/) |
 
 ## Notes
 
@@ -101,4 +102,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick task 23: Fix reaction badges overlapping on photo/GIF messages in DM conversations
+Last activity: 2026-02-24 - Completed quick task 24: Fix push notification logging and stale token detection for dev app
