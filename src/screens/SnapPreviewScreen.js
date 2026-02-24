@@ -120,8 +120,28 @@ const SnapPreviewScreen = () => {
         logger.info('SnapPreviewScreen: Snap sent successfully', {
           messageId: result.messageId,
         });
-        // Navigate back to conversation (pop SnapPreviewScreen and SnapCamera)
-        navigation.pop(2);
+        // Pop all snap screens off the root stack, then navigate into the Conversation.
+        // popToTop removes SnapPreview + SnapCamera, revealing MainTabs.
+        // The navigate call ensures the Messages tab's Conversation screen is focused
+        // (Material Top Tabs may reset nested stack state on tab blur, so we explicitly
+        // navigate rather than relying on preserved state).
+        navigation.popToTop();
+        setTimeout(() => {
+          navigation.navigate('MainTabs', {
+            screen: 'Messages',
+            params: {
+              screen: 'Conversation',
+              params: {
+                conversationId,
+                friendId,
+                friendProfile: {
+                  uid: friendId,
+                  displayName: friendDisplayName || 'Friend',
+                },
+              },
+            },
+          });
+        }, 100);
       } else if (result.retriesExhausted) {
         Alert.alert('Failed to send snap', 'Please check your connection and try again.', [
           { text: 'Cancel', style: 'cancel' },
@@ -138,7 +158,16 @@ const SnapPreviewScreen = () => {
     } finally {
       setIsSending(false);
     }
-  }, [isSending, conversationId, user.uid, photoUri, caption, navigation]);
+  }, [
+    isSending,
+    conversationId,
+    friendId,
+    friendDisplayName,
+    user.uid,
+    photoUri,
+    caption,
+    navigation,
+  ]);
 
   return (
     <GestureHandlerRootView style={screenStyles.root}>
