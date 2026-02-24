@@ -86,8 +86,8 @@ const ReplyPreview = ({ message, senderName, onCancel }) => {
 const styles = StyleSheet.create({
   container: {
     borderTopWidth: 1,
-    borderTopColor: colors.overlay.light,
-    backgroundColor: colors.background.primary,
+    borderTopColor: colors.border.default,
+    backgroundColor: colors.background.secondary,
     height: PREVIEW_HEIGHT,
     overflow: 'hidden',
   },
@@ -98,10 +98,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   accentBar: {
-    width: 3,
+    width: 4,
     height: '100%',
     backgroundColor: colors.interactive.primary,
-    borderRadius: 2,
+    borderRadius: 0,
     marginRight: 10,
   },
   textContainer: {

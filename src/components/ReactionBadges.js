@@ -21,6 +21,9 @@ const EMOJI_MAP = {
  * Pills that include the current user's reaction are highlighted.
  * Fades in on first appearance (300ms).
  *
+ * Retro 16-bit pixel aesthetic: blocky border-radius, Silkscreen font,
+ * opaque solid backgrounds for clear distinction from message bubbles.
+ *
  * @param {object} reactions - Reaction map: { emoji: [{ senderId, messageId }] }
  * @param {boolean} isCurrentUser - Whether the message is from the current user (for alignment)
  * @param {string} currentUserId - Current user's UID (to highlight own reactions)
@@ -93,16 +96,16 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.overlay.light,
+    backgroundColor: colors.background.tertiary,
     borderWidth: 1,
-    borderColor: colors.overlay.lightBorder,
-    borderRadius: 10,
+    borderColor: colors.border.default,
+    borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   pillHighlight: {
-    backgroundColor: colors.overlay.purpleTint,
-    borderColor: 'rgba(0, 212, 255, 0.3)',
+    backgroundColor: '#0D2A33',
+    borderColor: colors.interactive.primary,
   },
   emojiText: {
     fontSize: 12,

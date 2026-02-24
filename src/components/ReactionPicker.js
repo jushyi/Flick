@@ -43,8 +43,8 @@ const REACTION_EMOJIS = [
 
 const EMOJI_ROW_HEIGHT = 56;
 const ACTION_ITEM_HEIGHT = 46;
-const MENU_BORDER_RADIUS = 12;
-const EMOJI_BORDER_RADIUS = 20;
+const MENU_BORDER_RADIUS = 4;
+const EMOJI_BORDER_RADIUS = 4;
 const MENU_VERTICAL_GAP = 8;
 
 const ReactionPicker = ({
@@ -225,33 +225,33 @@ const styles = StyleSheet.create({
   emojiRow: {
     position: 'absolute',
     flexDirection: 'row',
-    backgroundColor: colors.overlay.darker,
+    backgroundColor: colors.background.secondary,
     borderRadius: EMOJI_BORDER_RADIUS,
     paddingHorizontal: 8,
     paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.overlay.lightBorder,
+    borderWidth: 2,
+    borderColor: colors.border.default,
   },
   emojiButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 4,
   },
   emojiButtonPressed: {
-    backgroundColor: colors.overlay.purpleTint,
+    backgroundColor: colors.background.tertiary,
   },
   emojiText: {
     fontSize: 22,
   },
   actionMenu: {
     position: 'absolute',
-    backgroundColor: colors.overlay.darker,
+    backgroundColor: colors.background.secondary,
     borderRadius: MENU_BORDER_RADIUS,
-    borderWidth: 1,
-    borderColor: colors.overlay.lightBorder,
+    borderWidth: 2,
+    borderColor: colors.border.default,
     overflow: 'hidden',
   },
   actionItem: {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   actionItemPressed: {
-    backgroundColor: colors.overlay.light,
+    backgroundColor: colors.background.tertiary,
   },
   actionText: {
     color: colors.text.primary,
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
   },
   divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.overlay.light,
+    height: 1,
+    backgroundColor: colors.border.default,
     marginHorizontal: 0,
   },
 });

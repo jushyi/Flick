@@ -394,17 +394,25 @@ const ConversationScreen = () => {
   }, [actionMenuMessage, user.uid]);
 
   /**
-   * Handle scrollToIndex failures gracefully (e.g., index out of range).
+   * Handle scrollToIndex failures gracefully (e.g., index out of range in virtualized window).
+   * First scrolls to the approximate offset to bring the item into the render window,
+   * then retries scrollToIndex after a short delay to land precisely.
    */
   const onScrollToIndexFailed = useCallback(info => {
     logger.warn('ConversationScreen: scrollToIndex failed', { index: info.index });
-    // Fall back to scrolling to approximate offset
+    // First scroll to approximate offset to bring item into render window
+    flatListRef.current?.scrollToOffset({
+      offset: info.averageItemLength * info.index,
+      animated: true,
+    });
+    // Then retry the precise scrollToIndex after the list has rendered the target area
     setTimeout(() => {
-      flatListRef.current?.scrollToOffset({
-        offset: info.averageItemLength * info.index,
+      flatListRef.current?.scrollToIndex({
+        index: info.index,
         animated: true,
+        viewPosition: 0.5,
       });
-    }, 100);
+    }, 200);
   }, []);
 
   // Show loading spinner while initial data loads

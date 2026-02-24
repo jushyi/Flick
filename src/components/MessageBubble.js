@@ -1,5 +1,13 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, Pressable, Animated as RNAnimated, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Animated as RNAnimated,
+  StyleSheet,
+  Platform,
+  StatusBar,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -77,7 +85,11 @@ const MessageBubble = ({
   const handleLongPress = () => {
     if (onLongPress && bubbleRef.current) {
       bubbleRef.current.measureInWindow((x, y, width, height) => {
-        onLongPress(message, { x, y, width, height });
+        // On Android, measureInWindow includes the status bar offset but the Modal
+        // overlay with statusBarTranslucent draws from the very top of the screen.
+        // Subtract status bar height to align the picker correctly.
+        const adjustedY = Platform.OS === 'android' ? y - (StatusBar.currentHeight || 0) : y;
+        onLongPress(message, { x, y: adjustedY, width, height });
       });
     }
   };
@@ -309,12 +321,14 @@ const MessageBubble = ({
               ]}
             >
               {isGif || isImage ? (
-                <Image
-                  source={{ uri: message.gifUrl || message.imageUrl }}
-                  style={isImage ? styles.messageImage : styles.gifImage}
-                  contentFit={isImage ? 'cover' : 'contain'}
-                  transition={200}
-                />
+                <View style={isCurrentUser ? styles.mediaAlignRight : styles.mediaAlignLeft}>
+                  <Image
+                    source={{ uri: message.gifUrl || message.imageUrl }}
+                    style={isImage ? styles.messageImage : styles.gifImage}
+                    contentFit={isImage ? 'cover' : 'contain'}
+                    transition={200}
+                  />
+                </View>
               ) : (
                 <Text style={[styles.text, isCurrentUser ? styles.textUser : styles.textFriend]}>
                   {message.text}
@@ -409,6 +423,12 @@ const styles = StyleSheet.create({
   textFriend: {
     color: colors.text.primary,
   },
+  mediaAlignRight: {
+    alignItems: 'flex-end',
+  },
+  mediaAlignLeft: {
+    alignItems: 'flex-start',
+  },
   gifImage: {
     width: 200,
     height: 150,
@@ -449,12 +469,18 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     zIndex: 10,
   },
-  // Muted original message block (shown above reply bubble)
+  // Muted original message block (shown above reply bubble) — retro "quoted text" panel
   originalMessageBlock: {
     maxWidth: '75%',
     marginBottom: 2,
     flexDirection: 'row',
-    opacity: 0.55,
+    opacity: 0.65,
+    backgroundColor: colors.background.secondary,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
   },
   originalMessageBlockRight: {
     alignSelf: 'flex-end',
@@ -463,9 +489,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   originalConnectingLine: {
-    width: 2,
+    width: 3,
     backgroundColor: colors.text.secondary,
-    borderRadius: 1,
+    borderRadius: 0,
   },
   connectingLineRight: {
     marginLeft: 8,
@@ -478,7 +504,7 @@ const styles = StyleSheet.create({
   },
   originalAuthorText: {
     fontSize: 10,
-    fontFamily: typography.fontFamily.bodyBold,
+    fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
     marginBottom: 2,
   },
