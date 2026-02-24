@@ -18,6 +18,7 @@ import {
   View,
   Text,
   Modal,
+  Pressable,
   StyleSheet,
   useWindowDimensions,
   StatusBar,
@@ -286,14 +287,16 @@ const SnapViewer = ({
             {showReactionBar && (
               <View style={styles.reactionBar}>
                 {REACTION_EMOJIS.map(emoji => (
-                  <GHTouchableOpacity
+                  <Pressable
                     key={emoji.key}
-                    style={styles.reactionButton}
+                    style={({ pressed }) => [
+                      styles.reactionButton,
+                      pressed && styles.reactionButtonPressed,
+                    ]}
                     onPress={() => handleReactionPress(emoji.key)}
-                    activeOpacity={0.7}
                   >
                     <Text style={styles.reactionEmoji}>{emoji.char}</Text>
-                  </GHTouchableOpacity>
+                  </Pressable>
                 ))}
               </View>
             )}
@@ -391,18 +394,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
-    gap: 12,
-    backgroundColor: colors.background.tertiary,
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
+    backgroundColor: colors.background.secondary,
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderWidth: 2,
     borderColor: colors.border.default,
   },
   reactionButton: {
-    padding: 6,
+    width: 40,
+    height: 40,
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  reactionButtonPressed: {
+    backgroundColor: colors.background.tertiary,
   },
   reactionEmoji: {
     fontSize: 22,

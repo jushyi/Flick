@@ -648,8 +648,21 @@ const ConversationScreen = () => {
         senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
         onClose={() => setSnapViewerMessage(null)}
         currentUserId={user.uid}
-        onReaction={emojiKey => {
-          sendReaction(conversationId, user.uid, snapViewerMessage.id, emojiKey);
+        onReaction={async emojiKey => {
+          const result = await sendReaction(
+            conversationId,
+            user.uid,
+            snapViewerMessage.id,
+            emojiKey
+          );
+          if (!result.success) {
+            logger.error('ConversationScreen: Snap reaction failed', {
+              conversationId,
+              messageId: snapViewerMessage.id,
+              emojiKey,
+              error: result.error,
+            });
+          }
         }}
       />
     </View>
