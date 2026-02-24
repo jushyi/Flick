@@ -20,14 +20,15 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Image } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -49,7 +50,7 @@ import logger from '../utils/logger';
 
 // Polaroid frame constants
 const POLAROID_BORDER = 8; // Thin white border on top and sides
-const POLAROID_STRIP_HEIGHT = 64; // Thick white strip at bottom for caption
+const POLAROID_STRIP_HEIGHT = 56; // Thick white strip at bottom for caption
 const SWIPE_DISMISS_THRESHOLD = 120; // Pixels of downward swipe to dismiss
 
 const SnapPreviewScreen = () => {
@@ -57,6 +58,7 @@ const SnapPreviewScreen = () => {
   const route = useRoute();
   const { user } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const { photoUri, conversationId, friendId, friendDisplayName } = route.params;
 
@@ -100,6 +102,7 @@ const SnapPreviewScreen = () => {
   const handleSend = useCallback(async () => {
     if (isSending) return;
 
+    Keyboard.dismiss();
     setIsSending(true);
     logger.info('SnapPreviewScreen: Sending snap', {
       conversationId,
@@ -138,13 +141,9 @@ const SnapPreviewScreen = () => {
 
   return (
     <GestureHandlerRootView style={screenStyles.root}>
-      <KeyboardAvoidingView
-        style={screenStyles.container}
-        behavior={Platform.select({ ios: 'padding', android: 'height' })}
-        keyboardVerticalOffset={Platform.select({ ios: 60, android: 0 })}
-      >
-        {/* "To: RecipientName" header */}
-        <View style={screenStyles.header}>
+      <View style={screenStyles.container}>
+        {/* Header: X close + "To: RecipientName" */}
+        <View style={[screenStyles.header, { paddingTop: Math.max(insets.top, 16) + 8 }]}>
           {/* X close / retake button */}
           <TouchableOpacity
             style={screenStyles.closeButton}
@@ -172,17 +171,18 @@ const SnapPreviewScreen = () => {
               />
 
               {/* Thick bottom strip with caption input */}
-              <View style={[screenStyles.captionStrip, { width: polaroidWidth }]}>
+              <View style={screenStyles.captionStrip}>
                 <TextInput
                   style={screenStyles.captionInput}
                   value={caption}
                   onChangeText={setCaption}
                   placeholder="Write something!"
-                  placeholderTextColor={colors.text.tertiary}
+                  placeholderTextColor="#999999"
                   maxLength={150}
                   multiline={false}
                   returnKeyType="done"
                   blurOnSubmit
+                  onSubmitEditing={() => Keyboard.dismiss()}
                   editable={!isSending}
                 />
               </View>
@@ -190,8 +190,8 @@ const SnapPreviewScreen = () => {
           </Animated.View>
         </GestureDetector>
 
-        {/* Bottom controls: send button */}
-        <View style={screenStyles.bottomBar}>
+        {/* Footer: wide send button */}
+        <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
           <TouchableOpacity
             style={[screenStyles.sendButton, isSending && screenStyles.sendButtonDisabled]}
             onPress={handleSend}
@@ -201,11 +201,14 @@ const SnapPreviewScreen = () => {
             {isSending ? (
               <ActivityIndicator size="small" color={colors.text.inverse} />
             ) : (
-              <PixelIcon name="arrow-up" size={24} color={colors.text.inverse} />
+              <View style={screenStyles.sendButtonContent}>
+                <PixelIcon name="arrow-up" size={18} color={colors.text.inverse} />
+                <Text style={screenStyles.sendButtonText}>Send</Text>
+              </View>
             )}
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </GestureHandlerRootView>
   );
 };
@@ -225,7 +228,6 @@ const screenStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.select({ ios: 56, android: 40 }),
     paddingBottom: 12,
   },
   closeButton: {
@@ -273,37 +275,43 @@ const screenStyles = StyleSheet.create({
   photo: {
     borderRadius: 1,
   },
-  // Caption strip at bottom of Polaroid
+  // Caption strip at bottom of Polaroid — uses frame padding for horizontal inset
   captionStrip: {
     height: POLAROID_STRIP_HEIGHT,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: POLAROID_BORDER,
   },
   captionInput: {
     fontSize: typography.size.sm,
-    fontFamily: typography.fontFamily.body,
+    fontFamily: typography.fontFamily.readable,
     color: '#1A1A1A',
     padding: 0,
     margin: 0,
     textAlignVertical: 'center',
   },
-  // Bottom bar with send button
-  bottomBar: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+  // Footer with wide send button
+  footer: {
+    backgroundColor: colors.background.primary,
     paddingHorizontal: 24,
-    paddingBottom: Platform.select({ ios: 40, android: 24 }),
-    paddingTop: 12,
+    paddingTop: 16,
   },
   sendButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    height: 48,
+    borderRadius: 4,
     backgroundColor: colors.status.developing, // Amber/yellow - matches snap theme
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sendButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sendButtonText: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.bodyBold,
+    color: colors.text.inverse,
   },
   sendButtonDisabled: {
     opacity: 0.5,

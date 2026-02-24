@@ -314,7 +314,7 @@ const DMInput = ({
               onPress={onOpenSnapCamera}
               testID="camera-button"
             >
-              <PixelIcon name="camera" size={20} color={colors.status.developing} />
+              <PixelIcon name="snap-polaroid" size={22} color={colors.status.developing} />
             </TouchableOpacity>
           </Animated.View>
         ) : null}
@@ -378,6 +378,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 212, 255, 0.3)',
     borderRadius: 2,
     paddingHorizontal: 8,
+    minHeight: 36,
     alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',

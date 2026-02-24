@@ -338,44 +338,37 @@ const CameraScreen = () => {
           {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
         </TouchableOpacity>
 
-        {/* Zoom Control Bar - hidden in snap mode (keep camera simple) */}
-        {!isSnapMode && (
-          <View style={styles.zoomBar}>
-            {zoomLevels.map(level => {
-              const isSelected = zoom.value === level.value;
-              return (
-                <TouchableOpacity
-                  key={level.value}
-                  style={[styles.zoomButton, isSelected && styles.zoomButtonActive]}
-                  onPress={() => handleZoomChange(level)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.zoomLabelContainer}>
+        {/* Zoom Control Bar */}
+        <View style={styles.zoomBar}>
+          {zoomLevels.map(level => {
+            const isSelected = zoom.value === level.value;
+            return (
+              <TouchableOpacity
+                key={level.value}
+                style={[styles.zoomButton, isSelected && styles.zoomButtonActive]}
+                onPress={() => handleZoomChange(level)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.zoomLabelContainer}>
+                  <Text style={[styles.zoomButtonText, isSelected && styles.zoomButtonTextActive]}>
+                    {level.label}
+                  </Text>
+                  {isSelected && (
                     <Text
-                      style={[styles.zoomButtonText, isSelected && styles.zoomButtonTextActive]}
+                      style={[
+                        styles.zoomButtonText,
+                        styles.zoomButtonTextActive,
+                        styles.zoomSuffix,
+                      ]}
                     >
-                      {level.label}
+                      x
                     </Text>
-                    {isSelected && (
-                      <Text
-                        style={[
-                          styles.zoomButtonText,
-                          styles.zoomButtonTextActive,
-                          styles.zoomSuffix,
-                        ]}
-                      >
-                        x
-                      </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Spacer to balance layout when zoom is hidden in snap mode */}
-        {isSnapMode && <View style={{ flex: 1 }} />}
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         {/* Flip Camera Button (far right) */}
         <TouchableOpacity style={styles.floatingButton} onPress={toggleCameraFacing}>
