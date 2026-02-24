@@ -6,13 +6,13 @@
 
 ## Phase Overview
 
-| Phase | Name                                   | Goal                                              | Requirements              | Status                      |
-| ----- | -------------------------------------- | ------------------------------------------------- | ------------------------- | --------------------------- |
-| 1     | Message Infrastructure & Read Receipts | Extended message schema + read receipts UI        | READ-01..03, INFRA-01..02 | In Progress (2/4 plans)     |
-| 2     | Message Interactions                   | Complete                                          | 2026-02-24                | Complete (6/6 plans)        |
-| 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic       | SNAP-01..08, INFRA-03..04 | UAT Gap Closure (6/8 plans) |
-| 4     | Snap Streaks                           | Daily mutual snap tracking with visual indicators | STRK-01..07               | In Progress (1/4 plans)     |
-| 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed   | TAG-01..04                | Not Started                 |
+| Phase | Name                                   | Goal                                            | Requirements              | Status                      |
+| ----- | -------------------------------------- | ----------------------------------------------- | ------------------------- | --------------------------- |
+| 1     | Message Infrastructure & Read Receipts | Extended message schema + read receipts UI      | READ-01..03, INFRA-01..02 | In Progress (2/4 plans)     |
+| 2     | Message Interactions                   | Complete                                        | 2026-02-24                | Complete (6/6 plans)        |
+| 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic     | SNAP-01..08, INFRA-03..04 | UAT Gap Closure (6/8 plans) |
+| 4     | 4/4                                    | Complete                                        | 2026-02-24                | In Progress (1/4 plans)     |
+| 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed | TAG-01..04                | Not Started                 |
 
 ## Phase 1: Message Infrastructure & Read Receipts
 
@@ -169,7 +169,7 @@ Plans:
 - Streak resets to 0 after 24h without mutual snaps
 - Streak state cannot be manipulated by client (verified with security rules)
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 

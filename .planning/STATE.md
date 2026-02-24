@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 04
-**Current Plan:** 03 of 4 complete
+**Current Plan:** 04 of 4 complete (Phase 04 DONE)
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -11,7 +11,7 @@
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —          |
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
 | 3 — Snap Messages                          | Complete (8/8 plans)    | 2026-02-24 | 2026-02-24 |
-| 4 — Snap Streaks                           | In Progress (3/4 plans) | 2026-02-24 | —          |
+| 4 — Snap Streaks                           | Complete (4/4 plans)    | 2026-02-24 | 2026-02-24 |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —          |
 
 ## Requirements Coverage
@@ -144,4 +144,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 04-03-PLAN.md: streak hooks and notification toggle
+Last activity: 2026-02-24 - Completed 04-04-PLAN.md: StreakIndicator wired into ConversationRow, ConversationHeader, and DMInput; Phase 04 Snap Streaks fully complete
