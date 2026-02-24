@@ -199,11 +199,58 @@ const MessageBubble = ({
   /**
    * Renders the muted original message block above the reply bubble.
    * Shows full text, images, or GIFs at reduced opacity.
+   * Layout mirrors for sent messages (line on right, text right-aligned).
    */
   const renderOriginalMessage = () => {
     if (!message.replyTo) return null;
 
     const replyAuthor = message.replyTo.senderId === currentUserId ? 'You' : senderName || 'Friend';
+
+    const connectingLine = (
+      <View
+        style={[
+          styles.originalConnectingLine,
+          isCurrentUser ? styles.connectingLineRight : styles.connectingLineLeft,
+        ]}
+      />
+    );
+
+    const contentBlock = (
+      <View style={styles.originalMessageContent}>
+        {message.replyTo.deleted ? (
+          <Text style={[styles.originalDeletedText, isCurrentUser && styles.originalTextRight]}>
+            Original message deleted
+          </Text>
+        ) : (
+          <>
+            <Text style={[styles.originalAuthorText, isCurrentUser && styles.originalTextRight]}>
+              {replyAuthor}
+            </Text>
+
+            {(originalType === 'image' || originalType === 'gif') && originalImageUrl ? (
+              <View
+                style={[styles.originalMediaContainer, isCurrentUser && styles.originalMediaRight]}
+              >
+                <Image
+                  source={{ uri: originalImageUrl }}
+                  style={originalType === 'image' ? styles.originalImage : styles.originalGif}
+                  contentFit={originalType === 'image' ? 'cover' : 'contain'}
+                  transition={200}
+                />
+              </View>
+            ) : (originalType === 'image' || originalType === 'gif') && !originalImageUrl ? (
+              <Text style={[styles.originalContentText, isCurrentUser && styles.originalTextRight]}>
+                {originalType === 'image' ? '\uD83D\uDCF7 Photo' : 'GIF'}
+              </Text>
+            ) : (
+              <Text style={[styles.originalContentText, isCurrentUser && styles.originalTextRight]}>
+                {originalText}
+              </Text>
+            )}
+          </>
+        )}
+      </View>
+    );
 
     return (
       <Pressable
@@ -213,40 +260,17 @@ const MessageBubble = ({
           isCurrentUser ? styles.originalMessageBlockRight : styles.originalMessageBlockLeft,
         ]}
       >
-        {/* Connecting line on the left edge */}
-        <View
-          style={[
-            styles.originalConnectingLine,
-            isCurrentUser ? styles.connectingLineRight : styles.connectingLineLeft,
-          ]}
-        />
-
-        <View style={styles.originalMessageContent}>
-          {message.replyTo.deleted ? (
-            <Text style={styles.originalDeletedText}>Original message deleted</Text>
-          ) : (
-            <>
-              <Text style={styles.originalAuthorText}>{replyAuthor}</Text>
-
-              {(originalType === 'image' || originalType === 'gif') && originalImageUrl ? (
-                <View style={styles.originalMediaContainer}>
-                  <Image
-                    source={{ uri: originalImageUrl }}
-                    style={originalType === 'image' ? styles.originalImage : styles.originalGif}
-                    contentFit={originalType === 'image' ? 'cover' : 'contain'}
-                    transition={200}
-                  />
-                </View>
-              ) : (originalType === 'image' || originalType === 'gif') && !originalImageUrl ? (
-                <Text style={styles.originalContentText}>
-                  {originalType === 'image' ? '\uD83D\uDCF7 Photo' : 'GIF'}
-                </Text>
-              ) : (
-                <Text style={styles.originalContentText}>{originalText}</Text>
-              )}
-            </>
-          )}
-        </View>
+        {isCurrentUser ? (
+          <>
+            {contentBlock}
+            {connectingLine}
+          </>
+        ) : (
+          <>
+            {connectingLine}
+            {contentBlock}
+          </>
+        )}
       </Pressable>
     );
   };
@@ -264,7 +288,12 @@ const MessageBubble = ({
       {/* Muted original message rendered above the reply bubble */}
       {renderOriginalMessage()}
 
-      <View style={styles.swipeContainer}>
+      <View
+        style={[
+          styles.swipeContainer,
+          isCurrentUser ? styles.swipeContainerRight : styles.swipeContainerLeft,
+        ]}
+      >
         <Animated.View style={[styles.replyArrowContainer, replyIconAnimatedStyle]}>
           <Ionicons name="return-up-back" size={20} color={colors.text.secondary} />
         </Animated.View>
@@ -329,6 +358,13 @@ const styles = StyleSheet.create({
   swipeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '100%',
+  },
+  swipeContainerRight: {
+    justifyContent: 'flex-end',
+  },
+  swipeContainerLeft: {
+    justifyContent: 'flex-start',
   },
   replyArrowContainer: {
     position: 'absolute',
@@ -338,6 +374,7 @@ const styles = StyleSheet.create({
   },
   bubble: {
     maxWidth: '75%',
+    minWidth: 32,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 4,
@@ -429,13 +466,12 @@ const styles = StyleSheet.create({
     width: 2,
     backgroundColor: colors.text.secondary,
     borderRadius: 1,
-    marginRight: 8,
   },
   connectingLineRight: {
-    // Line on the left side even for current user's replies
+    marginLeft: 8,
   },
   connectingLineLeft: {
-    // Line on the left side for friend's replies
+    marginRight: 8,
   },
   originalMessageContent: {
     flex: 1,
@@ -458,10 +494,16 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: colors.text.secondary,
   },
+  originalTextRight: {
+    textAlign: 'right',
+  },
   originalMediaContainer: {
     borderRadius: 3,
     overflow: 'hidden',
     marginTop: 2,
+  },
+  originalMediaRight: {
+    alignItems: 'flex-end',
   },
   originalImage: {
     width: 180,
