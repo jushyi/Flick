@@ -123,6 +123,7 @@ None currently.
 | 28  | Fix SnapPreviewScreen header X button and recipient label vertical alignment     | 2026-02-24 | 6b2d3e1 |          | [28-on-android-and-ios-the-x-button-and-the-](./quick/28-on-android-and-ios-the-x-button-and-the-/) |
 | 29  | Fix snap caption KAV so footer stays fixed when keyboard opens                   | 2026-02-24 | 3688dd8 |          | [29-fix-snap-caption-keyboardavoidingview-fo](./quick/29-fix-snap-caption-keyboardavoidingview-fo/) |
 | 30  | Reposition unread badge inline between snap icon and timestamp                   | 2026-02-24 | 7c415f8 |          | [30-the-icon-badge-for-unread-messages-in-a-](./quick/30-the-icon-badge-for-unread-messages-in-a-/) |
+| 32  | Fix send/snap button height to match input bar on both platforms                 | 2026-02-24 | bbfcec2 |          | [32-on-both-android-and-ios-the-send-or-snap](./quick/32-on-both-android-and-ios-the-send-or-snap/) |
 
 ## Notes
 
@@ -133,4 +134,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick task 30: the icon/badge for unread messages in a messages tab should be between the snap icon and time indicator with a little padding
+Last activity: 2026-02-24 - Completed quick task 32: fix send/snap button height to match input bar on both iOS and Android
