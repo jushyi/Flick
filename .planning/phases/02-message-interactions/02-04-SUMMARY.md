@@ -75,7 +75,7 @@ Each task was committed atomically:
 
 1. **Task 1+2: MessageBubble gesture refactor + ReactionBadges component** - `536938d` (feat)
 
-**Plan metadata:** [pending]
+**Plan metadata:** `ebd4b67` (docs: complete plan)
 
 _Note: Tasks 1 and 2 were committed together because MessageBubble imports ReactionBadges (circular dependency). The barrel export in index.js was already present from plan 02-05._
 
