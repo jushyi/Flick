@@ -1,7 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, Pressable, Animated as RNAnimated, StyleSheet } from 'react-native';
+import { View, Text, Animated as RNAnimated, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  Gesture,
+  GestureDetector,
+  TouchableOpacity as GHTouchableOpacity,
+} from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,11 +13,11 @@ import Animated, {
   interpolate,
   runOnJS,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { format } from 'date-fns';
 
+import PixelIcon from './PixelIcon';
 import ReactionBadges from './ReactionBadges';
 
 import { colors } from '../constants/colors';
@@ -240,7 +244,7 @@ const MessageBubble = ({
               </View>
             ) : (originalType === 'image' || originalType === 'gif') && !originalImageUrl ? (
               <Text style={[styles.originalContentText, isCurrentUser && styles.originalTextRight]}>
-                {originalType === 'image' ? '\uD83D\uDCF7 Photo' : 'GIF'}
+                {originalType === 'image' ? 'Photo' : 'GIF'}
               </Text>
             ) : (
               <Text style={[styles.originalContentText, isCurrentUser && styles.originalTextRight]}>
@@ -253,7 +257,8 @@ const MessageBubble = ({
     );
 
     return (
-      <Pressable
+      <GHTouchableOpacity
+        activeOpacity={0.5}
         onPress={() => onScrollToMessage?.(message.replyTo.messageId)}
         style={[
           styles.originalMessageBlock,
@@ -261,7 +266,7 @@ const MessageBubble = ({
         ]}
       >
         {contentBlock}
-      </Pressable>
+      </GHTouchableOpacity>
     );
   };
 
@@ -283,7 +288,7 @@ const MessageBubble = ({
           correct side without needing a full-width swipeContainer. */}
       <View style={styles.bubbleRow}>
         <Animated.View style={[styles.replyArrowContainer, replyIconAnimatedStyle]}>
-          <Ionicons name="return-up-back" size={20} color={colors.text.secondary} />
+          <PixelIcon name="arrow-undo" size={20} color={colors.text.secondary} />
         </Animated.View>
 
         <GestureDetector gesture={composed}>
