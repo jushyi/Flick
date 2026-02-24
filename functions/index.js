@@ -3060,7 +3060,7 @@ exports.getSignedSnapUrl = onCall({ memory: '256MiB', timeoutSeconds: 30 }, asyn
     }
   }
 
-  logger.info('getSignedSnapUrl: Generating signed URL', { userId, snapStoragePath });
+  logger.info('getSignedSnapUrl: Generating URL', { userId, snapStoragePath });
 
   try {
     const { getStorage } = require('firebase-admin/storage');
@@ -3073,25 +3073,58 @@ exports.getSignedSnapUrl = onCall({ memory: '256MiB', timeoutSeconds: 30 }, asyn
       throw new HttpsError('not-found', 'Snap photo not found');
     }
 
-    // 5-minute expiry for ephemeral snap viewing
-    const [url] = await file.getSignedUrl({
-      version: 'v4',
-      action: 'read',
-      expires: Date.now() + 5 * 60 * 1000,
-    });
+    // Try signed URL first (requires Service Account Token Creator role)
+    try {
+      const [url] = await file.getSignedUrl({
+        version: 'v4',
+        action: 'read',
+        expires: Date.now() + 5 * 60 * 1000,
+      });
+      logger.info('getSignedSnapUrl: Signed URL generated', { userId, snapStoragePath });
+      return { url };
+    } catch (signError) {
+      // Fallback: construct download URL from file metadata token
+      // This avoids the signBlob IAM permission requirement
+      logger.warn('getSignedSnapUrl: Signed URL failed, using download token fallback', {
+        error: signError.message,
+        userId,
+        snapStoragePath,
+      });
 
-    logger.info('getSignedSnapUrl: Signed URL generated', { userId, snapStoragePath });
-    return { url };
+      const [metadata] = await file.getMetadata();
+      const downloadTokens = metadata.metadata?.firebaseStorageDownloadTokens;
+
+      if (downloadTokens) {
+        const token = downloadTokens.split(',')[0];
+        const encodedPath = encodeURIComponent(snapStoragePath);
+        const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media&token=${token}`;
+        logger.info('getSignedSnapUrl: Download token URL generated', { userId, snapStoragePath });
+        return { url };
+      }
+
+      // No download token — generate one
+      const crypto = require('crypto');
+      const newToken = crypto.randomUUID();
+      await file.setMetadata({ metadata: { firebaseStorageDownloadTokens: newToken } });
+      const encodedPath = encodeURIComponent(snapStoragePath);
+      const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media&token=${newToken}`;
+      logger.info('getSignedSnapUrl: Generated new download token URL', {
+        userId,
+        snapStoragePath,
+      });
+      return { url };
+    }
   } catch (error) {
     if (error instanceof HttpsError) {
       throw error;
     }
-    logger.error('getSignedSnapUrl: Failed to generate signed URL', {
+    logger.error('getSignedSnapUrl: Failed to generate URL', {
       error: error.message,
+      stack: error.stack,
       userId,
       snapStoragePath,
     });
-    throw new HttpsError('internal', 'Failed to generate signed URL');
+    throw new HttpsError('internal', 'Failed to generate snap URL');
   }
 });
 

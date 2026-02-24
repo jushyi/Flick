@@ -163,7 +163,7 @@ const SnapPreviewScreen = () => {
         {/* Polaroid frame with swipe-down gesture */}
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.select({ ios: 'padding', android: undefined })}
+          behavior={Platform.select({ ios: 'padding', android: 'height' })}
         >
           <GestureDetector gesture={panGesture}>
             <Animated.View style={[screenStyles.polaroidOuter, animatedStyle]}>
@@ -188,6 +188,9 @@ const SnapPreviewScreen = () => {
                     returnKeyType="done"
                     blurOnSubmit
                     onSubmitEditing={() => Keyboard.dismiss()}
+                    autoCorrect={false}
+                    autoComplete="off"
+                    keyboardAppearance="dark"
                     editable={!isSending}
                   />
                 </View>
