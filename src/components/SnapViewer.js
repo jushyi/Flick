@@ -264,7 +264,7 @@ const SnapViewer = ({
                     <Image
                       source={{ uri: imageUrl }}
                       style={styles.snapImage}
-                      contentFit="contain"
+                      contentFit="cover"
                       cachePolicy="none"
                       transition={0}
                     />
