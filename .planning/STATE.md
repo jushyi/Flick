@@ -83,6 +83,7 @@
 | 2026-02-24 | Snap reactions reuse existing sendReaction system    | No separate system needed; reactions appear in conversation thread            |
 | 2026-02-24 | Semi-transparent overlay at 0.85 opacity             | Keeps snap as clear focus while showing conversation behind                   |
 | 2026-02-24 | Reaction bar hidden for senders                      | No reason to react to your own snap; recipients only                          |
+| 2026-02-24 | Footer outside KAV for fixed positioning             | Reverses prior decision; footer stays at bottom when keyboard opens           |
 
 ## Blockers
 
@@ -120,6 +121,7 @@ None currently.
 | 26  | Fix snap camera to match main Camera tab layout                                  | 2026-02-24 | 42a89ba |          | [26-fix-snap-camera-to-match-main-camera-tab](./quick/26-fix-snap-camera-to-match-main-camera-tab/) |
 | 27  | Fix snap send navigation to return to Conversation instead of MessagesList       | 2026-02-24 | 7368ce4 |          | [27-after-sending-a-snap-from-messages-tab-n](./quick/27-after-sending-a-snap-from-messages-tab-n/) |
 | 28  | Fix SnapPreviewScreen header X button and recipient label vertical alignment     | 2026-02-24 | 6b2d3e1 |          | [28-on-android-and-ios-the-x-button-and-the-](./quick/28-on-android-and-ios-the-x-button-and-the-/) |
+| 29  | Fix snap caption KAV so footer stays fixed when keyboard opens                   | 2026-02-24 | 3688dd8 |          | [29-fix-snap-caption-keyboardavoidingview-fo](./quick/29-fix-snap-caption-keyboardavoidingview-fo/) |
 
 ## Notes
 
@@ -130,4 +132,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick-28: Fix SnapPreviewScreen header alignment (includeFontPadding, lineHeight, textAlignVertical)
+Last activity: 2026-02-24 - Completed quick-29: Fix snap caption KAV so footer stays fixed when keyboard opens
