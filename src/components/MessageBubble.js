@@ -239,6 +239,7 @@ const MessageBubble = ({
                   source={{ uri: originalImageUrl }}
                   style={originalType === 'image' ? styles.originalImage : styles.originalGif}
                   contentFit={originalType === 'image' ? 'cover' : 'contain'}
+                  cachePolicy="memory-disk"
                   transition={200}
                 />
               </View>
@@ -307,6 +308,7 @@ const MessageBubble = ({
                   source={{ uri: message.gifUrl || message.imageUrl }}
                   style={isImage ? styles.messageImage : styles.gifImage}
                   contentFit={isImage ? 'cover' : 'contain'}
+                  cachePolicy="memory-disk"
                   transition={200}
                 />
               ) : (
