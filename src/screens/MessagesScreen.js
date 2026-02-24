@@ -100,7 +100,9 @@ const MessagesScreen = () => {
     return (
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-          <Text style={styles.headerTitle}>Messages</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            Messages
+          </Text>
           <TouchableOpacity
             style={styles.newMessageButton}
             onPress={handleNewMessage}
@@ -119,7 +121,9 @@ const MessagesScreen = () => {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-        <Text style={styles.headerTitle}>Messages</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          Messages
+        </Text>
         <TouchableOpacity
           style={styles.newMessageButton}
           onPress={handleNewMessage}
@@ -160,7 +164,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border.subtle,
   },
   headerTitle: {
-    fontSize: 28,
+    flex: 1,
+    fontSize: typography.size.xxl,
     color: colors.text.primary,
     fontFamily: typography.fontFamily.display,
     ...Platform.select({ android: { includeFontPadding: false } }),

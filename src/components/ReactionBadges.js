@@ -93,16 +93,16 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.overlay.light,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: colors.overlay.lightBorder,
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   pillHighlight: {
-    backgroundColor: 'rgba(0, 255, 255, 0.15)',
-    borderColor: 'rgba(0, 255, 255, 0.3)',
+    backgroundColor: colors.overlay.purpleTint,
+    borderColor: 'rgba(0, 212, 255, 0.3)',
   },
   emojiText: {
     fontSize: 12,

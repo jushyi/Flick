@@ -220,17 +220,17 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay.dark,
   },
   emojiRow: {
     position: 'absolute',
     flexDirection: 'row',
-    backgroundColor: 'rgba(20, 20, 40, 0.95)',
+    backgroundColor: colors.overlay.darker,
     borderRadius: EMOJI_BORDER_RADIUS,
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: colors.overlay.lightBorder,
   },
   emojiButton: {
     width: 40,
@@ -241,17 +241,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   emojiButtonPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: colors.overlay.purpleTint,
   },
   emojiText: {
     fontSize: 22,
   },
   actionMenu: {
     position: 'absolute',
-    backgroundColor: 'rgba(20, 20, 40, 0.95)',
+    backgroundColor: colors.overlay.darker,
     borderRadius: MENU_BORDER_RADIUS,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: colors.overlay.lightBorder,
     overflow: 'hidden',
   },
   actionItem: {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   actionItemPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.overlay.light,
   },
   actionText: {
     color: colors.text.primary,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.overlay.light,
     marginHorizontal: 0,
   },
 });

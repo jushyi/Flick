@@ -73,14 +73,14 @@ const PixelConfirmDialog = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.overlay.dark,
     justifyContent: 'center',
     alignItems: 'center',
   },
   dialog: {
-    backgroundColor: '#1A1A2E',
+    backgroundColor: colors.background.secondary,
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: colors.overlay.lightBorder,
     borderRadius: 8,
     paddingTop: 24,
     paddingHorizontal: 20,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    borderTopColor: colors.overlay.lightBorder,
     marginHorizontal: -20,
   },
   button: {
@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.overlay.light,
   },
   buttonDivider: {
     width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: colors.overlay.lightBorder,
   },
   cancelButton: {
     borderBottomLeftRadius: 8,

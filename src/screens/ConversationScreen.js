@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   messageWrapper: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     marginBottom: 4,
   },
   listContent: {

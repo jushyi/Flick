@@ -319,7 +319,6 @@ const MessageBubble = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 2,
-    paddingHorizontal: 16,
   },
   containerRight: {
     alignItems: 'flex-end',
@@ -330,7 +329,6 @@ const styles = StyleSheet.create({
   swipeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: '100%',
   },
   replyArrowContainer: {
     position: 'absolute',
@@ -406,11 +404,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: typography.fontFamily.readable,
     fontStyle: 'italic',
-    color: '#7B7B9E',
+    color: colors.text.secondary,
   },
   // Highlight overlay for scroll-to-message flash
   highlightOverlay: {
-    backgroundColor: 'rgba(0, 212, 255, 0.25)',
+    backgroundColor: colors.overlay.purpleTint,
     borderRadius: 4,
     zIndex: 10,
   },
@@ -429,7 +427,7 @@ const styles = StyleSheet.create({
   },
   originalConnectingLine: {
     width: 2,
-    backgroundColor: '#7B7B9E',
+    backgroundColor: colors.text.secondary,
     borderRadius: 1,
     marginRight: 8,
   },
@@ -445,20 +443,20 @@ const styles = StyleSheet.create({
   originalAuthorText: {
     fontSize: 10,
     fontFamily: typography.fontFamily.bodyBold,
-    color: '#7B7B9E',
+    color: colors.text.secondary,
     marginBottom: 2,
   },
   originalContentText: {
     fontSize: 13,
     fontFamily: typography.fontFamily.readable,
-    color: '#7B7B9E',
+    color: colors.text.secondary,
     lineHeight: 18,
   },
   originalDeletedText: {
     fontSize: 13,
     fontFamily: typography.fontFamily.readable,
     fontStyle: 'italic',
-    color: '#7B7B9E',
+    color: colors.text.secondary,
   },
   originalMediaContainer: {
     borderRadius: 3,
