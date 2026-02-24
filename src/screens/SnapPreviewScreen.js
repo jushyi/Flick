@@ -189,7 +189,7 @@ const SnapPreviewScreen = () => {
           <View style={screenStyles.headerSpacer} />
         </View>
 
-        {/* Polaroid frame + footer wrapped in KAV so both lift above keyboard */}
+        {/* Polaroid frame wrapped in KAV so caption lifts above keyboard; footer stays fixed below */}
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.select({ ios: 'padding', android: 'padding' })}
@@ -227,26 +227,26 @@ const SnapPreviewScreen = () => {
               </View>
             </Animated.View>
           </GestureDetector>
-
-          {/* Footer: wide send button — inside KAV so it lifts with Polaroid */}
-          <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
-            <TouchableOpacity
-              style={[screenStyles.sendButton, isSending && screenStyles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={isSending}
-              activeOpacity={0.7}
-            >
-              {isSending ? (
-                <ActivityIndicator size="small" color={colors.text.inverse} />
-              ) : (
-                <View style={screenStyles.sendButtonContent}>
-                  <PixelIcon name="arrow-up" size={18} color={colors.text.inverse} />
-                  <Text style={screenStyles.sendButtonText}>Send</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
         </KeyboardAvoidingView>
+
+        {/* Footer: wide send button — outside KAV so it stays fixed at screen bottom */}
+        <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
+          <TouchableOpacity
+            style={[screenStyles.sendButton, isSending && screenStyles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={isSending}
+            activeOpacity={0.7}
+          >
+            {isSending ? (
+              <ActivityIndicator size="small" color={colors.text.inverse} />
+            ) : (
+              <View style={screenStyles.sendButtonContent}>
+                <PixelIcon name="arrow-up" size={18} color={colors.text.inverse} />
+                <Text style={screenStyles.sendButtonText}>Send</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </GestureHandlerRootView>
   );
