@@ -11,6 +11,15 @@ import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 
+const EMOJI_MAP = {
+  heart: '\u2764\uFE0F',
+  laugh: '\uD83D\uDE02',
+  surprise: '\uD83D\uDE2E',
+  sad: '\uD83D\uDE22',
+  angry: '\uD83D\uDE21',
+  thumbs_up: '\uD83D\uDC4D',
+};
+
 const formatMessageTime = timestamp => {
   if (!timestamp) return '';
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -79,7 +88,14 @@ const ConversationRow = ({ conversation, friendProfile, currentUserId, onPress, 
     // Defensive: reaction messages should never be lastMessage (Cloud Function skips them),
     // but handle gracefully if race condition surfaces
     if (lastMessage.type === 'reaction') {
-      return isSender ? 'Sent' : 'Sent a message';
+      const emojiChar = lastMessage.emoji ? EMOJI_MAP[lastMessage.emoji] || lastMessage.emoji : '';
+      return isSender
+        ? emojiChar
+          ? `You reacted ${emojiChar}`
+          : 'You reacted'
+        : emojiChar
+          ? `Reacted ${emojiChar}`
+          : 'Reacted';
     }
 
     const msgType = lastMessage.type || 'text';
