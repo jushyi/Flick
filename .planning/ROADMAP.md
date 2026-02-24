@@ -123,7 +123,16 @@ Plans:
 - Orphaned snaps auto-deleted after 48h
 - Snap images do not persist in device cache
 
-**Estimated plans:** 6-8
+**Plans:** 6 plans
+
+Plans:
+
+- [ ] 03-01-PLAN.md — Snap service layer + Cloud Functions (upload, send, mark viewed, signed URLs, cleanup)
+- [ ] 03-02-PLAN.md — Snap capture flow (SnapCameraModal + SnapPreviewScreen with Polaroid frame and caption)
+- [ ] 03-03-PLAN.md — Snap viewing experience (SnapBubble states + SnapViewer full-screen Polaroid viewer)
+- [ ] 03-04-PLAN.md — Integration (DMInput camera morph, MessageBubble delegation, ConversationScreen wiring, ConversationRow updates)
+- [ ] 03-05-PLAN.md — Infrastructure (Storage rules, Firestore rules, TTL/lifecycle documentation)
+- [ ] 03-06-PLAN.md — Test suite validation + visual verification checkpoint
 
 ---
 
@@ -138,11 +147,11 @@ Plans:
 **Key deliverables:**
 
 - `streaks/` Firestore collection with deterministic IDs matching conversation pattern
-- Streak state machine: inactive → building → active → warning → expired
+- Streak state machine: inactive -> building -> active -> warning -> expired
 - `streakService.js`: read/subscribe to streak data, derive UI state
 - `useStreaks` hook: real-time streak subscription, countdown timer for expiry
 - `StreakIndicator` component: fire icon + day count, hourglass warning
-- Snap button color changes: default → streak active (colored + count) → warning (warning color + "!")
+- Snap button color changes: default -> streak active (colored + count) -> warning (warning color + "!")
 - Extended `onNewMessage` Cloud Function: update `lastSnapBy` on snap send, evaluate mutual snaps, increment streak
 - `processStreakExpiry` scheduled Cloud Function (every 30 min): expire dead streaks, set warning state, send push notifications
 - Push notification: "Your streak with [Name] is about to expire!"
@@ -198,10 +207,10 @@ Plans:
 ## Phase Dependencies
 
 ```
-Phase 1 ──→ Phase 2 (needs message type system)
-Phase 1 ──→ Phase 3 (needs message type system + Firestore rules)
-Phase 3 ──→ Phase 4 (streaks count snap exchanges)
-Phase 1 ──→ Phase 5 (needs message type system)
+Phase 1 --> Phase 2 (needs message type system)
+Phase 1 --> Phase 3 (needs message type system + Firestore rules)
+Phase 3 --> Phase 4 (streaks count snap exchanges)
+Phase 1 --> Phase 5 (needs message type system)
 ```
 
 Phases 2 and 3 are independent of each other.
@@ -218,4 +227,4 @@ Phase 5 is independent of Phases 2, 3, and 4.
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-23 — deferred screenshot detection to v2, no native build required for any phase_
+_Last updated: 2026-02-24 — Phase 3 planned: 6 plans across 5 waves_
