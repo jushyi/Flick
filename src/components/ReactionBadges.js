@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated as RNAnimated } from 'react-native';
+import { Text, Pressable, StyleSheet, Animated as RNAnimated } from 'react-native';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
@@ -29,7 +29,13 @@ const EMOJI_MAP = {
  * @param {string} currentUserId - Current user's UID (to highlight own reactions)
  * @param {function} onReactionPress - Callback (emoji) when tapping a reaction pill
  */
-const ReactionBadges = ({ reactions, isCurrentUser, currentUserId, onReactionPress }) => {
+const ReactionBadges = ({
+  reactions,
+  isCurrentUser,
+  currentUserId,
+  onReactionPress,
+  isMediaMessage = false,
+}) => {
   const fadeAnim = useRef(new RNAnimated.Value(0)).current;
 
   useEffect(() => {
@@ -51,6 +57,7 @@ const ReactionBadges = ({ reactions, isCurrentUser, currentUserId, onReactionPre
       style={[
         styles.container,
         isCurrentUser ? styles.containerRight : styles.containerLeft,
+        isMediaMessage && styles.containerMedia,
         { opacity: fadeAnim },
       ]}
     >
@@ -92,6 +99,9 @@ const styles = StyleSheet.create({
   containerLeft: {
     alignSelf: 'flex-start',
     marginLeft: 8,
+  },
+  containerMedia: {
+    marginTop: 4,
   },
   pill: {
     flexDirection: 'row',

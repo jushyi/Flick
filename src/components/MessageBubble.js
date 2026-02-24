@@ -45,6 +45,7 @@ const MessageBubble = ({
 }) => {
   const isGif = message.type === 'gif';
   const isImage = message.type === 'image';
+  const isMediaMessage = isGif || isImage;
   const isDeleted = message._isUnsent || message._isDeletedForMe;
 
   const translateX = useSharedValue(0);
@@ -299,11 +300,14 @@ const MessageBubble = ({
               style={[
                 styles.bubble,
                 isCurrentUser ? styles.bubbleUser : styles.bubbleFriend,
-                (isGif || isImage) && styles.bubbleMedia,
-                reactions && Object.keys(reactions).length > 0 && styles.bubbleWithReactions,
+                isMediaMessage && styles.bubbleMedia,
+                reactions &&
+                  Object.keys(reactions).length > 0 &&
+                  !isMediaMessage &&
+                  styles.bubbleWithReactions,
               ]}
             >
-              {isGif || isImage ? (
+              {isMediaMessage ? (
                 <Image
                   source={{ uri: message.gifUrl || message.imageUrl }}
                   style={isImage ? styles.messageImage : styles.gifImage}
@@ -327,6 +331,7 @@ const MessageBubble = ({
           isCurrentUser={isCurrentUser}
           currentUserId={currentUserId}
           onReactionPress={onReactionPress}
+          isMediaMessage={isMediaMessage}
         />
       )}
 
