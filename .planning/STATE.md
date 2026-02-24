@@ -133,4 +133,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick-29: Fix snap caption KAV so footer stays fixed when keyboard opens
+Last activity: 2026-02-24 - Completed quick task 30: the icon/badge for unread messages in a messages tab should be between the snap icon and time indicator with a little padding
