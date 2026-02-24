@@ -301,6 +301,16 @@ const ConversationScreen = () => {
   }, [replyToMessage, user.uid, liveFriendProfile]);
 
   /**
+   * Look up a message by ID from the loaded messages array.
+   * Used by MessageBubble to resolve original message data for replies
+   * (e.g., image/gif URLs that are not stored in the denormalized replyTo).
+   */
+  const findMessageById = useCallback(
+    messageId => messages.find(m => m.id === messageId) || null,
+    [messages]
+  );
+
+  /**
    * Render a single item — either a TimeDivider or a MessageBubble
    * wrapped with consistent spacing. Includes ReadReceiptIndicator
    * below the current user's most recent sent message.
@@ -332,6 +342,7 @@ const ConversationScreen = () => {
             currentUserId={user.uid}
             senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
             highlighted={highlightedMessageId === item.id}
+            findMessageById={findMessageById}
           />
           {isLastSent && (
             <ReadReceiptIndicator isRead={isRead} readAt={friendReadAt} visible={showIndicator} />
@@ -355,6 +366,7 @@ const ConversationScreen = () => {
       scrollToMessage,
       highlightedMessageId,
       liveFriendProfile,
+      findMessageById,
     ]
   );
 

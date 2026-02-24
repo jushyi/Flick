@@ -37,6 +37,7 @@ const MessageBubble = ({
   senderName,
   onScrollToMessage,
   highlighted,
+  findMessageById,
 }) => {
   const isGif = message.type === 'gif';
   const isImage = message.type === 'image';
@@ -184,6 +185,72 @@ const MessageBubble = ({
     );
   }
 
+  // Resolve the full original message for replies (needed for image/gif URLs)
+  const resolvedOriginal =
+    message.replyTo && !message.replyTo.deleted && findMessageById
+      ? findMessageById(message.replyTo.messageId)
+      : null;
+
+  // Determine the original message content for reply rendering
+  const originalType = message.replyTo?.type;
+  const originalImageUrl = resolvedOriginal?.imageUrl || resolvedOriginal?.gifUrl || null;
+  const originalText = message.replyTo?.text || resolvedOriginal?.text || '';
+
+  /**
+   * Renders the muted original message block above the reply bubble.
+   * Shows full text, images, or GIFs at reduced opacity.
+   */
+  const renderOriginalMessage = () => {
+    if (!message.replyTo) return null;
+
+    const replyAuthor = message.replyTo.senderId === currentUserId ? 'You' : senderName || 'Friend';
+
+    return (
+      <Pressable
+        onPress={() => onScrollToMessage?.(message.replyTo.messageId)}
+        style={[
+          styles.originalMessageBlock,
+          isCurrentUser ? styles.originalMessageBlockRight : styles.originalMessageBlockLeft,
+        ]}
+      >
+        {/* Connecting line on the left edge */}
+        <View
+          style={[
+            styles.originalConnectingLine,
+            isCurrentUser ? styles.connectingLineRight : styles.connectingLineLeft,
+          ]}
+        />
+
+        <View style={styles.originalMessageContent}>
+          {message.replyTo.deleted ? (
+            <Text style={styles.originalDeletedText}>Original message deleted</Text>
+          ) : (
+            <>
+              <Text style={styles.originalAuthorText}>{replyAuthor}</Text>
+
+              {(originalType === 'image' || originalType === 'gif') && originalImageUrl ? (
+                <View style={styles.originalMediaContainer}>
+                  <Image
+                    source={{ uri: originalImageUrl }}
+                    style={originalType === 'image' ? styles.originalImage : styles.originalGif}
+                    contentFit={originalType === 'image' ? 'cover' : 'contain'}
+                    transition={200}
+                  />
+                </View>
+              ) : (originalType === 'image' || originalType === 'gif') && !originalImageUrl ? (
+                <Text style={styles.originalContentText}>
+                  {originalType === 'image' ? '\uD83D\uDCF7 Photo' : 'GIF'}
+                </Text>
+              ) : (
+                <Text style={styles.originalContentText}>{originalText}</Text>
+              )}
+            </>
+          )}
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={[styles.container, isCurrentUser ? styles.containerRight : styles.containerLeft]}>
       {/* Highlight flash overlay for scroll-to-message */}
@@ -193,6 +260,10 @@ const MessageBubble = ({
           style={[StyleSheet.absoluteFill, styles.highlightOverlay, { opacity: highlightOpacity }]}
         />
       )}
+
+      {/* Muted original message rendered above the reply bubble */}
+      {renderOriginalMessage()}
+
       <View style={styles.swipeContainer}>
         <Animated.View style={[styles.replyArrowContainer, replyIconAnimatedStyle]}>
           <Ionicons name="return-up-back" size={20} color={colors.text.secondary} />
@@ -208,37 +279,6 @@ const MessageBubble = ({
                 (isGif || isImage) && styles.bubbleMedia,
               ]}
             >
-              {message.replyTo && (
-                <Pressable
-                  onPress={() => onScrollToMessage?.(message.replyTo.messageId)}
-                  style={[
-                    styles.replyPreviewInBubble,
-                    isCurrentUser
-                      ? styles.replyPreviewInBubbleUser
-                      : styles.replyPreviewInBubbleFriend,
-                  ]}
-                >
-                  {message.replyTo.deleted ? (
-                    <Text style={styles.replyDeletedText}>Original message deleted</Text>
-                  ) : (
-                    <>
-                      <Text style={styles.replyAuthorText} numberOfLines={1}>
-                        {message.replyTo.senderId === currentUserId
-                          ? 'You'
-                          : senderName || 'Friend'}
-                      </Text>
-                      <Text style={styles.replyContentText} numberOfLines={2}>
-                        {message.replyTo.type === 'image'
-                          ? '\uD83D\uDCF7 Photo'
-                          : message.replyTo.type === 'gif'
-                            ? 'GIF'
-                            : message.replyTo.text || ''}
-                      </Text>
-                    </>
-                  )}
-                </Pressable>
-              )}
-
               {isGif || isImage ? (
                 <Image
                   source={{ uri: message.gifUrl || message.imageUrl }}
@@ -374,38 +414,66 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     zIndex: 10,
   },
-  // Reply mini bubble styles
-  replyPreviewInBubble: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    marginBottom: 4,
-    borderRadius: 6,
-    borderLeftWidth: 2,
+  // Muted original message block (shown above reply bubble)
+  originalMessageBlock: {
+    maxWidth: '75%',
+    marginBottom: 2,
+    flexDirection: 'row',
+    opacity: 0.55,
   },
-  replyPreviewInBubbleUser: {
-    backgroundColor: 'rgba(0, 0, 0, 0.15)',
-    borderLeftColor: 'rgba(255, 255, 255, 0.4)',
+  originalMessageBlockRight: {
+    alignSelf: 'flex-end',
   },
-  replyPreviewInBubbleFriend: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderLeftColor: colors.interactive.primary,
+  originalMessageBlockLeft: {
+    alignSelf: 'flex-start',
   },
-  replyAuthorText: {
+  originalConnectingLine: {
+    width: 2,
+    backgroundColor: '#7B7B9E',
+    borderRadius: 1,
+    marginRight: 8,
+  },
+  connectingLineRight: {
+    // Line on the left side even for current user's replies
+  },
+  connectingLineLeft: {
+    // Line on the left side for friend's replies
+  },
+  originalMessageContent: {
+    flex: 1,
+  },
+  originalAuthorText: {
     fontSize: 10,
     fontFamily: typography.fontFamily.bodyBold,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 1,
+    color: '#7B7B9E',
+    marginBottom: 2,
   },
-  replyContentText: {
-    fontSize: 11,
+  originalContentText: {
+    fontSize: 13,
     fontFamily: typography.fontFamily.readable,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: '#7B7B9E',
+    lineHeight: 18,
   },
-  replyDeletedText: {
-    fontSize: 11,
+  originalDeletedText: {
+    fontSize: 13,
     fontFamily: typography.fontFamily.readable,
     fontStyle: 'italic',
     color: '#7B7B9E',
+  },
+  originalMediaContainer: {
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginTop: 2,
+  },
+  originalImage: {
+    width: 180,
+    height: 220,
+    borderRadius: 3,
+  },
+  originalGif: {
+    width: 180,
+    height: 135,
+    borderRadius: 3,
   },
 });
 
