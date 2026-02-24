@@ -190,6 +190,10 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.xl,
     fontFamily: typography.fontFamily.display,
+    lineHeight: 28,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   // Invisible spacer to balance darkroom button and center capture button
   footerSpacer: {
