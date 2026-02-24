@@ -2928,21 +2928,22 @@ exports.onNewMessage = functions
                 : message.text;
         }
 
-        await sendPushNotification(
-          fcmToken,
+        const notificationData = {
+          type: messageType === 'snap' ? 'snap' : 'direct_message',
+          conversationId,
+          senderId,
           senderName,
-          body,
-          {
-            type: 'direct_message',
-            conversationId,
-            senderId,
-            senderName,
-            senderProfilePhotoURL: senderPhotoURL || '',
-            threadId: conversationId,
-            channelId: 'messages',
-          },
-          recipientId
-        );
+          senderProfilePhotoURL: senderPhotoURL || '',
+          threadId: conversationId,
+          channelId: 'messages',
+        };
+
+        // Include messageId for snap notifications so client can auto-open the viewer
+        if (messageType === 'snap') {
+          notificationData.messageId = context.params.messageId;
+        }
+
+        await sendPushNotification(fcmToken, senderName, body, notificationData, recipientId);
 
         logger.debug('onNewMessage: Notification sent', { recipientId, conversationId });
       } catch (notifError) {
