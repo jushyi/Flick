@@ -119,6 +119,7 @@ None currently.
 | 25  | Fix selfie camera auto-mirror (remove skipProcessing from takePictureAsync)      | 2026-02-24 | b791dab |          | [25-fix-selfie-cam-auto-mirror](./quick/25-fix-selfie-cam-auto-mirror/)                             |
 | 26  | Fix snap camera to match main Camera tab layout                                  | 2026-02-24 | 42a89ba |          | [26-fix-snap-camera-to-match-main-camera-tab](./quick/26-fix-snap-camera-to-match-main-camera-tab/) |
 | 27  | Fix snap send navigation to return to Conversation instead of MessagesList       | 2026-02-24 | 7368ce4 |          | [27-after-sending-a-snap-from-messages-tab-n](./quick/27-after-sending-a-snap-from-messages-tab-n/) |
+| 28  | Fix SnapPreviewScreen header X button and recipient label vertical alignment     | 2026-02-24 | 6b2d3e1 |          | [28-on-android-and-ios-the-x-button-and-the-](./quick/28-on-android-and-ios-the-x-button-and-the-/) |
 
 ## Notes
 
@@ -129,4 +130,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 03-08-PLAN.md: SnapViewer overhaul (EXIF normalization, semi-transparent overlay, snap reaction bar)
+Last activity: 2026-02-24 - Completed quick-28: Fix SnapPreviewScreen header alignment (includeFontPadding, lineHeight, textAlignVertical)
