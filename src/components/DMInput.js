@@ -23,6 +23,7 @@ import {
   Platform,
   Keyboard,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -47,6 +48,7 @@ const MAX_LENGTH = 2000;
 const DMInput = ({
   onSendMessage,
   onSend,
+  onOpenSnapCamera,
   disabled = false,
   placeholder = 'Message...',
   replyToMessage = null,
@@ -183,6 +185,18 @@ const DMInput = ({
 
   const canSend = text.trim().length > 0 || !!selectedMedia;
 
+  // Crossfade animation between camera icon and send arrow
+  // 0 = camera visible, 1 = send arrow visible
+  const morphAnim = useRef(new Animated.Value(canSend ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(morphAnim, {
+      toValue: canSend ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [canSend, morphAnim]);
+
   const bottomPadding = keyboardVisible
     ? Platform.OS === 'ios'
       ? 8
@@ -277,16 +291,33 @@ const DMInput = ({
           </TouchableOpacity>
         </View>
 
-        {/* Send Button */}
-        {canSend && (
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={isUploading}>
-            {isUploading ? (
-              <Text style={styles.uploadingText}>...</Text>
-            ) : (
-              <PixelIcon name="arrow-up" size={20} color={colors.interactive.primary} />
-            )}
-          </TouchableOpacity>
-        )}
+        {/* Camera / Send Button — morphs between snap camera and send arrow */}
+        {canSend ? (
+          <Animated.View style={{ opacity: morphAnim }}>
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleSend}
+              disabled={isUploading}
+              testID="send-button"
+            >
+              {isUploading ? (
+                <Text style={styles.uploadingText}>...</Text>
+              ) : (
+                <PixelIcon name="arrow-up" size={20} color={colors.interactive.primary} />
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        ) : !disabled && onOpenSnapCamera ? (
+          <Animated.View style={{ opacity: Animated.subtract(1, morphAnim) }}>
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={onOpenSnapCamera}
+              testID="camera-button"
+            >
+              <PixelIcon name="camera" size={20} color={colors.status.developing} />
+            </TouchableOpacity>
+          </Animated.View>
+        ) : null}
       </View>
     </View>
   );
