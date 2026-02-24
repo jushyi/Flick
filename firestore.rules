@@ -441,6 +441,20 @@ service cloud.firestore {
     }
 
     // =============================================================================
+    // STREAKS COLLECTION (snap streaks - server-authoritative)
+    // =============================================================================
+    // Document ID format: [lowerUserId]_[higherUserId] (deterministic, same as conversations)
+    // All writes happen via Cloud Functions (admin SDK bypasses rules).
+    // Client is read-only for streak data.
+    match /streaks/{streakId} {
+      // Read: only participants can read their own streak
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.participants;
+      // Write: denied — all writes via Cloud Functions (admin SDK)
+      allow write: if false;
+    }
+
+    // =============================================================================
     // DEFAULT DENY
     // =============================================================================
     // Deny access to all other collections by default

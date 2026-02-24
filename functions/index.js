@@ -65,6 +65,37 @@ function getRandomTemplate(templates) {
   return templates[index];
 }
 
+// =============================================================================
+// STREAK CONSTANTS
+// =============================================================================
+
+// Streak expiry windows (tiered progressive leniency per user decision)
+const STREAK_EXPIRY_TIERS = {
+  base: 36 * 60 * 60 * 1000, // 36 hours (day 0-9)
+  tier10: 48 * 60 * 60 * 1000, // 48 hours (day 10-49)
+  tier50: 72 * 60 * 60 * 1000, // 72 hours (day 50+)
+};
+const STREAK_WARNING_HOURS = 4; // Warning sent 4h before expiry
+const DAY_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+const STREAK_WARNING_TEMPLATES = [
+  'Your streak with {name} is about to expire!',
+  "Don't let your streak with {name} die!",
+  'Quick — snap {name} before your streak ends!',
+];
+
+/**
+ * Get the expiry window in milliseconds based on current dayCount.
+ * Higher streaks get more lenient windows.
+ * @param {number} dayCount - Current streak day count
+ * @returns {number} - Expiry window in milliseconds
+ */
+function getExpiryWindowMs(dayCount) {
+  if (dayCount >= 50) return STREAK_EXPIRY_TIERS.tier50;
+  if (dayCount >= 10) return STREAK_EXPIRY_TIERS.tier10;
+  return STREAK_EXPIRY_TIERS.base;
+}
+
 // Reaction batch window in milliseconds (30 seconds)
 const REACTION_BATCH_WINDOW_MS = 30000;
 
@@ -2774,6 +2805,112 @@ exports.unsendMessage = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async r
   return { success: true };
 });
 
+// =============================================================================
+// STREAK ENGINE (Server-Authoritative)
+// =============================================================================
+
+/**
+ * updateStreakOnSnap - Updates streak data when a snap message is sent.
+ * Uses a Firestore transaction to atomically read-then-write the streak document,
+ * preventing race conditions when both users send snaps simultaneously.
+ *
+ * Streak document ID uses the same deterministic pattern as conversations:
+ * [lowerUserId]_[higherUserId]
+ *
+ * @param {string} conversationId - The conversation ID (also used as streak ID)
+ * @param {string} senderId - The user who sent the snap
+ * @param {string} recipientId - The other user in the conversation
+ */
+async function updateStreakOnSnap(conversationId, senderId, recipientId) {
+  const streakRef = db.collection('streaks').doc(conversationId);
+  const now = admin.firestore.Timestamp.now();
+  const nowMs = now.toMillis();
+
+  await db.runTransaction(async transaction => {
+    const streakDoc = await transaction.get(streakRef);
+
+    if (!streakDoc.exists) {
+      // Create new streak document with initial values
+      const participants = [senderId, recipientId].sort();
+      transaction.set(streakRef, {
+        participants,
+        dayCount: 0,
+        lastSnapBy: {
+          [senderId]: now,
+          [recipientId]: null,
+        },
+        lastMutualAt: null,
+        streakStartedAt: null,
+        expiresAt: null,
+        warningAt: null,
+        warning: false,
+        warningSentAt: null,
+        updatedAt: now,
+      });
+      return;
+    }
+
+    const streak = streakDoc.data();
+    const lastSnapBy = streak.lastSnapBy || {};
+
+    // Check if the other user has already snapped (mutual exchange)
+    const otherUserId = senderId === recipientId ? senderId : recipientId;
+    const otherHasSnapped =
+      lastSnapBy[otherUserId] !== null && lastSnapBy[otherUserId] !== undefined;
+
+    if (!otherHasSnapped) {
+      // One-sided snap: just update lastSnapBy for the sender
+      transaction.update(streakRef, {
+        [`lastSnapBy.${senderId}`]: now,
+        updatedAt: now,
+      });
+      return;
+    }
+
+    // Mutual snaps detected! Check if >= 24h since lastMutualAt
+    const lastMutualAt = streak.lastMutualAt;
+    const lastMutualMs = lastMutualAt ? lastMutualAt.toMillis() : 0;
+    const hoursSinceLastMutual = lastMutualAt ? (nowMs - lastMutualMs) / DAY_MS : Infinity;
+
+    if (hoursSinceLastMutual < 1) {
+      // Less than 24h since last mutual exchange — just record the snap
+      transaction.update(streakRef, {
+        [`lastSnapBy.${senderId}`]: now,
+        updatedAt: now,
+      });
+      return;
+    }
+
+    // >= 24h since last mutual (or first mutual ever): increment dayCount
+    const newDayCount = (streak.dayCount || 0) + 1;
+    const expiryWindowMs = getExpiryWindowMs(newDayCount);
+    const expiresAtMs = nowMs + expiryWindowMs;
+    const warningAtMs = expiresAtMs - STREAK_WARNING_HOURS * 60 * 60 * 1000;
+
+    const updateData = {
+      dayCount: newDayCount,
+      lastMutualAt: now,
+      expiresAt: admin.firestore.Timestamp.fromMillis(expiresAtMs),
+      warningAt: admin.firestore.Timestamp.fromMillis(warningAtMs),
+      warning: false,
+      warningSentAt: null,
+      // Clear both users' lastSnapBy entries (reset for next day's exchange)
+      lastSnapBy: {
+        [streak.participants[0]]: null,
+        [streak.participants[1]]: null,
+      },
+      updatedAt: now,
+    };
+
+    // Set streakStartedAt on first mutual exchange (dayCount 0->1)
+    if (streak.dayCount === 0) {
+      updateData.streakStartedAt = now;
+    }
+
+    transaction.update(streakRef, updateData);
+  });
+}
+
 /**
  * onNewMessage - Triggered when a new message is created in a conversation
  * 1. Updates conversation metadata (lastMessage, updatedAt, unreadCount) atomically
@@ -2781,6 +2918,7 @@ exports.unsendMessage = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async r
  * 2. Sends push notification to the recipient
  *    - Reaction messages send emoji-formatted notification
  *    - Reaction removal (emoji: null) is silent (no notification)
+ * 3. Updates streak data for snap messages (best-effort)
  */
 exports.onNewMessage = functions
   .runWith({ memory: '256MB', timeoutSeconds: 60 })
@@ -2866,7 +3004,20 @@ exports.onNewMessage = functions
         await convRef.update(updateData);
       }
 
-      // 2. Send push notification to recipient
+      // 2. Update streak data for snap messages (best-effort)
+      if (messageType === 'snap') {
+        try {
+          await updateStreakOnSnap(conversationId, senderId, recipientId);
+        } catch (streakError) {
+          // Best-effort: log but don't fail the message trigger
+          logger.error('onNewMessage: Streak update failed', {
+            conversationId,
+            error: streakError.message,
+          });
+        }
+      }
+
+      // 3. Send push notification to recipient
       try {
         const recipientDoc = await db.collection('users').doc(recipientId).get();
         if (!recipientDoc.exists) {
@@ -3269,6 +3420,136 @@ exports.cleanupExpiredSnaps = functions
       return null;
     } catch (error) {
       logger.error('cleanupExpiredSnaps: Error', { error: error.message });
+      return null;
+    }
+  });
+
+// =============================================================================
+// STREAK EXPIRY PROCESSING
+// =============================================================================
+
+/**
+ * processStreakExpiry - Scheduled function to process streak warnings and expirations.
+ *
+ * Runs every 30 minutes. Two phases:
+ * 1. Warnings: Find streaks where warningAt <= now AND warning == false,
+ *    set warning=true, send push notification to both participants.
+ * 2. Expiry: Find streaks where expiresAt <= now,
+ *    reset streak to inactive (dayCount=0, clear all timestamps).
+ *
+ * Limited to 200 streaks per phase per run to avoid timeout.
+ */
+exports.processStreakExpiry = functions
+  .runWith({ memory: '256MB', timeoutSeconds: 120 })
+  .pubsub.schedule('every 30 minutes')
+  .onRun(async () => {
+    const { sendPushNotification } = require('./notifications/sender');
+
+    try {
+      const now = admin.firestore.Timestamp.now();
+      const nowMs = now.toMillis();
+
+      // 1. Process warnings: warningAt <= now AND warning == false
+      const warningSnapshot = await db
+        .collection('streaks')
+        .where('warningAt', '<=', now)
+        .where('warning', '==', false)
+        .limit(200)
+        .get();
+
+      // 2. Process expired: expiresAt <= now AND expiresAt != null
+      const expiredSnapshot = await db
+        .collection('streaks')
+        .where('expiresAt', '<=', now)
+        .limit(200)
+        .get();
+
+      // Process warnings
+      const warningResults = await Promise.allSettled(
+        warningSnapshot.docs
+          .filter(doc => {
+            const data = doc.data();
+            // Skip streaks that are already expired (expiresAt <= now)
+            return !data.expiresAt || data.expiresAt.toMillis() > nowMs;
+          })
+          .map(async streakDoc => {
+            const streak = streakDoc.data();
+
+            // Set warning flag
+            await streakDoc.ref.update({
+              warning: true,
+              warningSentAt: now,
+              updatedAt: now,
+            });
+
+            // Send push notification to BOTH participants
+            for (const userId of streak.participants) {
+              const otherUserId = streak.participants.find(p => p !== userId);
+              const otherUser = await db.collection('users').doc(otherUserId).get();
+              const otherName = otherUser.exists
+                ? otherUser.data().displayName || otherUser.data().username
+                : 'your friend';
+
+              const user = await db.collection('users').doc(userId).get();
+              if (!user.exists) continue;
+              const userData = user.data();
+              const fcmToken = userData.fcmToken;
+              if (!fcmToken) continue;
+
+              // Check notification preferences (streakWarnings toggle)
+              const prefs = userData.notificationPreferences || {};
+              if (prefs.enabled === false || prefs.streakWarnings === false) continue;
+
+              const template = getRandomTemplate(STREAK_WARNING_TEMPLATES);
+              const body = template.replace('{name}', otherName);
+
+              await sendPushNotification(
+                fcmToken,
+                'Flick',
+                body,
+                {
+                  type: 'streak_warning',
+                  conversationId: streakDoc.id,
+                  userId: otherUserId,
+                },
+                userId
+              );
+            }
+          })
+      );
+
+      // Process expired streaks — reset to inactive
+      const expiryResults = await Promise.allSettled(
+        expiredSnapshot.docs
+          .filter(doc => {
+            const data = doc.data();
+            return data.expiresAt && data.expiresAt.toMillis() <= nowMs;
+          })
+          .map(async streakDoc => {
+            const streak = streakDoc.data();
+            await streakDoc.ref.update({
+              dayCount: 0,
+              lastMutualAt: null,
+              streakStartedAt: null,
+              expiresAt: null,
+              warningAt: null,
+              warning: false,
+              warningSentAt: null,
+              lastSnapBy: {
+                [streak.participants[0]]: null,
+                [streak.participants[1]]: null,
+              },
+              updatedAt: now,
+            });
+          })
+      );
+
+      const warningCount = warningResults.filter(r => r.status === 'fulfilled').length;
+      const expiryCount = expiryResults.filter(r => r.status === 'fulfilled').length;
+      logger.info('processStreakExpiry: Complete', { warningCount, expiryCount });
+      return null;
+    } catch (error) {
+      logger.error('processStreakExpiry: Error', { error: error.message });
       return null;
     }
   });
