@@ -258,6 +258,25 @@ const NotificationSettingsScreen = () => {
               />
             </View>
           ))}
+
+          {/* Messaging Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionHeaderText}>Messaging</Text>
+          </View>
+
+          <View style={[styles.toggleItem, !preferences.enabled && styles.toggleItemDisabled]}>
+            <View style={styles.toggleItemLeft}>
+              <PixelIcon name="warning-outline" size={22} color={colors.icon.primary} />
+              <View style={styles.toggleItemContent}>
+                <Text style={styles.toggleItemLabel}>Streak Warnings</Text>
+              </View>
+            </View>
+            <PixelToggle
+              value={preferences.streakWarnings !== false}
+              onValueChange={value => handleTypeToggle('streakWarnings', value)}
+              disabled={!preferences.enabled}
+            />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
