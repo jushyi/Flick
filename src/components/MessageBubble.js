@@ -48,15 +48,24 @@ const MessageBubble = ({
   const bubbleRef = useRef(null);
 
   // Highlight flash animation when scroll-to-message targets this bubble
+  // Two-phase: flash in (150ms) -> hold (300ms) -> fade out (1200ms)
   const highlightOpacity = useRef(new RNAnimated.Value(0)).current;
   useEffect(() => {
     if (highlighted) {
-      highlightOpacity.setValue(0.4);
-      RNAnimated.timing(highlightOpacity, {
-        toValue: 0,
-        duration: 1500,
-        useNativeDriver: true,
-      }).start();
+      highlightOpacity.setValue(0);
+      RNAnimated.sequence([
+        RNAnimated.timing(highlightOpacity, {
+          toValue: 0.5,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        RNAnimated.delay(300),
+        RNAnimated.timing(highlightOpacity, {
+          toValue: 0,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   }, [highlighted, highlightOpacity]);
 
@@ -421,9 +430,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: colors.text.secondary,
   },
-  // Highlight overlay for scroll-to-message flash
+  // Highlight overlay for scroll-to-message flash — cyan tint matches interactive.primary accent
   highlightOverlay: {
-    backgroundColor: colors.overlay.purpleTint,
+    backgroundColor: 'rgba(0, 212, 255, 0.15)',
     borderRadius: 4,
     zIndex: 10,
   },
