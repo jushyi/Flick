@@ -50,8 +50,8 @@ import { typography } from '../constants/typography';
 import logger from '../utils/logger';
 
 // Polaroid frame constants
-const POLAROID_BORDER = 8; // Thin white border on top and sides
-const POLAROID_STRIP_HEIGHT = 56; // Thick white strip at bottom for caption
+const POLAROID_BORDER = 16; // Thick white border on top and sides (realistic Polaroid)
+const POLAROID_STRIP_HEIGHT = 64; // Thick white strip at bottom for caption
 const SWIPE_DISMISS_THRESHOLD = 120; // Pixels of downward swipe to dismiss
 
 const SnapPreviewScreen = () => {
@@ -189,10 +189,11 @@ const SnapPreviewScreen = () => {
           <View style={screenStyles.headerSpacer} />
         </View>
 
-        {/* Polaroid frame with swipe-down gesture */}
+        {/* Polaroid frame + footer wrapped in KAV so both lift above keyboard */}
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.select({ ios: 'padding', android: 'height' })}
+          behavior={Platform.select({ ios: 'padding', android: 'padding' })}
+          keyboardVerticalOffset={Platform.select({ ios: insets.top + 56, android: 0 })}
         >
           <GestureDetector gesture={panGesture}>
             <Animated.View style={[screenStyles.polaroidOuter, animatedStyle]}>
@@ -226,26 +227,26 @@ const SnapPreviewScreen = () => {
               </View>
             </Animated.View>
           </GestureDetector>
-        </KeyboardAvoidingView>
 
-        {/* Footer: wide send button */}
-        <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
-          <TouchableOpacity
-            style={[screenStyles.sendButton, isSending && screenStyles.sendButtonDisabled]}
-            onPress={handleSend}
-            disabled={isSending}
-            activeOpacity={0.7}
-          >
-            {isSending ? (
-              <ActivityIndicator size="small" color={colors.text.inverse} />
-            ) : (
-              <View style={screenStyles.sendButtonContent}>
-                <PixelIcon name="arrow-up" size={18} color={colors.text.inverse} />
-                <Text style={screenStyles.sendButtonText}>Send</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
+          {/* Footer: wide send button — inside KAV so it lifts with Polaroid */}
+          <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
+            <TouchableOpacity
+              style={[screenStyles.sendButton, isSending && screenStyles.sendButtonDisabled]}
+              onPress={handleSend}
+              disabled={isSending}
+              activeOpacity={0.7}
+            >
+              {isSending ? (
+                <ActivityIndicator size="small" color={colors.text.inverse} />
+              ) : (
+                <View style={screenStyles.sendButtonContent}>
+                  <PixelIcon name="arrow-up" size={18} color={colors.text.inverse} />
+                  <Text style={screenStyles.sendButtonText}>Send</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
       </View>
     </GestureHandlerRootView>
   );

@@ -241,8 +241,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rightColumn: {
+    position: 'relative',
     alignItems: 'flex-end',
     marginLeft: 8,
+    minHeight: 24,
   },
   timestamp: {
     fontSize: 10,
@@ -250,12 +252,14 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.readable,
   },
   unreadBadge: {
+    position: 'absolute',
+    top: 22,
+    right: 0,
     minWidth: 18,
     height: 18,
     borderRadius: 9,
     backgroundColor: colors.interactive.primary,
     paddingHorizontal: 4,
-    marginTop: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
