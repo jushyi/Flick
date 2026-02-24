@@ -405,9 +405,28 @@ const ConversationScreen = () => {
       const isSnapMessage = item.type === 'snap';
       const isSnapUnopened = isSnapMessage && !isCurrentUser && !item.viewedAt;
 
-      const pressHandler = isSnapUnopened
-        ? () => handleSnapPress(item)
-        : () => toggleTimestamp(item.id);
+      // For tagged photo messages: override onPress to navigate to PhotoDetail
+      const isTaggedPhotoMessage = item.type === 'tagged_photo';
+
+      const pressHandler = isTaggedPhotoMessage
+        ? msg => {
+            navigation.navigate('PhotoDetail', {
+              photo: {
+                id: msg.photoId,
+                imageURL: msg.photoURL,
+                userId: msg.photoOwnerId,
+              },
+              taggedPhotoContext: {
+                messageId: msg.id,
+                conversationId: conversationId,
+                photoId: msg.photoId,
+                addedToFeedBy: msg.addedToFeedBy || {},
+              },
+            });
+          }
+        : isSnapUnopened
+          ? () => handleSnapPress(item)
+          : () => toggleTimestamp(item.id);
 
       return (
         <View style={styles.messageWrapper}>
@@ -427,6 +446,7 @@ const ConversationScreen = () => {
             senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
             highlighted={highlightedMessageId === item.id}
             findMessageById={findMessageById}
+            conversationId={conversationId}
           />
           {isLastSent && (
             <ReadReceiptIndicator isRead={isRead} readAt={friendReadAt} visible={showIndicator} />
@@ -452,6 +472,8 @@ const ConversationScreen = () => {
       liveFriendProfile,
       findMessageById,
       handleSnapPress,
+      conversationId,
+      navigation,
     ]
   );
 

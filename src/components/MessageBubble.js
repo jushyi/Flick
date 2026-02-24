@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import PixelIcon from './PixelIcon';
 import ReactionBadges from './ReactionBadges';
 import SnapBubble from './SnapBubble';
+import TaggedPhotoBubble from './TaggedPhotoBubble';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
@@ -43,8 +44,10 @@ const MessageBubble = ({
   onScrollToMessage,
   highlighted,
   findMessageById,
+  conversationId,
 }) => {
   const isSnap = message.type === 'snap';
+  const isTaggedPhoto = message.type === 'tagged_photo';
   const isGif = message.type === 'gif';
   const isImage = message.type === 'image';
   const isMediaMessage = isGif || isImage;
@@ -191,6 +194,23 @@ const MessageBubble = ({
         reactions={reactions}
         onReactionPress={onReactionPress}
         currentUserId={currentUserId}
+      />
+    );
+  }
+
+  // Delegate tagged photo messages to dedicated TaggedPhotoBubble component
+  // Placed after all hooks to satisfy Rules of Hooks
+  if (isTaggedPhoto) {
+    return (
+      <TaggedPhotoBubble
+        message={message}
+        isCurrentUser={isCurrentUser}
+        showTimestamp={showTimestamp}
+        onPress={onPress}
+        reactions={reactions}
+        onReactionPress={onReactionPress}
+        currentUserId={currentUserId}
+        conversationId={conversationId}
       />
     );
   }
