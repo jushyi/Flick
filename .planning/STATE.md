@@ -1,7 +1,7 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 3
-**Current Plan:** 6 of 6 (complete)
+**Current Plan:** 7 of 8 (complete)
 **Last Updated:** 2026-02-24
 
 ## Progress
@@ -10,7 +10,7 @@
 | ------------------------------------------ | ----------------------- | ---------- | ---------- |
 | 1 — Message Infrastructure & Read Receipts | In Progress (2/4 plans) | 2026-02-23 | —          |
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
-| 3 — Snap Messages                          | Complete (6/6 plans)    | 2026-02-24 | 2026-02-24 |
+| 3 — Snap Messages                          | In Progress (7/8 plans) | 2026-02-24 | —          |
 | 4 — Snap Streaks                           | Not Started             | —          | —          |
 | 5 — Photo Tag Integration                  | Not Started             | —          | —          |
 
@@ -75,6 +75,10 @@
 | 2026-02-24 | Snap notification shares Conversation nav handler | snap type returns screen:'Conversation' with autoOpenSnapId param   |
 | 2026-02-24 | Infrastructure configs (TTL, lifecycle) deferred  | Safety nets only; app works without them, user will configure later |
 | 2026-02-24 | Snap camera matches main Camera tab layout        | Supersedes "zoom hidden in snap mode"; full parity minus darkroom   |
+| 2026-02-24 | Dynamic safe area insets for snap footer          | Math.max(insets.bottom, 16) instead of hardcoded 20px               |
+| 2026-02-24 | Polaroid border doubled to 16px                   | 8px too thin on mobile; 16px matches realistic Polaroid proportions |
+| 2026-02-24 | Footer inside KAV for keyboard lift               | Root cause was footer outside KAV causing under-compensation        |
+| 2026-02-24 | Absolute positioning for unread badge             | Prevents flow-based displacement of snap camera shortcut button     |
 
 ## Blockers
 
@@ -121,4 +125,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed quick-27: Fix snap send navigation to return to Conversation instead of MessagesList
+Last activity: 2026-02-24 - Completed 03-07-PLAN.md: Snap UI layout fixes (footer padding, recipient header, Polaroid frame, KAV lift, unread badge)
