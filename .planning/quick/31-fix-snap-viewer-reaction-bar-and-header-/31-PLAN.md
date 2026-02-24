@@ -13,6 +13,7 @@ must_haves:
     - 'Reaction emojis appear inside a single unified bar, not individual circular buttons'
     - 'No sender name visible at the top of the snap viewer'
     - 'X close button remains functional in the top-right corner'
+    - 'Reaction emoji taps trigger haptic feedback and fire onReaction callback'
     - "Reaction bar matches the app's retro CRT dark theme"
   artifacts:
     - path: 'src/components/SnapViewer.js'
@@ -49,7 +50,7 @@ Output: Updated SnapViewer.js with a single-bar reaction row and header showing 
   <name>Task 1: Remove sender name and restyle reaction bar as unified themed bar</name>
   <files>src/components/SnapViewer.js</files>
   <action>
-Make two changes to SnapViewer.js:
+Make three changes to SnapViewer.js:
 
 **1. Remove the sender name from the header:**
 
@@ -66,6 +67,31 @@ Make two changes to SnapViewer.js:
 - Keep the `gap: 12` between emoji buttons (reduce from 16 to tighten spacing within the bar)
 - Keep `marginTop: 20` on the reaction bar for spacing below the Polaroid
 - The result: one dark indigo rounded pill containing all 6 emojis in a row, consistent with the app's `colors.background.tertiary` / `colors.border.default` pattern used elsewhere for pills and controls
+
+**3. Fix reaction taps not working:**
+
+The reaction bar is currently inside the `GestureDetector` wrapping the pan gesture, so the pan gesture intercepts taps before they reach the `GHTouchableOpacity` buttons. Fix by moving the reaction bar OUTSIDE the `GestureDetector` — keep it in the `polaroidContainer` Animated.View but render it after the `GestureDetector` closes, so it still animates with the polaroid on swipe but taps are not intercepted by the pan gesture.
+
+Updated JSX structure:
+
+```jsx
+<Animated.View style={[styles.polaroidContainer, animatedPolaroidStyle]}>
+  <GestureDetector gesture={panGesture}>
+    <View style={styles.polaroid}>
+      {/* photo + caption */}
+    </View>
+  </GestureDetector>
+
+  {/* Reaction bar — OUTSIDE GestureDetector so taps work */}
+  {showReactionBar && (
+    <View style={styles.reactionBar}>
+      {REACTION_EMOJIS.map(...)}
+    </View>
+  )}
+</Animated.View>
+```
+
+Note: `GestureDetector` requires its child to be a single animatable/native view. Since we're removing the reaction bar from inside it, the direct child becomes the `View` (polaroid), which is fine.
 
 **Style values summary:**
 
@@ -98,7 +124,7 @@ reactionEmoji: {
     <automated>cd "C:/Users/maser/Lapse Clone" && npx eslint src/components/SnapViewer.js --quiet</automated>
     <manual>Open a conversation with a snap, view the snap. Verify: (1) No sender name at the top, only the X button; (2) Reaction emojis are in a single dark indigo rounded bar, not separate circles.</manual>
   </verify>
-  <done>Snap viewer shows only X close button at top (no sender name). Reaction emojis appear inside one unified dark-themed bar that matches the app's retro aesthetic. All 6 emojis remain tappable.</done>
+  <done>Snap viewer shows only X close button at top (no sender name). Reaction emojis appear inside one unified dark-themed bar that matches the app's retro aesthetic. All 6 emojis are tappable (reaction bar moved outside GestureDetector).</done>
 </task>
 
 </tasks>
