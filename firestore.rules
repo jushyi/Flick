@@ -420,12 +420,16 @@ service cloud.firestore {
         allow read: if isConversationMemberById(conversationId);
 
         // Create: Only conversation participant, must be the sender
+        // Uses hasAll (not hasOnly) — additional fields are allowed:
+        //   text, gifUrl, imageUrl, replyTo (regular messages)
+        //   snapStoragePath, caption, expiresAt, viewedAt (snap messages)
         allow create: if isConversationMemberById(conversationId) &&
                          request.resource.data.senderId == request.auth.uid &&
                          request.resource.data.keys().hasAll(['senderId', 'type', 'createdAt']);
 
         // Update: Only conversation participants who are NOT the message sender
-        // can update viewedAt and screenshotted fields (for snap read receipts)
+        // can update viewedAt and screenshotted fields
+        // Covers: snap viewedAt (triggers onSnapViewed cleanup), screenshotted detection
         allow update: if isConversationMemberById(conversationId) &&
                          resource.data.senderId != request.auth.uid &&
                          request.resource.data.diff(resource.data).affectedKeys()

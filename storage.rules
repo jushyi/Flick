@@ -36,6 +36,15 @@ service firebase.storage {
                    && request.resource.size < 10 * 1024 * 1024;
     }
 
+    // Snap photos - owner can upload, owner can read directly
+    // Non-owners access snap photos exclusively via getSignedSnapUrl Cloud Function (Admin SDK bypasses rules)
+    match /snap-photos/{userId}/{allPaths=**} {
+      allow write: if isAuthenticated() && isOwner(userId)
+                   && request.resource.contentType.matches('image/(jpeg|png)')
+                   && request.resource.size < 10 * 1024 * 1024;
+      allow read: if isAuthenticated() && isOwner(userId);
+    }
+
     // Comment images - any authenticated user can upload
     match /comment-images/{allPaths=**} {
       allow read: if isAuthenticated();

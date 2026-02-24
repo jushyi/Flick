@@ -2960,6 +2960,63 @@ exports.onNewMessage = functions
     }
   });
 
+// =============================================================================
+// SNAP MESSAGE INFRASTRUCTURE
+// =============================================================================
+//
+// Snap messages use three cleanup mechanisms (in priority order):
+//   1. onSnapViewed (primary) — deletes Storage file immediately when viewed
+//   2. cleanupExpiredSnaps (scheduled) — deletes orphaned snaps every 2 hours
+//   3. Firestore TTL + GCS lifecycle (safety net) — auto-deletes after 24h/7d
+//
+// The following infrastructure requirements must be configured manually.
+// They cannot be deployed via code — they require gcloud CLI or Firebase Console.
+
+/**
+ * INFRASTRUCTURE REQUIREMENT (INFRA-03):
+ * Firestore TTL policy must be configured on the messages collection group:
+ *   Collection group: messages
+ *   TTL field: expiresAt
+ *
+ * Configure via gcloud CLI:
+ *   gcloud firestore fields ttls update expiresAt \
+ *     --collection-group=messages \
+ *     --enable-ttl \
+ *     --project=flick-prod-49615
+ *
+ * Or via Firebase Console:
+ *   Firestore -> Indexes -> TTL Policies -> Create policy
+ *   Collection group ID: messages
+ *   Timestamp field: expiresAt
+ *
+ * NOTE: TTL deletion is NOT instant (can take up to 24h after expiry).
+ * Primary cleanup path is onSnapViewed. TTL is a safety net only.
+ */
+
+/**
+ * INFRASTRUCTURE REQUIREMENT (INFRA-04):
+ * Firebase Storage lifecycle rule on snap-photos/ path:
+ *   Condition: matchesPrefix ["snap-photos/"]
+ *   Action: Delete
+ *   Age: 7 days
+ *
+ * Configure via gsutil:
+ *   gsutil lifecycle set lifecycle.json gs://[bucket-name]
+ *
+ * lifecycle.json:
+ *   {
+ *     "rule": [{
+ *       "action": { "type": "Delete" },
+ *       "condition": { "age": 7, "matchesPrefix": ["snap-photos/"] }
+ *     }]
+ *   }
+ *
+ * Or via GCS Console:
+ *   Cloud Storage -> [bucket] -> Lifecycle -> Add rule
+ *
+ * This is a safety net for orphaned snap photos. Primary cleanup is onSnapViewed.
+ */
+
 /**
  * getSignedSnapUrl - Generate a short-lived signed URL for snap photos
  *
