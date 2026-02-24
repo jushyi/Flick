@@ -42,15 +42,35 @@ async function sendPushNotification(token, title, body, data = {}, userId = null
     // sendPushNotificationsAsync handles rate limiting automatically
     const tickets = await expo.sendPushNotificationsAsync([message]);
 
-    logger.debug('sendPushNotification: Notification sent', {
-      token: token.substring(0, 30) + '...',
-      tickets,
-    });
+    // Log ticket result at info level for production visibility
+    const ticket = tickets.length > 0 ? tickets[0] : null;
+    if (ticket && ticket.status === 'ok') {
+      logger.info('sendPushNotification: Ticket OK', {
+        userId,
+        tokenPrefix: token.substring(0, 30) + '...',
+        ticketId: ticket.id,
+        type: data.type || 'unknown',
+      });
+    } else if (ticket && ticket.status === 'error') {
+      logger.warn('sendPushNotification: Ticket ERROR', {
+        userId,
+        tokenPrefix: token.substring(0, 30) + '...',
+        status: ticket.status,
+        message: ticket.message,
+        details: ticket.details,
+        type: data.type || 'unknown',
+      });
+    } else {
+      logger.warn('sendPushNotification: Unexpected ticket response', {
+        userId,
+        tokenPrefix: token.substring(0, 30) + '...',
+        tickets,
+      });
+    }
 
     // Store pending receipt for later checking (if userId provided)
     // Only store if ticket has id and status is 'ok'
-    if (userId && tickets.length > 0) {
-      const ticket = tickets[0];
+    if (userId && ticket) {
       if (ticket.status === 'ok' && ticket.id) {
         // Fire and forget - don't block on receipt storage
         storePendingReceipt(ticket.id, userId, token).catch(() => {

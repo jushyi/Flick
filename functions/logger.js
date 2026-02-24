@@ -41,9 +41,9 @@ const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
 /**
  * Current log level based on environment
  * - Emulator/Local: Show all logs (DEBUG and above)
- * - Production: Show only WARN and ERROR
+ * - Production: Show INFO and above (needed for push notification pipeline visibility)
  */
-const CURRENT_LOG_LEVEL = isEmulator ? LOG_LEVELS.DEBUG : LOG_LEVELS.WARN;
+const CURRENT_LOG_LEVEL = isEmulator ? LOG_LEVELS.DEBUG : LOG_LEVELS.INFO;
 
 // =============================================================================
 // UTILITY FUNCTIONS
@@ -91,8 +91,9 @@ const debug = (message, data) => {
 };
 
 /**
- * Log info message (emulator/development only)
+ * Log info message (all environments)
  * Use for general informational messages and progress tracking
+ * Visible in Cloud Logging for production debugging (push notifications, receipts, etc.)
  * @param {string} message - Log message (should include function name prefix)
  * @param {any} data - Additional data to log
  */
@@ -101,12 +102,10 @@ const info = (message, data) => {
     return;
   }
 
-  if (isEmulator) {
-    if (data !== undefined) {
-      functions.logger.info(`[INFO] ${message}`, data);
-    } else {
-      functions.logger.info(`[INFO] ${message}`);
-    }
+  if (data !== undefined) {
+    functions.logger.info(`[INFO] ${message}`, data);
+  } else {
+    functions.logger.info(`[INFO] ${message}`);
   }
 };
 

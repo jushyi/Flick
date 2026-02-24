@@ -126,7 +126,10 @@ export const getNotificationToken = async () => {
     );
 
     const token = tokenData.data;
-    logger.debug('Got notification token', { tokenPrefix: token.substring(0, 20) });
+    logger.info('Got notification token', {
+      tokenPrefix: token.substring(0, 25) + '...',
+      projectId: projectId || 'none',
+    });
     return { success: true, data: token };
   } catch (error) {
     logger.error('Error getting notification token', error);
@@ -152,6 +155,18 @@ export const getNotificationToken = async () => {
 export const storeNotificationToken = async (userId, token) => {
   return withTrace('notif/register_token', async () => {
     try {
+      // Check if token changed from what we have locally (detects bundle ID switches, reinstalls)
+      const previousToken = await secureStorage.getItem(STORAGE_KEYS.FCM_TOKEN);
+      const tokenChanged = previousToken && previousToken !== token;
+
+      if (tokenChanged) {
+        logger.warn('Notification token CHANGED - replacing stale token', {
+          userId,
+          oldTokenPrefix: previousToken.substring(0, 25) + '...',
+          newTokenPrefix: token.substring(0, 25) + '...',
+        });
+      }
+
       // Use React Native Firebase Firestore directly (shares auth state with RN Firebase Auth)
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
@@ -159,7 +174,11 @@ export const storeNotificationToken = async (userId, token) => {
         updatedAt: serverTimestamp(),
       });
 
-      logger.info('Notification token stored in Firestore', { userId });
+      logger.info('Notification token stored in Firestore', {
+        userId,
+        tokenPrefix: token.substring(0, 25) + '...',
+        wasRefreshed: tokenChanged,
+      });
 
       // Also store locally in SecureStore for offline access and logout cleanup
       const localStored = await secureStorage.setItem(STORAGE_KEYS.FCM_TOKEN, token);
