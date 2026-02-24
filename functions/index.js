@@ -42,6 +42,13 @@ const TAG_BATCH_BODY_TEMPLATES = [
   'included you in {count} moments',
 ];
 
+/**
+ * Body-only templates for snap messages (push notification)
+ * Title is the sender's name; body is the action phrase without their name.
+ * No emojis per user decision.
+ */
+const SNAP_BODY_TEMPLATES = ['sent you a snap', 'just snapped you', 'New snap'];
+
 // Track pending tags for debouncing: { "taggerId_taggedId": { timeout, photoIds, taggerName, taggerProfilePhotoURL, taggedUserId, fcmToken } }
 const pendingTags = {};
 
@@ -2825,13 +2832,15 @@ exports.onNewMessage = functions
       // 1. Update conversation metadata
       if (shouldUpdateLastMessage) {
         const lastMessagePreview =
-          messageType === 'gif'
-            ? 'Sent a GIF'
-            : messageType === 'image'
-              ? 'Sent a photo'
-              : messageType === 'reaction'
-                ? 'Reacted'
-                : message.text || '';
+          messageType === 'snap'
+            ? null
+            : messageType === 'gif'
+              ? 'Sent a GIF'
+              : messageType === 'image'
+                ? 'Sent a photo'
+                : messageType === 'reaction'
+                  ? 'Reacted'
+                  : message.text || '';
 
         const lastMessageData = {
           text: lastMessagePreview,
@@ -2897,7 +2906,9 @@ exports.onNewMessage = functions
 
         // Build notification body based on message type
         let body;
-        if (messageType === 'reaction' && message.emoji) {
+        if (messageType === 'snap') {
+          body = getRandomTemplate(SNAP_BODY_TEMPLATES);
+        } else if (messageType === 'reaction' && message.emoji) {
           const emojiMap = {
             heart: '\u2764\uFE0F',
             laugh: '\uD83D\uDE02',
@@ -2945,6 +2956,228 @@ exports.onNewMessage = functions
       return null;
     } catch (error) {
       logger.error('onNewMessage: Error', { error: error.message });
+      return null;
+    }
+  });
+
+/**
+ * getSignedSnapUrl - Generate a short-lived signed URL for snap photos
+ *
+ * Validates:
+ * 1. Caller is authenticated
+ * 2. snapStoragePath starts with 'snap-photos/' (rejects all other paths)
+ * 3. Caller is a participant in the conversation (validates via conversationId)
+ * 4. File exists in Storage
+ *
+ * Returns a 5-minute expiry signed URL for ephemeral viewing.
+ */
+exports.getSignedSnapUrl = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async request => {
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    logger.warn('getSignedSnapUrl: Unauthenticated request rejected');
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { snapStoragePath, conversationId } = request.data || {};
+
+  if (!snapStoragePath || typeof snapStoragePath !== 'string') {
+    logger.warn('getSignedSnapUrl: Missing or invalid snapStoragePath', { userId });
+    throw new HttpsError('invalid-argument', 'snapStoragePath is required');
+  }
+
+  if (!snapStoragePath.startsWith('snap-photos/')) {
+    logger.warn('getSignedSnapUrl: Invalid path prefix', { userId, snapStoragePath });
+    throw new HttpsError('invalid-argument', 'Path must start with snap-photos/');
+  }
+
+  // Validate caller is a participant if conversationId provided
+  if (conversationId) {
+    const convDoc = await db.doc(`conversations/${conversationId}`).get();
+    if (convDoc.exists) {
+      const participants = convDoc.data().participants || [];
+      if (!participants.includes(userId)) {
+        logger.warn('getSignedSnapUrl: Caller not a participant', { userId, conversationId });
+        throw new HttpsError('permission-denied', 'You are not a participant in this conversation');
+      }
+    }
+  }
+
+  logger.info('getSignedSnapUrl: Generating signed URL', { userId, snapStoragePath });
+
+  try {
+    const { getStorage } = require('firebase-admin/storage');
+    const bucket = getStorage().bucket();
+    const file = bucket.file(snapStoragePath);
+
+    const [exists] = await file.exists();
+    if (!exists) {
+      logger.warn('getSignedSnapUrl: File not found', { snapStoragePath, userId });
+      throw new HttpsError('not-found', 'Snap photo not found');
+    }
+
+    // 5-minute expiry for ephemeral snap viewing
+    const [url] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'read',
+      expires: Date.now() + 5 * 60 * 1000,
+    });
+
+    logger.info('getSignedSnapUrl: Signed URL generated', { userId, snapStoragePath });
+    return { url };
+  } catch (error) {
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    logger.error('getSignedSnapUrl: Failed to generate signed URL', {
+      error: error.message,
+      userId,
+      snapStoragePath,
+    });
+    throw new HttpsError('internal', 'Failed to generate signed URL');
+  }
+});
+
+/**
+ * onSnapViewed - Delete snap Storage file when a snap message is viewed
+ *
+ * Trigger: conversations/{conversationId}/messages/{messageId} onUpdate
+ * Guards:
+ * - Only fires when message type is 'snap'
+ * - Only fires when viewedAt transitions from null to a timestamp
+ * - Reads snapStoragePath from the updated document
+ *
+ * Deletes the Storage file (best-effort -- logs errors but does not throw).
+ */
+exports.onSnapViewed = functions
+  .runWith({ memory: '256MB', timeoutSeconds: 60 })
+  .firestore.document('conversations/{conversationId}/messages/{messageId}')
+  .onUpdate(async (change, context) => {
+    const { conversationId, messageId } = context.params;
+    const before = change.before.data();
+    const after = change.after.data();
+
+    // Guard: only process snap messages
+    if (after.type !== 'snap') {
+      return null;
+    }
+
+    // Guard: only fire on viewedAt transition from null to a timestamp
+    if (before.viewedAt !== null || after.viewedAt === null) {
+      return null;
+    }
+
+    const snapStoragePath = after.snapStoragePath;
+    if (!snapStoragePath) {
+      logger.warn('onSnapViewed: Missing snapStoragePath', { conversationId, messageId });
+      return null;
+    }
+
+    logger.info('onSnapViewed: Snap viewed, deleting Storage file', {
+      conversationId,
+      messageId,
+      snapStoragePath,
+    });
+
+    try {
+      const { getStorage } = require('firebase-admin/storage');
+      const bucket = getStorage().bucket();
+      await bucket.file(snapStoragePath).delete();
+
+      logger.info('onSnapViewed: Storage file deleted', { snapStoragePath });
+    } catch (error) {
+      // Best-effort cleanup -- log but don't throw
+      logger.error('onSnapViewed: Failed to delete Storage file', {
+        snapStoragePath,
+        error: error.message,
+      });
+    }
+
+    return null;
+  });
+
+/**
+ * cleanupExpiredSnaps - Scheduled function to delete orphaned snap messages
+ *
+ * Runs every 2 hours. Finds snap messages where:
+ * - type == 'snap'
+ * - expiresAt <= now (past expiry)
+ * - viewedAt == null (never viewed, so onSnapViewed never fired)
+ *
+ * For each matching message:
+ * 1. Deletes the Storage file (if it exists)
+ * 2. Deletes the Firestore message document
+ *
+ * Limited to 100 messages per run to avoid timeout.
+ */
+exports.cleanupExpiredSnaps = functions
+  .runWith({ memory: '512MB', timeoutSeconds: 120 })
+  .pubsub.schedule('every 2 hours')
+  .onRun(async () => {
+    logger.info('cleanupExpiredSnaps: Starting cleanup run');
+
+    try {
+      const now = admin.firestore.Timestamp.now();
+
+      // Collection group query across all conversations' messages subcollections
+      const expiredSnaps = await db
+        .collectionGroup('messages')
+        .where('type', '==', 'snap')
+        .where('viewedAt', '==', null)
+        .where('expiresAt', '<=', now)
+        .limit(100)
+        .get();
+
+      if (expiredSnaps.empty) {
+        logger.info('cleanupExpiredSnaps: No expired snaps found');
+        return null;
+      }
+
+      logger.info('cleanupExpiredSnaps: Found expired snaps', { count: expiredSnaps.size });
+
+      const { getStorage } = require('firebase-admin/storage');
+      const bucket = getStorage().bucket();
+      let deletedCount = 0;
+
+      for (const doc of expiredSnaps.docs) {
+        const data = doc.data();
+        const snapStoragePath = data.snapStoragePath;
+
+        // Delete Storage file if path exists
+        if (snapStoragePath) {
+          try {
+            const [exists] = await bucket.file(snapStoragePath).exists();
+            if (exists) {
+              await bucket.file(snapStoragePath).delete();
+            }
+          } catch (storageError) {
+            logger.warn('cleanupExpiredSnaps: Failed to delete Storage file', {
+              snapStoragePath,
+              error: storageError.message,
+            });
+          }
+        }
+
+        // Delete the Firestore message document
+        try {
+          await doc.ref.delete();
+          deletedCount++;
+        } catch (firestoreError) {
+          logger.warn('cleanupExpiredSnaps: Failed to delete message doc', {
+            docPath: doc.ref.path,
+            error: firestoreError.message,
+          });
+        }
+      }
+
+      logger.info('cleanupExpiredSnaps: Cleanup complete', {
+        processed: expiredSnaps.size,
+        deleted: deletedCount,
+      });
+
+      return null;
+    } catch (error) {
+      logger.error('cleanupExpiredSnaps: Error', { error: error.message });
       return null;
     }
   });
