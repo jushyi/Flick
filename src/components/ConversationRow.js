@@ -181,6 +181,8 @@ const ConversationRow = ({
 
       <View style={styles.rightColumn}>
         <View style={styles.rightTopRow}>
+          <UnreadBadge count={unreadCount} isSnap={isSnapLastMessage && hasUnread} />
+          <Text style={styles.timestamp}>{formatMessageTime(updatedAt)}</Text>
           {onSnapCamera && (
             <TouchableOpacity
               style={styles.snapCameraButton}
@@ -191,8 +193,6 @@ const ConversationRow = ({
               <PixelIcon name="snap-polaroid" size={18} color={SNAP_AMBER} />
             </TouchableOpacity>
           )}
-          <UnreadBadge count={unreadCount} isSnap={isSnapLastMessage && hasUnread} />
-          <Text style={styles.timestamp}>{formatMessageTime(updatedAt)}</Text>
         </View>
       </View>
     </TouchableOpacity>
