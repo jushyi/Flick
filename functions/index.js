@@ -2818,27 +2818,35 @@ exports.onNewMessage = functions
           logger.debug('onNewMessage: Reaction removal sentinel, skipping', { conversationId });
           return null;
         }
-        // Reactions: send notification but do NOT update conversation preview or unread count
-        shouldUpdateLastMessage = false;
+        // Reactions: update conversation preview but do NOT increment unread count
         shouldIncrementUnread = false;
       }
 
-      // 1. Update conversation metadata (skip for reactions)
+      // 1. Update conversation metadata
       if (shouldUpdateLastMessage) {
         const lastMessagePreview =
           messageType === 'gif'
             ? 'Sent a GIF'
             : messageType === 'image'
               ? 'Sent a photo'
-              : message.text || '';
+              : messageType === 'reaction'
+                ? 'Reacted'
+                : message.text || '';
+
+        const lastMessageData = {
+          text: lastMessagePreview,
+          senderId: senderId,
+          timestamp: message.createdAt,
+          type: messageType,
+        };
+
+        // Include emoji key for reaction messages so client can resolve display character
+        if (messageType === 'reaction' && message.emoji) {
+          lastMessageData.emoji = message.emoji;
+        }
 
         const updateData = {
-          lastMessage: {
-            text: lastMessagePreview,
-            senderId: senderId,
-            timestamp: message.createdAt,
-            type: messageType,
-          },
+          lastMessage: lastMessageData,
           updatedAt: message.createdAt,
         };
 
