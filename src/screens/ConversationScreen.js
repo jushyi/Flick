@@ -625,8 +625,6 @@ const ConversationScreen = () => {
           replyToMessage={replyToMessage}
           replyToSenderName={replyToSenderName}
           onCancelReply={cancelReply}
-          streakState={streakState}
-          streakDayCount={streakDayCount}
         />
       </KeyboardAvoidingView>
 

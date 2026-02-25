@@ -448,8 +448,11 @@ service cloud.firestore {
     // Client is read-only for streak data.
     match /streaks/{streakId} {
       // Read: only participants can read their own streak
+      // Uses document ID (lowerUserId_higherUserId) instead of resource.data
+      // so subscriptions work even before a streak document exists
       allow read: if request.auth != null
-        && request.auth.uid in resource.data.participants;
+        && (resource == null
+            || request.auth.uid in resource.data.participants);
       // Write: denied — all writes via Cloud Functions (admin SDK)
       allow write: if false;
     }

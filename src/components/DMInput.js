@@ -34,7 +34,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { openGifPicker, useGifSelection } from './comments/GifPicker';
 
 import PixelIcon from './PixelIcon';
-import StreakIndicator from './StreakIndicator';
 import ReplyPreview from './ReplyPreview';
 
 import { uploadCommentImage } from '../services/firebase/storageService';
@@ -55,8 +54,6 @@ const DMInput = ({
   replyToMessage = null,
   replyToSenderName = '',
   onCancelReply,
-  streakState = 'default',
-  streakDayCount = 0,
 }) => {
   const [text, setText] = useState('');
   const [selectedMedia, setSelectedMedia] = useState(null); // { uri, type: 'image' | 'gif' }
@@ -317,7 +314,7 @@ const DMInput = ({
               onPress={onOpenSnapCamera}
               testID="camera-button"
             >
-              <StreakIndicator streakState={streakState} dayCount={streakDayCount} size={22} />
+              <PixelIcon name="snap-polaroid" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           </Animated.View>
         ) : null}

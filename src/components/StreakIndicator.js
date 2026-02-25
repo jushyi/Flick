@@ -30,28 +30,15 @@ const StreakIndicator = ({ streakState = 'default', dayCount = 0, size = 18 }) =
   const iconColor = getStreakColor(streakState, dayCount);
   const showOverlay = streakState === 'active' || streakState === 'warning';
   const overlayText = streakState === 'warning' ? '!' : String(dayCount);
-  const fontSize =
-    overlayText.length > 2 ? size * 0.3 : overlayText.length > 1 ? size * 0.35 : size * 0.4;
+  const fontSize = size * 0.6;
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View style={styles.container}>
       <PixelIcon name="snap-polaroid" size={size} color={iconColor} />
       {showOverlay && (
-        <View style={styles.overlayContainer}>
-          <Text
-            style={[
-              styles.overlayText,
-              {
-                fontSize,
-                lineHeight: fontSize * 1.2,
-                color: '#FFFFFF',
-              },
-            ]}
-            allowFontScaling={false}
-          >
-            {overlayText}
-          </Text>
-        </View>
+        <Text style={[styles.countText, { fontSize, color: iconColor }]} allowFontScaling={false}>
+          {overlayText}
+        </Text>
       )}
     </View>
   );
@@ -59,19 +46,13 @@ const StreakIndicator = ({ streakState = 'default', dayCount = 0, size = 18 }) =
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  overlayContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  overlayText: {
-    fontFamily: typography.fontFamily.body, // Silkscreen
-    fontWeight: 'bold',
+  countText: {
+    fontFamily: typography.fontFamily.body,
     textAlign: 'center',
+    marginTop: 1,
+    backgroundColor: 'transparent',
   },
 });
 
