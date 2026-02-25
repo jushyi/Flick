@@ -1,8 +1,8 @@
 # Project State: Flick Messaging Upgrade
 
 **Current Phase:** 05
-**Current Plan:** Not started
-**Last Updated:** 2026-02-24
+**Current Plan:** Complete (4/4)
+**Last Updated:** 2026-02-25
 
 ## Progress
 
@@ -12,7 +12,7 @@
 | 2 — Message Interactions                   | Complete (6/6 plans)    | 2026-02-23 | 2026-02-24 |
 | 3 — Snap Messages                          | Complete (8/8 plans)    | 2026-02-24 | 2026-02-24 |
 | 4 — Snap Streaks                           | Complete (4/4 plans)    | 2026-02-24 | 2026-02-24 |
-| 5 — Photo Tag Integration                  | Complete (3/3 plans)    | 2026-02-24 | 2026-02-24 |
+| 5 — Photo Tag Integration                  | Complete (4/4 plans)    | 2026-02-24 | 2026-02-25 |
 
 ## Requirements Coverage
 
@@ -105,6 +105,9 @@
 | 2026-02-24 | useRoute for taggedPhotoContext in PhotoDetailScreen     | Route params from ConversationScreen, not PhotoDetailContext                  |
 | 2026-02-24 | image-outline PixelIcon for Add to feed button           | No add-circle-outline available; image-outline fits the action                |
 | 2026-02-24 | tagged/tagged_photo notifications route to Conversation  | Phase 5 migration from Activity screen routing                                |
+| 2026-02-25 | Transparent card styling for tagged photo bubbles        | Removed teal accent; matches reply/media bubble pattern                       |
+| 2026-02-25 | openPhotoDetail before navigate for DM photo views       | Context must be populated before PhotoDetail screen reads it                  |
+| 2026-02-25 | contextAvatarPress for all PhotoDetail profile nav       | ProfileFromPhotoDetail fullScreenModal renders above transparent modal        |
 
 ## Blockers
 
@@ -157,4 +160,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-24 - Completed 05-03-PLAN.md: Attribution display on FeedPhotoCard and PhotoDetailScreen, Add to feed button, tagged_photo notification routing to Conversation, 12 new tests
+Last activity: 2026-02-25 - Completed 05-04-PLAN.md: UAT gap closure - transparent TaggedPhotoBubble card, PhotoDetail context navigation, attribution profile nav via fullScreenModal
