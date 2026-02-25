@@ -67,12 +67,13 @@ Plans:
 7. Failed image loads auto-skip to the next photo after 5 seconds
 8. New photos generate a thumbnail at upload time for progressive loading
 
-**Plans:** 3 plans
+**Plans:** 4 plans
 
 Plans:
 
+- [ ] 07-00-PLAN.md — Wave 0: Test scaffolds for Phase 7 behaviors (RED tests)
 - [ ] 07-01-PLAN.md — Feed story card pagination + thumbnail generation at upload
-- [ ] 07-02-PLAN.md — Cube transition Reanimated migration (SharedValue + Gesture Handler)
+- [ ] 07-02-PLAN.md — Cube transition Reanimated migration (SharedValue + Gesture Handler) + Android back button dismiss
 - [ ] 07-03-PLAN.md — Progressive loading + dark loading states + subscription management + auto-skip + prefetching
 
 ### Phase 8: Screenshot Detection
