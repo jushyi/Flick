@@ -40,6 +40,7 @@ import ReanimatedModule, {
   Easing as ReanimatedEasing,
   runOnJS,
 } from 'react-native-reanimated';
+import { GestureDetector } from 'react-native-gesture-handler';
 import PixelIcon from '../components/PixelIcon';
 import StrokedNameText from '../components/StrokedNameText';
 import EmojiPicker from 'rn-emoji-keyboard';
@@ -510,6 +511,9 @@ const PhotoDetailScreen = () => {
 
     // Comments visibility (for disabling swipe-to-dismiss during comment scroll)
     updateCommentsVisible,
+
+    // Horizontal gesture for friend-to-friend swipe (Gesture.Pan)
+    horizontalGesture,
   } = usePhotoDetailModal({
     mode: contextMode,
     photo: contextPhoto,
@@ -1008,334 +1012,344 @@ const PhotoDetailScreen = () => {
         }}
       >
         {/* Main content wrapper - incoming face during cube transition (Reanimated) */}
-        <ReanimatedView style={[styles.contentWrapper, incomingCubeStyle]}>
-          {/* Header with close button */}
-          <View style={styles.header}>
-            <View style={styles.headerSpacer} />
-            <TouchableOpacity onPress={animatedClose} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Photo - TouchableWithoutFeedback for swipe-to-close gesture support */}
-          <TouchableWithoutFeedback
-            onPress={
-              isEditingCaption
-                ? () => {
-                    Keyboard.dismiss();
-                    handleSaveCaption();
-                  }
-                : contextMode === 'stories'
-                  ? handleTapNavigation
-                  : undefined
-            }
-          >
-            <View style={styles.photoScrollView}>
-              <Image
-                source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
-                style={styles.photo}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-                transition={0}
-                onLoadStart={handleImageLoadStart}
-                onLoadEnd={handleImageLoadEnd}
-              />
-              {imageLoading && (
-                <ActivityIndicator
-                  size="small"
-                  color="rgba(255, 255, 255, 0.6)"
-                  style={localStyles.imageLoadingSpinner}
-                />
-              )}
-            </View>
-          </TouchableWithoutFeedback>
-
-          {/* Profile photo - overlapping top left of photo, tappable to navigate to profile */}
-          <TouchableOpacity
-            style={styles.profilePicContainer}
-            onPress={handleAvatarPress}
-            activeOpacity={isOwnPhoto ? 1 : 0.7}
-            disabled={isOwnPhoto}
-          >
-            {profilePhotoURL ? (
-              <Image
-                source={{
-                  uri: profilePhotoURL,
-                  cacheKey: profileCacheKey(`profile-${currentPhoto?.userId}`, profilePhotoURL),
-                }}
-                style={styles.profilePic}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-                transition={0}
-              />
-            ) : (
-              <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
-                <Text style={styles.profilePicText}>{displayName?.[0]?.toUpperCase() || '?'}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* User info + caption - bottom left of photo */}
-          <View
-            style={[
-              styles.userInfoOverlay,
-              {
-                bottom:
-                  isEditingCaption && keyboardHeight > 0
-                    ? keyboardHeight + 16
-                    : (contextMode === 'stories' ? 110 : 100) +
-                      (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0),
-              },
-            ]}
-          >
-            <View style={styles.userInfoRow}>
-              <StrokedNameText
-                style={styles.displayName}
-                nameColor={currentPhoto?.user?.nameColor}
-                numberOfLines={1}
-              >
-                {displayName || 'Unknown User'}
-              </StrokedNameText>
-              <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
-            </View>
-            {currentPhoto?.attribution && (
-              <TouchableOpacity
-                onPress={() =>
-                  handlePhotographerPress(
-                    currentPhoto.attribution.photographerId,
-                    currentPhoto.attribution.photographerDisplayName
-                  )
-                }
-                activeOpacity={0.7}
-                style={localStyles.attributionRow}
-              >
-                <PixelIcon name="camera" size={14} color={colors.text.tertiary} />
-                <Text style={localStyles.attributionText}>
-                  Photo by @{currentPhoto.attribution.photographerUsername}
-                </Text>
+        <GestureDetector gesture={horizontalGesture}>
+          <ReanimatedView style={[styles.contentWrapper, incomingCubeStyle]}>
+            {/* Header with close button */}
+            <View style={styles.header}>
+              <View style={styles.headerSpacer} />
+              <TouchableOpacity onPress={animatedClose} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
-            )}
-            {isEditingCaption ? (
-              <View style={localStyles.captionEditRow}>
-                <TextInput
-                  ref={captionInputRef}
-                  style={[styles.captionEditInput, { flex: 1 }]}
-                  value={captionText}
-                  onChangeText={text => setCaptionText(text.slice(0, 100))}
-                  onBlur={handleSaveCaption}
-                  onEndEditing={handleSaveCaption}
-                  maxLength={100}
-                  multiline
-                  scrollEnabled={false}
-                  keyboardAppearance="dark"
-                  cursorColor={colors.interactive.primary}
-                  selectionColor={colors.interactive.primary}
-                  placeholder="Add a caption..."
-                  placeholderTextColor={colors.text.tertiary}
+            </View>
+
+            {/* Photo - TouchableWithoutFeedback for swipe-to-close gesture support */}
+            <TouchableWithoutFeedback
+              onPress={
+                isEditingCaption
+                  ? () => {
+                      Keyboard.dismiss();
+                      handleSaveCaption();
+                    }
+                  : contextMode === 'stories'
+                    ? handleTapNavigation
+                    : undefined
+              }
+            >
+              <View style={styles.photoScrollView}>
+                <Image
+                  source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
+                  style={styles.photo}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={0}
+                  onLoadStart={handleImageLoadStart}
+                  onLoadEnd={handleImageLoadEnd}
                 />
-                <TouchableOpacity
-                  style={localStyles.captionDoneButton}
-                  onPress={() => {
-                    Keyboard.dismiss();
-                    handleSaveCaption();
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <PixelIcon name="checkmark" size={18} color={colors.text.primary} />
-                </TouchableOpacity>
+                {imageLoading && (
+                  <ActivityIndicator
+                    size="small"
+                    color="rgba(255, 255, 255, 0.6)"
+                    style={localStyles.imageLoadingSpinner}
+                  />
+                )}
               </View>
-            ) : currentPhoto?.caption ? (
-              <Text style={styles.captionText} numberOfLines={3}>
-                {currentPhoto.caption}
-              </Text>
-            ) : null}
-          </View>
+            </TouchableWithoutFeedback>
 
-          {/* Tag button - visible for owner always, non-owner only when tags exist */}
-          {(isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
+            {/* Profile photo - overlapping top left of photo, tappable to navigate to profile */}
             <TouchableOpacity
-              style={[
-                styles.tagButton,
-                Platform.OS === 'android' && { bottom: styles.tagButton.bottom + insets.bottom },
-              ]}
-              onPress={() => {
-                if (isOwnPhoto) {
-                  setTagModalVisible(true);
-                } else {
-                  setTaggedPeopleModalVisible(true);
-                }
-              }}
-              activeOpacity={0.7}
+              style={styles.profilePicContainer}
+              onPress={handleAvatarPress}
+              activeOpacity={isOwnPhoto ? 1 : 0.7}
+              disabled={isOwnPhoto}
             >
-              <PixelIcon
-                name={isOwnPhoto ? 'person-add-outline' : 'people-outline'}
-                size={18}
-                color={colors.text.primary}
-              />
+              {profilePhotoURL ? (
+                <Image
+                  source={{
+                    uri: profilePhotoURL,
+                    cacheKey: profileCacheKey(`profile-${currentPhoto?.userId}`, profilePhotoURL),
+                  }}
+                  style={styles.profilePic}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={0}
+                />
+              ) : (
+                <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
+                  <Text style={styles.profilePicText}>
+                    {displayName?.[0]?.toUpperCase() || '?'}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
-          )}
 
-          {/* Photo menu button */}
-          {menuOptions.length > 0 && (
-            <TouchableOpacity
-              style={[
-                styles.photoMenuButton,
-                Platform.OS === 'android' && {
-                  bottom: styles.photoMenuButton.bottom + insets.bottom,
-                },
-              ]}
-              onPress={() => setShowPhotoMenu(true)}
-              onLayout={handleMenuButtonLayout}
-              activeOpacity={0.7}
-            >
-              <PixelIcon name="ellipsis-vertical" size={28} color={colors.text.primary} />
-            </TouchableOpacity>
-          )}
-
-          {/* Add to feed button - visible when viewing tagged photo as recipient */}
-          {showAddToFeedButton && (
+            {/* User info + caption - bottom left of photo */}
             <View
               style={[
-                localStyles.addToFeedContainer,
-                Platform.OS === 'android' && { bottom: 150 + insets.bottom },
+                styles.userInfoOverlay,
+                {
+                  bottom:
+                    isEditingCaption && keyboardHeight > 0
+                      ? keyboardHeight + 16
+                      : (contextMode === 'stories' ? 110 : 100) +
+                        (Platform.OS === 'android' ? Math.max(0, insets.bottom - 8) : 0),
+                },
               ]}
             >
+              <View style={styles.userInfoRow}>
+                <StrokedNameText
+                  style={styles.displayName}
+                  nameColor={currentPhoto?.user?.nameColor}
+                  numberOfLines={1}
+                >
+                  {displayName || 'Unknown User'}
+                </StrokedNameText>
+                <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
+              </View>
+              {currentPhoto?.attribution && (
+                <TouchableOpacity
+                  onPress={() =>
+                    handlePhotographerPress(
+                      currentPhoto.attribution.photographerId,
+                      currentPhoto.attribution.photographerDisplayName
+                    )
+                  }
+                  activeOpacity={0.7}
+                  style={localStyles.attributionRow}
+                >
+                  <PixelIcon name="camera" size={14} color={colors.text.tertiary} />
+                  <Text style={localStyles.attributionText}>
+                    Photo by @{currentPhoto.attribution.photographerUsername}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {isEditingCaption ? (
+                <View style={localStyles.captionEditRow}>
+                  <TextInput
+                    ref={captionInputRef}
+                    style={[styles.captionEditInput, { flex: 1 }]}
+                    value={captionText}
+                    onChangeText={text => setCaptionText(text.slice(0, 100))}
+                    onBlur={handleSaveCaption}
+                    onEndEditing={handleSaveCaption}
+                    maxLength={100}
+                    multiline
+                    scrollEnabled={false}
+                    keyboardAppearance="dark"
+                    cursorColor={colors.interactive.primary}
+                    selectionColor={colors.interactive.primary}
+                    placeholder="Add a caption..."
+                    placeholderTextColor={colors.text.tertiary}
+                  />
+                  <TouchableOpacity
+                    style={localStyles.captionDoneButton}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      handleSaveCaption();
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <PixelIcon name="checkmark" size={18} color={colors.text.primary} />
+                  </TouchableOpacity>
+                </View>
+              ) : currentPhoto?.caption ? (
+                <Text style={styles.captionText} numberOfLines={3}>
+                  {currentPhoto.caption}
+                </Text>
+              ) : null}
+            </View>
+
+            {/* Tag button - visible for owner always, non-owner only when tags exist */}
+            {(isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
               <TouchableOpacity
                 style={[
-                  localStyles.addToFeedButton,
-                  (hasAddedToFeed || isAddingToFeed) && localStyles.addToFeedButtonDisabled,
+                  styles.tagButton,
+                  Platform.OS === 'android' && { bottom: styles.tagButton.bottom + insets.bottom },
                 ]}
-                onPress={handleAddToFeed}
-                disabled={hasAddedToFeed || isAddingToFeed}
+                onPress={() => {
+                  if (isOwnPhoto) {
+                    setTagModalVisible(true);
+                  } else {
+                    setTaggedPeopleModalVisible(true);
+                  }
+                }}
                 activeOpacity={0.7}
               >
                 <PixelIcon
-                  name="image-outline"
-                  size={16}
-                  color={hasAddedToFeed ? 'rgba(10, 10, 26, 0.5)' : '#0A0A1A'}
+                  name={isOwnPhoto ? 'person-add-outline' : 'people-outline'}
+                  size={18}
+                  color={colors.text.primary}
                 />
-                <Text
-                  style={[
-                    localStyles.addToFeedText,
-                    hasAddedToFeed && localStyles.addToFeedTextDisabled,
-                  ]}
-                >
-                  {isAddingToFeed ? 'Adding...' : hasAddedToFeed ? 'Added to feed' : 'Add to feed'}
-                </Text>
               </TouchableOpacity>
-            </View>
-          )}
+            )}
 
-          {/* Progress bar - stories mode only */}
-          {showProgressBar && totalPhotos > 0 && (
-            <ScrollView
-              ref={progressScrollRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              scrollEnabled={needsScroll}
-              style={styles.progressBarScrollView}
-              contentContainerStyle={styles.progressBarContainer}
-            >
-              {Array.from({ length: totalPhotos }).map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.progressSegment,
-                    { width: segmentWidth },
-                    index <= currentIndex
-                      ? styles.progressSegmentActive
-                      : styles.progressSegmentInactive,
-                  ]}
-                />
-              ))}
-            </ScrollView>
-          )}
+            {/* Photo menu button */}
+            {menuOptions.length > 0 && (
+              <TouchableOpacity
+                style={[
+                  styles.photoMenuButton,
+                  Platform.OS === 'android' && {
+                    bottom: styles.photoMenuButton.bottom + insets.bottom,
+                  },
+                ]}
+                onPress={() => setShowPhotoMenu(true)}
+                onLayout={handleMenuButtonLayout}
+                activeOpacity={0.7}
+              >
+                <PixelIcon name="ellipsis-vertical" size={28} color={colors.text.primary} />
+              </TouchableOpacity>
+            )}
 
-          {/* Footer - Comment Input + Emoji Pills (hidden when caption keyboard is open) */}
-          <View
-            style={[
-              styles.footer,
-              Platform.OS === 'android' && {
-                paddingBottom: styles.footer.paddingBottom + insets.bottom,
-              },
-              isEditingCaption && keyboardHeight > 0 && { opacity: 0 },
-            ]}
-            pointerEvents={isEditingCaption && keyboardHeight > 0 ? 'none' : 'auto'}
-          >
-            {/* Comment input trigger - left side */}
-            <TouchableOpacity
-              style={styles.commentInputTrigger}
-              onPress={() => setShowComments(true)}
-              activeOpacity={0.8}
-            >
-              <PixelIcon name="chatbubble-outline" size={16} color={colors.text.secondary} />
-              <Text style={styles.commentInputTriggerText} numberOfLines={1}>
-                {currentPhoto?.commentCount > 0
-                  ? `${currentPhoto.commentCount} comment${currentPhoto.commentCount === 1 ? '' : 's'}`
-                  : 'Add a comment...'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Emoji pills - right side */}
-            <ScrollView
-              ref={emojiScrollRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.emojiPickerContainer}
-              style={[styles.emojiPickerScrollView, contextIsOwnStory && styles.disabledEmojiRow]}
-            >
-              {orderedEmojis.map(emoji => {
-                const totalCount = groupedReactions[emoji] || 0;
-                const userCount = getUserReactionCount(emoji);
-                const isSelected = userCount > 0;
-                const isNewlyAdded = emoji === newlyAddedEmoji;
-
-                // For own stories, render as non-interactive View
-                if (contextIsOwnStory) {
-                  return (
-                    <View key={emoji} style={{ position: 'relative' }}>
-                      <View style={[styles.emojiPill, isSelected && styles.emojiPillSelected]}>
-                        <Text style={styles.emojiPillEmoji}>{emoji}</Text>
-                        {totalCount > 0 && <Text style={styles.emojiPillCount}>{totalCount}</Text>}
-                      </View>
-                    </View>
-                  );
-                }
-
-                return (
-                  <View key={emoji} style={{ position: 'relative' }}>
-                    <TouchableOpacity
-                      style={[styles.emojiPill, isSelected && styles.emojiPillSelected]}
-                      onPress={() => handleEmojiPress(emoji)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.emojiPillEmoji}>{emoji}</Text>
-                      {totalCount > 0 && <Text style={styles.emojiPillCount}>{totalCount}</Text>}
-                    </TouchableOpacity>
-                    {/* Purple highlight overlay that fades out */}
-                    {isNewlyAdded && (
-                      <Animated.View
-                        pointerEvents="none"
-                        style={[styles.emojiHighlightOverlay, { opacity: highlightOpacity }]}
-                      />
-                    )}
-                  </View>
-                );
-              })}
-
-              {/* Add custom emoji button - hidden for own stories */}
-              {!contextIsOwnStory && (
+            {/* Add to feed button - visible when viewing tagged photo as recipient */}
+            {showAddToFeedButton && (
+              <View
+                style={[
+                  localStyles.addToFeedContainer,
+                  Platform.OS === 'android' && { bottom: 150 + insets.bottom },
+                ]}
+              >
                 <TouchableOpacity
-                  style={[styles.emojiPill, styles.addEmojiButton]}
-                  onPress={handleOpenEmojiPicker}
+                  style={[
+                    localStyles.addToFeedButton,
+                    (hasAddedToFeed || isAddingToFeed) && localStyles.addToFeedButtonDisabled,
+                  ]}
+                  onPress={handleAddToFeed}
+                  disabled={hasAddedToFeed || isAddingToFeed}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.addEmojiText}>+</Text>
+                  <PixelIcon
+                    name="image-outline"
+                    size={16}
+                    color={hasAddedToFeed ? 'rgba(10, 10, 26, 0.5)' : '#0A0A1A'}
+                  />
+                  <Text
+                    style={[
+                      localStyles.addToFeedText,
+                      hasAddedToFeed && localStyles.addToFeedTextDisabled,
+                    ]}
+                  >
+                    {isAddingToFeed
+                      ? 'Adding...'
+                      : hasAddedToFeed
+                        ? 'Added to feed'
+                        : 'Add to feed'}
+                  </Text>
                 </TouchableOpacity>
-              )}
-            </ScrollView>
-          </View>
-        </ReanimatedView>
+              </View>
+            )}
+
+            {/* Progress bar - stories mode only */}
+            {showProgressBar && totalPhotos > 0 && (
+              <ScrollView
+                ref={progressScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                scrollEnabled={needsScroll}
+                style={styles.progressBarScrollView}
+                contentContainerStyle={styles.progressBarContainer}
+              >
+                {Array.from({ length: totalPhotos }).map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.progressSegment,
+                      { width: segmentWidth },
+                      index <= currentIndex
+                        ? styles.progressSegmentActive
+                        : styles.progressSegmentInactive,
+                    ]}
+                  />
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Footer - Comment Input + Emoji Pills (hidden when caption keyboard is open) */}
+            <View
+              style={[
+                styles.footer,
+                Platform.OS === 'android' && {
+                  paddingBottom: styles.footer.paddingBottom + insets.bottom,
+                },
+                isEditingCaption && keyboardHeight > 0 && { opacity: 0 },
+              ]}
+              pointerEvents={isEditingCaption && keyboardHeight > 0 ? 'none' : 'auto'}
+            >
+              {/* Comment input trigger - left side */}
+              <TouchableOpacity
+                style={styles.commentInputTrigger}
+                onPress={() => setShowComments(true)}
+                activeOpacity={0.8}
+              >
+                <PixelIcon name="chatbubble-outline" size={16} color={colors.text.secondary} />
+                <Text style={styles.commentInputTriggerText} numberOfLines={1}>
+                  {currentPhoto?.commentCount > 0
+                    ? `${currentPhoto.commentCount} comment${currentPhoto.commentCount === 1 ? '' : 's'}`
+                    : 'Add a comment...'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Emoji pills - right side */}
+              <ScrollView
+                ref={emojiScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.emojiPickerContainer}
+                style={[styles.emojiPickerScrollView, contextIsOwnStory && styles.disabledEmojiRow]}
+              >
+                {orderedEmojis.map(emoji => {
+                  const totalCount = groupedReactions[emoji] || 0;
+                  const userCount = getUserReactionCount(emoji);
+                  const isSelected = userCount > 0;
+                  const isNewlyAdded = emoji === newlyAddedEmoji;
+
+                  // For own stories, render as non-interactive View
+                  if (contextIsOwnStory) {
+                    return (
+                      <View key={emoji} style={{ position: 'relative' }}>
+                        <View style={[styles.emojiPill, isSelected && styles.emojiPillSelected]}>
+                          <Text style={styles.emojiPillEmoji}>{emoji}</Text>
+                          {totalCount > 0 && (
+                            <Text style={styles.emojiPillCount}>{totalCount}</Text>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  }
+
+                  return (
+                    <View key={emoji} style={{ position: 'relative' }}>
+                      <TouchableOpacity
+                        style={[styles.emojiPill, isSelected && styles.emojiPillSelected]}
+                        onPress={() => handleEmojiPress(emoji)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.emojiPillEmoji}>{emoji}</Text>
+                        {totalCount > 0 && <Text style={styles.emojiPillCount}>{totalCount}</Text>}
+                      </TouchableOpacity>
+                      {/* Purple highlight overlay that fades out */}
+                      {isNewlyAdded && (
+                        <Animated.View
+                          pointerEvents="none"
+                          style={[styles.emojiHighlightOverlay, { opacity: highlightOpacity }]}
+                        />
+                      )}
+                    </View>
+                  );
+                })}
+
+                {/* Add custom emoji button - hidden for own stories */}
+                {!contextIsOwnStory && (
+                  <TouchableOpacity
+                    style={[styles.emojiPill, styles.addEmojiButton]}
+                    onPress={handleOpenEmojiPicker}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.addEmojiText}>+</Text>
+                  </TouchableOpacity>
+                )}
+              </ScrollView>
+            </View>
+          </ReanimatedView>
+        </GestureDetector>
 
         {/* Outgoing cube face - always rendered, naturally hidden at cubeProgress=1
            (off-screen left + rotated -90deg). Reanimated reveals it instantly
