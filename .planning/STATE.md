@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 6 of 9 (Tech Debt & Darkroom Optimization)
+Phase: 6 of 10 (Tech Debt & Darkroom Optimization)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
 Last activity: 2026-02-25 — Roadmap created for v1.1
@@ -50,10 +50,15 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 
 **Open blockers:** None
 
+### Roadmap Evolution
+
+- Phase 10 added: Performance enhancements to story viewing
+- Phases reordered: Performance moved to Phase 7, Screenshot Detection→8, Pinned iOS→9, Pinned Android→10
+
 **Key notes for v1.1:**
 
 - Phase 6 is OTA-deployable (no native build needed)
-- Phases 7-9 share a single EAS native build (expo-screen-capture + expo-live-activity)
+- Phases 8-10 share a single EAS native build (expo-screen-capture + expo-live-activity)
 - expo-live-activity is early-stage (MEDIUM confidence) — Voltra is documented fallback
 - PINI features use App Groups workaround for photo thumbnails in Live Activities
 
