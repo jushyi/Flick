@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 Messaging Upgrade** — Phases 1-5 (shipped 2026-02-25)
-- 🚧 **v1.1 Pinned Snaps & Polish** — Phases 6-9 (in progress)
+- 🚧 **v1.1 Pinned Snaps & Polish** — Phases 6-10 (in progress)
 
 ## Phases
 
@@ -21,9 +21,10 @@
 ### v1.1 Pinned Snaps & Polish
 
 - [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
-- [ ] **Phase 7: Screenshot Detection** — Detect and notify when a recipient screenshots a snap
-- [ ] **Phase 8: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
-- [ ] **Phase 9: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
+- [ ] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience
+- [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap
+- [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
+- [ ] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
 
 ## Phase Details
 
@@ -39,17 +40,31 @@
 3. Firestore TTL policy is configured in Firebase console and auto-deletes expired snap messages
 4. Firebase Storage lifecycle rule is configured in GCS console and auto-deletes orphaned snap photos
 5. Darkroom reveal checks on app foreground use a cached timestamp and skip Firestore reads when the cached time has not elapsed
-   **Plans**: TBD
+
+**Plans:** 5 plans
 
 Plans:
 
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Darkroom cache: write failing tests for isDarkroomReadyToReveal cache behavior (TDD RED)
+- [ ] 06-02-PLAN.md — Darkroom cache: implement module-level cache + wire clearRevealCache in App.js, useDarkroom.js, uploadQueueService.js (TDD GREEN)
+- [ ] 06-03-PLAN.md — DEBT-01: add useConversation Phase 2 tests (reactions, replies, soft deletion)
+- [ ] 06-04-PLAN.md — DEBT-02/05: audit snapFunctions.test.js + rename hoursSinceLastMutual to daysSinceLastMutual
+- [ ] 06-05-PLAN.md — DEBT-03/04: configure Firestore TTL and GCS Storage lifecycle rule (includes human checkpoint)
 
-### Phase 7: Screenshot Detection
+### Phase 7: Performance Enhancements to Story Viewing
+
+**Goal:** Optimize story viewing for smoother transitions, reduced memory usage, and faster load times
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd:plan-phase 7 to break down)
+
+### Phase 8: Screenshot Detection
 
 **Goal**: Snap senders are notified when a recipient screenshots their snap, with a persistent visual record in the conversation
-**Depends on**: Phase 6
+**Depends on**: Phase 7
 **Requirements**: SCRN-01, SCRN-02, SCRN-03
 **Success Criteria** (what must be TRUE):
 
@@ -60,13 +75,13 @@ Plans:
 
 Plans:
 
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 08-01: TBD
+- [ ] 08-02: TBD
 
-### Phase 8: Pinned Snaps iOS
+### Phase 9: Pinned Snaps iOS
 
 **Goal**: Senders can pin a snap to the recipient's iOS lock screen as a Live Activity showing the snap photo thumbnail, sender name, and a tap-to-open action
-**Depends on**: Phase 7 (shared EAS native build includes both expo-screen-capture and expo-live-activity)
+**Depends on**: Phase 8 (shared EAS native build includes both expo-screen-capture and expo-live-activity)
 **Requirements**: PINI-01, PINI-02, PINI-03, PINI-04, PINI-05
 **Success Criteria** (what must be TRUE):
 
@@ -79,14 +94,14 @@ Plans:
 
 Plans:
 
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
-- [ ] 08-03: TBD
+- [ ] 09-01: TBD
+- [ ] 09-02: TBD
+- [ ] 09-03: TBD
 
-### Phase 9: Pinned Snaps Android
+### Phase 10: Pinned Snaps Android
 
 **Goal**: Android recipients see a persistent notification for pinned snaps with the snap photo thumbnail and tap-to-open behavior, matching the iOS experience as closely as possible
-**Depends on**: Phase 8 (iOS implementation informs Android UX decisions)
+**Depends on**: Phase 9 (iOS implementation informs Android UX decisions)
 **Requirements**: PINA-01, PINA-02, PINA-03
 **Success Criteria** (what must be TRUE):
 
@@ -97,29 +112,30 @@ Plans:
 
 Plans:
 
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [ ] 10-01: TBD
+- [ ] 10-02: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 6 → 7 → 8 → 9
+Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 
-**Build Note:** Phases 7-9 share a single EAS native build (bundles expo-screen-capture + expo-live-activity). Phase 6 is OTA-deployable with no native build required.
+**Build Note:** Phases 8-10 share a single EAS native build (bundles expo-screen-capture + expo-live-activity). Phases 6-7 are OTA-deployable with no native build required.
 
-| Phase                                     | Milestone | Plans Complete | Status      | Completed  |
-| ----------------------------------------- | --------- | -------------- | ----------- | ---------- |
-| 1. Message Infrastructure & Read Receipts | v1.0      | 2/2            | Complete    | 2026-02-23 |
-| 2. Message Interactions                   | v1.0      | 6/6            | Complete    | 2026-02-24 |
-| 3. Snap Messages                          | v1.0      | 8/8            | Complete    | 2026-02-24 |
-| 4. Snap Streaks                           | v1.0      | 4/4            | Complete    | 2026-02-24 |
-| 5. Photo Tag Integration                  | v1.0      | 4/4            | Complete    | 2026-02-25 |
-| 6. Tech Debt & Darkroom Optimization      | v1.1      | 0/0            | Not started | -          |
-| 7. Screenshot Detection                   | v1.1      | 0/0            | Not started | -          |
-| 8. Pinned Snaps iOS                       | v1.1      | 0/0            | Not started | -          |
-| 9. Pinned Snaps Android                   | v1.1      | 0/0            | Not started | -          |
+| Phase                                        | Milestone | Plans Complete | Status      | Completed  |
+| -------------------------------------------- | --------- | -------------- | ----------- | ---------- |
+| 1. Message Infrastructure & Read Receipts    | v1.0      | 2/2            | Complete    | 2026-02-23 |
+| 2. Message Interactions                      | v1.0      | 6/6            | Complete    | 2026-02-24 |
+| 3. Snap Messages                             | v1.0      | 8/8            | Complete    | 2026-02-24 |
+| 4. Snap Streaks                              | v1.0      | 4/4            | Complete    | 2026-02-24 |
+| 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
+| 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
+| 7. Performance Enhancements to Story Viewing | v1.1      | 0/0            | Not started | -          |
+| 8. Screenshot Detection                      | v1.1      | 0/0            | Not started | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 0/0            | Not started | -          |
+| 10. Pinned Snaps Android                     | v1.1      | 0/0            | Not started | -          |
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-25 — v1.1 phases 6-9 added_
+_Last updated: 2026-02-25 — Reordered phases: moved Performance to Phase 7, renumbered Screenshot→8, Pinned iOS→9, Pinned Android→10_
