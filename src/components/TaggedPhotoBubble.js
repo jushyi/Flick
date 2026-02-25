@@ -15,13 +15,14 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 
 import * as Haptics from 'expo-haptics';
 import { format } from 'date-fns';
 
 import PixelIcon from './PixelIcon';
+import PixelSpinner from './PixelSpinner';
 import ReactionBadges from './ReactionBadges';
 
 import { addTaggedPhotoToFeed } from '../services/firebase/photoTagService';
@@ -123,7 +124,7 @@ const TaggedPhotoBubble = ({
                 accessibilityLabel={hasAdded ? 'Added to feed' : 'Add to feed'}
               >
                 {isAdding ? (
-                  <ActivityIndicator size="small" color={TAG_ACCENT} />
+                  <PixelSpinner size="small" color={TAG_ACCENT} />
                 ) : (
                   <>
                     <PixelIcon
