@@ -21,7 +21,7 @@
 ### v1.1 Pinned Snaps & Polish
 
 - [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
-- [ ] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience
+- [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2026-02-25)
 - [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap
 - [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
 - [ ] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
@@ -67,7 +67,7 @@ Plans:
 7. Failed image loads auto-skip to the next photo after 5 seconds
 8. New photos generate a thumbnail at upload time for progressive loading
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 
@@ -145,7 +145,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 4. Snap Streaks                              | v1.0      | 4/4            | Complete    | 2026-02-24 |
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
-| 7. Performance Enhancements to Story Viewing | v1.1      | 4/4            | Complete    | 2026-02-25 |
+| 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/0            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/0            | Not started | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/0            | Not started | -          |
