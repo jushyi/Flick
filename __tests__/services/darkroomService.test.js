@@ -29,6 +29,7 @@ let mockCurrentTime = 1000000;
 const createMockTimestamp = seconds => ({
   seconds,
   toDate: () => new Date(seconds * 1000),
+  toMillis: () => seconds * 1000,
 });
 
 // Mock Firestore
@@ -55,6 +56,7 @@ const {
   isDarkroomReadyToReveal,
   scheduleNextReveal,
   ensureDarkroomInitialized,
+  clearRevealCache,
 } = require('../../src/services/firebase/darkroomService');
 
 describe('darkroomService', () => {
@@ -317,6 +319,154 @@ describe('darkroomService', () => {
 
       expect(result.success).toBe(true);
       expect(result.refreshed).toBe(true);
+    });
+  });
+
+  // ===========================================================================
+  // isDarkroomReadyToReveal — cache behavior
+  // ===========================================================================
+  describe('isDarkroomReadyToReveal — cache behavior', () => {
+    beforeEach(() => {
+      clearRevealCache(); // Reset module-level cache between tests
+    });
+
+    it('should call Firestore on first invocation (cache miss)', async () => {
+      const futureSeconds = mockCurrentTime + 300; // 5 minutes from now
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({
+          userId: 'user-cache',
+          nextRevealAt: createMockTimestamp(futureSeconds),
+        }),
+      });
+
+      const result = await isDarkroomReadyToReveal('user-cache');
+
+      expect(mockGetDoc).toHaveBeenCalledTimes(1);
+      expect(result).toBe(false); // nextRevealAt is in the future
+    });
+
+    it('should skip Firestore on second call when cache is fresh and nextRevealAt is in the future', async () => {
+      const nowMs = 1000000 * 1000; // match mockCurrentTime in ms
+      jest.spyOn(Date, 'now').mockReturnValue(nowMs);
+
+      const futureSeconds = mockCurrentTime + 300;
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({
+          userId: 'user-cache',
+          nextRevealAt: createMockTimestamp(futureSeconds),
+        }),
+      });
+
+      // First call — populates cache
+      await isDarkroomReadyToReveal('user-cache');
+      mockGetDoc.mockClear();
+
+      // Second call — should hit cache, not Firestore
+      const result = await isDarkroomReadyToReveal('user-cache');
+
+      expect(mockGetDoc).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+
+      jest.restoreAllMocks();
+    });
+
+    it('should re-fetch from Firestore when cache is older than 5 minutes', async () => {
+      const nowMs = 1000000 * 1000;
+      jest
+        .spyOn(Date, 'now')
+        .mockReturnValueOnce(nowMs) // first call — cache write
+        .mockReturnValueOnce(nowMs + 6 * 60 * 1000) // second call — 6 min later (stale)
+        .mockReturnValue(nowMs + 6 * 60 * 1000);
+
+      const futureSeconds = mockCurrentTime + 600;
+      mockGetDoc
+        .mockResolvedValueOnce({
+          exists: () => true,
+          data: () => ({ userId: 'user-cache', nextRevealAt: createMockTimestamp(futureSeconds) }),
+        })
+        .mockResolvedValueOnce({
+          exists: () => true,
+          data: () => ({ userId: 'user-cache', nextRevealAt: createMockTimestamp(futureSeconds) }),
+        });
+
+      // First call — populates cache
+      await isDarkroomReadyToReveal('user-cache');
+      // Second call — cache stale, must re-fetch
+      await isDarkroomReadyToReveal('user-cache');
+
+      expect(mockGetDoc).toHaveBeenCalledTimes(2);
+
+      jest.restoreAllMocks();
+    });
+
+    it('should re-fetch from Firestore when cached nextRevealAt has elapsed', async () => {
+      const nowMs = 1000000 * 1000;
+      // First call: nextRevealAt 30 seconds in the future, cache written
+      const soonSeconds = mockCurrentTime + 30;
+      mockGetDoc
+        .mockResolvedValueOnce({
+          exists: () => true,
+          data: () => ({ userId: 'user-cache', nextRevealAt: createMockTimestamp(soonSeconds) }),
+        })
+        .mockResolvedValueOnce({
+          exists: () => true,
+          data: () => ({
+            userId: 'user-cache',
+            nextRevealAt: createMockTimestamp(soonSeconds - 60),
+          }),
+        });
+
+      jest
+        .spyOn(Date, 'now')
+        .mockReturnValueOnce(nowMs) // first call — write cache with soonSeconds
+        .mockReturnValue(nowMs + 60 * 1000); // second call — 1 min later, nextRevealAt has elapsed
+
+      // First call — populates cache, returns false (not ready yet)
+      await isDarkroomReadyToReveal('user-cache');
+      mockGetDoc.mockClear();
+
+      // Second call — cached nextRevealAt has elapsed, must re-fetch
+      await isDarkroomReadyToReveal('user-cache');
+
+      expect(mockGetDoc).toHaveBeenCalledTimes(1);
+
+      jest.restoreAllMocks();
+    });
+  });
+
+  // ===========================================================================
+  // clearRevealCache
+  // ===========================================================================
+  describe('clearRevealCache', () => {
+    it('should cause the next isDarkroomReadyToReveal call to fetch from Firestore', async () => {
+      const nowMs = 1000000 * 1000;
+      jest.spyOn(Date, 'now').mockReturnValue(nowMs);
+
+      const futureSeconds = mockCurrentTime + 300;
+      mockGetDoc
+        .mockResolvedValueOnce({
+          exists: () => true,
+          data: () => ({ userId: 'user-cache', nextRevealAt: createMockTimestamp(futureSeconds) }),
+        })
+        .mockResolvedValueOnce({
+          exists: () => true,
+          data: () => ({ userId: 'user-cache', nextRevealAt: createMockTimestamp(futureSeconds) }),
+        });
+
+      // First call — populates cache
+      await isDarkroomReadyToReveal('user-cache');
+      // Clear cache
+      clearRevealCache();
+      mockGetDoc.mockClear();
+
+      // Next call must fetch from Firestore (cache was cleared)
+      await isDarkroomReadyToReveal('user-cache');
+
+      expect(mockGetDoc).toHaveBeenCalledTimes(1);
+
+      jest.restoreAllMocks();
     });
   });
 });
