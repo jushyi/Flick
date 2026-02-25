@@ -45,9 +45,11 @@ const db = getFirestore();
  * Create a new photo document in Firestore
  * @param {string} userId - User ID who took the photo
  * @param {string} photoUri - Local photo URI
+ * @param {Object} [options] - Optional parameters
+ * @param {string} [options.thumbnailDataURL] - Base64 data URL for progressive loading placeholder
  * @returns {Promise} - Photo document data
  */
-export const createPhoto = async (userId, photoUri) => {
+export const createPhoto = async (userId, photoUri, options = {}) => {
   logger.debug('PhotoService.createPhoto: Starting', { userId });
 
   try {
@@ -84,6 +86,7 @@ export const createPhoto = async (userId, photoUri) => {
       month: getCurrentMonth(),
       reactions: {},
       reactionCount: 0,
+      ...(options.thumbnailDataURL && { thumbnailDataURL: options.thumbnailDataURL }),
     });
 
     logger.info('PhotoService.createPhoto: Photo created successfully', {
