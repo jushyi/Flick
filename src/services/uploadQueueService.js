@@ -15,7 +15,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import logger from '../utils/logger';
 import { uploadPhoto } from './firebase/storageService';
-import { ensureDarkroomInitialized } from './firebase/darkroomService';
+import { ensureDarkroomInitialized, clearRevealCache } from './firebase/darkroomService';
 import {
   getFirestore,
   collection,
@@ -301,6 +301,7 @@ const uploadQueueItem = async item => {
     userId,
   });
   await ensureDarkroomInitialized(userId);
+  clearRevealCache(); // New photo captured — clear cache so darkroom checks re-evaluate fresh timing
 
   logger.info('UploadQueueService.uploadQueueItem: Complete', {
     id,

@@ -32,6 +32,7 @@ import {
 import {
   isDarkroomReadyToReveal,
   scheduleNextReveal,
+  clearRevealCache,
 } from './src/services/firebase/darkroomService';
 import { revealPhotos, getPhotoById } from './src/services/firebase/photoService';
 import { initializeGiphy } from './src/components/comments/GifPicker';
@@ -383,6 +384,7 @@ export default function App() {
               });
               const revealResult = await revealPhotos(currentUser.uid);
               await scheduleNextReveal(currentUser.uid);
+              clearRevealCache(); // Invalidate cache so next foreground check re-fetches fresh nextRevealAt
               logger.info('App: Foreground reveal complete', {
                 userId: currentUser.uid,
                 revealedCount: revealResult.count,
