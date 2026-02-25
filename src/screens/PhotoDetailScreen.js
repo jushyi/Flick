@@ -584,6 +584,7 @@ const PhotoDetailScreen = () => {
       caption: currentPhoto?.caption,
       hasMenuOptions: true,
       contextMode: contextMode,
+      thumbnailDataURL: currentPhoto?.thumbnailDataURL || null,
     };
   }
 
@@ -1050,22 +1051,28 @@ const PhotoDetailScreen = () => {
               }
             >
               <View style={styles.photoScrollView}>
+                {/* Dark loading overlay - covers photo completely during loading */}
+                {imageLoading && (
+                  <View style={localStyles.darkLoadingOverlay}>
+                    <ActivityIndicator size="small" color="rgba(255, 255, 255, 0.6)" />
+                  </View>
+                )}
                 <Image
                   source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
+                  placeholder={
+                    currentPhoto?.thumbnailDataURL
+                      ? { uri: currentPhoto.thumbnailDataURL }
+                      : undefined
+                  }
+                  placeholderContentFit="cover"
                   style={styles.photo}
                   contentFit="cover"
                   cachePolicy="memory-disk"
-                  transition={0}
+                  transition={currentPhoto?.thumbnailDataURL ? 200 : 0}
+                  priority={isTransitioning ? 'normal' : 'high'}
                   onLoadStart={handleImageLoadStart}
                   onLoadEnd={handleImageLoadEnd}
                 />
-                {imageLoading && (
-                  <ActivityIndicator
-                    size="small"
-                    color="rgba(255, 255, 255, 0.6)"
-                    style={localStyles.imageLoadingSpinner}
-                  />
-                )}
               </View>
             </TouchableWithoutFeedback>
 
@@ -1388,6 +1395,12 @@ const PhotoDetailScreen = () => {
                       ? `photo-${snapshotRef.current.photoId}`
                       : undefined,
                   }}
+                  placeholder={
+                    snapshotRef.current.thumbnailDataURL
+                      ? { uri: snapshotRef.current.thumbnailDataURL }
+                      : undefined
+                  }
+                  placeholderContentFit="cover"
                   style={styles.photo}
                   contentFit="cover"
                   cachePolicy="memory-disk"
@@ -1595,12 +1608,12 @@ const PhotoDetailScreen = () => {
 };
 
 const localStyles = StyleSheet.create({
-  imageLoadingSpinner: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginTop: -10,
-    marginLeft: -10,
+  darkLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
   captionEditRow: {
     flexDirection: 'row',
