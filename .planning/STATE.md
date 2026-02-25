@@ -87,9 +87,9 @@ Progress: [██████░░░░] 45% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 07-03-PLAN.md (awaiting human verification checkpoint)
+Stopped at: Completed quick task 36 (BackHandler.removeEventListener fix)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-25 — Completed 07-03 (progressive loading, subscription management, auto-skip, prefetching)
+Last activity: 2026-02-25 — Completed quick-36 (fix BackHandler.removeEventListener crash on Android stories)
