@@ -27,6 +27,17 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **PINA-02**: Tapping the notification opens the conversation
 - [ ] **PINA-03**: Notification dismisses when recipient views the snap
 
+### Story Viewing Performance
+
+- [ ] **PERF-01**: Photos display a blurred placeholder that crossfades to full resolution over 200ms (progressive loading)
+- [ ] **PERF-02**: Tapping to next photo immediately shows dark background + spinner instead of lingering on previous image
+- [ ] **PERF-03**: Cube transition between friends runs on the UI thread via Reanimated at 60fps
+- [ ] **PERF-04**: Next friend's first photo is prefetched while viewing current friend; next 2-3 photos within current friend are prefetched
+- [ ] **PERF-05**: Feed story cards load in paginated batches with a "Load more" button
+- [ ] **PERF-06**: Firestore real-time listeners pause during photo/friend transitions and resume after settling
+- [ ] **PERF-07**: Failed image loads auto-skip to the next photo after a timeout
+- [ ] **PERF-08**: New photos generate a tiny thumbnail at upload time stored as base64 data URL in Firestore
+
 ### Darkroom Optimization
 
 - [ ] **DARK-01**: Darkroom reveal checks use local timestamp cache to avoid redundant Firestore reads
@@ -76,17 +87,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status  |
 | ----------- | ----- | ------- |
-| SCRN-01     | 7     | Pending |
-| SCRN-02     | 7     | Pending |
-| SCRN-03     | 7     | Pending |
-| PINI-01     | 8     | Pending |
-| PINI-02     | 8     | Pending |
-| PINI-03     | 8     | Pending |
-| PINI-04     | 8     | Pending |
-| PINI-05     | 8     | Pending |
-| PINA-01     | 9     | Pending |
-| PINA-02     | 9     | Pending |
-| PINA-03     | 9     | Pending |
+| PERF-01     | 7     | Pending |
+| PERF-02     | 7     | Pending |
+| PERF-03     | 7     | Pending |
+| PERF-04     | 7     | Pending |
+| PERF-05     | 7     | Pending |
+| PERF-06     | 7     | Pending |
+| PERF-07     | 7     | Pending |
+| PERF-08     | 7     | Pending |
+| SCRN-01     | 8     | Pending |
+| SCRN-02     | 8     | Pending |
+| SCRN-03     | 8     | Pending |
+| PINI-01     | 9     | Pending |
+| PINI-02     | 9     | Pending |
+| PINI-03     | 9     | Pending |
+| PINI-04     | 9     | Pending |
+| PINI-05     | 9     | Pending |
+| PINA-01     | 10    | Pending |
+| PINA-02     | 10    | Pending |
+| PINA-03     | 10    | Pending |
 | DARK-01     | 6     | Pending |
 | DARK-02     | 6     | Pending |
 | DEBT-01     | 6     | Pending |
@@ -97,11 +116,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 **Coverage:**
 
-- v1.1 requirements: 18 total
-- Mapped to phases: 18
+- v1.1 requirements: 26 total
+- Mapped to phases: 26
 - Unmapped: 0
 
 ---
 
 _Requirements defined: 2026-02-25_
-_Last updated: 2026-02-25 after roadmap creation (traceability populated)_
+_Last updated: 2026-02-25 — Added PERF-01 through PERF-08 for Phase 7; fixed SCRN/PINI/PINA phase mapping after renumber_

@@ -53,13 +53,27 @@ Plans:
 
 ### Phase 7: Performance Enhancements to Story Viewing
 
-**Goal:** Optimize story viewing for smoother transitions, reduced memory usage, and faster load times
+**Goal:** Story viewing feels instant and smooth — 60fps cube transitions, progressive image loading with placeholder crossfade, immediate dark loading states, smart prefetching, and paginated feed story cards
 **Depends on:** Phase 6
-**Plans:** 0 plans
+**Requirements**: PERF-01, PERF-02, PERF-03, PERF-04, PERF-05, PERF-06, PERF-07, PERF-08
+**Success Criteria** (what must be TRUE):
+
+1. Tapping to the next photo immediately shows dark background + spinner, not the previous image
+2. New photos display a blurred placeholder that crossfades to full resolution over 200ms
+3. Cube transition between friends runs at 60fps via Reanimated on the UI thread
+4. Next friend's first photo is prefetched while viewing the current friend
+5. Feed story cards load in batches with a "Load more" button
+6. Firestore real-time listeners pause during transitions and resume after settling
+7. Failed image loads auto-skip to the next photo after 5 seconds
+8. New photos generate a thumbnail at upload time for progressive loading
+
+**Plans:** 3 plans
 
 Plans:
 
-- [ ] TBD (run /gsd:plan-phase 7 to break down)
+- [ ] 07-01-PLAN.md — Feed story card pagination + thumbnail generation at upload
+- [ ] 07-02-PLAN.md — Cube transition Reanimated migration (SharedValue + Gesture Handler)
+- [ ] 07-03-PLAN.md — Progressive loading + dark loading states + subscription management + auto-skip + prefetching
 
 ### Phase 8: Screenshot Detection
 
@@ -130,7 +144,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 4. Snap Streaks                              | v1.0      | 4/4            | Complete    | 2026-02-24 |
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
-| 7. Performance Enhancements to Story Viewing | v1.1      | 0/0            | Not started | -          |
+| 7. Performance Enhancements to Story Viewing | v1.1      | 0/3            | Not started | -          |
 | 8. Screenshot Detection                      | v1.1      | 0/0            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/0            | Not started | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/0            | Not started | -          |
@@ -138,4 +152,4 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-25 — Reordered phases: moved Performance to Phase 7, renumbered Screenshot→8, Pinned iOS→9, Pinned Android→10_
+_Last updated: 2026-02-25 — Phase 7 planned: 3 plans for story viewing performance (pagination, Reanimated cube, progressive loading)_
