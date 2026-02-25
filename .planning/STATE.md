@@ -150,6 +150,7 @@ None currently.
 | 31  | Fix snap viewer reaction bar and header (unified bar, remove sender name)        | 2026-02-24 | 8ae7770 |          | [31-fix-snap-viewer-reaction-bar-and-header-](./quick/31-fix-snap-viewer-reaction-bar-and-header-/) |
 | 32  | Fix send/snap button height to match input bar on both platforms                 | 2026-02-24 | bbfcec2 |          | [32-on-both-android-and-ios-the-send-or-snap](./quick/32-on-both-android-and-ios-the-send-or-snap/) |
 | 33  | Fix snap photo black bars on iOS (contentFit contain to cover)                   | 2026-02-24 | 79b1e39 |          | [33-on-ios-only-the-photo-you-take-for-a-sna](./quick/33-on-ios-only-the-photo-you-take-for-a-sna/) |
+| 34  | Fix tagged photo add-to-feed button styling (cyan rectangle, centered)           | 2026-02-25 | 398a89e |          | [34-fix-tagged-photo-add-to-feed-button-styl](./quick/34-fix-tagged-photo-add-to-feed-button-styl/) |
 
 ## Notes
 
@@ -160,4 +161,4 @@ None currently.
 
 ---
 
-Last activity: 2026-02-25 - Completed 05-04-PLAN.md: UAT gap closure - transparent TaggedPhotoBubble card, PhotoDetail context navigation, attribution profile nav via fullScreenModal
+Last activity: 2026-02-25 - Completed quick-34: Fix tagged photo add-to-feed button styling to cyan rectangle, centered in both conversation and fullscreen views
