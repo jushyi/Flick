@@ -13,11 +13,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 7 of 10 (Performance Enhancements to Story Viewing)
-Plan: 3 of 4 in current phase (07-02 complete)
-Status: Executing phase 7
-Last activity: 2026-02-25 — Completed 07-02-PLAN.md (cube transition Reanimated migration + Android back button)
+Plan: 4 of 4 in current phase (07-03 complete)
+Status: Phase 7 complete
+Last activity: 2026-02-25 — Completed 07-03-PLAN.md (progressive loading, dark loading states, subscription management, auto-skip, prefetching)
 
-Progress: [██████░░░░] 40% (v1.1)
+Progress: [██████░░░░] 45% (v1.1)
 
 ## Performance Metrics
 
@@ -39,6 +39,7 @@ Progress: [██████░░░░] 40% (v1.1)
 | Phase 07 P00 | 4min | 1 tasks | 3 files |
 | Phase 07 P01 | 7min | 2 tasks | 3 files |
 | Phase 07 P02 | 2min | 3 tasks | 3 files |
+| Phase 07 P03 | 10min | 2 tasks | 3 files |
 
 ## Milestone History
 
@@ -65,6 +66,9 @@ Progress: [██████░░░░] 40% (v1.1)
 - Separate gesture systems: Gesture.Pan (horizontal) + PanResponder (vertical) to avoid migration risk
 - GestureDetector wraps only incoming cube face; outgoing is pointerEvents=none
 - Android BackHandler calls existing animatedClose for suck-back dismiss
+- Dark overlay uses zIndex 2 to fully cover image during loading (replaces old centered spinner)
+- Auto-skip timeout (5s) only fires in stories mode; feed mode has no auto-skip
+- getNextFriendFirstPhotoURL callback added to FeedScreen setCallbacks rather than modifying PhotoDetailContext schema
 
 **Open blockers:** None
 
@@ -83,9 +87,9 @@ Progress: [██████░░░░] 40% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 07-02-PLAN.md
+Stopped at: Completed 07-03-PLAN.md (awaiting human verification checkpoint)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-25 — Completed 07-02 (cube transition Reanimated migration + Android back button)
+Last activity: 2026-02-25 — Completed 07-03 (progressive loading, subscription management, auto-skip, prefetching)
