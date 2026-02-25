@@ -11,6 +11,8 @@
  */
 
 import React, { useState, useEffect, memo } from 'react';
+import { View } from 'react-native';
+
 import Svg, { Rect } from 'react-native-svg';
 import { BASE_PIXELS, HIGHLIGHT_SETS, GRID_SIZE, FRAME_COUNT } from '../constants/spinnerFrames';
 
@@ -33,24 +35,25 @@ const PixelSpinner = memo(({ size = 'small', color = '#E0E0F0', style }) => {
   const highlightSet = HIGHLIGHT_SETS[frame];
 
   return (
-    <Svg
-      width={resolvedSize}
-      height={resolvedSize}
-      viewBox={`0 0 ${resolvedSize} ${resolvedSize}`}
-      style={style}
-    >
-      {BASE_PIXELS.map(([x, y], i) => (
-        <Rect
-          key={i}
-          x={x * pixelSize}
-          y={y * pixelSize}
-          width={pixelSize}
-          height={pixelSize}
-          fill={color}
-          opacity={highlightSet.has((x << 4) | y) ? 1 : DIM_OPACITY}
-        />
-      ))}
-    </Svg>
+    <View style={[{ alignItems: 'center', justifyContent: 'center' }, style]}>
+      <Svg
+        width={resolvedSize}
+        height={resolvedSize}
+        viewBox={`0 0 ${resolvedSize} ${resolvedSize}`}
+      >
+        {BASE_PIXELS.map(([x, y], i) => (
+          <Rect
+            key={i}
+            x={x * pixelSize}
+            y={y * pixelSize}
+            width={pixelSize}
+            height={pixelSize}
+            fill={color}
+            opacity={highlightSet.has((x << 4) | y) ? 1 : DIM_OPACITY}
+          />
+        ))}
+      </Svg>
+    </View>
   );
 });
 
