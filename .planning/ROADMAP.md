@@ -124,12 +124,13 @@ Plans:
 1. When a pinned snap is received on Android, the recipient sees a persistent ongoing notification showing the snap photo thumbnail, sender name, and caption
 2. Tapping the notification opens the app directly to the conversation with the sender
 3. After the recipient views the snap, the notification is automatically dismissed
-   **Plans**: TBD
+
+**Plans:** 2 plans
 
 Plans:
 
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
+- [ ] 10-01-PLAN.md — Notification infrastructure: extend sendPushNotification with richContent, pinned-snaps channel, pinned_snap tap handler, onNewMessage pinned snap branch
+- [ ] 10-02-PLAN.md — Pin toggle UI, isPinned field, notification dismissal on snap view, 48h expiry cloud function
 
 ## Progress
 
@@ -149,9 +150,9 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/0            | Not started | -          |
-| 10. Pinned Snaps Android                     | v1.1      | 0/0            | Not started | -          |
+| 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-25 — Phase 8: created 2 plans for screenshot detection_
+_Last updated: 2026-02-25 — Phase 10: created 2 plans for pinned snaps Android_
