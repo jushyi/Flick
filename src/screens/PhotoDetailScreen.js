@@ -11,7 +11,7 @@
  * - Inline horizontal emoji picker in footer
  * - Multiple reactions per user with counts
  * - Stories mode: progress bar, tap navigation, multi-photo
- * - 3D cube rotation for friend-to-friend transitions
+ * - 3D cube rotation for friend-to-friend transitions (Reanimated UI thread)
  */
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
@@ -26,13 +26,20 @@ import {
   Animated,
   Dimensions,
   Alert,
-  Easing,
   Platform,
   ActivityIndicator,
   Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import ReanimatedModule, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Easing as ReanimatedEasing,
+  runOnJS,
+} from 'react-native-reanimated';
 import PixelIcon from '../components/PixelIcon';
 import StrokedNameText from '../components/StrokedNameText';
 import EmojiPicker from 'rn-emoji-keyboard';
@@ -56,6 +63,9 @@ import { colors } from '../constants/colors';
 import { profileCacheKey } from '../utils/imageUtils';
 import { addTaggedPhotoToFeed } from '../services/firebase/photoTagService';
 import logger from '../utils/logger';
+
+// Reanimated View component for cube face transforms (UI-thread animation)
+const ReanimatedView = ReanimatedModule.View;
 
 // Progress bar constants - matches photo marginHorizontal (8px)
 const PROGRESS_BAR_HORIZONTAL_PADDING = 8;
@@ -108,7 +118,9 @@ const PhotoDetailScreen = () => {
   } = usePhotoDetail();
 
   // Cube transition animation for friend-to-friend (two-view simultaneous rotation)
-  const cubeProgress = useRef(new Animated.Value(1)).current;
+  // Uses Reanimated SharedValue for UI-thread animation performance
+  const cubeProgress = useSharedValue(1);
+  const transitionDirectionValue = useSharedValue(1); // 1 = forward, -1 = backward
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
   const [transitionDirection, setTransitionDirection] = useState('forward'); // 'forward' | 'backward'
@@ -174,7 +186,7 @@ const PhotoDetailScreen = () => {
 
   // Reset cube state when screen mounts
   useEffect(() => {
-    cubeProgress.setValue(1);
+    cubeProgress.value = 1;
     isTransitioningRef.current = false;
     setIsTransitioning(false);
   }, []);
@@ -230,6 +242,14 @@ const PhotoDetailScreen = () => {
   }, [contextClose, navigation]);
 
   /**
+   * Transition complete callback - called via runOnJS from Reanimated worklet
+   */
+  const handleTransitionComplete = useCallback(() => {
+    isTransitioningRef.current = false;
+    setIsTransitioning(false);
+  }, []);
+
+  /**
    * Handle friend-to-friend transition with 3D cube animation
    * Uses two simultaneous views: outgoing rotates away, incoming rotates in
    * Both pivot on the shared right edge for a true cube effect
@@ -243,10 +263,11 @@ const PhotoDetailScreen = () => {
     // Mark transitioning synchronously so snapshotRef freezes on next render
     isTransitioningRef.current = true;
     setIsTransitioning(true);
+    transitionDirectionValue.value = 1; // forward
 
-    // Outgoing face is always in the tree — set cubeProgress to 0 so native driver
+    // Outgoing face is always in the tree — set cubeProgress to 0 so UI thread
     // instantly reveals it (no waiting for React render)
-    cubeProgress.setValue(0);
+    cubeProgress.value = 0;
 
     // Swap to next friend's content (incoming face is hidden at cubeProgress=0)
     handleRequestNextFriend();
@@ -254,19 +275,39 @@ const PhotoDetailScreen = () => {
     // Defer animation to next frame so React renders new friend's data on the incoming
     // face before it becomes visible (prevents flash of outgoing friend's photo)
     requestAnimationFrame(() => {
-      Animated.timing(cubeProgress, {
-        toValue: 1,
-        duration: 250,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start(() => {
-        isTransitioningRef.current = false;
-        setIsTransitioning(false);
-      });
+      cubeProgress.value = withTiming(
+        1,
+        {
+          duration: 250,
+          easing: ReanimatedEasing.out(ReanimatedEasing.cubic),
+        },
+        finished => {
+          'worklet';
+          if (finished) {
+            runOnJS(handleTransitionComplete)();
+          }
+        }
+      );
     });
 
     return true;
-  }, [contextHasNextFriend, handleRequestNextFriend, cubeProgress]);
+  }, [
+    contextHasNextFriend,
+    handleRequestNextFriend,
+    cubeProgress,
+    transitionDirectionValue,
+    handleTransitionComplete,
+  ]);
+
+  /**
+   * Backward transition complete callback - called via runOnJS from Reanimated worklet
+   */
+  const handleBackwardTransitionComplete = useCallback(() => {
+    isTransitioningRef.current = false;
+    setIsTransitioning(false);
+    setTransitionDirection('forward');
+    transitionDirectionValue.value = 1; // reset to forward
+  }, [transitionDirectionValue]);
 
   /**
    * Handle backward friend-to-friend transition with reverse 3D cube animation
@@ -280,28 +321,38 @@ const PhotoDetailScreen = () => {
 
     isTransitioningRef.current = true;
     setTransitionDirection('backward');
+    transitionDirectionValue.value = -1; // backward
     setIsTransitioning(true);
 
-    cubeProgress.setValue(0);
+    cubeProgress.value = 0;
     handleRequestPreviousFriend();
 
     // Defer animation to next frame so React renders new friend's data on the incoming
     // face before it becomes visible (prevents flash of outgoing friend's photo)
     requestAnimationFrame(() => {
-      Animated.timing(cubeProgress, {
-        toValue: 1,
-        duration: 250,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start(() => {
-        isTransitioningRef.current = false;
-        setIsTransitioning(false);
-        setTransitionDirection('forward');
-      });
+      cubeProgress.value = withTiming(
+        1,
+        {
+          duration: 250,
+          easing: ReanimatedEasing.out(ReanimatedEasing.cubic),
+        },
+        finished => {
+          'worklet';
+          if (finished) {
+            runOnJS(handleBackwardTransitionComplete)();
+          }
+        }
+      );
     });
 
     return true;
-  }, [contextHasPreviousFriend, handleRequestPreviousFriend, cubeProgress]);
+  }, [
+    contextHasPreviousFriend,
+    handleRequestPreviousFriend,
+    cubeProgress,
+    transitionDirectionValue,
+    handleBackwardTransitionComplete,
+  ]);
 
   /**
    * Prepare for an interactive horizontal swipe transition.
@@ -317,8 +368,9 @@ const PhotoDetailScreen = () => {
       isTransitioningRef.current = true;
       setIsTransitioning(true);
       setTransitionDirection(direction);
+      transitionDirectionValue.value = direction === 'forward' ? 1 : -1;
       swipeDirectionRef.current = direction;
-      cubeProgress.setValue(0);
+      cubeProgress.value = 0;
 
       if (direction === 'forward') {
         handleRequestNextFriend();
@@ -334,6 +386,7 @@ const PhotoDetailScreen = () => {
       handleRequestNextFriend,
       handleRequestPreviousFriend,
       cubeProgress,
+      transitionDirectionValue,
     ]
   );
 
@@ -362,11 +415,46 @@ const PhotoDetailScreen = () => {
         isTransitioningRef.current = false;
         setIsTransitioning(false);
         setTransitionDirection('forward');
+        transitionDirectionValue.value = 1; // reset to forward
         swipeDirectionRef.current = 'forward';
-        cubeProgress.setValue(1);
+        cubeProgress.value = 1;
       });
     });
-  }, [handleCancelFriendTransition, cubeProgress]);
+  }, [handleCancelFriendTransition, cubeProgress, transitionDirectionValue]);
+
+  // Reanimated animated styles for cube face transforms (runs on UI thread)
+  const incomingCubeStyle = useAnimatedStyle(() => {
+    const dir = transitionDirectionValue.value; // 1=forward, -1=backward
+    return {
+      backfaceVisibility: 'hidden',
+      transform: [
+        { perspective: 650 },
+        { translateX: interpolate(cubeProgress.value, [0, 1], [dir * SCREEN_WIDTH, 0]) },
+        { translateX: -dir * (SCREEN_WIDTH / 2) },
+        { rotateY: `${interpolate(cubeProgress.value, [0, 1], [dir * 90, 0])}deg` },
+        { translateX: dir * (SCREEN_WIDTH / 2) },
+      ],
+    };
+  });
+
+  const outgoingCubeStyle = useAnimatedStyle(() => {
+    const dir = transitionDirectionValue.value;
+    return {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backfaceVisibility: 'hidden',
+      transform: [
+        { perspective: 650 },
+        { translateX: interpolate(cubeProgress.value, [0, 1], [0, -dir * SCREEN_WIDTH]) },
+        { translateX: dir * (SCREEN_WIDTH / 2) },
+        { rotateY: `${interpolate(cubeProgress.value, [0, 1], [0, -dir * 90])}deg` },
+        { translateX: -dir * (SCREEN_WIDTH / 2) },
+      ],
+    };
+  });
 
   // Opens comments on swipe-up if not already visible
   const handleSwipeUpToOpenComments = useCallback(() => {
@@ -919,40 +1007,8 @@ const PhotoDetailScreen = () => {
           ],
         }}
       >
-        {/* Main content wrapper - incoming face during cube transition */}
-        <Animated.View
-          style={[
-            styles.contentWrapper,
-            {
-              backfaceVisibility: 'hidden',
-              transform: [
-                { perspective: 650 },
-                {
-                  translateX: cubeProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange:
-                      transitionDirection === 'forward' ? [SCREEN_WIDTH, 0] : [-SCREEN_WIDTH, 0],
-                  }),
-                },
-                {
-                  translateX:
-                    transitionDirection === 'forward' ? -SCREEN_WIDTH / 2 : SCREEN_WIDTH / 2,
-                },
-                {
-                  rotateY: cubeProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange:
-                      transitionDirection === 'forward' ? ['90deg', '0deg'] : ['-90deg', '0deg'],
-                  }),
-                },
-                {
-                  translateX:
-                    transitionDirection === 'forward' ? SCREEN_WIDTH / 2 : -SCREEN_WIDTH / 2,
-                },
-              ],
-            },
-          ]}
-        >
+        {/* Main content wrapper - incoming face during cube transition (Reanimated) */}
+        <ReanimatedView style={[styles.contentWrapper, incomingCubeStyle]}>
           {/* Header with close button */}
           <View style={styles.header}>
             <View style={styles.headerSpacer} />
@@ -1279,50 +1335,12 @@ const PhotoDetailScreen = () => {
               )}
             </ScrollView>
           </View>
-        </Animated.View>
+        </ReanimatedView>
 
         {/* Outgoing cube face - always rendered, naturally hidden at cubeProgress=1
-           (off-screen left + rotated -90deg). Native driver reveals it instantly
+           (off-screen left + rotated -90deg). Reanimated reveals it instantly
            when cubeProgress goes to 0, eliminating the flash. */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.contentWrapper,
-            {
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backfaceVisibility: 'hidden',
-              transform: [
-                { perspective: 650 },
-                {
-                  translateX: cubeProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange:
-                      transitionDirection === 'forward' ? [0, -SCREEN_WIDTH] : [0, SCREEN_WIDTH],
-                  }),
-                },
-                {
-                  translateX:
-                    transitionDirection === 'forward' ? SCREEN_WIDTH / 2 : -SCREEN_WIDTH / 2,
-                },
-                {
-                  rotateY: cubeProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange:
-                      transitionDirection === 'forward' ? ['0deg', '-90deg'] : ['0deg', '90deg'],
-                  }),
-                },
-                {
-                  translateX:
-                    transitionDirection === 'forward' ? -SCREEN_WIDTH / 2 : SCREEN_WIDTH / 2,
-                },
-              ],
-            },
-          ]}
-        >
+        <ReanimatedView pointerEvents="none" style={[styles.contentWrapper, outgoingCubeStyle]}>
           {snapshotRef.current.imageURL && (
             <>
               {/* Header with close button */}
@@ -1467,7 +1485,7 @@ const PhotoDetailScreen = () => {
               </View>
             </>
           )}
-        </Animated.View>
+        </ReanimatedView>
 
         {/* Close expand/collapse wrapper */}
       </Animated.View>
