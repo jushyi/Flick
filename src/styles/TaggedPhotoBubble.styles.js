@@ -67,22 +67,22 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 16,
+    backgroundColor: colors.interactive.primary,
+    borderRadius: 4,
     paddingHorizontal: 12,
     height: 32,
     gap: 4,
   },
   addButtonDisabled: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    opacity: 0.6,
   },
   addButtonText: {
     fontSize: 11,
     fontFamily: typography.fontFamily.body,
-    color: colors.text.inverse,
+    color: '#0A0A1A',
   },
   addButtonTextDisabled: {
-    color: colors.text.secondary,
+    color: 'rgba(10, 10, 26, 0.5)',
   },
   timestamp: {
     fontSize: 10,

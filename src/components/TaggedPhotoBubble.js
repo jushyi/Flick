@@ -122,13 +122,13 @@ const TaggedPhotoBubble = ({
                   accessibilityLabel={hasAdded ? 'Added to feed' : 'Add to feed'}
                 >
                   {isAdding ? (
-                    <PixelSpinner size="small" color={colors.text.primary} />
+                    <PixelSpinner size="small" color={'#0A0A1A'} />
                   ) : (
                     <>
                       <PixelIcon
                         name={hasAdded ? 'checkmark' : 'add'}
                         size={14}
-                        color={hasAdded ? colors.text.secondary : colors.text.inverse}
+                        color={hasAdded ? 'rgba(10, 10, 26, 0.5)' : '#0A0A1A'}
                       />
                       <Text
                         style={[
