@@ -27,7 +27,6 @@ import {
   Dimensions,
   Alert,
   Platform,
-  ActivityIndicator,
   Keyboard,
   BackHandler,
 } from 'react-native';
@@ -43,6 +42,7 @@ import ReanimatedModule, {
 } from 'react-native-reanimated';
 import { GestureDetector } from 'react-native-gesture-handler';
 import PixelIcon from '../components/PixelIcon';
+import PixelSpinner from '../components/PixelSpinner';
 import StrokedNameText from '../components/StrokedNameText';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -173,27 +173,50 @@ const PhotoDetailScreen = () => {
 
   // Image loading state - shows spinner when photo is loading from network
   // startLoadTimer/clearLoadTimer are set after usePhotoDetailModal call below
-  const [imageLoading, setImageLoading] = useState(true);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const overlayDelayRef = useRef(null);
   const startLoadTimerRef = useRef(null);
   const clearLoadTimerRef = useRef(null);
+
+  // Delay showing the dark overlay by 150ms so cached images never flash
+  const scheduleOverlay = useCallback(() => {
+    if (overlayDelayRef.current) clearTimeout(overlayDelayRef.current);
+    overlayDelayRef.current = setTimeout(() => {
+      setShowLoadingOverlay(true);
+    }, 150);
+  }, []);
+
+  const cancelOverlay = useCallback(() => {
+    if (overlayDelayRef.current) {
+      clearTimeout(overlayDelayRef.current);
+      overlayDelayRef.current = null;
+    }
+    setShowLoadingOverlay(false);
+  }, []);
+
   const handleImageLoadStart = useCallback(() => {
-    setImageLoading(true);
+    scheduleOverlay();
     startLoadTimerRef.current?.();
-  }, []);
+  }, [scheduleOverlay]);
   const handleImageLoadEnd = useCallback(() => {
-    setImageLoading(false);
+    cancelOverlay();
     clearLoadTimerRef.current?.();
-  }, []);
+  }, [cancelOverlay]);
 
   // Reset loading state when photo changes (new photo starts loading)
   const prevPhotoIdRef = useRef(null);
   if (contextPhoto?.id !== prevPhotoIdRef.current) {
     prevPhotoIdRef.current = contextPhoto?.id;
-    // Only set loading if the photo actually changed (avoids flicker on re-renders)
     if (contextPhoto?.id) {
-      setImageLoading(true);
+      // Cancel any pending overlay from previous photo — onLoadStart will reschedule
+      cancelOverlay();
     }
   }
+
+  // Cleanup overlay delay timer on unmount
+  useEffect(() => {
+    return () => cancelOverlay();
+  }, [cancelOverlay]);
 
   // Reset cube state when screen mounts
   useEffect(() => {
@@ -1102,9 +1125,9 @@ const PhotoDetailScreen = () => {
             >
               <View style={styles.photoScrollView}>
                 {/* Dark loading overlay - covers photo completely during loading */}
-                {imageLoading && (
+                {showLoadingOverlay && (
                   <View style={localStyles.darkLoadingOverlay}>
-                    <ActivityIndicator size="small" color="rgba(255, 255, 255, 0.6)" />
+                    <PixelSpinner size="small" color="rgba(255, 255, 255, 0.6)" />
                   </View>
                 )}
                 <Image
