@@ -35,10 +35,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Tech Debt
 
 - [ ] **DEBT-01**: useConversation hook Phase 2 additions have dedicated unit tests
-- [ ] **DEBT-02**: Stale test assertion in snapFunctions.test.js line 522 is fixed
+- [x] **DEBT-02**: Stale test assertion in snapFunctions.test.js line 522 is fixed
 - [ ] **DEBT-03**: Firestore TTL policy configured for snap message auto-cleanup
 - [ ] **DEBT-04**: Firebase Storage lifecycle rule configured for orphaned snap photo cleanup
-- [ ] **DEBT-05**: `hoursSinceLastMutual` variable renamed to accurately reflect its calculation
+- [x] **DEBT-05**: `hoursSinceLastMutual` variable renamed to accurately reflect its calculation
 
 ## v2 Requirements
 
@@ -90,10 +90,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DARK-01     | 6     | Pending |
 | DARK-02     | 6     | Pending |
 | DEBT-01     | 6     | Pending |
-| DEBT-02     | 6     | Pending |
+| DEBT-02     | 6     | Complete |
 | DEBT-03     | 6     | Pending |
 | DEBT-04     | 6     | Pending |
-| DEBT-05     | 6     | Pending |
+| DEBT-05     | 6     | Complete |
 
 **Coverage:**
 

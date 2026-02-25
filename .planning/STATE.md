@@ -13,11 +13,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 6 of 10 (Tech Debt & Darkroom Optimization)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-25 — Roadmap created for v1.1
+Plan: 4 of 5 in current phase (06-04 complete)
+Status: Executing phase 6
+Last activity: 2026-02-25 — Completed 06-04-PLAN.md (DEBT-02 audit + DEBT-05 rename)
 
-Progress: [░░░░░░░░░░] 0% (v1.1)
+Progress: [██░░░░░░░░] 20% (v1.1)
 
 ## Performance Metrics
 
@@ -48,6 +48,10 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 
 **Decisions:** See PROJECT.md Key Decisions table (full log)
 
+**Phase 6 Decisions:**
+- DEBT-02 confirmed as audit-and-pass: stale assertion already fixed in v1.0, all 15 snapFunctions tests pass with no fragile assertions
+- Pre-existing notifications.test.js failure (reaction lastMessage) is out of scope for phase 6
+
 **Open blockers:** None
 
 ### Roadmap Evolution
@@ -65,9 +69,9 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Roadmap created for v1.1 milestone
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
 
 ---
 
-Last activity: 2026-02-25 — v1.1 roadmap created, ready to plan Phase 6
+Last activity: 2026-02-25 — Completed 06-04 (snapFunctions audit + hoursSinceLastMutual rename)
