@@ -63,9 +63,15 @@ describe('darkroomService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCurrentTime = 1000000; // Reset mock time
+    clearRevealCache(); // Reset module-level cache between tests
+    jest.spyOn(Date, 'now').mockReturnValue(mockCurrentTime * 1000); // Align Date.now() with mock timestamps
     mockQuery.mockReturnValue({ _query: true });
     mockCollection.mockReturnValue({ _collection: true });
     mockDoc.mockReturnValue({ _doc: true, ref: { id: 'test-doc' } });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   // ===========================================================================
