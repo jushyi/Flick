@@ -29,13 +29,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Story Viewing Performance
 
-- [ ] **PERF-01**: Photos display a blurred placeholder that crossfades to full resolution over 200ms (progressive loading)
-- [ ] **PERF-02**: Tapping to next photo immediately shows dark background + spinner instead of lingering on previous image
+- [x] **PERF-01**: Photos display a blurred placeholder that crossfades to full resolution over 200ms (progressive loading)
+- [x] **PERF-02**: Tapping to next photo immediately shows dark background + spinner instead of lingering on previous image
 - [ ] **PERF-03**: Cube transition between friends runs on the UI thread via Reanimated at 60fps
-- [ ] **PERF-04**: Next friend's first photo is prefetched while viewing current friend; next 2-3 photos within current friend are prefetched
-- [ ] **PERF-05**: Feed story cards load in paginated batches with a "Load more" button
-- [ ] **PERF-06**: Firestore real-time listeners pause during photo/friend transitions and resume after settling
-- [ ] **PERF-07**: Failed image loads auto-skip to the next photo after a timeout
+- [x] **PERF-04**: Next friend's first photo is prefetched while viewing current friend; next 2-3 photos within current friend are prefetched
+- [x] **PERF-05**: Feed story cards load in paginated batches with a "Load more" button
+- [x] **PERF-06**: Firestore real-time listeners pause during photo/friend transitions and resume after settling
+- [x] **PERF-07**: Failed image loads auto-skip to the next photo after a timeout
 - [ ] **PERF-08**: New photos generate a tiny thumbnail at upload time stored as base64 data URL in Firestore
 
 ### Darkroom Optimization
@@ -87,13 +87,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status  |
 | ----------- | ----- | ------- |
-| PERF-01     | 7     | Pending |
-| PERF-02     | 7     | Pending |
+| PERF-01     | 7     | Complete |
+| PERF-02     | 7     | Complete |
 | PERF-03     | 7     | Pending |
-| PERF-04     | 7     | Pending |
-| PERF-05     | 7     | Pending |
-| PERF-06     | 7     | Pending |
-| PERF-07     | 7     | Pending |
+| PERF-04     | 7     | Complete |
+| PERF-05     | 7     | Complete |
+| PERF-06     | 7     | Complete |
+| PERF-07     | 7     | Complete |
 | PERF-08     | 7     | Pending |
 | SCRN-01     | 8     | Pending |
 | SCRN-02     | 8     | Pending |
