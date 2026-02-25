@@ -1138,30 +1138,36 @@ const PhotoDetailScreen = () => {
 
           {/* Add to feed button - visible when viewing tagged photo as recipient */}
           {showAddToFeedButton && (
-            <TouchableOpacity
+            <View
               style={[
-                localStyles.addToFeedButton,
-                (hasAddedToFeed || isAddingToFeed) && localStyles.addToFeedButtonDisabled,
+                localStyles.addToFeedContainer,
                 Platform.OS === 'android' && { bottom: 150 + insets.bottom },
               ]}
-              onPress={handleAddToFeed}
-              disabled={hasAddedToFeed || isAddingToFeed}
-              activeOpacity={0.7}
             >
-              <PixelIcon
-                name="image-outline"
-                size={16}
-                color={hasAddedToFeed ? colors.text.tertiary : colors.text.primary}
-              />
-              <Text
+              <TouchableOpacity
                 style={[
-                  localStyles.addToFeedText,
-                  hasAddedToFeed && localStyles.addToFeedTextDisabled,
+                  localStyles.addToFeedButton,
+                  (hasAddedToFeed || isAddingToFeed) && localStyles.addToFeedButtonDisabled,
                 ]}
+                onPress={handleAddToFeed}
+                disabled={hasAddedToFeed || isAddingToFeed}
+                activeOpacity={0.7}
               >
-                {isAddingToFeed ? 'Adding...' : hasAddedToFeed ? 'Added to feed' : 'Add to feed'}
-              </Text>
-            </TouchableOpacity>
+                <PixelIcon
+                  name="image-outline"
+                  size={16}
+                  color={hasAddedToFeed ? 'rgba(10, 10, 26, 0.5)' : '#0A0A1A'}
+                />
+                <Text
+                  style={[
+                    localStyles.addToFeedText,
+                    hasAddedToFeed && localStyles.addToFeedTextDisabled,
+                  ]}
+                >
+                  {isAddingToFeed ? 'Adding...' : hasAddedToFeed ? 'Added to feed' : 'Add to feed'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           {/* Progress bar - stories mode only */}
@@ -1578,19 +1584,24 @@ const localStyles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
-  // Add to feed button for tagged photo context
-  addToFeedButton: {
+  // Centering container for add to feed button
+  addToFeedContainer: {
     position: 'absolute',
     bottom: 150,
-    left: 22,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  // Add to feed button for tagged photo context
+  addToFeedButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.overlay.dark,
+    backgroundColor: colors.interactive.primary,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
-    zIndex: 10,
+    borderRadius: 4,
   },
   addToFeedButtonDisabled: {
     opacity: 0.5,
@@ -1598,10 +1609,10 @@ const localStyles = StyleSheet.create({
   addToFeedText: {
     fontSize: 12,
     fontFamily: 'Silkscreen_700Bold',
-    color: colors.text.primary,
+    color: '#0A0A1A',
   },
   addToFeedTextDisabled: {
-    color: colors.text.tertiary,
+    color: 'rgba(10, 10, 26, 0.5)',
   },
 });
 
