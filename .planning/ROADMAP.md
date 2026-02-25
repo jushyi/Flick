@@ -87,11 +87,12 @@ Plans:
 2. A screenshotted snap displays a visual indicator (e.g., sparkle/eye icon) on its bubble in the conversation thread
 3. The snap message document in Firestore contains a `screenshottedAt` timestamp field after a screenshot event
 
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 Plans:
 
-- [ ] 08-01-PLAN.md — Service layer: expo-screen-capture install, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
+- [ ] 08-00-PLAN.md — Wave 0: Test scaffolds for screenshotService and Cloud Function notification handling (RED tests)
+- [ ] 08-01-PLAN.md — Service layer: expo-screen-capture install, Firestore rules update, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
 - [ ] 08-02-PLAN.md — UI integration: useScreenshotDetection hook, SystemMessage component, SnapViewer wiring, ConversationScreen rendering
 
 ### Phase 9: Pinned Snaps iOS
