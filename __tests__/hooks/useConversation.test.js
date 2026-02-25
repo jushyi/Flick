@@ -35,12 +35,20 @@ const mockSubscribeToMessages = jest.fn();
 const mockLoadMoreMessages = jest.fn();
 const mockSendMessage = jest.fn();
 const mockMarkConversationRead = jest.fn();
+const mockSendReaction = jest.fn();
+const mockRemoveReaction = jest.fn();
+const mockSendReply = jest.fn();
+const mockDeleteMessageForMe = jest.fn();
 
 jest.mock('../../src/services/firebase/messageService', () => ({
   subscribeToMessages: (...args) => mockSubscribeToMessages(...args),
   loadMoreMessages: (...args) => mockLoadMoreMessages(...args),
   sendMessage: (...args) => mockSendMessage(...args),
   markConversationRead: (...args) => mockMarkConversationRead(...args),
+  sendReaction: (...args) => mockSendReaction(...args),
+  removeReaction: (...args) => mockRemoveReaction(...args),
+  sendReply: (...args) => mockSendReply(...args),
+  deleteMessageForMe: (...args) => mockDeleteMessageForMe(...args),
 }));
 
 // Track onSnapshot callbacks for testing
@@ -302,6 +310,90 @@ describe('useConversation', () => {
       unmount();
 
       expect(mockAppStateRemove).toHaveBeenCalled();
+    });
+  });
+
+  // ===========================================================================
+  // Phase 2: reactions
+  // ===========================================================================
+  describe('Phase 2: reactions', () => {
+    it('should call sendReaction with conversationId, currentUserId, targetMessageId, emoji', async () => {
+      mockSendReaction.mockResolvedValue({ success: true, messageId: 'rxn-1' });
+
+      const { result } = renderHook(() => useConversation(mockConversationId, mockCurrentUserId));
+
+      await act(async () => {
+        await result.current.handleSendReaction('msg-1', 'heart');
+      });
+
+      expect(mockSendReaction).toHaveBeenCalledWith(
+        mockConversationId,
+        mockCurrentUserId,
+        'msg-1',
+        'heart'
+      );
+    });
+
+    it('should call removeReaction with conversationId, currentUserId, targetMessageId', async () => {
+      mockRemoveReaction.mockResolvedValue({ success: true });
+
+      const { result } = renderHook(() => useConversation(mockConversationId, mockCurrentUserId));
+
+      await act(async () => {
+        await result.current.handleRemoveReaction('msg-1');
+      });
+
+      expect(mockRemoveReaction).toHaveBeenCalledWith(
+        mockConversationId,
+        mockCurrentUserId,
+        'msg-1'
+      );
+    });
+  });
+
+  // ===========================================================================
+  // Phase 2: replies
+  // ===========================================================================
+  describe('Phase 2: replies', () => {
+    it('should call sendReply with correct arguments including replyToMessage', async () => {
+      mockSendReply.mockResolvedValue({ success: true, messageId: 'reply-1' });
+      const replyToMessage = { id: 'orig-1', senderId: 'user2', type: 'text' };
+
+      const { result } = renderHook(() => useConversation(mockConversationId, mockCurrentUserId));
+
+      await act(async () => {
+        await result.current.handleSendReply('reply text', null, null, replyToMessage);
+      });
+
+      expect(mockSendReply).toHaveBeenCalledWith(
+        mockConversationId,
+        mockCurrentUserId,
+        'reply text',
+        null,
+        null,
+        replyToMessage
+      );
+    });
+  });
+
+  // ===========================================================================
+  // Phase 2: soft deletion
+  // ===========================================================================
+  describe('Phase 2: soft deletion', () => {
+    it('should call deleteMessageForMe with conversationId, currentUserId, messageId', async () => {
+      mockDeleteMessageForMe.mockResolvedValue({ success: true });
+
+      const { result } = renderHook(() => useConversation(mockConversationId, mockCurrentUserId));
+
+      await act(async () => {
+        await result.current.handleDeleteForMe('msg-to-delete');
+      });
+
+      expect(mockDeleteMessageForMe).toHaveBeenCalledWith(
+        mockConversationId,
+        mockCurrentUserId,
+        'msg-to-delete'
+      );
     });
   });
 });
