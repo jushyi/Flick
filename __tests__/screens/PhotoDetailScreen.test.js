@@ -173,6 +173,8 @@ let mockCurrentPhoto = {
 
 const mockContextUserId = 'current-user-123';
 
+const mockContextAvatarPress = jest.fn();
+
 jest.mock('../../src/context/PhotoDetailContext', () => ({
   usePhotoDetail: () => ({
     currentPhoto: mockCurrentPhoto,
@@ -193,7 +195,7 @@ jest.mock('../../src/context/PhotoDetailContext', () => ({
     handleRequestNextFriend: jest.fn(),
     handleRequestPreviousFriend: jest.fn(),
     handleCancelFriendTransition: jest.fn(),
-    handleAvatarPress: jest.fn(),
+    handleAvatarPress: mockContextAvatarPress,
     handleClose: jest.fn(),
     handlePhotoStateChanged: jest.fn(),
     updateCurrentPhoto: jest.fn(),
@@ -243,7 +245,7 @@ describe('PhotoDetailScreen', () => {
       expect(screen.queryByText(/Photo by @/)).toBeNull();
     });
 
-    it('navigates to photographer profile when attribution tapped', () => {
+    it('navigates to photographer profile via contextAvatarPress when attribution tapped', () => {
       mockCurrentPhoto = {
         ...mockCurrentPhoto,
         attribution: {
@@ -255,10 +257,7 @@ describe('PhotoDetailScreen', () => {
 
       render(<PhotoDetailScreen />);
       fireEvent.press(screen.getByText('Photo by @alice'));
-      expect(mockNavigate).toHaveBeenCalledWith('OtherUserProfile', {
-        userId: 'uid1',
-        username: 'Alice',
-      });
+      expect(mockContextAvatarPress).toHaveBeenCalledWith('uid1', 'Alice');
     });
   });
 

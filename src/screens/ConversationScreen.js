@@ -31,6 +31,7 @@ import PixelConfirmDialog from '../components/PixelConfirmDialog';
 import SnapViewer from '../components/SnapViewer';
 
 import { useAuth } from '../context/AuthContext';
+import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import useConversation from '../hooks/useConversation';
 import useMessageActions from '../hooks/useMessageActions';
 import { useStreak } from '../hooks/useStreaks';
@@ -87,6 +88,9 @@ const ConversationScreen = () => {
       cancelled = true;
     };
   }, [friendId, friendProfile?.username, friendProfile?.displayName]);
+
+  // --- PhotoDetail actions for tagged photo navigation ---
+  const { openPhotoDetail } = usePhotoDetailActions();
 
   // --- Streak data for header and DMInput ---
   const { streakState, dayCount: streakDayCount } = useStreak(user?.uid, friendId);
@@ -410,12 +414,26 @@ const ConversationScreen = () => {
 
       const pressHandler = isTaggedPhotoMessage
         ? msg => {
-            navigation.navigate('PhotoDetail', {
+            openPhotoDetail({
               photo: {
                 id: msg.photoId,
                 imageURL: msg.photoURL,
+                photoURL: msg.photoURL,
                 userId: msg.photoOwnerId,
               },
+              photos: [
+                {
+                  id: msg.photoId,
+                  imageURL: msg.photoURL,
+                  photoURL: msg.photoURL,
+                  userId: msg.photoOwnerId,
+                },
+              ],
+              initialIndex: 0,
+              mode: 'feed',
+              currentUserId: user.uid,
+            });
+            navigation.navigate('PhotoDetail', {
               taggedPhotoContext: {
                 messageId: msg.id,
                 conversationId: conversationId,
@@ -474,6 +492,7 @@ const ConversationScreen = () => {
       handleSnapPress,
       conversationId,
       navigation,
+      openPhotoDetail,
     ]
   );
 

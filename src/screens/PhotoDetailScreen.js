@@ -543,15 +543,16 @@ const PhotoDetailScreen = () => {
 
   /**
    * Handle attribution press - navigate to photographer's profile
+   * Uses contextAvatarPress (ProfileFromPhotoDetail fullScreenModal) so the profile
+   * renders above the transparent PhotoDetail modal, not behind it.
    */
   const handlePhotographerPress = useCallback(
     (photographerId, photographerDisplayName) => {
-      navigation.navigate('OtherUserProfile', {
-        userId: photographerId,
-        username: photographerDisplayName,
-      });
+      if (contextAvatarPress) {
+        contextAvatarPress(photographerId, photographerDisplayName);
+      }
     },
-    [navigation]
+    [contextAvatarPress]
   );
 
   // Tagged photo "Add to feed" state
