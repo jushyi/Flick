@@ -1,23 +1,16 @@
 /**
  * TaggedPhotoBubble Styles
  *
- * Distinct visual styling for tagged photo message cards in DM conversations.
- * Uses a soft teal/cyan accent border to differentiate from:
- * - Snap messages (amber accent)
- * - Regular text messages (default bubble styling)
- *
- * The card renders as a large photo with header text and an inline
- * "Add to feed" action button for recipients.
+ * Transparent card styling for tagged photo message cards in DM conversations.
+ * Matches the reply/media bubble transparent style pattern (no colored border
+ * or background). The photo displays at natural portrait aspect ratio with an
+ * "Add to feed" button overlaid inside at the bottom center.
  */
 
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
-
-const TAG_ACCENT = '#00B8D4'; // Soft teal — distinct from snap amber and interactive cyan
-const TAG_BG = 'rgba(0, 184, 212, 0.08)';
-const TAG_BORDER = 'rgba(0, 184, 212, 0.3)';
 
 export const styles = StyleSheet.create({
   container: {
@@ -32,21 +25,10 @@ export const styles = StyleSheet.create({
   card: {
     width: 240,
     borderRadius: 6,
-    borderWidth: 1,
-    borderColor: TAG_BORDER,
-    backgroundColor: TAG_BG,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: TAG_ACCENT,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   headerContainer: {
     paddingHorizontal: 10,
@@ -60,37 +42,39 @@ export const styles = StyleSheet.create({
   },
   photoContainer: {
     width: '100%',
-    aspectRatio: 4 / 3,
+    position: 'relative',
   },
   photo: {
     width: '100%',
-    height: '100%',
-    borderRadius: 0,
+    aspectRatio: 3 / 4,
+    borderRadius: 6,
   },
   photoPlaceholder: {
     width: '100%',
-    height: '100%',
+    aspectRatio: 3 / 4,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background.tertiary,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+  buttonOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: TAG_ACCENT,
-    borderRadius: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 16,
     paddingHorizontal: 12,
     height: 32,
     gap: 4,
   },
   addButtonDisabled: {
-    backgroundColor: colors.background.tertiary,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   addButtonText: {
     fontSize: 11,
@@ -113,5 +97,3 @@ export const styles = StyleSheet.create({
     textAlign: 'left',
   },
 });
-
-export { TAG_ACCENT };

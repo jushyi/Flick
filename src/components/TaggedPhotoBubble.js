@@ -1,13 +1,13 @@
 /**
  * TaggedPhotoBubble - Tagged photo message card for DM conversations
  *
- * Renders a tagged photo as a large, visually distinct card in the conversation
- * thread. Both sender and recipient see the same large photo card (no compact
- * version). The card includes:
+ * Renders a tagged photo as a transparent card in the conversation thread,
+ * matching the reply/media bubble styling. Both sender and recipient see the
+ * same card. The card includes:
  *
  * 1. Header text: "[Name] tagged you in a photo" (recipient) / "You tagged in a photo" (sender)
- * 2. Large photo image (4:3 aspect ratio)
- * 3. "Add to feed" button (recipient only, one-tap add)
+ * 2. Large photo image (3:4 portrait aspect ratio)
+ * 3. "Add to feed" button overlaid inside photo at bottom center (recipient only)
  * 4. Optional ReactionBadges below the card
  * 5. Optional timestamp
  *
@@ -27,7 +27,7 @@ import ReactionBadges from './ReactionBadges';
 
 import { addTaggedPhotoToFeed } from '../services/firebase/photoTagService';
 
-import { styles, TAG_ACCENT } from '../styles/TaggedPhotoBubble.styles';
+import { styles } from '../styles/TaggedPhotoBubble.styles';
 
 import { colors } from '../constants/colors';
 
@@ -110,41 +110,40 @@ const TaggedPhotoBubble = ({
                 onError={() => setImageError(true)}
               />
             )}
+            {/* Add to feed button - recipient only, overlaid inside photo */}
+            {!isCurrentUser && (
+              <View style={styles.buttonOverlay}>
+                <TouchableOpacity
+                  style={[styles.addButton, (hasAdded || isAdding) && styles.addButtonDisabled]}
+                  onPress={handleAddToFeed}
+                  disabled={hasAdded || isAdding}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={hasAdded ? 'Added to feed' : 'Add to feed'}
+                >
+                  {isAdding ? (
+                    <PixelSpinner size="small" color={colors.text.primary} />
+                  ) : (
+                    <>
+                      <PixelIcon
+                        name={hasAdded ? 'checkmark' : 'add'}
+                        size={14}
+                        color={hasAdded ? colors.text.secondary : colors.text.inverse}
+                      />
+                      <Text
+                        style={[
+                          styles.addButtonText,
+                          (hasAdded || isAdding) && styles.addButtonTextDisabled,
+                        ]}
+                      >
+                        {hasAdded ? 'Added to feed' : 'Add to feed'}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
-
-          {/* Add to feed button - recipient only */}
-          {!isCurrentUser && (
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[styles.addButton, (hasAdded || isAdding) && styles.addButtonDisabled]}
-                onPress={handleAddToFeed}
-                disabled={hasAdded || isAdding}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={hasAdded ? 'Added to feed' : 'Add to feed'}
-              >
-                {isAdding ? (
-                  <PixelSpinner size="small" color={TAG_ACCENT} />
-                ) : (
-                  <>
-                    <PixelIcon
-                      name={hasAdded ? 'checkmark' : 'add'}
-                      size={14}
-                      color={hasAdded ? colors.text.secondary : colors.text.inverse}
-                    />
-                    <Text
-                      style={[
-                        styles.addButtonText,
-                        (hasAdded || isAdding) && styles.addButtonTextDisabled,
-                      ]}
-                    >
-                      {hasAdded ? 'Added to feed' : 'Add to feed'}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </TouchableOpacity>
 
