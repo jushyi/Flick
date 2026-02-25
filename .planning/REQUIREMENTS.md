@@ -76,32 +76,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status  |
 | ----------- | ----- | ------- |
-| SCRN-01     | —     | Pending |
-| SCRN-02     | —     | Pending |
-| SCRN-03     | —     | Pending |
-| PINI-01     | —     | Pending |
-| PINI-02     | —     | Pending |
-| PINI-03     | —     | Pending |
-| PINI-04     | —     | Pending |
-| PINI-05     | —     | Pending |
-| PINA-01     | —     | Pending |
-| PINA-02     | —     | Pending |
-| PINA-03     | —     | Pending |
-| DARK-01     | —     | Pending |
-| DARK-02     | —     | Pending |
-| DEBT-01     | —     | Pending |
-| DEBT-02     | —     | Pending |
-| DEBT-03     | —     | Pending |
-| DEBT-04     | —     | Pending |
-| DEBT-05     | —     | Pending |
+| SCRN-01     | 7     | Pending |
+| SCRN-02     | 7     | Pending |
+| SCRN-03     | 7     | Pending |
+| PINI-01     | 8     | Pending |
+| PINI-02     | 8     | Pending |
+| PINI-03     | 8     | Pending |
+| PINI-04     | 8     | Pending |
+| PINI-05     | 8     | Pending |
+| PINA-01     | 9     | Pending |
+| PINA-02     | 9     | Pending |
+| PINA-03     | 9     | Pending |
+| DARK-01     | 6     | Pending |
+| DARK-02     | 6     | Pending |
+| DEBT-01     | 6     | Pending |
+| DEBT-02     | 6     | Pending |
+| DEBT-03     | 6     | Pending |
+| DEBT-04     | 6     | Pending |
+| DEBT-05     | 6     | Pending |
 
 **Coverage:**
 
-- v1.1 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15
+- v1.1 requirements: 18 total
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 
 _Requirements defined: 2026-02-25_
-_Last updated: 2026-02-25 after initial definition_
+_Last updated: 2026-02-25 after roadmap creation (traceability populated)_
