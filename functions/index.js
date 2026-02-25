@@ -2877,9 +2877,10 @@ async function updateStreakOnSnap(conversationId, senderId, recipientId) {
     // Mutual snaps detected! Check if >= 24h since lastMutualAt
     const lastMutualAt = streak.lastMutualAt;
     const lastMutualMs = lastMutualAt ? lastMutualAt.toMillis() : 0;
-    const hoursSinceLastMutual = lastMutualAt ? (nowMs - lastMutualMs) / DAY_MS : Infinity;
+    // daysSinceLastMutual < 1 means less than one full day (< 24h) since last mutual exchange
+    const daysSinceLastMutual = lastMutualAt ? (nowMs - lastMutualMs) / DAY_MS : Infinity;
 
-    if (hoursSinceLastMutual < 1) {
+    if (daysSinceLastMutual < 1) {
       // Less than 24h since last mutual exchange — just record the snap
       transaction.update(streakRef, {
         [`lastSnapBy.${senderId}`]: now,
