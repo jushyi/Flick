@@ -84,12 +84,19 @@ Progress: [██████░░░░] 45% (v1.1)
 - expo-live-activity is early-stage (MEDIUM confidence) — Voltra is documented fallback
 - PINI features use App Groups workaround for photo thumbnails in Live Activities
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 36 | Fix BackHandler.removeEventListener crash on Android stories | 2026-02-25 | 8486fe8 | [36-fix-backhandler-removeeventlistener-cras](./quick/36-fix-backhandler-removeeventlistener-cras/) |
+| 35 | Fix mispositioned loading spinner on Android | 2026-02-25 | 3e43ebe | [35-fix-mispositioned-loading-spinner-on-and](./quick/35-fix-mispositioned-loading-spinner-on-and/) |
+
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed quick task 36 (BackHandler.removeEventListener fix)
+Stopped at: Completed quick task 35 (fix mispositioned loading spinner on Android)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-25 — Completed quick-36 (fix BackHandler.removeEventListener crash on Android stories)
+Last activity: 2026-02-25 - Completed quick task 35: Fix mispositioned PixelSpinner on Android via View wrapper
