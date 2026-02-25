@@ -29,6 +29,7 @@ import {
   Platform,
   ActivityIndicator,
   Keyboard,
+  BackHandler,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -621,6 +622,19 @@ const PhotoDetailScreen = () => {
   useEffect(() => {
     updateCommentsVisible(showComments);
   }, [showComments, updateCommentsVisible]);
+
+  // Android hardware back button: trigger suck-back dismiss animation (same as swipe-down)
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const onBackPress = () => {
+      animatedClose();
+      return true; // Prevent default back behavior
+    };
+
+    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+  }, [animatedClose]);
 
   // Check if viewing own photo (disable avatar tap)
   const isOwnPhoto = currentPhoto?.userId === contextUserId;
