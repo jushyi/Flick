@@ -56,6 +56,7 @@ const db = getFirestore();
 // Layout constants
 const HEADER_HEIGHT = 68; // paddingVertical: 16 × 2 + title height
 const TAB_BAR_HEIGHT = 88; // iOS tab bar with safe area
+const STORY_BATCH_SIZE = 10; // Number of friend story cards loaded per batch
 
 const FeedScreen = () => {
   const { user, userProfile } = useAuth();
@@ -111,6 +112,9 @@ const FeedScreen = () => {
   const selectedFriendIndexRef = useRef(0);
   const storySequenceRef = useRef([]); // Story sequence locked at session start (stable ordering)
   const startedOnViewedRef = useRef(false); // Whether story session started on a viewed friend
+
+  // Story pagination state
+  const [visibleStoryCount, setVisibleStoryCount] = useState(STORY_BATCH_SIZE);
 
   // Own stories state
   const [myStories, setMyStories] = useState(null);
@@ -386,6 +390,8 @@ const FeedScreen = () => {
 
   const handleRefresh = async () => {
     logger.debug('FeedScreen: Pull-to-refresh triggered');
+    // Reset story pagination to first batch on refresh
+    setVisibleStoryCount(STORY_BATCH_SIZE);
     // Refresh all data sources in parallel
     await Promise.all([refreshFeed(), loadFriendStories(), loadMyStories(), reloadViewedState()]);
   };
@@ -473,7 +479,8 @@ const FeedScreen = () => {
     selectedFriendRef.current = friend;
     selectedFriendIndexRef.current = friendIdx;
     storiesCurrentIndexRef.current = startIndex;
-    storySequenceRef.current = sortedFriends; // Lock in sequence for this session
+    // Only include friends currently visible in the feed (locked sequence)
+    storySequenceRef.current = sortedFriends.slice(0, visibleStoryCount);
 
     // Set mode flags
     isInStoriesModeRef.current = true;
@@ -1264,6 +1271,10 @@ const FeedScreen = () => {
       return null;
     }
 
+    // Paginate friend story cards
+    const visibleFriends = sortedFriends.slice(0, visibleStoryCount);
+    const hasMoreFriends = visibleStoryCount < sortedFriends.length;
+
     return (
       <View style={styles.storiesContainer}>
         <ScrollView
@@ -1283,8 +1294,8 @@ const FeedScreen = () => {
               firstUnviewedIndex={getFirstUnviewedIndex(myStories.topPhotos || [])}
             />
           )}
-          {/* Friend cards after MeStoryCard */}
-          {sortedFriends.map((friend, index) => (
+          {/* Friend cards after MeStoryCard (paginated) */}
+          {visibleFriends.map((friend, index) => (
             <FriendStoryCard
               key={friend.userId}
               friend={friend}
@@ -1295,6 +1306,17 @@ const FeedScreen = () => {
               firstUnviewedIndex={getFirstUnviewedIndex(friend.topPhotos || [])}
             />
           ))}
+          {/* Load more button when more friends exist beyond current batch */}
+          {hasMoreFriends && (
+            <TouchableOpacity
+              style={styles.loadMoreStoriesButton}
+              onPress={() => setVisibleStoryCount(prev => prev + STORY_BATCH_SIZE)}
+              activeOpacity={0.7}
+            >
+              <PixelIcon name="chevron-forward" size={16} color={colors.text.secondary} />
+              <Text style={styles.loadMoreStoriesText}>More</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </View>
     );
@@ -1566,6 +1588,22 @@ const styles = StyleSheet.create({
     borderRadius: layout.borderRadius.sm,
     backgroundColor: colors.background.tertiary,
     overflow: 'hidden', // Contain shimmer
+  },
+  // Load more stories button
+  loadMoreStoriesButton: {
+    width: 56,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background.tertiary,
+    borderRadius: layout.borderRadius.sm,
+    marginLeft: spacing.xs,
+    gap: 4,
+  },
+  loadMoreStoriesText: {
+    fontSize: 9,
+    fontFamily: typography.fontFamily.bodyBold,
+    color: colors.text.secondary,
   },
   // Shimmer highlight bar that sweeps across skeleton elements
   shimmerHighlight: {

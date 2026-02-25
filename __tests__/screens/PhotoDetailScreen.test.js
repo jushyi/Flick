@@ -3,6 +3,11 @@
  *
  * Tests for attribution display on reshared photos and "Add to feed" button
  * when opened from a tagged photo message context.
+ *
+ * Phase 7 test scaffolds (skipped/todo until implementation):
+ * - Progressive loading (thumbnailDataURL, transition timing)
+ * - Dark loading overlay (spinner on image load)
+ * - Subscription pause/resume during cube transitions
  */
 
 import React from 'react';
@@ -309,5 +314,29 @@ describe('PhotoDetailScreen', () => {
       render(<PhotoDetailScreen />);
       expect(screen.getByText('Added to feed')).toBeTruthy();
     });
+  });
+
+  // ─── Phase 7: Progressive Loading ──────────────────────────────────────
+
+  describe('progressive loading', () => {
+    it.todo('renders placeholder prop with thumbnailDataURL when available');
+    it.todo('sets transition={200} when thumbnailDataURL exists');
+    it.todo('sets transition={0} when thumbnailDataURL is absent');
+  });
+
+  // ─── Phase 7: Dark Loading Overlay ─────────────────────────────────────
+
+  describe('dark loading overlay', () => {
+    it.todo('shows dark overlay with spinner when imageLoading is true');
+    it.todo('hides dark overlay when image finishes loading');
+    it.todo('shows dark overlay immediately on photo change');
+  });
+
+  // ─── Phase 7: Subscription Pause/Resume ────────────────────────────────
+
+  describe('subscription pause/resume', () => {
+    it.todo('pauses subscription at start of cube transition');
+    it.todo('resumes subscription when contextPhoto.id changes');
+    it.todo('cleans up subscription on unmount');
   });
 });
