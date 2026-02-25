@@ -62,6 +62,8 @@ export const usePhotoDetailModal = ({
   onPrepareSwipeTransition, // (direction) => boolean - prepare transition at drag start
   onCommitSwipeTransition, // () => void - complete transition after commit animation
   onCancelSwipeTransition, // () => void - cancel transition after spring-back animation
+  // Next-friend prefetching
+  onGetNextFriendPhotoURL, // () => string|null - returns next friend's first photo URL for prefetching
 }) => {
   // Stories mode: current photo index
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -88,6 +90,10 @@ export const usePhotoDetailModal = ({
   const [activeCustomEmojis, setActiveCustomEmojis] = useState([]);
   // Track newly added emoji for highlight animation (null when no highlight needed)
   const [newlyAddedEmoji, setNewlyAddedEmoji] = useState(null);
+
+  // Auto-skip on load failure: if image doesn't load within 5 seconds, skip to next photo
+  const LOAD_FAILURE_TIMEOUT = 5000; // ms
+  const loadFailureTimeoutRef = useRef(null);
 
   // Minimum display time tracking for rapid taps (ensures each photo is briefly visible)
   const lastTapTimeRef = useRef(0);
@@ -230,6 +236,18 @@ export const usePhotoDetailModal = ({
       Image.prefetch(urlsToPrefetch, 'memory-disk').catch(() => {});
     }
   }, [mode, visible, currentIndex, photos]);
+
+  // Prefetch next friend's first photo when near the end of current friend's story
+  useEffect(() => {
+    if (mode !== 'stories' || !visible) return;
+    if (currentIndex >= photos.length - 2 && onGetNextFriendPhotoURL) {
+      const nextURL = onGetNextFriendPhotoURL();
+      if (nextURL) {
+        Image.prefetch(nextURL, 'memory-disk').catch(() => {});
+        logger.debug('usePhotoDetailModal: Prefetched next friend first photo');
+      }
+    }
+  }, [mode, visible, currentIndex, photos.length, onGetNextFriendPhotoURL]);
 
   // Derive current photo based on mode
   // Clamp index to valid range to prevent null during friend transitions
@@ -557,6 +575,31 @@ export const usePhotoDetailModal = ({
     }
     return true;
   }, [mode, currentIndex, photos, onPhotoChange, onFriendTransition, clearQueuedTap]);
+
+  /**
+   * Clear the load failure timeout (called on successful load, manual navigation, unmount)
+   */
+  const clearLoadTimer = useCallback(() => {
+    if (loadFailureTimeoutRef.current) {
+      clearTimeout(loadFailureTimeoutRef.current);
+      loadFailureTimeoutRef.current = null;
+    }
+  }, []);
+
+  /**
+   * Start the load failure timeout (auto-skips to next photo after LOAD_FAILURE_TIMEOUT ms)
+   * Only active in stories mode — feed mode has no auto-skip behavior
+   */
+  const startLoadTimer = useCallback(() => {
+    clearLoadTimer();
+    if (mode !== 'stories') return;
+    loadFailureTimeoutRef.current = setTimeout(() => {
+      logger.warn('usePhotoDetailModal: Image load timeout, auto-skipping', {
+        photoId: currentPhoto?.id,
+      });
+      goNext();
+    }, LOAD_FAILURE_TIMEOUT);
+  }, [clearLoadTimer, mode, goNext, currentPhoto?.id]);
 
   /**
    * Close modal with animation
@@ -989,8 +1032,9 @@ export const usePhotoDetailModal = ({
         clearTimeout(sortTimerRef.current);
       }
       clearQueuedTap();
+      clearLoadTimer();
     };
-  }, [clearQueuedTap]);
+  }, [clearQueuedTap, clearLoadTimer]);
 
   return {
     // Mode
@@ -1050,5 +1094,9 @@ export const usePhotoDetailModal = ({
 
     // Horizontal gesture for friend-to-friend swipe (Gesture.Pan)
     horizontalGesture,
+
+    // Load failure timer (for auto-skip on image load timeout)
+    startLoadTimer,
+    clearLoadTimer,
   };
 };

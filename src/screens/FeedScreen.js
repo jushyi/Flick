@@ -385,6 +385,16 @@ const FeedScreen = () => {
         loadMyStories();
       },
       onCommentCountChange: handleCommentCountChange,
+      getNextFriendFirstPhotoURL: () => {
+        const sequence = storySequenceRef.current;
+        const currentIdx = selectedFriendIndexRef.current;
+        const nextFriend = sequence[currentIdx + 1];
+        if (!nextFriend) return null;
+        const nextPhotos = nextFriend.topPhotos || [];
+        const nextStartIdx = getFirstUnviewedIndex(nextPhotos);
+        const nextPhoto = nextPhotos[nextStartIdx];
+        return nextPhoto?.imageURL || null;
+      },
     });
   }, [setCallbacks, user?.uid, handleCommentCountChange]);
 

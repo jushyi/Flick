@@ -172,9 +172,18 @@ const PhotoDetailScreen = () => {
   }, []);
 
   // Image loading state - shows spinner when photo is loading from network
+  // startLoadTimer/clearLoadTimer are set after usePhotoDetailModal call below
   const [imageLoading, setImageLoading] = useState(true);
-  const handleImageLoadStart = useCallback(() => setImageLoading(true), []);
-  const handleImageLoadEnd = useCallback(() => setImageLoading(false), []);
+  const startLoadTimerRef = useRef(null);
+  const clearLoadTimerRef = useRef(null);
+  const handleImageLoadStart = useCallback(() => {
+    setImageLoading(true);
+    startLoadTimerRef.current?.();
+  }, []);
+  const handleImageLoadEnd = useCallback(() => {
+    setImageLoading(false);
+    clearLoadTimerRef.current?.();
+  }, []);
 
   // Reset loading state when photo changes (new photo starts loading)
   const prevPhotoIdRef = useRef(null);
@@ -201,32 +210,47 @@ const PhotoDetailScreen = () => {
     }
   }, []);
 
+  // Subscription pause/resume for Firestore photo updates
+  // Paused during cube transitions to avoid flicker from real-time updates
+  const subscriptionRef = useRef(null);
+
+  const pauseSubscription = useCallback(() => {
+    if (subscriptionRef.current) {
+      logger.debug('PhotoDetailScreen: Pausing photo subscription');
+      subscriptionRef.current();
+      subscriptionRef.current = null;
+    }
+  }, []);
+
+  const resumeSubscription = useCallback(
+    photoId => {
+      pauseSubscription();
+      if (!photoId) return;
+
+      logger.debug('PhotoDetailScreen: Resuming photo subscription', { photoId });
+      subscriptionRef.current = subscribePhoto(photoId, result => {
+        if (result.success && result.photo) {
+          logger.debug('PhotoDetailScreen: Photo updated from subscription', {
+            photoId: result.photo.id,
+            tagCount: result.photo.taggedUserIds?.length || 0,
+          });
+          updateCurrentPhoto(result.photo);
+        } else {
+          logger.warn('PhotoDetailScreen: Photo subscription error', {
+            error: result.error,
+          });
+        }
+      });
+    },
+    [pauseSubscription, updateCurrentPhoto]
+  );
+
   // Subscribe to current photo for real-time updates (tags, reactions, etc.)
   useEffect(() => {
     if (!contextPhoto?.id) return;
-
-    logger.debug('PhotoDetailScreen: Setting up photo subscription', { photoId: contextPhoto.id });
-
-    const unsubscribe = subscribePhoto(contextPhoto.id, result => {
-      if (result.success && result.photo) {
-        logger.debug('PhotoDetailScreen: Photo updated from subscription', {
-          photoId: result.photo.id,
-          tagCount: result.photo.taggedUserIds?.length || 0,
-        });
-
-        updateCurrentPhoto(result.photo);
-      } else {
-        logger.warn('PhotoDetailScreen: Photo subscription error', { error: result.error });
-      }
-    });
-
-    return () => {
-      logger.debug('PhotoDetailScreen: Cleaning up photo subscription', {
-        photoId: contextPhoto.id,
-      });
-      unsubscribe();
-    };
-  }, [contextPhoto?.id, updateCurrentPhoto]);
+    resumeSubscription(contextPhoto.id);
+    return () => pauseSubscription();
+  }, [contextPhoto?.id, resumeSubscription, pauseSubscription]);
 
   // Sync caption local state when navigating between photos
   useEffect(() => {
@@ -261,6 +285,9 @@ const PhotoDetailScreen = () => {
     if (!contextHasNextFriend) {
       return false; // Let hook handle animated close
     }
+
+    // Pause Firestore subscription during transition to avoid flicker
+    pauseSubscription();
 
     // Mark transitioning synchronously so snapshotRef freezes on next render
     isTransitioningRef.current = true;
@@ -299,6 +326,7 @@ const PhotoDetailScreen = () => {
     cubeProgress,
     transitionDirectionValue,
     handleTransitionComplete,
+    pauseSubscription,
   ]);
 
   /**
@@ -320,6 +348,9 @@ const PhotoDetailScreen = () => {
     if (!contextHasPreviousFriend) {
       return false; // Let hook handle animated close
     }
+
+    // Pause Firestore subscription during transition to avoid flicker
+    pauseSubscription();
 
     isTransitioningRef.current = true;
     setTransitionDirection('backward');
@@ -354,6 +385,7 @@ const PhotoDetailScreen = () => {
     cubeProgress,
     transitionDirectionValue,
     handleBackwardTransitionComplete,
+    pauseSubscription,
   ]);
 
   /**
@@ -366,6 +398,9 @@ const PhotoDetailScreen = () => {
       if (isTransitioningRef.current) return false;
       if (direction === 'forward' && !contextHasNextFriend) return false;
       if (direction === 'backward' && !contextHasPreviousFriend) return false;
+
+      // Pause Firestore subscription during interactive swipe transition
+      pauseSubscription();
 
       isTransitioningRef.current = true;
       setIsTransitioning(true);
@@ -389,6 +424,7 @@ const PhotoDetailScreen = () => {
       handleRequestPreviousFriend,
       cubeProgress,
       transitionDirectionValue,
+      pauseSubscription,
     ]
   );
 
@@ -515,6 +551,10 @@ const PhotoDetailScreen = () => {
 
     // Horizontal gesture for friend-to-friend swipe (Gesture.Pan)
     horizontalGesture,
+
+    // Load failure timer (for auto-skip on image load timeout)
+    startLoadTimer,
+    clearLoadTimer,
   } = usePhotoDetailModal({
     mode: contextMode,
     photo: contextPhoto,
@@ -534,7 +574,17 @@ const PhotoDetailScreen = () => {
     onPrepareSwipeTransition: handlePrepareSwipeTransition,
     onCommitSwipeTransition: handleCommitSwipeTransition,
     onCancelSwipeTransition: handleCancelSwipeTransition,
+    // Next-friend prefetching
+    onGetNextFriendPhotoURL: () => {
+      const callbacks = getCallbacks();
+      return callbacks?.getNextFriendFirstPhotoURL?.() || null;
+    },
   });
+
+  // Sync load timer refs so handleImageLoadStart/End can call them
+  // (refs avoid circular dependency since handlers are defined before usePhotoDetailModal)
+  startLoadTimerRef.current = startLoadTimer;
+  clearLoadTimerRef.current = clearLoadTimer;
 
   // Calculate segment width based on total photos
   // Must be computed BEFORE snapshot capture so outgoing cube face has correct widths
