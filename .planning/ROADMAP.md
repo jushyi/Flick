@@ -12,7 +12,7 @@
 | 2     | Message Interactions                   | Complete                                        | 2026-02-24                | Complete (6/6 plans)        |
 | 3     | Snap Messages                          | Ephemeral photo DMs with view-once mechanic     | SNAP-01..08, INFRA-03..04 | UAT Gap Closure (6/8 plans) |
 | 4     | 4/4                                    | Complete                                        | 2026-02-24                | In Progress (1/4 plans)     |
-| 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed | TAG-01..04                | In Progress (2/3 plans)     |
+| 5     | Photo Tag Integration                  | Tagged photos auto-send to DM + reshare to feed | TAG-01..04                | UAT Gap Closure (3/4 plans) |
 
 ## Phase 1: Message Infrastructure & Read Receipts
 
@@ -209,13 +209,14 @@ Plans:
 - Photographer receives notification of reshare
 - Multiple tags create messages in multiple conversations
 
-**Plans:** 3 plans
+**Plans:** 4 plans (3 complete, 1 gap closure)
 
 Plans:
 
 - [x] 05-01-PLAN.md — Server-side pipeline: sendTaggedPhotoNotification DM message creation, onNewMessage tagged_photo handling, addTaggedPhotoToFeed callable
 - [x] 05-02-PLAN.md — Client-side rendering: TaggedPhotoBubble component, photoTagService, MessageBubble delegation
-- [ ] 05-03-PLAN.md — Attribution display + integration: FeedPhotoCard and PhotoDetailScreen attribution, notification navigation update
+- [x] 05-03-PLAN.md — Attribution display + integration: FeedPhotoCard and PhotoDetailScreen attribution, notification navigation update
+- [ ] 05-04-PLAN.md — GAP CLOSURE: Card restyling (transparent bg, full photo, button overlay), PhotoDetail navigation fix, attribution profile navigation fix
 
 ---
 
@@ -242,4 +243,4 @@ Phase 5 is independent of Phases 2, 3, and 4.
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-24 — Phase 5 Plan 02 complete: TaggedPhotoBubble component, photoTagService, MessageBubble delegation_
+_Last updated: 2026-02-25 — Phase 5 UAT gap closure plan created: card restyling, PhotoDetail navigation, attribution navigation_
