@@ -36,7 +36,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **PERF-05**: Feed story cards load in paginated batches with a "Load more" button
 - [x] **PERF-06**: Firestore real-time listeners pause during photo/friend transitions and resume after settling
 - [x] **PERF-07**: Failed image loads auto-skip to the next photo after a timeout
-- [ ] **PERF-08**: New photos generate a tiny thumbnail at upload time stored as base64 data URL in Firestore
+- [x] **PERF-08**: New photos generate a tiny thumbnail at upload time stored as base64 data URL in Firestore
 
 ### Darkroom Optimization
 
@@ -94,7 +94,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-05     | 7     | Complete |
 | PERF-06     | 7     | Complete |
 | PERF-07     | 7     | Complete |
-| PERF-08     | 7     | Pending |
+| PERF-08     | 7     | Complete |
 | SCRN-01     | 8     | Pending |
 | SCRN-02     | 8     | Pending |
 | SCRN-03     | 8     | Pending |
