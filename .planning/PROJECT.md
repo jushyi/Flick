@@ -37,7 +37,16 @@ Snaps and streaks make messaging a daily habit — ephemeral photo messages that
 
 ### Active
 
-(None — next milestone requirements TBD via `/gsd:new-milestone`)
+#### Current Milestone: v1.1 Pinned Snaps & Polish
+
+**Goal:** Add Live Activity snap pinning, screenshot detection, darkroom cleanup, and resolve carried tech debt.
+
+**Target features:**
+
+- Pinned Snaps via iOS Live Activities (+ Android equivalent exploration)
+- Screenshot detection and notification for snaps
+- Darkroom client-side reveal check optimization
+- Tech debt resolution (test gaps, infra config, naming)
 
 ### Out of Scope
 
@@ -75,7 +84,7 @@ The messaging system now supports 5 message types (text, reaction, reply, snap, 
 - **Storage**: Snap photos cleaned up server-side after viewing (onSnapViewed + cleanupExpiredSnaps)
 - **Platform**: iOS and Android with platform guards throughout
 - **Existing patterns**: Service layer pattern, custom hooks, component structure established in v1.0
-- **OTA only**: All v1.0 changes are JS-only (deployable via EAS Update, no native rebuild)
+- **Native build required**: v1.1 requires EAS build (Live Activities via ActivityKit, expo-screen-capture)
 
 ## Key Decisions
 
@@ -100,4 +109,4 @@ The messaging system now supports 5 message types (text, reaction, reply, snap, 
 
 ---
 
-_Last updated: 2026-02-25 after v1.0 milestone_
+_Last updated: 2026-02-25 after v1.1 milestone started_
