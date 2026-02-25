@@ -13,11 +13,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 7 of 10 (Performance Enhancements to Story Viewing)
-Plan: 2 of 4 in current phase (07-01 complete)
+Plan: 3 of 4 in current phase (07-02 complete)
 Status: Executing phase 7
-Last activity: 2026-02-25 — Completed 07-01-PLAN.md (feed pagination + thumbnail generation)
+Last activity: 2026-02-25 — Completed 07-02-PLAN.md (cube transition Reanimated migration + Android back button)
 
-Progress: [████░░░░░░] 30% (v1.1)
+Progress: [██████░░░░] 40% (v1.1)
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Progress: [████░░░░░░] 30% (v1.1)
 | 5. Photo Tag Integration  | 4     | Complete |
 | Phase 07 P00 | 4min | 1 tasks | 3 files |
 | Phase 07 P01 | 7min | 2 tasks | 3 files |
+| Phase 07 P02 | 2min | 3 tasks | 3 files |
 
 ## Milestone History
 
@@ -60,6 +61,10 @@ Progress: [████░░░░░░] 30% (v1.1)
 - Task 1 (feed pagination) was already committed in 07-00 RED scaffolding - no duplicate commit needed
 - Thumbnail generated from local URI before storage upload to avoid re-downloading
 - thumbnailDataURL uses conditional spread (null = no field in Firestore document)
+- Keep RN Animated for expand/collapse/dismiss; only cube faces migrate to Reanimated
+- Separate gesture systems: Gesture.Pan (horizontal) + PanResponder (vertical) to avoid migration risk
+- GestureDetector wraps only incoming cube face; outgoing is pointerEvents=none
+- Android BackHandler calls existing animatedClose for suck-back dismiss
 
 **Open blockers:** None
 
@@ -78,9 +83,9 @@ Progress: [████░░░░░░] 30% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 07-01-PLAN.md
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
 
 ---
 
-Last activity: 2026-02-25 — Completed 07-01 (feed pagination + thumbnail generation)
+Last activity: 2026-02-25 — Completed 07-02 (cube transition Reanimated migration + Android back button)

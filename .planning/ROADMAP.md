@@ -73,7 +73,7 @@ Plans:
 
 - [x] 07-00-PLAN.md — Wave 0: Test scaffolds for Phase 7 behaviors (RED tests)
 - [x] 07-01-PLAN.md — Feed story card pagination + thumbnail generation at upload
-- [ ] 07-02-PLAN.md — Cube transition Reanimated migration (SharedValue + Gesture Handler) + Android back button dismiss
+- [x] 07-02-PLAN.md — Cube transition Reanimated migration (SharedValue + Gesture Handler) + Android back button dismiss
 - [ ] 07-03-PLAN.md — Progressive loading + dark loading states + subscription management + auto-skip + prefetching
 
 ### Phase 8: Screenshot Detection
@@ -145,7 +145,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 4. Snap Streaks                              | v1.0      | 4/4            | Complete    | 2026-02-24 |
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
-| 7. Performance Enhancements to Story Viewing | v1.1      | 2/4            | In Progress | -          |
+| 7. Performance Enhancements to Story Viewing | v1.1      | 3/4            | In Progress | -          |
 | 8. Screenshot Detection                      | v1.1      | 0/0            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/0            | Not started | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/0            | Not started | -          |
@@ -153,4 +153,4 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-25 — Phase 7: completed 07-01 (feed pagination + thumbnail generation)_
+_Last updated: 2026-02-25 — Phase 7: completed 07-02 (cube transition Reanimated migration + Android back button)_

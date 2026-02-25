@@ -31,7 +31,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **PERF-01**: Photos display a blurred placeholder that crossfades to full resolution over 200ms (progressive loading)
 - [x] **PERF-02**: Tapping to next photo immediately shows dark background + spinner instead of lingering on previous image
-- [ ] **PERF-03**: Cube transition between friends runs on the UI thread via Reanimated at 60fps
+- [x] **PERF-03**: Cube transition between friends runs on the UI thread via Reanimated at 60fps
 - [x] **PERF-04**: Next friend's first photo is prefetched while viewing current friend; next 2-3 photos within current friend are prefetched
 - [x] **PERF-05**: Feed story cards load in paginated batches with a "Load more" button
 - [x] **PERF-06**: Firestore real-time listeners pause during photo/friend transitions and resume after settling
@@ -89,7 +89,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ----------- | ----- | ------- |
 | PERF-01     | 7     | Complete |
 | PERF-02     | 7     | Complete |
-| PERF-03     | 7     | Pending |
+| PERF-03     | 7     | Complete |
 | PERF-04     | 7     | Complete |
 | PERF-05     | 7     | Complete |
 | PERF-06     | 7     | Complete |
