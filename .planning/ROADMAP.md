@@ -86,12 +86,13 @@ Plans:
 1. When a recipient takes a screenshot while viewing a snap, the sender receives a push notification identifying which snap was screenshotted
 2. A screenshotted snap displays a visual indicator (e.g., sparkle/eye icon) on its bubble in the conversation thread
 3. The snap message document in Firestore contains a `screenshottedAt` timestamp field after a screenshot event
-   **Plans**: TBD
+
+**Plans:** 2 plans
 
 Plans:
 
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Service layer: expo-screen-capture install, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
+- [ ] 08-02-PLAN.md — UI integration: useScreenshotDetection hook, SystemMessage component, SnapViewer wiring, ConversationScreen rendering
 
 ### Phase 9: Pinned Snaps iOS
 
@@ -146,11 +147,11 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
-| 8. Screenshot Detection                      | v1.1      | 0/0            | Not started | -          |
+| 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/0            | Not started | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/0            | Not started | -          |
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-25 — Phase 7: completed 07-03 (progressive loading, subscription management, auto-skip, prefetching)_
+_Last updated: 2026-02-25 — Phase 8: created 2 plans for screenshot detection_
