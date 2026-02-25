@@ -1,5 +1,5 @@
 ---
-status: diagnosed
+status: resolved
 trigger: 'Investigate why tapping the tagged photo image in the TaggedPhotoBubble DM card does NOT navigate to PhotoDetail'
 created: 2026-02-25T00:00:00Z
 updated: 2026-02-25T00:10:00Z

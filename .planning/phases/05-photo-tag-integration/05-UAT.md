@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: resolved
 phase: 05-photo-tag-integration
 source: 05-01-SUMMARY.md, 05-02-SUMMARY.md, 05-03-SUMMARY.md
 started: 2026-02-25T12:00:00Z
-updated: 2026-02-25T12:15:00Z
+updated: 2026-02-25T16:30:00Z
 ---
 
 ## Current Test
@@ -61,7 +61,7 @@ skipped: 0
 ## Gaps
 
 - truth: "Tagged photo DM card uses reply-like styling without darkening, full photo, and Add to feed button inside photo at bottom center"
-  status: failed
+  status: resolved
   reason: "User reported: ok the card should not be teal, it should look similar to how the reply looks but without the darkening. it should show full photo. the add to feed button should be inside the picture at the bottom centered."
   severity: major
   test: 1
@@ -78,7 +78,7 @@ skipped: 0
     debug_session: ".planning/debug/tagged-photo-bubble-styling.md"
 
 - truth: "Add to feed loading spinner matches app-wide spinner style"
-  status: failed
+  status: resolved
   reason: "User reported: spinner doesn't match the other spinners. everything else good."
   severity: cosmetic
   test: 2
@@ -91,7 +91,7 @@ skipped: 0
     debug_session: ".planning/debug/tagged-photo-spinner-mismatch.md"
 
 - truth: "Tapping tagged photo card in DM opens PhotoDetail with attribution and Add to feed button"
-  status: failed
+  status: resolved
   reason: "User reported: doesn't open anything"
   severity: major
   test: 3
@@ -107,7 +107,7 @@ skipped: 0
     debug_session: ".planning/debug/tagged-photo-tap-no-nav.md"
 
 - truth: "Tapping Photo by @username attribution navigates to photographer profile on top of current screen"
-  status: failed
+  status: resolved
   reason: "User reported: wrong type of navigation, it appears behind the photo detail"
   severity: major
   test: 4

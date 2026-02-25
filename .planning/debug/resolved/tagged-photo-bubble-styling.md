@@ -1,5 +1,5 @@
 ---
-status: investigating
+status: resolved
 trigger: 'TaggedPhotoBubble uses teal accent styling instead of matching reply bubble style'
 created: 2026-02-25T00:00:00Z
 updated: 2026-02-25T00:00:00Z
