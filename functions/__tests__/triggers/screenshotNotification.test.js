@@ -151,14 +151,14 @@ describe('onNewMessage - system_screenshot type', () => {
     );
   });
 
-  it('does NOT send notification if conversation is muted by recipient', async () => {
+  it('does NOT send notification if DM notifications are disabled by recipient', async () => {
     setupMockDb({
       users: {
         user1: {
           fcmToken: VALID_TOKEN,
           displayName: 'SnapSender',
-          notificationPreferences: {},
-          // user1 has muted the conversation
+          // user1 has disabled DM notifications via existing preference
+          notificationPreferences: { directMessages: false },
         },
         user2: {
           displayName: 'Alex',
@@ -168,7 +168,6 @@ describe('onNewMessage - system_screenshot type', () => {
       conversations: {
         user1_user2: {
           participants: ['user1', 'user2'],
-          mutedBy: ['user1'],
         },
       },
     });
@@ -193,7 +192,7 @@ describe('onNewMessage - system_screenshot type', () => {
 
     await onNewMessage(snapshot, context);
 
-    // Should NOT send notification because user1 muted the conversation
+    // Should NOT send notification because user1 disabled DM notifications
     expect(mockSendPushNotification).not.toHaveBeenCalled();
   });
 

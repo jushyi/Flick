@@ -426,6 +426,25 @@ export const handleNotificationTapped = notification => {
           },
         };
 
+      case 'screenshot':
+      case 'system_screenshot':
+        return {
+          success: true,
+          data: {
+            type: 'screenshot',
+            screen: 'Conversation',
+            params: {
+              conversationId: conversationId,
+              friendId: senderId,
+              friendProfile: {
+                uid: senderId,
+                displayName: senderName || 'Unknown',
+                photoURL: senderProfilePhotoURL || null,
+              },
+            },
+          },
+        };
+
       case 'direct_message':
         return {
           success: true,

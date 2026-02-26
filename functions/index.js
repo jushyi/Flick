@@ -2975,6 +2975,12 @@ exports.onNewMessage = functions
         shouldIncrementUnread = false;
       }
 
+      if (messageType === 'system_screenshot') {
+        // System messages: update lastMessage but do NOT increment unread count
+        // (system events are informational, not actionable unread messages)
+        shouldIncrementUnread = false;
+      }
+
       // 1. Update conversation metadata
       if (shouldUpdateLastMessage) {
         const lastMessagePreview =
@@ -2988,7 +2994,9 @@ exports.onNewMessage = functions
                   ? 'Sent a photo'
                   : messageType === 'reaction'
                     ? 'Reacted'
-                    : message.text || '';
+                    : messageType === 'system_screenshot'
+                      ? message.text
+                      : message.text || '';
 
         const lastMessageData = {
           text: lastMessagePreview,
@@ -3082,6 +3090,8 @@ exports.onNewMessage = functions
           };
           const emojiChar = emojiMap[message.emoji] || message.emoji;
           body = `Reacted ${emojiChar} to your message`;
+        } else if (messageType === 'system_screenshot') {
+          body = `${senderName} screenshotted your snap`;
         } else {
           body =
             messageType === 'gif'
@@ -3097,7 +3107,9 @@ exports.onNewMessage = functions
               ? 'snap'
               : messageType === 'tagged_photo'
                 ? 'tagged_photo'
-                : 'direct_message',
+                : messageType === 'system_screenshot'
+                  ? 'system_screenshot'
+                  : 'direct_message',
           conversationId,
           senderId,
           senderName,
