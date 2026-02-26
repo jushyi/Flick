@@ -21,7 +21,6 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// eslint-disable-next-line import/no-unresolved -- screenshotService.js created in Task 2
 import { recordScreenshot } from './firebase/screenshotService';
 
 import logger from '../utils/logger';
