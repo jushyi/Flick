@@ -101,6 +101,7 @@
       "@giphy/react-native-sdk",
       "expo-audio",
       "expo-asset",
+      "expo-screen-capture",
       "expo-updates"
     ],
     "owner": "spoodsjs",

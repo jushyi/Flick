@@ -428,12 +428,12 @@ service cloud.firestore {
                          request.resource.data.keys().hasAll(['senderId', 'type', 'createdAt']);
 
         // Update: Only conversation participants who are NOT the message sender
-        // can update viewedAt and screenshotted fields
-        // Covers: snap viewedAt (triggers onSnapViewed cleanup), screenshotted detection
+        // can update viewedAt, screenshotted, and screenshottedAt fields
+        // Covers: snap viewedAt (triggers onSnapViewed cleanup), screenshot detection
         allow update: if isConversationMemberById(conversationId) &&
                          resource.data.senderId != request.auth.uid &&
                          request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['viewedAt', 'screenshotted']);
+                           .hasOnly(['viewedAt', 'screenshotted', 'screenshottedAt']);
 
         // Delete: Never — messages are permanent (retained for moderation)
         allow delete: if false;
