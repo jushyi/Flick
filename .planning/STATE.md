@@ -13,11 +13,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 8 of 10 (Screenshot Detection)
-Plan: 1 of 3 in current phase (08-00 complete)
+Plan: 2 of 3 in current phase (08-00, 08-01 complete)
 Status: Phase 8 in progress
-Last activity: 2026-02-26 — Completed 08-00-PLAN.md (RED test scaffolds for screenshot detection)
+Last activity: 2026-02-26 — Completed 08-01-PLAN.md (screenshot service layer, Cloud Function, Firestore rules)
 
-Progress: [██████░░░░] 48% (v1.1)
+Progress: [██████░░░░] 52% (v1.1)
 
 ## Performance Metrics
 
@@ -41,6 +41,7 @@ Progress: [██████░░░░] 48% (v1.1)
 | Phase 07 P02 | 2min | 3 tasks | 3 files |
 | Phase 07 P03 | 10min | 2 tasks | 3 files |
 | Phase 08 P00 | 6min | 3 tasks | 3 files |
+| Phase 08 P01 | 10min | 3 tasks | 9 files |
 
 ## Milestone History
 
@@ -75,6 +76,10 @@ Progress: [██████░░░░] 48% (v1.1)
 - Used { virtual: true } for expo-screen-capture mock since package not yet installed
 - Tightened Cloud Function notification test assertions to check type: system_screenshot ensuring true RED state
 - Added unreadCount non-increment assertion for system_screenshot to ensure complete behavior coverage
+- senderId on system_screenshot message set to screenshotter's ID for correct onNewMessage recipient derivation
+- system_screenshot messages do NOT increment unread count (informational, not actionable)
+- Updated muted-conversation test to use existing dmEnabled preference check (no mutedBy field in codebase)
+- Removed { virtual: true } from expo-screen-capture jest mock after package installation
 
 **Open blockers:** None
 
@@ -100,9 +105,9 @@ Progress: [██████░░░░] 48% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 08-00-PLAN.md (RED test scaffolds for screenshot detection)
+Stopped at: Completed 08-01-PLAN.md (screenshot service layer + Cloud Function + Firestore rules)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-26 - Completed 08-00-PLAN.md: RED test scaffolds for screenshotService and screenshot notification Cloud Function
+Last activity: 2026-02-26 - Completed 08-01-PLAN.md: screenshotService, screenshotQueueService, onNewMessage system_screenshot handling, Firestore rules, notification deep-link

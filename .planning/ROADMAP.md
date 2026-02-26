@@ -92,7 +92,7 @@ Plans:
 Plans:
 
 - [x] 08-00-PLAN.md — Wave 0: Test scaffolds for screenshotService and Cloud Function notification handling (RED tests)
-- [ ] 08-01-PLAN.md — Service layer: expo-screen-capture install, Firestore rules update, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
+- [x] 08-01-PLAN.md — Service layer: expo-screen-capture install, Firestore rules update, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
 - [ ] 08-02-PLAN.md — UI integration: useScreenshotDetection hook, SystemMessage component, SnapViewer wiring, ConversationScreen rendering
 
 ### Phase 9: Pinned Snaps iOS
@@ -152,11 +152,11 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
-| 8. Screenshot Detection                      | v1.1      | 1/3            | In Progress | -          |
+| 8. Screenshot Detection                      | v1.1      | 2/3            | In Progress | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/5            | Not started | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-25 — Phase 9: created 5 plans for pinned snaps iOS (Live Activities)_
+_Last updated: 2026-02-26 — Phase 8: completed 08-01 (screenshot service layer, Cloud Function, Firestore rules)_
