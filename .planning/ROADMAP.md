@@ -112,8 +112,8 @@ Plans:
 
 Plans:
 
-- [ ] 09-01-PLAN.md — Native infrastructure: @bacons/apple-targets, local Expo module (ActivityKit bridge), SwiftUI widget extension, App Groups
-- [ ] 09-02-PLAN.md — JS pin toggle UI: usePinPreference hook, PinToggle component, PinTooltip component, unit tests
+- [x] 09-01-PLAN.md — Native infrastructure: @bacons/apple-targets, local Expo module (ActivityKit bridge), SwiftUI widget extension, App Groups
+- [x] 09-02-PLAN.md — JS pin toggle UI: usePinPreference hook, PinToggle component, PinTooltip component, unit tests
 - [ ] 09-03-PLAN.md — JS service layer: liveActivityService.js, snapService pinned flag, SnapPreviewScreen send flow wiring
 - [ ] 09-04-PLAN.md — Recipient-side wiring: Cloud Function pinned notification payload, App.js Live Activity trigger, SnapViewer dismissal
 - [ ] 09-05-PLAN.md — Checkpoint: end-to-end verification on physical iOS device
@@ -153,10 +153,10 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | Complete    | 2026-02-26 | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 0/5            | Not started | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 2/5            | In progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-26 — Phase 8: completed 08-02 (screenshot detection UI integration - phase complete)_
+_Last updated: 2026-02-26 — Phase 9: completed 09-01 (native infrastructure - ActivityKit bridge + widget extension)_

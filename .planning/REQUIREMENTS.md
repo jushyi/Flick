@@ -16,10 +16,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Pinned Snaps — iOS
 
 - [x] **PINI-01**: Sender can toggle "pin to screen" when sending a snap
-- [ ] **PINI-02**: Recipient sees a Live Activity on lock screen with snap photo thumbnail, sender name, and optional caption
+- [x] **PINI-02**: Recipient sees a Live Activity on lock screen with snap photo thumbnail, sender name, and optional caption
 - [ ] **PINI-03**: Tapping the Live Activity opens the conversation (same deeplink as push notification)
 - [ ] **PINI-04**: Live Activity disappears after recipient views the snap
-- [ ] **PINI-05**: Live Activity auto-expires after 48 hours if snap is never viewed
+- [x] **PINI-05**: Live Activity auto-expires after 48 hours if snap is never viewed
 
 ### Pinned Snaps — Android
 
@@ -99,10 +99,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRN-02     | 8     | Complete |
 | SCRN-03     | 8     | Complete |
 | PINI-01     | 9     | Complete |
-| PINI-02     | 9     | Pending |
+| PINI-02     | 9     | Complete |
 | PINI-03     | 9     | Pending |
 | PINI-04     | 9     | Pending |
-| PINI-05     | 9     | Pending |
+| PINI-05     | 9     | Complete |
 | PINA-01     | 10    | Pending |
 | PINA-02     | 10    | Pending |
 | PINA-03     | 10    | Pending |
@@ -123,4 +123,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 ---
 
 _Requirements defined: 2026-02-25_
-_Last updated: 2026-02-25 — Added PERF-01 through PERF-08 for Phase 7; fixed SCRN/PINI/PINA phase mapping after renumber_
+_Last updated: 2026-02-26 — Marked PINI-02, PINI-05 complete (09-01 native infrastructure)_

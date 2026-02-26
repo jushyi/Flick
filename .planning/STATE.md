@@ -43,6 +43,7 @@ Progress: [███████░░░] 65% (v1.1)
 | Phase 08 P00 | 6min | 3 tasks | 3 files |
 | Phase 08 P01 | 10min | 3 tasks | 9 files |
 | Phase 08 P02 | 3min | 2 tasks | 4 files |
+| Phase 09 P01 | 4min | 2 tasks | 13 files |
 | Phase 09 P02 | 3min | 2 tasks | 4 files |
 
 ## Milestone History
@@ -87,6 +88,10 @@ Progress: [███████░░░] 65% (v1.1)
 - viewerDisplayName prop added to SnapViewer (passed from ConversationScreen) rather than internal fetch
 
 **Phase 9 Decisions:**
+- Used monospaced system font (.system(design: .monospaced)) as fallback for pixel font in widget extension -- custom fonts cannot be reliably embedded via @bacons/apple-targets
+- Thumbnail stored in pinned_thumbnails/ subdirectory within App Groups container for clean organization
+- Cap enforcement (max 5 activities) implemented in native module on recipient device, not sender side
+- Dynamic Island included with minimal compact presentation for devices that support it
 - Used pricetag-outline PixelIcon since no pin icon exists in icon set
 - Amber color scheme (colors.status.developing) for enabled pin state to match retro aesthetic
 - Used RN core Animated for tooltip fade (not reanimated) per project convention for simple animations
