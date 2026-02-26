@@ -29,6 +29,7 @@ import PixelSpinner from '../components/PixelSpinner';
 import ReactionPicker from '../components/ReactionPicker';
 import PixelConfirmDialog from '../components/PixelConfirmDialog';
 import SnapViewer from '../components/SnapViewer';
+import SystemMessage from '../components/SystemMessage';
 
 import { useAuth } from '../context/AuthContext';
 import { usePhotoDetailActions } from '../context/PhotoDetailContext';
@@ -209,7 +210,7 @@ const ConversationScreen = () => {
    * Privacy: both users must have readReceiptsEnabled !== false for "Read" to show.
    */
   const lastSentMessage = useMemo(
-    () => messages.find(m => m.senderId === user.uid),
+    () => messages.find(m => m.senderId === user.uid && m.type !== 'system_screenshot'),
     [messages, user.uid]
   );
   const friendReadAt = conversationDoc?.readReceipts?.[friendId];
@@ -399,6 +400,15 @@ const ConversationScreen = () => {
     ({ item }) => {
       if (item.itemType === 'divider') {
         return <TimeDivider timestamp={item.timestamp} />;
+      }
+
+      // System messages (e.g., screenshot notifications) — render as centered gray text
+      if (item.type === 'system_screenshot') {
+        return (
+          <View style={styles.messageWrapper}>
+            <SystemMessage text={item.text} />
+          </View>
+        );
       }
 
       const isCurrentUser = item.senderId === user.uid;
@@ -699,6 +709,7 @@ const ConversationScreen = () => {
         senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
         onClose={() => setSnapViewerMessage(null)}
         currentUserId={user.uid}
+        viewerDisplayName={userProfile?.displayName || userProfile?.username || 'Someone'}
         onReaction={async emojiKey => {
           const result = await sendReaction(
             conversationId,

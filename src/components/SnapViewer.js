@@ -13,7 +13,7 @@
  * No timer -- user views at own pace until dismissed.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -43,9 +43,13 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getSignedSnapUrl, markSnapViewed } from '../services/firebase/snapService';
+import { recordScreenshot } from '../services/firebase/screenshotService';
+import { queueScreenshotEvent, processScreenshotQueue } from '../services/screenshotQueueService';
 
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
+
+import useScreenshotDetection from '../hooks/useScreenshotDetection';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
@@ -73,6 +77,7 @@ const SnapViewer = ({
   senderName,
   onReaction,
   currentUserId,
+  viewerDisplayName,
 }) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -213,6 +218,55 @@ const SnapViewer = ({
   // Determine if reaction bar should be shown (only for recipients, not senders)
   const isRecipient = currentUserId && snapMessage?.senderId !== currentUserId;
   const showReactionBar = onReaction && isRecipient;
+
+  // --- Screenshot detection ---
+  const isActiveSnap = snapMessage && snapMessage.type === 'snap' && !snapMessage.screenshottedAt;
+  const isExpired = useMemo(() => {
+    if (!snapMessage?.expiresAt) return false;
+    const expiresDate = snapMessage.expiresAt.toDate
+      ? snapMessage.expiresAt.toDate()
+      : new Date(snapMessage.expiresAt);
+    return expiresDate < new Date();
+  }, [snapMessage?.expiresAt]);
+  const detectionActive = visible && isRecipient && isActiveSnap && !isExpired;
+
+  const handleScreenshot = useCallback(async () => {
+    if (!conversationId || !snapMessage?.id || !currentUserId || !viewerDisplayName) return;
+
+    logger.info('SnapViewer: Screenshot detected', {
+      conversationId,
+      snapMessageId: snapMessage.id,
+    });
+
+    const result = await recordScreenshot({
+      conversationId,
+      snapMessageId: snapMessage.id,
+      screenshotterId: currentUserId,
+      screenshotterName: viewerDisplayName,
+    });
+
+    if (!result.success && result.error) {
+      // Network failure — queue for retry
+      logger.warn('SnapViewer: Screenshot recording failed, queueing for retry', {
+        error: result.error,
+      });
+      await queueScreenshotEvent({
+        conversationId,
+        snapMessageId: snapMessage.id,
+        screenshotterId: currentUserId,
+        screenshotterName: viewerDisplayName,
+      });
+    }
+  }, [conversationId, snapMessage?.id, currentUserId, viewerDisplayName]);
+
+  useScreenshotDetection({ active: detectionActive, onScreenshot: handleScreenshot });
+
+  // Process any queued offline screenshot events when viewer opens
+  useEffect(() => {
+    if (visible) {
+      processScreenshotQueue();
+    }
+  }, [visible]);
 
   const handleReactionPress = useCallback(
     emojiKey => {
