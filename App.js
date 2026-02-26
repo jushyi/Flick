@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { AppState, Platform, View } from 'react-native';
 import * as Updates from 'expo-updates';
+import * as FileSystem from 'expo-file-system';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -37,6 +38,7 @@ import {
 import { revealPhotos, getPhotoById } from './src/services/firebase/photoService';
 import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
+import { startPinnedSnapActivity } from './src/services/liveActivityService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
 import { WHATS_NEW } from './src/config/whatsNew';
@@ -331,6 +333,35 @@ export default function App() {
         ) {
           return; // Skip banner — user is already viewing this conversation
         }
+      }
+
+      // Start Live Activity for pinned snap notifications (iOS only, best-effort)
+      if (notifData?.type === 'snap' && notifData?.pinned === 'true' && Platform.OS === 'ios') {
+        (async () => {
+          try {
+            // Download thumbnail to local temp file for the Live Activity widget
+            const localThumbUri = `${FileSystem.cacheDirectory}pinned_thumb_${notifData.pinnedActivityId}.jpg`;
+            await FileSystem.downloadAsync(notifData.pinnedThumbnailUrl, localThumbUri);
+
+            await startPinnedSnapActivity({
+              activityId: notifData.pinnedActivityId,
+              senderName: notifData.senderName,
+              caption: notifData.caption || null,
+              conversationId: notifData.conversationId,
+              friendId: notifData.senderId,
+              thumbnailUri: localThumbUri,
+            });
+            logger.info('App: Live Activity started for pinned snap', {
+              activityId: notifData.pinnedActivityId,
+              conversationId: notifData.conversationId,
+            });
+          } catch (liveActivityError) {
+            logger.warn('App: Failed to start Live Activity for pinned snap', {
+              error: liveActivityError.message,
+              activityId: notifData.pinnedActivityId,
+            });
+          }
+        })();
       }
 
       const result = handleNotificationReceived(notification);

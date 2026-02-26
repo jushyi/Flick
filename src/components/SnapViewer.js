@@ -45,6 +45,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getSignedSnapUrl, markSnapViewed } from '../services/firebase/snapService';
 import { recordScreenshot } from '../services/firebase/screenshotService';
 import { queueScreenshotEvent, processScreenshotQueue } from '../services/screenshotQueueService';
+import { endPinnedSnapActivity } from '../services/liveActivityService';
 
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
@@ -162,11 +163,32 @@ const SnapViewer = ({
       });
     }
 
+    // End Live Activity for pinned snaps (iOS only, best-effort)
+    if (result.success && snapMessage.pinned && Platform.OS === 'ios') {
+      try {
+        await endPinnedSnapActivity(snapMessage.id || snapMessage.pinnedActivityId);
+        logger.info('SnapViewer: Live Activity ended for pinned snap', {
+          activityId: snapMessage.id || snapMessage.pinnedActivityId,
+        });
+      } catch (liveActivityError) {
+        logger.warn('SnapViewer: Failed to end Live Activity', {
+          error: liveActivityError.message,
+          activityId: snapMessage.id || snapMessage.pinnedActivityId,
+        });
+      }
+    }
+
     // Trigger haptic feedback on dismiss
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     onClose?.();
-  }, [conversationId, snapMessage?.id, onClose]);
+  }, [
+    conversationId,
+    snapMessage?.id,
+    snapMessage?.pinned,
+    snapMessage?.pinnedActivityId,
+    onClose,
+  ]);
 
   // Handle Android back button
   useEffect(() => {
