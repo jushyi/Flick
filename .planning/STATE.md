@@ -1,23 +1,23 @@
 # Project State: Flick
 
-**Status:** Ready to plan
-**Last Updated:** 2026-02-25
+**Status:** Executing
+**Last Updated:** 2026-02-26
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Snaps and streaks make messaging a daily habit
-**Current focus:** Phase 7 — Performance Enhancements to Story Viewing
+**Current focus:** Phase 8 — Screenshot Detection
 
 ## Current Position
 
-Phase: 7 of 10 (Performance Enhancements to Story Viewing)
-Plan: 4 of 4 in current phase (07-03 complete)
-Status: Phase 7 complete
-Last activity: 2026-02-25 — Completed 07-03-PLAN.md (progressive loading, dark loading states, subscription management, auto-skip, prefetching)
+Phase: 8 of 10 (Screenshot Detection)
+Plan: 1 of 3 in current phase (08-00 complete)
+Status: Phase 8 in progress
+Last activity: 2026-02-26 — Completed 08-00-PLAN.md (RED test scaffolds for screenshot detection)
 
-Progress: [██████░░░░] 45% (v1.1)
+Progress: [██████░░░░] 48% (v1.1)
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ Progress: [██████░░░░] 45% (v1.1)
 | Phase 07 P01 | 7min | 2 tasks | 3 files |
 | Phase 07 P02 | 2min | 3 tasks | 3 files |
 | Phase 07 P03 | 10min | 2 tasks | 3 files |
+| Phase 08 P00 | 6min | 3 tasks | 3 files |
 
 ## Milestone History
 
@@ -70,6 +71,11 @@ Progress: [██████░░░░] 45% (v1.1)
 - Auto-skip timeout (5s) only fires in stories mode; feed mode has no auto-skip
 - getNextFriendFirstPhotoURL callback added to FeedScreen setCallbacks rather than modifying PhotoDetailContext schema
 
+**Phase 8 Decisions:**
+- Used { virtual: true } for expo-screen-capture mock since package not yet installed
+- Tightened Cloud Function notification test assertions to check type: system_screenshot ensuring true RED state
+- Added unreadCount non-increment assertion for system_screenshot to ensure complete behavior coverage
+
 **Open blockers:** None
 
 ### Roadmap Evolution
@@ -93,10 +99,10 @@ Progress: [██████░░░░] 45% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed quick task 35 (fix mispositioned loading spinner on Android)
+Last session: 2026-02-26
+Stopped at: Completed 08-00-PLAN.md (RED test scaffolds for screenshot detection)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-25 - Completed quick task 35: Fix mispositioned PixelSpinner on Android via View wrapper
+Last activity: 2026-02-26 - Completed 08-00-PLAN.md: RED test scaffolds for screenshotService and screenshot notification Cloud Function

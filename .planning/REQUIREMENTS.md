@@ -9,9 +9,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Screenshot Detection
 
-- [ ] **SCRN-01**: Sender receives push notification when recipient screenshots their snap
-- [ ] **SCRN-02**: Screenshotted snaps display a visual indicator on the snap bubble in conversation
-- [ ] **SCRN-03**: Screenshot event is recorded on the snap message document (`screenshottedAt` field)
+- [x] **SCRN-01**: Sender receives push notification when recipient screenshots their snap
+- [x] **SCRN-02**: Screenshotted snaps display a visual indicator on the snap bubble in conversation
+- [x] **SCRN-03**: Screenshot event is recorded on the snap message document (`screenshottedAt` field)
 
 ### Pinned Snaps — iOS
 
@@ -95,9 +95,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-06     | 7     | Complete |
 | PERF-07     | 7     | Complete |
 | PERF-08     | 7     | Complete |
-| SCRN-01     | 8     | Pending |
-| SCRN-02     | 8     | Pending |
-| SCRN-03     | 8     | Pending |
+| SCRN-01     | 8     | Complete |
+| SCRN-02     | 8     | Complete |
+| SCRN-03     | 8     | Complete |
 | PINI-01     | 9     | Pending |
 | PINI-02     | 9     | Pending |
 | PINI-03     | 9     | Pending |

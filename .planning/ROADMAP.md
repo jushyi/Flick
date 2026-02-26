@@ -91,7 +91,7 @@ Plans:
 
 Plans:
 
-- [ ] 08-00-PLAN.md — Wave 0: Test scaffolds for screenshotService and Cloud Function notification handling (RED tests)
+- [x] 08-00-PLAN.md — Wave 0: Test scaffolds for screenshotService and Cloud Function notification handling (RED tests)
 - [ ] 08-01-PLAN.md — Service layer: expo-screen-capture install, Firestore rules update, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
 - [ ] 08-02-PLAN.md — UI integration: useScreenshotDetection hook, SystemMessage component, SnapViewer wiring, ConversationScreen rendering
 
@@ -152,7 +152,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
-| 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
+| 8. Screenshot Detection                      | v1.1      | 1/3            | In Progress | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/5            | Not started | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 
