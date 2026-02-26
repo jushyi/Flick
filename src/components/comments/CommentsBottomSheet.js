@@ -21,6 +21,7 @@ import {
   BackHandler,
   PanResponder,
 } from 'react-native';
+import Reanimated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import PixelSpinner from '../PixelSpinner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from '../PixelIcon';
@@ -66,6 +67,10 @@ const CommentsBottomSheet = ({
   const contentHeightRef = useRef(0); // Actual content height from onContentSizeChange
   const viewportHeightRef = useRef(0); // Actual FlatList viewport height from onLayout
   const insets = useSafeAreaInsets();
+  const keyboard = useAnimatedKeyboard();
+  const animatedInputStyle = useAnimatedStyle(() => ({
+    paddingBottom: keyboard.height.value > 0 ? keyboard.height.value : Math.max(insets.bottom, 8),
+  }));
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -229,10 +234,15 @@ const CommentsBottomSheet = ({
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const showSub = Keyboard.addListener(showEvent, event => {
-      const kbHeight = event.endCoordinates.height;
+      const kbHeight =
+        Platform.OS === 'android' && event.endCoordinates.screenY > 0
+          ? SCREEN_HEIGHT - event.endCoordinates.screenY
+          : event.endCoordinates.height;
       setKeyboardVisible(true);
-      setKeyboardHeight(kbHeight);
       keyboardHeightRef.current = kbHeight;
+      if (Platform.OS === 'ios') {
+        setKeyboardHeight(kbHeight);
+      }
 
       // Auto-expand to fullscreen when keyboard opens (if not already expanded)
       if (!isExpandedRef.current) {
@@ -250,8 +260,10 @@ const CommentsBottomSheet = ({
 
     const hideSub = Keyboard.addListener(hideEvent, () => {
       setKeyboardVisible(false);
-      setKeyboardHeight(0);
       keyboardHeightRef.current = 0;
+      if (Platform.OS === 'ios') {
+        setKeyboardHeight(0);
+      }
       // Stay expanded — don't collapse sheet on keyboard hide
     });
 
@@ -1100,12 +1112,7 @@ const CommentsBottomSheet = ({
             )}
 
             {/* Comment Input - paddingBottom accounts for keyboard or safe area */}
-            <View
-              testID="comment-input-area"
-              style={{
-                paddingBottom: keyboardVisible ? keyboardHeight : Math.max(insets.bottom, 8),
-              }}
-            >
+            <Reanimated.View testID="comment-input-area" style={animatedInputStyle}>
               <CommentInput
                 ref={inputRef}
                 onSubmit={handleSubmitComment}
@@ -1125,7 +1132,7 @@ const CommentsBottomSheet = ({
                 onTextChangeForMentions={handleTextChangeForMentions}
                 onMentionSelect={handleMentionSelect}
               />
-            </View>
+            </Reanimated.View>
           </Animated.View>
         </Animated.View>
       </View>
