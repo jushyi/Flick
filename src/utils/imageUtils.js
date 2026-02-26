@@ -6,7 +6,12 @@
  */
 export const profileCacheKey = (prefix, photoURL) => {
   if (!photoURL) return prefix;
-  // Use last 8 chars of URL path (before query params) as a cheap content identifier
-  const base = photoURL.split('?')[0];
-  return `${prefix}-${base.slice(-8)}`;
+  // Firebase Storage URLs contain a unique token param that changes on re-upload.
+  // Use the last 8 chars of the token as a cheap cache-busting identifier.
+  const tokenMatch = photoURL.match(/token=([^&]+)/);
+  if (tokenMatch) {
+    return `${prefix}-${tokenMatch[1].slice(-8)}`;
+  }
+  // Fallback: use last 8 chars of full URL (includes query params) for non-Firebase URLs
+  return `${prefix}-${photoURL.slice(-8)}`;
 };
