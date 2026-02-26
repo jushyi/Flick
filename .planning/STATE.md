@@ -1,6 +1,6 @@
 # Project State: Flick
 
-**Status:** Ready to plan
+**Status:** Executing phase 9
 **Last Updated:** 2026-02-26
 
 ## Project Reference
@@ -8,16 +8,16 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Snaps and streaks make messaging a daily habit
-**Current focus:** Phase 8 — Screenshot Detection
+**Current focus:** Phase 9 — Pinned Snaps iOS
 
 ## Current Position
 
-Phase: 8 of 10 (Screenshot Detection)
-Plan: 3 of 3 in current phase (08-00, 08-01, 08-02 complete)
-Status: Phase 8 in progress
-Last activity: 2026-02-26 — Completed 08-02-PLAN.md (screenshot detection UI integration)
+Phase: 9 of 10 (Pinned Snaps iOS)
+Plan: 2 of 5 in current phase (09-01, 09-02 complete)
+Status: Phase 9 in progress
+Last activity: 2026-02-26 — Completed 09-02-PLAN.md (pin toggle UI & preference hook)
 
-Progress: [██████░░░░] 55% (v1.1)
+Progress: [███████░░░] 65% (v1.1)
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [██████░░░░] 55% (v1.1)
 | Phase 08 P00 | 6min | 3 tasks | 3 files |
 | Phase 08 P01 | 10min | 3 tasks | 9 files |
 | Phase 08 P02 | 3min | 2 tasks | 4 files |
+| Phase 09 P02 | 3min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -85,6 +86,12 @@ Progress: [██████░░░░] 55% (v1.1)
 - isExpired check uses useMemo to handle both Firestore Timestamp and Date objects
 - viewerDisplayName prop added to SnapViewer (passed from ConversationScreen) rather than internal fetch
 
+**Phase 9 Decisions:**
+- Used pricetag-outline PixelIcon since no pin icon exists in icon set
+- Amber color scheme (colors.status.developing) for enabled pin state to match retro aesthetic
+- Used RN core Animated for tooltip fade (not reanimated) per project convention for simple animations
+- PinToggle uses pill/chip design with icon + label + dot indicator rather than reusing PixelToggle switch
+
 **Open blockers:** None
 
 ### Roadmap Evolution
@@ -109,9 +116,9 @@ Progress: [██████░░░░] 55% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 08-02-PLAN.md (screenshot detection UI integration)
+Stopped at: Completed 09-02-PLAN.md (pin toggle UI & preference hook)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-26 - Completed 08-02-PLAN.md: useScreenshotDetection hook, SystemMessage component, SnapViewer integration, ConversationScreen system message rendering
+Last activity: 2026-02-26 - Completed 09-02-PLAN.md: usePinPreference hook, PinToggle component, PinTooltip component, 9 unit tests

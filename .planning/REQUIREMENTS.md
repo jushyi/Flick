@@ -15,7 +15,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Pinned Snaps — iOS
 
-- [ ] **PINI-01**: Sender can toggle "pin to screen" when sending a snap
+- [x] **PINI-01**: Sender can toggle "pin to screen" when sending a snap
 - [ ] **PINI-02**: Recipient sees a Live Activity on lock screen with snap photo thumbnail, sender name, and optional caption
 - [ ] **PINI-03**: Tapping the Live Activity opens the conversation (same deeplink as push notification)
 - [ ] **PINI-04**: Live Activity disappears after recipient views the snap
@@ -98,7 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRN-01     | 8     | Complete |
 | SCRN-02     | 8     | Complete |
 | SCRN-03     | 8     | Complete |
-| PINI-01     | 9     | Pending |
+| PINI-01     | 9     | Complete |
 | PINI-02     | 9     | Pending |
 | PINI-03     | 9     | Pending |
 | PINI-04     | 9     | Pending |
