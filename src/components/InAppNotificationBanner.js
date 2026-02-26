@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
+import { profileCacheKey } from '../utils/imageUtils';
 import { styles } from '../styles/InAppNotificationBanner.styles';
 
 const AUTO_DISMISS_MS = 4000;
@@ -114,7 +115,10 @@ const InAppNotificationBanner = ({ visible, title, body, avatarUrl, onPress, onD
       <TouchableOpacity activeOpacity={0.85} onPress={handlePress} style={styles.container}>
         {avatarUrl ? (
           <Image
-            source={{ uri: avatarUrl, cacheKey: avatarUrl ? `notif-avatar` : undefined }}
+            source={{
+              uri: avatarUrl,
+              cacheKey: avatarUrl ? profileCacheKey('notif-avatar', avatarUrl) : undefined,
+            }}
             style={styles.avatar}
             contentFit="cover"
             cachePolicy="memory-disk"
