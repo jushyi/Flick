@@ -22,7 +22,7 @@
 
 - [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
 - [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2026-02-25)
-- [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap
+- [x] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap (completed 2026-02-26)
 - [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
 - [ ] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
 
@@ -87,7 +87,7 @@ Plans:
 2. A screenshotted snap displays a visual indicator (e.g., sparkle/eye icon) on its bubble in the conversation thread
 3. The snap message document in Firestore contains a `screenshottedAt` timestamp field after a screenshot event
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 
@@ -152,7 +152,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
-| 8. Screenshot Detection                      | v1.1      | 2/3            | In Progress | -          |
+| 8. Screenshot Detection                      | v1.1      | Complete    | 2026-02-26 | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 0/5            | Not started | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 
