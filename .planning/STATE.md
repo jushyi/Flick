@@ -13,11 +13,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 3 of 5 in current phase (09-01, 09-02, 09-03 complete)
+Plan: 4 of 5 in current phase (09-01, 09-02, 09-03, 09-04 complete)
 Status: Phase 9 in progress
-Last activity: 2026-02-26 — Completed 09-03-PLAN.md (JS service layer & send flow integration)
+Last activity: 2026-02-26 — Completed 09-04-PLAN.md (recipient-side Live Activity lifecycle)
 
-Progress: [███████░░░] 65% (v1.1)
+Progress: [████████░░] 70% (v1.1)
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [███████░░░] 65% (v1.1)
 | Phase 09 P01 | 4min | 2 tasks | 13 files |
 | Phase 09 P02 | 3min | 2 tasks | 4 files |
 | Phase 09 P03 | 5min | 2 tasks | 4 files |
+| Phase 09 P04 | 4min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -101,6 +102,10 @@ Progress: [███████░░░] 65% (v1.1)
 - Thumbnail compressed from already-compressed snap URI to avoid re-processing raw image
 - pinnedActivityId reuses snapId for simplicity (no separate ID generation)
 - pinned: false added as explicit field for all non-pinned snaps for Firestore query filtering
+- Live Activity start triggered in addNotificationReceivedListener (foreground), not response listener
+- Thumbnail downloaded to FileSystem.cacheDirectory with deterministic filename for deduplication
+- Pinned notification body uses dedicated text rather than random snap templates
+- endPinnedSnapActivity uses snapMessage.id with fallback to snapMessage.pinnedActivityId
 
 **Open blockers:** None
 
@@ -126,9 +131,9 @@ Progress: [███████░░░] 65% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 09-03-PLAN.md (JS service layer & send flow integration)
+Stopped at: Completed 09-04-PLAN.md (recipient-side Live Activity lifecycle)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-26 - Completed 09-03-PLAN.md: liveActivityService bridge, snapService pinToScreen, SnapPreviewScreen PinToggle integration, 26 tests passing
+Last activity: 2026-02-26 - Completed 09-04-PLAN.md: Cloud Function pinned notification payload, App.js Live Activity start, SnapViewer dismissal, 20 tests passing
