@@ -13,11 +13,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 8 of 10 (Screenshot Detection)
-Plan: 2 of 3 in current phase (08-00, 08-01 complete)
+Plan: 3 of 3 in current phase (08-00, 08-01, 08-02 complete)
 Status: Phase 8 in progress
-Last activity: 2026-02-26 — Completed 08-01-PLAN.md (screenshot service layer, Cloud Function, Firestore rules)
+Last activity: 2026-02-26 — Completed 08-02-PLAN.md (screenshot detection UI integration)
 
-Progress: [██████░░░░] 52% (v1.1)
+Progress: [██████░░░░] 55% (v1.1)
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [██████░░░░] 52% (v1.1)
 | Phase 07 P03 | 10min | 2 tasks | 3 files |
 | Phase 08 P00 | 6min | 3 tasks | 3 files |
 | Phase 08 P01 | 10min | 3 tasks | 9 files |
+| Phase 08 P02 | 3min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -80,6 +81,9 @@ Progress: [██████░░░░] 52% (v1.1)
 - system_screenshot messages do NOT increment unread count (informational, not actionable)
 - Updated muted-conversation test to use existing dmEnabled preference check (no mutedBy field in codebase)
 - Removed { virtual: true } from expo-screen-capture jest mock after package installation
+- Used onScreenshotRef pattern to avoid stale closure in screenshot callback
+- isExpired check uses useMemo to handle both Firestore Timestamp and Date objects
+- viewerDisplayName prop added to SnapViewer (passed from ConversationScreen) rather than internal fetch
 
 **Open blockers:** None
 
@@ -105,9 +109,9 @@ Progress: [██████░░░░] 52% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 08-01-PLAN.md (screenshot service layer + Cloud Function + Firestore rules)
+Stopped at: Completed 08-02-PLAN.md (screenshot detection UI integration)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-26 - Completed 08-01-PLAN.md: screenshotService, screenshotQueueService, onNewMessage system_screenshot handling, Firestore rules, notification deep-link
+Last activity: 2026-02-26 - Completed 08-02-PLAN.md: useScreenshotDetection hook, SystemMessage component, SnapViewer integration, ConversationScreen system message rendering
