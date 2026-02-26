@@ -17,6 +17,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@bacons/apple-targets": "^4.0.3",
     "@expo-google-fonts/press-start-2p": "^0.4.1",
     "@expo-google-fonts/silkscreen": "^0.4.2",
     "@expo-google-fonts/space-mono": "^0.4.2",

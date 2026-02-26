@@ -14,6 +14,7 @@ module.exports = ({ config }) => {
       entitlements: {
         ...config.ios.entitlements,
         'aps-environment': isProduction ? 'production' : 'development',
+        'com.apple.security.application-groups': ['group.com.spoodsjs.flick'],
       },
     },
     android: {
