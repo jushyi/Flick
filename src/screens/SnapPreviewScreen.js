@@ -42,8 +42,12 @@ import * as Haptics from 'expo-haptics';
 import { uploadAndSendSnap } from '../services/firebase/snapService';
 
 import PixelIcon from '../components/PixelIcon';
+import PinToggle from '../components/PinToggle';
+import PinTooltip from '../components/PinTooltip';
 
 import { useAuth } from '../context/AuthContext';
+
+import usePinPreference from '../hooks/usePinPreference';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
@@ -65,6 +69,18 @@ const SnapPreviewScreen = () => {
 
   const [caption, setCaption] = useState('');
   const [isSending, setIsSending] = useState(false);
+
+  // Pin-to-screen preference (per-friend sticky, iOS-only)
+  const {
+    pinEnabled,
+    togglePin,
+    loaded: pinLoaded,
+    showTooltip,
+    dismissTooltip,
+  } = usePinPreference(friendId);
+
+  // Pin toggle only renders in one-on-one conversations (route always targets a single friend)
+  const isOneOnOne = true;
 
   // Swipe-down dismiss animation
   const translateY = useSharedValue(0);
@@ -145,7 +161,9 @@ const SnapPreviewScreen = () => {
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      const result = await uploadAndSendSnap(conversationId, user.uid, photoUri, caption || null);
+      const result = await uploadAndSendSnap(conversationId, user.uid, photoUri, caption || null, {
+        pinToScreen: pinEnabled && isOneOnOne,
+      });
 
       if (result.success) {
         logger.info('SnapPreviewScreen: Snap sent successfully', {
@@ -197,6 +215,8 @@ const SnapPreviewScreen = () => {
     user.uid,
     photoUri,
     caption,
+    pinEnabled,
+    isOneOnOne,
     navigation,
   ]);
 
@@ -256,6 +276,14 @@ const SnapPreviewScreen = () => {
             </Animated.View>
           </GestureDetector>
         </Animated.View>
+
+        {/* Pin toggle — between Polaroid and send button, iOS 1:1 conversations only */}
+        {pinLoaded && isOneOnOne && (
+          <View style={screenStyles.pinToggleContainer}>
+            <PinToggle enabled={pinEnabled} onToggle={togglePin} disabled={isSending} />
+            <PinTooltip visible={showTooltip && pinLoaded} onDismiss={dismissTooltip} />
+          </View>
+        )}
 
         {/* Footer: wide send button — outside KAV so it stays fixed at screen bottom */}
         <View style={[screenStyles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
@@ -366,6 +394,12 @@ const screenStyles = StyleSheet.create({
     padding: 0,
     margin: 0,
     textAlignVertical: 'center',
+  },
+  // Pin toggle container between Polaroid and footer
+  pinToggleContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 8,
   },
   // Footer with wide send button
   footer: {
