@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 Phase: 52 of 53 (Systematic UAT)
 Plan: 10 of 10 in current phase
 Status: Complete
-Last activity: 2026-02-26 - Completed quick task 1: regression in the keyboard avoiding view for android in the comments input
+Last activity: 2026-02-26 - Completed quick task 2: skip What's New modal for silent OTA patch (keyboard avoiding view fix)
 
 Progress: █████████████ 13/13 (v1.0.0 phases)
 
@@ -101,9 +101,10 @@ None.
 
 ### Quick Tasks Completed
 
-| #   | Description                                                                | Date       | Commit  | Directory                                                                                         |
-| --- | -------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
-| 1   | regression in the keyboard avoiding view for android in the comments input | 2026-02-26 | 3ce419d | [1-regression-in-the-keyboard-avoiding-view](./quick/1-regression-in-the-keyboard-avoiding-view/) |
+| #   | Description                                                                 | Date       | Commit  | Directory                                                                                         |
+| --- | --------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
+| 1   | regression in the keyboard avoiding view for android in the comments input  | 2026-02-26 | 3ce419d | [1-regression-in-the-keyboard-avoiding-view](./quick/1-regression-in-the-keyboard-avoiding-view/) |
+| 2   | skip What's New modal for silent OTA patch (keyboard avoiding view bug fix) | 2026-02-26 | d3cb02a | [2-skip-ota-update-modal-for-small-bug-fix-](./quick/2-skip-ota-update-modal-for-small-bug-fix-/) |
 
 ### Roadmap Evolution
 
@@ -120,7 +121,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Completed 52-10 (Production Smoke Test — 4 critical fixes, all paths pass, IAP deferred to App Review)
+Last session: 2026-02-26
+Stopped at: Completed quick task 2 (Skip What's New modal for silent OTA patch)
 Resume file: None
 Next: Ready for Phase 53 (App Store Release)
