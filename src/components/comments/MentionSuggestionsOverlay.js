@@ -16,6 +16,7 @@ import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import PixelSpinner from '../PixelSpinner';
+import { profileCacheKey } from '../../utils/imageUtils';
 import StrokedNameText from '../StrokedNameText';
 import { colors } from '../../constants/colors';
 import { styles } from '../../styles/MentionSuggestionsOverlay.styles';
@@ -57,7 +58,10 @@ const MentionSuggestionsOverlay = ({
           {/* Profile Photo */}
           {item.profilePhotoURL ? (
             <Image
-              source={{ uri: item.profilePhotoURL, cacheKey: `mention-${item.userId}` }}
+              source={{
+                uri: item.profilePhotoURL,
+                cacheKey: profileCacheKey('mention-' + item.userId, item.profilePhotoURL),
+              }}
               style={styles.profilePhoto}
               contentFit="cover"
               cachePolicy="memory-disk"
