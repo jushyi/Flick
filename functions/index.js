@@ -3076,7 +3076,9 @@ exports.onNewMessage = functions
         // Build notification body based on message type
         let body;
         if (messageType === 'snap') {
-          body = getRandomTemplate(SNAP_BODY_TEMPLATES);
+          body = message.pinned
+            ? 'pinned a snap to your screen'
+            : getRandomTemplate(SNAP_BODY_TEMPLATES);
         } else if (messageType === 'tagged_photo') {
           body = 'Tagged you in a photo';
         } else if (messageType === 'reaction' && message.emoji) {
@@ -3121,6 +3123,16 @@ exports.onNewMessage = functions
         // Include messageId for snap notifications so client can auto-open the viewer
         if (messageType === 'snap') {
           notificationData.messageId = context.params.messageId;
+
+          // Include pinned snap fields for Live Activity on recipient device
+          if (message.pinned === true) {
+            notificationData.pinned = 'true';
+            notificationData.pinnedActivityId = message.pinnedActivityId || '';
+            notificationData.pinnedThumbnailUrl = message.pinnedThumbnailUrl || '';
+            notificationData.caption = message.caption || '';
+            notificationData.senderName = senderName;
+            notificationData.conversationId = conversationId;
+          }
         }
 
         await sendPushNotification(fcmToken, senderName, body, notificationData, recipientId);
