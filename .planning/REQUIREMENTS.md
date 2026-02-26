@@ -17,7 +17,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **PINI-01**: Sender can toggle "pin to screen" when sending a snap
 - [x] **PINI-02**: Recipient sees a Live Activity on lock screen with snap photo thumbnail, sender name, and optional caption
-- [ ] **PINI-03**: Tapping the Live Activity opens the conversation (same deeplink as push notification)
+- [x] **PINI-03**: Tapping the Live Activity opens the conversation (same deeplink as push notification)
 - [ ] **PINI-04**: Live Activity disappears after recipient views the snap
 - [x] **PINI-05**: Live Activity auto-expires after 48 hours if snap is never viewed
 
@@ -100,7 +100,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRN-03     | 8     | Complete |
 | PINI-01     | 9     | Complete |
 | PINI-02     | 9     | Complete |
-| PINI-03     | 9     | Pending |
+| PINI-03     | 9     | Complete |
 | PINI-04     | 9     | Pending |
 | PINI-05     | 9     | Complete |
 | PINA-01     | 10    | Pending |

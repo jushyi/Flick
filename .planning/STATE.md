@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 2 of 5 in current phase (09-01, 09-02 complete)
+Plan: 3 of 5 in current phase (09-01, 09-02, 09-03 complete)
 Status: Phase 9 in progress
-Last activity: 2026-02-26 — Completed 09-02-PLAN.md (pin toggle UI & preference hook)
+Last activity: 2026-02-26 — Completed 09-03-PLAN.md (JS service layer & send flow integration)
 
 Progress: [███████░░░] 65% (v1.1)
 
@@ -45,6 +45,7 @@ Progress: [███████░░░] 65% (v1.1)
 | Phase 08 P02 | 3min | 2 tasks | 4 files |
 | Phase 09 P01 | 4min | 2 tasks | 13 files |
 | Phase 09 P02 | 3min | 2 tasks | 4 files |
+| Phase 09 P03 | 5min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -96,6 +97,10 @@ Progress: [███████░░░] 65% (v1.1)
 - Amber color scheme (colors.status.developing) for enabled pin state to match retro aesthetic
 - Used RN core Animated for tooltip fade (not reanimated) per project convention for simple animations
 - PinToggle uses pill/chip design with icon + label + dot indicator rather than reusing PixelToggle switch
+- isOneOnOne hardcoded to true in SnapPreviewScreen since snap send flow is always 1:1
+- Thumbnail compressed from already-compressed snap URI to avoid re-processing raw image
+- pinnedActivityId reuses snapId for simplicity (no separate ID generation)
+- pinned: false added as explicit field for all non-pinned snaps for Firestore query filtering
 
 **Open blockers:** None
 
@@ -121,9 +126,9 @@ Progress: [███████░░░] 65% (v1.1)
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 09-02-PLAN.md (pin toggle UI & preference hook)
+Stopped at: Completed 09-03-PLAN.md (JS service layer & send flow integration)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-26 - Completed 09-02-PLAN.md: usePinPreference hook, PinToggle component, PinTooltip component, 9 unit tests
+Last activity: 2026-02-26 - Completed 09-03-PLAN.md: liveActivityService bridge, snapService pinToScreen, SnapPreviewScreen PinToggle integration, 26 tests passing
