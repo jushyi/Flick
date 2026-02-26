@@ -378,6 +378,22 @@ jest.mock('expo-camera', () => ({
   },
 }));
 
+// expo-screen-capture
+const mockAddScreenshotListener = jest.fn(() => ({ remove: jest.fn() }));
+
+jest.mock(
+  'expo-screen-capture',
+  () => ({
+    addScreenshotListener: mockAddScreenshotListener,
+    usePreventScreenCapture: jest.fn(),
+    preventScreenCaptureAsync: jest.fn(() => Promise.resolve()),
+    allowScreenCaptureAsync: jest.fn(() => Promise.resolve()),
+  }),
+  { virtual: true }
+);
+
+global.mockAddScreenshotListener = mockAddScreenshotListener;
+
 // expo-image-picker
 jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn(() =>
