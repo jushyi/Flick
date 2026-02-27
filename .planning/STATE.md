@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 Phase: 52 of 53 (Systematic UAT)
 Plan: 10 of 10 in current phase
 Status: Complete
-Last activity: 2026-02-26 - Completed quick task 3: fix stale profile photo caching (profileCacheKey uses Firebase token)
+Last activity: 2026-02-27 - Completed quick task 4: fix blank profile photos in Friends Request search results
 
 Progress: █████████████ 13/13 (v1.0.0 phases)
 
@@ -102,11 +102,12 @@ None.
 
 ### Quick Tasks Completed
 
-| #   | Description                                                                   | Date       | Commit  | Directory                                                                                         |
-| --- | ----------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
-| 1   | regression in the keyboard avoiding view for android in the comments input    | 2026-02-26 | 3ce419d | [1-regression-in-the-keyboard-avoiding-view](./quick/1-regression-in-the-keyboard-avoiding-view/) |
-| 2   | skip What's New modal for silent OTA patch (keyboard avoiding view bug fix)   | 2026-02-26 | d3cb02a | [2-skip-ota-update-modal-for-small-bug-fix-](./quick/2-skip-ota-update-modal-for-small-bug-fix-/) |
-| 3   | fix stale profile photo caching — profileCacheKey uses Firebase Storage token | 2026-02-26 | fd1b9d2 | [3-investigate-why-for-some-users-viewing-t](./quick/3-investigate-why-for-some-users-viewing-t/) |
+| #   | Description                                                                                        | Date       | Commit  | Directory                                                                                         |
+| --- | -------------------------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
+| 1   | regression in the keyboard avoiding view for android in the comments input                         | 2026-02-26 | 3ce419d | [1-regression-in-the-keyboard-avoiding-view](./quick/1-regression-in-the-keyboard-avoiding-view/) |
+| 2   | skip What's New modal for silent OTA patch (keyboard avoiding view bug fix)                        | 2026-02-26 | d3cb02a | [2-skip-ota-update-modal-for-small-bug-fix-](./quick/2-skip-ota-update-modal-for-small-bug-fix-/) |
+| 3   | fix stale profile photo caching — profileCacheKey uses Firebase Storage token                      | 2026-02-26 | fd1b9d2 | [3-investigate-why-for-some-users-viewing-t](./quick/3-investigate-why-for-some-users-viewing-t/) |
+| 4   | search results in Friends Request tab show blank photo — profilePhotoURL not mapped in searchUsers | 2026-02-27 | 6643af6 | [4-when-searching-people-in-the-friends-req](./quick/4-when-searching-people-in-the-friends-req/) |
 
 ### Roadmap Evolution
 
@@ -123,7 +124,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: Completed quick task 3 (Fix stale profile photo caching)
+Last session: 2026-02-27
+Stopped at: Completed quick task 4 (Fix blank profile photos in Friends Request search results)
 Resume file: None
 Next: Ready for Phase 53 (App Store Release)

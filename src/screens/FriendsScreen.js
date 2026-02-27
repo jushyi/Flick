@@ -554,9 +554,11 @@ const FriendsScreen = ({ navigation }) => {
       querySnapshot.forEach(docSnap => {
         // Exclude self and users who have blocked current user
         if (docSnap.id !== user.uid && !blockedByUserIds.includes(docSnap.id)) {
+          const data = docSnap.data();
           results.push({
             userId: docSnap.id,
-            ...docSnap.data(),
+            ...data,
+            profilePhotoURL: data.profilePhotoURL || data.photoURL,
           });
         }
       });
