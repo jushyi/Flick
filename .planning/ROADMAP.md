@@ -189,6 +189,15 @@ Plans:
 
 **Build Note:** Phase 11 requires a new EAS build (expo-video native module + microphone permission). Storage rules must be deployed separately: `firebase deploy --only storage`.
 
+### Phase 12: deploy all milestone changes to prod
+
+**Goal:** [To be planned]
+**Depends on:** Phase 11
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 12 to break down)
+
 ---
 
 _Roadmap created: 2026-02-23_
