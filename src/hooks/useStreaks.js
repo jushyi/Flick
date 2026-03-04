@@ -8,7 +8,7 @@
  * These hooks bridge the server-side streak engine (Cloud Functions)
  * and the UI components (StreakIndicator, ConversationRow, etc.).
  */
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 import {
   subscribeToStreak,
@@ -114,20 +114,31 @@ export const useStreak = (currentUserId, friendId) => {
   }, [streakData?.expiresAt]);
 
   // Derive state and color from raw data
-  const streakState = useMemo(
+  const rawStreakState = useMemo(
     () => deriveStreakState(streakData, currentUserId),
     [streakData, currentUserId]
   );
 
-  const dayCount = streakData?.dayCount || 0;
+  const rawDayCount = streakData?.dayCount || 0;
 
-  const streakColor = useMemo(() => getStreakColor(streakState, dayCount), [streakState, dayCount]);
+  // Override to default when locally expired (instant UI feedback before Cloud Function runs)
+  const effectiveStreakState = useMemo(
+    () => (isExpired && rawStreakState !== 'default' ? 'default' : rawStreakState),
+    [isExpired, rawStreakState]
+  );
+
+  const effectiveDayCount = useMemo(() => (isExpired ? 0 : rawDayCount), [isExpired, rawDayCount]);
+
+  const effectiveStreakColor = useMemo(
+    () => getStreakColor(effectiveStreakState, effectiveDayCount),
+    [effectiveStreakState, effectiveDayCount]
+  );
 
   return {
     streakData,
-    streakState,
-    dayCount,
-    streakColor,
+    streakState: effectiveStreakState,
+    dayCount: effectiveDayCount,
+    streakColor: effectiveStreakColor,
     timeRemaining,
     isExpired,
   };
@@ -165,11 +176,28 @@ export const useStreakMap = userId => {
       });
 
       const map = {};
+      const now = Date.now();
       streaks.forEach(streak => {
-        const state = deriveStreakState(streak, userId);
-        const color = getStreakColor(state, streak.dayCount || 0);
+        let state = deriveStreakState(streak, userId);
+        let dayCount = streak.dayCount || 0;
+
+        // Check local expiry: override to default if expiresAt has passed
+        if (streak.expiresAt) {
+          const expiresAtMs = streak.expiresAt.toMillis
+            ? streak.expiresAt.toMillis()
+            : streak.expiresAt.toDate
+              ? streak.expiresAt.toDate().getTime()
+              : new Date(streak.expiresAt).getTime();
+
+          if (expiresAtMs <= now) {
+            state = 'default';
+            dayCount = 0;
+          }
+        }
+
+        const color = getStreakColor(state, dayCount);
         map[streak.id] = {
-          dayCount: streak.dayCount || 0,
+          dayCount,
           streakState: state,
           streakColor: color,
           expiresAt: streak.expiresAt || null,
