@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 4 of 5 in current phase (09-03 complete)
+Plan: 5 of 5 in current phase (09-04 complete)
 Status: Executing phase 9
-Last activity: 2026-03-04 — Completed 09-03-PLAN.md (liveActivityService JS bridge, snapService pinned snap support, SnapPreviewScreen pin toggle integration)
+Last activity: 2026-03-04 — Completed 09-04-PLAN.md (recipient Live Activity lifecycle: Cloud Function pinned payload, App.js notification start, SnapViewer view dismissal)
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -43,6 +43,7 @@ Progress: [██████░░░░] 50% (v1.1)
 | Phase 09 P01 | 4min | 2 tasks | 13 files |
 | Phase 09 P02 | 4min | 2 tasks | 4 files |
 | Phase 09 P03 | 4min | 2 tasks | 4 files |
+| Phase 09 P04 | 4min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -85,6 +86,10 @@ Progress: [██████░░░░] 50% (v1.1)
 - isOneOnOne derived from !!friendId since snap mode is always 1:1
 - pinnedActivityId reuses snapId for simplicity
 - Explicit pinned:false field on non-pinned snaps for clean Firestore queries
+- Live Activity started in notification received listener (not response listener) for immediate lock screen appearance
+- Thumbnail downloaded to FileSystem.cacheDirectory (ephemeral) before Live Activity start
+- Pinned snap notification body uses distinct text instead of randomized templates
+- All notification data values are strings per push notification constraint (pinned='true')
 
 **Open blockers:** None
 
@@ -112,9 +117,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed quick task 37 (streak expiration local override)
+Stopped at: Completed 09-04-PLAN.md
 Resume file: None
 
 ---
 
-Last activity: 2026-03-04 - Completed quick-37: local expiry override in useStreak/useStreakMap hooks + 4 new tests
+Last activity: 2026-03-04 - Completed 09-04: recipient Live Activity lifecycle (Cloud Function payload, App.js start, SnapViewer dismissal)

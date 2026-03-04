@@ -108,7 +108,7 @@ Plans:
 4. After the recipient views the snap, the Live Activity disappears from the lock screen
 5. If the recipient never views the snap, the Live Activity auto-expires and disappears after 48 hours
 
-**Plans:** 5 plans
+**Plans:** 4/5 plans executed
 
 Plans:
 
@@ -153,7 +153,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 1/5            | In Progress | -          |
+| 9. Pinned Snaps iOS                          | 4/5 | In Progress|  | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 
 ### Phase 11: Add video support to main camera
