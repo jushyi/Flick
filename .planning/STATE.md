@@ -105,15 +105,16 @@ Progress: [██████░░░░] 50% (v1.1)
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 37 | Fix streak expiration: add local expiry override to useStreak/useStreakMap | 2026-03-04 | 5991492 | [37-fix-streak-expiration-add-logic-to-end-s](./quick/37-fix-streak-expiration-add-logic-to-end-s/) |
 | 36 | Fix BackHandler.removeEventListener crash on Android stories | 2026-02-25 | 8486fe8 | [36-fix-backhandler-removeeventlistener-cras](./quick/36-fix-backhandler-removeeventlistener-cras/) |
 | 35 | Fix mispositioned loading spinner on Android | 2026-02-25 | 3e43ebe | [35-fix-mispositioned-loading-spinner-on-and](./quick/35-fix-mispositioned-loading-spinner-on-and/) |
 
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 09-03-PLAN.md (JS service layer + send flow integration)
+Stopped at: Completed quick task 37 (streak expiration local override)
 Resume file: None
 
 ---
 
-Last activity: 2026-03-04 - Completed 09-03-PLAN.md: liveActivityService bridge, snapService pinned snap support, SnapPreviewScreen pin toggle wiring
+Last activity: 2026-03-04 - Completed quick-37: local expiry override in useStreak/useStreakMap hooks + 4 new tests
