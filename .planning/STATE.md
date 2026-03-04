@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 3 of 5 in current phase (09-02 complete)
+Plan: 4 of 5 in current phase (09-03 complete)
 Status: Executing phase 9
-Last activity: 2026-03-04 — Completed 09-02-PLAN.md (pin toggle UI, per-friend preference hook, one-time tooltip)
+Last activity: 2026-03-04 — Completed 09-03-PLAN.md (liveActivityService JS bridge, snapService pinned snap support, SnapPreviewScreen pin toggle integration)
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -42,6 +42,7 @@ Progress: [██████░░░░] 50% (v1.1)
 | Phase 07 P03 | 10min | 2 tasks | 3 files |
 | Phase 09 P01 | 4min | 2 tasks | 13 files |
 | Phase 09 P02 | 4min | 2 tasks | 4 files |
+| Phase 09 P03 | 4min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -80,6 +81,10 @@ Progress: [██████░░░░] 50% (v1.1)
 - Used notifications-outline PixelIcon as pin indicator (no pin/bookmark icon in set)
 - PinToggle returns null on Android via Platform.OS guard (iOS-only feature)
 - Tooltip uses RN core Animated for fade, not Reanimated, per project convention
+- Deep link URL uses lapse://messages/{conversationId} matching existing linking config
+- isOneOnOne derived from !!friendId since snap mode is always 1:1
+- pinnedActivityId reuses snapId for simplicity
+- Explicit pinned:false field on non-pinned snaps for clean Firestore queries
 
 **Open blockers:** None
 
@@ -106,9 +111,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 09-02-PLAN.md (pin toggle UI + preference hook)
+Stopped at: Completed 09-03-PLAN.md (JS service layer + send flow integration)
 Resume file: None
 
 ---
 
-Last activity: 2026-03-04 - Completed 09-02-PLAN.md: PinToggle, PinTooltip components + usePinPreference hook with 9 unit tests
+Last activity: 2026-03-04 - Completed 09-03-PLAN.md: liveActivityService bridge, snapService pinned snap support, SnapPreviewScreen pin toggle wiring
