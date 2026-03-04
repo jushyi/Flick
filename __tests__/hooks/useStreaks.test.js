@@ -236,6 +236,76 @@ describe('useStreak', () => {
 
     jest.useRealTimers();
   });
+
+  it("returns streakState='default' and dayCount=0 when streak is locally expired", () => {
+    jest.useFakeTimers();
+    const now = Date.now();
+    jest.setSystemTime(now);
+
+    let subscriptionCallback;
+    mockSubscribeToStreak.mockImplementation((uid1, uid2, cb) => {
+      subscriptionCallback = cb;
+      return jest.fn();
+    });
+    // deriveStreakState returns 'warning' for a streak that is about to expire
+    mockDeriveStreakState.mockReturnValue('warning');
+    mockGetStreakColor.mockReturnValue('#666666');
+
+    const { result } = renderHook(() => useStreak('userA', 'userB'));
+
+    const mockData = {
+      dayCount: 10,
+      participants: ['userA', 'userB'],
+      warning: true,
+      expiresAt: {
+        toMillis: () => now - 1000, // expired 1 second ago
+      },
+    };
+
+    act(() => {
+      subscriptionCallback(mockData);
+    });
+
+    expect(result.current.isExpired).toBe(true);
+    expect(result.current.streakState).toBe('default');
+    expect(result.current.dayCount).toBe(0);
+
+    jest.useRealTimers();
+  });
+
+  it('returns normal streakState when streak is not expired', () => {
+    jest.useFakeTimers();
+    const now = Date.now();
+    jest.setSystemTime(now);
+
+    let subscriptionCallback;
+    mockSubscribeToStreak.mockImplementation((uid1, uid2, cb) => {
+      subscriptionCallback = cb;
+      return jest.fn();
+    });
+    mockDeriveStreakState.mockReturnValue('active');
+    mockGetStreakColor.mockReturnValue('#F5A623');
+
+    const { result } = renderHook(() => useStreak('userA', 'userB'));
+
+    const mockData = {
+      dayCount: 5,
+      participants: ['userA', 'userB'],
+      expiresAt: {
+        toMillis: () => now + 3600000, // 1 hour from now
+      },
+    };
+
+    act(() => {
+      subscriptionCallback(mockData);
+    });
+
+    expect(result.current.isExpired).toBe(false);
+    expect(result.current.streakState).toBe('active');
+    expect(result.current.dayCount).toBe(5);
+
+    jest.useRealTimers();
+  });
 });
 
 describe('useStreakMap', () => {
@@ -362,5 +432,81 @@ describe('useStreakMap', () => {
 
     expect(result.current.streakMap).toEqual({});
     expect(result.current.loading).toBe(false);
+  });
+
+  it("returns 'default' state for expired streaks in the map", () => {
+    jest.useFakeTimers();
+    const now = Date.now();
+    jest.setSystemTime(now);
+
+    let subscriptionCallback;
+    mockSubscribeToUserStreaks.mockImplementation((uid, cb) => {
+      subscriptionCallback = cb;
+      return jest.fn();
+    });
+    // deriveStreakState returns 'active' but hook should override to 'default' for expired streak
+    mockDeriveStreakState.mockReturnValue('active');
+    // getStreakColor will be called with overridden ('default', 0) values
+    mockGetStreakColor.mockReturnValue('#666666');
+
+    const { result } = renderHook(() => useStreakMap('userA'));
+
+    const mockStreaks = [
+      {
+        id: 'userA_userB',
+        dayCount: 7,
+        participants: ['userA', 'userB'],
+        expiresAt: {
+          toMillis: () => now - 5000, // expired 5 seconds ago
+        },
+        warning: false,
+      },
+    ];
+
+    act(() => {
+      subscriptionCallback(mockStreaks);
+    });
+
+    expect(result.current.streakMap['userA_userB'].streakState).toBe('default');
+    expect(result.current.streakMap['userA_userB'].dayCount).toBe(0);
+
+    jest.useRealTimers();
+  });
+
+  it('returns normal state for non-expired streaks in the map', () => {
+    jest.useFakeTimers();
+    const now = Date.now();
+    jest.setSystemTime(now);
+
+    let subscriptionCallback;
+    mockSubscribeToUserStreaks.mockImplementation((uid, cb) => {
+      subscriptionCallback = cb;
+      return jest.fn();
+    });
+    mockDeriveStreakState.mockReturnValue('active');
+    mockGetStreakColor.mockReturnValue('#F5A623');
+
+    const { result } = renderHook(() => useStreakMap('userA'));
+
+    const mockStreaks = [
+      {
+        id: 'userA_userB',
+        dayCount: 5,
+        participants: ['userA', 'userB'],
+        expiresAt: {
+          toMillis: () => now + 86400000, // 1 day from now
+        },
+        warning: false,
+      },
+    ];
+
+    act(() => {
+      subscriptionCallback(mockStreaks);
+    });
+
+    expect(result.current.streakMap['userA_userB'].streakState).toBe('active');
+    expect(result.current.streakMap['userA_userB'].dayCount).toBe(5);
+
+    jest.useRealTimers();
   });
 });
