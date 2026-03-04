@@ -6,14 +6,15 @@
  * - Centered Polaroid frame (white border, photo, caption strip)
  * - Reaction bar below Polaroid for recipients (6 emoji buttons)
  * - X close button in top-right corner
- * - Swipe-down dismiss gesture with haptic feedback
+ * - Expand-from-source / suck-back-to-source animation (matching story viewer)
+ * - Swipe-down dismiss gesture with scale-down effect and haptic feedback
  * - Image loaded via short-lived signed URL (cachePolicy="none")
  * - Marks snap as viewed on dismiss
  *
  * No timer -- user views at own pace until dismissed.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -36,6 +37,8 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  interpolate,
+  Easing as ReanimatedEasing,
   runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -74,6 +77,7 @@ const SnapViewer = ({
   senderName,
   onReaction,
   currentUserId,
+  sourceRect,
 }) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -85,7 +89,35 @@ const SnapViewer = ({
 
   // Gesture shared values
   const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
+  const opacity = useSharedValue(0);
+
+  // Expand/collapse animation values
+  const openProgress = useSharedValue(0); // 0 = source position, 1 = full screen
+  const scale = useSharedValue(1); // Shrinks during swipe-down drag
+  const animTranslateX = useSharedValue(0);
+
+  // Track whether close animation is in progress to avoid double-dismiss
+  const isClosingRef = useRef(false);
+
+  // Source rect ref for close animation (stable across re-renders)
+  const sourceRectRef = useRef(sourceRect);
+  sourceRectRef.current = sourceRect;
+
+  // Compute source transform from sourceRect
+  const sourceTransform = useMemo(() => {
+    if (!sourceRect) return null;
+    const scaleX = sourceRect.width / screenWidth;
+    const scaleY = sourceRect.height / screenHeight;
+    const s = Math.min(scaleX, scaleY);
+    const cx = sourceRect.x + sourceRect.width / 2;
+    const cy = sourceRect.y + sourceRect.height / 2;
+    return {
+      scale: s,
+      translateX: cx - screenWidth / 2,
+      translateY: cy - screenHeight / 2,
+      borderRadius: sourceRect.borderRadius || 4,
+    };
+  }, [sourceRect, screenWidth, screenHeight]);
 
   // Calculate Polaroid dimensions (4:3 aspect ratio photo, centered)
   const maxWidth = screenWidth - 48; // 24px margin on each side
@@ -134,13 +166,35 @@ const SnapViewer = ({
     };
   }, [visible, snapMessage?.snapStoragePath]);
 
-  // Reset gesture values when opening
+  // Opening animation — expand from source or fade in
   useEffect(() => {
-    if (visible) {
-      translateY.value = 0;
-      opacity.value = 1;
+    if (!visible) {
+      isClosingRef.current = false;
+      return;
     }
-  }, [visible, translateY, opacity]);
+
+    isClosingRef.current = false;
+    translateY.value = 0;
+    scale.value = 1;
+    animTranslateX.value = 0;
+
+    if (sourceTransform) {
+      // Start at source position, animate to full screen
+      openProgress.value = 0;
+      opacity.value = 0;
+
+      // Animate expand
+      openProgress.value = withTiming(1, {
+        duration: 280,
+        easing: ReanimatedEasing.out(ReanimatedEasing.cubic),
+      });
+      opacity.value = withTiming(1, { duration: 150 });
+    } else {
+      // Fallback: fade in (no source rect, e.g. notification deep link)
+      openProgress.value = 1;
+      opacity.value = withTiming(1, { duration: 200 });
+    }
+  }, [visible, sourceTransform, translateY, opacity, openProgress, scale, animTranslateX]);
 
   const handleDismiss = useCallback(async () => {
     if (!conversationId || !snapMessage?.id) {
@@ -184,12 +238,56 @@ const SnapViewer = ({
     onClose,
   ]);
 
+  // Close with suck-back or slide-down animation
+  const closeWithAnimation = useCallback(() => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+
+    const source = sourceRectRef.current;
+    const transform = source
+      ? {
+          scale: Math.min(source.width / screenWidth, source.height / screenHeight),
+          translateX: source.x + source.width / 2 - screenWidth / 2,
+          translateY: source.y + source.height / 2 - screenHeight / 2,
+        }
+      : null;
+
+    if (transform) {
+      // Suck-back to source position
+      const suckDuration = 200;
+      const easeIn = ReanimatedEasing.in(ReanimatedEasing.cubic);
+
+      openProgress.value = withTiming(0, { duration: suckDuration, easing: easeIn });
+      animTranslateX.value = withTiming(0, { duration: suckDuration, easing: easeIn });
+      translateY.value = withTiming(0, { duration: suckDuration, easing: easeIn });
+      scale.value = withTiming(1, { duration: suckDuration, easing: easeIn });
+      opacity.value = withTiming(0, { duration: suckDuration }, () => {
+        runOnJS(handleDismiss)();
+      });
+    } else {
+      // Fallback: slide down + fade
+      translateY.value = withTiming(screenHeight, { duration: 220 });
+      opacity.value = withTiming(0, { duration: 220 }, () => {
+        runOnJS(handleDismiss)();
+      });
+    }
+  }, [
+    screenWidth,
+    screenHeight,
+    handleDismiss,
+    openProgress,
+    animTranslateX,
+    translateY,
+    scale,
+    opacity,
+  ]);
+
   // Handle Android back button
   useEffect(() => {
     if (!visible) return;
 
     const handleBackPress = () => {
-      handleDismiss();
+      closeWithAnimation();
       return true;
     };
 
@@ -197,7 +295,7 @@ const SnapViewer = ({
       const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
       return () => subscription.remove();
     }
-  }, [visible, handleDismiss]);
+  }, [visible, closeWithAnimation]);
 
   // Swipe-down dismiss gesture
   const panGesture = Gesture.Pan()
@@ -208,25 +306,44 @@ const SnapViewer = ({
       translateY.value = yTranslation;
       // Fade opacity as user swipes down
       opacity.value = 1 - yTranslation / (DISMISS_THRESHOLD * 3);
+      // Scale down slightly while dragging (matching stories feel)
+      scale.value = 1 - yTranslation / (screenHeight * 3);
     })
     .onEnd(event => {
       'worklet';
       if (event.translationY >= DISMISS_THRESHOLD) {
-        // Dismiss
-        translateY.value = withTiming(screenHeight, { duration: 200 });
-        opacity.value = withTiming(0, { duration: 200 });
-        runOnJS(handleDismiss)();
+        // Dismiss with animation
+        runOnJS(closeWithAnimation)();
       } else {
         // Snap back
         translateY.value = withTiming(0, { duration: 200 });
         opacity.value = withTiming(1, { duration: 200 });
+        scale.value = withTiming(1, { duration: 200 });
       }
     });
 
-  const animatedPolaroidStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
+  // Animated style for polaroid container — interpolates between source and full-screen
+  const animatedPolaroidStyle = useAnimatedStyle(() => {
+    if (!sourceTransform) {
+      // Fallback: just translateY (existing swipe behavior) + scale
+      return {
+        transform: [{ translateY: translateY.value }, { scale: scale.value }],
+      };
+    }
 
+    const progress = openProgress.value;
+    const currentScale = interpolate(progress, [0, 1], [sourceTransform.scale, 1]) * scale.value;
+    const currentTX =
+      interpolate(progress, [0, 1], [sourceTransform.translateX, 0]) + animTranslateX.value;
+    const currentTY =
+      interpolate(progress, [0, 1], [sourceTransform.translateY, 0]) + translateY.value;
+
+    return {
+      transform: [{ translateX: currentTX }, { translateY: currentTY }, { scale: currentScale }],
+    };
+  });
+
+  // Animated overlay opacity
   const animatedOverlayStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
@@ -250,9 +367,9 @@ const SnapViewer = ({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="none"
       statusBarTranslucent
-      onRequestClose={handleDismiss}
+      onRequestClose={closeWithAnimation}
     >
       <GestureHandlerRootView style={styles.gestureRoot}>
         <StatusBar hidden />
@@ -260,7 +377,7 @@ const SnapViewer = ({
           {/* Close button */}
           <View style={[styles.closeButtonContainer, { top: insets.top + 16 }]}>
             <GHTouchableOpacity
-              onPress={handleDismiss}
+              onPress={closeWithAnimation}
               style={styles.closeButton}
               activeOpacity={0.7}
               accessibilityLabel="Close snap"
