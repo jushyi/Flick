@@ -112,7 +112,7 @@ Plans:
 
 Plans:
 
-- [ ] 09-01-PLAN.md — Native infrastructure: @bacons/apple-targets, local Expo module (ActivityKit bridge), SwiftUI widget extension, App Groups
+- [x] 09-01-PLAN.md — Native infrastructure: @bacons/apple-targets, local Expo module (ActivityKit bridge), SwiftUI widget extension, App Groups
 - [ ] 09-02-PLAN.md — JS pin toggle UI: usePinPreference hook, PinToggle component, PinTooltip component, unit tests
 - [ ] 09-03-PLAN.md — JS service layer: liveActivityService.js, snapService pinned flag, SnapPreviewScreen send flow wiring
 - [ ] 09-04-PLAN.md — Recipient-side wiring: Cloud Function pinned notification payload, App.js Live Activity trigger, SnapViewer dismissal
@@ -153,10 +153,19 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 0/5            | Not started | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 1/5            | In Progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
+
+### Phase 11: Add video support to main camera
+
+**Goal:** [To be planned]
+**Depends on:** Phase 10
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 11 to break down)
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-02-25 — Phase 9: created 5 plans for pinned snaps iOS (Live Activities)_
+_Last updated: 2026-03-04 — Phase 9: completed plan 09-01 (native infrastructure)_

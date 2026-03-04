@@ -1,23 +1,23 @@
 # Project State: Flick
 
-**Status:** Ready to plan
-**Last Updated:** 2026-02-25
+**Status:** Executing
+**Last Updated:** 2026-03-04
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Snaps and streaks make messaging a daily habit
-**Current focus:** Phase 7 — Performance Enhancements to Story Viewing
+**Current focus:** Phase 9 — Pinned Snaps iOS
 
 ## Current Position
 
-Phase: 7 of 10 (Performance Enhancements to Story Viewing)
-Plan: 4 of 4 in current phase (07-03 complete)
-Status: Phase 7 complete
-Last activity: 2026-02-25 — Completed 07-03-PLAN.md (progressive loading, dark loading states, subscription management, auto-skip, prefetching)
+Phase: 9 of 10 (Pinned Snaps iOS)
+Plan: 3 of 5 in current phase (09-02 complete)
+Status: Executing phase 9
+Last activity: 2026-03-04 — Completed 09-02-PLAN.md (pin toggle UI, per-friend preference hook, one-time tooltip)
 
-Progress: [██████░░░░] 45% (v1.1)
+Progress: [██████░░░░] 50% (v1.1)
 
 ## Performance Metrics
 
@@ -40,6 +40,8 @@ Progress: [██████░░░░] 45% (v1.1)
 | Phase 07 P01 | 7min | 2 tasks | 3 files |
 | Phase 07 P02 | 2min | 3 tasks | 3 files |
 | Phase 07 P03 | 10min | 2 tasks | 3 files |
+| Phase 09 P01 | 4min | 2 tasks | 13 files |
+| Phase 09 P02 | 4min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -70,12 +72,22 @@ Progress: [██████░░░░] 45% (v1.1)
 - Auto-skip timeout (5s) only fires in stories mode; feed mode has no auto-skip
 - getNextFriendFirstPhotoURL callback added to FeedScreen setCallbacks rather than modifying PhotoDetailContext schema
 
+**Phase 9 Decisions:**
+- Used .system(design: .monospaced) font in widget extension as pixel font fallback -- custom font embedding in widget targets not supported by @bacons/apple-targets
+- Thumbnails stored in App Groups /thumbnails/ subdirectory for clean separation
+- Cap enforcement (5 max) implemented in native Swift module, not JS
+- Widget extension uses compact-only layout with minimal Dynamic Island fallback views
+- Used notifications-outline PixelIcon as pin indicator (no pin/bookmark icon in set)
+- PinToggle returns null on Android via Platform.OS guard (iOS-only feature)
+- Tooltip uses RN core Animated for fade, not Reanimated, per project convention
+
 **Open blockers:** None
 
 ### Roadmap Evolution
 
 - Phase 10 added: Performance enhancements to story viewing
 - Phases reordered: Performance moved to Phase 7, Screenshot Detection→8, Pinned iOS→9, Pinned Android→10
+- Phase 11 added: Add video support to main camera
 
 **Key notes for v1.1:**
 
@@ -93,10 +105,10 @@ Progress: [██████░░░░] 45% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed quick task 35 (fix mispositioned loading spinner on Android)
+Last session: 2026-03-04
+Stopped at: Completed 09-02-PLAN.md (pin toggle UI + preference hook)
 Resume file: None
 
 ---
 
-Last activity: 2026-02-25 - Completed quick task 35: Fix mispositioned PixelSpinner on Android via View wrapper
+Last activity: 2026-03-04 - Completed 09-02-PLAN.md: PinToggle, PinTooltip components + usePinPreference hook with 9 unit tests
