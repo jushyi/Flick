@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 5 of 5 in current phase (09-04 complete)
+Plan: 6 of 6 in current phase (09-06 complete)
 Status: Executing phase 9
-Last activity: 2026-03-04 — Completed 09-04-PLAN.md (recipient Live Activity lifecycle: Cloud Function pinned payload, App.js notification start, SnapViewer view dismissal)
+Last activity: 2026-03-04 — Completed 09-06-PLAN.md (NSE for background Live Activities, mutableContent flag, native deduplication)
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -44,6 +44,7 @@ Progress: [██████░░░░] 50% (v1.1)
 | Phase 09 P02 | 4min | 2 tasks | 4 files |
 | Phase 09 P03 | 4min | 2 tasks | 4 files |
 | Phase 09 P04 | 4min | 2 tasks | 4 files |
+| Phase 09 P06 | 4min | 2 tasks | 8 files |
 
 ## Milestone History
 
@@ -90,6 +91,11 @@ Progress: [██████░░░░] 50% (v1.1)
 - Thumbnail downloaded to FileSystem.cacheDirectory (ephemeral) before Live Activity start
 - Pinned snap notification body uses distinct text instead of randomized templates
 - All notification data values are strings per push notification constraint (pinned='true')
+- NSE downloads thumbnail via URLSession to App Groups container (same path as native module)
+- Deduplication checks activityId attribute match -- returns existing activity.id if already running
+- Used Expo SDK _mutableContent field which maps to APNS mutable-content:1 header
+- Removed Platform/FileSystem/startPinnedSnapActivity imports from App.js since NSE handles all states
+- Cap enforcement in NSE runs after Activity.request to avoid race with newly created activity
 
 **Open blockers:** None
 
@@ -98,6 +104,7 @@ Progress: [██████░░░░] 50% (v1.1)
 - Phase 10 added: Performance enhancements to story viewing
 - Phases reordered: Performance moved to Phase 7, Screenshot Detection→8, Pinned iOS→9, Pinned Android→10
 - Phase 11 added: Add video support to main camera
+- Phase 12 added: deploy all milestone changes to prod
 
 **Key notes for v1.1:**
 
@@ -117,9 +124,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 09-04-PLAN.md
+Stopped at: Completed 09-06-PLAN.md
 Resume file: None
 
 ---
 
-Last activity: 2026-03-04 - Completed 09-04: recipient Live Activity lifecycle (Cloud Function payload, App.js start, SnapViewer dismissal)
+Last activity: 2026-03-04 - Completed 09-06: NSE for background Live Activities, mutableContent flag, native deduplication
