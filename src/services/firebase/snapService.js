@@ -107,13 +107,24 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
  * @param {string} senderId - Sender's user ID
  * @param {string} localUri - Local image URI from camera capture
  * @param {string|null} caption - Optional caption text (truncated to 150 chars)
- * @returns {Promise<{success: boolean, messageId?: string, error?: string, retriesExhausted?: boolean}>}
+ * @param {Object} options - Optional configuration
+ * @param {boolean} options.pinToScreen - Whether to pin this snap to the recipient's lock screen
+ * @returns {Promise<{success: boolean, messageId?: string, pinnedActivityId?: string, error?: string, retriesExhausted?: boolean}>}
  */
-export const uploadAndSendSnap = async (conversationId, senderId, localUri, caption = null) => {
+export const uploadAndSendSnap = async (
+  conversationId,
+  senderId,
+  localUri,
+  caption = null,
+  options = {}
+) => {
+  const { pinToScreen = false } = options;
+
   logger.debug('snapService.uploadAndSendSnap: Starting', {
     conversationId,
     senderId,
     hasCaption: !!caption,
+    pinToScreen,
   });
 
   if (!conversationId || !senderId || !localUri) {
@@ -163,8 +174,41 @@ export const uploadAndSendSnap = async (conversationId, senderId, localUri, capt
         caption: truncatedCaption,
         viewedAt: null,
         expiresAt,
+        pinned: !!pinToScreen,
         createdAt: serverTimestamp(),
       };
+
+      // When pinToScreen is enabled, upload a tiny thumbnail and add pinned fields
+      if (pinToScreen) {
+        const pinnedActivityId = snapId;
+
+        // Create a small 100x100 thumbnail for the Live Activity
+        const thumbnailResult = await ImageManipulator.manipulateAsync(
+          compressedUri,
+          [{ resize: { width: 100 } }],
+          { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+        );
+        const thumbnailPath = uriToFilePath(thumbnailResult.uri);
+
+        // Upload thumbnail to separate Storage path
+        const thumbnailStoragePath = `snap-thumbnails/${snapId}.jpg`;
+        const thumbnailRef = ref(storage, thumbnailStoragePath);
+        await thumbnailRef.putFile(thumbnailPath, {
+          cacheControl: 'no-store',
+          contentType: 'image/jpeg',
+        });
+
+        // Get download URL for recipient to access
+        const pinnedThumbnailUrl = await thumbnailRef.getDownloadURL();
+
+        messageData.pinnedActivityId = pinnedActivityId;
+        messageData.pinnedThumbnailUrl = pinnedThumbnailUrl;
+
+        logger.debug('snapService.uploadAndSendSnap: Thumbnail uploaded for pinned snap', {
+          pinnedActivityId,
+          thumbnailStoragePath,
+        });
+      }
 
       const messageDoc = await addDoc(messagesRef, messageData);
 
@@ -172,10 +216,15 @@ export const uploadAndSendSnap = async (conversationId, senderId, localUri, capt
         conversationId,
         messageId: messageDoc.id,
         snapStoragePath,
+        pinned: !!pinToScreen,
         attempt,
       });
 
-      return { success: true, messageId: messageDoc.id };
+      const result = { success: true, messageId: messageDoc.id };
+      if (pinToScreen) {
+        result.pinnedActivityId = snapId;
+      }
+      return result;
     } catch (error) {
       if (attempt < maxRetries) {
         logger.warn('snapService.uploadAndSendSnap: Attempt failed, retrying', {
