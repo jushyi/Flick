@@ -120,6 +120,7 @@ const ConversationScreen = () => {
 
   // --- SnapViewer state ---
   const [snapViewerMessage, setSnapViewerMessage] = useState(null);
+  const [snapSourceRect, setSnapSourceRect] = useState(null);
   const autoOpenSnapHandled = useRef(false);
 
   // --- Message actions hook ---
@@ -375,12 +376,13 @@ const ConversationScreen = () => {
    * Sender's own snaps and already-viewed snaps are non-interactive.
    */
   const handleSnapPress = useCallback(
-    message => {
+    (message, sourceRect) => {
       const isCurrentUser = message.senderId === user.uid;
       const isViewed = message.viewedAt !== null && message.viewedAt !== undefined;
 
       // Only allow opening unviewed snaps from the friend
       if (!isCurrentUser && !isViewed) {
+        setSnapSourceRect(sourceRect || null);
         setSnapViewerMessage(message);
       }
     },
@@ -443,7 +445,7 @@ const ConversationScreen = () => {
             });
           }
         : isSnapUnopened
-          ? () => handleSnapPress(item)
+          ? sourceRect => handleSnapPress(item, sourceRect)
           : () => toggleTimestamp(item.id);
 
       return (
@@ -697,8 +699,12 @@ const ConversationScreen = () => {
         snapMessage={snapViewerMessage}
         conversationId={conversationId}
         senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
-        onClose={() => setSnapViewerMessage(null)}
+        onClose={() => {
+          setSnapViewerMessage(null);
+          setSnapSourceRect(null);
+        }}
         currentUserId={user.uid}
+        sourceRect={snapSourceRect}
         onReaction={async emojiKey => {
           const result = await sendReaction(
             conversationId,

@@ -10,7 +10,7 @@
  * Aligns left (friend) or right (current user) like MessageBubble.
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { format } from 'date-fns';
@@ -40,6 +40,8 @@ const SnapBubble = ({
   onReactionPress,
   currentUserId,
 }) => {
+  const bubbleRef = useRef(null);
+
   const isOpened = message.viewedAt !== null && message.viewedAt !== undefined;
   const isSending = isPending && !hasError;
   const isError = hasError;
@@ -65,7 +67,17 @@ const SnapBubble = ({
       return;
     }
     if (isUnopened && onPress) {
-      onPress();
+      if (bubbleRef.current && bubbleRef.current.measureInWindow) {
+        bubbleRef.current.measureInWindow((x, y, width, height) => {
+          if (width > 0 && height > 0) {
+            onPress({ x, y, width, height, borderRadius: 4 });
+          } else {
+            onPress(null);
+          }
+        });
+      } else {
+        onPress(null);
+      }
     }
   };
 
@@ -128,6 +140,7 @@ const SnapBubble = ({
     <View style={[styles.container, isCurrentUser ? styles.containerRight : styles.containerLeft]}>
       {isInteractive ? (
         <TouchableOpacity
+          ref={bubbleRef}
           onPress={handlePress}
           activeOpacity={0.7}
           style={getBubbleStyle()}
