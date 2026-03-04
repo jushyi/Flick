@@ -139,7 +139,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
+Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 
 **Build Note:** Phases 8-10 share a single EAS native build (bundles expo-screen-capture + expo-live-activity). Phases 6-7 are OTA-deployable with no native build required.
 
@@ -155,17 +155,40 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
 | 9. Pinned Snaps iOS                          | 4/5 | In Progress|  | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
+| 11. Add Video Support to Main Camera         | v1.1      | 0/7            | Not started | -          |
 
-### Phase 11: Add video support to main camera
+### Phase 11: Add Video Support to Main Camera
 
-**Goal:** [To be planned]
+**Goal:** Users can capture, upload, develop, and view videos alongside photos using the same camera interface, darkroom workflow, feed, PhotoDetail, and stories views
 **Depends on:** Phase 10
-**Plans:** 0 plans
+**Requirements:** VID-01, VID-02, VID-03, VID-04, VID-05, VID-06, VID-07, VID-08, VID-09, VID-10
+**Success Criteria** (what must be TRUE):
+
+1. Tapping the shutter button takes a photo; holding for ~500ms starts video recording with haptic feedback
+2. A circular progress ring fills around the shutter button during recording (30s max)
+3. Recorded videos upload to Firebase Storage and create Firestore documents with mediaType, videoURL, and duration fields
+4. Videos develop and reveal identically to photos in darkroom, with a small video icon overlay
+5. Feed autoplays videos muted when scrolled into view; tapping unmutes with state persisting across subsequent videos
+6. Video cards show a duration badge (e.g. "0:12") in the corner
+7. PhotoDetail plays videos with progress bar and mute toggle, looping in feed mode
+8. Stories plays videos once to completion then auto-advances to the next story
+9. expo-video installed, microphone permission configured, storage rules updated for video content types
+10. Video thumbnail placeholder generated at capture time for progressive loading
+
+**Plans:** 7 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 11 to break down)
+- [ ] 11-01-PLAN.md — Native config: expo-video install, microphone permission, storage rules, storageService uploadVideo, jest mock
+- [ ] 11-02-PLAN.md — Upload queue video support (mediaType/duration/videoURL), VideoMuteContext
+- [ ] 11-03-PLAN.md — UI components: RecordingProgressRing (animated SVG), VideoPlayer wrapper (expo-video)
+- [ ] 11-04-PLAN.md — Camera hold-to-record: useCameraBase recording logic, CameraScreen progress ring integration
+- [ ] 11-05-PLAN.md — Feed video playback: FeedPhotoCard video rendering, viewport detection, duration badge
+- [ ] 11-06-PLAN.md — PhotoDetail/Stories video playback, stories auto-advance, darkroom video icon overlay
+- [ ] 11-07-PLAN.md — Full test suite + lint verification, end-to-end checkpoint on physical device
+
+**Build Note:** Phase 11 requires a new EAS build (expo-video native module + microphone permission). Storage rules must be deployed separately: `firebase deploy --only storage`.
 
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-03-04 — Phase 9: completed plan 09-01 (native infrastructure)_
+_Last updated: 2026-03-04 — Phase 11: created 7 plans for video support_
