@@ -18,7 +18,7 @@ import logger from '../utils/logger';
 const PIN_KEY_PREFIX = 'pin_pref_';
 const TOOLTIP_SHOWN_KEY = 'pin_tooltip_shown';
 
-export const usePinPreference = (friendId) => {
+export const usePinPreference = friendId => {
   const [pinEnabled, setPinEnabled] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -55,7 +55,7 @@ export const usePinPreference = (friendId) => {
   }, [friendId]);
 
   const togglePin = useCallback(
-    async (value) => {
+    async value => {
       setPinEnabled(value);
       try {
         await AsyncStorage.setItem(`${PIN_KEY_PREFIX}${friendId}`, String(value));
