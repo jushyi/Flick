@@ -155,7 +155,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
 | 9. Pinned Snaps iOS                          | 4/5 | In Progress|  | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
-| 11. Add Video Support to Main Camera         | v1.1      | 0/7            | Not started | -          |
+| 11. Add Video Support to Main Camera         | v1.1      | 0/8            | Not started | -          |
 
 ### Phase 11: Add Video Support to Main Camera
 
@@ -175,11 +175,12 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 9. expo-video installed, microphone permission configured, storage rules updated for video content types
 10. Video thumbnail placeholder generated at capture time for progressive loading
 
-**Plans:** 7 plans
+**Plans:** 8 plans
 
 Plans:
+- [ ] 11-00-PLAN.md — Wave 0: RED test scaffolds for useCameraBase, uploadQueueService, VideoMuteContext
 - [ ] 11-01-PLAN.md — Native config: expo-video install, microphone permission, storage rules, storageService uploadVideo, jest mock
-- [ ] 11-02-PLAN.md — Upload queue video support (mediaType/duration/videoURL), VideoMuteContext
+- [ ] 11-02-PLAN.md — Upload queue video support (mediaType/duration/videoURL/thumbnail), VideoMuteContext, App.js provider wiring
 - [ ] 11-03-PLAN.md — UI components: RecordingProgressRing (animated SVG), VideoPlayer wrapper (expo-video)
 - [ ] 11-04-PLAN.md — Camera hold-to-record: useCameraBase recording logic, CameraScreen progress ring integration
 - [ ] 11-05-PLAN.md — Feed video playback: FeedPhotoCard video rendering, viewport detection, duration badge
@@ -191,4 +192,4 @@ Plans:
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-03-04 — Phase 11: created 7 plans for video support_
+_Last updated: 2026-03-04 — Phase 11: revised to 8 plans (added Wave 0 test scaffolds, fixed checker issues)_
