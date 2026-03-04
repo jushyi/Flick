@@ -28,8 +28,15 @@ public class LiveActivityManagerModule: Module {
             // Copy thumbnail to App Groups shared container for widget access
             self.copyThumbnailToAppGroup(activityId: activityId, thumbnailUri: thumbnailUri)
 
-            // Cap enforcement: if at max, end the oldest activity
+            // Deduplication: skip if activity with same ID already exists (NSE may have started it)
             let currentActivities = Activity<PinnedSnapAttributes>.activities
+            for activity in currentActivities {
+                if activity.attributes.activityId == activityId {
+                    return activity.id  // Already running, return existing ID
+                }
+            }
+
+            // Cap enforcement: if at max, end the oldest activity
             if currentActivities.count >= MAX_ACTIVE_ACTIVITIES {
                 // End the oldest activity (first in the array — typically oldest)
                 if let oldest = currentActivities.sorted(by: { $0.id < $1.id }).first {

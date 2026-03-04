@@ -17,9 +17,10 @@ const expo = new Expo({
  * @param {string} body - Notification body
  * @param {object} data - Additional data payload for deep linking
  * @param {string|null} userId - User ID for receipt tracking (optional, enables token cleanup)
+ * @param {object} options - Optional config: { mutableContent: boolean }
  * @returns {Promise<object>} - { success, tickets } or { success: false, error }
  */
-async function sendPushNotification(token, title, body, data = {}, userId = null) {
+async function sendPushNotification(token, title, body, data = {}, userId = null, options = {}) {
   try {
     // Validate token format using SDK helper
     if (!Expo.isExpoPushToken(token)) {
@@ -36,6 +37,9 @@ async function sendPushNotification(token, title, body, data = {}, userId = null
       data: data,
       priority: 'high',
       channelId: 'default',
+      // mutableContent triggers iOS Notification Service Extension (NSE)
+      // which intercepts the push to start Live Activities in background/killed state
+      ...(options.mutableContent && { _mutableContent: true }),
     };
 
     // Send notification via Expo Push Service

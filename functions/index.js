@@ -3121,7 +3121,9 @@ exports.onNewMessage = functions
           }
         }
 
-        await sendPushNotification(fcmToken, senderName, body, notificationData, recipientId);
+        await sendPushNotification(fcmToken, senderName, body, notificationData, recipientId, {
+          mutableContent: message.pinned === true,
+        });
 
         logger.debug('onNewMessage: Notification sent', { recipientId, conversationId });
       } catch (notifError) {
