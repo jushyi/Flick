@@ -20,9 +20,11 @@ jest.mock('../../src/utils/logger', () => ({
 }));
 
 // Create mock functions at module level
+const mockGetDownloadURL = jest.fn(() => Promise.resolve('https://thumb.example.com/thumb.jpg'));
 const mockPutFile = jest.fn(() => Promise.resolve({ state: 'success' }));
 const mockStorageRef = jest.fn(() => ({
   putFile: mockPutFile,
+  getDownloadURL: mockGetDownloadURL,
 }));
 
 const mockUpdateDoc = jest.fn(() => Promise.resolve());
@@ -82,17 +84,19 @@ jest.mock('expo-image-manipulator', () => ({
   },
 }));
 
-// Import service AFTER mocks are set up
+// Import service and mocked modules AFTER mocks are set up
 const {
   uploadAndSendSnap,
   markSnapViewed,
   getSignedSnapUrl,
 } = require('../../src/services/firebase/snapService');
+const ImageManipulator = require('expo-image-manipulator');
 
 describe('snapService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPutFile.mockResolvedValue({ state: 'success' });
+    mockGetDownloadURL.mockResolvedValue('https://thumb.example.com/thumb.jpg');
     mockAddDoc.mockResolvedValue({ id: 'snap-msg-id' });
     mockUpdateDoc.mockResolvedValue(undefined);
     mockCallableFn.mockResolvedValue({
@@ -219,6 +223,88 @@ describe('snapService', () => {
       expect(result.error).toBe('Persistent network error');
       expect(mockPutFile).toHaveBeenCalledTimes(3);
     }, 15000);
+
+    // Pinned snap tests
+    it('should include pinned:true, pinnedActivityId, and pinnedThumbnailUrl when pinToScreen is true', async () => {
+      const result = await uploadAndSendSnap(
+        'conv-123',
+        'sender-456',
+        'file://photo.jpg',
+        'Pinned!',
+        { pinToScreen: true }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.pinnedActivityId).toBeDefined();
+
+      const messageData = mockAddDoc.mock.calls[0][1];
+      expect(messageData.pinned).toBe(true);
+      expect(messageData.pinnedActivityId).toBeDefined();
+      expect(typeof messageData.pinnedActivityId).toBe('string');
+      expect(messageData.pinnedThumbnailUrl).toBe('https://thumb.example.com/thumb.jpg');
+    });
+
+    it('should include pinned:false and no pinnedActivityId when pinToScreen is false', async () => {
+      const result = await uploadAndSendSnap(
+        'conv-123',
+        'sender-456',
+        'file://photo.jpg',
+        'Normal snap',
+        { pinToScreen: false }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.pinnedActivityId).toBeUndefined();
+
+      const messageData = mockAddDoc.mock.calls[0][1];
+      expect(messageData.pinned).toBe(false);
+      expect(messageData.pinnedActivityId).toBeUndefined();
+      expect(messageData.pinnedThumbnailUrl).toBeUndefined();
+    });
+
+    it('should default to pinned:false when no options provided', async () => {
+      const result = await uploadAndSendSnap('conv-123', 'sender-456', 'file://photo.jpg');
+
+      expect(result.success).toBe(true);
+
+      const messageData = mockAddDoc.mock.calls[0][1];
+      expect(messageData.pinned).toBe(false);
+      expect(messageData.pinnedActivityId).toBeUndefined();
+      expect(messageData.pinnedThumbnailUrl).toBeUndefined();
+    });
+
+    it('should upload thumbnail to snap-thumbnails/ path when pinToScreen is true', async () => {
+      await uploadAndSendSnap('conv-123', 'sender-456', 'file://photo.jpg', null, {
+        pinToScreen: true,
+      });
+
+      // Storage ref should be called for snap photo AND thumbnail
+      const storagePaths = mockStorageRef.mock.calls.map(call => call[1]);
+      const thumbnailPath = storagePaths.find(p => p && p.startsWith('snap-thumbnails/'));
+      expect(thumbnailPath).toBeDefined();
+      expect(thumbnailPath).toMatch(/^snap-thumbnails\/.+\.jpg$/);
+
+      // Thumbnail manipulateAsync should have been called with resize to 100
+      const manipCalls = ImageManipulator.manipulateAsync.mock.calls;
+      const thumbnailCall = manipCalls.find(
+        call => call[1] && call[1][0] && call[1][0].resize && call[1][0].resize.width === 100
+      );
+      expect(thumbnailCall).toBeDefined();
+    });
+
+    it('should NOT upload thumbnail when pinToScreen is false', async () => {
+      await uploadAndSendSnap('conv-123', 'sender-456', 'file://photo.jpg', null, {
+        pinToScreen: false,
+      });
+
+      // Storage ref called only for the snap photo, not for thumbnail
+      const storagePaths = mockStorageRef.mock.calls.map(call => call[1]);
+      const thumbnailPath = storagePaths.find(p => p && p.startsWith('snap-thumbnails/'));
+      expect(thumbnailPath).toBeUndefined();
+
+      // getDownloadURL should not be called (no thumbnail upload)
+      expect(mockGetDownloadURL).not.toHaveBeenCalled();
+    });
   });
 
   // ==========================================================================

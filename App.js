@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { AppState, Platform, View } from 'react-native';
 import * as Updates from 'expo-updates';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,6 +8,7 @@ import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-star
 import { Silkscreen_400Regular, Silkscreen_700Bold } from '@expo-google-fonts/silkscreen';
 import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import { colors } from './src/constants/colors';
+import * as FileSystem from 'expo-file-system';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
@@ -37,6 +38,7 @@ import {
 import { revealPhotos, getPhotoById } from './src/services/firebase/photoService';
 import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
+import { startPinnedSnapActivity } from './src/services/liveActivityService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
 import { WHATS_NEW } from './src/config/whatsNew';
@@ -331,6 +333,41 @@ export default function App() {
         ) {
           return; // Skip banner — user is already viewing this conversation
         }
+      }
+
+      // Start Live Activity for pinned snap notifications (iOS only)
+      if (notifData?.type === 'snap' && notifData?.pinned === 'true' && Platform.OS === 'ios') {
+        (async () => {
+          try {
+            // Download thumbnail to local temp file for Live Activity
+            let localThumbUri = null;
+            if (notifData.pinnedThumbnailUrl) {
+              const thumbFilename = `pinned-thumb-${notifData.pinnedActivityId || Date.now()}.jpg`;
+              const downloadResult = await FileSystem.downloadAsync(
+                notifData.pinnedThumbnailUrl,
+                `${FileSystem.cacheDirectory}${thumbFilename}`
+              );
+              localThumbUri = downloadResult.uri;
+            }
+
+            await startPinnedSnapActivity({
+              activityId: notifData.pinnedActivityId,
+              senderName: notifData.senderName,
+              caption: notifData.caption || null,
+              conversationId: notifData.conversationId,
+              friendId: notifData.senderId,
+              thumbnailUri: localThumbUri,
+            });
+            logger.info('App: Started Live Activity for pinned snap', {
+              activityId: notifData.pinnedActivityId,
+              conversationId: notifData.conversationId,
+            });
+          } catch (err) {
+            logger.warn('App: Failed to start Live Activity for pinned snap', {
+              error: err.message,
+            });
+          }
+        })();
       }
 
       const result = handleNotificationReceived(notification);
