@@ -117,6 +117,7 @@ Progress: [██████░░░░] 50% (v1.1)
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 38 | Snap expand/suck-back animation matching story viewer | 2026-03-04 | cbda9de | [38-opening-and-closing-a-snap-should-use-th](./quick/38-opening-and-closing-a-snap-should-use-th/) |
 | 37 | Fix streak expiration: add local expiry override to useStreak/useStreakMap | 2026-03-04 | 5991492 | [37-fix-streak-expiration-add-logic-to-end-s](./quick/37-fix-streak-expiration-add-logic-to-end-s/) |
 | 36 | Fix BackHandler.removeEventListener crash on Android stories | 2026-02-25 | 8486fe8 | [36-fix-backhandler-removeeventlistener-cras](./quick/36-fix-backhandler-removeeventlistener-cras/) |
 | 35 | Fix mispositioned loading spinner on Android | 2026-02-25 | 3e43ebe | [35-fix-mispositioned-loading-spinner-on-and](./quick/35-fix-mispositioned-loading-spinner-on-and/) |
@@ -124,9 +125,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 09-06-PLAN.md
+Stopped at: Completed quick task 38 (snap expand/suck-back animation)
 Resume file: None
 
 ---
 
-Last activity: 2026-03-04 - Completed 09-06: NSE for background Live Activities, mutableContent flag, native deduplication
+Last activity: 2026-03-04 - Completed quick-38: Snap expand/suck-back animation matching story viewer
