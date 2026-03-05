@@ -24,14 +24,12 @@ const mockStartActivity = jest.fn(() => Promise.resolve('native-activity-id-123'
 const mockEndActivity = jest.fn(() => Promise.resolve());
 const mockEndAllActivities = jest.fn(() => Promise.resolve());
 
-// Mock the native module
+// Mock the native module (named exports, not default)
 jest.mock('../../modules/live-activity-manager', () => ({
   __esModule: true,
-  default: {
-    startActivity: (...args) => mockStartActivity(...args),
-    endActivity: (...args) => mockEndActivity(...args),
-    endAllActivities: (...args) => mockEndAllActivities(...args),
-  },
+  startActivity: (...args) => mockStartActivity(...args),
+  endActivity: (...args) => mockEndActivity(...args),
+  endAllActivities: (...args) => mockEndAllActivities(...args),
 }));
 
 // Helper to reload module with specific platform
@@ -53,26 +51,13 @@ const loadServiceWithPlatform = platform => {
     },
   }));
 
-  if (platform === 'ios') {
-    jest.doMock('../../modules/live-activity-manager', () => ({
-      __esModule: true,
-      default: {
-        startActivity: (...args) => mockStartActivity(...args),
-        endActivity: (...args) => mockEndActivity(...args),
-        endAllActivities: (...args) => mockEndAllActivities(...args),
-      },
-    }));
-  } else {
-    // On Android, the module won't be loaded due to Platform guard
-    jest.doMock('../../modules/live-activity-manager', () => ({
-      __esModule: true,
-      default: {
-        startActivity: (...args) => mockStartActivity(...args),
-        endActivity: (...args) => mockEndActivity(...args),
-        endAllActivities: (...args) => mockEndAllActivities(...args),
-      },
-    }));
-  }
+  // Mock the native module with named exports (not default)
+  jest.doMock('../../modules/live-activity-manager', () => ({
+    __esModule: true,
+    startActivity: (...args) => mockStartActivity(...args),
+    endActivity: (...args) => mockEndActivity(...args),
+    endAllActivities: (...args) => mockEndAllActivities(...args),
+  }));
 
   return require('../../src/services/liveActivityService');
 };
