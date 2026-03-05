@@ -2,7 +2,7 @@
   "expo": {
     "name": "Flick",
     "slug": "Flick",
-    "version": "1.0.5",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -12,6 +12,7 @@
       "backgroundColor": "#0A0A1A"
     },
     "ios": {
+      "appleTeamId": "QY576ZZAZB",
       "supportsTablet": false,
       "backgroundColor": "#0A0A1A",
       "bundleIdentifier": "com.spoodsjs.flick",
@@ -103,7 +104,8 @@
       "expo-audio",
       "expo-asset",
       "expo-updates",
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "./plugins/withNSELiveActivities"
     ],
     "owner": "spoodsjs",
     "extra": {

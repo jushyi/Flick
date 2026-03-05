@@ -276,7 +276,7 @@ const SnapPreviewScreen = () => {
           </GestureDetector>
         </Animated.View>
 
-        {/* Pin toggle — iOS-only, 1:1 conversations only */}
+        {/* Pin toggle — 1:1 conversations only */}
         {pinLoaded && isOneOnOne && (
           <View style={screenStyles.pinToggleContainer}>
             <PinToggle enabled={pinEnabled} onToggle={togglePin} disabled={isSending} />
@@ -398,6 +398,7 @@ const screenStyles = StyleSheet.create({
   pinToggleContainer: {
     alignItems: 'center',
     paddingVertical: 10,
+    paddingHorizontal: 24,
   },
   // Footer with wide send button
   footer: {

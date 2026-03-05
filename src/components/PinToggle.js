@@ -24,10 +24,6 @@ const PIN_AMBER = '#F5A623';
 const PIN_MUTED = colors.icon.tertiary;
 
 const PinToggle = ({ enabled, onToggle, disabled = false }) => {
-  if (Platform.OS !== 'ios') {
-    return null;
-  }
-
   const handlePress = () => {
     if (disabled) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

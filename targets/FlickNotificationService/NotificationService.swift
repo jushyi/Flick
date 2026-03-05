@@ -11,6 +11,11 @@ import ActivityKit
 /// The NSE runs in a separate process with a ~30 second time limit.
 /// It downloads the snap thumbnail to the App Groups shared container
 /// so the widget extension can display it, then starts the Live Activity.
+///
+/// KNOWN ISSUE: Activity.request() fails with "Target does not include
+/// NSSupportsLiveActivities plist key" despite the key being in Info.plist.
+/// @bacons/apple-targets sets GENERATE_INFOPLIST_FILE=YES which may strip
+/// custom keys during Xcode's plist generation. Needs further investigation.
 class NotificationService: UNNotificationServiceExtension {
 
     var contentHandler: ((UNNotificationContent) -> Void)?
@@ -39,8 +44,32 @@ class NotificationService: UNNotificationServiceExtension {
 
         let userInfo = bestAttemptContent.userInfo
 
+        // Expo Push Service nests custom data under the "body" key in APNS userInfo
+        // as a JSON-encoded string, not a native dictionary.
+        let bodyData: [String: Any]
+        if let bodyDict = userInfo["body"] as? [String: Any] {
+            bodyData = bodyDict
+        } else if let bodyString = userInfo["body"] as? String,
+                  let jsonData = bodyString.data(using: .utf8),
+                  let parsed = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+            bodyData = parsed
+        } else if userInfo["pinned"] != nil {
+            bodyData = userInfo as? [String: Any] ?? [:]
+        } else {
+            bodyData = [:]
+        }
+
         // Only intercept pinned snap notifications
-        guard let pinned = userInfo["pinned"] as? String, pinned == "true" else {
+        let isPinned: Bool
+        if let pinnedStr = bodyData["pinned"] as? String {
+            isPinned = pinnedStr == "true"
+        } else if let pinnedBool = bodyData["pinned"] as? Bool {
+            isPinned = pinnedBool
+        } else {
+            isPinned = false
+        }
+
+        guard isPinned else {
             contentHandler(bestAttemptContent)
             return
         }
@@ -56,12 +85,12 @@ class NotificationService: UNNotificationServiceExtension {
             return
         }
 
-        // Extract pinned snap data from notification payload
-        let activityId = userInfo["pinnedActivityId"] as? String ?? ""
-        let thumbnailUrlString = userInfo["pinnedThumbnailUrl"] as? String ?? ""
-        let caption = userInfo["caption"] as? String
-        let conversationId = userInfo["conversationId"] as? String ?? ""
-        let senderName = userInfo["senderName"] as? String ?? "Someone"
+        // Extract pinned snap data from notification body
+        let activityId = bodyData["pinnedActivityId"] as? String ?? ""
+        let thumbnailUrlString = bodyData["pinnedThumbnailUrl"] as? String ?? ""
+        let caption = bodyData["caption"] as? String
+        let conversationId = bodyData["conversationId"] as? String ?? ""
+        let senderName = bodyData["senderName"] as? String ?? "Someone"
 
         guard !activityId.isEmpty else {
             contentHandler(bestAttemptContent)
@@ -72,7 +101,6 @@ class NotificationService: UNNotificationServiceExtension {
         let currentActivities = Activity<PinnedSnapAttributes>.activities
         for activity in currentActivities {
             if activity.attributes.activityId == activityId {
-                // Already running — deliver notification without starting another
                 contentHandler(bestAttemptContent)
                 return
             }
@@ -80,17 +108,15 @@ class NotificationService: UNNotificationServiceExtension {
 
         // Download thumbnail and start Live Activity
         Task {
-            // Download thumbnail to App Groups container
             if !thumbnailUrlString.isEmpty, let thumbnailUrl = URL(string: thumbnailUrlString) {
                 do {
                     let (data, _) = try await URLSession.shared.data(from: thumbnailUrl)
                     self.saveThumbnailToAppGroup(activityId: activityId, imageData: data)
                 } catch {
-                    // Continue without thumbnail — Live Activity can still show text
+                    // Continue without thumbnail
                 }
             }
 
-            // Create Live Activity
             let deepLinkUrl = "lapse://messages/\(conversationId)"
             let attributes = PinnedSnapAttributes(
                 activityId: activityId,
@@ -112,7 +138,7 @@ class NotificationService: UNNotificationServiceExtension {
                     pushType: nil
                 )
             } catch {
-                // Live Activity start failed — deliver notification anyway
+                // Known issue: NSSupportsLiveActivities plist key not found at runtime
             }
 
             // Cap enforcement: if over max, end the oldest
@@ -123,7 +149,6 @@ class NotificationService: UNNotificationServiceExtension {
                 }
             }
 
-            // Deliver the notification to the user
             contentHandler(bestAttemptContent)
         }
         #else
@@ -132,8 +157,6 @@ class NotificationService: UNNotificationServiceExtension {
     }
 
     override func serviceExtensionTimeWillExpire() {
-        // Called just before the extension will be terminated by the system.
-        // Deliver the notification as-is, even if Live Activity setup didn't complete.
         if let contentHandler = contentHandler, let bestAttemptContent = bestAttemptContent {
             contentHandler(bestAttemptContent)
         }
@@ -141,8 +164,6 @@ class NotificationService: UNNotificationServiceExtension {
 
     // MARK: - Private Helpers
 
-    /// Saves thumbnail image data to the App Groups shared container.
-    /// Path matches what the widget extension reads: thumbnails/{activityId}.jpg
     private func saveThumbnailToAppGroup(activityId: String, imageData: Data) {
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupId
@@ -152,8 +173,6 @@ class NotificationService: UNNotificationServiceExtension {
         try? FileManager.default.createDirectory(at: thumbsDir, withIntermediateDirectories: true)
 
         let destURL = thumbsDir.appendingPathComponent("\(activityId).jpg")
-
-        // Overwrite if already exists
         try? FileManager.default.removeItem(at: destURL)
         try? imageData.write(to: destURL)
     }

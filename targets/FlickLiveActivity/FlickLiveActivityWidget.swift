@@ -48,26 +48,27 @@ struct FlickLiveActivityWidget: Widget {
     // MARK: - Lock Screen Layout
 
     /// The main lock screen presentation of the Live Activity.
-    /// Shows a photo thumbnail on the left with sender name and caption on the right.
+    /// Shows a photo thumbnail on the left with optional caption on the right.
+    /// Sender name is intentionally hidden to preserve the mystery/surprise.
     @ViewBuilder
     private func lockScreenView(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
         HStack(spacing: 12) {
             // Left: 48x48 photo thumbnail from App Groups shared container
             thumbnailView(activityId: context.attributes.activityId, size: 48)
 
-            // Right: Sender name + optional caption
+            // Right: Caption or "Tap to view" hint
             VStack(alignment: .leading, spacing: 2) {
-                Text(context.attributes.senderName)
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundColor(flickTextPrimary)
-                    .lineLimit(1)
-
                 if let caption = context.attributes.caption, !caption.isEmpty {
                     Text(caption)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(flickTextSecondary)
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(flickTextPrimary)
                         .lineLimit(1)
                         .truncationMode(.tail)
+                } else {
+                    Text("Tap to view")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(flickTextSecondary)
+                        .lineLimit(1)
                 }
             }
 

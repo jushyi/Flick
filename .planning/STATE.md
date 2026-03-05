@@ -1,21 +1,21 @@
 # Project State: Flick
 
-**Status:** Executing
-**Last Updated:** 2026-03-04
+**Status:** Blocked
+**Last Updated:** 2026-03-05
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Snaps and streaks make messaging a daily habit
-**Current focus:** Phase 9 — Pinned Snaps iOS
+**Current focus:** Phase 9 — Pinned Snaps iOS (blocked)
 
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 6 of 6 in current phase (09-06 complete)
-Status: Executing phase 9
-Last activity: 2026-03-04 — Completed 09-06-PLAN.md (NSE for background Live Activities, mutableContent flag, native deduplication)
+Plan: 5 of 6 executed, 1 checkpoint blocked
+Status: Blocked — NSE cannot start Live Activities
+Last activity: 2026-03-05 — Phase 9 marked blocked, needs research/fix agent
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -97,7 +97,13 @@ Progress: [██████░░░░] 50% (v1.1)
 - Removed Platform/FileSystem/startPinnedSnapActivity imports from App.js since NSE handles all states
 - Cap enforcement in NSE runs after Activity.request to avoid race with newly created activity
 
-**Open blockers:** None
+**Open blockers:**
+
+1. **NSE NSSupportsLiveActivities plist key** — `Activity.request()` in the Notification Service Extension fails with "Target does not include NSSupportsLiveActivities plist key" despite the key being in `targets/FlickNotificationService/Info.plist`. Root cause: `@bacons/apple-targets` sets `GENERATE_INFOPLIST_FILE=YES` in Xcode build settings, causing Xcode to auto-generate the plist from `INFOPLIST_KEY_*` settings and ignore custom keys in the source file. Attempted fixes: manual Info.plist edit, `withXcodeProject` config plugin, `withDangerousMod` config plugin setting `GENERATE_INFOPLIST_FILE=NO` and `INFOPLIST_KEY_NSSupportsLiveActivities=YES` — none resolved at runtime. Needs research into how `@bacons/apple-targets` constructs the final plist during EAS builds.
+
+2. **Multiple pins in a row** — Sending multiple pinned snaps in succession may cause issues (needs investigation).
+
+3. **React Native Firebase deprecated namespaced API warnings** — `putFile()` and `getDownloadURL()` on storage references use deprecated namespaced API. Need migration to modular API per https://rnfirebase.io/migrating-to-v22.
 
 ### Roadmap Evolution
 
@@ -124,10 +130,10 @@ Progress: [██████░░░░] 50% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-04
-Stopped at: Completed quick task 38 (snap expand/suck-back animation)
+Last session: 2026-03-05
+Stopped at: Phase 9 blocked on NSE plist issue. Plans 01-04, 06 executed. Checkpoint 05 pending fix.
 Resume file: None
 
 ---
 
-Last activity: 2026-03-04 - Completed quick-38: Snap expand/suck-back animation matching story viewer
+Last activity: 2026-03-05 - Phase 9 marked blocked (NSE NSSupportsLiveActivities plist key issue)

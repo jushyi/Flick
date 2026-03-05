@@ -39,7 +39,7 @@ async function sendPushNotification(token, title, body, data = {}, userId = null
       channelId: 'default',
       // mutableContent triggers iOS Notification Service Extension (NSE)
       // which intercepts the push to start Live Activities in background/killed state
-      ...(options.mutableContent && { _mutableContent: true }),
+      ...(options.mutableContent && { mutableContent: true }),
     };
 
     // Send notification via Expo Push Service

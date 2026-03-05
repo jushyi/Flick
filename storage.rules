@@ -45,6 +45,14 @@ service firebase.storage {
       allow read: if isAuthenticated() && isOwner(userId);
     }
 
+    // Snap thumbnails for pinned Live Activities - any authenticated user can upload
+    match /snap-thumbnails/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+                   && request.resource.contentType.matches('image/jpeg')
+                   && request.resource.size < 500 * 1024;
+    }
+
     // Comment images - any authenticated user can upload
     match /comment-images/{allPaths=**} {
       allow read: if isAuthenticated();
