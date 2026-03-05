@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 7 of 10 executed, Plan 05 checkpoint pending
-Status: In Progress — Plan 08 complete (Live Activity cleanup + NSE rewrite)
-Last activity: 2026-03-05 - Completed Plan 09-08: Remove Live Activity infrastructure
+Plan: 9 of 13 executed, Plan 05 checkpoint pending
+Status: In Progress — Plan 12 complete (Polaroid frame and portrait layout)
+Last activity: 2026-03-05 - Completed Plan 09-12: Add Polaroid frame and portrait layout to Live Activity widget
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -47,6 +47,8 @@ Progress: [██████░░░░] 50% (v1.1)
 | Phase 09 P06 | 4min | 2 tasks | 8 files |
 | Phase 09 P07 | 4min | 2 tasks | 2 files |
 | Phase 09 P08 | 4min | 2 tasks | 22 files |
+| Phase 09 P11 | 1min | 2 tasks | 2 files |
+| Phase 09 P12 | 1min | 1 tasks | 1 files |
 
 ## Milestone History
 
@@ -105,6 +107,8 @@ Progress: [██████░░░░] 50% (v1.1)
 - Lowered NSE deploymentTarget from 16.2 to 16.0 (ActivityKit no longer required)
 - SnapViewer handleDismiss left TODO for dismissPinnedSnapNotification (Plan 09-09)
 - Version display in SettingsScreen changed from TouchableOpacity with diagnostics to plain View
+- Thumbnail downloaded to FileSystem.cacheDirectory (ephemeral) before Live Activity start -- graceful fallback if download fails
+- Thumbnail resolution increased from 100px to 300px with 0.6 compression for Retina display
 
 **Open blockers:**
 
@@ -140,9 +144,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 09-08-PLAN.md (Remove Live Activity infrastructure). Phase 9 plans 01-04, 06-08 executed. Checkpoint 05 pending EAS build + verification.
+Stopped at: Completed 09-11-PLAN.md (Fix thumbnail download pipeline). Phase 9 plans 01-04, 06-08, 11 executed. Checkpoint 05 pending EAS build + verification.
 Resume file: None
 
 ---
 
-Last activity: 2026-03-05 - Completed Plan 09-08: Remove Live Activity infrastructure, rewrite NSE for rich notifications
+Last activity: 2026-03-05 - Completed Plan 09-11: Fix thumbnail download pipeline for Live Activity
