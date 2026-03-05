@@ -17,8 +17,7 @@ public class LiveActivityManagerModule: Module {
     /// Key: activityId, Value: attributes used to create the activity.
     /// Entries are removed ONLY when endActivity is called (snap viewed).
     #if canImport(ActivityKit)
-    @available(iOS 16.2, *)
-    private lazy var persistentActivities: [String: PinnedSnapAttributes] = [:]
+    private var persistentActivities: [String: PinnedSnapAttributes] = [:]
     #endif
 
     /// Active observation tasks, keyed by activityId, for cleanup.
