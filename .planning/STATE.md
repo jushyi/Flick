@@ -15,7 +15,7 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 Phase: 9 of 10 (Pinned Snaps iOS)
 Plan: 6 of 7 executed, Plan 05 checkpoint pending
 Status: In Progress — NSE plist blocker resolved (Plan 07), needs EAS build + Plan 05 verification
-Last activity: 2026-03-05 — Plan 07 (NSE plist fix) completed
+Last activity: 2026-03-05 - Completed quick task 39: fix streak reset bug
 
 Progress: [██████░░░░] 50% (v1.1)
 
