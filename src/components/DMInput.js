@@ -31,7 +31,7 @@ import * as Haptics from 'expo-haptics';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { openGifPicker, useGifSelection } from './comments/GifPicker';
+import { openGifPicker, useGifSelection, isGiphyReady } from './comments/GifPicker';
 
 import PixelIcon from './PixelIcon';
 import ReplyPreview from './ReplyPreview';
@@ -94,6 +94,10 @@ const DMInput = ({
 
   const handleGifPress = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!isGiphyReady()) {
+      Alert.alert('GIF Unavailable', 'GIF picker is not available right now.');
+      return;
+    }
     openGifPicker();
   }, []);
 
