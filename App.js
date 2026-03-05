@@ -40,7 +40,6 @@ import { initPerformanceMonitoring } from './src/services/firebase/performanceSe
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
 import { startPinnedSnapActivity } from './src/services/liveActivityService';
-import * as FileSystem from 'expo-file-system';
 import { WHATS_NEW } from './src/config/whatsNew';
 import { GIPHY_API_KEY } from '@env';
 
@@ -340,21 +339,12 @@ export default function App() {
       if (Platform.OS === 'ios' && notifData?.pinned === 'true' && notifData?.pinnedActivityId) {
         (async () => {
           try {
-            let thumbnailUri = '';
-            if (notifData.pinnedThumbnailUrl) {
-              const localPath = `${FileSystem.cacheDirectory}thumb_${notifData.pinnedActivityId}.jpg`;
-              const download = await FileSystem.downloadAsync(
-                notifData.pinnedThumbnailUrl,
-                localPath
-              );
-              thumbnailUri = download.uri;
-            }
             const laResult = await startPinnedSnapActivity({
               activityId: notifData.pinnedActivityId,
               senderName: notifData.senderName || 'Someone',
               caption: notifData.caption || null,
               conversationId: notifData.conversationId,
-              thumbnailUri,
+              thumbnailUri: '',
             });
             logger.info('App: Live Activity start result', laResult);
           } catch (err) {
