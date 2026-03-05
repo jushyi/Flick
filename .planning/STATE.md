@@ -136,6 +136,7 @@ Progress: [██████░░░░] 50% (v1.1)
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 40 | Fix GIF click crash on Android and error screen on iOS | 2026-03-05 | 7cf9757 | [40-fix-gif-click-crash-on-android-and-error](./quick/40-fix-gif-click-crash-on-android-and-error/) |
 | 39 | Fix streak reset bug: new streak starts at dayCount 0 (not old count) | 2026-03-05 | 8e8c99e | [39-fix-streak-reset-bug-new-streak-starts-a](./quick/39-fix-streak-reset-bug-new-streak-starts-a/) |
 | 38 | Snap expand/suck-back animation matching story viewer | 2026-03-04 | cbda9de | [38-opening-and-closing-a-snap-should-use-th](./quick/38-opening-and-closing-a-snap-should-use-th/) |
 | 37 | Fix streak expiration: add local expiry override to useStreak/useStreakMap | 2026-03-04 | 5991492 | [37-fix-streak-expiration-add-logic-to-end-s](./quick/37-fix-streak-expiration-add-logic-to-end-s/) |
