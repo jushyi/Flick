@@ -1,69 +1,89 @@
 # Phase 9: Pinned Snaps iOS - Context
 
-**Gathered:** 2026-02-25
+**Gathered:** 2026-03-05 (updated — pivoted from Live Activities to persistent notifications)
 **Status:** Ready for planning
 
 <domain>
 ## Phase Boundary
 
-Allow senders to pin a snap to the recipient's iOS lock screen as a Live Activity. The Live Activity displays a photo thumbnail, sender name, and optional caption. Tapping opens the conversation. The activity dismisses after viewing or auto-expires after 48 hours. Android pinned snaps are a separate phase (Phase 10).
+Allow senders to pin a snap to the recipient's iOS lock screen as a persistent notification. The notification shows the snap photo thumbnail and optional caption. Tapping opens the conversation. The notification persists until the snap is viewed. Android pinned snaps are a separate phase (Phase 10).
+
+**PIVOT:** Originally implemented via Live Activities + widget extension. Pivoting to persistent notifications — simpler, more reliable, matches Lapse's UX pattern. All Live Activity code (widget extension, native module, NSE Live Activity logic) should be removed.
 
 </domain>
 
 <decisions>
 ## Implementation Decisions
 
-### Pin toggle placement & design
+### Pin toggle placement & design (UNCHANGED from v1)
 - Toggle appears on the send confirmation screen (after capturing the snap, before sending)
 - Visual: pixel-art pin icon with a toggle switch — fits the retro brand
 - Default state: off, but sticky per friend (remembers last choice per conversation)
 - First-time tooltip: brief one-time tooltip explaining "Pin this snap to their lock screen" — then never shown again
+- Pin toggle only appears in one-to-one conversations
 
-### Live Activity layout
-- Small square photo thumbnail, left-aligned, with sender name and caption text to the right (notification-row style)
-- Pixel-art branded styling: app's pixel font, dark background, CRT-style accents — the Live Activity should feel like part of Flick
-- Text shown: sender display name + caption (if present)
-- Compact view only — no expanded state on long-press. Tapping opens the app.
+### Notification appearance
+- Photo thumbnail shown as image attachment (rich notification with image preview)
+- Caption displayed next to/below the thumbnail if present
+- No extra descriptive text — just the thumbnail and caption content
+- Sender name as notification title
+- Default notification sound (no custom sound)
+- No action buttons — just tap to open the conversation
 
-### Multiple active pins
-- Each pinned snap creates its own separate Live Activity — they stack on the lock screen
-- Global cap of 5 active Live Activities per recipient across all senders
-- When cap is reached, oldest Live Activity is dismissed to make room for new one
-- Silent fallback: snap still sends normally if cap is reached, just without the pin — no feedback to sender
-- Pin toggle only appears in one-to-one conversations (not multi-recipient)
+### Persistence & dismissal
+- Notification persists as long as the snap hasn't been viewed
+- If user swipes the notification away, it should be re-delivered (snap is still unviewed)
+- Viewing the snap in SnapViewer is the only thing that dismisses the notification
+- No separate expiry timer — tied purely to snap viewed state
 
-### Caption behavior
+### Multiple pinned snaps
+- Each pinned snap creates its own notification — they stack on top of each other
+- No cap on number of active pinned notifications
+
+### Caption behavior (UNCHANGED from v1)
 - Caption reuses the snap's message text — no separate caption field
-- Long text truncated with ellipsis (~40 chars) on the Live Activity
-- If no message text: caption area is hidden entirely — just photo thumbnail + sender name
+- If no message text: just photo thumbnail + sender name
 - Emoji-only messages display normally as caption text
 
+### Cleanup: Remove Live Activity code
+- Remove the FlickLiveActivity widget extension target
+- Remove the LiveActivityManager native module (modules/live-activity-manager/)
+- Remove PinnedSnapAttributes.swift copies
+- Simplify NSE to only handle thumbnail attachment (no ActivityKit)
+- Remove liveActivityService.js
+- Remove Live Activity imports/calls from App.js and SnapViewer.js
+- Remove diagnose/NSE diagnostics from Settings screen
+- Keep the FlickNotificationService NSE target (repurpose for thumbnail attachment)
+
 ### Claude's Discretion
-- SwiftUI layout specifics for the Live Activity widget
-- App Groups configuration for sharing thumbnail between main app and widget extension
-- Push notification payload structure for triggering Live Activity updates
+- NSE implementation for downloading and attaching thumbnail to notification
+- Notification identifier scheme for programmatic dismissal
+- How to re-deliver notification if swiped away (foreground check vs scheduled local notification)
 - How to track/persist the per-friend sticky toggle preference
 - Exact tooltip implementation and dismissal logic
+- Cloud Function notification payload structure
 
 </decisions>
 
 <specifics>
 ## Specific Ideas
 
-- The Live Activity should feel like a branded piece of Flick on the lock screen — pixel font, dark background, retro accents
-- Pin toggle is intentionally opt-in (not on by default) but remembers per-friend to reduce friction for power users
-- Compact-only design keeps the native code surface area small and the lock screen presence clean
+- Lapse used this exact pattern: persistent notification with "don't swipe away" messaging
+- The notification should feel native and clean — thumbnail image is the star
+- Re-delivery after swipe-away is important — the snap stays pinned until viewed, period
+- Pin toggle is intentionally opt-in but remembers per-friend to reduce friction
 
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope
+- Live Activities could be revisited as an enhancement in a future phase if persistent notifications feel insufficient
+- Custom notification sound for pinned snaps — potential future polish
 
 </deferred>
 
 ---
 
 *Phase: 09-pinned-snaps-ios*
-*Context gathered: 2026-02-25*
+*Context gathered: 2026-03-05*
