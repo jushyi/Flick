@@ -14,6 +14,8 @@ interface LiveActivityManagerInterface {
   endActivity(activityId: string): Promise<void>;
   endAllActivities(): Promise<void>;
   getActiveCount(): Promise<number>;
+  getNSEDiagnostics(): Promise<string | null>;
+  clearNSEDiagnostics(): Promise<void>;
 }
 
 let nativeModule: LiveActivityManagerInterface | null = null;
@@ -73,4 +75,30 @@ export async function endAllActivities(): Promise<void> {
 export async function getActiveCount(): Promise<number> {
   if (!nativeModule) return 0;
   return nativeModule.getActiveCount();
+}
+
+/**
+ * Read NSE diagnostic logs written by the Notification Service Extension.
+ * The NSE writes step-by-step diagnostics to App Groups so they can be
+ * read from the main app without Console.app access.
+ *
+ * @returns Parsed diagnostic entries, or null if none exist
+ */
+export async function getNSEDiagnostics(): Promise<unknown[] | null> {
+  if (!nativeModule) return null;
+  const raw = await nativeModule.getNSEDiagnostics();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear NSE diagnostic logs.
+ */
+export async function clearNSEDiagnostics(): Promise<void> {
+  if (!nativeModule) return;
+  return nativeModule.clearNSEDiagnostics();
 }

@@ -113,6 +113,30 @@ public class LiveActivityManagerModule: Module {
             return 0
             #endif
         }
+
+        // MARK: - getNSEDiagnostics
+        // Reads the NSE diagnostic log written to App Groups by the NotificationService extension.
+        // Returns JSON string of diagnostic entries, or null if no diagnostics exist.
+        AsyncFunction("getNSEDiagnostics") { () -> String? in
+            guard let containerURL = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: self.appGroupId
+            ) else { return nil }
+
+            let diagURL = containerURL.appendingPathComponent("nse-diagnostics.json")
+            guard let data = try? Data(contentsOf: diagURL) else { return nil }
+            return String(data: data, encoding: .utf8)
+        }
+
+        // MARK: - clearNSEDiagnostics
+        // Clears the NSE diagnostic log file.
+        AsyncFunction("clearNSEDiagnostics") {
+            guard let containerURL = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: self.appGroupId
+            ) else { return }
+
+            let diagURL = containerURL.appendingPathComponent("nse-diagnostics.json")
+            try? FileManager.default.removeItem(at: diagURL)
+        }
     }
 
     // MARK: - Private Helpers

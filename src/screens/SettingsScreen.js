@@ -16,6 +16,8 @@ import PixelToggle from '../components/PixelToggle';
 
 import { useAuth } from '../context/AuthContext';
 
+import { getNSEDiagnostics, clearNSEDiagnostics } from '../../modules/live-activity-manager';
+
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
@@ -68,6 +70,27 @@ const SettingsScreen = () => {
   const handleHelpSupport = () => {
     logger.debug('SettingsScreen: Help & Support pressed');
     navigation.navigate('HelpSupport');
+  };
+
+  const handleNSEDiagnostics = async () => {
+    try {
+      const diags = await getNSEDiagnostics();
+      if (!diags || diags.length === 0) {
+        Alert.alert('NSE Diagnostics', 'No NSE logs found. Send a pinned snap first.');
+        return;
+      }
+      // Show the most recent invocation
+      const latest = diags[diags.length - 1];
+      const entries = latest.entries || [];
+      const summary = entries.map(e => `${e.step}: ${JSON.stringify(e)}`).join('\n\n');
+      Alert.alert(`NSE Log (${latest.timestamp})`, summary, [
+        { text: 'Clear Logs', onPress: () => clearNSEDiagnostics(), style: 'destructive' },
+        { text: 'OK' },
+      ]);
+      logger.info('NSE Diagnostics:', JSON.stringify(diags, null, 2));
+    } catch (error) {
+      Alert.alert('NSE Diagnostics', `Error reading: ${error.message}`);
+    }
   };
 
   const sections = [
@@ -272,12 +295,17 @@ const SettingsScreen = () => {
           ))}
         </View>
 
-        {/* App Version */}
-        <View style={styles.versionContainer}>
+        {/* App Version — long press for NSE debug logs */}
+        <TouchableOpacity
+          style={styles.versionContainer}
+          onLongPress={handleNSEDiagnostics}
+          delayLongPress={1000}
+          activeOpacity={0.7}
+        >
           <Text style={styles.versionText}>
             Version {Application.nativeApplicationVersion || '0.1.0'}
           </Text>
-        </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
