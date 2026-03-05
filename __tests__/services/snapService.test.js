@@ -284,10 +284,10 @@ describe('snapService', () => {
       expect(thumbnailPath).toBeDefined();
       expect(thumbnailPath).toMatch(/^snap-thumbnails\/.+\.jpg$/);
 
-      // Thumbnail manipulateAsync should have been called with resize to 100
+      // Thumbnail manipulateAsync should have been called with resize to 300
       const manipCalls = ImageManipulator.manipulateAsync.mock.calls;
       const thumbnailCall = manipCalls.find(
-        call => call[1] && call[1][0] && call[1][0].resize && call[1][0].resize.width === 100
+        call => call[1] && call[1][0] && call[1][0].resize && call[1][0].resize.width === 300
       );
       expect(thumbnailCall).toBeDefined();
     });
