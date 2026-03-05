@@ -1,71 +1,54 @@
 /**
- * Expo config plugin to ensure NSSupportsLiveActivities is in the
- * FlickNotificationService extension's built Info.plist.
+ * Expo config plugin to ensure NSSupportsLiveActivities is set in the
+ * FlickNotificationService extension's build settings.
  *
- * Strategy: Disable GENERATE_INFOPLIST_FILE so Xcode uses the manually
- * managed Info.plist from targets/FlickNotificationService/ as-is,
- * preserving our NSSupportsLiveActivities key.
+ * CRITICAL: This plugin MUST use @bacons/apple-targets' own Xcode project API
+ * (withXcodeProjectBeta). Do NOT use the 'xcode' npm package — it has an
+ * incompatible pbxproj serializer that corrupts build settings written by
+ * @bacons/apple-targets. See 09-RESEARCH.md "NSE Plist Fix" for full diagnosis.
+ *
+ * Strategy: Add INFOPLIST_KEY_NSSupportsLiveActivities=YES as a build setting.
+ * When GENERATE_INFOPLIST_FILE=YES (set by @bacons/apple-targets), Xcode merges
+ * INFOPLIST_KEY_* build settings into the generated Info.plist at build time.
+ * This ensures NSSupportsLiveActivities=true appears in the final compiled plist.
  */
-const { withDangerousMod } = require('expo/config-plugins');
-const fs = require('fs');
-const path = require('path');
-const xcode = require('xcode');
+const { withXcodeProjectBeta } = require('@bacons/apple-targets/build/with-bacons-xcode');
 
 module.exports = function withNSELiveActivities(config) {
-  return withDangerousMod(config, [
-    'ios',
-    async config => {
-      const iosDir = config.modRequest.platformProjectRoot;
-      const projectName = config.modRequest.projectName;
+  return withXcodeProjectBeta(config, async config => {
+    const project = config.modResults;
+    const targets = project.rootObject.props.targets;
 
-      const pbxprojPath = path.join(iosDir, `${projectName}.xcodeproj`, 'project.pbxproj');
+    let found = false;
+    for (const target of targets) {
+      // Match by target name via getDisplayName() which returns props.name
+      // Also check props.productName as fallback
+      const name =
+        (typeof target.getDisplayName === 'function' ? target.getDisplayName() : null) ||
+        target.props?.productName;
 
-      if (!fs.existsSync(pbxprojPath)) {
-        console.warn('[withNSELiveActivities] .pbxproj not found at', pbxprojPath);
-        return config;
+      if (name === 'FlickNotificationService') {
+        // Add NSSupportsLiveActivities to ALL build configurations (Debug + Release)
+        // This sets the INFOPLIST_KEY_NSSupportsLiveActivities build setting,
+        // which Xcode translates to NSSupportsLiveActivities=true in the generated plist
+        target.setBuildSetting('INFOPLIST_KEY_NSSupportsLiveActivities', 'YES');
+        found = true;
+        console.log(
+          '[withNSELiveActivities] Set INFOPLIST_KEY_NSSupportsLiveActivities=YES for',
+          name
+        );
+        break;
       }
+    }
 
-      const project = xcode.project(pbxprojPath);
-      project.parseSync();
+    if (!found) {
+      console.warn(
+        '[withNSELiveActivities] Could not find FlickNotificationService target.',
+        'Available targets:',
+        targets.map(t => t.getDisplayName?.() || t.props?.productName || 'unknown').join(', ')
+      );
+    }
 
-      const targetName = 'FlickNotificationService';
-      let modified = false;
-
-      const nativeTargets = project.pbxNativeTargetSection();
-      for (const key of Object.keys(nativeTargets)) {
-        const target = nativeTargets[key];
-        if (typeof target === 'object' && target.name === targetName) {
-          const configListId = target.buildConfigurationList;
-          const configLists = project.pbxXCConfigurationList();
-          const configList = configLists[configListId];
-
-          if (configList && configList.buildConfigurations) {
-            const buildConfigs = project.pbxXCBuildConfigurationSection();
-            for (const configEntry of configList.buildConfigurations) {
-              const configId = configEntry.value;
-              const buildConfig = buildConfigs[configId];
-
-              if (buildConfig && buildConfig.buildSettings) {
-                // Disable auto-generation so Xcode uses our Info.plist directly
-                buildConfig.buildSettings.GENERATE_INFOPLIST_FILE = 'NO';
-                // Also set via build setting as belt-and-suspenders
-                buildConfig.buildSettings.INFOPLIST_KEY_NSSupportsLiveActivities = 'YES';
-                modified = true;
-              }
-            }
-          }
-          break;
-        }
-      }
-
-      if (modified) {
-        fs.writeFileSync(pbxprojPath, project.writeSync());
-        console.log('[withNSELiveActivities] Configured', targetName, 'for Live Activities');
-      } else {
-        console.warn('[withNSELiveActivities] Could not find target:', targetName);
-      }
-
-      return config;
-    },
-  ]);
+    return config;
+  });
 };
