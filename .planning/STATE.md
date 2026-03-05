@@ -49,6 +49,7 @@ Progress: [██████░░░░] 50% (v1.1)
 | Phase 09 P08 | 4min | 2 tasks | 22 files |
 | Phase 09 P11 | 1min | 2 tasks | 2 files |
 | Phase 09 P12 | 1min | 1 tasks | 1 files |
+| Phase 09 P13 | 2min | 1 tasks | 1 files |
 
 ## Milestone History
 
@@ -112,6 +113,10 @@ Progress: [██████░░░░] 50% (v1.1)
 - Thumbnail uses 128x160 (4:5) portrait ratio matching typical photo aspect
 - Polaroid frame uses 4pt top/sides, 14pt bottom matching classic instant photo proportions
 - No-caption layout centers Polaroid with no text rather than showing sender name alone
+- Used @available(iOS 16.2, *) lazy var for persistentActivities to satisfy compiler requirement for ActivityKit types
+- Observation uses fire-and-forget Task with [weak self] to avoid retain cycles
+- persistentActivities removed BEFORE activity.end() in endActivity to prevent race condition re-creation
+- Re-creation failure removes from tracking to prevent infinite retry loops
 
 **Open blockers:**
 
@@ -147,9 +152,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 09-12-PLAN.md (Polaroid frame and portrait layout). Phase 9 plans 01-04, 06-08, 11-12 executed. Checkpoint 05 pending EAS build + verification.
+Stopped at: Completed 09-13-PLAN.md (Live Activity persistence via ActivityState observation). Phase 9 plans 01-04, 06-08, 11-13 executed. Checkpoint 05 pending EAS build + verification.
 Resume file: None
 
 ---
 
-Last activity: 2026-03-05 - Completed Plan 09-12: Add Polaroid frame and portrait layout to Live Activity widget
+Last activity: 2026-03-05 - Completed Plan 09-13: Add Live Activity persistence via ActivityState observation
