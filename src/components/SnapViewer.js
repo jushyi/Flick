@@ -46,6 +46,7 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getSignedSnapUrl, markSnapViewed } from '../services/firebase/snapService';
+import { dismissPinnedSnapNotification } from '../services/pinnedNotificationService';
 
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
@@ -211,7 +212,12 @@ const SnapViewer = ({
       });
     }
 
-    // TODO: dismissPinnedSnapNotification will be wired in Plan 09-09
+    // Dismiss pinned snap notification if this is a pinned snap
+    if (snapMessage?.pinned === true || snapMessage?.pinned === 'true') {
+      const activityId = snapMessage.id || snapMessage.pinnedActivityId;
+      await dismissPinnedSnapNotification(activityId);
+      logger.debug('SnapViewer: Dismissed pinned notification', { activityId });
+    }
 
     // Trigger haptic feedback on dismiss
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

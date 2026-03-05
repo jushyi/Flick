@@ -34,6 +34,10 @@ import {
   scheduleNextReveal,
   clearRevealCache,
 } from './src/services/firebase/darkroomService';
+import {
+  checkAndRedeliverPinnedSnaps,
+  trackPinnedSnap,
+} from './src/services/pinnedNotificationService';
 import { revealPhotos, getPhotoById } from './src/services/firebase/photoService';
 import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
@@ -333,6 +337,16 @@ export default function App() {
         }
       }
 
+      // Track pinned snap for re-delivery if notification is swiped away
+      if (notifData?.pinned === 'true') {
+        trackPinnedSnap(notifData.pinnedActivityId, {
+          conversationId: notifData.conversationId,
+          senderName: notifData.senderName || '',
+          caption: notifData.caption || '',
+          pinnedThumbnailUrl: notifData.pinnedThumbnailUrl || '',
+        });
+      }
+
       const result = handleNotificationReceived(notification);
       if (result.success) {
         setBannerData(result.data);
@@ -371,6 +385,12 @@ export default function App() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async nextAppState => {
       if (nextAppState === 'active') {
+        // Re-deliver swiped-away pinned snap notifications after a short delay
+        // Delay allows the notification system to settle before checking (avoids false positives)
+        setTimeout(() => {
+          checkAndRedeliverPinnedSnaps();
+        }, 2000);
+
         const currentUser = getAuth().currentUser;
         if (currentUser) {
           logger.debug('App: Checking for pending reveals on foreground', {
