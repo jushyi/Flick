@@ -23,7 +23,7 @@
 - [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
 - [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2026-02-25)
 - [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap
-- [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking (**BLOCKED**: NSE NSSupportsLiveActivities plist key not picked up at runtime — needs fix)
+- [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking (fix plan created for NSE plist blocker)
 - [ ] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
 
 ## Phase Details
@@ -108,7 +108,7 @@ Plans:
 4. After the recipient views the snap, the Live Activity disappears from the lock screen
 5. If the recipient never views the snap, the Live Activity auto-expires and disappears after 48 hours
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/7 plans executed
 
 Plans:
 
@@ -117,7 +117,8 @@ Plans:
 - [x] 09-03-PLAN.md — JS service layer: liveActivityService.js, snapService pinned flag, SnapPreviewScreen send flow wiring
 - [x] 09-04-PLAN.md — Recipient-side wiring: Cloud Function pinned notification payload, App.js Live Activity trigger, SnapViewer dismissal
 - [x] 09-06-PLAN.md — NSE for background Live Activities, mutableContent flag, native deduplication
-- [ ] 09-05-PLAN.md — Checkpoint: end-to-end verification on physical iOS device (**BLOCKED**: NSE plist issue)
+- [ ] 09-07-PLAN.md — Fix NSE plist blocker: rewrite withNSELiveActivities.js to use @bacons/apple-targets API
+- [ ] 09-05-PLAN.md — Checkpoint: end-to-end verification on physical iOS device (unblocked after 09-07)
 
 ### Phase 10: Pinned Snaps Android
 
@@ -154,7 +155,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 5/6            | Blocked     | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 5/7            | In Progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 | 11. Add Video Support to Main Camera         | v1.1      | 0/8            | Not started | -          |
 
@@ -202,4 +203,4 @@ Plans:
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-03-05 — Phase 9: 5/6 plans complete, blocked on NSE NSSupportsLiveActivities plist issue_
+_Last updated: 2026-03-05 — Phase 9: 5/7 plans complete, fix plan 07 created for NSE plist blocker_
