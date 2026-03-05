@@ -1,10 +1,10 @@
 /** @type {import('@bacons/apple-targets').Config} */
 module.exports = {
-  type: 'notification-service',
-  name: 'FlickNotificationService',
-  bundleIdentifier: '.FlickNotificationService',
+  type: 'widget',
+  name: 'FlickLiveActivity',
+  bundleIdentifier: '.FlickLiveActivity',
   deploymentTarget: '16.2',
-  frameworks: ['ActivityKit'],
+  frameworks: ['SwiftUI', 'ActivityKit', 'WidgetKit'],
   entitlements: {
     'com.apple.security.application-groups': ['group.com.spoodsjs.flick'],
   },
