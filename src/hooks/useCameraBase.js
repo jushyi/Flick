@@ -241,7 +241,9 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
           photoUri = flipped.uri;
           logger.debug('useCameraBase: Front camera photo flipped', { uri: photoUri });
         } catch (flipError) {
-          logger.warn('useCameraBase: Failed to flip front camera photo', { error: flipError.message });
+          logger.warn('useCameraBase: Failed to flip front camera photo', {
+            error: flipError.message,
+          });
         }
       }
 
