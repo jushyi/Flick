@@ -3,9 +3,5 @@ module.exports = {
   type: 'notification-service',
   name: 'FlickNotificationService',
   bundleIdentifier: '.FlickNotificationService',
-  deploymentTarget: '16.2',
-  frameworks: ['ActivityKit'],
-  entitlements: {
-    'com.apple.security.application-groups': ['group.com.spoodsjs.flick'],
-  },
+  deploymentTarget: '16.0',
 };
