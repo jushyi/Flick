@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.description    = 'Native module for starting, ending, and diagnosing pinned snap Live Activities on the iOS lock screen'
   s.author         = 'Flick'
   s.homepage       = 'https://github.com/example'
-  s.platforms      = { :ios => '16.2' }
+  s.platforms      = { :ios => '15.1' }
   s.source         = { git: '' }
   s.static_framework = true
 
