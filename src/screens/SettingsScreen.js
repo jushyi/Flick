@@ -16,7 +16,11 @@ import PixelToggle from '../components/PixelToggle';
 
 import { useAuth } from '../context/AuthContext';
 
-import { getNSEDiagnostics, clearNSEDiagnostics } from '../../modules/live-activity-manager';
+import {
+  getNSEDiagnostics,
+  clearNSEDiagnostics,
+  diagnose,
+} from '../../modules/live-activity-manager';
 
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
@@ -74,22 +78,27 @@ const SettingsScreen = () => {
 
   const handleNSEDiagnostics = async () => {
     try {
+      // Run Live Activity diagnostics first
+      const diagResult = await diagnose();
+      logger.info('Live Activity Diagnostics:\n' + diagResult);
+
+      // Then check NSE logs
       const diags = await getNSEDiagnostics();
-      if (!diags || diags.length === 0) {
-        Alert.alert('NSE Diagnostics', 'No NSE logs found. Send a pinned snap first.');
-        return;
-      }
-      // Show the most recent invocation
-      const latest = diags[diags.length - 1];
-      const entries = latest.entries || [];
-      const summary = entries.map(e => `${e.step}: ${JSON.stringify(e)}`).join('\n\n');
-      Alert.alert(`NSE Log (${latest.timestamp})`, summary, [
-        { text: 'Clear Logs', onPress: () => clearNSEDiagnostics(), style: 'destructive' },
+      const nseSummary =
+        diags && diags.length > 0
+          ? diags[diags.length - 1].entries?.map(e => e.step).join(' → ') || 'No entries'
+          : 'No NSE logs';
+
+      Alert.alert('Live Activity Diagnostics', `${diagResult}\n\n--- NSE ---\n${nseSummary}`, [
+        {
+          text: 'Clear NSE Logs',
+          onPress: () => clearNSEDiagnostics(),
+          style: 'destructive',
+        },
         { text: 'OK' },
       ]);
-      logger.info('NSE Diagnostics:', JSON.stringify(diags, null, 2));
     } catch (error) {
-      Alert.alert('NSE Diagnostics', `Error reading: ${error.message}`);
+      Alert.alert('Diagnostics Error', error.message);
     }
   };
 

@@ -14,6 +14,7 @@ interface LiveActivityManagerInterface {
   endActivity(activityId: string): Promise<void>;
   endAllActivities(): Promise<void>;
   getActiveCount(): Promise<number>;
+  diagnose(): Promise<string>;
   getNSEDiagnostics(): Promise<string | null>;
   clearNSEDiagnostics(): Promise<void>;
 }
@@ -75,6 +76,16 @@ export async function endAllActivities(): Promise<void> {
 export async function getActiveCount(): Promise<number> {
   if (!nativeModule) return 0;
   return nativeModule.getActiveCount();
+}
+
+/**
+ * Run diagnostics on Live Activity support.
+ * Checks each prerequisite and attempts a test Activity.request().
+ * Returns a multi-line diagnostic string.
+ */
+export async function diagnose(): Promise<string> {
+  if (!nativeModule) return 'nativeModule is null — LiveActivityManager not loaded';
+  return nativeModule.diagnose();
 }
 
 /**

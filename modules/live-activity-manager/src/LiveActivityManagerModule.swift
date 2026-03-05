@@ -114,6 +114,63 @@ public class LiveActivityManagerModule: Module {
             #endif
         }
 
+        // MARK: - diagnose
+        // Returns a diagnostic string checking each prerequisite for Live Activities.
+        // Call from JS to see why startActivity returns null.
+        AsyncFunction("diagnose") { () -> String in
+            var lines: [String] = []
+
+            #if canImport(ActivityKit)
+            lines.append("canImport(ActivityKit): YES")
+
+            if #available(iOS 16.2, *) {
+                lines.append("iOS 16.2+: YES")
+
+                let authInfo = ActivityAuthorizationInfo()
+                lines.append("areActivitiesEnabled: \(authInfo.areActivitiesEnabled)")
+                lines.append("frequentPushesEnabled: \(authInfo.frequentPushesEnabled)")
+
+                let count = Activity<PinnedSnapAttributes>.activities.count
+                lines.append("currentActivityCount: \(count)")
+
+                // Try to actually request an activity with a test ID and see what error we get
+                let testAttributes = PinnedSnapAttributes(
+                    activityId: "__diag_test__",
+                    senderName: "Diagnostic",
+                    caption: nil,
+                    deepLinkUrl: "lapse://test"
+                )
+                let testState = PinnedSnapAttributes.ContentState()
+                let testContent = ActivityContent(
+                    state: testState,
+                    staleDate: Date().addingTimeInterval(60)
+                )
+
+                do {
+                    let activity = try Activity.request(
+                        attributes: testAttributes,
+                        content: testContent,
+                        pushType: nil
+                    )
+                    lines.append("Activity.request(): SUCCESS (id=\(activity.id))")
+                    // Clean up test activity immediately
+                    await activity.end(nil, dismissalPolicy: .immediate)
+                    lines.append("Test activity cleaned up")
+                } catch {
+                    lines.append("Activity.request(): FAILED")
+                    lines.append("error.localizedDescription: \(error.localizedDescription)")
+                    lines.append("error.full: \(String(describing: error))")
+                }
+            } else {
+                lines.append("iOS 16.2+: NO (current: \(ProcessInfo.processInfo.operatingSystemVersionString))")
+            }
+            #else
+            lines.append("canImport(ActivityKit): NO")
+            #endif
+
+            return lines.joined(separator: "\n")
+        }
+
         // MARK: - getActiveCount
         // Returns the number of currently active pinned snap Live Activities.
         AsyncFunction("getActiveCount") { () -> Int in
