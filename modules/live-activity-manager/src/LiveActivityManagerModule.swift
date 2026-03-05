@@ -13,6 +13,17 @@ private let MAX_ACTIVE_ACTIVITIES = 5
 private let EXPIRY_INTERVAL: TimeInterval = 48 * 60 * 60
 
 public class LiveActivityManagerModule: Module {
+    /// Tracks activities that should be re-created if user swipes them away.
+    /// Key: activityId, Value: attributes used to create the activity.
+    /// Entries are removed ONLY when endActivity is called (snap viewed).
+    #if canImport(ActivityKit)
+    @available(iOS 16.2, *)
+    private lazy var persistentActivities: [String: PinnedSnapAttributes] = [:]
+    #endif
+
+    /// Active observation tasks, keyed by activityId, for cleanup.
+    private var observationTasks: [String: Task<Void, Never>] = [:]
+
     public func definition() -> ModuleDefinition {
         Name("LiveActivityManager")
 
@@ -71,6 +82,9 @@ public class LiveActivityManagerModule: Module {
                     content: content,
                     pushType: nil
                 )
+                // Track for persistence and start observing for dismissal
+                self.persistentActivities[activityId] = attributes
+                self.observeActivityState(activity, activityId: activityId)
                 return activity.id
             } catch {
                 // Re-throw with the actual error message so JS can log it
@@ -85,9 +99,15 @@ public class LiveActivityManagerModule: Module {
 
         // MARK: - endActivity
         // Ends a specific Live Activity matching the given activityId.
+        // Removes from persistent tracking FIRST to prevent re-creation on dismissal.
         AsyncFunction("endActivity") { (activityId: String) in
             #if canImport(ActivityKit)
             guard #available(iOS 16.2, *) else { return }
+
+            // Remove from persistent tracking FIRST -- prevents re-creation
+            self.persistentActivities.removeValue(forKey: activityId)
+            self.observationTasks[activityId]?.cancel()
+            self.observationTasks.removeValue(forKey: activityId)
 
             for activity in Activity<PinnedSnapAttributes>.activities {
                 if activity.attributes.activityId == activityId {
@@ -102,9 +122,17 @@ public class LiveActivityManagerModule: Module {
 
         // MARK: - endAllActivities
         // Ends all active pinned snap Live Activities immediately.
+        // Clears all persistent tracking before ending to prevent re-creation.
         AsyncFunction("endAllActivities") {
             #if canImport(ActivityKit)
             guard #available(iOS 16.2, *) else { return }
+
+            // Clear all persistent tracking FIRST -- prevents re-creation
+            self.persistentActivities.removeAll()
+            for (_, task) in self.observationTasks {
+                task.cancel()
+            }
+            self.observationTasks.removeAll()
 
             for activity in Activity<PinnedSnapAttributes>.activities {
                 await activity.end(nil, dismissalPolicy: .immediate)
@@ -211,6 +239,61 @@ public class LiveActivityManagerModule: Module {
 
     /// App Group identifier for sharing data between main app and widget extension.
     private let appGroupId = "group.com.spoodsjs.flick"
+
+    /// Observes an activity's state updates and automatically re-creates it if dismissed by the user.
+    /// Only re-creates if the activityId is still in `persistentActivities` (not explicitly ended).
+    #if canImport(ActivityKit)
+    @available(iOS 16.2, *)
+    private func observeActivityState(_ activity: Activity<PinnedSnapAttributes>, activityId: String) {
+        // Cancel any existing observation for this activityId
+        observationTasks[activityId]?.cancel()
+
+        let task = Task { [weak self] in
+            for await state in activity.activityStateUpdates {
+                guard let self = self else { return }
+
+                if state == .dismissed {
+                    // Check if this activity should persist (not explicitly ended)
+                    guard let attributes = self.persistentActivities[activityId] else {
+                        // endActivity was called -- do not re-create
+                        return
+                    }
+
+                    // Re-create the activity with fresh staleDate
+                    let newState = PinnedSnapAttributes.ContentState()
+                    let content = ActivityContent(
+                        state: newState,
+                        staleDate: Date().addingTimeInterval(EXPIRY_INTERVAL)
+                    )
+
+                    do {
+                        let newActivity = try Activity.request(
+                            attributes: attributes,
+                            content: content,
+                            pushType: nil
+                        )
+                        // Observe the new activity for future dismissals
+                        self.observeActivityState(newActivity, activityId: activityId)
+                    } catch {
+                        // Failed to re-create -- remove from tracking to avoid infinite retries
+                        self.persistentActivities.removeValue(forKey: activityId)
+                        self.observationTasks.removeValue(forKey: activityId)
+                    }
+                    return  // Exit this observation loop (new one started for new activity)
+                }
+
+                if state == .ended {
+                    // System ended it (e.g., staleDate expired) -- clean up tracking
+                    self.persistentActivities.removeValue(forKey: activityId)
+                    self.observationTasks.removeValue(forKey: activityId)
+                    return
+                }
+            }
+        }
+
+        observationTasks[activityId] = task
+    }
+    #endif
 
     /// Copies a thumbnail image from a local file URI to the App Groups shared container.
     /// The widget extension reads from this location to display the photo.
