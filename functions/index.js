@@ -3143,9 +3143,28 @@ exports.onNewMessage = functions
           }
         }
 
-        await sendPushNotification(fcmToken, senderName, body, notificationData, recipientId, {
+        const pushOptions = {
           mutableContent: message.pinned === true,
-        });
+        };
+
+        if (message.pinned === true) {
+          logger.info('onNewMessage: Sending PINNED snap notification', {
+            recipientId,
+            conversationId,
+            mutableContent: true,
+            pinnedActivityId: notificationData.pinnedActivityId,
+            hasThumbnailUrl: !!notificationData.pinnedThumbnailUrl,
+          });
+        }
+
+        await sendPushNotification(
+          fcmToken,
+          senderName,
+          body,
+          notificationData,
+          recipientId,
+          pushOptions
+        );
 
         logger.debug('onNewMessage: Notification sent', { recipientId, conversationId });
       } catch (notifError) {

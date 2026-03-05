@@ -17,7 +17,7 @@ import logger from '../utils/logger';
 let LiveActivityManager = null;
 if (Platform.OS === 'ios') {
   try {
-    LiveActivityManager = require('../../modules/live-activity-manager').default;
+    LiveActivityManager = require('../../modules/live-activity-manager');
   } catch (e) {
     logger.warn('liveActivityService: Native module not available', { error: e.message });
   }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { AppState, Platform, View } from 'react-native';
 import * as Updates from 'expo-updates';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -39,6 +39,8 @@ import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
+import { startPinnedSnapActivity } from './src/services/liveActivityService';
+import * as FileSystem from 'expo-file-system';
 import { WHATS_NEW } from './src/config/whatsNew';
 import { GIPHY_API_KEY } from '@env';
 
@@ -333,8 +335,33 @@ export default function App() {
         }
       }
 
-      // Note: Live Activities for pinned snaps are started by the Notification Service Extension (NSE)
-      // which runs in all app states (foreground, background, killed). No JS handling needed.
+      // Start Live Activity from JS when a pinned snap notification is received.
+      // This handles the foreground/background case. The NSE handles the killed-app case.
+      if (Platform.OS === 'ios' && notifData?.pinned === 'true' && notifData?.pinnedActivityId) {
+        (async () => {
+          try {
+            let thumbnailUri = '';
+            if (notifData.pinnedThumbnailUrl) {
+              const localPath = `${FileSystem.cacheDirectory}thumb_${notifData.pinnedActivityId}.jpg`;
+              const download = await FileSystem.downloadAsync(
+                notifData.pinnedThumbnailUrl,
+                localPath
+              );
+              thumbnailUri = download.uri;
+            }
+            const laResult = await startPinnedSnapActivity({
+              activityId: notifData.pinnedActivityId,
+              senderName: notifData.senderName || 'Someone',
+              caption: notifData.caption || null,
+              conversationId: notifData.conversationId,
+              thumbnailUri,
+            });
+            logger.info('App: Live Activity start result', laResult);
+          } catch (err) {
+            logger.error('App: Failed to start Live Activity', { error: err.message });
+          }
+        })();
+      }
 
       const result = handleNotificationReceived(notification);
       if (result.success) {
