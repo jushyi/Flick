@@ -33,14 +33,14 @@ struct FlickLiveActivityWidget: Widget {
                     EmptyView()
                 }
             } compactLeading: {
-                thumbnailView(activityId: context.attributes.activityId, size: 24)
+                thumbnailView(activityId: context.attributes.activityId, width: 24, height: 24)
             } compactTrailing: {
                 Text(context.attributes.senderName)
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundColor(flickTextPrimary)
                     .lineLimit(1)
             } minimal: {
-                thumbnailView(activityId: context.attributes.activityId, size: 24)
+                thumbnailView(activityId: context.attributes.activityId, width: 24, height: 24)
             }
         }
     }
@@ -48,41 +48,64 @@ struct FlickLiveActivityWidget: Widget {
     // MARK: - Lock Screen Layout
 
     /// The main lock screen presentation of the Live Activity.
-    /// Shows a large photo thumbnail on the left with caption on the right.
-    /// Designed to be tall and visually prominent on the lock screen.
+    /// When caption is present: Polaroid on left, sender name + caption on right.
+    /// When no caption: centered Polaroid only, no text.
     @ViewBuilder
     private func lockScreenView(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
-        HStack(spacing: 14) {
-            // Left: Large photo thumbnail from App Groups shared container
-            thumbnailView(activityId: context.attributes.activityId, size: 96)
+        let hasCaption = context.attributes.caption != nil && !context.attributes.caption!.isEmpty
 
-            // Right: Sender name + caption
-            VStack(alignment: .leading, spacing: 6) {
-                Text(context.attributes.senderName)
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                    .foregroundColor(flickTextSecondary)
-                    .lineLimit(1)
+        if hasCaption {
+            // Caption present: Polaroid on left, text on right
+            HStack(spacing: 14) {
+                polaroidFrame(activityId: context.attributes.activityId)
 
-                if let caption = context.attributes.caption, !caption.isEmpty {
-                    Text(caption)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(context.attributes.senderName)
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundColor(flickTextSecondary)
+                        .lineLimit(1)
+
+                    Text(context.attributes.caption!)
                         .font(.system(size: 15, weight: .bold, design: .monospaced))
                         .foregroundColor(flickTextPrimary)
                         .lineLimit(2)
                         .truncationMode(.tail)
-                } else {
-                    Text("Tap to view")
-                        .font(.system(size: 15, weight: .bold, design: .monospaced))
-                        .foregroundColor(flickTextSecondary)
-                        .lineLimit(1)
                 }
-            }
 
-            Spacer()
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(flickBackground)
+            .widgetURL(URL(string: context.attributes.deepLinkUrl))
+        } else {
+            // No caption: centered Polaroid only, no text
+            HStack {
+                Spacer()
+                polaroidFrame(activityId: context.attributes.activityId)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(flickBackground)
+            .widgetURL(URL(string: context.attributes.deepLinkUrl))
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(flickBackground)
-        .widgetURL(URL(string: context.attributes.deepLinkUrl))
+    }
+
+    // MARK: - Polaroid Frame
+
+    /// Wraps the thumbnail in a white Polaroid-style border with a thick bottom strip.
+    @ViewBuilder
+    private func polaroidFrame(activityId: String) -> some View {
+        VStack(spacing: 0) {
+            thumbnailView(activityId: activityId, width: 128, height: 160)
+        }
+        .padding(.top, 4)
+        .padding(.horizontal, 4)
+        .padding(.bottom, 14)
+        .background(Color.white)
+        .cornerRadius(4)
+        .shadow(color: Color.black.opacity(0.3), radius: 3, x: 0, y: 2)
     }
 
     // MARK: - Thumbnail View
@@ -90,21 +113,21 @@ struct FlickLiveActivityWidget: Widget {
     /// Loads and displays a thumbnail image from the App Groups shared container.
     /// Falls back to a branded placeholder if the image is not found.
     @ViewBuilder
-    private func thumbnailView(activityId: String, size: CGFloat) -> some View {
+    private func thumbnailView(activityId: String, width: CGFloat, height: CGFloat) -> some View {
         if let image = loadThumbnail(activityId: activityId) {
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: size > 48 ? 8 : 4))
+                .frame(width: width, height: height)
+                .clipShape(RoundedRectangle(cornerRadius: width > 48 ? 8 : 4))
         } else {
             // Fallback: branded placeholder with "F" initial
-            RoundedRectangle(cornerRadius: size > 48 ? 8 : 4)
+            RoundedRectangle(cornerRadius: width > 48 ? 8 : 4)
                 .fill(Color(red: 30 / 255, green: 30 / 255, blue: 60 / 255))
-                .frame(width: size, height: size)
+                .frame(width: width, height: height)
                 .overlay(
                     Text("F")
-                        .font(.system(size: size * 0.4, weight: .bold, design: .monospaced))
+                        .font(.system(size: min(width, height) * 0.4, weight: .bold, design: .monospaced))
                         .foregroundColor(flickTextPrimary)
                 )
         }
