@@ -43,12 +43,29 @@ export const startPinnedSnapActivity = async ({
   friendId,
   thumbnailUri,
 }) => {
+  logger.info('liveActivityService: DEBUG module check', {
+    hasManager: !!LiveActivityManager,
+    managerKeys: LiveActivityManager ? Object.keys(LiveActivityManager) : [],
+    hasStartActivity: LiveActivityManager ? typeof LiveActivityManager.startActivity : 'N/A',
+  });
+
   if (Platform.OS !== 'ios' || !LiveActivityManager) {
+    logger.error('liveActivityService: NOT SUPPORTED', {
+      platform: Platform.OS,
+      hasManager: !!LiveActivityManager,
+    });
     return { success: false, error: 'Not supported' };
   }
 
   try {
     const deepLinkUrl = `lapse://messages/${conversationId}`;
+
+    logger.info('liveActivityService: Calling native startActivity', {
+      activityId,
+      senderName,
+      deepLinkUrl,
+      thumbnailUri: thumbnailUri ? 'present' : 'empty',
+    });
 
     const nativeActivityId = await LiveActivityManager.startActivity(
       activityId,
@@ -58,18 +75,19 @@ export const startPinnedSnapActivity = async ({
       thumbnailUri
     );
 
-    logger.info('liveActivityService: Started pinned snap activity', {
+    logger.info('liveActivityService: Native returned', {
       activityId,
-      senderName,
-      conversationId,
       nativeActivityId,
+      type: typeof nativeActivityId,
     });
 
     return { success: true, nativeActivityId };
   } catch (error) {
-    logger.error('liveActivityService: Failed to start activity', {
+    logger.error('liveActivityService: NATIVE THREW ERROR', {
       activityId,
       error: error.message,
+      code: error.code,
+      full: String(error),
     });
     return { success: false, error: error.message };
   }
