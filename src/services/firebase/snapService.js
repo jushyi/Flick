@@ -182,11 +182,11 @@ export const uploadAndSendSnap = async (
       if (pinToScreen) {
         const pinnedActivityId = snapId;
 
-        // Create a small 100x100 thumbnail for the Live Activity
+        // Create a 300px wide thumbnail for the Live Activity (sharp at 2-3x Retina)
         const thumbnailResult = await ImageManipulator.manipulateAsync(
           compressedUri,
-          [{ resize: { width: 100 } }],
-          { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+          [{ resize: { width: 300 } }],
+          { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
         );
         const thumbnailPath = uriToFilePath(thumbnailResult.uri);
 
