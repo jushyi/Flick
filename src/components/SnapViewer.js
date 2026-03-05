@@ -46,7 +46,6 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getSignedSnapUrl, markSnapViewed } from '../services/firebase/snapService';
-import { endPinnedSnapActivity } from '../services/liveActivityService';
 
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
@@ -212,31 +211,13 @@ const SnapViewer = ({
       });
     }
 
-    // End Live Activity for pinned snaps (iOS only, best-effort)
-    if (result.success && snapMessage.pinned && Platform.OS === 'ios') {
-      try {
-        await endPinnedSnapActivity(snapMessage.id || snapMessage.pinnedActivityId);
-        logger.info('SnapViewer: Ended Live Activity for pinned snap', {
-          activityId: snapMessage.id || snapMessage.pinnedActivityId,
-        });
-      } catch (err) {
-        logger.warn('SnapViewer: Failed to end Live Activity', {
-          error: err.message,
-        });
-      }
-    }
+    // TODO: dismissPinnedSnapNotification will be wired in Plan 09-09
 
     // Trigger haptic feedback on dismiss
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     onClose?.();
-  }, [
-    conversationId,
-    snapMessage?.id,
-    snapMessage?.pinned,
-    snapMessage?.pinnedActivityId,
-    onClose,
-  ]);
+  }, [conversationId, snapMessage?.id, onClose]);
 
   // Close with suck-back or slide-down animation
   const closeWithAnimation = useCallback(() => {

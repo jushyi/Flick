@@ -42,7 +42,6 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
-        "NSSupportsLiveActivities": true,
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
@@ -104,7 +103,6 @@
       "expo-audio",
       "expo-asset",
       "expo-updates",
-      "./plugins/withNSELiveActivities",
       "@bacons/apple-targets"
     ],
     "owner": "spoodsjs",

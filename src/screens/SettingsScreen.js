@@ -16,12 +16,6 @@ import PixelToggle from '../components/PixelToggle';
 
 import { useAuth } from '../context/AuthContext';
 
-import {
-  getNSEDiagnostics,
-  clearNSEDiagnostics,
-  diagnose,
-} from '../../modules/live-activity-manager';
-
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
@@ -74,32 +68,6 @@ const SettingsScreen = () => {
   const handleHelpSupport = () => {
     logger.debug('SettingsScreen: Help & Support pressed');
     navigation.navigate('HelpSupport');
-  };
-
-  const handleNSEDiagnostics = async () => {
-    try {
-      // Run Live Activity diagnostics first
-      const diagResult = await diagnose();
-      logger.info('Live Activity Diagnostics:\n' + diagResult);
-
-      // Then check NSE logs
-      const diags = await getNSEDiagnostics();
-      const nseSummary =
-        diags && diags.length > 0
-          ? diags[diags.length - 1].entries?.map(e => e.step).join(' → ') || 'No entries'
-          : 'No NSE logs';
-
-      Alert.alert('Live Activity Diagnostics', `${diagResult}\n\n--- NSE ---\n${nseSummary}`, [
-        {
-          text: 'Clear NSE Logs',
-          onPress: () => clearNSEDiagnostics(),
-          style: 'destructive',
-        },
-        { text: 'OK' },
-      ]);
-    } catch (error) {
-      Alert.alert('Diagnostics Error', error.message);
-    }
   };
 
   const sections = [
@@ -304,17 +272,12 @@ const SettingsScreen = () => {
           ))}
         </View>
 
-        {/* App Version — long press for NSE debug logs */}
-        <TouchableOpacity
-          style={styles.versionContainer}
-          onLongPress={handleNSEDiagnostics}
-          delayLongPress={1000}
-          activeOpacity={0.7}
-        >
+        {/* App Version */}
+        <View style={styles.versionContainer}>
           <Text style={styles.versionText}>
             Version {Application.nativeApplicationVersion || '0.1.0'}
           </Text>
-        </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

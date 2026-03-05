@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState, Platform, View } from 'react-native';
+import { AppState, View } from 'react-native';
 import * as Updates from 'expo-updates';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -39,7 +39,6 @@ import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
-import { startPinnedSnapActivity } from './src/services/liveActivityService';
 import { WHATS_NEW } from './src/config/whatsNew';
 import { GIPHY_API_KEY } from '@env';
 
@@ -332,25 +331,6 @@ export default function App() {
         ) {
           return; // Skip banner — user is already viewing this conversation
         }
-      }
-
-      // Start Live Activity from JS when a pinned snap notification is received.
-      // This handles the foreground/background case. The NSE handles the killed-app case.
-      if (Platform.OS === 'ios' && notifData?.pinned === 'true' && notifData?.pinnedActivityId) {
-        (async () => {
-          try {
-            const laResult = await startPinnedSnapActivity({
-              activityId: notifData.pinnedActivityId,
-              senderName: notifData.senderName || 'Someone',
-              caption: notifData.caption || null,
-              conversationId: notifData.conversationId,
-              thumbnailUri: '',
-            });
-            logger.info('App: Live Activity start result', laResult);
-          } catch (err) {
-            logger.error('App: Failed to start Live Activity', { error: err.message });
-          }
-        })();
       }
 
       const result = handleNotificationReceived(notification);
