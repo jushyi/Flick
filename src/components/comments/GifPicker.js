@@ -13,6 +13,8 @@
  * 3. Call openGifPicker() to show the dialog
  */
 import { useEffect } from 'react';
+import { Alert } from 'react-native';
+
 import {
   GiphyDialog,
   GiphyDialogEvent,
@@ -20,7 +22,10 @@ import {
   GiphyContentType,
   GiphyThemePreset,
 } from '@giphy/react-native-sdk';
+
 import logger from '../../utils/logger';
+
+let isGiphyInitialized = false;
 
 /**
  * Initialize the Giphy SDK
@@ -36,6 +41,7 @@ export const initializeGiphy = apiKey => {
 
   try {
     GiphySDK.configure({ apiKey });
+    isGiphyInitialized = true;
     logger.info('GifPicker: Giphy SDK initialized');
   } catch (error) {
     logger.error('GifPicker: Failed to initialize Giphy SDK', { error: error.message });
@@ -43,10 +49,22 @@ export const initializeGiphy = apiKey => {
 };
 
 /**
+ * Check whether the Giphy SDK was successfully initialized
+ * @returns {boolean}
+ */
+export const isGiphyReady = () => isGiphyInitialized;
+
+/**
  * Open the Giphy dialog for GIF selection
  * Shows both GIFs and Stickers, no confirmation screen
  */
 export const openGifPicker = () => {
+  if (!isGiphyInitialized) {
+    logger.warn('GifPicker: Attempted to open picker but SDK is not initialized');
+    Alert.alert('GIF Unavailable', 'GIF picker is not available right now.');
+    return;
+  }
+
   logger.info('GifPicker: Opening dialog');
 
   try {
@@ -103,4 +121,5 @@ export default {
   initializeGiphy,
   openGifPicker,
   useGifSelection,
+  isGiphyReady,
 };
