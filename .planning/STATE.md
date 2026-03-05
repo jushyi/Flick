@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 7 of 10 executed, Plan 05 checkpoint pending
-Status: In Progress — Plan 08 complete (Live Activity cleanup + NSE rewrite)
-Last activity: 2026-03-05 - Completed Plan 09-08: Remove Live Activity infrastructure
+Plan: 8 of 10 executed, Plan 05 checkpoint pending
+Status: In Progress — Plan 09 complete (pinned notification lifecycle)
+Last activity: 2026-03-05 - Completed Plan 09-09: Pinned notification dismiss/track/re-deliver
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -47,6 +47,7 @@ Progress: [██████░░░░] 50% (v1.1)
 | Phase 09 P06 | 4min | 2 tasks | 8 files |
 | Phase 09 P07 | 4min | 2 tasks | 2 files |
 | Phase 09 P08 | 4min | 2 tasks | 22 files |
+| Phase 09 P09 | 4min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -105,6 +106,10 @@ Progress: [██████░░░░] 50% (v1.1)
 - Lowered NSE deploymentTarget from 16.2 to 16.0 (ActivityKit no longer required)
 - SnapViewer handleDismiss left TODO for dismissPinnedSnapNotification (Plan 09-09)
 - Version display in SettingsScreen changed from TouchableOpacity with diagnostics to plain View
+- pinnedNotificationService placed at src/services/ root (not firebase/) since it uses expo-notifications and AsyncStorage
+- Re-delivered notifications omit thumbnail (local notifications skip NSE) -- acceptable per RESEARCH.md
+- 2-second setTimeout delay before foreground re-delivery check to let notification system settle
+- Tracking only in foreground notification received listener (background arrivals handled by OS presentation)
 
 **Open blockers:**
 
@@ -140,9 +145,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 09-08-PLAN.md (Remove Live Activity infrastructure). Phase 9 plans 01-04, 06-08 executed. Checkpoint 05 pending EAS build + verification.
+Stopped at: Completed 09-09-PLAN.md (Pinned notification lifecycle). Phase 9 plans 01-04, 06-09 executed. Checkpoint 05 pending EAS build + verification.
 Resume file: None
 
 ---
 
-Last activity: 2026-03-05 - Completed Plan 09-08: Remove Live Activity infrastructure, rewrite NSE for rich notifications
+Last activity: 2026-03-05 - Completed Plan 09-09: Pinned notification dismiss/track/re-deliver lifecycle
