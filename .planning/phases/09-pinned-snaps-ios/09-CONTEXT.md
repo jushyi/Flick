@@ -1,14 +1,14 @@
 # Phase 9: Pinned Snaps iOS - Context
 
-**Gathered:** 2026-03-05 (updated — pivoted from Live Activities to persistent notifications)
-**Status:** Ready for planning
+**Gathered:** 2026-03-05 (updated — reverted notification pivot, Live Activities restored)
+**Status:** Gap closure — fixing issues from device testing
 
 <domain>
 ## Phase Boundary
 
-Allow senders to pin a snap to the recipient's iOS lock screen as a persistent notification. The notification shows the snap photo thumbnail and optional caption. Tapping opens the conversation. The notification persists until the snap is viewed. Android pinned snaps are a separate phase (Phase 10).
+Allow senders to pin a snap to the recipient's iOS lock screen as a Live Activity. The Live Activity shows the snap photo thumbnail with Polaroid frame and optional caption. Tapping opens the conversation. The Live Activity persists until the snap is viewed — even if swiped away. Android pinned snaps are a separate phase (Phase 10).
 
-**PIVOT:** Originally implemented via Live Activities + widget extension. Pivoting to persistent notifications — simpler, more reliable, matches Lapse's UX pattern. All Live Activity code (widget extension, native module, NSE Live Activity logic) should be removed.
+**HISTORY:** Originally implemented via Live Activities (plans 01-07). Briefly pivoted to persistent notifications (plans 08-09) but user testing showed notifications couldn't achieve the custom layout desired (large thumbnail, no app icon, no title bar). Reverted back to Live Activities (commit 1dee950). Now in gap closure fixing device-testing issues.
 
 </domain>
 
@@ -22,64 +22,72 @@ Allow senders to pin a snap to the recipient's iOS lock screen as a persistent n
 - First-time tooltip: brief one-time tooltip explaining "Pin this snap to their lock screen" — then never shown again
 - Pin toggle only appears in one-to-one conversations
 
-### Notification appearance
-- Photo thumbnail shown as image attachment (rich notification with image preview)
-- Caption displayed next to/below the thumbnail if present
-- No extra descriptive text — just the thumbnail and caption content
-- Sender name as notification title
-- Default notification sound (no custom sound)
-- No action buttons — just tap to open the conversation
+### Live Activity appearance
+- Large photo thumbnail (~128px wide) with natural portrait aspect ratio (~4:5)
+- Polaroid-style white frame around thumbnail (thicker on bottom)
+- Caption displayed to the right of the thumbnail if present
+- Sender name shown as small label above caption (only when caption exists)
+- When no caption: centered Polaroid image only, no text at all
+- No "Tap to view" or other fallback text
+- Flick dark background (#0A0A1A)
+- Monospaced font for text (matching brand)
 
 ### Persistence & dismissal
-- Notification persists as long as the snap hasn't been viewed
-- If user swipes the notification away, it should be re-delivered (snap is still unviewed)
-- Viewing the snap in SnapViewer is the only thing that dismisses the notification
-- No separate expiry timer — tied purely to snap viewed state
+- Live Activity persists as long as the snap hasn't been viewed
+- If user swipes the Live Activity away, it is automatically re-created (ActivityState observation)
+- Viewing the snap in SnapViewer calls endActivity which removes it permanently
+- 48-hour auto-expiry via ActivityKit staleDate
+
+### Thumbnail pipeline
+- Sender: 300px wide thumbnail generated in snapService (enough for 128px at 2-3x Retina)
+- Sender: Thumbnail uploaded to Firebase Storage, download URL sent in push notification
+- NSE (killed app): Downloads thumbnail from URL, saves to App Groups, starts Live Activity
+- JS handler (foreground/background): Downloads thumbnail from pinnedThumbnailUrl to local temp file via expo-file-system, then passes local URI to native module
+- Native module: Copies from local file URI to App Groups shared container
 
 ### Multiple pinned snaps
-- Each pinned snap creates its own notification — they stack on top of each other
-- No cap on number of active pinned notifications
+- Each pinned snap creates its own Live Activity — they stack
+- Cap of 5 concurrent Live Activities (oldest dismissed to make room)
 
 ### Caption behavior (UNCHANGED from v1)
 - Caption reuses the snap's message text — no separate caption field
-- If no message text: just photo thumbnail + sender name
+- If no message text: just photo thumbnail with Polaroid frame, centered
 - Emoji-only messages display normally as caption text
 
-### Cleanup: Remove Live Activity code
-- Remove the FlickLiveActivity widget extension target
-- Remove the LiveActivityManager native module (modules/live-activity-manager/)
-- Remove PinnedSnapAttributes.swift copies
-- Simplify NSE to only handle thumbnail attachment (no ActivityKit)
-- Remove liveActivityService.js
-- Remove Live Activity imports/calls from App.js and SnapViewer.js
-- Remove diagnose/NSE diagnostics from Settings screen
-- Keep the FlickNotificationService NSE target (repurpose for thumbnail attachment)
+### Live Activity infrastructure (KEEP)
+- FlickLiveActivity widget extension target (SwiftUI layout)
+- LiveActivityManager native Expo module (ActivityKit bridge)
+- PinnedSnapAttributes.swift (3 copies: widget, NSE, native module)
+- FlickNotificationService NSE (thumbnail download + Live Activity start for killed-app state)
+- liveActivityService.js (JS bridge)
+- App.js foreground handler (starts Live Activity when notification received)
+- SnapViewer.js (ends Live Activity when snap viewed)
 
 ### Claude's Discretion
-- NSE implementation for downloading and attaching thumbnail to notification
-- Notification identifier scheme for programmatic dismissal
-- How to re-deliver notification if swiped away (foreground check vs scheduled local notification)
+- Exact Polaroid frame dimensions and proportions in SwiftUI
+- ActivityState observation implementation details
+- Thumbnail download retry/error handling in JS
 - How to track/persist the per-friend sticky toggle preference
 - Exact tooltip implementation and dismissal logic
-- Cloud Function notification payload structure
 
 </decisions>
 
 <specifics>
 ## Specific Ideas
 
-- Lapse used this exact pattern: persistent notification with "don't swipe away" messaging
-- The notification should feel native and clean — thumbnail image is the star
-- Re-delivery after swipe-away is important — the snap stays pinned until viewed, period
+- Lapse likely uses Live Activities for their pinning feature (auto-appears on lock screen, custom layout, can't be accidentally dismissed)
+- The Live Activity should feel like a Polaroid instant photo pinned to the lock screen
+- Re-creation after swipe-away is critical — the snap stays pinned until viewed, period
 - Pin toggle is intentionally opt-in but remembers per-friend to reduce friction
+- Thumbnail size ~128px to be visually prominent on lock screen
 
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
-- Live Activities could be revisited as an enhancement in a future phase if persistent notifications feel insufficient
 - Custom notification sound for pinned snaps — potential future polish
+- Dynamic Island expanded view (currently minimal/empty)
 
 </deferred>
 
