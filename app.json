@@ -104,8 +104,8 @@
       "expo-audio",
       "expo-asset",
       "expo-updates",
-      "@bacons/apple-targets",
-      "./plugins/withNSELiveActivities"
+      "./plugins/withNSELiveActivities",
+      "@bacons/apple-targets"
     ],
     "owner": "spoodsjs",
     "extra": {
