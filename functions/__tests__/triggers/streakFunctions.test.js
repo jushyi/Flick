@@ -641,6 +641,98 @@ describe('Streak Functions', () => {
       expect(result).toBeNull();
     });
 
+    it('resets expired streak to dayCount 0 when snap is sent after expiry (before cron cleanup)', async () => {
+      const { transactionOps } = setupOnNewMessageMocks({
+        users: {
+          'user-a': {
+            displayName: 'Alice',
+            fcmToken: VALID_TOKEN,
+            notificationPreferences: { enabled: true, directMessages: true },
+          },
+          'user-b': { displayName: 'Bob', username: 'bob' },
+        },
+        streakExists: true,
+        streakDoc: createStreakDoc({
+          dayCount: 15,
+          lastSnapBy: { 'user-a': null, 'user-b': null },
+          lastMutualAt: mockTimestamp(FIXED_NOW_MS - 50 * 60 * 60 * 1000),
+          streakStartedAt: mockTimestamp(FIXED_NOW_MS - 15 * DAY_MS),
+          expiresAt: mockTimestamp(FIXED_NOW_MS - 1000), // Expired 1 second ago
+          warningAt: mockTimestamp(FIXED_NOW_MS - 5 * 60 * 60 * 1000),
+          warning: true,
+          warningSentAt: mockTimestamp(FIXED_NOW_MS - 4 * 60 * 60 * 1000),
+        }),
+      });
+
+      // user-b sends a snap after the streak has expired
+      const snapshot = createSnapSnapshot('user-b');
+      const context = createMessageContext();
+
+      await onNewMessage(snapshot, context);
+
+      // Should reset the streak, NOT continue from dayCount 15
+      expect(transactionOps.update).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          dayCount: 0,
+          lastMutualAt: null,
+          streakStartedAt: null,
+          expiresAt: null,
+          warningAt: null,
+          warning: false,
+          warningSentAt: null,
+        })
+      );
+
+      // Verify lastSnapBy: sender (user-b) should have their snap recorded, user-a should be null
+      const updateCallArgs = transactionOps.update.mock.calls[0][1];
+      expect(updateCallArgs.lastSnapBy['user-b'].toMillis()).toBe(FIXED_NOW_MS);
+      expect(updateCallArgs.lastSnapBy['user-a']).toBeNull();
+    });
+
+    it('increments dayCount normally when streak has NOT expired', async () => {
+      const { transactionOps } = setupOnNewMessageMocks({
+        users: {
+          'user-a': {
+            displayName: 'Alice',
+            fcmToken: VALID_TOKEN,
+            notificationPreferences: { enabled: true, directMessages: true },
+          },
+          'user-b': { displayName: 'Bob', username: 'bob' },
+        },
+        streakExists: true,
+        streakDoc: createStreakDoc({
+          dayCount: 5,
+          lastSnapBy: {
+            'user-a': mockTimestamp(FIXED_NOW_MS - 60000), // user-a already snapped
+            'user-b': null,
+          },
+          lastMutualAt: mockTimestamp(FIXED_NOW_MS - 25 * 60 * 60 * 1000), // 25h ago
+          expiresAt: mockTimestamp(FIXED_NOW_MS + 10 * 60 * 60 * 1000), // Expires in 10h (NOT expired)
+        }),
+      });
+
+      // user-b sends snap, completing mutual exchange
+      const snapshot = createSnapSnapshot('user-b');
+      const context = createMessageContext();
+
+      await onNewMessage(snapshot, context);
+
+      // Should increment dayCount from 5 to 6 (normal behavior, NOT reset)
+      expect(transactionOps.update).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          dayCount: 6,
+        })
+      );
+
+      // Verify it did NOT reset
+      const updateCallArgs = transactionOps.update.mock.calls[0][1];
+      expect(updateCallArgs.dayCount).toBe(6);
+      expect(updateCallArgs.lastMutualAt).toBeDefined();
+      expect(updateCallArgs.lastMutualAt.toMillis()).toBe(FIXED_NOW_MS);
+    });
+
     it('does not trigger streak update for non-snap message types', async () => {
       setupOnNewMessageMocks({
         users: {
@@ -928,12 +1020,10 @@ describe('Streak Functions', () => {
         if (name === 'users') {
           return {
             doc: jest.fn(() => ({
-              get: jest
-                .fn()
-                .mockResolvedValue({
-                  exists: true,
-                  data: () => ({ displayName: 'Test', fcmToken: VALID_TOKEN }),
-                }),
+              get: jest.fn().mockResolvedValue({
+                exists: true,
+                data: () => ({ displayName: 'Test', fcmToken: VALID_TOKEN }),
+              }),
             })),
           };
         }
