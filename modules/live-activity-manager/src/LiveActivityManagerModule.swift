@@ -20,10 +20,19 @@ public class LiveActivityManagerModule: Module {
         // Starts a new pinned snap Live Activity on the lock screen.
         // Copies the thumbnail to the App Groups shared container for the widget to read.
         // Enforces the 5-activity cap by ending the oldest activity if needed.
+        // Throws descriptive errors to JS instead of silently returning nil.
         AsyncFunction("startActivity") { (activityId: String, senderName: String, caption: String?, deepLinkUrl: String, thumbnailUri: String) -> String? in
             #if canImport(ActivityKit)
-            guard #available(iOS 16.2, *) else { return nil }
-            guard ActivityAuthorizationInfo().areActivitiesEnabled else { return nil }
+            guard #available(iOS 16.2, *) else {
+                throw NSError(domain: "LiveActivityManager", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "iOS 16.2+ required for Live Activities"])
+            }
+
+            let authInfo = ActivityAuthorizationInfo()
+            guard authInfo.areActivitiesEnabled else {
+                throw NSError(domain: "LiveActivityManager", code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "Live Activities disabled in Settings (areActivitiesEnabled=false)"])
+            }
 
             // Copy thumbnail to App Groups shared container for widget access
             self.copyThumbnailToAppGroup(activityId: activityId, thumbnailUri: thumbnailUri)
@@ -38,7 +47,6 @@ public class LiveActivityManagerModule: Module {
 
             // Cap enforcement: if at max, end the oldest activity
             if currentActivities.count >= MAX_ACTIVE_ACTIVITIES {
-                // End the oldest activity (first in the array — typically oldest)
                 if let oldest = currentActivities.sorted(by: { $0.id < $1.id }).first {
                     await oldest.end(nil, dismissalPolicy: .immediate)
                 }
@@ -65,10 +73,13 @@ public class LiveActivityManagerModule: Module {
                 )
                 return activity.id
             } catch {
-                return nil
+                // Re-throw with the actual error message so JS can log it
+                throw NSError(domain: "LiveActivityManager", code: 3,
+                    userInfo: [NSLocalizedDescriptionKey: "Activity.request() failed: \(error.localizedDescription) | Full: \(String(describing: error))"])
             }
             #else
-            return nil
+            throw NSError(domain: "LiveActivityManager", code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "ActivityKit not available (canImport failed)"])
             #endif
         }
 
