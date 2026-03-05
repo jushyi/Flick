@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 9 of 13 executed, Plan 05 checkpoint pending
-Status: In Progress — Plan 12 complete (Polaroid frame and portrait layout)
-Last activity: 2026-03-05 - Completed Plan 09-12: Add Polaroid frame and portrait layout to Live Activity widget
+Plan: 10 of 13 executed, Plan 05 checkpoint pending
+Status: In Progress — Plan 13 complete (Live Activity persistence via ActivityState observation)
+Last activity: 2026-03-05 - Completed Plan 09-13: Add Live Activity persistence via ActivityState observation
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -109,6 +109,9 @@ Progress: [██████░░░░] 50% (v1.1)
 - Version display in SettingsScreen changed from TouchableOpacity with diagnostics to plain View
 - Thumbnail downloaded to FileSystem.cacheDirectory (ephemeral) before Live Activity start -- graceful fallback if download fails
 - Thumbnail resolution increased from 100px to 300px with 0.6 compression for Retina display
+- Thumbnail uses 128x160 (4:5) portrait ratio matching typical photo aspect
+- Polaroid frame uses 4pt top/sides, 14pt bottom matching classic instant photo proportions
+- No-caption layout centers Polaroid with no text rather than showing sender name alone
 
 **Open blockers:**
 
@@ -144,9 +147,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 09-11-PLAN.md (Fix thumbnail download pipeline). Phase 9 plans 01-04, 06-08, 11 executed. Checkpoint 05 pending EAS build + verification.
+Stopped at: Completed 09-12-PLAN.md (Polaroid frame and portrait layout). Phase 9 plans 01-04, 06-08, 11-12 executed. Checkpoint 05 pending EAS build + verification.
 Resume file: None
 
 ---
 
-Last activity: 2026-03-05 - Completed Plan 09-11: Fix thumbnail download pipeline for Live Activity
+Last activity: 2026-03-05 - Completed Plan 09-12: Add Polaroid frame and portrait layout to Live Activity widget
