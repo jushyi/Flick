@@ -13,9 +13,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 9 of 10 (Pinned Snaps iOS)
-Plan: 6 of 7 executed, Plan 05 checkpoint pending
-Status: In Progress — NSE plist blocker resolved (Plan 07), needs EAS build + Plan 05 verification
-Last activity: 2026-03-05 - Completed quick task 39: fix streak reset bug
+Plan: 7 of 10 executed, Plan 05 checkpoint pending
+Status: In Progress — Plan 08 complete (Live Activity cleanup + NSE rewrite)
+Last activity: 2026-03-05 - Completed Plan 09-08: Remove Live Activity infrastructure
 
 Progress: [██████░░░░] 50% (v1.1)
 
@@ -46,6 +46,7 @@ Progress: [██████░░░░] 50% (v1.1)
 | Phase 09 P04 | 4min | 2 tasks | 4 files |
 | Phase 09 P06 | 4min | 2 tasks | 8 files |
 | Phase 09 P07 | 4min | 2 tasks | 2 files |
+| Phase 09 P08 | 4min | 2 tasks | 22 files |
 
 ## Milestone History
 
@@ -100,10 +101,14 @@ Progress: [██████░░░░] 50% (v1.1)
 - Consumer mods using withXcodeProjectBeta must be listed BEFORE @bacons/apple-targets in app.json plugins (base mod provider must be last)
 - Match NSE target by getDisplayName() with productName fallback for reliability
 - Do NOT set GENERATE_INFOPLIST_FILE=NO -- use INFOPLIST_KEY_* build settings with GENERATE_INFOPLIST_FILE=YES
+- Replaced ~298-line ActivityKit NSE with ~85-line thumbnail-attachment-only version
+- Lowered NSE deploymentTarget from 16.2 to 16.0 (ActivityKit no longer required)
+- SnapViewer handleDismiss left TODO for dismissPinnedSnapNotification (Plan 09-09)
+- Version display in SettingsScreen changed from TouchableOpacity with diagnostics to plain View
 
 **Open blockers:**
 
-1. ~~**NSE NSSupportsLiveActivities plist key**~~ RESOLVED in Plan 07 -- rewrote withNSELiveActivities.js to use @bacons/apple-targets withXcodeProjectBeta API with corrected plugin ordering. Needs native EAS build to verify at runtime.
+1. ~~**NSE NSSupportsLiveActivities plist key**~~ FULLY RESOLVED -- Plan 08 deleted withNSELiveActivities.js entirely. NSE no longer uses ActivityKit or NSSupportsLiveActivities.
 
 2. **Multiple pins in a row** — Sending multiple pinned snaps in succession may cause issues (needs investigation).
 
@@ -119,9 +124,8 @@ Progress: [██████░░░░] 50% (v1.1)
 **Key notes for v1.1:**
 
 - Phase 6 is OTA-deployable (no native build needed)
-- Phases 8-10 share a single EAS native build (expo-screen-capture + expo-live-activity)
-- expo-live-activity is early-stage (MEDIUM confidence) — Voltra is documented fallback
-- PINI features use App Groups workaround for photo thumbnails in Live Activities
+- Phase 9 pivoted from Live Activities to persistent rich notifications (Plan 08 removed all ActivityKit code)
+- NSE uses UNNotificationAttachment for thumbnail display (no App Groups needed)
 
 ### Quick Tasks Completed
 
@@ -136,9 +140,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed quick task 39 (streak reset bug fix). Phase 9 plans 01-04, 06-07 executed. Checkpoint 05 pending EAS build + verification.
+Stopped at: Completed 09-08-PLAN.md (Remove Live Activity infrastructure). Phase 9 plans 01-04, 06-08 executed. Checkpoint 05 pending EAS build + verification.
 Resume file: None
 
 ---
 
-Last activity: 2026-03-05 - Quick task 39 (fix streak reset bug in Cloud Functions) completed
+Last activity: 2026-03-05 - Completed Plan 09-08: Remove Live Activity infrastructure, rewrite NSE for rich notifications
