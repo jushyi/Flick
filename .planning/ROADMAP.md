@@ -108,7 +108,7 @@ Plans:
 4. After the recipient views the snap, the Live Activity disappears from the lock screen
 5. If the recipient never views the snap, the Live Activity auto-expires and disappears after 48 hours
 
-**Plans:** 5/7 plans executed
+**Plans:** 6/7 plans executed
 
 Plans:
 
@@ -117,7 +117,7 @@ Plans:
 - [x] 09-03-PLAN.md — JS service layer: liveActivityService.js, snapService pinned flag, SnapPreviewScreen send flow wiring
 - [x] 09-04-PLAN.md — Recipient-side wiring: Cloud Function pinned notification payload, App.js Live Activity trigger, SnapViewer dismissal
 - [x] 09-06-PLAN.md — NSE for background Live Activities, mutableContent flag, native deduplication
-- [ ] 09-07-PLAN.md — Fix NSE plist blocker: rewrite withNSELiveActivities.js to use @bacons/apple-targets API
+- [x] 09-07-PLAN.md — Fix NSE plist blocker: rewrite withNSELiveActivities.js to use @bacons/apple-targets API
 - [ ] 09-05-PLAN.md — Checkpoint: end-to-end verification on physical iOS device (unblocked after 09-07)
 
 ### Phase 10: Pinned Snaps Android
@@ -155,7 +155,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 5/7            | In Progress | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 6/7            | In Progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 | 11. Add Video Support to Main Camera         | v1.1      | 0/8            | Not started | -          |
 
@@ -203,4 +203,4 @@ Plans:
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-03-05 — Phase 9: 5/7 plans complete, fix plan 07 created for NSE plist blocker_
+_Last updated: 2026-03-05 — Phase 9: 6/7 plans complete, NSE plist blocker resolved by Plan 07, Plan 05 checkpoint pending_
