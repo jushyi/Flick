@@ -98,6 +98,11 @@
   "optionalDependencies": {
     "sharp": "^0.34.5"
   },
+  "expo": {
+    "autolinking": {
+      "nativeModulesDir": "modules"
+    }
+  },
   "lint-staged": {
     "*.{js,jsx}": [
       "eslint --fix",
