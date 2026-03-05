@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Platform, View } from 'react-native';
 import * as Updates from 'expo-updates';
+import * as FileSystem from 'expo-file-system';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -339,12 +340,30 @@ export default function App() {
       if (Platform.OS === 'ios' && notifData?.pinned === 'true' && notifData?.pinnedActivityId) {
         (async () => {
           try {
+            // Download thumbnail from Firebase Storage URL to local cache
+            let thumbnailUri = '';
+            if (notifData.pinnedThumbnailUrl) {
+              try {
+                const localPath = `${FileSystem.cacheDirectory}pinned-thumb-${notifData.pinnedActivityId}.jpg`;
+                const downloadResult = await FileSystem.downloadAsync(
+                  notifData.pinnedThumbnailUrl,
+                  localPath
+                );
+                thumbnailUri = downloadResult.uri;
+                logger.info('App: Downloaded pinned snap thumbnail', { uri: thumbnailUri });
+              } catch (dlErr) {
+                logger.warn('App: Failed to download pinned thumbnail, proceeding without', {
+                  error: dlErr.message,
+                });
+              }
+            }
+
             const laResult = await startPinnedSnapActivity({
               activityId: notifData.pinnedActivityId,
               senderName: notifData.senderName || 'Someone',
               caption: notifData.caption || null,
               conversationId: notifData.conversationId,
-              thumbnailUri: '',
+              thumbnailUri,
             });
             logger.info('App: Live Activity start result', laResult);
           } catch (err) {
