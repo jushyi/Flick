@@ -23,7 +23,7 @@
 - [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
 - [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2026-02-25)
 - [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap
-- [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via persistent rich notifications with photo thumbnail, sender info, and deep linking (pivoted from Live Activities)
+- [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
 - [ ] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
 
 ## Phase Details
@@ -97,34 +97,40 @@ Plans:
 
 ### Phase 9: Pinned Snaps iOS
 
-**Goal**: Senders can pin a snap to the recipient's iOS lock screen as a persistent rich notification with photo thumbnail, sender name, and a tap-to-open action
+**Goal**: Senders can pin a snap to the recipient's iOS lock screen as a Live Activity with photo thumbnail, sender name, and a tap-to-open action that persists until the snap is viewed
 **Depends on**: Phase 8 (shared EAS native build)
 **Requirements**: PINI-01, PINI-02, PINI-03, PINI-04, PINI-05
 **Success Criteria** (what must be TRUE):
 
 1. When composing a snap, the sender can toggle a "pin to screen" option before sending
-2. The recipient sees a persistent rich notification on their iOS lock screen showing the snap photo thumbnail, sender display name, and optional caption
-3. Tapping the notification opens the app directly to the conversation with the sender
-4. After the recipient views the snap, the notification disappears from Notification Center
-5. If the recipient swipes away the notification, it is re-delivered on next app foreground until the snap is viewed
+2. The recipient sees a Live Activity on their iOS lock screen showing the snap photo thumbnail, sender display name, and optional caption
+3. Tapping the Live Activity opens the app directly to the conversation with the sender
+4. After the recipient views the snap, the Live Activity disappears
+5. If the recipient swipes away the Live Activity, it is automatically re-created until the snap is viewed
 
-**Plans:** 10 plans (7 original Live Activity approach + 3 pivot plans)
+**Plans:** 13 plans (7 original + 3 pivot attempts reverted + 3 gap closure)
 
-Plans (original Live Activity approach -- executed, superseded by pivot):
+Plans (Live Activity infrastructure -- executed):
 
 - [x] 09-01-PLAN.md — Native infrastructure: @bacons/apple-targets, local Expo module (ActivityKit bridge), SwiftUI widget extension, App Groups
 - [x] 09-02-PLAN.md — JS pin toggle UI: usePinPreference hook, PinToggle component, PinTooltip component, unit tests
 - [x] 09-03-PLAN.md — JS service layer: liveActivityService.js, snapService pinned flag, SnapPreviewScreen send flow wiring
 - [x] 09-04-PLAN.md — Recipient-side wiring: Cloud Function pinned notification payload, App.js Live Activity trigger, SnapViewer dismissal
-- [ ] 09-05-PLAN.md — (SUPERSEDED by 09-10) Checkpoint: end-to-end verification on physical iOS device
+- [ ] 09-05-PLAN.md — (SUPERSEDED) Checkpoint: end-to-end verification on physical iOS device
 - [x] 09-06-PLAN.md — NSE for background Live Activities, mutableContent flag, native deduplication
 - [x] 09-07-PLAN.md — Fix NSE plist blocker: rewrite withNSELiveActivities.js to use @bacons/apple-targets API
 
-Plans (persistent notification pivot):
+Plans (persistent notification pivot -- REVERTED, Live Activities restored):
 
-- [ ] 09-08-PLAN.md — Remove Live Activity infrastructure, simplify NSE to thumbnail-only rich notifications
-- [ ] 09-09-PLAN.md — Recipient-side notification dismissal (pinnedNotificationService) and re-delivery on foreground
-- [ ] 09-10-PLAN.md — End-to-end verification checkpoint on physical iOS devices
+- [ ] 09-08-PLAN.md — (REVERTED) Remove Live Activity infrastructure
+- [ ] 09-09-PLAN.md — (REVERTED) Recipient-side notification dismissal
+- [ ] 09-10-PLAN.md — (REVERTED) End-to-end verification checkpoint
+
+Plans (gap closure -- fixes from device testing):
+
+- [ ] 09-11-PLAN.md — Fix thumbnail display: download thumbnail in JS handler, increase resolution to 300px
+- [ ] 09-12-PLAN.md — Widget visual polish: portrait aspect ratio, Polaroid frame, conditional text layout
+- [ ] 09-13-PLAN.md — Live Activity persistence: auto re-create on swipe-away via ActivityState observation
 
 ### Phase 10: Pinned Snaps Android
 
@@ -149,7 +155,7 @@ Plans:
 **Execution Order:**
 Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 
-**Build Note:** Phases 8-10 share a single EAS native build (bundles expo-screen-capture + expo-live-activity). Phases 6-7 are OTA-deployable with no native build required.
+**Build Note:** Phases 8-10 share a single EAS native build (bundles expo-screen-capture + Live Activity module). Phases 6-7 are OTA-deployable with no native build required.
 
 | Phase                                        | Milestone | Plans Complete | Status      | Completed  |
 | -------------------------------------------- | --------- | -------------- | ----------- | ---------- |
@@ -161,7 +167,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 6/10           | In Progress | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 7/13           | In Progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
 | 11. Add Video Support to Main Camera         | v1.1      | 0/8            | Not started | -          |
 
@@ -209,4 +215,4 @@ Plans:
 ---
 
 _Roadmap created: 2026-02-23_
-_Last updated: 2026-03-05 — Phase 9: pivoted from Live Activities to persistent notifications, 3 new plans (09-08 through 09-10) replace old approach_
+_Last updated: 2026-03-05 — Phase 9: pivot plans reverted, Live Activities restored, 3 gap closure plans (09-11 through 09-13) for device-tested fixes_
