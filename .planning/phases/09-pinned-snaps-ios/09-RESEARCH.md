@@ -1,509 +1,530 @@
-# Phase 9: Pinned Snaps iOS - Research
+# Phase 9: Pinned Snaps iOS (PIVOT) - Research
 
-**Researched:** 2026-02-25 (original), 2026-03-05 (updated for NSE blocker)
-**Domain:** iOS Live Activities (ActivityKit), Expo native modules, App Groups, SwiftUI widgets, NSE plist generation
-**Confidence:** MEDIUM (original stack), HIGH (blocker diagnosis and fix)
+**Researched:** 2026-03-05 (rewritten -- pivot from Live Activities to persistent notifications)
+**Domain:** iOS rich push notifications, Notification Service Extension (thumbnail attachment), expo-notifications programmatic dismissal, Cloud Functions notification payload
+**Confidence:** HIGH
 
 ## Summary
 
-Phase 9 adds a "pin to screen" toggle when sending snaps. When enabled, the recipient sees a Live Activity on their iOS lock screen showing a photo thumbnail, sender name, and optional caption. Tapping opens the conversation. The Live Activity dismisses on snap view or auto-expires after 48 hours.
+Phase 9 is pivoting from Live Activities to persistent rich notifications for pinned snaps. The sender-side code (PinToggle UI, usePinPreference hook, PinTooltip, snapService pinned flag, SnapPreviewScreen send flow, and Cloud Function notification payload) is already built and working. The pivot requires three categories of work:
 
-Plans 01-04 and 06 are complete. The implementation is blocked by `Activity.request()` failing in the Notification Service Extension (NSE) with "Target does not include NSSupportsLiveActivities plist key." Root cause analysis of `@bacons/apple-targets` v4.0.6 source code reveals the exact mechanism: the plugin unconditionally sets `GENERATE_INFOPLIST_FILE=YES` in all target build configurations (line 19 of `configuration-list.js`), and the `notification-service` type uses `createDefaultConfigurationList` which includes this setting. When `GENERATE_INFOPLIST_FILE=YES`, Xcode generates the final Info.plist by merging the source `INFOPLIST_FILE` with `INFOPLIST_KEY_*` build settings. The custom `NSSupportsLiveActivities` key in `targets/FlickNotificationService/Info.plist` IS included in the merge, BUT Xcode's plist generation only recognizes well-known `INFOPLIST_KEY_*` prefixes and certain keys from the source file. The `NSSupportsLiveActivities` key, being a newer key added for ActivityKit, may not be recognized by Xcode's merger for extension targets.
+1. **Remove Live Activity infrastructure:** Delete the FlickLiveActivity widget extension target, LiveActivityManager native module, liveActivityService.js, PinnedSnapAttributes.swift copies, NSE ActivityKit logic, Live Activity references in App.js and SnapViewer.js, diagnostic UI in SettingsScreen, and the withNSELiveActivities.js config plugin. Also remove `@bacons/apple-targets` from app.json plugins (no more extension targets needed).
 
-The existing `withNSELiveActivities.js` plugin attempted to fix this by setting `GENERATE_INFOPLIST_FILE=NO` and `INFOPLIST_KEY_NSSupportsLiveActivities=YES`, but this approach has a fatal flaw: it uses the `xcode` npm package (v3.0.1) to parse and rewrite the pbxproj file, while `@bacons/apple-targets` uses `@bacons/xcode` (v1.0.0-alpha.32). These are incompatible pbxproj serializers. The `xcode` npm package writes pbxproj in a format that `@bacons/xcode` cannot reliably round-trip, and vice versa. Additionally, setting `GENERATE_INFOPLIST_FILE=NO` may break other auto-generated plist entries that the NSE target needs.
+2. **Simplify NSE for thumbnail attachment:** The FlickNotificationService NSE stays but is rewritten to only download the snap thumbnail and attach it as a `UNNotificationAttachment` to the notification. No ActivityKit imports, no App Groups, no Live Activity creation. The NSE downloads the image to a temporary file and creates an attachment -- this is standard iOS rich notification behavior.
 
-**Primary recommendation:** Rewrite `withNSELiveActivities.js` to use `@bacons/apple-targets`' own `withXcodeProjectBeta` mod API instead of the incompatible `xcode` npm package. The fix should add `INFOPLIST_KEY_NSSupportsLiveActivities = YES` as a build setting while keeping `GENERATE_INFOPLIST_FILE=YES`. This is the most reliable fix because it uses the same xcode project parser/serializer that `@bacons/apple-targets` uses, ensuring build settings are preserved correctly through the build pipeline.
+3. **Add recipient-side dismissal logic:** When the recipient views a pinned snap in SnapViewer, dismiss the corresponding notification programmatically using `Notifications.dismissNotificationAsync()`. For re-delivery when swiped away, check on app foreground whether unviewed pinned snaps exist without a corresponding presented notification, and re-schedule a local notification. The Cloud Function already includes `pinnedActivityId` in the notification data, which serves as the lookup key.
+
+**Primary recommendation:** Simplify aggressively. The persistent notification approach is dramatically simpler than Live Activities -- no widget extension, no native module, no ActivityKit, no App Groups, no SwiftUI. The NSE only needs to download an image and attach it. Dismissal uses the existing `expo-notifications` API pattern already used in `useConversation.js`.
 
 <user_constraints>
 ## User Constraints (from CONTEXT.md)
 
 ### Locked Decisions
-- **Pin toggle placement:** Appears on the send confirmation screen (SnapPreviewScreen), after capturing but before sending. Pixel-art pin icon with toggle switch.
-- **Default state:** Off, but sticky per friend (remembers last choice per conversation).
-- **First-time tooltip:** Brief one-time tooltip explaining "Pin this snap to their lock screen" -- then never shown again.
-- **Live Activity layout:** Small square photo thumbnail left-aligned, sender name and caption text to the right (notification-row style). Pixel-art branded styling with app's pixel font, dark background, CRT-style accents.
-- **Compact view only:** No expanded state on long-press. Tapping opens the app.
-- **Multiple active pins:** Each pinned snap = separate Live Activity. Global cap of 5 per recipient. Oldest dismissed for new. Silent fallback when cap reached. Pin toggle only in 1-on-1 conversations.
-- **Caption behavior:** Reuses snap's message text. Truncated ~40 chars with ellipsis. Hidden if no text. Emoji-only displays normally.
+- **Pin toggle placement:** Appears on the send confirmation screen (SnapPreviewScreen), after capturing but before sending. Pixel-art pin icon with toggle switch. UNCHANGED -- already built.
+- **Default state:** Off, but sticky per friend (remembers last choice per conversation). UNCHANGED -- already built.
+- **First-time tooltip:** Brief one-time tooltip explaining "Pin this snap to their lock screen" -- then never shown again. UNCHANGED -- already built.
+- **Notification appearance:** Photo thumbnail shown as image attachment (rich notification with image preview). Caption displayed next to/below the thumbnail if present. No extra descriptive text -- just the thumbnail and caption content. Sender name as notification title. Default notification sound. No action buttons -- just tap to open.
+- **Persistence and dismissal:** Notification persists as long as the snap hasn't been viewed. If user swipes the notification away, it should be re-delivered (snap is still unviewed). Viewing the snap in SnapViewer is the only thing that dismisses the notification. No separate expiry timer -- tied purely to snap viewed state.
+- **Multiple pinned snaps:** Each pinned snap creates its own notification -- they stack. No cap on number of active pinned notifications.
+- **Caption behavior:** Reuses snap's message text. If no message text: just photo thumbnail + sender name. Emoji-only messages display normally as caption text. UNCHANGED -- already built.
+- **Cleanup: Remove Live Activity code:** Remove FlickLiveActivity widget extension target, LiveActivityManager native module (modules/live-activity-manager/), PinnedSnapAttributes.swift copies, simplify NSE to only handle thumbnail attachment (no ActivityKit), remove liveActivityService.js, remove Live Activity imports/calls from App.js and SnapViewer.js, remove diagnose/NSE diagnostics from Settings screen, keep FlickNotificationService NSE target (repurpose for thumbnail attachment).
 
 ### Claude's Discretion
-- SwiftUI layout specifics for the Live Activity widget
-- App Groups configuration for sharing thumbnail between main app and widget extension
-- Push notification payload structure for triggering Live Activity updates
-- How to track/persist the per-friend sticky toggle preference
-- Exact tooltip implementation and dismissal logic
+- NSE implementation for downloading and attaching thumbnail to notification
+- Notification identifier scheme for programmatic dismissal
+- How to re-deliver notification if swiped away (foreground check vs scheduled local notification)
+- How to track/persist the per-friend sticky toggle preference (ALREADY BUILT -- usePinPreference hook uses AsyncStorage)
+- Exact tooltip implementation and dismissal logic (ALREADY BUILT -- PinTooltip component)
+- Cloud Function notification payload structure (ALREADY BUILT -- pinned fields in onNewMessage)
 
 ### Deferred Ideas (OUT OF SCOPE)
-None -- discussion stayed within phase scope.
+- Live Activities could be revisited as an enhancement in a future phase if persistent notifications feel insufficient
+- Custom notification sound for pinned snaps -- potential future polish
 </user_constraints>
 
 <phase_requirements>
 ## Phase Requirements
 
-| ID | Description | Research Support |
+Note: REQUIREMENTS.md still references "Live Activity" wording (PINI-02 through PINI-05). Per the CONTEXT.md pivot, these are now fulfilled via persistent notifications instead. The requirement INTENT is preserved -- only the mechanism changes.
+
+| ID | Description (reinterpreted for pivot) | Research Support |
 |----|-------------|-----------------|
-| PINI-01 | Sender can toggle "pin to screen" when sending a snap | COMPLETE: SnapPreviewScreen already has the send UI; toggle with AsyncStorage sticky preference per friend implemented |
-| PINI-02 | Recipient sees Live Activity on lock screen with photo thumbnail, sender name, optional caption | BLOCKED: NSE code is written but Activity.request() fails due to plist key issue. Fix approach documented below. |
-| PINI-03 | Tapping Live Activity opens conversation (same deeplink as push notification) | COMPLETE: ActivityKit deepLinkUrl config and existing navigateToNotification pattern wired |
-| PINI-04 | Live Activity disappears after recipient views the snap | BLOCKED: Depends on Activity.request() working. Code for endActivity is written and ready. |
-| PINI-05 | Live Activity auto-expires after 48 hours if never viewed | BLOCKED: staleDate set at creation time in NSE code, but Activity.request() fails. |
+| PINI-01 | Sender can toggle "pin to screen" when sending a snap | COMPLETE: Already built (PinToggle, usePinPreference, SnapPreviewScreen, snapService). No changes needed. |
+| PINI-02 | Recipient sees a persistent notification with snap photo thumbnail, sender name, and optional caption | NSE thumbnail attachment pattern, Cloud Function richContent/mutableContent, notification body structure |
+| PINI-03 | Tapping the notification opens the conversation (same deeplink as push notification) | COMPLETE: Already handled by existing notification tap handler in App.js (navigateToNotification). Data payload already contains conversationId. |
+| PINI-04 | Notification disappears after recipient views the snap | Programmatic dismissal via Notifications.dismissNotificationAsync() in SnapViewer, identifier matching pattern |
+| PINI-05 | (Originally: auto-expires after 48h) Now: notification re-delivers if swiped away before viewing | Re-delivery via foreground check + local notification scheduling pattern |
 </phase_requirements>
-
-## NSE Plist Fix
-
-### Root Cause Analysis (HIGH confidence)
-
-The failure chain has been traced through `@bacons/apple-targets` v4.0.6 source code:
-
-1. **`configuration-list.js` line 19:** `createDefaultConfigurationList()` unconditionally sets `GENERATE_INFOPLIST_FILE: "YES"` for all target types including `notification-service`.
-
-2. **`configuration-list.js` line 672-705:** The `getConfigurationListBuildSettingsForType()` switch falls through from `notification-service` to the default `createDefaultConfigurationList()` function.
-
-3. **`with-widget.js` line 169:** During `withDangerousMod`, the plugin generates `Info.plist` from `getTargetInfoPlistForType('notification-service')` which returns only `NSExtension` keys -- NOT `NSSupportsLiveActivities`.
-
-4. **`with-widget.js` lines 184-189:** The generated Info.plist is only written if the file does not already exist (`!fs.existsSync(filePath)`). Since `targets/FlickNotificationService/Info.plist` exists with `NSSupportsLiveActivities`, the existing file is preserved.
-
-5. **At build time:** Xcode sees `GENERATE_INFOPLIST_FILE=YES` and `INFOPLIST_FILE=../targets/FlickNotificationService/Info.plist`. It merges the source file with `INFOPLIST_KEY_*` build settings. The `NSSupportsLiveActivities` key IS in the source file, and Xcode SHOULD include it in the generated plist.
-
-6. **The actual failure:** The `withNSELiveActivities.js` plugin uses a different pbxproj parser (`xcode` v3.0.1) than `@bacons/apple-targets` uses (`@bacons/xcode` v1.0.0-alpha.32). When `withNSELiveActivities` rewrites the pbxproj, it corrupts/conflicts with the format `@bacons/apple-targets` wrote, potentially invalidating the build settings for the NSE target entirely.
-
-### Fix Approach 1: Use @bacons/apple-targets API (RECOMMENDED)
-
-**Confidence: HIGH**
-
-Rewrite `plugins/withNSELiveActivities.js` to use `@bacons/apple-targets`' own `withXcodeProjectBeta` mod instead of the incompatible `xcode` npm package. This ensures build settings are modified using the same parser/serializer.
-
-```javascript
-// plugins/withNSELiveActivities.js (rewritten)
-const { withXcodeProjectBeta } = require('@bacons/apple-targets/build/with-bacons-xcode');
-
-module.exports = function withNSELiveActivities(config) {
-  return withXcodeProjectBeta(config, async (config) => {
-    const project = config.modResults;
-    const targets = project.rootObject.props.targets;
-
-    for (const target of targets) {
-      // Find the FlickNotificationService target
-      if (target.getDisplayName() === 'FlickNotificationService' ||
-          target.props.productName === 'FlickNotificationService') {
-        // Add NSSupportsLiveActivities to ALL build configurations
-        target.setBuildSetting(
-          'INFOPLIST_KEY_NSSupportsLiveActivities',
-          'YES'
-        );
-        break;
-      }
-    }
-
-    return config;
-  });
-};
-```
-
-**Why this works:**
-- Uses the same `@bacons/xcode` parser that `@bacons/apple-targets` uses internally
-- Modifies the in-memory xcode project BEFORE it is serialized to disk (both modifications go through the same write path)
-- Keeps `GENERATE_INFOPLIST_FILE=YES` (no breakage of other auto-generated plist entries)
-- `INFOPLIST_KEY_NSSupportsLiveActivities=YES` tells Xcode to add `NSSupportsLiveActivities=true` to the generated plist
-- The source `Info.plist` still contains the key as well (belt-and-suspenders)
-
-**Critical detail on plugin ordering:** The plugin must be registered AFTER `@bacons/apple-targets` in `app.json` plugins array. Both use `withXcodeProjectBeta`, and mods of the same type execute in registration order. This is already the case in the current `app.json` (line 107-108).
-
-### Fix Approach 2: Patch @bacons/apple-targets directly (FALLBACK)
-
-**Confidence: MEDIUM**
-
-If Approach 1 fails, modify the `notification-service` case in `@bacons/apple-targets` to include `NSSupportsLiveActivities`:
-
-```javascript
-// In target.js, getTargetInfoPlistForType(), notification-service case:
-case "notification-service":
-    return {
-        NSSupportsLiveActivities: true,  // ADD THIS
-        NSExtension: {
-            NSExtensionAttributes: {
-                NSExtensionActivationRule: "TRUEPREDICATE",
-            },
-            NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).NotificationService",
-            NSExtensionPointIdentifier,
-        },
-    };
-```
-
-Apply via `patch-package`:
-```bash
-npx patch-package @bacons/apple-targets
-```
-
-**Why this is the fallback:** Patching node_modules is fragile and must be maintained across version updates. The project already uses `patch-package` (postinstall script), so the infrastructure exists.
-
-### Fix Approach 3: Post-build plist injection (LAST RESORT)
-
-**Confidence: LOW**
-
-Add a custom EAS build hook that modifies the compiled Info.plist inside the build artifact after Xcode finishes:
-
-```bash
-# eas-build-post-install.sh
-/usr/libexec/PlistBuddy -c "Add :NSSupportsLiveActivities bool true" \
-  "build/FlickNotificationService.appex/Info.plist"
-```
-
-**Why this is last resort:** EAS build hooks are harder to debug, run in a different environment, and may not have access to the correct paths. The timing relative to code signing is also uncertain.
-
-## Alternative Approaches
-
-### Alternative 1: Bypass NSE Entirely with Push-to-Start (iOS 17.2+)
-
-**Confidence: MEDIUM**
-
-Instead of starting Live Activities from the NSE, use Apple's push-to-start mechanism (iOS 17.2+) to start them directly from the server via APNs.
-
-**How it works:**
-1. App registers for `pushToStartTokenUpdates` on launch and sends the token to the Cloud Function backend
-2. When a pinned snap is sent, the Cloud Function sends an APNs push with `event: "start"`, `attributes-type: "PinnedSnapAttributes"`, and the activity data
-3. iOS starts the Live Activity directly -- no NSE involvement needed
-
-**APNs payload format:**
-```json
-{
-  "aps": {
-    "timestamp": 1709654400,
-    "event": "start",
-    "attributes-type": "PinnedSnapAttributes",
-    "attributes": {
-      "activityId": "snap_123",
-      "senderName": "Alice",
-      "caption": "Check this out!",
-      "deepLinkUrl": "lapse://messages/conv_456"
-    },
-    "content-state": {},
-    "alert": {
-      "title": "Alice pinned a snap",
-      "body": "Check this out!"
-    }
-  }
-}
-```
-
-**Required headers:**
-- `apns-push-type: liveactivity`
-- `apns-topic: com.spoodsjs.flick.push-type.liveactivity`
-- `apns-priority: 10`
-
-**Pros:**
-- Completely bypasses the NSE plist issue
-- Server-controlled -- no app code needs to run
-- Cleaner architecture (server decides, device renders)
-
-**Cons:**
-- Requires iOS 17.2+ (iOS 16.2-17.1 users cannot receive pinned snaps)
-- Push-to-start token reliability issues on iOS 17 (fixed in iOS 18)
-- Requires APNs token-based auth (not certificate-based) from the Cloud Function
-- Cannot download and save thumbnail to App Groups before the Live Activity starts (the widget would need to load from a URL, but widgets cannot make network requests)
-- Thumbnail delivery becomes a problem -- the image must somehow be in App Groups before the widget renders
-
-**Thumbnail workaround for push-to-start:**
-The widget extension cannot make network requests. Options:
-1. Encode a very tiny thumbnail (< 1KB) as base64 in the push payload attributes -- but ActivityKit has a 4KB total payload limit
-2. Use a two-step process: push-to-start creates the activity, then the app downloads the thumbnail when it wakes up and updates the activity -- but this adds latency to the image appearing
-3. Show a placeholder icon instead of the actual photo thumbnail -- degrades the user experience
-
-**Verdict:** Push-to-start is viable as a v2 enhancement (PINI-06 in REQUIREMENTS.md) but NOT recommended as the primary fix for this blocker because: (a) it drops iOS 16.2-17.1 support, (b) the thumbnail delivery problem degrades UX, and (c) the NSE plist fix is a simpler, lower-risk solution.
-
-### Alternative 2: Start Live Activity from App Foreground/Background
-
-**Confidence: HIGH**
-
-Instead of the NSE, start the Live Activity from the main app's notification listener when the app is in the foreground or background.
-
-**How it works:**
-- In `App.js`, the existing notification received listener already handles pinned snap data
-- When the app receives a pinned snap notification while in foreground or background, it starts the Live Activity using the existing native module
-
-**Limitation:** This only works when the app is running (foreground or background). If the app is killed/suspended, the notification arrives but no Live Activity starts. The NSE approach was specifically chosen to handle ALL app states including killed.
-
-**Verdict:** This is the current fallback already implemented in the codebase. It works for foreground/background but misses the killed-app case. The NSE fix is still needed for full coverage.
-
-### Alternative 3: Hybrid Approach (NSE fix + push-to-start for iOS 17.2+)
-
-**Confidence: MEDIUM**
-
-Fix the NSE plist issue (Approach 1 above) for iOS 16.2+ support, and also implement push-to-start as a future enhancement for iOS 17.2+ users.
-
-**Verdict:** This is the ideal long-term solution but overkill for unblocking the current phase. Fix the NSE first, defer push-to-start to PINI-06 (v2).
-
-## Push-to-Start Analysis
-
-### Feasibility
-
-Push-to-start Live Activities became available in iOS 17.2 (December 2023). The mechanism requires:
-
-1. **App-side token registration:** The app must call `Activity<PinnedSnapAttributes>.pushToStartTokenUpdates` on launch to obtain a push-to-start token, then send it to the server.
-
-2. **Server-side APNs integration:** The Cloud Function must send APNs requests with `apns-push-type: liveactivity` using token-based authentication (p8 key, not p12 certificate).
-
-3. **Widget extension:** Still required for rendering the UI -- push-to-start only handles lifecycle, not rendering.
-
-### iOS Version Impact
-
-Based on TelemetryDeck data (February 2026):
-- iOS 26 (19): ~76% of devices
-- iOS 18: ~19% of devices
-- iOS 17 and earlier: ~5% of devices
-- iOS 16: < 2% of devices (not individually tracked)
-
-**Impact of requiring iOS 17.2+:** Would exclude < 5% of all iOS users (those on iOS 16.x and iOS 17.0-17.1). This is acceptable for a non-critical feature like pinned snaps, but the NSE approach (iOS 16.2+) has even broader coverage.
-
-### Token Reliability
-
-iOS 17 had issues with `pushToStartTokenUpdates` -- the token was reportedly obtainable only once per app install, requiring app deletion and reinstall to get a new token. This was fixed in iOS 18.
-
-### Recommendation
-
-Push-to-start is deferred to PINI-06 (v2). The NSE approach is the correct solution for v1.1 because:
-1. Broader iOS version support (16.2+)
-2. No server-side APNs complexity
-3. Thumbnail can be downloaded by the NSE before starting the activity
-4. The infrastructure is already built (Plan 06 is complete minus the plist fix)
 
 ## Standard Stack
 
-### Core
+### Core (Already Installed)
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
-| `@bacons/apple-targets` | 4.0.6 | Expo config plugin to add widget extension target | Standard way to add Apple targets (widgets, Live Activities) in Expo managed workflow. Generates native targets outside /ios |
-| Custom Expo Module (local) | -- | Bridge JS to ActivityKit (start/end/update) | Required because ActivityKit is Swift-only; no JS equivalent. `npx create-expo-module@latest --local` |
-| SwiftUI + ActivityKit | iOS 16.2+ | Native Live Activity widget UI | Apple's required framework for Live Activity rendering |
-| AsyncStorage | 2.2.0 (installed) | Per-friend sticky toggle preference | Already used in project for persistent local storage |
+| `expo-notifications` | ~0.32.16 | Programmatic notification dismissal, local notification scheduling, presented notifications query | Already used throughout app for push notifications |
+| `expo-server-sdk` | ^5.0.0 | Cloud Function push notification sending with mutableContent and richContent | Already used in functions/notifications/sender.js |
+| `@react-native-firebase/firestore` | installed | Query unviewed pinned snaps for re-delivery check | Already used throughout app |
 
-### Supporting
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| `expo-image-manipulator` | ~14.0.8 (installed) | Compress thumbnail for App Groups | Already used in snapService for snap compression |
-| `expo-file-system` | ~19.0.21 (installed) | Write thumbnail to App Groups shared container | Already installed; needed to write files to shared directory |
-| `@bacons/xcode` | 1.0.0-alpha.32 | Xcode project parser used by apple-targets | Required for config plugin that modifies NSE build settings |
+### NSE (Native Swift -- no npm packages)
+| Component | Purpose | Notes |
+|-----------|---------|-------|
+| `UNNotificationServiceExtension` | Download thumbnail, attach to notification | Already exists as FlickNotificationService; rewrite to remove ActivityKit |
+| `UNNotificationAttachment` | Rich notification image display | Standard iOS API since iOS 10 |
+| `URLSession` | Download thumbnail from Firebase Storage URL | Already used in existing NSE code |
 
-### Alternatives Considered
-| Instead of | Could Use | Tradeoff |
-|------------|-----------|----------|
-| @bacons/apple-targets + custom module | expo-live-activity (Software Mansion) | Fixed template UI -- cannot achieve branded pixel-art layout. Only supports title/subtitle/progress bar pattern. |
-| @bacons/apple-targets + custom module | Voltra (Callstack) | Write Live Activity in JSX instead of SwiftUI. More ergonomic but less mature (v1.2.0). Limited style subset. Unclear App Groups image support. MEDIUM confidence as fallback if custom module approach proves too complex. |
-| `xcode` npm package (in config plugins) | `@bacons/xcode` via `withXcodeProjectBeta` | MUST use `@bacons/xcode` -- the `xcode` npm package is INCOMPATIBLE with `@bacons/apple-targets` pbxproj format. This was the root cause of the blocker. |
+### Removed (This Pivot)
+| Library/Component | Why Removed |
+|-------------------|-------------|
+| `@bacons/apple-targets` | No more widget extension targets needed. NSE target needs rebuild approach (see Architecture). |
+| `modules/live-activity-manager/` | No more ActivityKit bridge needed |
+| `liveActivityService.js` | No more Live Activity JS interface |
+| `targets/FlickLiveActivity/` | No more widget extension |
+| `plugins/withNSELiveActivities.js` | No more NSSupportsLiveActivities build setting |
+| `ActivityKit` framework (in NSE) | No more Live Activities |
+
+### Key Decision: NSE Target After Removing @bacons/apple-targets
+
+**Problem:** The FlickNotificationService NSE target is currently managed by `@bacons/apple-targets`. Removing `@bacons/apple-targets` from app.json means the NSE target would no longer be generated during `expo prebuild`.
+
+**Recommendation:** Keep `@bacons/apple-targets` in app.json BUT only for the NSE target. Remove the FlickLiveActivity widget extension directory. The NSE expo-target.config.js should be updated to remove the `ActivityKit` framework and `NSSupportsLiveActivities` plist key. The `withNSELiveActivities.js` plugin is no longer needed (it only added the NSSupportsLiveActivities build setting).
+
+**Updated NSE expo-target.config.js:**
+```javascript
+/** @type {import('@bacons/apple-targets').Config} */
+module.exports = {
+  type: 'notification-service',
+  name: 'FlickNotificationService',
+  bundleIdentifier: '.FlickNotificationService',
+  deploymentTarget: '16.0',  // Lower from 16.2 -- no ActivityKit needed
+};
+```
+
+No App Groups entitlement needed anymore (was only for sharing thumbnails with widget extension).
 
 **Installation:**
 ```bash
-# Already installed -- no new packages needed for the fix
+# No new packages needed. Only deletions and modifications.
 ```
 
 ## Architecture Patterns
 
-### Recommended Project Structure
+### Recommended Project Structure (After Pivot)
 ```
 src/
-├── services/
-│   ├── firebase/
-│   │   ├── snapService.js        # Modified: add pinned flag to snap message
-│   │   └── messageService.js     # Unchanged
-│   └── liveActivityService.js    # NEW: JS bridge to native module (Platform.OS guard)
-├── screens/
-│   └── SnapPreviewScreen.js      # Modified: add pin toggle UI
-├── hooks/
-│   └── usePinPreference.js       # NEW: AsyncStorage per-friend sticky toggle
-├── components/
-│   └── PinToggle.js              # NEW: pixel-art pin icon + toggle switch
-│   └── PinTooltip.js             # NEW: one-time tooltip overlay
-modules/
-└── live-activity-manager/        # NEW: local Expo module (created by create-expo-module)
-    ├── index.ts                  # TS exports: startActivity, endActivity, endAllActivities
-    ├── src/
-    │   └── LiveActivityManagerModule.swift  # Swift bridge to ActivityKit
-    └── expo-module.config.json
+  services/
+    firebase/
+      snapService.js         # UNCHANGED: pinned flag, thumbnail upload
+    pinnedNotificationService.js  # NEW: dismiss + re-deliver notifications
+  screens/
+    SnapPreviewScreen.js     # UNCHANGED: pin toggle send flow
+    SettingsScreen.js         # MODIFIED: remove NSE diagnostics long-press
+  hooks/
+    usePinPreference.js      # UNCHANGED: sticky per-friend toggle
+    usePinnedSnaps.js         # NEW: foreground re-delivery check hook
+  components/
+    PinToggle.js             # UNCHANGED
+    PinTooltip.js            # UNCHANGED
+    SnapViewer.js            # MODIFIED: dismiss notification instead of Live Activity
 targets/
-├── FlickLiveActivity/            # Widget extension target (via @bacons/apple-targets)
-│   ├── index.swift               # Widget entry point
-│   ├── FlickLiveActivityWidget.swift  # SwiftUI Live Activity layout
-│   ├── PinnedSnapAttributes.swift     # ActivityAttributes shared definition
-│   ├── expo-target.config.js     # Target config (type: widget, frameworks: SwiftUI, ActivityKit)
-│   ├── Info.plist                # NSSupportsLiveActivities: true
-│   └── Assets.xcassets/
-└── FlickNotificationService/     # Notification Service Extension
-    ├── NotificationService.swift # NSE code for background Live Activity start
-    ├── PinnedSnapAttributes.swift # Copy of ActivityAttributes (must match widget)
-    ├── expo-target.config.js     # Target config (type: notification-service)
-    └── Info.plist                # NSSupportsLiveActivities: true (SOURCE file)
+  FlickNotificationService/  # MODIFIED: simplified NSE (no ActivityKit)
+    NotificationService.swift
+    expo-target.config.js
+    Info.plist
 plugins/
-├── withFirebaseFix.js            # iOS-only: Podfile fix for RN Firebase + Expo 54
-└── withNSELiveActivities.js      # REWRITE: inject NSSupportsLiveActivities build setting
+  withFirebaseFix.js         # UNCHANGED
 functions/
-└── index.js                      # Modified: onSnapViewed triggers Live Activity end via push
+  index.js                   # MINOR: update notification body text, add richContent
+  notifications/sender.js    # MINOR: support richContent field in message
 ```
 
-### Pattern: Config Plugin Using @bacons/xcode API
-**What:** When modifying Xcode project build settings for targets created by `@bacons/apple-targets`, always use the `withXcodeProjectBeta` mod from `@bacons/apple-targets` instead of the `xcode` npm package.
-**When to use:** Any config plugin that needs to modify build settings, Info.plist keys, or other Xcode project properties for targets managed by `@bacons/apple-targets`.
+**Deleted:**
+```
+targets/FlickLiveActivity/           # ENTIRE directory removed
+modules/live-activity-manager/       # ENTIRE directory removed
+src/services/liveActivityService.js  # DELETED
+plugins/withNSELiveActivities.js     # DELETED
+```
+
+### Pattern 1: NSE Rich Notification Thumbnail Attachment
+**What:** The Notification Service Extension intercepts pinned snap push notifications (identified by `mutable-content: 1` and `pinned: true` in data), downloads the thumbnail image from the URL in the notification data, writes it to a temporary file, creates a `UNNotificationAttachment`, and attaches it to the notification content.
+**When to use:** Any pinned snap notification that has a thumbnailUrl in its data payload.
+**Example:**
+```swift
+// Source: Apple UNNotificationAttachment documentation + SwiftLee rich notifications guide
+class NotificationService: UNNotificationServiceExtension {
+    var contentHandler: ((UNNotificationContent) -> Void)?
+    var bestAttemptContent: UNMutableNotificationContent?
+
+    override func didReceive(
+        _ request: UNNotificationRequest,
+        withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
+    ) {
+        self.contentHandler = contentHandler
+        bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+
+        guard let bestAttemptContent = bestAttemptContent else {
+            contentHandler(request.content)
+            return
+        }
+
+        // Extract data from Expo push notification body
+        let bodyData = extractBodyData(from: bestAttemptContent.userInfo)
+
+        // Only process pinned snap notifications
+        guard isPinnedSnap(bodyData) else {
+            contentHandler(bestAttemptContent)
+            return
+        }
+
+        // Set thread identifier for notification grouping
+        if let conversationId = bodyData["conversationId"] as? String {
+            bestAttemptContent.threadIdentifier = "pinned-\(conversationId)"
+        }
+
+        // Download and attach thumbnail
+        guard let thumbnailUrlString = bodyData["pinnedThumbnailUrl"] as? String,
+              !thumbnailUrlString.isEmpty,
+              let thumbnailUrl = URL(string: thumbnailUrlString) else {
+            contentHandler(bestAttemptContent)
+            return
+        }
+
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: thumbnailUrl)
+                let tmpDir = FileManager.default.temporaryDirectory
+                let fileUrl = tmpDir.appendingPathComponent(UUID().uuidString + ".jpg")
+                try data.write(to: fileUrl)
+
+                let attachment = try UNNotificationAttachment(
+                    identifier: "thumbnail",
+                    url: fileUrl,
+                    options: [UNNotificationAttachmentOptionsTypeHintKey: "public.jpeg"]
+                )
+                bestAttemptContent.attachments = [attachment]
+            } catch {
+                // Fail gracefully -- notification still shows without image
+            }
+            contentHandler(bestAttemptContent)
+        }
+    }
+}
+```
+
+### Pattern 2: Programmatic Notification Dismissal on Snap View
+**What:** When the recipient views a pinned snap in SnapViewer, dismiss the corresponding notification from Notification Center. Uses the same pattern already in `useConversation.js` -- query presented notifications, filter by data match, dismiss by identifier.
+**When to use:** In SnapViewer's `handleDismiss` callback, after successfully marking snap as viewed.
 **Example:**
 ```javascript
-// Source: @bacons/apple-targets source code analysis
-const { withXcodeProjectBeta } = require('@bacons/apple-targets/build/with-bacons-xcode');
+// Source: Existing pattern in useConversation.js + expo-notifications docs
+import * as Notifications from 'expo-notifications';
 
-module.exports = function withCustomBuildSettings(config) {
-  return withXcodeProjectBeta(config, async (config) => {
-    const project = config.modResults;
-    const targets = project.rootObject.props.targets;
+/**
+ * Dismiss notification for a specific pinned snap.
+ * Matches by pinnedActivityId in notification data payload.
+ */
+export const dismissPinnedSnapNotification = async (pinnedActivityId) => {
+  if (Platform.OS !== 'ios' || !pinnedActivityId) return;
 
-    for (const target of targets) {
-      if (target.getDisplayName() === 'MyTarget') {
-        target.setBuildSetting('MY_CUSTOM_KEY', 'VALUE');
+  try {
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    const matching = presented.filter(
+      n => n.request.content.data?.pinnedActivityId === pinnedActivityId
+    );
+    await Promise.all(
+      matching.map(n => Notifications.dismissNotificationAsync(n.request.identifier))
+    );
+  } catch (err) {
+    // Best-effort -- ignore errors
+  }
+};
+```
+
+### Pattern 3: Re-Delivery After Swipe-Away (Foreground Check)
+**What:** When the app comes to the foreground, check whether any unviewed pinned snaps are missing from the notification tray. If a pinned snap is unviewed but its notification is no longer presented, schedule a local notification immediately to re-deliver it.
+**When to use:** On app foreground (AppState 'active' transition) and on notification received events.
+**Example:**
+```javascript
+// Foreground check: query Firestore for unviewed pinned snaps sent TO this user,
+// then compare against getPresentedNotificationsAsync()
+const checkAndRedeliverPinnedSnaps = async (userId) => {
+  if (Platform.OS !== 'ios') return;
+
+  try {
+    // Get unviewed pinned snaps where this user is the recipient
+    const unviewedSnaps = await getUnviewedPinnedSnapsForUser(userId);
+    if (unviewedSnaps.length === 0) return;
+
+    // Get currently presented notifications
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    const presentedIds = new Set(
+      presented
+        .map(n => n.request.content.data?.pinnedActivityId)
+        .filter(Boolean)
+    );
+
+    // Re-deliver any missing
+    for (const snap of unviewedSnaps) {
+      if (!presentedIds.has(snap.pinnedActivityId)) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: snap.senderName,
+            body: snap.caption || '',
+            data: {
+              type: 'snap',
+              conversationId: snap.conversationId,
+              pinnedActivityId: snap.pinnedActivityId,
+              pinned: 'true',
+            },
+          },
+          trigger: null, // Deliver immediately
+        });
       }
     }
-    return config;
-  });
+  } catch (err) {
+    // Best-effort
+  }
 };
 ```
 
 ### Anti-Patterns to Avoid
-- **Using `xcode` npm package with `@bacons/apple-targets`:** The `xcode` npm package (v3.0.1) and `@bacons/xcode` (v1.0.0-alpha.32) have incompatible pbxproj serialization formats. Using both causes build settings corruption. ALWAYS use `@bacons/xcode` via `withXcodeProjectBeta` when modifying targets managed by `@bacons/apple-targets`.
-- **Setting `GENERATE_INFOPLIST_FILE=NO`:** This breaks Xcode's auto-generation of standard plist entries (like `NSExtensionPointIdentifier`, `CFBundleDisplayName`, etc.) that `@bacons/apple-targets` relies on. Keep it `YES` and use `INFOPLIST_KEY_*` build settings to inject custom keys.
-- **Embedding image data in ActivityKit payload:** The 4KB limit makes this impossible for photos. Always use App Groups file sharing.
-- **Starting Live Activities from widget extensions:** Widget extensions render UI only. They cannot call `Activity.request()`. Only the main app or NSE can start activities.
+- **Using ActivityKit for something notifications handle natively:** Live Activities add widget extension target, native module, App Groups, SwiftUI, and three copies of ActivityAttributes.swift. A rich notification achieves the same "persistent presence on lock screen" with none of that complexity.
+- **Trying to set the APNS notification identifier from Expo Push Service:** The Expo Push Service does not expose `apns-id` or `apns-collapse-id`. The notification identifier is assigned by the system. Use data payload matching (pinnedActivityId) instead.
+- **Polling for notification dismissal:** Do not continuously check if notifications are still presented. Only check on app foreground events and after snap view events.
+- **Making the re-delivery mechanism overly complex:** A simple foreground check with Firestore query is sufficient. Users open the app to see messages anyway -- that is when the re-delivery is needed.
 
 ## Don't Hand-Roll
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| Widget extension target generation | Manual Xcode target configuration | `@bacons/apple-targets` Expo plugin | Handles Podfile modifications, signing, target linking automatically during `expo prebuild` |
-| Image compression for thumbnail | Custom resize logic | `expo-image-manipulator` (already installed) | Battle-tested, handles EXIF orientation, already used in snapService |
-| Deep link URL scheme | Custom URL parsing | Existing `linking` config in AppNavigator + `navigateToNotification` in App.js | Conversation deep linking already works for push notifications |
-| Expo native module boilerplate | Manual Swift/Xcode module setup | `npx create-expo-module@latest --local` | Generates correct module structure, config, and build integration |
-| pbxproj modification | `xcode` npm package | `@bacons/xcode` via `withXcodeProjectBeta` | Must use same serializer as `@bacons/apple-targets` to avoid corruption |
+| Rich notification image | Custom image rendering in notification | `UNNotificationAttachment` via NSE | Standard iOS API; handles image formats, sizing, and display automatically |
+| Notification dismissal | Custom notification tracking system | `Notifications.getPresentedNotificationsAsync()` + `dismissNotificationAsync()` | Pattern already exists in codebase (useConversation.js); battle-tested |
+| Notification identifier matching | Custom ID tracking across app/NSE | Data payload `pinnedActivityId` field | Already in the Cloud Function payload; carried through to presented notifications |
+| Local notification re-scheduling | Background task / silent push | `Notifications.scheduleNotificationAsync()` with `trigger: null` | Instant delivery, works from foreground, no background mode needed |
+| NSE target generation | Manual Xcode project modification | `@bacons/apple-targets` notification-service type | Already manages the NSE target; just remove ActivityKit framework from config |
+
+**Key insight:** The persistent notification approach eliminates the entire native module + widget extension stack. Everything on the recipient side is achievable with standard iOS notification APIs and existing expo-notifications functions already used in the codebase.
 
 ## Common Pitfalls
 
-### Pitfall 1: Incompatible pbxproj Serializers (ROOT CAUSE OF BLOCKER)
-**What goes wrong:** Config plugin uses the `xcode` npm package to modify build settings, but `@bacons/apple-targets` uses `@bacons/xcode`. The two packages serialize pbxproj files differently, causing modifications from one to be lost or corrupted when the other writes.
-**Why it happens:** `xcode` (v3.x) and `@bacons/xcode` (v1.0.0-alpha.32) are completely different packages with different internal representations and serialization logic.
-**How to avoid:** Always use `withXcodeProjectBeta` from `@bacons/apple-targets/build/with-bacons-xcode` for any config plugin that modifies targets managed by `@bacons/apple-targets`. Never mix pbxproj parsers.
-**Warning signs:** Build settings appear correct in the plugin's console.log output but don't take effect in the compiled binary.
+### Pitfall 1: NSE Thumbnail Download Timeout
+**What goes wrong:** The NSE has a ~30 second time budget. Large image downloads or slow network can exceed this limit, causing `serviceExtensionTimeWillExpire()` to fire and the notification to be delivered without the image.
+**Why it happens:** NSE runs in a separate process with strict resource limits.
+**How to avoid:** Thumbnails are already small (100x100, ~5-10KB via snapService compression). This should complete well within the time limit. Implement `serviceExtensionTimeWillExpire()` to deliver the notification without the image as a graceful fallback.
+**Warning signs:** Notifications sometimes appear without images on slow connections.
 
-### Pitfall 2: ActivityAttributes Must Be Identical in All Targets
-**What goes wrong:** The Swift `ActivityAttributes` struct must be defined identically in the widget extension, the native module, AND the NSE. If they differ by even one field, ActivityKit silently fails to match activities.
-**Why it happens:** Apple uses the struct type identity to match activities. There's no easy way to share Swift files between Expo module and widget/NSE targets.
-**How to avoid:** `PinnedSnapAttributes.swift` is already copied to all three locations. Each copy has a comment referencing the other copies. Any change MUST be mirrored to all three.
-**Warning signs:** `Activity.request()` succeeds but no Live Activity appears on the lock screen.
+### Pitfall 2: Notification Identifier Mismatch for Dismissal
+**What goes wrong:** `dismissNotificationAsync()` requires the system-assigned notification identifier, not the pinnedActivityId. If you try to dismiss by pinnedActivityId directly, it fails silently.
+**Why it happens:** Remote push notifications get system-assigned identifiers, not custom ones. Expo Push Service does not expose `apns-id` or `apns-collapse-id`.
+**How to avoid:** Always use `getPresentedNotificationsAsync()` first, filter by `data.pinnedActivityId`, then use `request.identifier` to dismiss. This two-step pattern is already used in `useConversation.js`.
+**Warning signs:** `dismissNotificationAsync()` resolves successfully but the notification stays.
 
-### Pitfall 3: App Groups Container Path Differences
-**What goes wrong:** React Native's `FileSystem.documentDirectory` and iOS's `FileManager.containerURL(forSecurityApplicationGroupIdentifier:)` point to different locations.
-**Why it happens:** The App Groups shared container is a separate sandboxed directory.
-**How to avoid:** The NSE writes thumbnails to App Groups via `FileManager.containerURL()`. The widget reads from the same path. This is already correctly implemented.
-**Warning signs:** Widget shows placeholder/empty image.
+### Pitfall 3: Re-Delivery Creating Duplicate Notifications
+**What goes wrong:** Foreground check fires and re-schedules a local notification, but the original push notification is still in the tray (user didn't swipe it away -- it's just off screen or in a different group).
+**Why it happens:** `getPresentedNotificationsAsync()` might miss notifications in certain states, or the check runs before the push notification arrives.
+**How to avoid:** Always check presented notifications BEFORE re-delivering. Use `pinnedActivityId` in the data payload to deduplicate -- if a notification with that ID is already presented, skip re-delivery. Add a short delay (1-2 seconds) after app foreground before running the check.
+**Warning signs:** Multiple identical notifications appearing for the same pinned snap.
 
-### Pitfall 4: Live Activity 8-Hour Auto-Expiry
-**What goes wrong:** iOS automatically expires Live Activities after 8 hours.
-**Why it happens:** ActivityKit enforces an 8-hour maximum active duration, then 4 hours stale (12 hours total).
-**How to avoid:** Set `staleDate` to 48 hours (already done). For true 48-hour persistence, use ActivityKit push to periodically refresh. For v1.1, accept that activities may disappear after ~12 hours -- most snaps are viewed much sooner.
-**Warning signs:** Live Activity disappears from lock screen after ~8-12 hours.
+### Pitfall 4: Expo Push Body Data Nesting in NSE
+**What goes wrong:** Expo Push Service nests custom data under the `body` key in APNS userInfo as a JSON-encoded string. Parsing fails if you assume it is a dictionary.
+**Why it happens:** Expo's push delivery format differs from raw APNS format.
+**How to avoid:** The existing NSE code already handles this correctly with three fallback paths: direct dictionary, JSON string parse, and direct userInfo. Preserve this parsing logic in the simplified NSE.
+**Warning signs:** NSE cannot find `pinned` or `pinnedThumbnailUrl` fields in the notification data.
 
-### Pitfall 5: NSE Cannot Make Network Requests Reliably
-**What goes wrong:** NSE has a ~30 second time limit and limited memory. Network requests may fail or time out.
-**Why it happens:** NSE runs in a separate process with constrained resources.
-**How to avoid:** Keep thumbnail downloads small (~5-10KB). Use `URLSession.shared.data(from:)` (already implemented). Fall back gracefully if download fails (activity starts without thumbnail).
-**Warning signs:** Intermittent failures in thumbnail display.
+### Pitfall 5: Local Notification Missing Image Attachment for Re-Delivery
+**What goes wrong:** When re-delivering a dismissed pinned snap notification via `scheduleNotificationAsync`, the local notification does not have the thumbnail image because it is not going through the NSE.
+**Why it happens:** The NSE only intercepts remote push notifications, not locally scheduled notifications. Local notifications do not trigger `didReceive` in the NSE.
+**How to avoid:** For local re-delivery notifications, download the thumbnail image to a local file first, then use the `attachments` property of `NotificationContentInput` (iOS only) to attach it. Alternatively, accept that re-delivered notifications may not have the image (simpler, acceptable UX tradeoff since the user has already seen the notification at least once).
+**Warning signs:** Re-delivered notifications show without the thumbnail image.
 
-### Pitfall 6: NSSupportsLiveActivities Missing (THE CURRENT BLOCKER)
-**What goes wrong:** `Activity.request()` fails with "Target does not include NSSupportsLiveActivities plist key."
-**Why it happens:** `@bacons/apple-targets` sets `GENERATE_INFOPLIST_FILE=YES`, and the `INFOPLIST_KEY_NSSupportsLiveActivities` build setting is not set. The source Info.plist has the key but Xcode's generated plist may not include it for extension targets.
-**How to avoid:** Add `INFOPLIST_KEY_NSSupportsLiveActivities=YES` as a build setting using `withXcodeProjectBeta` (NOT `xcode` npm package). See NSE Plist Fix section.
-**Warning signs:** `ActivityAuthorizationInfo().areActivitiesEnabled` returns false in the NSE.
+### Pitfall 6: Removing @bacons/apple-targets Breaks NSE Target
+**What goes wrong:** If `@bacons/apple-targets` is removed from app.json plugins entirely, the FlickNotificationService NSE target is no longer generated during `expo prebuild`, breaking the NSE.
+**Why it happens:** The NSE target is defined via `targets/FlickNotificationService/expo-target.config.js` which requires `@bacons/apple-targets` to process.
+**How to avoid:** Keep `@bacons/apple-targets` in app.json. Only delete the `targets/FlickLiveActivity/` directory. The plugin will only generate targets for directories that exist under `targets/`.
+**Warning signs:** EAS build fails with "FlickNotificationService target not found" or NSE stops intercepting notifications.
 
 ## Code Examples
 
-### NSE Plist Fix Plugin (REWRITTEN)
-```javascript
-// plugins/withNSELiveActivities.js
-// Uses @bacons/apple-targets' own Xcode project API to ensure compatibility
-const { withXcodeProjectBeta } = require('@bacons/apple-targets/build/with-bacons-xcode');
+### Simplified NSE (No ActivityKit)
+```swift
+// targets/FlickNotificationService/NotificationService.swift
+// Source: Apple UNNotificationAttachment docs + SwiftLee rich notifications guide
+import UserNotifications
+import Foundation
 
-module.exports = function withNSELiveActivities(config) {
-  return withXcodeProjectBeta(config, async (config) => {
-    const project = config.modResults;
-    const targets = project.rootObject.props.targets;
+class NotificationService: UNNotificationServiceExtension {
+    var contentHandler: ((UNNotificationContent) -> Void)?
+    var bestAttemptContent: UNMutableNotificationContent?
 
-    for (const target of targets) {
-      const name = target.getDisplayName?.() || target.props?.productName;
-      if (name === 'FlickNotificationService') {
-        // Add NSSupportsLiveActivities to all build configurations
-        // This sets INFOPLIST_KEY_NSSupportsLiveActivities in the build settings
-        // which Xcode merges into the generated Info.plist at build time
-        target.setBuildSetting('INFOPLIST_KEY_NSSupportsLiveActivities', 'YES');
-        console.log('[withNSELiveActivities] Set INFOPLIST_KEY_NSSupportsLiveActivities=YES for', name);
-        break;
-      }
+    override func didReceive(
+        _ request: UNNotificationRequest,
+        withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
+    ) {
+        self.contentHandler = contentHandler
+        bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+
+        guard let bestAttemptContent = bestAttemptContent else {
+            contentHandler(request.content)
+            return
+        }
+
+        // Parse notification data (handle Expo push nesting)
+        let bodyData = extractBodyData(from: bestAttemptContent.userInfo)
+
+        // Only enhance pinned snap notifications with thumbnail
+        guard isPinned(bodyData),
+              let thumbnailUrlString = bodyData["pinnedThumbnailUrl"] as? String,
+              !thumbnailUrlString.isEmpty,
+              let thumbnailUrl = URL(string: thumbnailUrlString) else {
+            contentHandler(bestAttemptContent)
+            return
+        }
+
+        // Download thumbnail and attach
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: thumbnailUrl)
+                let tmpFile = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(UUID().uuidString + ".jpg")
+                try data.write(to: tmpFile)
+
+                let attachment = try UNNotificationAttachment(
+                    identifier: "snap-thumbnail",
+                    url: tmpFile,
+                    options: [UNNotificationAttachmentOptionsTypeHintKey: "public.jpeg"]
+                )
+                bestAttemptContent.attachments = [attachment]
+            } catch {
+                // Graceful fallback -- notification displays without image
+            }
+            contentHandler(bestAttemptContent)
+        }
     }
 
-    return config;
-  });
+    override func serviceExtensionTimeWillExpire() {
+        // Deliver whatever we have so far
+        if let contentHandler = contentHandler,
+           let bestAttemptContent = bestAttemptContent {
+            contentHandler(bestAttemptContent)
+        }
+    }
+
+    // MARK: - Private Helpers
+
+    private func extractBodyData(from userInfo: [AnyHashable: Any]) -> [String: Any] {
+        // Expo nests data under "body" as dict or JSON string
+        if let bodyDict = userInfo["body"] as? [String: Any] {
+            return bodyDict
+        } else if let bodyString = userInfo["body"] as? String,
+                  let jsonData = bodyString.data(using: .utf8),
+                  let parsed = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+            return parsed
+        } else if userInfo["pinned"] != nil {
+            return userInfo as? [String: Any] ?? [:]
+        }
+        return [:]
+    }
+
+    private func isPinned(_ bodyData: [String: Any]) -> Bool {
+        if let pinnedStr = bodyData["pinned"] as? String { return pinnedStr == "true" }
+        if let pinnedBool = bodyData["pinned"] as? Bool { return pinnedBool }
+        return false
+    }
+}
+```
+
+### Notification Dismissal in SnapViewer (Replaces Live Activity End)
+```javascript
+// Source: Existing pattern in useConversation.js (dismissConversationNotifications)
+import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
+import logger from '../utils/logger';
+
+export const dismissPinnedSnapNotification = async (pinnedActivityId) => {
+  if (Platform.OS !== 'ios' || !pinnedActivityId) return;
+
+  try {
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    const matching = presented.filter(
+      n => n.request.content.data?.pinnedActivityId === pinnedActivityId
+    );
+
+    if (matching.length > 0) {
+      await Promise.all(
+        matching.map(n =>
+          Notifications.dismissNotificationAsync(n.request.identifier)
+        )
+      );
+      logger.info('pinnedNotificationService: Dismissed notification', {
+        pinnedActivityId,
+        count: matching.length,
+      });
+    }
+  } catch (err) {
+    logger.warn('pinnedNotificationService: Failed to dismiss', {
+      pinnedActivityId,
+      error: err.message,
+    });
+  }
 };
 ```
 
-### Live Activity Service (JS Bridge) - Already Implemented
+### Cloud Function Notification Payload (Minor Update)
 ```javascript
-// src/services/liveActivityService.js (existing, no changes needed)
-import { Platform } from 'react-native';
-import * as ImageManipulator from 'expo-image-manipulator';
-import logger from '../utils/logger';
-
-let LiveActivityManager = null;
-if (Platform.OS === 'ios') {
-  try {
-    LiveActivityManager = require('../../modules/live-activity-manager').default;
-  } catch (e) {
-    logger.warn('liveActivityService: Native module not available', { error: e.message });
-  }
+// functions/index.js -- onNewMessage handler
+// The mutableContent flag is already set. Add richContent for server-side image support
+// (belt-and-suspenders with NSE attachment)
+if (message.pinned === true) {
+  notificationData.pinned = 'true';
+  notificationData.pinnedActivityId = message.pinnedActivityId || '';
+  notificationData.pinnedThumbnailUrl = message.pinnedThumbnailUrl || '';
+  notificationData.caption = message.caption || '';
 }
 
-export const startPinnedSnapActivity = async ({
-  activityId, senderName, caption, conversationId, friendId, photoUri,
-}) => {
-  if (Platform.OS !== 'ios' || !LiveActivityManager) {
-    return { success: false, error: 'Not supported' };
-  }
-  // ... existing implementation
+const pushOptions = {
+  mutableContent: message.pinned === true,
 };
+
+// The notification body for pinned snaps
+// CONTEXT.md: "No extra descriptive text -- just the thumbnail and caption content"
+body = message.caption || '';  // Caption as body, or empty
 ```
 
 ## State of the Art
 
-| Old Approach | Current Approach | When Changed | Impact |
-|--------------|------------------|--------------|--------|
-| No Live Activity support in Expo | @bacons/apple-targets + custom module | 2024 | Enables widget extensions in Expo managed workflow |
-| `xcode` npm package for pbxproj mods | `@bacons/xcode` via `withXcodeProjectBeta` | 2025 | Required for compatibility with @bacons/apple-targets v4.x |
-| PR #136 (infoPlist config property) | Not merged in v4.0.6 | -- | Must use build settings approach instead of direct plist config |
-| Push-to-start (server-triggered) | App-side Activity.request() with NSE | iOS 17.2+ for push-to-start | NSE approach supports iOS 16.2+; push-to-start deferred to PINI-06 |
-| expo-widgets (SDK 55 alpha) | @bacons/apple-targets (SDK 54 compatible) | 2025 | expo-widgets not available on SDK 54; apple-targets is the stable option |
+| Old Approach (This Phase v1) | New Approach (Pivot) | Why Changed | Impact |
+|------------------------------|---------------------|-------------|--------|
+| Live Activities (ActivityKit + widget extension + native module) | Persistent rich notification with thumbnail attachment | Massive complexity reduction; Live Activities require native EAS build for every change, three copies of ActivityAttributes, SwiftUI widget, App Groups, NSE ActivityKit logic | Eliminates ~15 files, 2 native targets, 1 native module. NSE becomes ~50 lines instead of ~300. |
+| NSE starts Live Activity via `Activity.request()` | NSE downloads thumbnail and creates `UNNotificationAttachment` | Standard iOS API since iOS 10; no ActivityKit required; no App Groups needed | NSE works on iOS 10+, not just iOS 16.2+ |
+| JS bridge via `liveActivityService.js` + native module | `expo-notifications` `dismissNotificationAsync()` | Already used in codebase for conversation notification dismissal | Zero new native code needed on JS side |
+| Widget extension renders pixel-art SwiftUI layout | iOS system notification displays thumbnail image | Image attachment handled by iOS system; renders consistently | No custom UI to maintain |
+| App Groups shared container for thumbnails | NSE temporary directory for attachment | Attachment is copied by iOS to its own storage; no shared container needed | Simpler file management |
 
-**Deprecated/outdated:**
-- **`xcode` npm package for modifying @bacons/apple-targets targets:** Causes pbxproj serialization conflicts. Use `withXcodeProjectBeta` instead.
-- **`GENERATE_INFOPLIST_FILE=NO` approach:** Breaks standard plist key generation. Keep it `YES` and use `INFOPLIST_KEY_*` build settings.
-- `expo-live-activity` for custom layouts: Its fixed template cannot achieve branded designs.
-- `expo-widgets` on SDK 54: Requires SDK 55.
+**Deprecated/outdated (from Phase 9 v1):**
+- `LiveActivityManager` native module: No longer needed
+- `PinnedSnapAttributes.swift`: No longer needed (was for ActivityKit)
+- `FlickLiveActivity` widget extension: No longer needed
+- `liveActivityService.js`: No longer needed
+- `withNSELiveActivities.js` plugin: No longer needed (was for NSSupportsLiveActivities)
+- App Groups entitlement in NSE: No longer needed (was for sharing with widget)
+- `ActivityKit` framework in NSE: No longer needed
 
 ## Open Questions
 
-1. **`target.setBuildSetting()` API availability**
-   - What we know: `@bacons/xcode` PBXNativeTarget has `setBuildSetting()` method used extensively in `with-xcode-changes.js` (confirmed in source code lines 54, 97-101, etc.)
-   - What's unclear: Whether `getDisplayName()` returns the user-visible name or the internal product name for NSE targets
-   - Recommendation: Try both `getDisplayName()` and `props.productName` to match the target. Add fallback matching.
+1. **Re-delivery image attachment for local notifications**
+   - What we know: Local notifications scheduled via `scheduleNotificationAsync` do not go through the NSE. The `attachments` field on `NotificationContentInput` supports iOS attachments with a local file URL.
+   - What's unclear: Whether expo-notifications' `attachments` field works reliably with file:// URIs for downloaded images. The docs mention it but practical examples are scarce.
+   - Recommendation: For re-delivered local notifications, first try using the `attachments` field with a cached thumbnail file. If that proves unreliable, accept text-only re-delivery as a simpler fallback -- the user already saw the image on first delivery.
 
-2. **48-Hour Live Activity Persistence**
-   - What we know: iOS enforces an 8-hour active duration, then 4 hours stale (12 hours total).
-   - What's unclear: Whether periodic push updates truly reset the staleness timer.
-   - Recommendation: Accept 12-hour practical limit for v1.1. Most snaps are viewed within minutes. Defer 48-hour persistence to v2.
+2. **Firestore query for unviewed pinned snaps (re-delivery check)**
+   - What we know: Pinned snap messages have `pinned: true` and `viewedAt: null` in the messages subcollection. We need to query across all conversations for the current user.
+   - What's unclear: Whether a cross-conversation query is practical or if we need a top-level collection/field to track active pinned snaps per user.
+   - Recommendation: Use a simple approach -- store a local list of unviewed pinned snap IDs (AsyncStorage) that gets cleared when viewed. This avoids a Firestore query entirely and is more efficient. On foreground, check the local list against `getPresentedNotificationsAsync()`.
 
-3. **EAS Build Widget Extension Signing**
-   - What we know: @bacons/apple-targets handles most Xcode configuration. EAS builds sign the main app automatically.
-   - What's unclear: Whether EAS automatically provisions the NSE and widget extension bundle identifiers.
-   - Recommendation: Test with a dev build first. If signing fails, manually create provisioning profiles.
+3. **Notification body content for pinned snaps**
+   - What we know: CONTEXT.md says "No extra descriptive text -- just the thumbnail and caption content." Sender name as notification title.
+   - What's unclear: What the notification body should be when there is no caption. An empty body may look odd.
+   - Recommendation: Use caption as body if present. If no caption, use a minimal body like "Sent you a snap" or leave empty. The thumbnail image is the primary content.
 
 ## Validation Architecture
 
@@ -512,18 +533,18 @@ export const startPinnedSnapActivity = async ({
 |----------|-------|
 | Framework | Jest 29.7 with jest-expo preset |
 | Config file | `jest.config.js` |
-| Quick run command | `npx jest --testPathPattern="pinned\|liveActivity\|snapService\|usePinPreference" --no-coverage` |
+| Quick run command | `npx jest --testPathPattern="pinnedNotification\|snapService\|usePinPreference" --no-coverage` |
 | Full suite command | `npm test` |
 | Estimated runtime | ~5 seconds (targeted), ~30 seconds (full) |
 
 ### Phase Requirements -> Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| PINI-01 | Pin toggle appears, sticky preference per friend | unit | `npx jest __tests__/hooks/usePinPreference.test.js -x` | No -- Wave 0 gap |
-| PINI-02 | Live Activity started with correct params (sender name, caption, thumbnail) | unit | `npx jest __tests__/services/liveActivityService.test.js -x` | No -- Wave 0 gap |
-| PINI-03 | Deep link URL matches conversation routing pattern | unit | `npx jest __tests__/services/liveActivityService.test.js -x` | No -- Wave 0 gap |
-| PINI-04 | Live Activity ended when snap is viewed | unit | `npx jest __tests__/services/snapService.test.js -x` (extend existing) | Yes (snapService) |
-| PINI-05 | Snap message includes pinned flag and activityId | unit | `npx jest __tests__/services/snapService.test.js -x` (extend existing) | Yes (snapService) |
+| PINI-01 | Pin toggle appears, sticky preference per friend | unit | `npx jest __tests__/hooks/usePinPreference.test.js -x` | No -- but component is already built and working. Test is a Wave 0 gap from v1. |
+| PINI-02 | Notification includes thumbnail attachment (NSE), correct title/body | manual-only | Physical device test (NSE is native Swift) | N/A -- cannot unit test NSE |
+| PINI-03 | Tapping notification opens conversation | manual-only | Physical device test (system notification tap) | N/A |
+| PINI-04 | Notification dismissed after snap viewed | unit | `npx jest __tests__/services/pinnedNotificationService.test.js -x` | No -- Wave 0 gap |
+| PINI-05 | Re-delivery when swiped away | unit + manual | `npx jest __tests__/services/pinnedNotificationService.test.js -x` (logic); physical device (behavior) | No -- Wave 0 gap |
 
 ### Nyquist Sampling Rate
 - **Minimum sample interval:** After every committed task -> run quick targeted tests
@@ -532,48 +553,37 @@ export const startPinnedSnapActivity = async ({
 - **Estimated feedback latency per task:** ~5 seconds
 
 ### Wave 0 Gaps (must be created before implementation)
-- [ ] `__tests__/hooks/usePinPreference.test.js` -- covers PINI-01 (sticky per-friend toggle)
-- [ ] `__tests__/services/liveActivityService.test.js` -- covers PINI-02, PINI-03 (activity start/end, deep link URL)
-- [ ] Extend `__tests__/services/snapService.test.js` -- covers PINI-04, PINI-05 (pinned flag in message data, end on view)
+- [ ] `__tests__/services/pinnedNotificationService.test.js` -- covers PINI-04, PINI-05 (dismissal logic, re-delivery logic)
+- [ ] Delete `__tests__/services/liveActivityService.test.js` -- no longer needed (Live Activity service is removed)
+- [ ] Extend `__tests__/services/snapService.test.js` -- verify pinned snap message data unchanged after pivot (existing tests should still pass)
 
-**Note:** Native Swift code (ActivityKit, SwiftUI widget, NSE) cannot be tested with Jest. The config plugin fix (`withNSELiveActivities.js`) and native NSE behavior must be verified manually via EAS dev build on a physical iOS device (iOS 16.2+). Jest tests cover the JS service layer, preference storage, and message document structure only.
-
-### NSE Fix Verification Procedure
-Since the plist fix cannot be tested with Jest, verification requires:
-1. Run `npx expo prebuild -p ios --clean` locally
-2. Inspect `ios/<ProjectName>.xcodeproj/project.pbxproj` for `INFOPLIST_KEY_NSSupportsLiveActivities = YES` in the FlickNotificationService build configurations
-3. Run `eas build --platform ios --profile development` (requires native build)
-4. Test on physical device: send a pinned snap, verify Live Activity appears on lock screen
+**Note:** The NSE (native Swift), notification display, tap-to-open behavior, and re-delivery on physical device are manual-only. These require an EAS native build on a physical iOS device. Jest tests cover the JS service layer (dismissal logic, re-delivery checking logic, data matching) only.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `@bacons/apple-targets` v4.0.6 source code analysis: `configuration-list.js`, `with-widget.js`, `with-xcode-changes.js`, `with-bacons-xcode.js`, `target.js` -- direct inspection of how plist generation and build settings work
-- [Apple Build Settings Reference](https://developer.apple.com/documentation/xcode/build-settings-reference) -- GENERATE_INFOPLIST_FILE and INFOPLIST_KEY_ documentation
-- [Apple ActivityKit Documentation](https://developer.apple.com/documentation/activitykit) -- Official API reference for Live Activities
-- [Apple: Starting Live Activities with Push Notifications](https://developer.apple.com/documentation/activitykit/starting-and-updating-live-activities-with-activitykit-push-notifications) -- Push-to-start requirements (iOS 17.2+)
-- Codebase analysis: `plugins/withNSELiveActivities.js`, `targets/FlickNotificationService/`, `app.json` plugin ordering
+- [Apple UNNotificationAttachment Documentation](https://developer.apple.com/documentation/usernotifications/unnotificationattachment) -- Standard iOS API for rich notification images
+- [Apple UNNotificationServiceExtension Documentation](https://developer.apple.com/documentation/usernotifications/unnotificationserviceextension) -- NSE lifecycle and limitations
+- [Expo Notifications SDK Documentation](https://docs.expo.dev/versions/latest/sdk/notifications/) -- dismissNotificationAsync, getPresentedNotificationsAsync, scheduleNotificationAsync APIs
+- [Expo Push Notification Sending Documentation](https://docs.expo.dev/push-notifications/sending-notifications/) -- mutableContent, richContent message fields
+- Codebase analysis: `useConversation.js` (existing dismissal pattern), `NotificationService.swift` (existing NSE), `sender.js` (push payload), `snapService.js` (pinned data fields), `App.js` (notification handlers), `SnapViewer.js` (snap view lifecycle)
 
 ### Secondary (MEDIUM confidence)
-- [GitHub: expo-apple-targets PR #136](https://github.com/EvanBacon/expo-apple-targets/pull/136) -- infoPlist config property (NOT merged in v4.0.6)
-- [GitHub: expo-apple-targets](https://github.com/EvanBacon/expo-apple-targets) -- README confirms "root Info.plist is not managed" but build settings override at build time
-- [Christian Selig: Server-Side Live Activities](https://christianselig.com/2024/09/server-side-live-activities/) -- Push-to-start implementation details and iOS 17 reliability issues
-- [APNsPush: Start and Update Live Activities](https://apnspush.com/how-to-start-and-update-live-activities-with-push-notifications) -- APNs payload format for push-to-start
-- [TelemetryDeck: iOS Version Market Share](https://telemetrydeck.com/survey/apple/iOS/majorSystemVersions/) -- iOS 16/17/18 adoption data (Feb 2026)
-- [Apple Developer Forums: GENERATE_INFOPLIST_FILE](https://developer.apple.com/forums/thread/726709) -- Behavior of GENERATE_INFOPLIST_FILE with INFOPLIST_FILE
+- [SwiftLee: Rich Notifications Explained](https://www.avanderlee.com/swift/rich-notifications/) -- NSE image attachment implementation pattern
+- [expo-server-sdk-node GitHub](https://github.com/expo/expo-server-sdk-node) -- richContent field support
+- [Apple threadIdentifier Documentation](https://developer.apple.com/documentation/usernotifications/unnotificationcontent/threadidentifier) -- Notification grouping
 
 ### Tertiary (LOW confidence)
-- [Apple Developer Forums: NSE and Live Activities](https://developer.apple.com/forums/thread/740332) -- Community discussion on NSE limitations with ActivityKit
-- [Apple Discussions: NSSupportsLiveActivities error](https://discussions.apple.com/thread/255760447) -- Same error reported by other developers
+- [Expo Forum: Push notification collapse identifier](https://forums.expo.dev/t/push-notification-support-for-collapse-identifier/65271/2) -- Expo Push Service does not support apns-collapse-id (needs validation)
 
 ## Metadata
 
 **Confidence breakdown:**
-- NSE plist fix (Approach 1): HIGH - Based on direct source code analysis of `@bacons/apple-targets` and understanding of Xcode build settings. The `withXcodeProjectBeta` + `setBuildSetting` API is used extensively in the plugin's own code.
-- Push-to-start alternative: MEDIUM - Well-documented by Apple but thumbnail delivery problem makes it unsuitable as primary approach for this use case.
-- Root cause diagnosis: HIGH - Traced through source code of both `@bacons/apple-targets` and the existing `withNSELiveActivities.js` plugin. The incompatible pbxproj serializers are the definitive cause.
-- Architecture (existing implementation): MEDIUM - Plans 01-06 are implemented and patterns are validated except for the blocked NSE path.
-- Pitfalls: HIGH - ActivityKit limitations, App Groups paths, and NSE constraints are well-documented.
+- NSE thumbnail attachment: HIGH - Standard iOS API since iOS 10, well-documented, simple implementation
+- Programmatic dismissal: HIGH - Already used in codebase (useConversation.js), verified API exists
+- Re-delivery mechanism: MEDIUM - Approach is sound but implementation details (local notification attachments, foreground timing) need validation on device
+- Code removal scope: HIGH - All Live Activity references identified through thorough grep of codebase
+- @bacons/apple-targets retention for NSE: HIGH - Plugin only generates targets for directories that exist
 
-**Research date:** 2026-03-05 (update)
-**Valid until:** 2026-04-05 (30 days - core fix is based on stable source code analysis, not evolving APIs)
+**Research date:** 2026-03-05
+**Valid until:** 2026-04-05 (30 days -- standard iOS APIs are stable)
