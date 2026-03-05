@@ -2860,6 +2860,28 @@ async function updateStreakOnSnap(conversationId, senderId, recipientId) {
     const streak = streakDoc.data();
     const lastSnapBy = streak.lastSnapBy || {};
 
+    // Check if streak has expired (cron hasn't cleaned it up yet)
+    if (streak.expiresAt && streak.expiresAt.toMillis() <= nowMs) {
+      // Reset expired streak and record this as first snap of a new streak
+      const participants = streak.participants;
+      transaction.update(streakRef, {
+        dayCount: 0,
+        lastMutualAt: null,
+        streakStartedAt: null,
+        expiresAt: null,
+        warningAt: null,
+        warning: false,
+        warningSentAt: null,
+        lastSnapBy: {
+          [participants[0]]: null,
+          [participants[1]]: null,
+          [senderId]: now,
+        },
+        updatedAt: now,
+      });
+      return;
+    }
+
     // Check if the other user has already snapped (mutual exchange)
     const otherUserId = senderId === recipientId ? senderId : recipientId;
     const otherHasSnapped =
