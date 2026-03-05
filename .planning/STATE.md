@@ -127,6 +127,7 @@ Progress: [██████░░░░] 50% (v1.1)
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 39 | Fix streak reset bug: new streak starts at dayCount 0 (not old count) | 2026-03-05 | 8e8c99e | [39-fix-streak-reset-bug-new-streak-starts-a](./quick/39-fix-streak-reset-bug-new-streak-starts-a/) |
 | 38 | Snap expand/suck-back animation matching story viewer | 2026-03-04 | cbda9de | [38-opening-and-closing-a-snap-should-use-th](./quick/38-opening-and-closing-a-snap-should-use-th/) |
 | 37 | Fix streak expiration: add local expiry override to useStreak/useStreakMap | 2026-03-04 | 5991492 | [37-fix-streak-expiration-add-logic-to-end-s](./quick/37-fix-streak-expiration-add-logic-to-end-s/) |
 | 36 | Fix BackHandler.removeEventListener crash on Android stories | 2026-02-25 | 8486fe8 | [36-fix-backhandler-removeeventlistener-cras](./quick/36-fix-backhandler-removeeventlistener-cras/) |
@@ -135,9 +136,9 @@ Progress: [██████░░░░] 50% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 09-07-PLAN.md (NSE plist fix). Plans 01-04, 06-07 executed. Checkpoint 05 pending EAS build + verification.
+Stopped at: Completed quick task 39 (streak reset bug fix). Phase 9 plans 01-04, 06-07 executed. Checkpoint 05 pending EAS build + verification.
 Resume file: None
 
 ---
 
-Last activity: 2026-03-05 - Plan 07 (NSE plist fix) completed, NSSupportsLiveActivities blocker resolved
+Last activity: 2026-03-05 - Quick task 39 (fix streak reset bug in Cloud Functions) completed
