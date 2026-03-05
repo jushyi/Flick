@@ -48,25 +48,30 @@ struct FlickLiveActivityWidget: Widget {
     // MARK: - Lock Screen Layout
 
     /// The main lock screen presentation of the Live Activity.
-    /// Shows a photo thumbnail on the left with optional caption on the right.
-    /// Sender name is intentionally hidden to preserve the mystery/surprise.
+    /// Shows a large photo thumbnail on the left with caption on the right.
+    /// Designed to be tall and visually prominent on the lock screen.
     @ViewBuilder
     private func lockScreenView(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
-        HStack(spacing: 12) {
-            // Left: 48x48 photo thumbnail from App Groups shared container
-            thumbnailView(activityId: context.attributes.activityId, size: 48)
+        HStack(spacing: 14) {
+            // Left: Large photo thumbnail from App Groups shared container
+            thumbnailView(activityId: context.attributes.activityId, size: 96)
 
-            // Right: Caption or "Tap to view" hint
-            VStack(alignment: .leading, spacing: 2) {
+            // Right: Sender name + caption
+            VStack(alignment: .leading, spacing: 6) {
+                Text(context.attributes.senderName)
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundColor(flickTextSecondary)
+                    .lineLimit(1)
+
                 if let caption = context.attributes.caption, !caption.isEmpty {
                     Text(caption)
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .font(.system(size: 15, weight: .bold, design: .monospaced))
                         .foregroundColor(flickTextPrimary)
-                        .lineLimit(1)
+                        .lineLimit(2)
                         .truncationMode(.tail)
                 } else {
                     Text("Tap to view")
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .font(.system(size: 15, weight: .bold, design: .monospaced))
                         .foregroundColor(flickTextSecondary)
                         .lineLimit(1)
                 }
@@ -75,7 +80,7 @@ struct FlickLiveActivityWidget: Widget {
             Spacer()
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .background(flickBackground)
         .widgetURL(URL(string: context.attributes.deepLinkUrl))
     }
@@ -91,10 +96,10 @@ struct FlickLiveActivityWidget: Widget {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: size > 48 ? 8 : 4))
         } else {
             // Fallback: branded placeholder with "F" initial
-            RoundedRectangle(cornerRadius: 4)
+            RoundedRectangle(cornerRadius: size > 48 ? 8 : 4)
                 .fill(Color(red: 30 / 255, green: 30 / 255, blue: 60 / 255))
                 .frame(width: size, height: size)
                 .overlay(
