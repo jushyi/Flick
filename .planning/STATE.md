@@ -3,11 +3,42 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-03-18T17:21:12.010Z"
+last_activity: "2026-03-18 - Completed Plan 11-03: Video UI components"
+progress:
+  total_phases: 6
+  completed_phases: 2
+  total_plans: 37
+  completed_plans: 27
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
+stopped_at: Completed 10-01-PLAN.md (pinned snap notification infrastructure)
+last_updated: "2026-03-18T17:20:42.655Z"
+last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
+progress:
+  total_phases: 6
+  completed_phases: 2
+  total_plans: 37
+  completed_plans: 27
+  percent: 73
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
 stopped_at: Completed 10-01-PLAN.md (pinned snap notification infrastructure)
 last_updated: "2026-03-18T17:15:55.009Z"
 last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
 progress:
-  total_phases: 6
+  [███████░░░] 73%
   completed_phases: 2
   total_plans: 37
   completed_plans: 26
@@ -29,9 +60,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 12 (Add Video Support to Main Camera)
-Plan: 3 of 8 executed
-Status: In Progress — Plan 02 complete (upload queue video support + VideoMuteContext)
-Last activity: 2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext
+Plan: 4 of 8 executed
+Status: In Progress — Plan 03 complete (video UI components: RecordingProgressRing + VideoPlayer)
+Last activity: 2026-03-18 - Completed Plan 11-03: Video UI components
 
 Progress: [██████░░░░] 62% (v1.1)
 
@@ -73,6 +104,7 @@ Progress: [██████░░░░] 62% (v1.1)
 | Phase 10 P01 | 8min | 2 tasks | 4 files |
 | Phase 09 P15 | 2min | 1 tasks | 1 files |
 | Phase 08 P01 | 6min | 3 tasks | 8 files |
+| Phase 11 P03 | 4min | 2 tasks | 2 files |
 
 ## Milestone History
 
@@ -162,6 +194,10 @@ Progress: [██████░░░░] 62% (v1.1)
 - Video thumbnail uses createVideoPlayer + generateThumbnailsAsync at time 0 (first frame) then ImageManipulator resize to 20px base64
 - VideoMuteProvider placed inside ThemeProvider wrapping AuthProvider for cross-navigator mute state sharing
 - Backward compatibility: uploadQueueItem reads item.photoUri as fallback for legacy persisted queue items
+- Used #FF3B30 (iOS system red) as default recording progress ring color for clear recording indicator
+- Text-based mute toggle (M/U) since no speaker/volume PixelIcon exists in the icon set
+- SVG circle rotation=-90 with origin transform starts fill from 12 o'clock (top center)
+- VideoPlayer controls overlay uses semi-transparent dark background at 0.3 opacity
 
 **Phase 10 Decisions:**
 - Used options object {richContent, mutableContent} for sendPushNotification 6th param (backward compatible with all existing callers)
@@ -213,8 +249,8 @@ Progress: [██████░░░░] 62% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:15:50.363Z
-Stopped at: Completed 10-01-PLAN.md (pinned snap notification infrastructure)
+Last session: 2026-03-18T17:21:12.007Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None
 
 ---
