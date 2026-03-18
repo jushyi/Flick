@@ -121,11 +121,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 12 (Add Video Support to Main Camera)
-Plan: 6 of 8 executed
-Status: In Progress -- Plan 05 complete (feed video cards with autoplay and viewport detection)
-Last activity: 2026-03-18 - Completed Plan 11-05: Feed video cards
+Plan: 7 of 8 executed
+Status: In Progress -- Plan 06 complete (PhotoDetail video playback + darkroom video icon)
+Last activity: 2026-03-18 - Completed Plan 11-06: PhotoDetail video playback & darkroom icon
 
-Progress: [█████████░] 92% (v1.1)
+Progress: [█████████░] 95% (v1.1)
 
 ## Performance Metrics
 
@@ -169,6 +169,7 @@ Progress: [█████████░] 92% (v1.1)
 | Phase 08 P02 | 3min | 2 tasks | 4 files |
 | Phase 10 P02 | 15min | 3 tasks | 4 files |
 | Phase 11 P05 | 3min | 2 tasks | 3 files |
+| Phase 11 P06 | 5min | 3 tasks | 4 files |
 
 ## Milestone History
 
@@ -270,6 +271,11 @@ Progress: [█████████░] 92% (v1.1)
 - Viewport detection uses 50% itemVisiblePercentThreshold for autoplay trigger
 - Duration badge and video icon overlay positioned absolute within photoContainer
 - Memo comparison updated to include isVisible prop for correct re-render on viewport change
+- Videos loop in feed mode (PhotoDetail), play once in stories mode with auto-advance on playToEnd
+- Load failure timer (5s auto-skip) disabled for video items in stories -- videos use playToEnd for advancement
+- Video progress bar segments use absolute-positioned fill child with percentage width driven by videoProgress state
+- Added overflow:hidden to progressSegment for proper video fill clipping at border radius
+- SwipeablePhotoCard video icon uses PixelIcon play at 12px in bottom-left with dark overlay background
 
 **Phase 10 Decisions:**
 - Used options object {richContent, mutableContent} for sendPushNotification 6th param (backward compatible with all existing callers)
@@ -321,8 +327,8 @@ Progress: [█████████░] 92% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:28:01.866Z
-Stopped at: Completed 11-05-PLAN.md
+Last session: 2026-03-18T17:28:08Z
+Stopped at: Completed 11-06-PLAN.md
 Resume file: None
 
 ---

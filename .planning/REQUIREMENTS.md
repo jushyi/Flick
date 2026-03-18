@@ -56,11 +56,11 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **VID-01**: Hold shutter for ~500ms starts video recording; tap takes photo (no toggle UI)
 - [x] **VID-02**: Circular progress ring fills around shutter button during recording (30s max)
 - [x] **VID-03**: Video uploads create Firestore documents with mediaType, videoURL, and duration fields
-- [ ] **VID-04**: Videos develop and reveal identically to photos in darkroom with video icon overlay
+- [x] **VID-04**: Videos develop and reveal identically to photos in darkroom with video icon overlay
 - [x] **VID-05**: Feed autoplays videos muted; tap to unmute persists across subsequent videos
 - [x] **VID-06**: Video cards display a duration badge (e.g. "0:12") in the corner
 - [x] **VID-07**: PhotoDetail plays videos with progress bar and mute toggle, looping in feed mode
-- [ ] **VID-08**: Stories plays videos once to completion then auto-advances to next story
+- [x] **VID-08**: Stories plays videos once to completion then auto-advances to next story
 - [x] **VID-09**: expo-video installed, microphone permission configured, storage rules allow video content types
 - [x] **VID-10**: Video thumbnail placeholder generated at capture time for progressive loading
 
@@ -129,11 +129,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VID-01      | 11    | Complete |
 | VID-02      | 11    | Complete |
 | VID-03      | 11    | Complete |
-| VID-04      | 11    | Pending |
+| VID-04      | 11    | Complete |
 | VID-05      | 11    | Complete |
 | VID-06      | 11    | Complete |
 | VID-07      | 11    | Complete |
-| VID-08      | 11    | Pending |
+| VID-08      | 11    | Complete |
 | VID-09      | 11    | Complete |
 | VID-10      | 11    | Complete |
 

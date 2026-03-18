@@ -194,16 +194,16 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 9. expo-video installed, microphone permission configured, storage rules updated for video content types
 10. Video thumbnail placeholder generated at capture time for progressive loading
 
-**Plans:** 5/8 plans executed
+**Plans:** 7/8 plans executed
 
 Plans:
-- [ ] 11-00-PLAN.md — Wave 0: RED test scaffolds for useCameraBase, uploadQueueService, VideoMuteContext
-- [ ] 11-01-PLAN.md — Native config: expo-video install, microphone permission, storage rules, storageService uploadVideo, jest mock
-- [ ] 11-02-PLAN.md — Upload queue video support (mediaType/duration/videoURL/thumbnail), VideoMuteContext, App.js provider wiring
-- [ ] 11-03-PLAN.md — UI components: RecordingProgressRing (animated SVG), VideoPlayer wrapper (expo-video)
-- [ ] 11-04-PLAN.md — Camera hold-to-record: useCameraBase recording logic, CameraScreen progress ring integration
-- [ ] 11-05-PLAN.md — Feed video playback: FeedPhotoCard video rendering, viewport detection, duration badge
-- [ ] 11-06-PLAN.md — PhotoDetail/Stories video playback, stories auto-advance, darkroom video icon overlay
+- [x] 11-00-PLAN.md — Wave 0: RED test scaffolds for useCameraBase, uploadQueueService, VideoMuteContext
+- [x] 11-01-PLAN.md — Native config: expo-video install, microphone permission, storage rules, storageService uploadVideo, jest mock
+- [x] 11-02-PLAN.md — Upload queue video support (mediaType/duration/videoURL/thumbnail), VideoMuteContext, App.js provider wiring
+- [x] 11-03-PLAN.md — UI components: RecordingProgressRing (animated SVG), VideoPlayer wrapper (expo-video)
+- [x] 11-04-PLAN.md — Camera hold-to-record: useCameraBase recording logic, CameraScreen progress ring integration
+- [x] 11-05-PLAN.md — Feed video playback: FeedPhotoCard video rendering, viewport detection, duration badge
+- [x] 11-06-PLAN.md — PhotoDetail/Stories video playback, stories auto-advance, darkroom video icon overlay
 - [ ] 11-07-PLAN.md — Full test suite + lint verification, end-to-end checkpoint on physical device
 
 **Build Note:** Phase 11 requires a new EAS build (expo-video native module + microphone permission). Storage rules must be deployed separately: `firebase deploy --only storage`.
