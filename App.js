@@ -30,6 +30,7 @@ import {
   getNotificationToken,
   storeNotificationToken,
   markNotificationReadFromPushData,
+  storePinnedNotifId,
 } from './src/services/firebase/notificationService';
 import {
   isDarkroomReadyToReveal,
@@ -404,6 +405,13 @@ export default function App() {
             });
           }
         })();
+      }
+
+      // Store notification identifier for Android pinned snap dismissal.
+      // When the snap is viewed, ConversationScreen calls dismissPinnedNotif
+      // which reads this stored ID to call Notifications.dismissNotificationAsync.
+      if (Platform.OS === 'android' && notifData?.type === 'pinned_snap' && notifData?.senderId) {
+        storePinnedNotifId(notifData.senderId, notification.request.identifier);
       }
 
       const result = handleNotificationReceived(notification);

@@ -2,7 +2,7 @@
  * PinToggle - Pixel-art styled toggle for "pin to screen" feature
  *
  * Renders a dark pill/chip with a pin indicator and toggle switch.
- * iOS-only: returns null on Android.
+ * Renders on both iOS and Android. The pinned field is written cross-platform.
  *
  * Props:
  *   enabled (boolean) - Current toggle state
