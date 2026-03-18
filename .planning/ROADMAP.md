@@ -169,7 +169,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 7/13           | In Progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
-| 11. Add Video Support to Main Camera         | v1.1      | 0/8            | Not started | -          |
+| 11. Add Video Support to Main Camera         | 1/8 | In Progress|  | -          |
 
 ### Phase 11: Add Video Support to Main Camera
 
@@ -189,7 +189,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 9. expo-video installed, microphone permission configured, storage rules updated for video content types
 10. Video thumbnail placeholder generated at capture time for progressive loading
 
-**Plans:** 8 plans
+**Plans:** 1/8 plans executed
 
 Plans:
 - [ ] 11-00-PLAN.md — Wave 0: RED test scaffolds for useCameraBase, uploadQueueService, VideoMuteContext
