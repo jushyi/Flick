@@ -173,7 +173,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
-| 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
+| 10. Pinned Snaps Android                     | v1.1      | 1/2            | In Progress | -          |
 | 11. Add Video Support to Main Camera         | 3/8 | In Progress|  | -          |
 
 ### Phase 11: Add Video Support to Main Camera
