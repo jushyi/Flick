@@ -10,6 +10,7 @@ import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
+import RecordingProgressRing from '../components/RecordingProgressRing';
 
 import useCamera, {
   BASE_ROTATION_PER_CARD,
@@ -19,7 +20,6 @@ import useCamera, {
 } from '../hooks/useCamera';
 import { styles } from '../styles/CameraScreen.styles';
 import { DarkroomBottomSheet } from '../components';
-import { lightImpact } from '../utils/haptics';
 
 import logger from '../utils/logger';
 
@@ -221,6 +221,25 @@ const CameraScreen = () => {
   const { mode = 'normal', conversationId, friendId, friendDisplayName } = route.params || {};
   const isSnapMode = mode === 'snap';
 
+  // Snap mode capture callback: navigates to SnapPreviewScreen with photo/video URI
+  const handleSnapResult = useCallback(
+    ({ uri, mediaType }) => {
+      logger.info('CameraScreen: Snap captured, navigating to preview', {
+        conversationId,
+        friendId,
+        mediaType,
+      });
+      navigation.navigate('SnapPreviewScreen', {
+        photoUri: uri,
+        mediaType,
+        conversationId,
+        friendId,
+        friendDisplayName,
+      });
+    },
+    [navigation, conversationId, friendId, friendDisplayName]
+  );
+
   const {
     // Camera permissions
     permission,
@@ -233,6 +252,11 @@ const CameraScreen = () => {
     isCapturing,
     zoomLevels,
     selectedLens,
+
+    // Video recording state
+    isRecording,
+    cameraMode,
+    MAX_RECORDING_DURATION,
 
     // Darkroom state
     darkroomCounts,
@@ -253,31 +277,15 @@ const CameraScreen = () => {
     toggleCameraFacing,
     toggleFlash,
     handleZoomChange,
-    takePicture,
+    handlePressIn,
+    handlePressOut,
     handleAvailableLensesChanged,
 
     // Bottom sheet handlers
     openBottomSheet,
     closeBottomSheet,
     handleBottomSheetComplete,
-  } = useCamera({ mode });
-
-  // Handle capture in snap mode: navigate to SnapPreviewScreen with photo URI
-  const handleSnapCapture = useCallback(async () => {
-    const photoUri = await takePicture();
-    if (photoUri) {
-      logger.info('CameraScreen: Snap captured, navigating to preview', {
-        conversationId,
-        friendId,
-      });
-      navigation.navigate('SnapPreviewScreen', {
-        photoUri,
-        conversationId,
-        friendId,
-        friendDisplayName,
-      });
-    }
-  }, [takePicture, navigation, conversationId, friendId, friendDisplayName]);
+  } = useCamera({ mode, onSnapCapture: isSnapMode ? handleSnapResult : null });
 
   // Handle close button in snap mode
   const handleSnapClose = useCallback(() => {
@@ -315,6 +323,10 @@ const CameraScreen = () => {
           facing={facing}
           flash={flash}
           zoom={zoom.cameraZoom}
+          mode={cameraMode}
+          mute={false}
+          videoQuality="720p"
+          videoBitrate={3000000}
           onAvailableLensesChanged={handleAvailableLensesChanged}
           {...(selectedLens && { selectedLens })}
         />
@@ -348,8 +360,11 @@ const CameraScreen = () => {
           {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
         </TouchableOpacity>
 
-        {/* Zoom Control Bar */}
-        <View style={styles.zoomBar}>
+        {/* Zoom Control Bar - disabled during recording */}
+        <View
+          style={[styles.zoomBar, isRecording && { opacity: 0.3 }]}
+          pointerEvents={isRecording ? 'none' : 'auto'}
+        >
           {zoomLevels.map(level => {
             const isSelected = zoom.value === level.value;
             return (
@@ -380,8 +395,12 @@ const CameraScreen = () => {
           })}
         </View>
 
-        {/* Flip Camera Button (far right) */}
-        <TouchableOpacity style={styles.floatingButton} onPress={toggleCameraFacing}>
+        {/* Flip Camera Button (far right) - disabled during recording */}
+        <TouchableOpacity
+          style={[styles.floatingButton, isRecording && { opacity: 0.3 }]}
+          onPress={toggleCameraFacing}
+          disabled={isRecording}
+        >
           <FlipCameraIcon color={colors.icon.primary} />
         </TouchableOpacity>
       </View>
@@ -406,23 +425,33 @@ const CameraScreen = () => {
             />
           )}
 
-          {/* Capture Button (center) */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.captureButtonOuter,
-              isCapturing && styles.captureButtonDisabled,
-              pressed && styles.captureButtonPressed,
-            ]}
-            onPressIn={() => {
-              lightImpact();
-            }}
-            onPressOut={isSnapMode ? handleSnapCapture : takePicture}
-            disabled={isCapturing}
-          >
-            <View style={styles.captureButton}>
-              <View style={styles.captureButtonInner} />
-            </View>
-          </Pressable>
+          {/* Capture Button (center) with recording progress ring */}
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <RecordingProgressRing
+              isRecording={isRecording}
+              maxDuration={MAX_RECORDING_DURATION}
+              size={108}
+            />
+            <Pressable
+              style={({ pressed }) => [
+                styles.captureButtonOuter,
+                (isCapturing || isRecording) && styles.captureButtonDisabled,
+                pressed && !isRecording && styles.captureButtonPressed,
+              ]}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              disabled={isCapturing}
+            >
+              <View style={styles.captureButton}>
+                <View
+                  style={[
+                    styles.captureButtonInner,
+                    isRecording && { backgroundColor: '#FF3B30', borderRadius: 8 },
+                  ]}
+                />
+              </View>
+            </Pressable>
+          </View>
 
           {/* Invisible spacer to balance darkroom button and center capture button */}
           {!isSnapMode && <View style={styles.footerSpacer} />}
