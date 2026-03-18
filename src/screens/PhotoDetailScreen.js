@@ -44,6 +44,8 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import StrokedNameText from '../components/StrokedNameText';
+import VideoPlayer from '../components/VideoPlayer';
+import { useVideoMute } from '../context/VideoMuteContext';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getTimeAgo } from '../utils/timeUtils';
@@ -151,6 +153,9 @@ const PhotoDetailScreen = () => {
   const [captionText, setCaptionText] = useState('');
   const captionInputRef = useRef(null);
   const lastSavedCaptionRef = useRef('');
+
+  // Video mute state from global context
+  const { isMuted, toggleMute } = useVideoMute();
 
   // Keyboard tracking for caption input offset
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -578,6 +583,11 @@ const PhotoDetailScreen = () => {
     // Load failure timer (for auto-skip on image load timeout)
     startLoadTimer,
     clearLoadTimer,
+
+    // Video support
+    handleVideoPlayToEnd,
+    handleVideoTimeUpdate,
+    videoProgress,
   } = usePhotoDetailModal({
     mode: contextMode,
     photo: contextPhoto,
@@ -658,6 +668,8 @@ const PhotoDetailScreen = () => {
       hasMenuOptions: true,
       contextMode: contextMode,
       thumbnailDataURL: currentPhoto?.thumbnailDataURL || null,
+      mediaType: currentPhoto?.mediaType || 'photo',
+      videoURL: currentPhoto?.videoURL || null,
     };
   }
 
@@ -712,6 +724,10 @@ const PhotoDetailScreen = () => {
 
   // Check if viewing own photo (disable avatar tap)
   const isOwnPhoto = currentPhoto?.userId === contextUserId;
+
+  // Check if current photo is a video
+  const isVideo = currentPhoto?.mediaType === 'video';
+  const videoURL = currentPhoto?.videoURL;
 
   // Disabled for own photos
   const handleAvatarPress = useCallback(() => {
@@ -1130,22 +1146,38 @@ const PhotoDetailScreen = () => {
                     <PixelSpinner size="small" color="rgba(255, 255, 255, 0.6)" />
                   </View>
                 )}
-                <Image
-                  source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
-                  placeholder={
-                    currentPhoto?.thumbnailDataURL
-                      ? { uri: currentPhoto.thumbnailDataURL }
-                      : undefined
-                  }
-                  placeholderContentFit="cover"
-                  style={styles.photo}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={currentPhoto?.thumbnailDataURL ? 200 : 0}
-                  priority={isTransitioning ? 'normal' : 'high'}
-                  onLoadStart={handleImageLoadStart}
-                  onLoadEnd={handleImageLoadEnd}
-                />
+                {isVideo && videoURL ? (
+                  <VideoPlayer
+                    source={videoURL}
+                    isMuted={isMuted}
+                    onToggleMute={toggleMute}
+                    loop={contextMode !== 'stories'}
+                    autoPlay={true}
+                    showControls={true}
+                    onPlayToEnd={contextMode === 'stories' ? handleVideoPlayToEnd : undefined}
+                    onTimeUpdate={contextMode === 'stories' ? handleVideoTimeUpdate : undefined}
+                    style={styles.photo}
+                    contentFit="cover"
+                    isVisible={true}
+                  />
+                ) : (
+                  <Image
+                    source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
+                    placeholder={
+                      currentPhoto?.thumbnailDataURL
+                        ? { uri: currentPhoto.thumbnailDataURL }
+                        : undefined
+                    }
+                    placeholderContentFit="cover"
+                    style={styles.photo}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={currentPhoto?.thumbnailDataURL ? 200 : 0}
+                    priority={isTransitioning ? 'normal' : 'high'}
+                    onLoadStart={handleImageLoadStart}
+                    onLoadEnd={handleImageLoadEnd}
+                  />
+                )}
               </View>
             </TouchableWithoutFeedback>
 
@@ -1341,18 +1373,44 @@ const PhotoDetailScreen = () => {
                 style={styles.progressBarScrollView}
                 contentContainerStyle={styles.progressBarContainer}
               >
-                {Array.from({ length: totalPhotos }).map((_, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.progressSegment,
-                      { width: segmentWidth },
-                      index <= currentIndex
-                        ? styles.progressSegmentActive
-                        : styles.progressSegmentInactive,
-                    ]}
-                  />
-                ))}
+                {Array.from({ length: totalPhotos }).map((_, index) => {
+                  const isCurrentSegment = index === currentIndex;
+                  const isPast = index < currentIndex;
+                  const isCurrentVideo =
+                    isCurrentSegment && contextPhotos[index]?.mediaType === 'video';
+
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.progressSegment,
+                        { width: segmentWidth },
+                        isPast
+                          ? styles.progressSegmentActive
+                          : isCurrentSegment && !isCurrentVideo
+                            ? styles.progressSegmentActive
+                            : styles.progressSegmentInactive,
+                      ]}
+                    >
+                      {/* For current video segment, show partial fill based on video progress */}
+                      {isCurrentVideo && (
+                        <View
+                          style={[
+                            styles.progressSegmentActive,
+                            {
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              bottom: 0,
+                              width: `${videoProgress * 100}%`,
+                              borderRadius: 1,
+                            },
+                          ]}
+                        />
+                      )}
+                    </View>
+                  );
+                })}
               </ScrollView>
             )}
 

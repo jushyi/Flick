@@ -34,6 +34,7 @@ export const styles = StyleSheet.create({
   progressSegment: {
     height: 3,
     borderRadius: 1.5,
+    overflow: 'hidden',
   },
   progressSegmentActive: {
     backgroundColor: colors.text.primary,
