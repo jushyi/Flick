@@ -142,3 +142,25 @@ export const endAllPinnedActivities = async () => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Get the activityId values of all currently running pinned snap Live Activities.
+ * Used by the foreground-resume fallback to check which pinned snaps already have activities.
+ *
+ * @returns {Promise<string[]>} Array of activityId strings (snap IDs)
+ */
+export const getActiveActivityIds = async () => {
+  if (Platform.OS !== 'ios' || !LiveActivityManager) {
+    return [];
+  }
+
+  try {
+    const ids = await LiveActivityManager.getActiveActivityIds();
+    return ids || [];
+  } catch (error) {
+    logger.warn('liveActivityService: Failed to get active activity IDs', {
+      error: error.message,
+    });
+    return [];
+  }
+};

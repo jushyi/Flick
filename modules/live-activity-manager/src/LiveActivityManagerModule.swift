@@ -209,6 +209,18 @@ public class LiveActivityManagerModule: Module {
             #endif
         }
 
+        // MARK: - getActiveActivityIds
+        // Returns array of activityId attribute values for all running pinned snap Live Activities.
+        // Used by JS foreground-resume fallback to check which pinned snaps already have activities.
+        AsyncFunction("getActiveActivityIds") { () -> [String] in
+            #if canImport(ActivityKit)
+            guard #available(iOS 16.2, *) else { return [] }
+            return Activity<PinnedSnapAttributes>.activities.map { $0.attributes.activityId }
+            #else
+            return []
+            #endif
+        }
+
         // MARK: - getNSEDiagnostics
         // Reads the NSE diagnostic log written to App Groups by the NotificationService extension.
         // Returns JSON string of diagnostic entries, or null if no diagnostics exist.

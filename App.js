@@ -41,7 +41,7 @@ import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
-import { startPinnedSnapActivity } from './src/services/liveActivityService';
+import { startPinnedSnapActivity, getActiveActivityIds } from './src/services/liveActivityService';
 import { WHATS_NEW } from './src/config/whatsNew';
 import { GIPHY_API_KEY } from '@env';
 
@@ -469,6 +469,103 @@ export default function App() {
               error: error.message,
             });
           }
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  // Foreground-resume fallback: when app returns from background, check for
+  // pinned snap notifications that didn't get a Live Activity (e.g., NSE failed).
+  // Belt-and-suspenders for Issue 2 — ensures Live Activities appear even if
+  // the NSE doesn't fire or fails in background/killed state.
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+
+    const subscription = AppState.addEventListener('change', async nextAppState => {
+      if (nextAppState === 'active') {
+        try {
+          // Get all delivered notifications still in the notification center
+          const presented = await Notifications.getPresentedNotificationsAsync();
+          const pinnedNotifs = presented.filter(
+            n =>
+              n.request.content.data?.pinned === 'true' && n.request.content.data?.pinnedActivityId
+          );
+
+          if (pinnedNotifs.length === 0) return;
+
+          logger.info('App: [RESUME-CHECK] Found pinned snap notifications on foreground', {
+            count: pinnedNotifs.length,
+            activityIds: pinnedNotifs.map(n => n.request.content.data.pinnedActivityId),
+          });
+
+          // Get IDs of already-running Live Activities to avoid duplicates
+          const activeIds = await getActiveActivityIds();
+          const activeIdSet = new Set(activeIds);
+
+          logger.info('App: [RESUME-CHECK] Active Live Activities', {
+            activeCount: activeIds.length,
+            activeIds,
+          });
+
+          // Start Live Activities for pinned notifications that don't have one yet
+          for (const notif of pinnedNotifs) {
+            const notifData = notif.request.content.data;
+            const activityId = notifData.pinnedActivityId;
+
+            if (activeIdSet.has(activityId)) {
+              logger.debug('App: [RESUME-SKIP] Activity already exists', { activityId });
+              continue;
+            }
+
+            logger.info('App: [RESUME-START] Starting Live Activity for missed pinned snap', {
+              activityId,
+              hasThumbnailUrl: !!notifData.pinnedThumbnailUrl,
+            });
+
+            // Download thumbnail
+            let thumbnailUri = '';
+            if (notifData.pinnedThumbnailUrl) {
+              try {
+                const localPath = `${FileSystem.cacheDirectory}pinned-thumb-${activityId}.jpg`;
+                const downloadResult = await FileSystem.downloadAsync(
+                  notifData.pinnedThumbnailUrl,
+                  localPath
+                );
+                thumbnailUri = downloadResult.uri;
+              } catch (dlErr) {
+                logger.warn('App: [RESUME-DL-FAIL] Thumbnail download failed', {
+                  activityId,
+                  error: dlErr.message,
+                });
+              }
+            }
+
+            try {
+              const result = await startPinnedSnapActivity({
+                activityId,
+                senderName: notifData.senderName || 'Someone',
+                caption: notifData.caption || null,
+                conversationId: notifData.conversationId,
+                thumbnailUri,
+              });
+              logger.info('App: [RESUME-RESULT] Live Activity start result', {
+                activityId,
+                success: result.success,
+                error: result.error,
+              });
+            } catch (err) {
+              logger.error('App: [RESUME-FAIL] Failed to start Live Activity', {
+                activityId,
+                error: err.message,
+              });
+            }
+          }
+        } catch (err) {
+          logger.warn('App: [RESUME-ERROR] Foreground resume check failed', {
+            error: err.message,
+          });
         }
       }
     });
