@@ -45,7 +45,7 @@ describe('usePinPreference', () => {
   });
 
   it('returns pinEnabled: true when AsyncStorage has "true" for the friend', async () => {
-    AsyncStorage.getItem.mockImplementation((key) => {
+    AsyncStorage.getItem.mockImplementation(key => {
       if (key === 'pin_pref_friend-2') return Promise.resolve('true');
       return Promise.resolve(null);
     });
@@ -75,7 +75,7 @@ describe('usePinPreference', () => {
   });
 
   it('togglePin(false) updates state and persists false', async () => {
-    AsyncStorage.getItem.mockImplementation((key) => {
+    AsyncStorage.getItem.mockImplementation(key => {
       if (key === 'pin_pref_friend-4') return Promise.resolve('true');
       return Promise.resolve(null);
     });
@@ -117,7 +117,7 @@ describe('usePinPreference', () => {
   });
 
   it('showTooltip is false when pin_tooltip_shown is "true"', async () => {
-    AsyncStorage.getItem.mockImplementation((key) => {
+    AsyncStorage.getItem.mockImplementation(key => {
       if (key === 'pin_tooltip_shown') return Promise.resolve('true');
       return Promise.resolve(null);
     });
@@ -149,16 +149,15 @@ describe('usePinPreference', () => {
   });
 
   it('changing friendId reloads the preference for the new friend', async () => {
-    AsyncStorage.getItem.mockImplementation((key) => {
+    AsyncStorage.getItem.mockImplementation(key => {
       if (key === 'pin_pref_friend-A') return Promise.resolve('true');
       if (key === 'pin_pref_friend-B') return Promise.resolve(null);
       return Promise.resolve(null);
     });
 
-    const { result, rerender } = renderHook(
-      ({ friendId }) => usePinPreference(friendId),
-      { initialProps: { friendId: 'friend-A' } }
-    );
+    const { result, rerender } = renderHook(({ friendId }) => usePinPreference(friendId), {
+      initialProps: { friendId: 'friend-A' },
+    });
 
     await waitFor(() => {
       expect(result.current.loaded).toBe(true);

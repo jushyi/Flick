@@ -1403,7 +1403,7 @@ describe('onNewMessage - reaction handling', () => {
     return { mockConvUpdate };
   }
 
-  it('should not update lastMessage or unreadCount for reaction messages', async () => {
+  it('should update lastMessage but NOT increment unreadCount for reaction messages', async () => {
     const { mockConvUpdate } = setupOnNewMessageMockDb({
       users: {
         'recipient-1': {
@@ -1438,8 +1438,16 @@ describe('onNewMessage - reaction handling', () => {
 
     await onNewMessage(snapshot, context);
 
-    // convRef.update should NOT have been called (no lastMessage/unreadCount update)
-    expect(mockConvUpdate).not.toHaveBeenCalled();
+    // convRef.update SHOULD be called to update lastMessage preview,
+    // but should NOT include unreadCount increment for reactions
+    expect(mockConvUpdate).toHaveBeenCalledTimes(1);
+    const updateArg = mockConvUpdate.mock.calls[0][0];
+    expect(updateArg.lastMessage).toBeDefined();
+    expect(updateArg.lastMessage.type).toBe('reaction');
+    expect(updateArg.lastMessage.emoji).toBe('heart');
+    expect(updateArg.lastMessage.text).toBe('Reacted');
+    // No unreadCount key should be present (reactions don't increment unread)
+    expect(updateArg['unreadCount.recipient-1']).toBeUndefined();
   });
 
   it('should send push notification with emoji character for reaction messages', async () => {

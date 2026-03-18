@@ -86,6 +86,13 @@ describe('SnapBubble', () => {
 
     it('calls onPress when tapped', () => {
       const onPress = jest.fn();
+      // Patch View prototype measureInWindow to invoke callback synchronously
+      // (RNTL's mock doesn't invoke the callback, preventing onPress from firing)
+      const { View } = require('react-native');
+      const origMeasure = View.prototype.measureInWindow;
+      View.prototype.measureInWindow = function (cb) {
+        cb(0, 0, 100, 50);
+      };
       render(
         <SnapBubble
           message={createSnapMessage()}
@@ -94,8 +101,17 @@ describe('SnapBubble', () => {
           onPress={onPress}
         />
       );
-      fireEvent.press(screen.getByText('Snap'));
+      fireEvent.press(screen.getByLabelText('View snap'));
       expect(onPress).toHaveBeenCalledTimes(1);
+      expect(onPress).toHaveBeenCalledWith({
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        borderRadius: 4,
+      });
+      // Restore original
+      View.prototype.measureInWindow = origMeasure;
     });
   });
 

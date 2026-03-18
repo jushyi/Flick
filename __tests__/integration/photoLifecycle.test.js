@@ -144,16 +144,17 @@ describe('Photo Lifecycle Integration Tests', () => {
   describe('1. Photo Capture → Developing flow', () => {
     it('should create photo with developing status and call ensureDarkroomInitialized', async () => {
       // Arrange
-      const mockPhotoId = 'new-photo-123';
       const mockUser = createTestUser({ uid: 'user-capture-1' });
+      // createPhoto now uses doc() to generate ID then setDoc(), not addDoc
+      // mockDoc returns { id: 'test-doc-id' } from beforeEach
+      const expectedPhotoId = 'test-doc-id';
 
-      mockAddDoc.mockResolvedValueOnce({ id: mockPhotoId });
       mockUploadPhoto.mockResolvedValueOnce({
         success: true,
         url: 'https://mock-storage.com/photo.jpg',
         size: 1024,
       });
-      mockUpdateDoc.mockResolvedValueOnce();
+      mockSetDoc.mockResolvedValueOnce();
 
       // For ensureDarkroomInitialized - darkroom exists
       mockGetDoc.mockResolvedValueOnce({
@@ -166,24 +167,22 @@ describe('Photo Lifecycle Integration Tests', () => {
 
       // Assert
       expect(result.success).toBe(true);
-      expect(result.photoId).toBe(mockPhotoId);
+      expect(result.photoId).toBe(expectedPhotoId);
       expect(mockUploadPhoto).toHaveBeenCalledWith(
         mockUser.uid,
-        mockPhotoId,
+        expectedPhotoId,
         'file://local-photo.jpg'
       );
-      expect(mockAddDoc).toHaveBeenCalled();
+      expect(mockSetDoc).toHaveBeenCalled();
     });
 
-    it('should roll back photo document if storage upload fails', async () => {
+    it('should return error if storage upload fails (no rollback needed - upload-first pattern)', async () => {
       // Arrange
-      const photoRef = { id: 'rollback-photo-123' };
-      mockAddDoc.mockResolvedValueOnce(photoRef);
+      // createPhoto now uploads FIRST, then writes doc. If upload fails, no doc to roll back.
       mockUploadPhoto.mockResolvedValueOnce({
         success: false,
         error: 'Upload failed',
       });
-      mockDeleteDoc.mockResolvedValueOnce();
 
       // Act
       const result = await createPhoto('user-123', 'file://local-photo.jpg');
@@ -191,23 +190,23 @@ describe('Photo Lifecycle Integration Tests', () => {
       // Assert
       expect(result.success).toBe(false);
       expect(result.error).toBe('Upload failed');
-      expect(mockDeleteDoc).toHaveBeenCalledWith(photoRef);
+      // No document was created, so no rollback needed
+      expect(mockDeleteDoc).not.toHaveBeenCalled();
+      expect(mockSetDoc).not.toHaveBeenCalled();
     });
 
     it('should create photo with correct initial fields', async () => {
       // Arrange
-      const mockPhotoId = 'init-fields-photo';
       let capturedDocData = null;
 
-      mockAddDoc.mockImplementationOnce(async (collectionRef, data) => {
+      // createPhoto uses setDoc(photoRef, data), capture the data arg
+      mockSetDoc.mockImplementationOnce(async (ref, data) => {
         capturedDocData = data;
-        return { id: mockPhotoId };
       });
       mockUploadPhoto.mockResolvedValueOnce({
         success: true,
         url: 'https://example.com/photo.jpg',
       });
-      mockUpdateDoc.mockResolvedValueOnce();
       mockGetDoc.mockResolvedValueOnce({
         exists: () => true,
         data: () => createTestDarkroom({ userId: 'user-init' }),

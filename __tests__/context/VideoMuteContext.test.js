@@ -17,7 +17,7 @@ import React from 'react';
 import { renderHook, act } from '@testing-library/react-native';
 
 // This import will fail until VideoMuteContext.js is created in Plan 11-02
-// eslint-disable-next-line import/no-unresolved
+
 import { VideoMuteProvider, useVideoMute } from '../../src/context/VideoMuteContext';
 
 describe('VideoMuteContext', () => {

@@ -112,69 +112,17 @@ describe('SettingsScreen - Read Receipts', () => {
     expect(screen.getByText('Read Receipts')).toBeTruthy();
   });
 
-  it('shows toggle in ON state when readReceiptsEnabled is undefined (default)', () => {
-    mockUserProfile = { uid: 'test-uid', readReceiptsEnabled: undefined };
+  // NOTE: The read receipts toggle was moved from SettingsScreen to a dedicated
+  // ReadReceiptsSettings screen (quick-15). The toggle tests below were removed
+  // because they tested behavior that no longer exists on this screen.
+  // SettingsScreen now just shows a navigation item to ReadReceiptsSettings.
+
+  it('shows Read Receipts as a navigation item (not a toggle)', () => {
     render(<SettingsScreen />);
-    // The Read Receipts toggle should show ON by default
+    // Read Receipts should be present as a navigation link, not a toggle
     expect(screen.getByText('Read Receipts')).toBeTruthy();
-    // Find the toggle near the Read Receipts label — it should show ON
-    const toggles = screen.getAllByText('ON');
-    expect(toggles.length).toBeGreaterThan(0);
-  });
-
-  it('shows toggle in OFF state when readReceiptsEnabled is false', () => {
-    mockUserProfile = { uid: 'test-uid', readReceiptsEnabled: false };
-    render(<SettingsScreen />);
-    expect(screen.getByText('Read Receipts')).toBeTruthy();
-    const toggles = screen.getAllByText('OFF');
-    expect(toggles.length).toBeGreaterThan(0);
-  });
-
-  it('shows confirmation Alert when toggling OFF', () => {
-    mockUserProfile = { uid: 'test-uid', readReceiptsEnabled: true };
-    render(<SettingsScreen />);
-    // Find the ON toggle for Read Receipts and press it to toggle OFF
-    const onToggles = screen.getAllByText('ON');
-    // Press the read receipts toggle (there should be one)
-    fireEvent.press(onToggles[0]);
-    expect(Alert.alert).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining("you also won't see"),
-      expect.any(Array)
-    );
-  });
-
-  it('writes readReceiptsEnabled to Firestore on toggle confirm', async () => {
-    mockUserProfile = { uid: 'test-uid', readReceiptsEnabled: true };
-    render(<SettingsScreen />);
-    // Toggle OFF
-    const onToggles = screen.getAllByText('ON');
-    fireEvent.press(onToggles[0]);
-    // Get the Alert callback and simulate confirming
-    const alertCall = Alert.alert.mock.calls[0];
-    const buttons = alertCall[2];
-    // Find the "Turn Off" button and press it
-    const turnOffButton = buttons.find(b => b.text === 'Turn Off');
-    expect(turnOffButton).toBeTruthy();
-    await turnOffButton.onPress();
-    expect(mockUpdateDoc).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ readReceiptsEnabled: false })
-    );
-  });
-
-  it('toggles ON without confirmation dialog', async () => {
-    mockUserProfile = { uid: 'test-uid', readReceiptsEnabled: false };
-    render(<SettingsScreen />);
-    // Toggle ON - press the OFF toggle
-    const offToggles = screen.getAllByText('OFF');
-    fireEvent.press(offToggles[0]);
-    // Should NOT show Alert
-    expect(Alert.alert).not.toHaveBeenCalled();
-    // Should write directly to Firestore
-    expect(mockUpdateDoc).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ readReceiptsEnabled: true })
-    );
+    // There should be no ON/OFF toggle text for read receipts
+    expect(screen.queryAllByText('ON').length).toBe(0);
+    expect(screen.queryAllByText('OFF').length).toBe(0);
   });
 });
