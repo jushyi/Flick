@@ -22,7 +22,7 @@
  */
 
 import { forwardRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet as RNStyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
@@ -107,6 +107,13 @@ const SwipeablePhotoCard = forwardRef(
             })
           }
         />
+
+        {/* Video icon overlay - shows play badge for video items */}
+        {photo.mediaType === 'video' && (
+          <View style={darkroomVideoStyles.videoIcon}>
+            <PixelIcon name="play" size={12} color={colors.text.primary} />
+          </View>
+        )}
 
         {/* Caption input - only on active front card */}
         {stackIndex === 0 && onCaptionChange && (
@@ -194,5 +201,19 @@ const SwipeablePhotoCard = forwardRef(
 );
 
 SwipeablePhotoCard.displayName = 'SwipeablePhotoCard';
+
+const darkroomVideoStyles = RNStyleSheet.create({
+  videoIcon: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
+    backgroundColor: colors.overlay.dark,
+    borderRadius: 8,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default SwipeablePhotoCard;

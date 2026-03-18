@@ -24,7 +24,7 @@
 - [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2012-02-25)
 - [x] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap (completed 2026-03-18)
 - [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
-- [ ] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
+- [x] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking (completed 2026-03-18)
 
 ## Phase Details
 
@@ -148,12 +148,12 @@ Plans (gap closure R2 -- fixes from second device testing):
 2. Tapping the notification opens the app directly to the conversation with the sender
 3. After the recipient views the snap, the notification is automatically dismissed
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 
 - [x] 10-01-PLAN.md — Notification infrastructure: extend sendPushNotification with richContent, pinned-snaps channel, pinned_snap tap handler, onNewMessage pinned snap branch
-- [ ] 10-02-PLAN.md — Pin toggle UI, isPinned field, notification dismissal on snap view, 48h expiry cloud function
+- [x] 10-02-PLAN.md — Pin toggle UI, isPinned field, notification dismissal on snap view, 48h expiry cloud function
 
 ## Progress
 
@@ -173,7 +173,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
 | 8. Screenshot Detection                      | 3/3 | Complete   | 2026-03-18 | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
-| 10. Pinned Snaps Android                     | v1.1      | 1/2            | In Progress | -          |
+| 10. Pinned Snaps Android                     | 2/2 | Complete   | 2026-03-18 | -          |
 | 11. Add Video Support to Main Camera         | 4/8 | In Progress|  | -          |
 
 ### Phase 11: Add Video Support to Main Camera

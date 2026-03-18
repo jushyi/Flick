@@ -25,7 +25,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **PINA-01**: Recipient sees a persistent ongoing notification with snap photo thumbnail for pinned snaps
 - [x] **PINA-02**: Tapping the notification opens the conversation
-- [ ] **PINA-03**: Notification dismisses when recipient views the snap
+- [x] **PINA-03**: Notification dismisses when recipient views the snap
 
 ### Story Viewing Performance
 
@@ -118,7 +118,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PINI-05     | 9     | Complete |
 | PINA-01     | 10    | Complete |
 | PINA-02     | 10    | Complete |
-| PINA-03     | 10    | Pending |
+| PINA-03     | 10    | Complete |
 | DARK-01     | 6     | Pending |
 | DARK-02     | 6     | Pending |
 | DEBT-01     | 6     | Pending |
