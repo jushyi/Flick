@@ -3,14 +3,45 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
-stopped_at: Completed 11-03-PLAN.md
-last_updated: "2026-03-18T17:21:12.010Z"
+stopped_at: Completed 08-02-PLAN.md (screenshot detection UI integration)
+last_updated: "2026-03-18T17:23:14.710Z"
 last_activity: "2026-03-18 - Completed Plan 11-03: Video UI components"
 progress:
   total_phases: 6
+  completed_phases: 3
+  total_plans: 37
+  completed_plans: 29
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-03-18T17:22:48.369Z"
+last_activity: "2026-03-18 - Completed Plan 11-03: Video UI components"
+progress:
+  total_phases: 6
+  completed_phases: 3
+  total_plans: 37
+  completed_plans: 29
+  percent: 78
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
+stopped_at: Completed Phase 9 gap closure (09-11 through 09-15)
+last_updated: "2026-03-18T17:30:00.000Z"
+last_activity: "2026-03-18 - Completed Phase 9 gap closure plans (5/5 gap plans done)"
+progress:
+  [████████░░] 78%
   completed_phases: 2
   total_plans: 37
-  completed_plans: 27
+  completed_plans: 28
 ---
 
 ---
@@ -105,6 +136,7 @@ Progress: [██████░░░░] 62% (v1.1)
 | Phase 09 P15 | 2min | 1 tasks | 1 files |
 | Phase 08 P01 | 6min | 3 tasks | 8 files |
 | Phase 11 P03 | 4min | 2 tasks | 2 files |
+| Phase 08 P02 | 3min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -184,6 +216,10 @@ Progress: [██████░░░░] 62% (v1.1)
 - senderId on system_screenshot message = screenshotter's ID (not null) so onNewMessage derives recipientId correctly
 - system_screenshot does NOT increment unreadCount (informational, not actionable)
 - Notification body uses factual tone: "{name} screenshotted your snap"
+- useScreenshotDetection uses onScreenshotRef (useRef) to avoid stale closure in listener callback
+- viewerDisplayName prop added to SnapViewer for screenshotterName (passed from ConversationScreen where userProfile is available)
+- system_screenshot messages filtered from lastSentMessage to avoid incorrect read receipt display
+- system_screenshot early return in renderItem prevents MessageBubble from rendering system events
 
 **Phase 11 Decisions:**
 - Video files use same photos/ storage path as images, differentiated by extension (.mp4/.mov)
@@ -249,8 +285,8 @@ Progress: [██████░░░░] 62% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:21:12.007Z
-Stopped at: Completed 11-03-PLAN.md
+Last session: 2026-03-18T17:23:14.708Z
+Stopped at: Completed 08-02-PLAN.md (screenshot detection UI integration)
 Resume file: None
 
 ---
