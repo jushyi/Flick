@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-18T17:08:18.597Z"
-last_activity: "2026-03-18 - Completed Plan 11-01: Native dependencies and service foundation"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-03-18T17:12:39.150Z"
+last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 22
-  percent: 59
+  completed_plans: 23
+  percent: 62
 ---
 
 # Project State: Flick
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 12 (Add Video Support to Main Camera)
-Plan: 2 of 8 executed
-Status: In Progress — Plan 01 complete (native dependencies and service foundation for video)
-Last activity: 2026-03-18 - Completed Plan 11-01: Native dependencies and service foundation
+Plan: 3 of 8 executed
+Status: In Progress — Plan 02 complete (upload queue video support + VideoMuteContext)
+Last activity: 2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext
 
-Progress: [██████░░░░] 59% (v1.1)
+Progress: [██████░░░░] 62% (v1.1)
 
 ## Performance Metrics
 
@@ -69,6 +69,8 @@ Progress: [██████░░░░] 59% (v1.1)
 | Phase 11 P00 | 3min | 2 tasks | 3 files |
 | Phase 08 P00 | 4min | 3 tasks | 5 files |
 | Phase 11 P01 | 4min | 2 tasks | 6 files |
+| Phase 11 P02 | 6min | 3 tasks | 3 files |
+| Phase 10 P01 | 8min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -146,6 +148,10 @@ Progress: [██████░░░░] 59% (v1.1)
 - 100MB storage limit provides headroom for video beyond 30s at 720p/3Mbps
 - expo-video mock includes generateThumbnailsAsync for future thumbnail generation
 - createVideoPlayer mock exported globally for test assertions alongside useVideoPlayer
+- processQueue tracks processingPromise for reliable await chaining (prevents race condition in tests and production)
+- Video thumbnail uses createVideoPlayer + generateThumbnailsAsync at time 0 (first frame) then ImageManipulator resize to 20px base64
+- VideoMuteProvider placed inside ThemeProvider wrapping AuthProvider for cross-navigator mute state sharing
+- Backward compatibility: uploadQueueItem reads item.photoUri as fallback for legacy persisted queue items
 
 **Open blockers:**
 
@@ -190,10 +196,10 @@ Progress: [██████░░░░] 59% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:08:18.595Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-03-18T17:11:53Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
 
 ---
 
-Last activity: 2026-03-18 - Completed Plan 08-00: RED test scaffolds for screenshot detection
+Last activity: 2026-03-18 - Completed Plan 10-01: Pinned snap notification infrastructure
