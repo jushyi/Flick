@@ -138,8 +138,7 @@ describe('onNewMessage — system_screenshot type', () => {
         type: 'screenshot',
         conversationId: 'user1_user2',
       }),
-      'user1',
-      expect.anything()
+      'user1'
     );
   });
 

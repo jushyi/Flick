@@ -3103,6 +3103,9 @@ exports.onNewMessage = functions
             : getRandomTemplate(SNAP_BODY_TEMPLATES);
         } else if (messageType === 'tagged_photo') {
           body = 'Tagged you in a photo';
+        } else if (messageType === 'system_screenshot') {
+          // Neutral/factual tone per user decision
+          body = `${senderName} screenshotted your snap`;
         } else if (messageType === 'reaction' && message.emoji) {
           const emojiMap = {
             heart: '\u2764\uFE0F',
@@ -3129,7 +3132,9 @@ exports.onNewMessage = functions
               ? 'snap'
               : messageType === 'tagged_photo'
                 ? 'tagged_photo'
-                : 'direct_message',
+                : messageType === 'system_screenshot'
+                  ? 'screenshot'
+                  : 'direct_message',
           conversationId,
           senderId,
           senderName,

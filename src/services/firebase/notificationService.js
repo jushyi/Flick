@@ -472,6 +472,24 @@ export const handleNotificationTapped = notification => {
           },
         };
 
+      case 'screenshot':
+        return {
+          success: true,
+          data: {
+            type: 'screenshot',
+            screen: 'Conversation',
+            params: {
+              conversationId: conversationId,
+              friendId: senderId,
+              friendProfile: {
+                uid: senderId,
+                displayName: senderName || 'Unknown',
+                photoURL: senderProfilePhotoURL || null,
+              },
+            },
+          },
+        };
+
       default:
         logger.warn('Unknown notification type, navigating to Feed', { type });
         return {
