@@ -13,6 +13,7 @@ import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { AuthProvider, ThemeProvider } from './src/context';
+import { VideoMuteProvider } from './src/context/VideoMuteContext';
 import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -448,16 +449,18 @@ export default function App() {
         <SafeAreaProvider>
           <ErrorBoundary>
             <ThemeProvider>
-              <AuthProvider>
-                <AppNavigator />
-                <StatusBar style="auto" />
-                {showAnimatedSplash && (
-                  <AnimatedSplash
-                    onAnimationComplete={handleSplashComplete}
-                    fontsLoaded={fontsLoaded}
-                  />
-                )}
-              </AuthProvider>
+              <VideoMuteProvider>
+                <AuthProvider>
+                  <AppNavigator />
+                  <StatusBar style="auto" />
+                  {showAnimatedSplash && (
+                    <AnimatedSplash
+                      onAnimationComplete={handleSplashComplete}
+                      fontsLoaded={fontsLoaded}
+                    />
+                  )}
+                </AuthProvider>
+              </VideoMuteProvider>
             </ThemeProvider>
           </ErrorBoundary>
           <WhatsNewModal

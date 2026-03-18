@@ -17,10 +17,13 @@ const expo = new Expo({
  * @param {string} body - Notification body
  * @param {object} data - Additional data payload for deep linking
  * @param {string|null} userId - User ID for receipt tracking (optional, enables token cleanup)
- * @param {object} options - Optional config: { mutableContent: boolean }
+ * @param {object} options - Optional config: { richContent: object|null, mutableContent: boolean }
+ *   richContent: Rich content for Android BigPictureStyle notifications (e.g. { image: 'https://...' })
+ *   mutableContent: Triggers iOS Notification Service Extension (NSE) for background processing
  * @returns {Promise<object>} - { success, tickets } or { success: false, error }
  */
 async function sendPushNotification(token, title, body, data = {}, userId = null, options = {}) {
+  const { richContent = null, mutableContent = false } = options || {};
   try {
     // Validate token format using SDK helper
     if (!Expo.isExpoPushToken(token)) {
@@ -36,10 +39,12 @@ async function sendPushNotification(token, title, body, data = {}, userId = null
       body: body,
       data: data,
       priority: 'high',
-      channelId: 'default',
+      channelId: data.channelId || 'default',
       // mutableContent triggers iOS Notification Service Extension (NSE)
       // which intercepts the push to start Live Activities in background/killed state
-      ...(options.mutableContent && { mutableContent: true }),
+      ...(mutableContent && { mutableContent: true }),
+      // Rich content for Android BigPictureStyle notifications (e.g. pinned snap thumbnails)
+      ...(richContent ? { richContent } : {}),
     };
 
     // Send notification via Expo Push Service

@@ -52,13 +52,22 @@ Notifications.setNotificationHandler({
  */
 export const initializeNotifications = async () => {
   try {
-    // Configure Android notification channel (iOS handles this automatically)
+    // Configure Android notification channels (iOS handles this automatically)
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'default',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#000000',
+      });
+
+      await Notifications.setNotificationChannelAsync('pinned-snaps', {
+        name: 'Pinned Snaps',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#000000',
+        description: 'Photo snaps pinned to your notification shade',
+        sound: 'default',
       });
     }
 
@@ -412,6 +421,25 @@ export const handleNotificationTapped = notification => {
           success: true,
           data: {
             type: 'snap',
+            screen: 'Conversation',
+            params: {
+              conversationId: conversationId,
+              friendId: senderId,
+              friendProfile: {
+                uid: senderId,
+                displayName: senderName || 'Unknown',
+                photoURL: senderProfilePhotoURL || null,
+              },
+              autoOpenSnapId: messageId || null,
+            },
+          },
+        };
+
+      case 'pinned_snap':
+        return {
+          success: true,
+          data: {
+            type: 'pinned_snap',
             screen: 'Conversation',
             params: {
               conversationId: conversationId,

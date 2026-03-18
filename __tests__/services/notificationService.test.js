@@ -85,7 +85,7 @@ jest.mock('expo-notifications', () => ({
   scheduleNotificationAsync: mockScheduleNotificationAsync,
   addNotificationReceivedListener: mockAddNotificationReceivedListener,
   addNotificationResponseReceivedListener: mockAddNotificationResponseReceivedListener,
-  AndroidImportance: { MAX: 5 },
+  AndroidImportance: { MAX: 5, HIGH: 4 },
 }));
 
 // Firestore mocks
@@ -188,6 +188,28 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Channel setup failed');
+
+      Platform.OS = originalOS;
+    });
+
+    it('should create pinned-snaps channel on Android', async () => {
+      const { Platform } = require('react-native');
+      const originalOS = Platform.OS;
+      Platform.OS = 'android';
+
+      const result = await initializeNotifications();
+
+      expect(result.success).toBe(true);
+      expect(mockSetNotificationChannelAsync).toHaveBeenCalledWith(
+        'pinned-snaps',
+        expect.objectContaining({
+          name: 'Pinned Snaps',
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#000000',
+          description: 'Photo snaps pinned to your notification shade',
+          sound: 'default',
+        })
+      );
 
       Platform.OS = originalOS;
     });
@@ -900,6 +922,65 @@ describe('notificationService', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Update failed');
+    });
+  });
+
+  // ===========================================================================
+  // pinned_snap notification type tests
+  // ===========================================================================
+  describe('pinned_snap notification type', () => {
+    it('should navigate to Conversation with autoOpenSnapId for pinned_snap', () => {
+      const notification = {
+        request: {
+          content: {
+            data: {
+              type: 'pinned_snap',
+              conversationId: 'conv123',
+              senderId: 'user456',
+              senderName: 'Alice',
+              senderProfilePhotoURL: '',
+              messageId: 'msg789',
+            },
+          },
+        },
+      };
+
+      const result = handleNotificationTapped(notification);
+
+      expect(result.success).toBe(true);
+      expect(result.data.type).toBe('pinned_snap');
+      expect(result.data.screen).toBe('Conversation');
+      expect(result.data.params.conversationId).toBe('conv123');
+      expect(result.data.params.friendId).toBe('user456');
+      expect(result.data.params.friendProfile).toEqual({
+        uid: 'user456',
+        displayName: 'Alice',
+        photoURL: null,
+      });
+      expect(result.data.params.autoOpenSnapId).toBe('msg789');
+    });
+
+    it('should handle pinned_snap with missing optional fields', () => {
+      const notification = {
+        request: {
+          content: {
+            data: {
+              type: 'pinned_snap',
+              conversationId: 'conv-abc',
+              senderId: 'sender-xyz',
+            },
+          },
+        },
+      };
+
+      const result = handleNotificationTapped(notification);
+
+      expect(result.success).toBe(true);
+      expect(result.data.type).toBe('pinned_snap');
+      expect(result.data.screen).toBe('Conversation');
+      expect(result.data.params.friendProfile.displayName).toBe('Unknown');
+      expect(result.data.params.friendProfile.photoURL).toBeNull();
+      expect(result.data.params.autoOpenSnapId).toBeNull();
     });
   });
 });

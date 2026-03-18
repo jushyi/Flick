@@ -3136,35 +3136,62 @@ exports.onNewMessage = functions
 
           // Include pinned snap fields for Live Activity on recipient device
           if (message.pinned === true) {
+            notificationData.type = 'pinned_snap';
             notificationData.pinned = 'true';
             notificationData.pinnedActivityId = message.pinnedActivityId || '';
             notificationData.pinnedThumbnailUrl = message.pinnedThumbnailUrl || '';
             notificationData.caption = message.caption || '';
+            notificationData.channelId = 'pinned-snaps';
           }
         }
 
-        const pushOptions = {
-          mutableContent: message.pinned === true,
-        };
+        // Pinned snap: generate signed URL and send richContent notification (BigPictureStyle on Android)
+        if (messageType === 'snap' && message.pinned === true) {
+          try {
+            // Use pinnedThumbnailUrl for richContent if available, else generate signed URL from snap
+            let thumbnailUrl = message.pinnedThumbnailUrl;
+            if (!thumbnailUrl && message.snapStoragePath) {
+              const file = admin.storage().bucket().file(message.snapStoragePath);
+              const [signedUrl] = await file.getSignedUrl({
+                action: 'read',
+                expires: Date.now() + 30 * 60 * 1000, // 30 minutes for notification delivery
+              });
+              thumbnailUrl = signedUrl;
+            }
 
-        if (message.pinned === true) {
-          logger.info('onNewMessage: Sending PINNED snap notification', {
-            recipientId,
-            conversationId,
-            mutableContent: true,
-            pinnedActivityId: notificationData.pinnedActivityId,
-            hasThumbnailUrl: !!notificationData.pinnedThumbnailUrl,
-          });
+            logger.info('onNewMessage: Sending PINNED snap notification with thumbnail', {
+              recipientId,
+              conversationId,
+              pinnedActivityId: notificationData.pinnedActivityId,
+              hasThumbnailUrl: !!thumbnailUrl,
+            });
+
+            await sendPushNotification(
+              fcmToken,
+              `Pinned snap from ${senderName}`,
+              message.caption || 'Tap to view',
+              notificationData,
+              recipientId,
+              {
+                richContent: thumbnailUrl ? { image: thumbnailUrl } : null,
+                mutableContent: true,
+              }
+            );
+          } catch (pinnedError) {
+            logger.error(
+              'onNewMessage: Pinned snap notification failed, falling back to standard',
+              {
+                error: pinnedError.message,
+                conversationId,
+              }
+            );
+            // Fall back to standard snap notification
+            await sendPushNotification(fcmToken, senderName, body, notificationData, recipientId);
+          }
+        } else {
+          // Standard notification (non-pinned snaps + all other types)
+          await sendPushNotification(fcmToken, senderName, body, notificationData, recipientId);
         }
-
-        await sendPushNotification(
-          fcmToken,
-          senderName,
-          body,
-          notificationData,
-          recipientId,
-          pushOptions
-        );
 
         logger.debug('onNewMessage: Notification sent', { recipientId, conversationId });
       } catch (notifError) {
