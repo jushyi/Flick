@@ -3,6 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
+stopped_at: Completed 10-01-PLAN.md (pinned snap notification infrastructure)
+last_updated: "2026-03-18T17:15:55.009Z"
+last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
+progress:
+  total_phases: 6
+  completed_phases: 2
+  total_plans: 37
+  completed_plans: 26
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
 stopped_at: Completed 08-01-PLAN.md (screenshot detection service layer)
 last_updated: "2026-03-18T17:15:15.811Z"
 last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
@@ -104,6 +119,7 @@ Progress: [██████░░░░] 62% (v1.1)
 | Phase 10 P01 | 8min | 2 tasks | 4 files |
 | Phase 09 P15 | 2min | 1 tasks | 1 files |
 | Phase 08 P01 | 6min | 3 tasks | 8 files |
+| Phase 10 P01 | 8min | 2 tasks | 4 files |
 
 ## Milestone History
 
@@ -179,6 +195,10 @@ Progress: [██████░░░░] 62% (v1.1)
 **Phase 8 Decisions:**
 - Used moduleNameMapper + manual mock file for expo-screen-capture since package is not yet installed (requires native build)
 - Cloud Function tests assert type:'screenshot' in notification data and no unreadCount increment to ensure RED state against current generic handler
+- screenshotService created in Task 1 (not Task 2) because screenshotQueueService imports recordScreenshot -- lint blocks commit with unresolved import
+- senderId on system_screenshot message = screenshotter's ID (not null) so onNewMessage derives recipientId correctly
+- system_screenshot does NOT increment unreadCount (informational, not actionable)
+- Notification body uses factual tone: "{name} screenshotted your snap"
 
 **Phase 11 Decisions:**
 - Video files use same photos/ storage path as images, differentiated by extension (.mp4/.mov)
@@ -240,10 +260,10 @@ Progress: [██████░░░░] 62% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:15:15.808Z
-Stopped at: Completed 08-01-PLAN.md (screenshot detection service layer)
+Last session: 2026-03-18T17:15:50.363Z
+Stopped at: Completed 10-01-PLAN.md (pinned snap notification infrastructure)
 Resume file: None
 
 ---
 
-Last activity: 2026-03-18 - Completed Plan 10-01: Pinned snap notification infrastructure
+Last activity: 2026-03-18 - Completed Plan 08-01: Screenshot detection service layer
