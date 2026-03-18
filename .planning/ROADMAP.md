@@ -179,7 +179,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 8. Screenshot Detection                      | 3/4 | Gap closure | - | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
 | 10. Pinned Snaps Android                     | 3/3 | Complete    | 2026-03-18 | -          |
-| 11. Add Video Support to Main Camera         | 8/8 | Complete   | 2026-03-18 | -          |
+| 11. Add Video Support to Main Camera         | 8/8 | Complete    | 2026-03-18 | -          |
 
 ### Phase 11: Add Video Support to Main Camera
 
