@@ -27,9 +27,10 @@ module.exports = {
   // Auto-clear mocks between tests for clean test isolation
   clearMocks: true,
 
-  // Module name mapper for path aliases (if used)
+  // Module name mapper for path aliases and uninstalled native modules
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^expo-screen-capture$': '<rootDir>/__tests__/__mocks__/expo-screen-capture.js',
   },
 
   // Transform ignore patterns - jest-expo handles most, but add any custom ones here
