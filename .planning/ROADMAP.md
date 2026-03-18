@@ -2,26 +2,26 @@
 
 ## Milestones
 
-- ✅ **v1.0 Messaging Upgrade** — Phases 1-5 (shipped 2026-02-25)
+- ✅ **v1.0 Messaging Upgrade** — Phases 1-5 (shipped 2012-02-25)
 - 🚧 **v1.1 Pinned Snaps & Polish** — Phases 6-10 (in progress)
 
 ## Phases
 
 <details>
-<summary>✅ v1.0 Messaging Upgrade (Phases 1-5) — SHIPPED 2026-02-25</summary>
+<summary>✅ v1.0 Messaging Upgrade (Phases 1-5) — SHIPPED 2012-02-25</summary>
 
-- [x] Phase 1: Message Infrastructure & Read Receipts (2/2 plans) — completed 2026-02-23
-- [x] Phase 2: Message Interactions (6/6 plans) — completed 2026-02-24
-- [x] Phase 3: Snap Messages (8/8 plans) — completed 2026-02-24
-- [x] Phase 4: Snap Streaks (4/4 plans) — completed 2026-02-24
-- [x] Phase 5: Photo Tag Integration (4/4 plans) — completed 2026-02-25
+- [x] Phase 1: Message Infrastructure & Read Receipts (2/2 plans) — completed 2012-02-23
+- [x] Phase 2: Message Interactions (6/6 plans) — completed 2012-02-24
+- [x] Phase 3: Snap Messages (8/8 plans) — completed 2012-02-24
+- [x] Phase 4: Snap Streaks (4/4 plans) — completed 2012-02-24
+- [x] Phase 5: Photo Tag Integration (4/4 plans) — completed 2012-02-25
 
 </details>
 
 ### v1.1 Pinned Snaps & Polish
 
 - [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
-- [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2026-02-25)
+- [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2012-02-25)
 - [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap
 - [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
 - [ ] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking
@@ -159,13 +159,13 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 
 | Phase                                        | Milestone | Plans Complete | Status      | Completed  |
 | -------------------------------------------- | --------- | -------------- | ----------- | ---------- |
-| 1. Message Infrastructure & Read Receipts    | v1.0      | 2/2            | Complete    | 2026-02-23 |
-| 2. Message Interactions                      | v1.0      | 6/6            | Complete    | 2026-02-24 |
-| 3. Snap Messages                             | v1.0      | 8/8            | Complete    | 2026-02-24 |
-| 4. Snap Streaks                              | v1.0      | 4/4            | Complete    | 2026-02-24 |
-| 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2026-02-25 |
+| 1. Message Infrastructure & Read Receipts    | v1.0      | 2/2            | Complete    | 2012-02-23 |
+| 2. Message Interactions                      | v1.0      | 6/6            | Complete    | 2012-02-24 |
+| 3. Snap Messages                             | v1.0      | 8/8            | Complete    | 2012-02-24 |
+| 4. Snap Streaks                              | v1.0      | 4/4            | Complete    | 2012-02-24 |
+| 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2012-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
-| 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2026-02-25 | 2026-02-25 |
+| 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 7/13           | In Progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
@@ -202,17 +202,4 @@ Plans:
 - [ ] 11-07-PLAN.md — Full test suite + lint verification, end-to-end checkpoint on physical device
 
 **Build Note:** Phase 11 requires a new EAS build (expo-video native module + microphone permission). Storage rules must be deployed separately: `firebase deploy --only storage`.
-
-### Phase 12: deploy all milestone changes to prod
-
-**Goal:** [To be planned]
-**Depends on:** Phase 11
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd:plan-phase 12 to break down)
-
----
-
-_Roadmap created: 2026-02-23_
-_Last updated: 2026-03-05 — Phase 9: pivot plans reverted, Live Activities restored, 3 gap closure plans (09-11 through 09-13) for device-tested fixes_
+
