@@ -48,6 +48,7 @@ jest.mock('../../src/services/firebase/darkroomService', () => ({
   isDarkroomReadyToReveal: (...args) => mockIsDarkroomReadyToReveal(...args),
   scheduleNextReveal: (...args) => mockScheduleNextReveal(...args),
   recordTriageCompletion: (...args) => mockRecordTriageCompletion(...args),
+  clearRevealCache: jest.fn(),
 }));
 
 // Mock haptics

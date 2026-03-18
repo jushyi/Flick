@@ -126,6 +126,7 @@ const {
   isDarkroomReadyToReveal,
   scheduleNextReveal,
   ensureDarkroomInitialized,
+  clearRevealCache,
 } = require('../../src/services/firebase/darkroomService');
 
 const { getFeedPhotos } = require('../../src/services/firebase/feedService');
@@ -133,6 +134,7 @@ const { getFeedPhotos } = require('../../src/services/firebase/feedService');
 describe('Photo Lifecycle Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearRevealCache(); // Reset darkroom cache between tests
     // Default mock returns
     mockQuery.mockReturnValue({ _query: true });
     mockCollection.mockReturnValue({ _collection: true });
@@ -276,7 +278,11 @@ describe('Photo Lifecycle Integration Tests', () => {
       const pastTime = Math.floor(Date.now() / 1000) - 3600;
       const readyDarkroom = {
         userId: 'user-ready',
-        nextRevealAt: { seconds: pastTime, toDate: () => new Date(pastTime * 1000) },
+        nextRevealAt: {
+          seconds: pastTime,
+          toDate: () => new Date(pastTime * 1000),
+          toMillis: () => pastTime * 1000,
+        },
         lastRevealedAt: null,
         createdAt: { seconds: pastTime - 3600 },
       };

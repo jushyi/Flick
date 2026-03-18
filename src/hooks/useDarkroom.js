@@ -32,6 +32,7 @@ import {
   isDarkroomReadyToReveal,
   scheduleNextReveal,
   recordTriageCompletion,
+  clearRevealCache,
 } from '../services/firebase/darkroomService';
 import { successNotification } from '../utils/haptics';
 import { playSuccessSound } from '../utils/soundUtils';
@@ -131,6 +132,7 @@ const useDarkroom = () => {
 
         // Schedule next reveal time (0-15 minutes from now)
         await scheduleNextReveal(user.uid);
+        clearRevealCache(); // Invalidate cache after reveal so next check fetches updated nextRevealAt
         logger.debug('useDarkroom: Next reveal scheduled');
       } else {
         logger.warn('useDarkroom: Darkroom not ready to reveal - photos still developing');

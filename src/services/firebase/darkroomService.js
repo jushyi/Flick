@@ -70,6 +70,19 @@ export const getDarkroom = async userId => {
   }
 };
 
+// Module-level cache for darkroom reveal timing — shared across all callers (App.js + useDarkroom.js)
+let _revealCache = { nextRevealAt: null, cachedAt: null };
+const CACHE_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Clear the reveal cache. Call after new photo capture and after reveal processing.
+ * This forces the next isDarkroomReadyToReveal call to re-fetch from Firestore.
+ */
+export const clearRevealCache = () => {
+  _revealCache = { nextRevealAt: null, cachedAt: null };
+  logger.debug('darkroomService: Reveal cache cleared');
+};
+
 /**
  * Check if darkroom is ready to reveal photos
  * @param {string} userId - User ID
@@ -77,13 +90,40 @@ export const getDarkroom = async userId => {
  */
 export const isDarkroomReadyToReveal = async userId => {
   try {
+    const now = Date.now();
+
+    // Cache hit: skip Firestore if cache is fresh and reveal time hasn't elapsed yet
+    if (
+      _revealCache.nextRevealAt !== null &&
+      _revealCache.cachedAt !== null &&
+      now - _revealCache.cachedAt < CACHE_MAX_AGE_MS &&
+      _revealCache.nextRevealAt.toMillis() > now
+    ) {
+      logger.debug('isDarkroomReadyToReveal: cache hit — not ready yet', {
+        userId,
+        cachedNextRevealAt: _revealCache.nextRevealAt.toDate().toISOString(),
+        cacheAgeMs: now - _revealCache.cachedAt,
+      });
+      return false;
+    }
+
+    // Cache miss, stale, or cached time elapsed — fetch from Firestore
     const result = await getDarkroom(userId);
     if (!result.success) return false;
 
     const { nextRevealAt } = result.darkroom;
-    const now = Timestamp.now();
 
-    return nextRevealAt && nextRevealAt.seconds <= now.seconds;
+    // Update cache with new value (even if null — null means no scheduled reveal)
+    _revealCache = { nextRevealAt: nextRevealAt ?? null, cachedAt: now };
+
+    const isReady = nextRevealAt && nextRevealAt.toMillis() <= now;
+    logger.debug('isDarkroomReadyToReveal: Firestore check', {
+      userId,
+      isReady,
+      nextRevealAt: nextRevealAt?.toDate().toISOString(),
+    });
+
+    return isReady;
   } catch (error) {
     logger.error('Error checking darkroom reveal status', error);
     return false;

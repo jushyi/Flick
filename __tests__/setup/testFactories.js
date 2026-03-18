@@ -141,13 +141,11 @@ const createPendingFriendRequest = (overrides = {}) => {
 const createTestDarkroom = (overrides = {}) => {
   const now = Date.now();
   // Default: next reveal in 2 minutes
-  const nextRevealAt = now + 2 * 60 * 1000;
-
   return {
     userId: 'test-user-123',
-    nextRevealAt: { _seconds: nextRevealAt / 1000, _nanoseconds: 0 },
+    nextRevealAt: createTimestamp(now + 2 * 60 * 1000),
     lastRevealedAt: null,
-    createdAt: { _seconds: now / 1000, _nanoseconds: 0 },
+    createdAt: createTimestamp(now),
     ...overrides,
   };
 };
@@ -161,8 +159,8 @@ const createReadyDarkroom = (overrides = {}) => {
   const now = Date.now();
   // Next reveal is in the past (ready now)
   return createTestDarkroom({
-    nextRevealAt: { _seconds: (now - 60000) / 1000, _nanoseconds: 0 }, // 1 min ago
-    lastRevealedAt: { _seconds: (now - 3600000) / 1000, _nanoseconds: 0 }, // 1 hour ago
+    nextRevealAt: createTimestamp(now - 60000), // 1 min ago
+    lastRevealedAt: createTimestamp(now - 3600000), // 1 hour ago
     ...overrides,
   });
 };
