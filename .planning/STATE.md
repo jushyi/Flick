@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
-stopped_at: Completed 11-05-PLAN.md
-last_updated: "2026-03-18T17:28:01.868Z"
-last_activity: "2026-03-18 - Completed Plan 11-05: Feed video cards"
+stopped_at: Completed 11-04-PLAN.md
+last_updated: "2026-03-18T17:32:42Z"
+last_activity: "2026-03-18 - Completed Plan 11-04: Camera recording integration"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 37
-  completed_plans: 34
+  completed_plans: 35
 ---
 
 ---
@@ -166,6 +166,7 @@ Progress: [█████████░] 95% (v1.1)
 | Phase 09 P15 | 2min | 1 tasks | 1 files |
 | Phase 08 P01 | 6min | 3 tasks | 8 files |
 | Phase 11 P03 | 4min | 2 tasks | 2 files |
+| Phase 11 P04 | 10min | 2 tasks | 5 files |
 | Phase 08 P02 | 3min | 2 tasks | 4 files |
 | Phase 10 P02 | 15min | 3 tasks | 4 files |
 | Phase 11 P05 | 3min | 2 tasks | 3 files |
@@ -267,6 +268,13 @@ Progress: [█████████░] 95% (v1.1)
 - Text-based mute toggle (M/U) since no speaker/volume PixelIcon exists in the icon set
 - SVG circle rotation=-90 with origin transform starts fill from 12 o'clock (top center)
 - VideoPlayer controls overlay uses semi-transparent dark background at 0.3 opacity
+- 500ms hold threshold (HOLD_THRESHOLD_MS) + 100ms camera reconfigure buffer for reliable mode switch
+- recordingDurationRef mirrors state for async access in handleRecordingComplete callback
+- isFacingLockedRef checked in platform hooks (iOS/Android) to prevent camera flip during recording
+- onSnapCapture callback pattern replaces direct handleSnapCapture for unified photo/video snap flow
+- RecordingProgressRing size=108 wraps 100px captureButtonOuter with 4px margin
+- Shutter button inner turns red with borderRadius:8 during recording (stop icon effect)
+- 720p videoQuality and 3Mbps videoBitrate for quality/filesize balance
 - Video cards use tap-to-toggle-mute (not tap-to-open); PhotoDetail accessed via info row below video
 - Viewport detection uses 50% itemVisiblePercentThreshold for autoplay trigger
 - Duration badge and video icon overlay positioned absolute within photoContainer
@@ -327,8 +335,8 @@ Progress: [█████████░] 95% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:28:08Z
-Stopped at: Completed 11-06-PLAN.md
+Last session: 2026-03-18T17:32:42Z
+Stopped at: Completed 11-04-PLAN.md
 Resume file: None
 
 ---
