@@ -22,7 +22,7 @@
 
 - [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
 - [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2012-02-25)
-- [x] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap (completed 2026-03-18)
+- [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap (gap closure in progress)
 - [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
 - [x] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking (completed 2026-03-18)
 
@@ -87,13 +87,17 @@ Plans:
 2. A screenshotted snap displays a visual indicator (e.g., sparkle/eye icon) on its bubble in the conversation thread
 3. The snap message document in Firestore contains a `screenshottedAt` timestamp field after a screenshot event
 
-**Plans:** 3/3 plans complete
+**Plans:** 4 plans (3 original + 1 gap closure)
 
 Plans:
 
-- [ ] 08-00-PLAN.md — Wave 0: Test scaffolds for screenshotService and Cloud Function notification handling (RED tests)
-- [ ] 08-01-PLAN.md — Service layer: expo-screen-capture install, Firestore rules update, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
-- [ ] 08-02-PLAN.md — UI integration: useScreenshotDetection hook, SystemMessage component, SnapViewer wiring, ConversationScreen rendering
+- [x] 08-00-PLAN.md — Wave 0: Test scaffolds for screenshotService and Cloud Function notification handling (RED tests)
+- [x] 08-01-PLAN.md — Service layer: expo-screen-capture install, Firestore rules update, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
+- [x] 08-02-PLAN.md — UI integration: useScreenshotDetection hook, SystemMessage component, SnapViewer wiring, ConversationScreen rendering
+
+Plans (gap closure -- SCRN-02 snap bubble indicator):
+
+- [ ] 08-03-PLAN.md — Add 5th "Screenshotted" visual state to SnapBubble (eye-outline icon, dimmed amber, "Screenshotted" label)
 
 ### Phase 9: Pinned Snaps iOS
 
@@ -172,7 +176,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2012-02-25 |
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
-| 8. Screenshot Detection                      | 3/3 | Complete   | 2026-03-18 | -          |
+| 8. Screenshot Detection                      | 3/4 | Gap closure | - | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
 | 10. Pinned Snaps Android                     | 2/3 | In Progress | - | -          |
 | 11. Add Video Support to Main Camera         | 7/8 | In Progress|  | -          |
