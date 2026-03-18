@@ -89,6 +89,18 @@ const FeedScreen = () => {
   const shimmerPosition = useRef(new Animated.Value(-SHIMMER_WIDTH)).current;
   const shimmerAnimation = useRef(null);
 
+  // Video autoplay viewport detection
+  const [visibleItemIds, setVisibleItemIds] = useState(new Set());
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    const ids = new Set(viewableItems.map(item => item.key || item.item?.id));
+    setVisibleItemIds(ids);
+  }).current;
+
   // Screen load trace - measures time from mount to data-ready
   const { markLoaded } = useScreenTrace('FeedScreen');
   const screenTraceMarkedRef = useRef(false);
@@ -1117,13 +1129,14 @@ const FeedScreen = () => {
     ({ item }) => (
       <FeedPhotoCard
         photo={item}
+        isVisible={visibleItemIds.has(item.id)}
         onPress={sourceRect => handlePhotoPress(item, sourceRect)}
         onCommentPress={sourceRect => handleCommentPress(item, sourceRect)}
         onAvatarPress={handleAvatarPress}
         currentUserId={user?.uid}
       />
     ),
-    [handlePhotoPress, handleCommentPress, handleAvatarPress, user?.uid]
+    [handlePhotoPress, handleCommentPress, handleAvatarPress, user?.uid, visibleItemIds]
   );
 
   const renderFooter = () => {
@@ -1423,6 +1436,8 @@ const FeedScreen = () => {
             updateCellsBatchingPeriod={50}
             onEndReached={photos.length > 0 ? loadMorePhotos : null}
             onEndReachedThreshold={0.5}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
             ListHeaderComponent={renderStoriesRow}
             ListFooterComponent={renderFooter}
             ListEmptyComponent={archivePhotosLoading ? null : renderEmptyState()}
