@@ -179,7 +179,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 8. Screenshot Detection                      | 3/4 | Gap closure | - | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
 | 10. Pinned Snaps Android                     | 2/3 | In Progress | - | -          |
-| 11. Add Video Support to Main Camera         | 7/8 | In Progress|  | -          |
+| 11. Add Video Support to Main Camera         | 8/8 | Complete   | 2026-03-18 | -          |
 
 ### Phase 11: Add Video Support to Main Camera
 
@@ -199,7 +199,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 9. expo-video installed, microphone permission configured, storage rules updated for video content types
 10. Video thumbnail placeholder generated at capture time for progressive loading
 
-**Plans:** 7/8 plans executed
+**Plans:** 8/8 plans complete
 
 Plans:
 - [x] 11-00-PLAN.md — Wave 0: RED test scaffolds for useCameraBase, uploadQueueService, VideoMuteContext
@@ -209,6 +209,6 @@ Plans:
 - [x] 11-04-PLAN.md — Camera hold-to-record: useCameraBase recording logic, CameraScreen progress ring integration
 - [x] 11-05-PLAN.md — Feed video playback: FeedPhotoCard video rendering, viewport detection, duration badge
 - [x] 11-06-PLAN.md — PhotoDetail/Stories video playback, stories auto-advance, darkroom video icon overlay
-- [ ] 11-07-PLAN.md — Full test suite + lint verification, end-to-end checkpoint on physical device
+- [x] 11-07-PLAN.md — Full test suite + lint verification, end-to-end checkpoint on physical device
 
 **Build Note:** Phase 11 requires a new EAS build (expo-video native module + microphone permission). Storage rules must be deployed separately: `firebase deploy --only storage`.

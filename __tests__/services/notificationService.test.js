@@ -1097,6 +1097,42 @@ describe('notificationService', () => {
   });
 
   // ===========================================================================
+  // storePinnedNotifId + dismissPinnedNotif integration (Android pipeline)
+  // ===========================================================================
+  describe('Android pinned snap notification pipeline', () => {
+    it('should store notification ID then dismiss it when snap is viewed', async () => {
+      // Simulate receiving a pinned_snap notification on Android
+      const senderId = 'android-sender-456';
+      const notificationIdentifier = 'android-notif-789';
+
+      // Step 1: Store the notification identifier (as App.js would do)
+      mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
+      await storePinnedNotifId(senderId, notificationIdentifier);
+
+      expect(mockAsyncStorageSetItem).toHaveBeenCalledWith(
+        '@pinned_snap_notifications',
+        JSON.stringify({ [senderId]: notificationIdentifier })
+      );
+
+      // Step 2: Dismiss the notification (as ConversationScreen would do)
+      mockAsyncStorageGetItem.mockResolvedValueOnce(
+        JSON.stringify({ [senderId]: notificationIdentifier })
+      );
+      await dismissPinnedNotif(senderId);
+
+      expect(mockDismissNotificationAsync).toHaveBeenCalledWith(notificationIdentifier);
+    });
+
+    it('should not call dismissNotificationAsync when no ID was stored for sender', async () => {
+      // dismissPinnedNotif with empty storage (the bug this gap closure fixes)
+      mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
+      await dismissPinnedNotif('unknown-sender');
+
+      expect(mockDismissNotificationAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  // ===========================================================================
   // handleCancelPinnedSnap tests
   // ===========================================================================
   describe('handleCancelPinnedSnap', () => {
