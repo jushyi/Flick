@@ -91,6 +91,9 @@ export const usePhotoDetailModal = ({
   // Track newly added emoji for highlight animation (null when no highlight needed)
   const [newlyAddedEmoji, setNewlyAddedEmoji] = useState(null);
 
+  // Video progress for stories progress bar (0-1, driven by VideoPlayer time updates)
+  const [videoProgress, setVideoProgress] = useState(0);
+
   // Auto-skip on load failure: if image doesn't load within 5 seconds, skip to next photo
   const LOAD_FAILURE_TIMEOUT = 5000; // ms
   const loadFailureTimeoutRef = useRef(null);
@@ -266,11 +269,12 @@ export const usePhotoDetailModal = ({
     return getCuratedEmojis(currentPhoto?.id, 5);
   }, [currentPhoto?.id]);
 
-  // Reset frozen order and custom emoji state when navigating to a different photo
+  // Reset frozen order, custom emoji, and video progress when navigating to a different photo
   useEffect(() => {
     if (currentPhoto?.id) {
       setFrozenOrder(null);
       setCustomEmoji(null);
+      setVideoProgress(0);
     }
   }, [currentPhoto?.id]);
 
@@ -588,18 +592,40 @@ export const usePhotoDetailModal = ({
 
   /**
    * Start the load failure timeout (auto-skips to next photo after LOAD_FAILURE_TIMEOUT ms)
-   * Only active in stories mode — feed mode has no auto-skip behavior
+   * Only active in stories mode for photos — videos use playToEnd for advancement
    */
   const startLoadTimer = useCallback(() => {
     clearLoadTimer();
     if (mode !== 'stories') return;
+    // Don't start load failure timer for videos — they handle advancement via playToEnd
+    if (currentPhoto?.mediaType === 'video') return;
     loadFailureTimeoutRef.current = setTimeout(() => {
       logger.warn('usePhotoDetailModal: Image load timeout, auto-skipping', {
         photoId: currentPhoto?.id,
       });
       goNext();
     }, LOAD_FAILURE_TIMEOUT);
-  }, [clearLoadTimer, mode, goNext, currentPhoto?.id]);
+  }, [clearLoadTimer, mode, goNext, currentPhoto?.id, currentPhoto?.mediaType]);
+
+  /**
+   * Handle video play-to-end — auto-advance to next photo/video in stories mode
+   * Triggered by VideoPlayer onPlayToEnd callback when video finishes playing
+   */
+  const handleVideoPlayToEnd = useCallback(() => {
+    if (mode !== 'stories') return;
+    logger.info('usePhotoDetailModal: Video play-to-end, auto-advancing');
+    goNext();
+  }, [mode, goNext]);
+
+  /**
+   * Handle video time update — updates videoProgress for stories progress bar
+   * Triggered by VideoPlayer onTimeUpdate callback
+   */
+  const handleVideoTimeUpdate = useCallback(({ currentTime, duration }) => {
+    if (duration > 0) {
+      setVideoProgress(currentTime / duration);
+    }
+  }, []);
 
   /**
    * Close modal with animation
@@ -1098,5 +1124,10 @@ export const usePhotoDetailModal = ({
     // Load failure timer (for auto-skip on image load timeout)
     startLoadTimer,
     clearLoadTimer,
+
+    // Video support (stories auto-advance + progress bar)
+    handleVideoPlayToEnd,
+    handleVideoTimeUpdate,
+    videoProgress,
   };
 };
