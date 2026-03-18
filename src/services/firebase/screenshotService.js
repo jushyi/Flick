@@ -5,7 +5,7 @@
  * Records screenshottedAt timestamp on snap message documents and creates
  * system_screenshot messages in conversation subcollections.
  *
- * Stub: Full implementation in Task 2.
+ * Used by screenshotQueueService for offline retry of failed writes.
  */
 
 import {
