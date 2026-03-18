@@ -6,6 +6,7 @@
  * - Error: warning icon, "Failed", "Tap to retry"
  * - Unopened: camera icon, "Snap" label (recipient) / "Delivered" (sender)
  * - Opened: dimmed, "Opened" label, non-interactive
+ * - Screenshotted: dimmed amber bubble, eye-outline icon, "Screenshotted" label, non-interactive
  * - Press interactions: onPress for unopened, onRetry for error, no action for opened/sending
  * - Alignment: right for sender, left for recipient
  */
@@ -150,6 +151,61 @@ describe('SnapBubble', () => {
       // Opened state renders a View, not TouchableOpacity, so there's nothing interactive to press
       // Verify onPress was never called (no interactive element to trigger it)
       expect(onPress).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── Screenshotted State ────────────────────────────────────────────
+
+  describe('Screenshotted state', () => {
+    const screenshottedMessage = createSnapMessage({
+      viewedAt: { toDate: () => new Date('2026-02-24T15:35:00Z') },
+      screenshottedAt: { toDate: () => new Date('2026-02-24T15:36:00Z') },
+    });
+
+    it('renders "Screenshotted" label and eye-outline icon', () => {
+      render(
+        <SnapBubble message={screenshottedMessage} isCurrentUser={false} showTimestamp={false} />
+      );
+      expect(screen.getByText('Screenshotted')).toBeTruthy();
+      expect(screen.getByTestId('pixel-icon-eye-outline')).toBeTruthy();
+    });
+
+    it('does NOT render "Opened" label when screenshotted', () => {
+      render(
+        <SnapBubble message={screenshottedMessage} isCurrentUser={false} showTimestamp={false} />
+      );
+      expect(screen.queryByText('Opened')).toBeNull();
+    });
+
+    it('prioritizes screenshotted state over opened state', () => {
+      const bothMessage = createSnapMessage({
+        viewedAt: { toDate: () => new Date('2026-02-24T15:35:00Z') },
+        screenshottedAt: { toDate: () => new Date('2026-02-24T15:36:00Z') },
+      });
+      render(<SnapBubble message={bothMessage} isCurrentUser={false} showTimestamp={false} />);
+      expect(screen.getByText('Screenshotted')).toBeTruthy();
+      expect(screen.queryByText('Opened')).toBeNull();
+    });
+
+    it('is non-interactive (does not call onPress)', () => {
+      const onPress = jest.fn();
+      render(
+        <SnapBubble
+          message={screenshottedMessage}
+          isCurrentUser={false}
+          showTimestamp={false}
+          onPress={onPress}
+        />
+      );
+      // Screenshotted state renders a View, not TouchableOpacity, so there's nothing interactive to press
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('shows "Screenshotted [time]" timestamp when showTimestamp is true', () => {
+      render(
+        <SnapBubble message={screenshottedMessage} isCurrentUser={false} showTimestamp={true} />
+      );
+      expect(screen.getByText('Screenshotted 3:30 PM')).toBeTruthy();
     });
   });
 
