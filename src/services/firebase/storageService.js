@@ -1,11 +1,12 @@
 /**
  * Storage Service
  *
- * Handles Firebase Cloud Storage operations for photos and profile images.
- * Includes image compression before upload.
+ * Handles Firebase Cloud Storage operations for photos, videos, and profile images.
+ * Includes image compression before upload (photos only; videos are not compressed).
  *
  * Key functions:
  * - uploadPhoto: Compress and upload photo to Storage
+ * - uploadVideo: Upload video to Storage (no compression)
  * - uploadProfilePhoto: Upload profile photo
  * - deletePhoto: Delete photo from Storage
  * - getPhotoURL: Get download URL for a photo
@@ -182,6 +183,39 @@ export const getPhotoURL = async (userId, photoId) => {
     logger.error('StorageService.getPhotoURL: Failed', { userId, photoId, error: error.message });
     return { success: false, error: error.message };
   }
+};
+
+/**
+ * Upload video to Firebase Storage
+ * Videos are NOT compressed — expo-camera handles quality via videoQuality/videoBitrate at recording time.
+ * @param {string} userId - User ID who owns the video
+ * @param {string} photoId - Photo/video document ID
+ * @param {string} videoUri - Local video URI
+ * @returns {Promise<{success: boolean, url?: string, storagePath?: string, error?: string}>}
+ */
+export const uploadVideo = async (userId, photoId, videoUri) => {
+  return withTrace('storage_upload_video', async () => {
+    try {
+      logger.debug('StorageService.uploadVideo: Starting', { userId, photoId });
+
+      const extension = videoUri.toLowerCase().endsWith('.mov') ? 'mov' : 'mp4';
+      const storagePath = `photos/${userId}/${photoId}.${extension}`;
+      const storageRef = ref(storageInstance, storagePath);
+
+      const filePath = uriToFilePath(videoUri);
+      await storageRef.putFile(filePath, {
+        contentType: extension === 'mov' ? 'video/quicktime' : 'video/mp4',
+      });
+
+      const downloadURL = await storageRef.getDownloadURL();
+
+      logger.info('StorageService.uploadVideo: Upload successful', { photoId });
+      return { success: true, url: downloadURL, storagePath };
+    } catch (error) {
+      logger.error('StorageService.uploadVideo: Failed', { photoId, error: error.message });
+      return { success: false, error: error.message };
+    }
+  });
 };
 
 /**

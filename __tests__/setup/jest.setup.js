@@ -532,6 +532,49 @@ console.warn = (...args) => {
 };
 
 // ============================================================================
+// expo-video Mock
+// ============================================================================
+const mockVideoPlayer = {
+  play: jest.fn(),
+  pause: jest.fn(),
+  release: jest.fn(),
+  replace: jest.fn(),
+  seekBy: jest.fn(),
+  replay: jest.fn(),
+  muted: true,
+  loop: false,
+  currentTime: 0,
+  duration: 0,
+  playing: false,
+  generateThumbnailsAsync: jest.fn(() => Promise.resolve([{ uri: 'file://video-thumbnail.jpg' }])),
+  addListener: jest.fn(() => ({ remove: jest.fn() })),
+};
+
+const mockCreateVideoPlayer = jest.fn(() => mockVideoPlayer);
+
+jest.mock('expo-video', () => ({
+  __esModule: true,
+  VideoView: 'VideoView',
+  useVideoPlayer: jest.fn((source, setup) => {
+    if (setup) setup(mockVideoPlayer);
+    return mockVideoPlayer;
+  }),
+  createVideoPlayer: mockCreateVideoPlayer,
+  isPictureInPictureSupported: jest.fn(() => Promise.resolve(false)),
+}));
+
+global.mockVideoPlayer = mockVideoPlayer;
+global.mockCreateVideoPlayer = mockCreateVideoPlayer;
+
+// ============================================================================
+// expo Mock (useEvent hook used with expo-video)
+// ============================================================================
+jest.mock('expo', () => ({
+  __esModule: true,
+  useEvent: jest.fn((target, eventName, initialValue) => initialValue || {}),
+}));
+
+// ============================================================================
 // Global Test Utilities
 // ============================================================================
 
