@@ -143,6 +143,7 @@ Progress: [██████░░░░] 50% (v1.1)
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260318-dia | Cherry-pick 9 production bug fixes from feat/dm into hotfix/production-fixes branch | 2026-03-18 | 973e8b99 | [260318-dia-separate-feat-dm-branch-changes-into-fea](./quick/260318-dia-separate-feat-dm-branch-changes-into-fea/) |
 | 39 | Fix streak reset bug: new streak starts at dayCount 0 (not old count) | 2026-03-05 | 8e8c99e | [39-fix-streak-reset-bug-new-streak-starts-a](./quick/39-fix-streak-reset-bug-new-streak-starts-a/) |
 | 38 | Snap expand/suck-back animation matching story viewer | 2026-03-04 | cbda9de | [38-opening-and-closing-a-snap-should-use-th](./quick/38-opening-and-closing-a-snap-should-use-th/) |
 | 37 | Fix streak expiration: add local expiry override to useStreak/useStreakMap | 2026-03-04 | 5991492 | [37-fix-streak-expiration-add-logic-to-end-s](./quick/37-fix-streak-expiration-add-logic-to-end-s/) |
@@ -151,10 +152,10 @@ Progress: [██████░░░░] 50% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-05
-Stopped at: Completed 09-13-PLAN.md (Live Activity persistence via ActivityState observation). Phase 9 plans 01-04, 06-08, 11-13 executed. Checkpoint 05 pending EAS build + verification.
+Last session: 2026-03-18
+Stopped at: Completed quick task 260318-dia (cherry-pick production fixes into hotfix branch)
 Resume file: None
 
 ---
 
-Last activity: 2026-03-05 - Completed Plan 09-13: Add Live Activity persistence via ActivityState observation
+Last activity: 2026-03-18 - Completed quick task 260318-dia: Cherry-pick 9 production bug fixes from feat/dm into hotfix/production-fixes branch
