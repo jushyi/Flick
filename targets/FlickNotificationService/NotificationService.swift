@@ -173,7 +173,9 @@ class NotificationService: UNNotificationServiceExtension {
 
         diag("extracted_data", [
             "activityId": activityId,
-            "thumbnailUrl": String(thumbnailUrlString.prefix(80)),
+            "thumbnailUrl_full": thumbnailUrlString,
+            "thumbnailUrl_length": thumbnailUrlString.count,
+            "thumbnailUrl_isEmpty": thumbnailUrlString.isEmpty,
             "caption": caption ?? "(none)",
             "conversationId": conversationId,
             "senderName": senderName
@@ -206,6 +208,14 @@ class NotificationService: UNNotificationServiceExtension {
                     let (data, _) = try await URLSession.shared.data(from: thumbnailUrl)
                     diag("thumbnail_downloaded", ["bytes": data.count])
                     self.saveThumbnailToAppGroup(activityId: activityId, imageData: data)
+
+                    // Verify thumbnail was saved
+                    if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: self.appGroupId) {
+                        let verifyURL = containerURL.appendingPathComponent("thumbnails/\(activityId).jpg")
+                        let exists = FileManager.default.fileExists(atPath: verifyURL.path)
+                        let size = (try? FileManager.default.attributesOfItem(atPath: verifyURL.path)[.size] as? Int) ?? 0
+                        self.diag("thumbnail_verify", ["exists": exists, "bytes": size, "path": verifyURL.path])
+                    }
                 } catch {
                     diag("thumbnail_download_failed", ["error": error.localizedDescription])
                 }

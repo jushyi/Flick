@@ -341,23 +341,49 @@ export default function App() {
       if (Platform.OS === 'ios' && notifData?.pinned === 'true' && notifData?.pinnedActivityId) {
         (async () => {
           try {
-            // Download thumbnail from Firebase Storage URL to local cache
+            logger.info('App: [PIN-STEP-1] Pinned snap notification received', {
+              activityId: notifData.pinnedActivityId,
+              hasThumbnailUrl: !!notifData.pinnedThumbnailUrl,
+              thumbnailUrlLength: (notifData.pinnedThumbnailUrl || '').length,
+              thumbnailUrlPrefix: (notifData.pinnedThumbnailUrl || '').substring(0, 60),
+              senderName: notifData.senderName,
+              hasCaption: !!notifData.caption,
+              allDataKeys: Object.keys(notifData),
+            });
+
             let thumbnailUri = '';
             if (notifData.pinnedThumbnailUrl) {
               try {
                 const localPath = `${FileSystem.cacheDirectory}pinned-thumb-${notifData.pinnedActivityId}.jpg`;
+                logger.info('App: [PIN-STEP-2] Downloading thumbnail', {
+                  from: notifData.pinnedThumbnailUrl.substring(0, 80),
+                  to: localPath,
+                });
                 const downloadResult = await FileSystem.downloadAsync(
                   notifData.pinnedThumbnailUrl,
                   localPath
                 );
                 thumbnailUri = downloadResult.uri;
-                logger.info('App: Downloaded pinned snap thumbnail', { uri: thumbnailUri });
+                logger.info('App: [PIN-STEP-3] Thumbnail downloaded', {
+                  uri: thumbnailUri,
+                  status: downloadResult.status,
+                  headers: downloadResult.headers ? Object.keys(downloadResult.headers) : [],
+                });
               } catch (dlErr) {
-                logger.warn('App: Failed to download pinned thumbnail, proceeding without', {
+                logger.warn('App: [PIN-STEP-2-FAIL] Thumbnail download failed', {
                   error: dlErr.message,
+                  url: notifData.pinnedThumbnailUrl.substring(0, 80),
                 });
               }
+            } else {
+              logger.warn('App: [PIN-STEP-2-SKIP] No thumbnailUrl in notification data');
             }
+
+            logger.info('App: [PIN-STEP-4] Starting Live Activity', {
+              activityId: notifData.pinnedActivityId,
+              thumbnailUri: thumbnailUri ? 'present (' + thumbnailUri.length + ' chars)' : 'empty',
+              senderName: notifData.senderName || 'Someone',
+            });
 
             const laResult = await startPinnedSnapActivity({
               activityId: notifData.pinnedActivityId,
@@ -366,9 +392,16 @@ export default function App() {
               conversationId: notifData.conversationId,
               thumbnailUri,
             });
-            logger.info('App: Live Activity start result', laResult);
+            logger.info('App: [PIN-STEP-5] Live Activity result', {
+              success: laResult.success,
+              nativeActivityId: laResult.nativeActivityId,
+              error: laResult.error,
+            });
           } catch (err) {
-            logger.error('App: Failed to start Live Activity', { error: err.message });
+            logger.error('App: [PIN-FAIL] Failed to start Live Activity', {
+              error: err.message,
+              stack: err.stack?.substring(0, 200),
+            });
           }
         })();
       }

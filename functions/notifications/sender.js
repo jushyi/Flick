@@ -47,6 +47,18 @@ async function sendPushNotification(token, title, body, data = {}, userId = null
       ...(richContent ? { richContent } : {}),
     };
 
+    // Log full message structure for pinned snap debugging
+    if (options.mutableContent) {
+      logger.info('sendPushNotification: PINNED SNAP message structure', {
+        userId,
+        hasMutableContent: !!message.mutableContent,
+        dataKeys: Object.keys(data),
+        hasPinnedThumbnailUrl: !!data.pinnedThumbnailUrl,
+        pinnedThumbnailUrlLength: (data.pinnedThumbnailUrl || '').length,
+        pinnedActivityId: data.pinnedActivityId || '(missing)',
+      });
+    }
+
     // Send notification via Expo Push Service
     // sendPushNotificationsAsync handles rate limiting automatically
     const tickets = await expo.sendPushNotificationsAsync([message]);

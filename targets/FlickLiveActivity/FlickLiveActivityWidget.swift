@@ -50,32 +50,35 @@ struct FlickLiveActivityWidget: Widget {
     /// The main lock screen presentation of the Live Activity.
     /// When caption is present: Polaroid on left, sender name + caption on right.
     /// When no caption: centered Polaroid only, no text.
+    /// Total height budget: 6pt outer top + 133pt polaroid + 6pt outer bottom = 145pt (under 160pt max).
     @ViewBuilder
     private func lockScreenView(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
         let hasCaption = context.attributes.caption != nil && !context.attributes.caption!.isEmpty
+        let tiltAngle = Self.tiltDegrees(for: context.attributes.activityId)
 
         if hasCaption {
             // Caption present: Polaroid on left, text on right
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 polaroidFrame(activityId: context.attributes.activityId)
+                    .rotationEffect(.degrees(tiltAngle))
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(context.attributes.senderName)
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
                         .foregroundColor(flickTextSecondary)
                         .lineLimit(1)
 
                     Text(context.attributes.caption!)
-                        .font(.system(size: 15, weight: .bold, design: .monospaced))
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
                         .foregroundColor(flickTextPrimary)
-                        .lineLimit(2)
+                        .lineLimit(3)
                         .truncationMode(.tail)
                 }
 
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
             .background(flickBackground)
             .widgetURL(URL(string: context.attributes.deepLinkUrl))
         } else {
@@ -83,10 +86,11 @@ struct FlickLiveActivityWidget: Widget {
             HStack {
                 Spacer()
                 polaroidFrame(activityId: context.attributes.activityId)
+                    .rotationEffect(.degrees(tiltAngle))
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
             .background(flickBackground)
             .widgetURL(URL(string: context.attributes.deepLinkUrl))
         }
@@ -94,24 +98,28 @@ struct FlickLiveActivityWidget: Widget {
 
     // MARK: - Polaroid Frame
 
-    /// Wraps the thumbnail in a white Polaroid-style border with a thick bottom strip.
+    /// Wraps the thumbnail in a white Polaroid-style border with thick borders matching
+    /// classic instant photo proportions: 7pt top/sides, 22pt bottom.
+    /// Polaroid total: 7 + 104 + 22 = 133pt tall, 7 + 83 + 7 = 97pt wide.
     @ViewBuilder
     private func polaroidFrame(activityId: String) -> some View {
         VStack(spacing: 0) {
-            thumbnailView(activityId: activityId, width: 128, height: 160)
+            thumbnailView(activityId: activityId, width: 83, height: 104)
+                .clipped()  // Sharp square corners on the photo
         }
-        .padding(.top, 4)
-        .padding(.horizontal, 4)
-        .padding(.bottom, 14)
+        .padding(.top, 7)
+        .padding(.horizontal, 7)
+        .padding(.bottom, 22)
         .background(Color.white)
-        .cornerRadius(4)
-        .shadow(color: Color.black.opacity(0.3), radius: 3, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 3))  // Subtle outer rounding only
+        .shadow(color: Color.black.opacity(0.4), radius: 4, x: 1, y: 2)
     }
 
     // MARK: - Thumbnail View
 
     /// Loads and displays a thumbnail image from the App Groups shared container.
     /// Falls back to a branded placeholder if the image is not found.
+    /// Photo uses sharp square corners (.clipped) — real Polaroid photos have no rounding.
     @ViewBuilder
     private func thumbnailView(activityId: String, width: CGFloat, height: CGFloat) -> some View {
         if let image = loadThumbnail(activityId: activityId) {
@@ -119,10 +127,10 @@ struct FlickLiveActivityWidget: Widget {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: width, height: height)
-                .clipShape(RoundedRectangle(cornerRadius: width > 48 ? 8 : 4))
+                .clipped()  // Sharp square corners — real Polaroid photos have no rounding
         } else {
             // Fallback: branded placeholder with "F" initial
-            RoundedRectangle(cornerRadius: width > 48 ? 8 : 4)
+            Rectangle()
                 .fill(Color(red: 30 / 255, green: 30 / 255, blue: 60 / 255))
                 .frame(width: width, height: height)
                 .overlay(
@@ -131,6 +139,19 @@ struct FlickLiveActivityWidget: Widget {
                         .foregroundColor(flickTextPrimary)
                 )
         }
+    }
+
+    // MARK: - Tilt Angle
+
+    /// Derives a deterministic pseudo-random tilt angle from the activityId string.
+    /// Range: -4.0 to +4.0 degrees. Same activityId always produces the same angle.
+    /// This makes each Polaroid look casually placed on the lock screen.
+    private static func tiltDegrees(for activityId: String) -> Double {
+        // Use a simple hash: sum of character Unicode scalars
+        let hashValue = activityId.unicodeScalars.reduce(0) { $0 + Int($1.value) }
+        // Map to -4.0 ... +4.0 range
+        let normalized = Double(hashValue % 81) / 80.0  // 0.0 to 1.0
+        return (normalized * 8.0) - 4.0  // -4.0 to +4.0
     }
 
     // MARK: - Thumbnail Loading

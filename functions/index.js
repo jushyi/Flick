@@ -3175,8 +3175,17 @@ exports.onNewMessage = functions
             logger.info('onNewMessage: Sending PINNED snap notification with thumbnail', {
               recipientId,
               conversationId,
+              messageId: context.params.messageId,
+              mutableContent: true,
               pinnedActivityId: notificationData.pinnedActivityId,
+              pinnedThumbnailUrl: thumbnailUrl ? thumbnailUrl.substring(0, 80) + '...' : '(empty)',
               hasThumbnailUrl: !!thumbnailUrl,
+              caption: notificationData.caption || '(none)',
+              senderName: notificationData.senderName || '(missing)',
+              firestorePinnedActivityId: message.pinnedActivityId || '(missing from doc)',
+              firestorePinnedThumbnailUrl: message.pinnedThumbnailUrl
+                ? 'present'
+                : '(missing from doc)',
             });
 
             await sendPushNotification(
