@@ -143,4 +143,34 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingBottom: spacing.sm,
   },
+
+  // Video duration badge (bottom-right of photo/video area)
+  durationBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: colors.overlay.dark,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+
+  durationBadgeText: {
+    color: colors.text.primary,
+    fontSize: 11,
+    fontFamily: typography.fontFamily.body,
+  },
+
+  // Video icon overlay (top-left of photo/video area)
+  videoIconOverlay: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: colors.overlay.dark,
+    borderRadius: 10,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

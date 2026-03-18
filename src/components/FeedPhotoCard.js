@@ -1,14 +1,20 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
+
 import PixelIcon from './PixelIcon';
 import StrokedNameText from './StrokedNameText';
+import VideoPlayer from './VideoPlayer';
+import CommentPreview from './comments/CommentPreview';
+
+import { useVideoMute } from '../context/VideoMuteContext';
+
 import { getTimeAgo } from '../utils/timeUtils';
+import { getPreviewComments } from '../services/firebase/commentService';
+
 import { styles } from '../styles/FeedPhotoCard.styles';
 import { colors } from '../constants/colors';
 import { profileCacheKey } from '../utils/imageUtils';
-import CommentPreview from './comments/CommentPreview';
-import { getPreviewComments } from '../services/firebase/commentService';
 
 /**
  * Feed photo card component - Instagram-Style Design
@@ -22,7 +28,25 @@ import { getPreviewComments } from '../services/firebase/commentService';
  * @param {function} onAvatarPress - Callback when avatar is tapped (userId, displayName) -> navigate to profile
  * @param {string} currentUserId - Current user's ID (to disable tap on own avatar)
  */
-const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentUserId }) => {
+/**
+ * Format video duration in seconds to M:SS string
+ * @param {number} seconds - Duration in seconds
+ * @returns {string} Formatted duration (e.g. "0:12", "1:05")
+ */
+const formatDuration = seconds => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const FeedPhotoCard = ({
+  photo,
+  onPress,
+  onCommentPress,
+  onAvatarPress,
+  currentUserId,
+  isVisible = false,
+}) => {
   const {
     id,
     imageURL,
@@ -32,9 +56,17 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
     commentCount = 0,
     userId,
     user = {},
+    mediaType,
+    videoURL,
+    duration,
   } = photo;
 
+  const isVideo = mediaType === 'video';
+
   const { displayName, profilePhotoURL } = user;
+
+  // Global mute state for video playback
+  const { isMuted, toggleMute } = useVideoMute();
 
   const [previewComments, setPreviewComments] = useState([]);
 
@@ -123,15 +155,45 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
       onPress={handlePhotoPress}
       activeOpacity={0.95}
     >
-      {/* Photo - full width with rounded top corners */}
+      {/* Photo/Video - full width */}
       <View ref={photoContainerRef} style={styles.photoContainer}>
-        <Image
-          source={{ uri: imageURL, cacheKey: `photo-${id}` }}
-          style={styles.photo}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          transition={0}
-        />
+        {isVideo && videoURL ? (
+          <TouchableOpacity activeOpacity={1} onPress={toggleMute}>
+            <VideoPlayer
+              source={videoURL}
+              isMuted={isMuted}
+              onToggleMute={toggleMute}
+              loop={true}
+              autoPlay={true}
+              showControls={false}
+              isVisible={isVisible}
+              style={styles.photo}
+              contentFit="cover"
+            />
+          </TouchableOpacity>
+        ) : (
+          <Image
+            source={{ uri: imageURL, cacheKey: `photo-${id}` }}
+            style={styles.photo}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={0}
+          />
+        )}
+
+        {/* Video icon overlay */}
+        {isVideo && (
+          <View style={styles.videoIconOverlay}>
+            <PixelIcon name="play" size={14} color={colors.text.primary} />
+          </View>
+        )}
+
+        {/* Duration badge */}
+        {isVideo && duration != null && (
+          <View style={styles.durationBadge}>
+            <Text style={styles.durationBadgeText}>{formatDuration(duration)}</Text>
+          </View>
+        )}
       </View>
 
       {/* User info row - profile photo + name + timestamp */}
@@ -226,6 +288,10 @@ const FeedPhotoCard = ({ photo, onPress, onCommentPress, onAvatarPress, currentU
 };
 
 export default memo(FeedPhotoCard, (prevProps, nextProps) => {
-  // Only re-render when photo data actually changes
-  return prevProps.photo === nextProps.photo && prevProps.currentUserId === nextProps.currentUserId;
+  // Only re-render when photo data or visibility actually changes
+  return (
+    prevProps.photo === nextProps.photo &&
+    prevProps.currentUserId === nextProps.currentUserId &&
+    prevProps.isVisible === nextProps.isVisible
+  );
 });
