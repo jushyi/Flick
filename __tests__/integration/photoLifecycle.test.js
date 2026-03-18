@@ -126,6 +126,7 @@ const {
   isDarkroomReadyToReveal,
   scheduleNextReveal,
   ensureDarkroomInitialized,
+  clearRevealCache,
 } = require('../../src/services/firebase/darkroomService');
 
 const { getFeedPhotos } = require('../../src/services/firebase/feedService');
@@ -133,6 +134,7 @@ const { getFeedPhotos } = require('../../src/services/firebase/feedService');
 describe('Photo Lifecycle Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearRevealCache(); // Reset darkroom cache between tests
     // Default mock returns
     mockQuery.mockReturnValue({ _query: true });
     mockCollection.mockReturnValue({ _collection: true });
@@ -145,13 +147,14 @@ describe('Photo Lifecycle Integration Tests', () => {
       const mockPhotoId = 'new-photo-123';
       const mockUser = createTestUser({ uid: 'user-capture-1' });
 
-      mockAddDoc.mockResolvedValueOnce({ id: mockPhotoId });
+      // Refactored createPhoto uses doc(collection) to generate ID, then setDoc
+      mockDoc.mockReturnValueOnce({ _doc: true, id: mockPhotoId });
       mockUploadPhoto.mockResolvedValueOnce({
         success: true,
         url: 'https://mock-storage.com/photo.jpg',
         size: 1024,
       });
-      mockUpdateDoc.mockResolvedValueOnce();
+      mockSetDoc.mockResolvedValueOnce();
 
       // For ensureDarkroomInitialized - darkroom exists
       mockGetDoc.mockResolvedValueOnce({
@@ -170,18 +173,15 @@ describe('Photo Lifecycle Integration Tests', () => {
         mockPhotoId,
         'file://local-photo.jpg'
       );
-      expect(mockAddDoc).toHaveBeenCalled();
+      expect(mockSetDoc).toHaveBeenCalled();
     });
 
-    it('should roll back photo document if storage upload fails', async () => {
-      // Arrange
-      const photoRef = { id: 'rollback-photo-123' };
-      mockAddDoc.mockResolvedValueOnce(photoRef);
+    it('should return error without creating Firestore doc if storage upload fails', async () => {
+      // Arrange - refactored createPhoto uploads FIRST, so no doc to roll back
       mockUploadPhoto.mockResolvedValueOnce({
         success: false,
         error: 'Upload failed',
       });
-      mockDeleteDoc.mockResolvedValueOnce();
 
       // Act
       const result = await createPhoto('user-123', 'file://local-photo.jpg');
@@ -189,7 +189,9 @@ describe('Photo Lifecycle Integration Tests', () => {
       // Assert
       expect(result.success).toBe(false);
       expect(result.error).toBe('Upload failed');
-      expect(mockDeleteDoc).toHaveBeenCalledWith(photoRef);
+      // No Firestore document was created, so no deleteDoc needed
+      expect(mockSetDoc).not.toHaveBeenCalled();
+      expect(mockDeleteDoc).not.toHaveBeenCalled();
     });
 
     it('should create photo with correct initial fields', async () => {
@@ -197,15 +199,15 @@ describe('Photo Lifecycle Integration Tests', () => {
       const mockPhotoId = 'init-fields-photo';
       let capturedDocData = null;
 
-      mockAddDoc.mockImplementationOnce(async (collectionRef, data) => {
+      // Refactored createPhoto uses setDoc instead of addDoc
+      mockDoc.mockReturnValueOnce({ _doc: true, id: mockPhotoId });
+      mockSetDoc.mockImplementationOnce(async (docRef, data) => {
         capturedDocData = data;
-        return { id: mockPhotoId };
       });
       mockUploadPhoto.mockResolvedValueOnce({
         success: true,
         url: 'https://example.com/photo.jpg',
       });
-      mockUpdateDoc.mockResolvedValueOnce();
       mockGetDoc.mockResolvedValueOnce({
         exists: () => true,
         data: () => createTestDarkroom({ userId: 'user-init' }),
@@ -276,7 +278,11 @@ describe('Photo Lifecycle Integration Tests', () => {
       const pastTime = Math.floor(Date.now() / 1000) - 3600;
       const readyDarkroom = {
         userId: 'user-ready',
-        nextRevealAt: { seconds: pastTime, toDate: () => new Date(pastTime * 1000) },
+        nextRevealAt: {
+          seconds: pastTime,
+          toDate: () => new Date(pastTime * 1000),
+          toMillis: () => pastTime * 1000,
+        },
         lastRevealedAt: null,
         createdAt: { seconds: pastTime - 3600 },
       };

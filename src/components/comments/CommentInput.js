@@ -18,7 +18,7 @@ import React, {
   useRef,
   useEffect,
 } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import PixelIcon from '../PixelIcon';
 import * as Haptics from 'expo-haptics';
@@ -27,7 +27,7 @@ import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
 import { uploadCommentImage } from '../../services/firebase/storageService';
 // Giphy SDK requires dev client build, not Expo Go
-import { openGifPicker, useGifSelection } from './GifPicker';
+import { openGifPicker, useGifSelection, isGiphyReady } from './GifPicker';
 import { styles } from '../../styles/CommentInput.styles';
 import MentionSuggestionsOverlay from './MentionSuggestionsOverlay';
 
@@ -91,6 +91,10 @@ const CommentInput = forwardRef(
     const handleGifPick = useCallback(() => {
       logger.info('CommentInput: GIF picker pressed');
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (!isGiphyReady()) {
+        Alert.alert('GIF Unavailable', 'GIF picker is not available right now.');
+        return;
+      }
       openGifPicker();
     }, []);
 
@@ -308,7 +312,7 @@ const CommentInput = forwardRef(
               multiline
               maxLength={1000}
               returnKeyType="send"
-              blurOnSubmit={true}
+              blurOnSubmit={Platform.OS === 'ios'}
               onSubmitEditing={handleSubmitEditing}
               autoFocus={autoFocus}
               keyboardAppearance="dark"

@@ -450,6 +450,41 @@ global.mockWithTrace = mockWithTrace;
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 
 // ============================================================================
+// React Native Gesture Handler Mock
+// ============================================================================
+jest.mock('react-native-gesture-handler', () => {
+  const View = require('react-native').View;
+  return {
+    GestureDetector: ({ children }) => children,
+    Gesture: {
+      Pan: () => ({
+        activeOffsetX: () => ({
+          failOffsetY: () => ({
+            onStart: function onStart() {
+              return this;
+            },
+            onUpdate: function onUpdate() {
+              return this;
+            },
+            onEnd: function onEnd() {
+              return this;
+            },
+            onFinalize: function onFinalize() {
+              return this;
+            },
+          }),
+        }),
+      }),
+    },
+    GestureHandlerRootView: View,
+    PanGestureHandler: View,
+    TapGestureHandler: View,
+    State: {},
+    Directions: {},
+  };
+});
+
+// ============================================================================
 // React Navigation Mock
 // ============================================================================
 jest.mock('@react-navigation/native', () => ({

@@ -2,8 +2,9 @@
  * usePhotoDetailModal Hook
  *
  * Encapsulates all PhotoDetailModal logic:
- * - Animation values for swipe-to-dismiss
- * - PanResponder gesture handling
+ * - Animation values for swipe-to-dismiss (RN Animated)
+ * - PanResponder for vertical gestures (dismiss, comments)
+ * - Gesture.Pan for horizontal swipe (friend-to-friend cube transitions)
  * - Reaction state management
  * - Emoji ordering with frozen state during rapid taps
  * - Stories mode: multi-photo navigation with progress bar
@@ -11,6 +12,14 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Animated, PanResponder, Dimensions, Easing } from 'react-native';
 import { Image } from 'expo-image';
+
+import { Gesture } from 'react-native-gesture-handler';
+import {
+  withTiming,
+  withSpring,
+  Easing as ReanimatedEasing,
+  runOnJS,
+} from 'react-native-reanimated';
 
 import { reactionHaptic } from '../utils/haptics';
 import logger from '../utils/logger';
@@ -49,10 +58,12 @@ export const usePhotoDetailModal = ({
   onSwipeUp, // Callback when user swipes up to open comments
   sourceRect, // Source card position for expand/collapse animation { x, y, width, height, borderRadius }
   // Interactive swipe support
-  cubeProgress, // Animated.Value from PhotoDetailScreen for interactive gesture tracking
+  cubeProgress, // Reanimated SharedValue from PhotoDetailScreen for interactive gesture tracking
   onPrepareSwipeTransition, // (direction) => boolean - prepare transition at drag start
   onCommitSwipeTransition, // () => void - complete transition after commit animation
   onCancelSwipeTransition, // () => void - cancel transition after spring-back animation
+  // Next-friend prefetching
+  onGetNextFriendPhotoURL, // () => string|null - returns next friend's first photo URL for prefetching
 }) => {
   // Stories mode: current photo index
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -79,6 +90,10 @@ export const usePhotoDetailModal = ({
   const [activeCustomEmojis, setActiveCustomEmojis] = useState([]);
   // Track newly added emoji for highlight animation (null when no highlight needed)
   const [newlyAddedEmoji, setNewlyAddedEmoji] = useState(null);
+
+  // Auto-skip on load failure: if image doesn't load within 5 seconds, skip to next photo
+  const LOAD_FAILURE_TIMEOUT = 5000; // ms
+  const loadFailureTimeoutRef = useRef(null);
 
   // Minimum display time tracking for rapid taps (ensures each photo is briefly visible)
   const lastTapTimeRef = useRef(0);
@@ -221,6 +236,18 @@ export const usePhotoDetailModal = ({
       Image.prefetch(urlsToPrefetch, 'memory-disk').catch(() => {});
     }
   }, [mode, visible, currentIndex, photos]);
+
+  // Prefetch next friend's first photo when near the end of current friend's story
+  useEffect(() => {
+    if (mode !== 'stories' || !visible) return;
+    if (currentIndex >= photos.length - 2 && onGetNextFriendPhotoURL) {
+      const nextURL = onGetNextFriendPhotoURL();
+      if (nextURL) {
+        Image.prefetch(nextURL, 'memory-disk').catch(() => {});
+        logger.debug('usePhotoDetailModal: Prefetched next friend first photo');
+      }
+    }
+  }, [mode, visible, currentIndex, photos.length, onGetNextFriendPhotoURL]);
 
   // Derive current photo based on mode
   // Clamp index to valid range to prevent null during friend transitions
@@ -550,8 +577,33 @@ export const usePhotoDetailModal = ({
   }, [mode, currentIndex, photos, onPhotoChange, onFriendTransition, clearQueuedTap]);
 
   /**
+   * Clear the load failure timeout (called on successful load, manual navigation, unmount)
+   */
+  const clearLoadTimer = useCallback(() => {
+    if (loadFailureTimeoutRef.current) {
+      clearTimeout(loadFailureTimeoutRef.current);
+      loadFailureTimeoutRef.current = null;
+    }
+  }, []);
+
+  /**
+   * Start the load failure timeout (auto-skips to next photo after LOAD_FAILURE_TIMEOUT ms)
+   * Only active in stories mode — feed mode has no auto-skip behavior
+   */
+  const startLoadTimer = useCallback(() => {
+    clearLoadTimer();
+    if (mode !== 'stories') return;
+    loadFailureTimeoutRef.current = setTimeout(() => {
+      logger.warn('usePhotoDetailModal: Image load timeout, auto-skipping', {
+        photoId: currentPhoto?.id,
+      });
+      goNext();
+    }, LOAD_FAILURE_TIMEOUT);
+  }, [clearLoadTimer, mode, goNext, currentPhoto?.id]);
+
+  /**
    * Close modal with animation
-   * Two-phase if sourceRect exists: settle (soft lock) → suck-back to source
+   * Two-phase if sourceRect exists: settle (soft lock) -> suck-back to source
    * Fallback: simple slide-down + fade
    */
   const closeWithAnimation = useCallback(() => {
@@ -691,7 +743,7 @@ export const usePhotoDetailModal = ({
     ]).start();
   }, [translateY, opacity, dismissScale]);
 
-  // Store callbacks in refs for panResponder access (created once, needs current values)
+  // Store callbacks in refs for panResponder/gesture access (created once, needs current values)
   const onSwipeUpRef = useRef(onSwipeUp);
   useEffect(() => {
     onSwipeUpRef.current = onSwipeUp;
@@ -732,10 +784,6 @@ export const usePhotoDetailModal = ({
   const isHorizontalSwipeActiveRef = useRef(false);
   const swipeDirectionRef = useRef(null); // 'forward' | 'backward'
 
-  // Gesture axis lock - once a gesture is determined to be vertical or horizontal,
-  // it stays locked for the entire gesture to prevent conflicts from diagonal finger movement
-  const gestureLockRef = useRef(null); // null | 'vertical' | 'horizontal'
-
   // Track initial vertical direction so reversing mid-gesture doesn't trigger the opposite action
   const verticalDirectionRef = useRef(null); // null | 'down' | 'up'
 
@@ -744,17 +792,135 @@ export const usePhotoDetailModal = ({
   const commentsVisibleRef = useRef(false);
 
   // Expose setter for parent to call when comments open/close
-  const updateCommentsVisible = useCallback(visible => {
-    commentsVisibleRef.current = visible;
-    setCommentsVisible(visible);
+  const updateCommentsVisible = useCallback(isVisible => {
+    commentsVisibleRef.current = isVisible;
+    setCommentsVisible(isVisible);
   }, []);
 
   /**
-   * Pan responder for swipe gestures:
-   * - Swipe DOWN: dismiss photo detail (existing behavior)
+   * Helper: prepare horizontal swipe transition (called from Gesture.Pan via runOnJS)
+   */
+  const prepareHorizontalSwipe = useCallback((direction, absDx) => {
+    const hasCallback =
+      direction === 'forward'
+        ? onFriendTransitionRef.current
+        : onPreviousFriendTransitionRef.current;
+    if (!hasCallback || !onPrepareSwipeTransitionRef.current) return;
+
+    const prepared = onPrepareSwipeTransitionRef.current(direction);
+    if (!prepared) return;
+
+    isHorizontalSwipeActiveRef.current = true;
+    swipeDirectionRef.current = direction;
+  }, []);
+
+  /**
+   * Helper: complete horizontal swipe (called from Gesture.Pan via runOnJS)
+   */
+  const completeHorizontalSwipe = useCallback((dx, vx) => {
+    if (!isHorizontalSwipeActiveRef.current) return;
+
+    const signedDx = swipeDirectionRef.current === 'forward' ? -dx : dx;
+    const clampedDx = Math.max(0, signedDx);
+
+    const signedVx = swipeDirectionRef.current === 'forward' ? -vx : vx;
+    const forwardVx = Math.max(0, signedVx);
+
+    const COMMIT_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.25;
+    const COMMIT_VELOCITY_THRESHOLD = 0.4;
+    const shouldCommit =
+      clampedDx > COMMIT_DISTANCE_THRESHOLD || forwardVx > COMMIT_VELOCITY_THRESHOLD;
+
+    if (shouldCommit && cubeProgressRef.current) {
+      cubeProgressRef.current.value = withTiming(
+        1,
+        {
+          duration: 150,
+          easing: ReanimatedEasing.out(ReanimatedEasing.cubic),
+        },
+        finished => {
+          'worklet';
+          if (finished) {
+            runOnJS(function commitTransition() {
+              onCommitSwipeTransitionRef.current?.();
+            })();
+          }
+        }
+      );
+    } else if (cubeProgressRef.current) {
+      cubeProgressRef.current.value = withSpring(
+        0,
+        {
+          damping: 18,
+          stiffness: 200,
+        },
+        finished => {
+          'worklet';
+          if (finished) {
+            runOnJS(function cancelTransition() {
+              onCancelSwipeTransitionRef.current?.();
+            })();
+          }
+        }
+      );
+    }
+
+    isHorizontalSwipeActiveRef.current = false;
+    swipeDirectionRef.current = null;
+  }, []);
+
+  /**
+   * Gesture.Pan for horizontal friend-to-friend swipe transitions.
+   * Runs on the UI thread via react-native-gesture-handler.
+   * Only activates on horizontal movement; fails on vertical to let PanResponder handle dismiss/comments.
+   */
+  const horizontalGesture = useMemo(() => {
+    return Gesture.Pan()
+      .activeOffsetX([-15, 15]) // Only activate after 15px horizontal movement
+      .failOffsetY([-10, 10]) // Fail (let PanResponder take over) if vertical movement > 10px
+      .onStart(() => {
+        'worklet';
+        // Reset tracking state at gesture start
+      })
+      .onUpdate(event => {
+        'worklet';
+        const { translationX } = event;
+
+        if (!isHorizontalSwipeActiveRef.current) {
+          // First significant horizontal movement — prepare transition
+          const direction = translationX < 0 ? 'forward' : 'backward';
+          runOnJS(prepareHorizontalSwipe)(direction, Math.abs(translationX));
+          return;
+        }
+
+        // Drive cube progress from gesture
+        const signedDx = swipeDirectionRef.current === 'forward' ? -translationX : translationX;
+        const adjustedDx = Math.max(0, signedDx - 15);
+        const progress = Math.min(1, adjustedDx / SCREEN_WIDTH);
+        if (cubeProgressRef.current) {
+          cubeProgressRef.current.value = progress;
+        }
+      })
+      .onEnd(event => {
+        'worklet';
+        if (!isHorizontalSwipeActiveRef.current) return;
+        runOnJS(completeHorizontalSwipe)(event.translationX, event.velocityX);
+      })
+      .onFinalize(() => {
+        'worklet';
+        // Handle gesture cancellation — if still active, cancel via JS thread
+        if (isHorizontalSwipeActiveRef.current) {
+          runOnJS(completeHorizontalSwipe)(0, 0);
+        }
+      });
+  }, [prepareHorizontalSwipe, completeHorizontalSwipe]);
+
+  /**
+   * Pan responder for VERTICAL swipe gestures only:
+   * - Swipe DOWN: dismiss photo detail
    * - Swipe UP: open comments
+   * Horizontal swipes are handled by Gesture.Pan (horizontalGesture) above.
    * Excludes footer area (bottom 100px) to allow emoji taps.
-   * Better gesture detection - check vertical vs horizontal movement
    */
   const panResponder = useRef(
     PanResponder.create({
@@ -775,23 +941,12 @@ export const usePhotoDetailModal = ({
         const footerThreshold = SCREEN_HEIGHT - 100;
         if (touchY >= footerThreshold) return false;
 
+        // Only respond to vertical swipes — horizontal is handled by Gesture.Pan
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-
         if (isVerticalSwipe) {
-          // Respond to both downward (close) and upward (open comments) swipes
           const isDownward = gestureState.dy > 5;
           const isUpward = gestureState.dy < -10;
           return isDownward || isUpward;
-        }
-
-        // Horizontal swipe detection for friend-to-friend transitions
-        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-        const isLeftSwipe = gestureState.dx < -10;
-        const isRightSwipe = gestureState.dx > 10;
-        if (isHorizontalSwipe && (isLeftSwipe || isRightSwipe)) {
-          const hasNext = isLeftSwipe && onFriendTransitionRef.current;
-          const hasPrev = isRightSwipe && onPreviousFriendTransitionRef.current;
-          return !!(hasNext || hasPrev);
         }
 
         return false;
@@ -805,111 +960,26 @@ export const usePhotoDetailModal = ({
         const footerThreshold = SCREEN_HEIGHT - 100;
         if (touchY >= footerThreshold) return false;
 
+        // Only capture vertical swipes — horizontal is handled by Gesture.Pan
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-
         if (isVerticalSwipe) {
           const isDownward = gestureState.dy > 5;
           const isUpward = gestureState.dy < -10;
           return isDownward || isUpward;
         }
 
-        // Capture horizontal swipes for friend transitions
-        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-        const isLeftSwipe = gestureState.dx < -10;
-        const isRightSwipe = gestureState.dx > 10;
-        if (isHorizontalSwipe && (isLeftSwipe || isRightSwipe)) {
-          const hasNext = isLeftSwipe && onFriendTransitionRef.current;
-          const hasPrev = isRightSwipe && onPreviousFriendTransitionRef.current;
-          return !!(hasNext || hasPrev);
-        }
-
         return false;
       },
       onPanResponderMove: (_, gestureState) => {
-        const { dx, dy } = gestureState;
+        const { dy } = gestureState;
 
-        // HORIZONTAL - interactive cube tracking (already locked)
-        if (isHorizontalSwipeActiveRef.current) {
-          // Drive cubeProgress using signed displacement in the original swipe direction
-          // so reversing past origin clamps to 0 instead of driving the cube backwards.
-          // Offset by detection threshold (10px) so cube starts smoothly from 0.
-          const signedDx = swipeDirectionRef.current === 'forward' ? -dx : dx;
-          const adjustedDx = Math.max(0, signedDx - 10);
-          const progress = Math.min(1, adjustedDx / SCREEN_WIDTH);
-          if (cubeProgressRef.current) {
-            cubeProgressRef.current.setValue(progress);
-          }
-          return;
-        }
-
-        // If already locked to vertical, skip horizontal detection
-        if (gestureLockRef.current === 'vertical') {
-          if (verticalDirectionRef.current === 'down') {
-            // Swipe-down dismiss: clamp so reversing above origin resets to resting state
-            const clampedDy = Math.max(0, dy);
-            translateY.setValue(clampedDy);
-            const dragRatio = Math.min(1, clampedDy / SCREEN_HEIGHT);
-            dismissScale.setValue(1 - dragRatio * 0.15);
-            const fadeAmount = Math.max(0, 1 - dragRatio * 0.8);
-            opacity.setValue(fadeAmount);
-          }
-          // Swipe-up: no visual tracking needed (commits on release)
-          return;
-        }
-
-        // If already locked to horizontal, only handle horizontal (waiting for prepare)
-        if (gestureLockRef.current === 'horizontal') {
-          return;
-        }
-
-        // No lock yet - determine axis from first significant movement
-        const absDx = Math.abs(dx);
-        const absDy = Math.abs(dy);
-
-        // Check if this should be an interactive horizontal swipe
-        const isHorizontalGesture = absDx > absDy && absDx > 10;
-        if (isHorizontalGesture) {
-          gestureLockRef.current = 'horizontal';
-
-          const direction = dx < 0 ? 'forward' : 'backward';
-
-          // Check if transition callback is available
-          const hasCallback =
-            direction === 'forward'
-              ? onFriendTransitionRef.current
-              : onPreviousFriendTransitionRef.current;
-          if (!hasCallback || !onPrepareSwipeTransitionRef.current) {
-            gestureLockRef.current = null; // Reset lock - allow re-evaluation on next move
-            return;
-          }
-
-          // Prepare transition (freezes snapshot, loads next friend data)
-          const prepared = onPrepareSwipeTransitionRef.current(direction);
-          if (!prepared) {
-            gestureLockRef.current = null; // Reset lock - allow re-evaluation on next move
-            return;
-          }
-
-          isHorizontalSwipeActiveRef.current = true;
-          swipeDirectionRef.current = direction;
-
-          // Immediately drive cubeProgress (offset by threshold so it starts at 0)
-          const adjustedDx = Math.max(0, absDx - 10);
-          const progress = Math.min(1, adjustedDx / SCREEN_WIDTH);
-          if (cubeProgressRef.current) {
-            cubeProgressRef.current.setValue(progress);
-          }
-          return;
-        }
-
-        // Vertical gesture detected - lock it and record initial direction
-        if (absDy > absDx && absDy > 5) {
-          gestureLockRef.current = 'vertical';
+        // Record initial vertical direction on first move
+        if (verticalDirectionRef.current === null) {
           verticalDirectionRef.current = dy > 0 ? 'down' : 'up';
         }
 
         // VERTICAL - only apply dismiss effects for downward gestures
-        if (gestureLockRef.current === 'vertical' && verticalDirectionRef.current === 'down') {
+        if (verticalDirectionRef.current === 'down') {
           const clampedDy = Math.max(0, dy);
           translateY.setValue(clampedDy);
           const dragRatio = Math.min(1, clampedDy / SCREEN_HEIGHT);
@@ -917,65 +987,13 @@ export const usePhotoDetailModal = ({
           const fadeAmount = Math.max(0, 1 - dragRatio * 0.8);
           opacity.setValue(fadeAmount);
         }
+        // Swipe-up: no visual tracking needed (commits on release)
       },
       onPanResponderRelease: (_, gestureState) => {
-        const { dx, dy, vx, vy } = gestureState;
-
-        // HORIZONTAL SWIPES - interactive cube transition
-        if (isHorizontalSwipeActiveRef.current) {
-          // Use signed displacement in original direction (negative = reversed past origin)
-          const signedDx = swipeDirectionRef.current === 'forward' ? -dx : dx;
-          const clampedDx = Math.max(0, signedDx);
-          const currentProgress = Math.min(1, clampedDx / SCREEN_WIDTH);
-
-          // Only use velocity in the original swipe direction for commit check
-          const signedVx = swipeDirectionRef.current === 'forward' ? -vx : vx;
-          const forwardVx = Math.max(0, signedVx);
-
-          const COMMIT_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.25;
-          const COMMIT_VELOCITY_THRESHOLD = 0.4;
-          const shouldCommit =
-            clampedDx > COMMIT_DISTANCE_THRESHOLD || forwardVx > COMMIT_VELOCITY_THRESHOLD;
-
-          if (shouldCommit && cubeProgressRef.current) {
-            // Commit: animate remaining distance to 1
-            const remainingDistance = 1 - currentProgress;
-            const baseDuration = remainingDistance * 180;
-            const velocityFactor = Math.max(0.2, 1 - forwardVx * 0.5);
-            const duration = Math.max(50, Math.min(150, baseDuration * velocityFactor));
-
-            Animated.timing(cubeProgressRef.current, {
-              toValue: 1,
-              duration,
-              easing: Easing.out(Easing.cubic),
-              useNativeDriver: true,
-            }).start(() => {
-              onCommitSwipeTransitionRef.current?.();
-            });
-          } else if (cubeProgressRef.current) {
-            // Cancel: spring back to 0
-            Animated.spring(cubeProgressRef.current, {
-              toValue: 0,
-              tension: 200,
-              friction: 18,
-              useNativeDriver: true,
-            }).start(() => {
-              onCancelSwipeTransitionRef.current?.();
-            });
-          }
-
-          // Reset horizontal gesture state
-          isHorizontalSwipeActiveRef.current = false;
-          swipeDirectionRef.current = null;
-          gestureLockRef.current = null;
-          verticalDirectionRef.current = null;
-          return;
-        }
-
+        const { dy, vy } = gestureState;
         const gestureDir = verticalDirectionRef.current;
 
-        // Reset gesture lock for next gesture
-        gestureLockRef.current = null;
+        // Reset vertical direction for next gesture
         verticalDirectionRef.current = null;
 
         // SWIPE UP - open comments (only if gesture started upward)
@@ -1001,24 +1019,8 @@ export const usePhotoDetailModal = ({
         springBack();
       },
       onPanResponderTerminate: () => {
-        // Gesture interrupted by system - reset all locks
-        gestureLockRef.current = null;
+        // Gesture interrupted by system - reset vertical direction
         verticalDirectionRef.current = null;
-
-        // Cancel any active horizontal swipe
-        if (isHorizontalSwipeActiveRef.current && cubeProgressRef.current) {
-          Animated.spring(cubeProgressRef.current, {
-            toValue: 0,
-            tension: 150,
-            friction: 12,
-            useNativeDriver: true,
-          }).start(() => {
-            onCancelSwipeTransitionRef.current?.();
-          });
-
-          isHorizontalSwipeActiveRef.current = false;
-          swipeDirectionRef.current = null;
-        }
       },
     })
   ).current;
@@ -1030,8 +1032,9 @@ export const usePhotoDetailModal = ({
         clearTimeout(sortTimerRef.current);
       }
       clearQueuedTap();
+      clearLoadTimer();
     };
-  }, [clearQueuedTap]);
+  }, [clearQueuedTap, clearLoadTimer]);
 
   return {
     // Mode
@@ -1088,5 +1091,12 @@ export const usePhotoDetailModal = ({
 
     // Comments visibility (for disabling swipe-to-dismiss during comment scroll)
     updateCommentsVisible,
+
+    // Horizontal gesture for friend-to-friend swipe (Gesture.Pan)
+    horizontalGesture,
+
+    // Load failure timer (for auto-skip on image load timeout)
+    startLoadTimer,
+    clearLoadTimer,
   };
 };

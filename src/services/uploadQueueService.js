@@ -13,15 +13,17 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
+
 import logger from '../utils/logger';
 import { uploadPhoto } from './firebase/storageService';
-import { ensureDarkroomInitialized } from './firebase/darkroomService';
+import { ensureDarkroomInitialized, clearRevealCache } from './firebase/darkroomService';
 import {
   getFirestore,
   collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
+  doc,
+  setDoc,
   serverTimestamp,
 } from '@react-native-firebase/firestore';
 
@@ -45,6 +47,31 @@ const generateId = () => {
   const timestamp = Date.now().toString(36);
   const randomPart = Math.random().toString(36).substring(2, 10);
   return `${timestamp}-${randomPart}`;
+};
+
+/**
+ * Generate a tiny thumbnail for progressive loading placeholder.
+ * Creates a 20px wide JPEG, reads it as base64, returns a data URL.
+ * Returns null on failure (non-critical - photo uploads without thumbnail).
+ * @param {string} photoUri - Local file URI of the photo
+ * @returns {Promise<string|null>} Base64 data URL or null
+ */
+const generateThumbnail = async photoUri => {
+  try {
+    const result = await ImageManipulator.manipulateAsync(photoUri, [{ resize: { width: 20 } }], {
+      format: ImageManipulator.SaveFormat.JPEG,
+      compress: 0.5,
+    });
+    const base64 = await FileSystem.readAsStringAsync(result.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return `data:image/jpeg;base64,${base64}`;
+  } catch (error) {
+    logger.warn('UploadQueueService.generateThumbnail: Thumbnail generation failed', {
+      error: error.message,
+    });
+    return null;
+  }
 };
 
 // =============================================================================
@@ -255,12 +282,42 @@ const uploadQueueItem = async item => {
   item.status = 'uploading';
   await saveQueue();
 
-  // Step 1: Create Firestore document with placeholder imageURL
-  logger.debug('UploadQueueService.uploadQueueItem: Creating Firestore document', { id });
+  // Step 1: Generate a Firestore document ID without writing anything
   const photosCollection = collection(db, 'photos');
-  const photoRef = await addDoc(photosCollection, {
+  const photoRef = doc(photosCollection);
+  const photoId = photoRef.id;
+  const storagePath = `photos/${userId}/${photoId}.jpg`;
+
+  logger.debug('UploadQueueService.uploadQueueItem: Generated photo ID', {
+    id,
+    photoId,
+  });
+
+  // Step 2: Generate thumbnail from local photo (non-blocking, non-critical)
+  logger.debug('UploadQueueService.uploadQueueItem: Generating thumbnail', { id, photoId });
+  const thumbnailDataURL = await generateThumbnail(photoUri);
+
+  // Step 3: Upload compressed photo to Storage FIRST
+  logger.debug('UploadQueueService.uploadQueueItem: Uploading to Storage', {
+    id,
+    photoId,
     userId,
-    imageURL: '', // Placeholder until upload completes
+  });
+  const uploadResult = await uploadPhoto(userId, photoId, photoUri);
+
+  if (!uploadResult.success) {
+    throw new Error(uploadResult.error || 'Upload to storage failed');
+  }
+
+  // Step 4: Create Firestore document with the real URL (single atomic write)
+  logger.debug('UploadQueueService.uploadQueueItem: Creating Firestore document with URL', {
+    id,
+    photoId,
+  });
+  const docData = {
+    userId,
+    imageURL: uploadResult.url,
+    storagePath,
     capturedAt: serverTimestamp(),
     status: 'developing',
     photoState: null,
@@ -268,66 +325,23 @@ const uploadQueueItem = async item => {
     month: getCurrentMonth(),
     reactions: {},
     reactionCount: 0,
-  });
+    ...(thumbnailDataURL && { thumbnailDataURL }),
+  };
+  await setDoc(photoRef, docData);
 
-  const photoId = photoRef.id;
-  logger.debug('UploadQueueService.uploadQueueItem: Firestore document created', {
+  // Step 5: Ensure darkroom is initialized
+  logger.debug('UploadQueueService.uploadQueueItem: Initializing darkroom', {
+    id,
+    userId,
+  });
+  await ensureDarkroomInitialized(userId);
+  clearRevealCache(); // New photo captured — clear cache so darkroom checks re-evaluate fresh timing
+
+  logger.info('UploadQueueService.uploadQueueItem: Complete', {
     id,
     photoId,
+    userId,
   });
-
-  try {
-    // Step 2: Upload compressed photo to Storage
-    logger.debug('UploadQueueService.uploadQueueItem: Uploading to Storage', {
-      id,
-      photoId,
-      userId,
-    });
-    const uploadResult = await uploadPhoto(userId, photoId, photoUri);
-
-    if (!uploadResult.success) {
-      throw new Error(uploadResult.error || 'Upload to storage failed');
-    }
-
-    // Step 3: Update Firestore document with imageURL
-    logger.debug('UploadQueueService.uploadQueueItem: Updating document with URL', {
-      id,
-      photoId,
-    });
-    await updateDoc(photoRef, {
-      imageURL: uploadResult.url,
-    });
-
-    // Step 4: Ensure darkroom is initialized
-    logger.debug('UploadQueueService.uploadQueueItem: Initializing darkroom', {
-      id,
-      userId,
-    });
-    await ensureDarkroomInitialized(userId);
-
-    logger.info('UploadQueueService.uploadQueueItem: Complete', {
-      id,
-      photoId,
-      userId,
-    });
-  } catch (error) {
-    // Rollback: delete the Firestore document if upload failed
-    logger.warn('UploadQueueService.uploadQueueItem: Rolling back Firestore document', {
-      id,
-      photoId,
-      error: error.message,
-    });
-    try {
-      await deleteDoc(photoRef);
-    } catch (deleteError) {
-      logger.error('UploadQueueService.uploadQueueItem: Rollback failed', {
-        id,
-        photoId,
-        error: deleteError.message,
-      });
-    }
-    throw error;
-  }
 };
 
 // =============================================================================
