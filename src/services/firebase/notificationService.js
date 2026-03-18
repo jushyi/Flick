@@ -16,6 +16,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getFirestore,
   doc,
@@ -33,6 +34,9 @@ import { secureStorage, STORAGE_KEYS } from '../secureStorageService';
 import { withTrace } from './performanceService';
 
 const db = getFirestore();
+
+// AsyncStorage key for tracking pinned snap notification identifiers
+const PINNED_NOTIF_KEY = '@pinned_snap_notifications';
 
 /**
  * Configure how notifications are displayed when app is in foreground
@@ -717,4 +721,51 @@ export const markNotificationReadFromPushData = async (userId, pushData) => {
     logger.error('markNotificationReadFromPushData: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
+};
+
+/**
+ * Store a pinned snap notification identifier for later dismissal.
+ * Called when a pinned_snap notification is received.
+ * @param {string} senderId - The sender's user ID (key for lookup)
+ * @param {string} notificationId - The system notification identifier
+ */
+export const storePinnedNotifId = async (senderId, notificationId) => {
+  try {
+    const existing = JSON.parse((await AsyncStorage.getItem(PINNED_NOTIF_KEY)) || '{}');
+    existing[senderId] = notificationId;
+    await AsyncStorage.setItem(PINNED_NOTIF_KEY, JSON.stringify(existing));
+    logger.debug('Stored pinned notification ID', { senderId, notificationId });
+  } catch (error) {
+    logger.error('Failed to store pinned notification ID', { error: error.message });
+  }
+};
+
+/**
+ * Dismiss a pinned snap notification when the snap is viewed.
+ * Reads the stored notification identifier for the sender and dismisses it.
+ * @param {string} senderId - The sender's user ID
+ */
+export const dismissPinnedNotif = async senderId => {
+  try {
+    const existing = JSON.parse((await AsyncStorage.getItem(PINNED_NOTIF_KEY)) || '{}');
+    const notifId = existing[senderId];
+    if (notifId) {
+      await Notifications.dismissNotificationAsync(notifId);
+      delete existing[senderId];
+      await AsyncStorage.setItem(PINNED_NOTIF_KEY, JSON.stringify(existing));
+      logger.info('Dismissed pinned notification', { senderId, notifId });
+    }
+  } catch (error) {
+    // Best-effort: notification may already be dismissed by user swipe
+    logger.warn('Failed to dismiss pinned notification', { senderId, error: error.message });
+  }
+};
+
+/**
+ * Handle cancel_pinned_snap push from 48h expiry cloud function.
+ * Called from notification received listener when type is cancel_pinned_snap.
+ * @param {string} senderId - Sender whose pinned notification to cancel
+ */
+export const handleCancelPinnedSnap = async senderId => {
+  await dismissPinnedNotif(senderId);
 };

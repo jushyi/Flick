@@ -3727,6 +3727,106 @@ exports.cleanupExpiredSnaps = functions
   });
 
 // =============================================================================
+// PINNED SNAP NOTIFICATION EXPIRY
+// =============================================================================
+
+/**
+ * expirePinnedSnapNotifications - Scheduled function to expire unviewed pinned snap notifications.
+ *
+ * Runs every 2 hours (matching cleanupExpiredSnaps cadence). Finds snap messages where:
+ * - type == 'snap'
+ * - pinned == true (still pinned, not yet expired)
+ * - viewedAt == null (not viewed by recipient)
+ * - createdAt <= 48 hours ago
+ *
+ * For each matching message:
+ * 1. Sends a data-only push with type 'cancel_pinned_snap' to dismiss the notification on device
+ * 2. Sets pinned to false to avoid re-processing
+ *
+ * NOTE: This collectionGroup query on 'messages' requires a Firestore composite index on
+ * type, pinned, viewedAt, createdAt. The index will be created automatically when the
+ * function first runs and Firestore returns an error with a direct link to create it.
+ */
+exports.expirePinnedSnapNotifications = functions
+  .runWith({ memory: '256MB', timeoutSeconds: 120 })
+  .pubsub.schedule('every 2 hours')
+  .onRun(async () => {
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoff);
+
+    try {
+      const snapshot = await db
+        .collectionGroup('messages')
+        .where('type', '==', 'snap')
+        .where('pinned', '==', true)
+        .where('viewedAt', '==', null)
+        .where('createdAt', '<=', cutoffTimestamp)
+        .get();
+
+      if (snapshot.empty) {
+        logger.info('expirePinnedSnapNotifications: No expired pinned snaps');
+        return null;
+      }
+
+      logger.info('expirePinnedSnapNotifications: Found expired pinned snaps', {
+        count: snapshot.size,
+      });
+
+      const { sendPushNotification } = require('./notifications/sender');
+
+      for (const msgDoc of snapshot.docs) {
+        try {
+          const message = msgDoc.data();
+          const conversationId = msgDoc.ref.parent.parent.id;
+          const parts = conversationId.split('_');
+          if (parts.length !== 2) continue;
+
+          const [uid1, uid2] = parts;
+          const recipientId = uid1 === message.senderId ? uid2 : uid1;
+
+          // Get recipient's FCM token
+          const recipientDoc = await db.collection('users').doc(recipientId).get();
+          if (!recipientDoc.exists) continue;
+          const fcmToken = recipientDoc.data().fcmToken;
+          if (!fcmToken) continue;
+
+          // Send silent data-only push to cancel the notification on device
+          await sendPushNotification(
+            fcmToken,
+            '', // empty title (data-only)
+            '', // empty body (data-only)
+            {
+              type: 'cancel_pinned_snap',
+              senderId: message.senderId,
+              conversationId,
+            },
+            recipientId
+          );
+
+          // Mark as no longer pinned to avoid re-processing
+          await msgDoc.ref.update({ pinned: false });
+
+          logger.info('expirePinnedSnapNotifications: Expired pinned snap', {
+            conversationId,
+            messageId: msgDoc.id,
+          });
+        } catch (error) {
+          logger.error('expirePinnedSnapNotifications: Error expiring snap', {
+            messageId: msgDoc.id,
+            error: error.message,
+          });
+          // Continue with other snaps
+        }
+      }
+
+      return null;
+    } catch (error) {
+      logger.error('expirePinnedSnapNotifications: Error', { error: error.message });
+      return null;
+    }
+  });
+
+// =============================================================================
 // STREAK EXPIRY PROCESSING
 // =============================================================================
 

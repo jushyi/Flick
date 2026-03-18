@@ -19,6 +19,7 @@ import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import { sendReaction } from '../services/firebase/messageService';
+import { dismissPinnedNotif } from '../services/firebase/notificationService';
 
 import ConversationHeader from '../components/ConversationHeader';
 import MessageBubble from '../components/MessageBubble';
@@ -700,6 +701,10 @@ const ConversationScreen = () => {
         conversationId={conversationId}
         senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
         onClose={() => {
+          // Dismiss pinned snap notification if viewing a friend's snap (not own)
+          if (snapViewerMessage?.senderId && snapViewerMessage.senderId !== user.uid) {
+            dismissPinnedNotif(snapViewerMessage.senderId);
+          }
           setSnapViewerMessage(null);
           setSnapSourceRect(null);
         }}
