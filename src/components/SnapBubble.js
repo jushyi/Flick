@@ -1,11 +1,12 @@
 /**
  * SnapBubble - Snap message bubble for conversation thread
  *
- * Renders a snap message in the conversation list with four visual states:
- * 1. Sending   - amber bubble, progress ring, "Sending..." text
- * 2. Error     - red-tinted bubble, warning icon, "Failed" + "Tap to retry"
- * 3. Unopened  - warm amber bubble, camera icon, "Snap" label, tappable
- * 4. Opened    - dimmed/faded bubble, camera icon, "Opened" label, non-interactive
+ * Renders a snap message in the conversation list with five visual states:
+ * 1. Sending       - amber bubble, progress ring, "Sending..." text
+ * 2. Error         - red-tinted bubble, warning icon, "Failed" + "Tap to retry"
+ * 3. Unopened      - warm amber bubble, camera icon, "Snap" label, tappable
+ * 4. Opened        - dimmed/faded bubble, camera icon, "Opened" label, non-interactive
+ * 5. Screenshotted - dimmed amber bubble, eye-outline icon, "Screenshotted" label, non-interactive
  *
  * Aligns left (friend) or right (current user) like MessageBubble.
  */
@@ -27,6 +28,8 @@ const SNAP_AMBER_BG = 'rgba(245, 166, 35, 0.15)';
 const SNAP_AMBER_BORDER = 'rgba(245, 166, 35, 0.3)';
 const SNAP_ERROR_BG = 'rgba(255, 51, 51, 0.15)';
 const SNAP_ERROR_BORDER = 'rgba(255, 51, 51, 0.3)';
+const SNAP_SCREENSHOTTED_BG = 'rgba(245, 166, 35, 0.08)';
+const SNAP_SCREENSHOTTED_BORDER = 'rgba(245, 166, 35, 0.2)';
 
 const SnapBubble = ({
   message,
@@ -42,10 +45,11 @@ const SnapBubble = ({
 }) => {
   const bubbleRef = useRef(null);
 
-  const isOpened = message.viewedAt !== null && message.viewedAt !== undefined;
+  const isScreenshotted = message.screenshottedAt !== null && message.screenshottedAt !== undefined;
+  const isOpened = !isScreenshotted && message.viewedAt !== null && message.viewedAt !== undefined;
   const isSending = isPending && !hasError;
   const isError = hasError;
-  const isUnopened = !isOpened && !isPending && !hasError;
+  const isUnopened = !isOpened && !isScreenshotted && !isPending && !hasError;
 
   const formatTimestamp = () => {
     if (!message.createdAt) return '';
@@ -58,6 +62,14 @@ const SnapBubble = ({
   const formatViewedTimestamp = () => {
     if (!message.viewedAt) return '';
     const date = message.viewedAt.toDate ? message.viewedAt.toDate() : new Date(message.viewedAt);
+    return format(date, 'h:mm a');
+  };
+
+  const formatScreenshottedTimestamp = () => {
+    if (!message.screenshottedAt) return '';
+    const date = message.screenshottedAt.toDate
+      ? message.screenshottedAt.toDate()
+      : new Date(message.screenshottedAt);
     return format(date, 'h:mm a');
   };
 
@@ -107,6 +119,15 @@ const SnapBubble = ({
       );
     }
 
+    if (isScreenshotted) {
+      return (
+        <View style={[styles.snapContent, styles.openedContent]}>
+          <PixelIcon name="eye-outline" size={24} color={colors.text.secondary} />
+          <Text style={styles.openedLabel}>Screenshotted</Text>
+        </View>
+      );
+    }
+
     if (isOpened) {
       return (
         <View style={[styles.snapContent, styles.openedContent]}>
@@ -128,6 +149,9 @@ const SnapBubble = ({
   const getBubbleStyle = () => {
     if (isError) {
       return [styles.bubble, styles.errorBubble];
+    }
+    if (isScreenshotted) {
+      return [styles.bubble, styles.screenshottedBubble];
     }
     if (isOpened) {
       return [styles.bubble, styles.openedBubble];
@@ -166,7 +190,11 @@ const SnapBubble = ({
         <Text
           style={[styles.timestamp, isCurrentUser ? styles.timestampRight : styles.timestampLeft]}
         >
-          {isOpened ? `Opened ${formatViewedTimestamp()}` : formatTimestamp()}
+          {isScreenshotted
+            ? `Screenshotted ${formatScreenshottedTimestamp()}`
+            : isOpened
+              ? `Opened ${formatViewedTimestamp()}`
+              : formatTimestamp()}
         </Text>
       )}
     </View>
@@ -204,6 +232,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(123, 123, 158, 0.1)',
     borderColor: 'rgba(123, 123, 158, 0.2)',
     opacity: 0.5,
+  },
+  screenshottedBubble: {
+    backgroundColor: SNAP_SCREENSHOTTED_BG,
+    borderColor: SNAP_SCREENSHOTTED_BORDER,
+    opacity: 0.6,
   },
   snapContent: {
     flexDirection: 'row',

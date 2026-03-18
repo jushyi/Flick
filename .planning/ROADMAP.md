@@ -152,7 +152,7 @@ Plans (gap closure R2 -- fixes from second device testing):
 2. Tapping the notification opens the app directly to the conversation with the sender
 3. After the recipient views the snap, the notification is automatically dismissed
 
-**Plans:** 3 plans (2 original + 1 gap closure)
+**Plans:** 3/3 plans complete
 
 Plans:
 
@@ -178,7 +178,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
 | 8. Screenshot Detection                      | 3/4 | Gap closure | - | -          |
 | 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
-| 10. Pinned Snaps Android                     | 2/3 | In Progress | - | -          |
+| 10. Pinned Snaps Android                     | 3/3 | Complete   | 2026-03-18 | -          |
 | 11. Add Video Support to Main Camera         | 8/8 | Complete   | 2026-03-18 | -          |
 
 ### Phase 11: Add Video Support to Main Camera
