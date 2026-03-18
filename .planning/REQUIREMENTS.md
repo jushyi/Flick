@@ -58,7 +58,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **VID-03**: Video uploads create Firestore documents with mediaType, videoURL, and duration fields
 - [ ] **VID-04**: Videos develop and reveal identically to photos in darkroom with video icon overlay
 - [x] **VID-05**: Feed autoplays videos muted; tap to unmute persists across subsequent videos
-- [ ] **VID-06**: Video cards display a duration badge (e.g. "0:12") in the corner
+- [x] **VID-06**: Video cards display a duration badge (e.g. "0:12") in the corner
 - [x] **VID-07**: PhotoDetail plays videos with progress bar and mute toggle, looping in feed mode
 - [ ] **VID-08**: Stories plays videos once to completion then auto-advances to next story
 - [x] **VID-09**: expo-video installed, microphone permission configured, storage rules allow video content types
@@ -131,7 +131,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VID-03      | 11    | Complete |
 | VID-04      | 11    | Pending |
 | VID-05      | 11    | Complete |
-| VID-06      | 11    | Pending |
+| VID-06      | 11    | Complete |
 | VID-07      | 11    | Complete |
 | VID-08      | 11    | Pending |
 | VID-09      | 11    | Complete |

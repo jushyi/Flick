@@ -3,6 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
+stopped_at: Completed 11-05-PLAN.md
+last_updated: "2026-03-18T17:28:01.868Z"
+last_activity: "2026-03-18 - Completed Plan 11-05: Feed video cards"
+progress:
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 37
+  completed_plans: 34
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
 stopped_at: Completed 10-02-PLAN.md (pin toggle, notification dismissal, 48h expiry)
 last_updated: "2026-03-18T17:27:29.767Z"
 last_activity: "2026-03-18 - Completed Plan 11-05: Feed video cards"
@@ -251,6 +266,10 @@ Progress: [█████████░] 92% (v1.1)
 - Text-based mute toggle (M/U) since no speaker/volume PixelIcon exists in the icon set
 - SVG circle rotation=-90 with origin transform starts fill from 12 o'clock (top center)
 - VideoPlayer controls overlay uses semi-transparent dark background at 0.3 opacity
+- Video cards use tap-to-toggle-mute (not tap-to-open); PhotoDetail accessed via info row below video
+- Viewport detection uses 50% itemVisiblePercentThreshold for autoplay trigger
+- Duration badge and video icon overlay positioned absolute within photoContainer
+- Memo comparison updated to include isVisible prop for correct re-render on viewport change
 
 **Phase 10 Decisions:**
 - Used options object {richContent, mutableContent} for sendPushNotification 6th param (backward compatible with all existing callers)
@@ -302,8 +321,8 @@ Progress: [█████████░] 92% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:27:04.526Z
-Stopped at: Completed 10-02-PLAN.md (pin toggle, notification dismissal, 48h expiry)
+Last session: 2026-03-18T17:28:01.866Z
+Stopped at: Completed 11-05-PLAN.md
 Resume file: None
 
 ---
