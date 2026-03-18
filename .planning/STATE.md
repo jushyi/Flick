@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
-stopped_at: Completed 11-00-PLAN.md (RED test scaffolds for video support)
-last_updated: "2026-03-18T17:01:26.980Z"
-last_activity: "2026-03-18 - Completed Plan 11-00: RED test scaffolds for video support"
+stopped_at: Completed 08-00-PLAN.md (RED test scaffolds for screenshot detection)
+last_updated: "2026-03-18T17:03:23.000Z"
+last_activity: "2026-03-18 - Completed Plan 08-00: RED test scaffolds for screenshot detection"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 36
-  completed_plans: 20
-  percent: 56
+  completed_plans: 21
+  percent: 58
 ---
 
 # Project State: Flick
@@ -67,6 +67,7 @@ Progress: [██████░░░░] 56% (v1.1)
 | Phase 09 P12 | 1min | 1 tasks | 1 files |
 | Phase 09 P13 | 2min | 1 tasks | 1 files |
 | Phase 11 P00 | 3min | 2 tasks | 3 files |
+| Phase 08 P00 | 4min | 3 tasks | 5 files |
 
 ## Milestone History
 
@@ -135,6 +136,10 @@ Progress: [██████░░░░] 56% (v1.1)
 - persistentActivities removed BEFORE activity.end() in endActivity to prevent race condition re-creation
 - Re-creation failure removes from tracking to prevent infinite retry loops
 
+**Phase 8 Decisions:**
+- Used moduleNameMapper + manual mock file for expo-screen-capture since package is not yet installed (requires native build)
+- Cloud Function tests assert type:'screenshot' in notification data and no unreadCount increment to ensure RED state against current generic handler
+
 **Open blockers:**
 
 1. ~~**NSE NSSupportsLiveActivities plist key**~~ FULLY RESOLVED -- Plan 08 deleted withNSELiveActivities.js entirely. NSE no longer uses ActivityKit or NSSupportsLiveActivities.
@@ -178,10 +183,10 @@ Progress: [██████░░░░] 56% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:01:26.978Z
-Stopped at: Completed 11-00-PLAN.md
-Resume file: None
+Last session: 2026-03-18T17:03:23.000Z
+Stopped at: Completed 08-00-PLAN.md
+Resume file: .planning/phases/08-screenshot-detection/08-00-SUMMARY.md
 
 ---
 
-Last activity: 2026-03-18 - Completed quick task 260318-dia: Cherry-pick 9 production bug fixes from feat/dm into hotfix/production-fixes branch
+Last activity: 2026-03-18 - Completed Plan 08-00: RED test scaffolds for screenshot detection
