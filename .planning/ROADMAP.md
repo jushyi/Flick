@@ -108,7 +108,7 @@ Plans:
 4. After the recipient views the snap, the Live Activity disappears
 5. If the recipient swipes away the Live Activity, it is automatically re-created until the snap is viewed
 
-**Plans:** 13 plans (7 original + 3 pivot attempts reverted + 3 gap closure)
+**Plans:** 15 plans (7 original + 3 pivot attempts reverted + 3 gap closure R1 + 2 gap closure R2)
 
 Plans (Live Activity infrastructure -- executed):
 
@@ -126,11 +126,16 @@ Plans (persistent notification pivot -- REVERTED, Live Activities restored):
 - [ ] 09-09-PLAN.md — (REVERTED) Recipient-side notification dismissal
 - [ ] 09-10-PLAN.md — (REVERTED) End-to-end verification checkpoint
 
-Plans (gap closure -- fixes from device testing):
+Plans (gap closure R1 -- fixes from first device testing):
 
-- [ ] 09-11-PLAN.md — Fix thumbnail display: download thumbnail in JS handler, increase resolution to 300px
-- [ ] 09-12-PLAN.md — Widget visual polish: portrait aspect ratio, Polaroid frame, conditional text layout
-- [ ] 09-13-PLAN.md — Live Activity persistence: auto re-create on swipe-away via ActivityState observation
+- [x] 09-11-PLAN.md — Fix thumbnail display: download thumbnail in JS handler, increase resolution to 300px
+- [x] 09-12-PLAN.md — Widget visual polish: portrait aspect ratio, Polaroid frame, conditional text layout
+- [x] 09-13-PLAN.md — Live Activity persistence: auto re-create on swipe-away via ActivityState observation
+
+Plans (gap closure R2 -- fixes from second device testing):
+
+- [ ] 09-14-PLAN.md — Thumbnail pipeline diagnostics + NSE fix + foreground-resume fallback for background Live Activities
+- [ ] 09-15-PLAN.md — Polaroid visual overhaul: 160pt max height, thick borders, sharp corners, tilt rotation
 
 ### Phase 10: Pinned Snaps Android
 
@@ -167,9 +172,9 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
 | 8. Screenshot Detection                      | v1.1      | 0/2            | Not started | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 7/13           | In Progress | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
 | 10. Pinned Snaps Android                     | v1.1      | 0/2            | Not started | -          |
-| 11. Add Video Support to Main Camera         | 1/8 | In Progress|  | -          |
+| 11. Add Video Support to Main Camera         | v1.1      | 0/8            | Not started | -          |
 
 ### Phase 11: Add Video Support to Main Camera
 
@@ -189,7 +194,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 9. expo-video installed, microphone permission configured, storage rules updated for video content types
 10. Video thumbnail placeholder generated at capture time for progressive loading
 
-**Plans:** 1/8 plans executed
+**Plans:** 8 plans
 
 Plans:
 - [ ] 11-00-PLAN.md — Wave 0: RED test scaffolds for useCameraBase, uploadQueueService, VideoMuteContext
@@ -202,4 +207,3 @@ Plans:
 - [ ] 11-07-PLAN.md — Full test suite + lint verification, end-to-end checkpoint on physical device
 
 **Build Note:** Phase 11 requires a new EAS build (expo-video native module + microphone permission). Storage rules must be deployed separately: `firebase deploy --only storage`.
-
