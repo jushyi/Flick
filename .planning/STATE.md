@@ -126,6 +126,15 @@ Progress: [██████░░░░] 50% (v1.1)
 
 3. **React Native Firebase deprecated namespaced API warnings** — `putFile()` and `getDownloadURL()` on storage references use deprecated namespaced API. Need migration to modular API per https://rnfirebase.io/migrating-to-v22.
 
+### Quick Tasks Completed
+
+| #   | Description                                                                                        | Date       | Commit  | Directory                                                                                         |
+| --- | -------------------------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
+| 1   | regression in the keyboard avoiding view for android in the comments input                         | 2026-02-26 | 3ce419d | [1-regression-in-the-keyboard-avoiding-view](./quick/1-regression-in-the-keyboard-avoiding-view/) |
+| 2   | skip What's New modal for silent OTA patch (keyboard avoiding view bug fix)                        | 2026-02-26 | d3cb02a | [2-skip-ota-update-modal-for-small-bug-fix-](./quick/2-skip-ota-update-modal-for-small-bug-fix-/) |
+| 3   | fix stale profile photo caching — profileCacheKey uses Firebase Storage token                      | 2026-02-26 | fd1b9d2 | [3-investigate-why-for-some-users-viewing-t](./quick/3-investigate-why-for-some-users-viewing-t/) |
+| 4   | search results in Friends Request tab show blank photo — profilePhotoURL not mapped in searchUsers | 2026-02-27 | 6643af6 | [4-when-searching-people-in-the-friends-req](./quick/4-when-searching-people-in-the-friends-req/) |
+
 ### Roadmap Evolution
 
 - Phase 10 added: Performance enhancements to story viewing

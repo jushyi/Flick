@@ -17,6 +17,7 @@ import PixelIcon from '../PixelIcon';
 import StrokedNameText from '../StrokedNameText';
 import * as Haptics from 'expo-haptics';
 import { getTimeAgo } from '../../utils/timeUtils';
+import { profileCacheKey } from '../../utils/imageUtils';
 import { colors } from '../../constants/colors';
 import { layout } from '../../constants/layout';
 import logger from '../../utils/logger';
@@ -265,7 +266,10 @@ const CommentRow = ({
             >
               {profilePhotoURL ? (
                 <Image
-                  source={{ uri: profilePhotoURL, cacheKey: `avatar-${comment.userId}` }}
+                  source={{
+                    uri: profilePhotoURL,
+                    cacheKey: profileCacheKey('avatar-' + comment.userId, profilePhotoURL),
+                  }}
                   style={styles.profilePhoto}
                   contentFit="cover"
                   cachePolicy="memory-disk"
