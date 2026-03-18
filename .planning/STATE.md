@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
-stopped_at: Completed 08-00-PLAN.md (RED test scaffolds for screenshot detection)
-last_updated: "2026-03-18T17:03:23.000Z"
-last_activity: "2026-03-18 - Completed Plan 08-00: RED test scaffolds for screenshot detection"
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-18T17:08:18.597Z"
+last_activity: "2026-03-18 - Completed Plan 11-01: Native dependencies and service foundation"
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 36
-  completed_plans: 21
-  percent: 58
+  total_plans: 37
+  completed_plans: 22
+  percent: 59
 ---
 
 # Project State: Flick
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 12 (Add Video Support to Main Camera)
-Plan: 1 of 8 executed
-Status: In Progress — Plan 00 complete (RED test scaffolds for video support)
-Last activity: 2026-03-18 - Completed Plan 11-00: RED test scaffolds for video support
+Plan: 2 of 8 executed
+Status: In Progress — Plan 01 complete (native dependencies and service foundation for video)
+Last activity: 2026-03-18 - Completed Plan 11-01: Native dependencies and service foundation
 
-Progress: [██████░░░░] 56% (v1.1)
+Progress: [██████░░░░] 59% (v1.1)
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [██████░░░░] 56% (v1.1)
 | Phase 09 P13 | 2min | 1 tasks | 1 files |
 | Phase 11 P00 | 3min | 2 tasks | 3 files |
 | Phase 08 P00 | 4min | 3 tasks | 5 files |
+| Phase 11 P01 | 4min | 2 tasks | 6 files |
 
 ## Milestone History
 
@@ -140,6 +141,12 @@ Progress: [██████░░░░] 56% (v1.1)
 - Used moduleNameMapper + manual mock file for expo-screen-capture since package is not yet installed (requires native build)
 - Cloud Function tests assert type:'screenshot' in notification data and no unreadCount increment to ensure RED state against current generic handler
 
+**Phase 11 Decisions:**
+- Video files use same photos/ storage path as images, differentiated by extension (.mp4/.mov)
+- 100MB storage limit provides headroom for video beyond 30s at 720p/3Mbps
+- expo-video mock includes generateThumbnailsAsync for future thumbnail generation
+- createVideoPlayer mock exported globally for test assertions alongside useVideoPlayer
+
 **Open blockers:**
 
 1. ~~**NSE NSSupportsLiveActivities plist key**~~ FULLY RESOLVED -- Plan 08 deleted withNSELiveActivities.js entirely. NSE no longer uses ActivityKit or NSSupportsLiveActivities.
@@ -183,9 +190,9 @@ Progress: [██████░░░░] 56% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:03:23.000Z
-Stopped at: Completed 08-00-PLAN.md
-Resume file: .planning/phases/08-screenshot-detection/08-00-SUMMARY.md
+Last session: 2026-03-18T17:08:18.595Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: None
 
 ---
 

@@ -2997,6 +2997,12 @@ exports.onNewMessage = functions
         shouldIncrementUnread = false;
       }
 
+      if (messageType === 'system_screenshot') {
+        // System messages: update lastMessage but do NOT increment unread count
+        // (system events are informational, not actionable unread messages)
+        shouldIncrementUnread = false;
+      }
+
       // 1. Update conversation metadata
       if (shouldUpdateLastMessage) {
         const lastMessagePreview =
@@ -3010,7 +3016,9 @@ exports.onNewMessage = functions
                   ? 'Sent a photo'
                   : messageType === 'reaction'
                     ? 'Reacted'
-                    : message.text || '';
+                    : messageType === 'system_screenshot'
+                      ? message.text || 'Someone screenshotted a snap'
+                      : message.text || '';
 
         const lastMessageData = {
           text: lastMessagePreview,

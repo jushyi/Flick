@@ -61,7 +61,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **VID-06**: Video cards display a duration badge (e.g. "0:12") in the corner
 - [ ] **VID-07**: PhotoDetail plays videos with progress bar and mute toggle, looping in feed mode
 - [ ] **VID-08**: Stories plays videos once to completion then auto-advances to next story
-- [ ] **VID-09**: expo-video installed, microphone permission configured, storage rules allow video content types
+- [x] **VID-09**: expo-video installed, microphone permission configured, storage rules allow video content types
 - [x] **VID-10**: Video thumbnail placeholder generated at capture time for progressive loading
 
 ## v2 Requirements
@@ -134,7 +134,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VID-06      | 11    | Pending |
 | VID-07      | 11    | Pending |
 | VID-08      | 11    | Pending |
-| VID-09      | 11    | Pending |
+| VID-09      | 11    | Complete |
 | VID-10      | 11    | Complete |
 
 **Coverage:**
