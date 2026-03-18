@@ -61,10 +61,13 @@ const useCamera = options => {
 
   // Reset zoom to 1x when flipping cameras
   const toggleCameraFacing = useCallback(() => {
+    // Lock facing during video recording (expo-camera stops recording on flip)
+    if (base.isFacingLockedRef.current) return;
+
     lightImpact();
     setZoom(ZOOM_LEVELS_BASE[0]);
     setFacing(facing === 'back' ? 'front' : 'back');
-  }, [facing, setFacing, setZoom]);
+  }, [facing, setFacing, setZoom, base.isFacingLockedRef]);
 
   const handleZoomChange = useCallback(
     zoomLevel => {

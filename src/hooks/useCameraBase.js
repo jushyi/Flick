@@ -21,6 +21,10 @@ import { addToQueue, initializeQueue } from '../services/uploadQueueService';
 import logger from '../utils/logger';
 import { lightImpact, mediumImpact } from '../utils/haptics';
 
+// Recording constants
+export const HOLD_THRESHOLD_MS = 500;
+export const MAX_RECORDING_DURATION = 30; // seconds
+
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Zoom level configuration
@@ -67,7 +71,7 @@ export const SPREAD_OFFSET_MULTIPLIER = 2;
  * Exposes setFacing and setZoom so platform hooks can manage state transitions
  * during camera flips and zoom changes.
  */
-const useCameraBase = ({ mode = 'normal' } = {}) => {
+const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
   const isSnapMode = mode === 'snap';
   const { user } = useAuth();
   const navigation = useNavigation();
@@ -87,6 +91,15 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
   });
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
+
+  // Video recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [cameraMode, setCameraMode] = useState('picture'); // 'picture' | 'video'
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const holdTimerRef = useRef(null);
+  const recordingTimerRef = useRef(null);
+  const isFacingLockedRef = useRef(false);
+  const recordingDurationRef = useRef(0); // Ref mirror for async access
 
   const cameraRef = useRef(null);
   const flashOpacity = useRef(new Animated.Value(0)).current;
@@ -213,6 +226,111 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
     ]).start();
   }, [cardScale, cardFanSpread]);
 
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    };
+  }, []);
+
+  // Handle completed video recording
+  const handleRecordingComplete = useCallback(
+    result => {
+      if (!result?.uri) {
+        logger.warn('useCameraBase: recordAsync resolved with no URI');
+        return;
+      }
+
+      const duration = recordingDurationRef.current;
+      logger.info('useCameraBase: Recording complete', { uri: result.uri, duration });
+
+      if (isSnapMode && onSnapCapture) {
+        onSnapCapture({ uri: result.uri, mediaType: 'video' });
+        return;
+      }
+
+      // Normal mode: queue for background upload
+      addToQueue(user.uid, result.uri, 'video', duration);
+
+      // Play card stack animation (same as photo)
+      playCardCaptureAnimation();
+
+      // Optimistically update badge count (+1 developing)
+      setDarkroomCounts(prev => ({
+        ...prev,
+        developingCount: prev.developingCount + 1,
+        totalCount: prev.totalCount + 1,
+      }));
+
+      logger.info('useCameraBase: Video queued for background upload');
+    },
+    [isSnapMode, onSnapCapture, user, playCardCaptureAnimation]
+  );
+
+  // Start recording video
+  const startRecording = useCallback(async () => {
+    if (!cameraRef.current || !user) return;
+
+    try {
+      // Switch to video mode
+      setCameraMode('video');
+
+      // Brief delay for camera reconfiguration
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Haptic feedback for recording start
+      lightImpact();
+
+      setIsRecording(true);
+      isFacingLockedRef.current = true;
+      recordingDurationRef.current = 0;
+      setRecordingDuration(0);
+
+      // Start duration tracker (every 1 second)
+      recordingTimerRef.current = setInterval(() => {
+        recordingDurationRef.current += 1;
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
+      logger.info('useCameraBase: Starting video recording', {
+        maxDuration: MAX_RECORDING_DURATION,
+      });
+
+      // recordAsync returns a promise that resolves when recording stops
+      const result = await cameraRef.current.recordAsync({
+        maxDuration: MAX_RECORDING_DURATION,
+      });
+
+      // Recording finished (user stopped or maxDuration reached)
+      handleRecordingComplete(result);
+    } catch (error) {
+      logger.error('useCameraBase: Error during recording', { error: error.message });
+    } finally {
+      // Clean up recording state
+      setIsRecording(false);
+      isFacingLockedRef.current = false;
+      setRecordingDuration(0);
+      recordingDurationRef.current = 0;
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      setCameraMode('picture');
+    }
+  }, [user, handleRecordingComplete]);
+
+  // Handle press in (start hold timer)
+  const handlePressIn = useCallback(() => {
+    lightImpact(); // Immediate tactile feedback
+
+    holdTimerRef.current = setTimeout(() => {
+      holdTimerRef.current = null;
+      startRecording();
+    }, HOLD_THRESHOLD_MS);
+  }, [startRecording]);
+
+  // Take a photo (used by handlePressOut for tap-to-capture)
   const takePicture = useCallback(async () => {
     if (!cameraRef.current || isCapturing || !user) return;
 
@@ -274,6 +392,38 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
     }
   }, [isCapturing, user, facing, playFlashEffect, playCardCaptureAnimation, isSnapMode]);
 
+  // Handle press out (stop recording or take photo)
+  const handlePressOut = useCallback(async () => {
+    // If hold timer is still pending, it was a tap — take a photo
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+
+      if (isSnapMode && onSnapCapture) {
+        // Snap mode photo: capture and call callback
+        const photoUri = await takePicture();
+        if (photoUri) {
+          onSnapCapture({ uri: photoUri, mediaType: 'photo' });
+        }
+      } else {
+        // Normal mode photo
+        takePicture();
+      }
+      return;
+    }
+
+    // If recording, stop it
+    if (cameraRef.current && isRecording) {
+      lightImpact(); // Recording-stop haptic
+      try {
+        cameraRef.current.stopRecording();
+      } catch (error) {
+        logger.warn('useCameraBase: Error stopping recording', { error: error.message });
+      }
+      // The recordAsync promise in startRecording will resolve and clean up state
+    }
+  }, [isSnapMode, onSnapCapture, isRecording, takePicture]);
+
   const openBottomSheet = useCallback(() => {
     setIsBottomSheetVisible(true);
   }, []);
@@ -312,6 +462,12 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
     setZoom,
     isCapturing,
 
+    // Video recording state
+    isRecording,
+    cameraMode,
+    recordingDuration,
+    isFacingLockedRef,
+
     // Darkroom state
     darkroomCounts,
     isBottomSheetVisible,
@@ -332,11 +488,16 @@ const useCameraBase = ({ mode = 'normal' } = {}) => {
     playFlashEffect,
     playCardCaptureAnimation,
     takePicture,
+    handlePressIn,
+    handlePressOut,
 
     // Bottom sheet handlers
     openBottomSheet,
     closeBottomSheet,
     handleBottomSheetComplete,
+
+    // Constants (for UI components)
+    MAX_RECORDING_DURATION,
   };
 };
 

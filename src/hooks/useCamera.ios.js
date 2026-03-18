@@ -57,7 +57,7 @@ export {
  */
 const useCamera = options => {
   const base = useCameraBase(options);
-  const { facing, setFacing, zoom, setZoom, cameraRef } = base;
+  const { facing, setFacing, zoom, setZoom, cameraRef, isFacingLockedRef } = base;
 
   // iOS lens state
   const [availableLenses, setAvailableLenses] = useState([]);
@@ -168,6 +168,9 @@ const useCamera = options => {
   }, [frontCameraLens, selectedLens, facing]);
 
   const toggleCameraFacing = useCallback(() => {
+    // Lock facing during video recording (expo-camera stops recording on flip)
+    if (isFacingLockedRef.current) return;
+
     lightImpact();
     const newFacing = facing === 'back' ? 'front' : 'back';
 
@@ -200,7 +203,16 @@ const useCamera = options => {
     }
 
     setFacing(newFacing);
-  }, [facing, zoom.value, hasUltraWide, availableLenses, wideAngleLens, setFacing, setZoom]);
+  }, [
+    facing,
+    zoom.value,
+    hasUltraWide,
+    availableLenses,
+    wideAngleLens,
+    setFacing,
+    setZoom,
+    isFacingLockedRef,
+  ]);
 
   const handleZoomChange = useCallback(
     zoomLevel => {
