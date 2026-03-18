@@ -152,7 +152,7 @@ Plans (gap closure R2 -- fixes from second device testing):
 
 Plans:
 
-- [ ] 10-01-PLAN.md — Notification infrastructure: extend sendPushNotification with richContent, pinned-snaps channel, pinned_snap tap handler, onNewMessage pinned snap branch
+- [x] 10-01-PLAN.md — Notification infrastructure: extend sendPushNotification with richContent, pinned-snaps channel, pinned_snap tap handler, onNewMessage pinned snap branch
 - [ ] 10-02-PLAN.md — Pin toggle UI, isPinned field, notification dismissal on snap view, 48h expiry cloud function
 
 ## Progress

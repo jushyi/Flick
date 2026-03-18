@@ -3,11 +3,42 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Pinned Snaps & Polish
 status: executing
+stopped_at: Completed 08-01-PLAN.md (screenshot detection service layer)
+last_updated: "2026-03-18T17:15:15.811Z"
+last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
+progress:
+  total_phases: 6
+  completed_phases: 2
+  total_plans: 37
+  completed_plans: 26
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
+stopped_at: Completed 09-15-PLAN.md
+last_updated: "2026-03-18T17:15:01.024Z"
+last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
+progress:
+  total_phases: 6
+  completed_phases: 2
+  total_plans: 37
+  completed_plans: 26
+  percent: 70
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Pinned Snaps & Polish
+status: executing
 stopped_at: Completed 11-02-PLAN.md
 last_updated: "2026-03-18T17:12:39.150Z"
 last_activity: "2026-03-18 - Completed Plan 11-02: Upload queue video support + VideoMuteContext"
 progress:
-  total_phases: 6
+  [███████░░░] 70%
   completed_phases: 2
   total_plans: 37
   completed_plans: 23
@@ -71,6 +102,8 @@ Progress: [██████░░░░] 62% (v1.1)
 | Phase 11 P01 | 4min | 2 tasks | 6 files |
 | Phase 11 P02 | 6min | 3 tasks | 3 files |
 | Phase 10 P01 | 8min | 2 tasks | 4 files |
+| Phase 09 P15 | 2min | 1 tasks | 1 files |
+| Phase 08 P01 | 6min | 3 tasks | 8 files |
 
 ## Milestone History
 
@@ -138,6 +171,10 @@ Progress: [██████░░░░] 62% (v1.1)
 - Observation uses fire-and-forget Task with [weak self] to avoid retain cycles
 - persistentActivities removed BEFORE activity.end() in endActivity to prevent race condition re-creation
 - Re-creation failure removes from tracking to prevent infinite retry loops
+- Polaroid frame redesigned to 83x104pt photo (4:5), 7pt top/sides, 22pt bottom = 145pt total under 160pt max
+- Deterministic tilt: Unicode scalar sum mod 81 mapped to -4.0 to +4.0 degrees
+- Sharp square photo corners via .clipped() replacing RoundedRectangle clipShape
+- Placeholder uses Rectangle() instead of RoundedRectangle() for consistency
 
 **Phase 8 Decisions:**
 - Used moduleNameMapper + manual mock file for expo-screen-capture since package is not yet installed (requires native build)
@@ -152,6 +189,13 @@ Progress: [██████░░░░] 62% (v1.1)
 - Video thumbnail uses createVideoPlayer + generateThumbnailsAsync at time 0 (first frame) then ImageManipulator resize to 20px base64
 - VideoMuteProvider placed inside ThemeProvider wrapping AuthProvider for cross-navigator mute state sharing
 - Backward compatibility: uploadQueueItem reads item.photoUri as fallback for legacy persisted queue items
+
+**Phase 10 Decisions:**
+- Used options object {richContent, mutableContent} for sendPushNotification 6th param (backward compatible with all existing callers)
+- channelId extracted from data.channelId allowing per-notification-type channel routing without new params
+- Pinned snaps use type:'pinned_snap' (distinct from 'snap') for separate tap handler and client behavior
+- 30-minute signed URL expiry for FCM delivery latency tolerance (vs standard 5-minute)
+- pinnedThumbnailUrl preferred over snapStoragePath for richContent image (avoids redundant storage access)
 
 **Open blockers:**
 
@@ -196,8 +240,8 @@ Progress: [██████░░░░] 62% (v1.1)
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:11:53Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-03-18T17:15:15.808Z
+Stopped at: Completed 08-01-PLAN.md (screenshot detection service layer)
 Resume file: None
 
 ---
