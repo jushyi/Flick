@@ -27,13 +27,13 @@ service firebase.storage {
                    && request.resource.size < 10 * 1024 * 1024;
     }
 
-    // Main photos (darkroom/feed photos) - only owner can read directly from Storage
+    // Main photos and videos (darkroom/feed) - only owner can read directly from Storage
     // Other users access photos via getSignedPhotoUrl Cloud Function (uses Admin SDK)
     match /photos/{userId}/{allPaths=**} {
       allow read: if isAuthenticated() && isOwner(userId);
       allow write: if isAuthenticated() && isOwner(userId)
-                   && request.resource.contentType.matches('image/.*')
-                   && request.resource.size < 10 * 1024 * 1024;
+                   && (request.resource.contentType.matches('image/.*') || request.resource.contentType.matches('video/.*'))
+                   && request.resource.size < 100 * 1024 * 1024;
     }
 
     // Snap photos - owner can upload, owner can read directly
