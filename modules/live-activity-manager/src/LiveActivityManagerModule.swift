@@ -23,8 +23,35 @@ public class LiveActivityManagerModule: Module {
     /// Active observation tasks, keyed by activityId, for cleanup.
     private var observationTasks: [String: Task<Void, Never>] = [:]
 
+    /// Task for observing push-to-start token updates (iOS 17.2+).
+    private var pushToStartObservationTask: Task<Void, Never>?
+
     public func definition() -> ModuleDefinition {
         Name("LiveActivityManager")
+
+        Events("onPushToStartToken")
+
+        // MARK: - observePushToStartToken
+        // Starts observing push-to-start token updates via ActivityKit (iOS 17.2+).
+        // Emits "onPushToStartToken" events with the hex-encoded token string.
+        AsyncFunction("observePushToStartToken") { [weak self] in
+            guard let self = self else { return }
+            #if canImport(ActivityKit)
+            guard #available(iOS 17.2, *) else { return }
+
+            // Cancel any existing observation
+            self.pushToStartObservationTask?.cancel()
+
+            self.pushToStartObservationTask = Task {
+                for await tokenData in Activity<PinnedSnapAttributes>.pushToStartTokenUpdates {
+                    let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
+                    self.sendEvent("onPushToStartToken", [
+                        "token": tokenString
+                    ])
+                }
+            }
+            #endif
+        }
 
         // MARK: - startActivity
         // Starts a new pinned snap Live Activity on the lock screen.

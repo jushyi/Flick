@@ -42,7 +42,11 @@ import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
-import { startPinnedSnapActivity, getActiveActivityIds } from './src/services/liveActivityService';
+import {
+  startPinnedSnapActivity,
+  getActiveActivityIds,
+  registerPushToStartToken,
+} from './src/services/liveActivityService';
 import { WHATS_NEW } from './src/config/whatsNew';
 import { GIPHY_API_KEY } from '@env';
 
@@ -316,6 +320,13 @@ export default function App() {
           }
         } catch (error) {
           logger.error('App: Failed to setup notifications', { error: error.message });
+        }
+
+        // Register push-to-start token for Live Activities (iOS 17.2+)
+        if (Platform.OS === 'ios') {
+          registerPushToStartToken(firebaseUser.uid).catch(err => {
+            logger.warn('App: Push-to-start registration failed', { error: err?.message });
+          });
         }
       }
     });

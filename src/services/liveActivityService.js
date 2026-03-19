@@ -11,6 +11,10 @@
 
 import { Platform } from 'react-native';
 
+import { NativeModulesProxy, EventEmitter } from 'expo-modules-core';
+import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
+import messaging from '@react-native-firebase/messaging';
+
 import logger from '../utils/logger';
 
 // Lazy-load the native module to avoid crash on Android
@@ -162,5 +166,82 @@ export const getActiveActivityIds = async () => {
       error: error.message,
     });
     return [];
+  }
+};
+
+/**
+ * Get the FCM registration token (different from Expo push token).
+ * Required by Firebase Admin SDK for push-to-start delivery.
+ * @returns {Promise<string|null>} FCM registration token or null
+ */
+export const getFCMRegistrationToken = async () => {
+  if (Platform.OS !== 'ios') return null;
+  try {
+    // Ensure notification permission is granted before requesting token
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    if (!enabled) return null;
+
+    const fcmToken = await messaging().getToken();
+    return fcmToken;
+  } catch (error) {
+    logger.warn('liveActivityService: Failed to get FCM token', { error: error.message });
+    return null;
+  }
+};
+
+/**
+ * Start observing push-to-start token updates and store tokens in Firestore.
+ * Call on authenticated app startup (iOS only).
+ * Stores both pushToStartToken and fcmRegistrationToken in user document.
+ *
+ * @param {string} userId - Authenticated user's UID
+ * @returns {object|null} Event subscription (call .remove() to unsubscribe)
+ */
+export const registerPushToStartToken = async userId => {
+  if (Platform.OS !== 'ios' || !LiveActivityManager) return null;
+
+  try {
+    // Get and store FCM registration token
+    const fcmToken = await getFCMRegistrationToken();
+    if (fcmToken) {
+      const db = getFirestore();
+      await updateDoc(doc(db, 'users', userId), {
+        fcmRegistrationToken: fcmToken,
+      });
+      logger.info('liveActivityService: Stored FCM registration token', { userId });
+    }
+
+    // Start observing push-to-start token
+    LiveActivityManager.observePushToStartToken();
+
+    // Listen for token events
+    const emitter = new EventEmitter(NativeModulesProxy.LiveActivityManager);
+    const subscription = emitter.addListener('onPushToStartToken', async event => {
+      try {
+        const db = getFirestore();
+        await updateDoc(doc(db, 'users', userId), {
+          pushToStartToken: event.token,
+        });
+        logger.info('liveActivityService: Stored push-to-start token', {
+          userId,
+          tokenLength: event.token?.length,
+        });
+      } catch (error) {
+        logger.error('liveActivityService: Failed to store push-to-start token', {
+          error: error.message,
+        });
+      }
+    });
+
+    return subscription;
+  } catch (error) {
+    // iOS < 17.2 or other error — silently ignore
+    logger.warn('liveActivityService: Push-to-start observation failed', {
+      error: error.message,
+    });
+    return null;
   }
 };
