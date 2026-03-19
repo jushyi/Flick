@@ -28,8 +28,9 @@ const SNAP_AMBER_BG = 'rgba(245, 166, 35, 0.15)';
 const SNAP_AMBER_BORDER = 'rgba(245, 166, 35, 0.3)';
 const SNAP_ERROR_BG = 'rgba(255, 51, 51, 0.15)';
 const SNAP_ERROR_BORDER = 'rgba(255, 51, 51, 0.3)';
-const SNAP_SCREENSHOTTED_BG = 'rgba(245, 166, 35, 0.08)';
-const SNAP_SCREENSHOTTED_BORDER = 'rgba(245, 166, 35, 0.2)';
+const SNAP_SCREENSHOTTED_MAGENTA = '#FF2D78';
+const SNAP_SCREENSHOTTED_BG = 'rgba(255, 45, 120, 0.15)';
+const SNAP_SCREENSHOTTED_BORDER = 'rgba(255, 45, 120, 0.3)';
 
 const SnapBubble = ({
   message,
@@ -162,6 +163,13 @@ const SnapBubble = ({
 
   const bubble = (
     <View style={[styles.container, isCurrentUser ? styles.containerRight : styles.containerLeft]}>
+      {message.pinned && (
+        <Text
+          style={[styles.pinnedLabel, isCurrentUser ? styles.timestampRight : styles.timestampLeft]}
+        >
+          Pinned
+        </Text>
+      )}
       {isInteractive ? (
         <TouchableOpacity
           ref={bubbleRef}
@@ -236,7 +244,6 @@ const styles = StyleSheet.create({
   screenshottedBubble: {
     backgroundColor: SNAP_SCREENSHOTTED_BG,
     borderColor: SNAP_SCREENSHOTTED_BORDER,
-    opacity: 0.6,
   },
   snapContent: {
     flexDirection: 'row',
@@ -255,6 +262,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: typography.fontFamily.body,
     color: colors.text.secondary,
+  },
+  screenshottedLabel: {
+    fontSize: 13,
+    fontFamily: typography.fontFamily.body,
+    color: SNAP_SCREENSHOTTED_MAGENTA,
   },
   sendingText: {
     fontSize: 12,
@@ -286,6 +298,12 @@ const styles = StyleSheet.create({
   },
   timestampLeft: {
     textAlign: 'left',
+  },
+  pinnedLabel: {
+    fontSize: 10,
+    fontFamily: typography.fontFamily.body,
+    color: colors.text.tertiary,
+    marginBottom: 3,
   },
 });
 

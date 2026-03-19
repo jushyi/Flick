@@ -191,21 +191,92 @@ const ConversationScreen = () => {
    * Auto-open SnapViewer from notification deep link.
    * When route.params.autoOpenSnapId is set, find the snap message in the
    * messages list and auto-open the SnapViewer once found.
+   *
+   * The snap may not be in the initial message batch (subscription loads newest 25),
+   * so we also set up a polling fallback that retries for up to 5 seconds. If the
+   * snap still isn't found in local messages after the timeout, we fetch it directly
+   * from Firestore as a last resort.
    */
   useEffect(() => {
     const autoOpenSnapId = route.params?.autoOpenSnapId;
     if (!autoOpenSnapId || autoOpenSnapHandled.current) return;
-    if (!messages.length) return;
 
-    const snapMsg = messages.find(m => m.id === autoOpenSnapId && m.type === 'snap');
-    if (snapMsg) {
-      autoOpenSnapHandled.current = true;
-      // Delay to allow conversation to render first
-      setTimeout(() => {
-        setSnapViewerMessage(snapMsg);
-      }, 300);
-    }
-  }, [messages, route.params?.autoOpenSnapId]);
+    // Try to find snap in currently loaded messages
+    const tryOpen = () => {
+      if (autoOpenSnapHandled.current) return true;
+      const snapMsg = messages.find(m => m.id === autoOpenSnapId && m.type === 'snap');
+      if (snapMsg) {
+        autoOpenSnapHandled.current = true;
+        setTimeout(() => {
+          setSnapViewerMessage(snapMsg);
+        }, 300);
+        return true;
+      }
+      return false;
+    };
+
+    // If messages are loaded and snap is found, open immediately
+    if (messages.length && tryOpen()) return;
+
+    // Polling fallback: retry every 500ms for up to 5 seconds
+    let elapsed = 0;
+    const POLL_INTERVAL = 500;
+    const MAX_WAIT = 5000;
+
+    const intervalId = setInterval(async () => {
+      elapsed += POLL_INTERVAL;
+
+      // Re-check current messages (they update via subscription)
+      if (tryOpen()) {
+        clearInterval(intervalId);
+        return;
+      }
+
+      // After max wait, attempt direct Firestore fetch as last resort
+      if (elapsed >= MAX_WAIT) {
+        clearInterval(intervalId);
+        if (autoOpenSnapHandled.current) return;
+
+        logger.info(
+          'ConversationScreen: Snap not found in messages after polling, fetching directly',
+          {
+            autoOpenSnapId,
+            conversationId,
+          }
+        );
+
+        try {
+          const db = getFirestore();
+          const snapDoc = await getDoc(
+            doc(db, 'conversations', conversationId, 'messages', autoOpenSnapId)
+          );
+          if (snapDoc.exists() && !autoOpenSnapHandled.current) {
+            const data = { id: snapDoc.id, ...snapDoc.data() };
+            if (data.type === 'snap') {
+              autoOpenSnapHandled.current = true;
+              setSnapViewerMessage(data);
+            } else {
+              logger.warn('ConversationScreen: autoOpenSnapId message is not a snap', {
+                autoOpenSnapId,
+                type: data.type,
+              });
+            }
+          } else if (!snapDoc.exists()) {
+            logger.warn('ConversationScreen: autoOpenSnapId message not found in Firestore', {
+              autoOpenSnapId,
+            });
+          }
+        } catch (err) {
+          logger.error('ConversationScreen: Failed to fetch snap message directly', {
+            autoOpenSnapId,
+            error: err.message,
+          });
+        }
+      }
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [messages, route.params?.autoOpenSnapId, conversationId]);
 
   /**
    * Derive read receipt state for the sender's last message.
@@ -298,6 +369,7 @@ const ConversationScreen = () => {
     if (!messages.length) return [];
     const result = [];
     let lastDate = null;
+    const seenDates = new Set();
 
     // Messages are sorted newest-first (for inverted list)
     // Process in reverse to insert dividers correctly
@@ -306,7 +378,8 @@ const ConversationScreen = () => {
       const msgDate = msg.createdAt?.toDate?.() ? msg.createdAt.toDate() : new Date();
       const dateKey = `${msgDate.getFullYear()}-${msgDate.getMonth()}-${msgDate.getDate()}`;
 
-      if (dateKey !== lastDate) {
+      if (dateKey !== lastDate && !seenDates.has(dateKey)) {
+        seenDates.add(dateKey);
         result.push({
           itemType: 'divider',
           id: `divider-${dateKey}`,
