@@ -1,20 +1,35 @@
-// IMPORTANT: This file must stay in sync with modules/live-activity-manager/src/PinnedSnapAttributes.swift
-// and targets/FlickLiveActivity/PinnedSnapAttributes.swift
-// Any changes here MUST be mirrored to both the native module and widget extension copies.
+// IMPORTANT: This file must stay in sync across all 3 locations:
+// - targets/FlickLiveActivity/PinnedSnapAttributes.swift
+// - modules/live-activity-manager/src/PinnedSnapAttributes.swift
+// - targets/FlickNotificationService/PinnedSnapAttributes.swift
 
 import ActivityKit
 import Foundation
 
 struct PinnedSnapAttributes: ActivityAttributes {
-    /// Unique ID for this pinned snap activity (usually the snap message ID)
+    /// Stack ID — uses "pinned-stack" for the single stacked activity
     var activityId: String
-    /// Display name of the sender
+    /// Display name of the first/top sender (used for single-snap mode)
     var senderName: String
-    /// Optional caption text (snap message text, truncated)
+    /// Optional caption text (used for single-snap mode)
     var caption: String?
-    /// Deep link URL to open when tapped (e.g., lapse://messages/{conversationId})
+    /// Deep link URL — points to messages list for stacked mode
     var deepLinkUrl: String
 
-    /// ContentState is empty — compact-only layout with no dynamic updates needed
-    struct ContentState: Codable, Hashable {}
+    struct ContentState: Codable, Hashable {
+        /// Stack of pinned snap entries. Empty array = no entries (should end activity).
+        /// Single entry = render single Polaroid with caption. Multiple = stacked layout.
+        var stack: [StackEntry]
+
+        struct StackEntry: Codable, Hashable {
+            /// Individual snap identifier (the snap message ID)
+            let snapActivityId: String
+            /// Display name of the sender
+            let senderName: String
+            /// Optional caption text
+            let caption: String?
+            /// Conversation ID for deep link when tapped
+            let conversationId: String
+        }
+    }
 }
