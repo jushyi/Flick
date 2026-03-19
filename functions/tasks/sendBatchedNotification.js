@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const { FieldValue } = require('firebase-admin/firestore');
 const logger = require('../logger');
 
 /**
@@ -60,7 +61,7 @@ async function sendBatchedNotificationHandler(req, res) {
       // Mark as processing
       transaction.update(batchRef, {
         status: 'processing',
-        processingAt: admin.firestore.FieldValue.serverTimestamp(),
+        processingAt: FieldValue.serverTimestamp(),
       });
 
       batchData = data;
@@ -89,7 +90,7 @@ async function sendBatchedNotificationHandler(req, res) {
       // Mark as sent to prevent retry
       await batchRef.update({
         status: 'sent',
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        sentAt: FieldValue.serverTimestamp(),
         error: 'Photo not found',
       });
       return res.status(200).json({ message: 'Photo not found' });
@@ -109,7 +110,7 @@ async function sendBatchedNotificationHandler(req, res) {
       // Mark as sent to prevent retry
       await batchRef.update({
         status: 'sent',
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        sentAt: FieldValue.serverTimestamp(),
         error: 'Owner not found',
       });
       return res.status(200).json({ message: 'Owner not found' });
@@ -126,7 +127,7 @@ async function sendBatchedNotificationHandler(req, res) {
       // Mark as sent to prevent retry
       await batchRef.update({
         status: 'sent',
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        sentAt: FieldValue.serverTimestamp(),
         error: 'No FCM token',
       });
       return res.status(200).json({ message: 'No FCM token' });
@@ -147,7 +148,7 @@ async function sendBatchedNotificationHandler(req, res) {
       // Mark as sent to prevent retry
       await batchRef.update({
         status: 'sent',
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        sentAt: FieldValue.serverTimestamp(),
         error: 'Notifications disabled',
       });
       return res.status(200).json({ message: 'Notifications disabled' });
@@ -179,7 +180,7 @@ async function sendBatchedNotificationHandler(req, res) {
     // Mark batch as sent
     await batchRef.update({
       status: 'sent',
-      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      sentAt: FieldValue.serverTimestamp(),
     });
 
     logger.debug('sendBatchedNotificationHandler: Batch sent successfully', { batchId });
@@ -273,7 +274,7 @@ async function sendReactionPushNotification(
     photoId: photoId,
     reactions: reactions,
     message: body,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
     read: false,
   });
 

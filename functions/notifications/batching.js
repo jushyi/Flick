@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const { FieldValue } = require('firebase-admin/firestore');
 const logger = require('../logger');
 
 /**
@@ -42,8 +43,8 @@ async function addReactionToBatch(photoId, reactorId, reactions) {
           photoId,
           reactorId,
           reactions,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
           status: 'pending',
           taskScheduled: false,
         });
@@ -67,7 +68,7 @@ async function addReactionToBatch(photoId, reactorId, reactions) {
 
       transaction.update(batchRef, {
         reactions: mergedReactions,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
     } else {
       // Create new batch
@@ -80,8 +81,8 @@ async function addReactionToBatch(photoId, reactorId, reactions) {
         photoId,
         reactorId,
         reactions,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
         status: 'pending',
         taskScheduled: false,
       });

@@ -1,9 +1,10 @@
 describe('Cloud Functions Test Infrastructure', () => {
   it('should have mocks configured correctly', () => {
     const admin = require('firebase-admin');
+    const { FieldValue, Timestamp } = require('firebase-admin/firestore');
     expect(admin.initializeApp).toBeDefined();
-    expect(admin.firestore).toBeDefined();
-    expect(admin.firestore.FieldValue.serverTimestamp).toBeDefined();
+    expect(FieldValue.serverTimestamp).toBeDefined();
+    expect(Timestamp.now).toBeDefined();
   });
 
   it('should mock expo-server-sdk correctly', () => {

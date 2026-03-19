@@ -10,25 +10,7 @@ process.env.SMTP_EMAIL = 'test@gmail.com';
 process.env.SMTP_PASSWORD = 'test-password';
 process.env.SUPPORT_EMAIL = 'support@test.com';
 
-// Mock firebase-functions (needed by logger.js)
-const mockFirestoreHandlers = {
-  onCreate: jest.fn(handler => handler),
-  onUpdate: jest.fn(handler => handler),
-  onWrite: jest.fn(handler => handler),
-  onDelete: jest.fn(handler => handler),
-};
-const mockFirestore = {
-  document: jest.fn(() => mockFirestoreHandlers),
-};
-const mockPubsub = {
-  schedule: jest.fn(() => ({
-    timeZone: jest.fn(() => ({
-      onRun: jest.fn(handler => handler),
-    })),
-    onRun: jest.fn(handler => handler),
-  })),
-};
-
+// Mock firebase-functions logger (needed by logger.js)
 jest.mock('firebase-functions', () => ({
   logger: {
     debug: jest.fn(),
@@ -36,29 +18,51 @@ jest.mock('firebase-functions', () => ({
     warn: jest.fn(),
     error: jest.fn(),
   },
-  config: jest.fn(() => ({
-    smtp: {
-      email: 'test@gmail.com',
-      password: 'test-password',
-    },
-    support: {
-      email: 'support@test.com',
-    },
-  })),
-  firestore: mockFirestore,
-  pubsub: mockPubsub,
-  runWith: jest.fn(() => ({
-    firestore: mockFirestore,
-    pubsub: mockPubsub,
-    https: {
-      onRequest: jest.fn(handler => handler),
-    },
-  })),
 }));
 
-// Mock firebase-functions/v2/https (needed by index.js for onCall)
+// Mock firebase-functions/v2/firestore (v2 Firestore triggers)
+// Handlers are wrapped to accept both v1 (snap/change, context) and v2 (event) call styles
+jest.mock('firebase-functions/v2/firestore', () => ({
+  onDocumentCreated: jest.fn((opts, handler) => {
+    // v1-to-v2 adapter: if called with (snap, context), converts to (event)
+    return function mockAdaptedOnCreate(...args) {
+      if (args.length === 2 && args[1] && args[1].params) {
+        return handler({ data: args[0], params: args[1].params });
+      }
+      return handler(...args);
+    };
+  }),
+  onDocumentWritten: jest.fn((opts, handler) => {
+    return function mockAdaptedOnWrite(...args) {
+      if (args.length === 2 && args[1] && args[1].params) {
+        const change = args[0];
+        return handler({
+          data: { before: change.before, after: change.after },
+          params: args[1].params,
+        });
+      }
+      return handler(...args);
+    };
+  }),
+  onDocumentDeleted: jest.fn((opts, handler) => {
+    return function mockAdaptedOnDelete(...args) {
+      if (args.length === 2 && args[1] && args[1].params) {
+        return handler({ data: args[0], params: args[1].params });
+      }
+      return handler(...args);
+    };
+  }),
+}));
+
+// Mock firebase-functions/v2/scheduler (v2 scheduled functions)
+jest.mock('firebase-functions/v2/scheduler', () => ({
+  onSchedule: jest.fn((opts, handler) => handler),
+}));
+
+// Mock firebase-functions/v2/https (needed by index.js for onCall and onRequest)
 jest.mock('firebase-functions/v2/https', () => ({
   onCall: jest.fn((options, handler) => handler),
+  onRequest: jest.fn((options, handler) => handler),
   HttpsError: class HttpsError extends Error {
     constructor(code, message) {
       super(message);
@@ -149,6 +153,27 @@ jest.mock('firebase-admin/firestore', () => {
 
   return {
     initializeFirestore: jest.fn(() => mockDb),
+    FieldValue: {
+      serverTimestamp: jest.fn(() => 'mock-timestamp'),
+      increment: jest.fn(n => n),
+      arrayUnion: jest.fn((...args) => args),
+      arrayRemove: jest.fn((...args) => args),
+      delete: jest.fn(() => 'mock-field-delete'),
+    },
+    Timestamp: {
+      now: jest.fn(() => ({
+        toDate: () => new Date(),
+        toMillis: () => Date.now(),
+      })),
+      fromMillis: jest.fn(ms => ({
+        toDate: () => new Date(ms),
+        toMillis: () => ms,
+      })),
+      fromDate: jest.fn(date => ({
+        toDate: () => date,
+        toMillis: () => date.getTime(),
+      })),
+    },
   };
 });
 

@@ -24,7 +24,7 @@ jest.mock('../../notifications/batching', () => ({
   scheduleNotificationTask: jest.fn().mockResolvedValue(),
 }));
 
-const { initializeFirestore } = require('firebase-admin/firestore');
+const { initializeFirestore, Timestamp } = require('firebase-admin/firestore');
 const admin = require('firebase-admin');
 
 // Get the singleton mock db
@@ -175,33 +175,34 @@ function setupOnNewMessageMocks(config = {}) {
 }
 
 /**
- * Helper: create a snap message snapshot for onNewMessage trigger
+ * Helper: create a v2 event for onDocumentCreated trigger (onNewMessage)
+ * Combines the old snapshot + context into a single event object
  */
-function createSnapSnapshot(senderId = 'user-b') {
+function createOnNewMessageEvent(
+  senderId = 'user-b',
+  conversationId = 'user-a_user-b',
+  messageId = 'msg-123'
+) {
   return {
-    data: () => ({
-      senderId,
-      type: 'snap',
-      text: null,
-      snapStoragePath: `snap-photos/${senderId}/snap123.jpg`,
-      createdAt: { _seconds: FIXED_NOW_MS / 1000 },
-    }),
+    data: {
+      data: () => ({
+        senderId,
+        type: 'snap',
+        text: null,
+        snapStoragePath: `snap-photos/${senderId}/snap123.jpg`,
+        createdAt: { _seconds: FIXED_NOW_MS / 1000 },
+      }),
+    },
+    params: { conversationId, messageId },
   };
-}
-
-/**
- * Helper: create an onNewMessage context
- */
-function createMessageContext(conversationId = 'user-a_user-b', messageId = 'msg-123') {
-  return { params: { conversationId, messageId } };
 }
 
 describe('Streak Functions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset Timestamp.now to return a stable value
-    admin.firestore.Timestamp.now.mockReturnValue(mockTimestamp(FIXED_NOW_MS));
-    admin.firestore.Timestamp.fromMillis.mockImplementation(ms => mockTimestamp(ms));
+    Timestamp.now.mockReturnValue(mockTimestamp(FIXED_NOW_MS));
+    Timestamp.fromMillis.mockImplementation(ms => mockTimestamp(ms));
   });
 
   // ==========================================================================
@@ -225,10 +226,9 @@ describe('Streak Functions', () => {
         streakExists: false,
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Verify transaction.set was called to create new streak doc
       expect(transactionOps.set).toHaveBeenCalledWith(
@@ -268,10 +268,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Should call transaction.update (not set) with just lastSnapBy + updatedAt
       expect(transactionOps.update).toHaveBeenCalledWith(
@@ -309,10 +308,9 @@ describe('Streak Functions', () => {
       });
 
       // user-b sends snap, completing the mutual exchange
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Should increment dayCount to 1
       expect(transactionOps.update).toHaveBeenCalledWith(
@@ -349,10 +347,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Should update lastSnapBy but NOT increment dayCount
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
@@ -383,10 +380,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Should increment dayCount from 5 to 6
       expect(transactionOps.update).toHaveBeenCalledWith(
@@ -418,10 +414,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // After mutual exchange, both lastSnapBy entries should be cleared
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
@@ -453,10 +448,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // streakStartedAt should be set
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
@@ -485,10 +479,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
       // dayCount goes from 5 to 6, still base tier (36h)
@@ -517,10 +510,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
       // dayCount goes from 9 to 10, enters tier10 (48h)
@@ -549,10 +541,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
       // dayCount goes from 49 to 50, enters tier50 (72h)
@@ -583,10 +574,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
       expect(updateCallArgs.warning).toBe(false);
@@ -606,10 +596,9 @@ describe('Streak Functions', () => {
         streakExists: false,
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Verify runTransaction was called (ensuring atomic read-then-write)
       expect(mockDb.runTransaction).toHaveBeenCalled();
@@ -633,11 +622,10 @@ describe('Streak Functions', () => {
       // Override runTransaction to throw
       mockDb.runTransaction.mockRejectedValue(new Error('Transaction failed'));
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
       // Should NOT throw — streak failure is caught and logged
-      const result = await onNewMessage(snapshot, context);
+      const result = await onNewMessage(event);
       expect(result).toBeNull();
     });
 
@@ -665,10 +653,9 @@ describe('Streak Functions', () => {
       });
 
       // user-b sends a snap after the streak has expired
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Should reset the streak, NOT continue from dayCount 15
       expect(transactionOps.update).toHaveBeenCalledWith(
@@ -713,10 +700,9 @@ describe('Streak Functions', () => {
       });
 
       // user-b sends snap, completing mutual exchange
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // Should increment dayCount from 5 to 6 (normal behavior, NOT reset)
       expect(transactionOps.update).toHaveBeenCalledWith(
@@ -746,17 +732,19 @@ describe('Streak Functions', () => {
       });
 
       // Send a text message, not a snap
-      const snapshot = {
-        data: () => ({
-          senderId: 'user-b',
-          type: 'text',
-          text: 'Hello!',
-          createdAt: { _seconds: FIXED_NOW_MS / 1000 },
-        }),
+      const event = {
+        data: {
+          data: () => ({
+            senderId: 'user-b',
+            type: 'text',
+            text: 'Hello!',
+            createdAt: { _seconds: FIXED_NOW_MS / 1000 },
+          }),
+        },
+        params: { conversationId: 'user-a_user-b', messageId: 'msg-123' },
       };
-      const context = createMessageContext();
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       // runTransaction should NOT have been called (no streak update for text)
       expect(mockDb.runTransaction).not.toHaveBeenCalled();
@@ -1135,10 +1123,9 @@ describe('Streak Functions', () => {
         }),
       });
 
-      const snapshot = createSnapSnapshot('user-b');
-      const context = createMessageContext();
+      const event = createOnNewMessageEvent('user-b');
 
-      await onNewMessage(snapshot, context);
+      await onNewMessage(event);
 
       const updateCallArgs = transactionOps.update.mock.calls[0][1];
       // dayCount goes from 3 to 4 (base tier, 36h)

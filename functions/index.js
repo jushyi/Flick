@@ -1,7 +1,13 @@
-const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { initializeApp, getApps, getApp } = require('firebase-admin/app');
-const { initializeFirestore } = require('firebase-admin/firestore');
+const { initializeFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
+const {
+  onDocumentCreated,
+  onDocumentWritten,
+  onDocumentDeleted,
+} = require('firebase-functions/v2/firestore');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const logger = require('./logger');
 const nodemailer = require('nodemailer');
 const {
@@ -12,7 +18,6 @@ const {
   UserDocSchema,
   SignedUrlRequestSchema,
 } = require('./validation');
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
 
 // Initialize Firebase Admin SDK with preferRest for faster cold starts
 const app = getApps().length > 0 ? getApp() : initializeApp();
@@ -184,7 +189,7 @@ async function revealUserPhotos(userId, now) {
     photosSnapshot.docs.forEach(doc => {
       batch.update(doc.ref, {
         status: 'revealed',
-        revealedAt: admin.firestore.FieldValue.serverTimestamp(),
+        revealedAt: FieldValue.serverTimestamp(),
       });
     });
     await batch.commit();
@@ -193,13 +198,13 @@ async function revealUserPhotos(userId, now) {
   // Calculate next reveal time (0-5 minutes from now)
   const randomMinutes = Math.floor(Math.random() * 6); // 0-5 minutes
   const nextRevealMs = now.toMillis() + randomMinutes * 60 * 1000;
-  const nextRevealAt = admin.firestore.Timestamp.fromMillis(nextRevealMs);
+  const nextRevealAt = Timestamp.fromMillis(nextRevealMs);
 
   // Update darkroom with new reveal time
   // This update triggers sendPhotoRevealNotification via onUpdate
   await db.collection('darkrooms').doc(userId).update({
     nextRevealAt: nextRevealAt,
-    lastRevealedAt: admin.firestore.FieldValue.serverTimestamp(),
+    lastRevealedAt: FieldValue.serverTimestamp(),
   });
 
   logger.info(
@@ -220,21 +225,21 @@ async function revealUserPhotos(userId, now) {
  * Idempotent handler for sending accumulated reaction notifications
  */
 const { sendBatchedNotificationHandler } = require('./tasks/sendBatchedNotification');
-exports.sendBatchedNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .https.onRequest(sendBatchedNotificationHandler);
+exports.sendBatchedNotification = onRequest(
+  { memory: '256MiB', timeoutSeconds: 60 },
+  sendBatchedNotificationHandler
+);
 
 /**
  * Cloud Function: Process darkroom reveals on schedule
  * Runs every 2 minutes to check all darkrooms and reveal overdue photos
  * This ensures photos reveal at scheduled time even when app is closed
  */
-exports.processDarkroomReveals = functions
-  .runWith({ memory: '512MB', timeoutSeconds: 120 })
-  .pubsub.schedule('every 2 minutes')
-  .onRun(async context => {
+exports.processDarkroomReveals = onSchedule(
+  { schedule: 'every 2 minutes', memory: '512MiB', timeoutSeconds: 120 },
+  async () => {
     try {
-      const now = admin.firestore.Timestamp.now();
+      const now = Timestamp.now();
       logger.info('processDarkroomReveals: Starting scheduled reveal check at', now.toDate());
 
       // Query all darkrooms where nextRevealAt has passed
@@ -280,7 +285,8 @@ exports.processDarkroomReveals = functions
       logger.error('processDarkroomReveals: Fatal error:', error);
       return null;
     }
-  });
+  }
+);
 
 /**
  * Cloud Function: Check push notification receipts and clean up invalid tokens
@@ -293,10 +299,9 @@ exports.processDarkroomReveals = functions
  * 4. Remove invalid tokens when DeviceNotRegistered error detected
  * 5. Clean up processed receipts
  */
-exports.checkPushReceipts = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .pubsub.schedule('every 15 minutes')
-  .onRun(async context => {
+exports.checkPushReceipts = onSchedule(
+  { schedule: 'every 15 minutes', memory: '256MiB', timeoutSeconds: 60 },
+  async () => {
     const { expo } = require('./notifications/sender');
     const {
       getPendingReceipts,
@@ -389,7 +394,8 @@ exports.checkPushReceipts = functions
       logger.error('checkPushReceipts: Fatal error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 /**
  * Cloud Function: Send notification when photos are revealed in darkroom
@@ -398,15 +404,15 @@ exports.checkPushReceipts = functions
  * IMPORTANT: Uses lastNotifiedAt to ensure only ONE notification per reveal batch.
  * This prevents spam when the scheduled function runs frequently.
  */
-exports.sendPhotoRevealNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('darkrooms/{userId}')
-  .onUpdate(async (change, context) => {
+exports.sendPhotoRevealNotification = onDocumentWritten(
+  { document: 'darkrooms/{userId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     const { sendPushNotification } = require('./notifications/sender');
     try {
-      const userId = context.params.userId;
-      const before = change.before.data();
-      const after = change.after.data();
+      if (!event.data || !event.data.before || !event.data.after) return null;
+      const userId = event.params.userId;
+      const before = event.data.before.data();
+      const after = event.data.after.data();
 
       // Guard: validate document data exists
       if (!after || typeof after !== 'object') {
@@ -461,7 +467,7 @@ exports.sendPhotoRevealNotification = functions
         );
         // Still update lastNotifiedAt to prevent future checks for this batch
         await db.collection('darkrooms').doc(userId).update({
-          lastNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+          lastNotifiedAt: FieldValue.serverTimestamp(),
         });
         return null;
       }
@@ -500,7 +506,7 @@ exports.sendPhotoRevealNotification = functions
 
       // Update lastNotifiedAt AFTER successfully sending notification
       await db.collection('darkrooms').doc(userId).update({
-        lastNotifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastNotifiedAt: FieldValue.serverTimestamp(),
       });
 
       logger.debug('sendPhotoRevealNotification: Notification sent to', userId, {
@@ -512,20 +518,21 @@ exports.sendPhotoRevealNotification = functions
       logger.error('sendPhotoRevealNotification: Error:', error);
       return null;
     }
-  });
+  }
+);
 
 /**
  * Cloud Function: Send notification when friend request is received
  * Triggered when friendship document is created with status 'pending'
  */
-exports.sendFriendRequestNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('friendships/{friendshipId}')
-  .onCreate(async (snap, context) => {
+exports.sendFriendRequestNotification = onDocumentCreated(
+  { document: 'friendships/{friendshipId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     const { sendPushNotification } = require('./notifications/sender');
     try {
-      const friendshipId = context.params.friendshipId;
-      const friendshipData = snap.data();
+      if (!event.data) return null;
+      const friendshipId = event.params.friendshipId;
+      const friendshipData = event.data.data();
 
       // Guard: validate friendshipData exists and has required shape
       if (!friendshipData || typeof friendshipData !== 'object') {
@@ -627,21 +634,22 @@ exports.sendFriendRequestNotification = functions
       logger.error('sendFriendRequestNotification: Error:', error);
       return null;
     }
-  });
+  }
+);
 
 /**
  * Cloud Function: Send notification when friend request is accepted
  * Triggered when friendship document is updated with status changing to 'accepted'
  */
-exports.sendFriendAcceptedNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('friendships/{friendshipId}')
-  .onUpdate(async (change, context) => {
+exports.sendFriendAcceptedNotification = onDocumentWritten(
+  { document: 'friendships/{friendshipId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     const { sendPushNotification } = require('./notifications/sender');
     try {
-      const friendshipId = context.params.friendshipId;
-      const before = change.before.data();
-      const after = change.after.data();
+      if (!event.data || !event.data.before || !event.data.after) return null;
+      const friendshipId = event.params.friendshipId;
+      const before = event.data.before.data();
+      const after = event.data.after.data();
 
       // Guard: validate document data exists
       if (!after || typeof after !== 'object') {
@@ -748,7 +756,7 @@ exports.sendFriendAcceptedNotification = functions
         senderProfilePhotoURL: acceptorProfilePhotoURL || null,
         friendshipId: friendshipId,
         message: body,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
         read: false,
       });
 
@@ -758,7 +766,8 @@ exports.sendFriendAcceptedNotification = functions
       logger.error('sendFriendAcceptedNotification: Error:', error);
       return null;
     }
-  });
+  }
+);
 
 /**
  * Cloud Function: Send notification when someone reacts to user's photo
@@ -769,16 +778,16 @@ exports.sendFriendAcceptedNotification = functions
  * - Cloud Tasks schedule delayed sends after 30-second window
  * - Multiple instances safely merge reactions via transactions
  */
-exports.sendReactionNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('photos/{photoId}')
-  .onUpdate(async (change, context) => {
+exports.sendReactionNotification = onDocumentWritten(
+  { document: 'photos/{photoId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     const { addReactionToBatch } = require('./notifications/batching');
 
     try {
-      const photoId = context.params.photoId;
-      const before = change.before.data();
-      const after = change.after.data();
+      if (!event.data || !event.data.before || !event.data.after) return null;
+      const photoId = event.params.photoId;
+      const before = event.data.before.data();
+      const after = event.data.after.data();
 
       // Guard: validate document data exists
       if (!after || typeof after !== 'object') {
@@ -872,7 +881,8 @@ exports.sendReactionNotification = functions
       logger.error('sendReactionNotification: Error:', error);
       return null;
     }
-  });
+  }
+);
 
 /**
  * Send the batched tag notification after debounce window expires
@@ -939,7 +949,7 @@ async function sendBatchedTagNotification(pendingKey) {
     photoIds: photoIds, // All photos in batch
     photoCount: count,
     message: message,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
     read: false,
   });
 
@@ -968,8 +978,8 @@ async function getOrCreateConversationServer(userId1, userId2) {
     await convRef.set({
       participants: [lower, higher],
       lastMessage: null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
       deletedAt: { [userId1]: null, [userId2]: null },
       unreadCount: { [userId1]: 0, [userId2]: 0 },
     });
@@ -984,14 +994,14 @@ async function getOrCreateConversationServer(userId1, userId2) {
  * Creates a type:tagged_photo message in the DM conversation between tagger and each tagged user.
  * The onNewMessage trigger handles conversation metadata (lastMessage, unreadCount) and push notifications.
  */
-exports.sendTaggedPhotoNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('photos/{photoId}')
-  .onUpdate(async (change, context) => {
+exports.sendTaggedPhotoNotification = onDocumentWritten(
+  { document: 'photos/{photoId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     try {
-      const photoId = context.params.photoId;
-      const before = change.before.data();
-      const after = change.after.data();
+      if (!event.data || !event.data.before || !event.data.after) return null;
+      const photoId = event.params.photoId;
+      const before = event.data.before.data();
+      const after = event.data.after.data();
 
       // Guard: validate document data exists
       if (!after || typeof after !== 'object') {
@@ -1088,7 +1098,7 @@ exports.sendTaggedPhotoNotification = functions
               photoId: photoId,
               photoURL: after.imageURL || null,
               photoOwnerId: taggerId,
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              createdAt: FieldValue.serverTimestamp(),
             });
 
           logger.info('sendTaggedPhotoNotification: DM message created', {
@@ -1117,7 +1127,8 @@ exports.sendTaggedPhotoNotification = functions
       logger.error('sendTaggedPhotoNotification: Error:', error);
       return null;
     }
-  });
+  }
+);
 exports.getSignedPhotoUrl = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async request => {
   const userId = request.auth?.uid;
 
@@ -1215,13 +1226,13 @@ exports.getSignedPhotoUrl = onCall({ memory: '256MiB', timeoutSeconds: 30 }, asy
  * For replies: skips comment notification to photo owner (Part 1)
  * but still processes @mention notifications (Part 2).
  */
-exports.sendCommentNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('photos/{photoId}/comments/{commentId}')
-  .onCreate(async (snap, context) => {
+exports.sendCommentNotification = onDocumentCreated(
+  { document: 'photos/{photoId}/comments/{commentId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     const { sendPushNotification } = require('./notifications/sender');
-    const { photoId, commentId } = context.params;
-    const comment = snap.data();
+    if (!event.data) return null;
+    const { photoId, commentId } = event.params;
+    const comment = event.data.data();
 
     try {
       // Guard: validate comment data
@@ -1313,7 +1324,7 @@ exports.sendCommentNotification = functions
                 photoId: photoId,
                 commentId: commentId,
                 message: inAppMessage,
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                createdAt: FieldValue.serverTimestamp(),
                 read: false,
               });
 
@@ -1455,7 +1466,7 @@ exports.sendCommentNotification = functions
               photoId: photoId,
               commentId: commentId,
               message: mentionBody,
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              createdAt: FieldValue.serverTimestamp(),
               read: false,
             });
 
@@ -1484,7 +1495,8 @@ exports.sendCommentNotification = functions
       });
       return null;
     }
-  });
+  }
+);
 
 /**
  * Delete user account and all associated data
@@ -1864,8 +1876,8 @@ exports.scheduleUserAccountDeletion = onCall(
         .collection('users')
         .doc(userId)
         .update({
-          scheduledForDeletionAt: admin.firestore.Timestamp.fromDate(scheduledForDeletionAt),
-          deletionScheduledAt: admin.firestore.FieldValue.serverTimestamp(),
+          scheduledForDeletionAt: Timestamp.fromDate(scheduledForDeletionAt),
+          deletionScheduledAt: FieldValue.serverTimestamp(),
         });
 
       logger.info('scheduleUserAccountDeletion: User scheduled for deletion', {
@@ -1906,8 +1918,8 @@ exports.cancelUserAccountDeletion = onCall(
     try {
       // Clear deletion schedule fields
       await db.collection('users').doc(userId).update({
-        scheduledForDeletionAt: admin.firestore.FieldValue.delete(),
-        deletionScheduledAt: admin.firestore.FieldValue.delete(),
+        scheduledForDeletionAt: FieldValue.delete(),
+        deletionScheduledAt: FieldValue.delete(),
       });
 
       logger.info('cancelUserAccountDeletion: Scheduled deletion canceled', { userId });
@@ -1927,21 +1939,16 @@ exports.cancelUserAccountDeletion = onCall(
  * Cloud Function: Send reminder notification 3 days before account deletion
  * Runs daily at 9 AM UTC to check for accounts approaching deletion
  */
-exports.sendDeletionReminderNotification = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 300 })
-  .pubsub.schedule('0 9 * * *') // Daily at 9 AM UTC
-  .onRun(async context => {
+exports.sendDeletionReminderNotification = onSchedule(
+  { schedule: '0 9 * * *', memory: '256MiB', timeoutSeconds: 300 }, // Daily at 9 AM UTC
+  async () => {
     const { sendPushNotification } = require('./notifications/sender');
     try {
-      const now = admin.firestore.Timestamp.now();
+      const now = Timestamp.now();
 
       // Calculate 3 days from now window (check accounts deleting in ~3 days)
-      const threeDaysFromNow = admin.firestore.Timestamp.fromMillis(
-        now.toMillis() + 3 * 24 * 60 * 60 * 1000
-      );
-      const threeDaysFromNowEnd = admin.firestore.Timestamp.fromMillis(
-        now.toMillis() + 4 * 24 * 60 * 60 * 1000
-      );
+      const threeDaysFromNow = Timestamp.fromMillis(now.toMillis() + 3 * 24 * 60 * 60 * 1000);
+      const threeDaysFromNowEnd = Timestamp.fromMillis(now.toMillis() + 4 * 24 * 60 * 60 * 1000);
 
       // Query users scheduled for deletion in ~3 days
       // (between 3 and 4 days from now to avoid duplicate notifications)
@@ -2000,20 +2007,20 @@ exports.sendDeletionReminderNotification = functions
       logger.error('sendDeletionReminderNotification: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 /**
  * Process scheduled account deletions
  * Runs daily at 3 AM UTC to find and delete accounts past their scheduled date
  * Uses the same deletion cascade as deleteUserAccount
  */
-exports.processScheduledDeletions = functions
-  .runWith({ memory: '512MB', timeoutSeconds: 300 })
-  .pubsub.schedule('0 3 * * *') // 3 AM UTC daily
-  .onRun(async context => {
+exports.processScheduledDeletions = onSchedule(
+  { schedule: '0 3 * * *', memory: '512MiB', timeoutSeconds: 300 }, // 3 AM UTC daily
+  async () => {
     const { getStorage } = require('firebase-admin/storage');
     const bucket = getStorage().bucket();
-    const now = admin.firestore.Timestamp.now();
+    const now = Timestamp.now();
 
     logger.info('processScheduledDeletions: Starting scheduled deletion check', {
       checkTime: now.toDate(),
@@ -2134,20 +2141,20 @@ exports.processScheduledDeletions = functions
       logger.error('processScheduledDeletions: Fatal error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 /**
  * Process scheduled photo deletions
  * Runs daily at 3:15 AM UTC to permanently delete photos past their 30-day grace period
  * Offset from account deletion (3 AM) to avoid resource contention
  */
-exports.processScheduledPhotoDeletions = functions
-  .runWith({ memory: '512MB', timeoutSeconds: 300 })
-  .pubsub.schedule('15 3 * * *') // 3:15 AM UTC daily
-  .onRun(async context => {
+exports.processScheduledPhotoDeletions = onSchedule(
+  { schedule: '15 3 * * *', memory: '512MiB', timeoutSeconds: 300 }, // 3:15 AM UTC daily
+  async () => {
     const { getStorage } = require('firebase-admin/storage');
     const bucket = getStorage().bucket();
-    const now = admin.firestore.Timestamp.now();
+    const now = Timestamp.now();
 
     logger.info('processScheduledPhotoDeletions: Starting', { checkTime: now.toDate() });
 
@@ -2295,7 +2302,8 @@ exports.processScheduledPhotoDeletions = functions
       logger.error('processScheduledPhotoDeletions: Fatal error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 /**
  * Clean up old notification batches and in-app notifications
@@ -2304,11 +2312,10 @@ exports.processScheduledPhotoDeletions = functions
  * - Deletes notifications older than 30 days
  * Uses batched writes to handle large volumes efficiently
  */
-exports.cleanupOldNotifications = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 120 })
-  .pubsub.schedule('0 2 * * *') // 2 AM UTC daily
-  .onRun(async _context => {
-    const now = admin.firestore.Timestamp.now();
+exports.cleanupOldNotifications = onSchedule(
+  { schedule: '0 2 * * *', memory: '256MiB', timeoutSeconds: 120 }, // 2 AM UTC daily
+  async () => {
+    const now = Timestamp.now();
     const sevenDaysAgo = new Date(now.toMillis() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.toMillis() - 30 * 24 * 60 * 60 * 1000);
 
@@ -2327,7 +2334,7 @@ exports.cleanupOldNotifications = functions
       const batchesSnapshot = await db
         .collection('reactionBatches')
         .where('status', '==', 'sent')
-        .where('sentAt', '<', admin.firestore.Timestamp.fromDate(sevenDaysAgo))
+        .where('sentAt', '<', Timestamp.fromDate(sevenDaysAgo))
         .limit(500) // Process in chunks to avoid timeouts
         .get();
 
@@ -2354,7 +2361,7 @@ exports.cleanupOldNotifications = functions
 
       const notificationsSnapshot = await db
         .collection('notifications')
-        .where('createdAt', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+        .where('createdAt', '<', Timestamp.fromDate(thirtyDaysAgo))
         .limit(500) // Process in chunks
         .get();
 
@@ -2393,19 +2400,20 @@ exports.cleanupOldNotifications = functions
       });
       return { success: false, error: error.message };
     }
-  });
+  }
+);
 
 /**
  * Increment friendCount on both users when a friendship is accepted
  * Triggers on friendship document update (pending → accepted)
  */
-exports.incrementFriendCountOnAccept = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('friendships/{friendshipId}')
-  .onUpdate(async change => {
+exports.incrementFriendCountOnAccept = onDocumentWritten(
+  { document: 'friendships/{friendshipId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     try {
-      const before = change.before.data();
-      const after = change.after.data();
+      if (!event.data || !event.data.before || !event.data.after) return null;
+      const before = event.data.before.data();
+      const after = event.data.after.data();
 
       if (!before || !after) return null;
       if (before.status === 'accepted' || after.status !== 'accepted') return null;
@@ -2413,7 +2421,7 @@ exports.incrementFriendCountOnAccept = functions
       const { user1Id, user2Id } = after;
       if (!user1Id || !user2Id) return null;
 
-      const increment = admin.firestore.FieldValue.increment(1);
+      const increment = FieldValue.increment(1);
       await Promise.all([
         db.collection('users').doc(user1Id).update({ friendCount: increment }),
         db.collection('users').doc(user2Id).update({ friendCount: increment }),
@@ -2425,18 +2433,19 @@ exports.incrementFriendCountOnAccept = functions
       logger.error('incrementFriendCountOnAccept: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 /**
  * Decrement friendCount on both users when an accepted friendship is deleted
  * Triggers on friendship document deletion
  */
-exports.decrementFriendCountOnRemove = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('friendships/{friendshipId}')
-  .onDelete(async snapshot => {
+exports.decrementFriendCountOnRemove = onDocumentDeleted(
+  { document: 'friendships/{friendshipId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     try {
-      const data = snapshot.data();
+      if (!event.data) return null;
+      const data = event.data.data();
       if (!data) return null;
 
       // Only decrement if the deleted friendship was accepted
@@ -2445,7 +2454,7 @@ exports.decrementFriendCountOnRemove = functions
       const { user1Id, user2Id } = data;
       if (!user1Id || !user2Id) return null;
 
-      const decrement = admin.firestore.FieldValue.increment(-1);
+      const decrement = FieldValue.increment(-1);
       await Promise.all([
         db.collection('users').doc(user1Id).update({ friendCount: decrement }),
         db.collection('users').doc(user2Id).update({ friendCount: decrement }),
@@ -2457,7 +2466,8 @@ exports.decrementFriendCountOnRemove = functions
       logger.error('decrementFriendCountOnRemove: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 /**
  * One-time migration: backfill friendCount on all user documents
@@ -2516,15 +2526,14 @@ exports.backfillFriendCounts = onCall({ memory: '512MiB', timeoutSeconds: 300 },
  * Sends formatted email with report details to configured support address
  * Email failure is logged but doesn't prevent report submission (already in Firestore)
  */
-exports.onReportCreated = functions.firestore
-  .document('reports/{reportId}')
-  .onCreate(async (snapshot, context) => {
-    const report = snapshot.data();
-    const reportId = context.params.reportId;
+exports.onReportCreated = onDocumentCreated('reports/{reportId}', async event => {
+  if (!event.data) return null;
+  const report = event.data.data();
+  const reportId = event.params.reportId;
 
-    const subject = `[REPORT] ${report.reason} — ${report.profileSnapshot?.username || 'Unknown user'}`;
+  const subject = `[REPORT] ${report.reason} — ${report.profileSnapshot?.username || 'Unknown user'}`;
 
-    const body = `
+  const body = `
 New Report Submitted
 ====================
 
@@ -2544,21 +2553,21 @@ View in Firebase Console:
 https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firestore/data/reports/${reportId}
     `.trim();
 
-    try {
-      const transporter = getTransporter();
-      await transporter.sendMail({
-        from: `"Flick Reports" <${process.env.SMTP_EMAIL}>`,
-        to: process.env.SUPPORT_EMAIL,
-        subject,
-        text: body,
-      });
-      logger.info('Report email sent', { reportId, reason: report.reason });
-    } catch (error) {
-      logger.error('Failed to send report email', { reportId, error: error.message });
-      // Don't throw — the report is already saved in Firestore.
-      // Email failure shouldn't prevent report submission.
-    }
-  });
+  try {
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: `"Flick Reports" <${process.env.SMTP_EMAIL}>`,
+      to: process.env.SUPPORT_EMAIL,
+      subject,
+      text: body,
+    });
+    logger.info('Report email sent', { reportId, reason: report.reason });
+  } catch (error) {
+    logger.error('Failed to send report email', { reportId, error: error.message });
+    // Don't throw — the report is already saved in Firestore.
+    // Email failure shouldn't prevent report submission.
+  }
+});
 
 /**
  * Email support requests to support address
@@ -2566,22 +2575,21 @@ https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firest
  * Sends formatted email with request details to configured support address
  * Email failure is logged but doesn't prevent request submission (already in Firestore)
  */
-exports.onSupportRequestCreated = functions.firestore
-  .document('supportRequests/{requestId}')
-  .onCreate(async (snapshot, context) => {
-    const request = snapshot.data();
-    const requestId = context.params.requestId;
+exports.onSupportRequestCreated = onDocumentCreated('supportRequests/{requestId}', async event => {
+  if (!event.data) return null;
+  const request = event.data.data();
+  const requestId = event.params.requestId;
 
-    const categoryLabels = {
-      support: 'Support',
-      bug_report: 'Bug Report',
-      feature_request: 'Feature Request',
-    };
+  const categoryLabels = {
+    support: 'Support',
+    bug_report: 'Bug Report',
+    feature_request: 'Feature Request',
+  };
 
-    const categoryLabel = categoryLabels[request.category] || request.category;
-    const subject = `[${categoryLabel.toUpperCase()}] Flick Support Request`;
+  const categoryLabel = categoryLabels[request.category] || request.category;
+  const subject = `[${categoryLabel.toUpperCase()}] Flick Support Request`;
 
-    const body = `
+  const body = `
 New Support Request
 ====================
 
@@ -2599,20 +2607,20 @@ View in Firebase Console:
 https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firestore/data/supportRequests/${requestId}
     `.trim();
 
-    try {
-      const transporter = getTransporter();
-      await transporter.sendMail({
-        from: `"Flick Support" <${process.env.SMTP_EMAIL}>`,
-        to: 'support@flickcam.app',
-        subject,
-        text: body,
-      });
-      logger.info('Support request email sent', { requestId, category: request.category });
-    } catch (error) {
-      logger.error('Failed to send support request email', { requestId, error: error.message });
-      // Don't throw — the request is already saved in Firestore.
-    }
-  });
+  try {
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: `"Flick Support" <${process.env.SMTP_EMAIL}>`,
+      to: 'support@flickcam.app',
+      subject,
+      text: body,
+    });
+    logger.info('Support request email sent', { requestId, category: request.category });
+  } catch (error) {
+    logger.error('Failed to send support request email', { requestId, error: error.message });
+    // Don't throw — the request is already saved in Firestore.
+  }
+});
 
 /**
  * Delete notifications for a photo immediately when it is soft-deleted.
@@ -2620,20 +2628,20 @@ https://console.firebase.google.com/project/${process.env.GCLOUD_PROJECT}/firest
  * cross-user queries on the notifications collection. This trigger runs with
  * admin privileges and fires as soon as photoState transitions to 'deleted'.
  */
-exports.onPhotoSoftDeleted = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('photos/{photoId}')
-  .onUpdate(async (change, context) => {
+exports.onPhotoSoftDeleted = onDocumentWritten(
+  { document: 'photos/{photoId}', memory: '256MiB', timeoutSeconds: 60 },
+  async event => {
     try {
-      const before = change.before.data();
-      const after = change.after.data();
+      if (!event.data || !event.data.before || !event.data.after) return null;
+      const before = event.data.before.data();
+      const after = event.data.after.data();
 
       if (!before || !after) return null;
 
       // Only act on the transition to 'deleted' — ignore all other updates
       if (before.photoState === 'deleted' || after.photoState !== 'deleted') return null;
 
-      const photoId = context.params.photoId;
+      const photoId = event.params.photoId;
 
       const notifSnapshot = await db
         .collection('notifications')
@@ -2658,7 +2666,8 @@ exports.onPhotoSoftDeleted = functions
       logger.error('onPhotoSoftDeleted: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 /**
  * unsendMessage - Callable function to soft-delete a message within 15-minute window
@@ -2718,7 +2727,7 @@ exports.unsendMessage = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async r
   // Soft-delete the message
   batch.update(messageRef, {
     unsent: true,
-    unsentAt: admin.firestore.FieldValue.serverTimestamp(),
+    unsentAt: FieldValue.serverTimestamp(),
   });
 
   // Cascade 1: Remove reactions targeting this message
@@ -2728,7 +2737,7 @@ exports.unsendMessage = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async r
   reactionsSnap.docs.forEach(doc => {
     batch.update(doc.ref, {
       unsent: true,
-      unsentAt: admin.firestore.FieldValue.serverTimestamp(),
+      unsentAt: FieldValue.serverTimestamp(),
     });
   });
 
@@ -2830,7 +2839,7 @@ exports.unsendMessage = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async r
  */
 async function updateStreakOnSnap(conversationId, senderId, recipientId) {
   const streakRef = db.collection('streaks').doc(conversationId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   const nowMs = now.toMillis();
 
   await db.runTransaction(async transaction => {
@@ -2920,8 +2929,8 @@ async function updateStreakOnSnap(conversationId, senderId, recipientId) {
     const updateData = {
       dayCount: newDayCount,
       lastMutualAt: now,
-      expiresAt: admin.firestore.Timestamp.fromMillis(expiresAtMs),
-      warningAt: admin.firestore.Timestamp.fromMillis(warningAtMs),
+      expiresAt: Timestamp.fromMillis(expiresAtMs),
+      warningAt: Timestamp.fromMillis(warningAtMs),
       warning: false,
       warningSentAt: null,
       // Clear both users' lastSnapBy entries (reset for next day's exchange)
@@ -2950,14 +2959,18 @@ async function updateStreakOnSnap(conversationId, senderId, recipientId) {
  *    - Reaction removal (emoji: null) is silent (no notification)
  * 3. Updates streak data for snap messages (best-effort)
  */
-exports.onNewMessage = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('conversations/{conversationId}/messages/{messageId}')
-  .onCreate(async (snapshot, context) => {
+exports.onNewMessage = onDocumentCreated(
+  {
+    document: 'conversations/{conversationId}/messages/{messageId}',
+    memory: '256MiB',
+    timeoutSeconds: 60,
+  },
+  async event => {
     const { sendPushNotification } = require('./notifications/sender');
     try {
-      const { conversationId } = context.params;
-      const message = snapshot.data();
+      if (!event.data) return null;
+      const { conversationId } = event.params;
+      const message = event.data.data();
 
       // Guard: validate message data exists and has required shape
       if (!message || typeof message !== 'object') {
@@ -3038,7 +3051,7 @@ exports.onNewMessage = functions
         };
 
         if (shouldIncrementUnread) {
-          updateData[`unreadCount.${recipientId}`] = admin.firestore.FieldValue.increment(1);
+          updateData[`unreadCount.${recipientId}`] = FieldValue.increment(1);
         }
 
         await convRef.update(updateData);
@@ -3145,7 +3158,7 @@ exports.onNewMessage = functions
 
         // Include messageId for snap notifications so client can auto-open the viewer
         if (messageType === 'snap') {
-          notificationData.messageId = context.params.messageId;
+          notificationData.messageId = event.params.messageId;
 
           // Include pinned snap fields for Live Activity on recipient device
           if (message.pinned === true) {
@@ -3175,7 +3188,7 @@ exports.onNewMessage = functions
             logger.info('onNewMessage: Sending PINNED snap notification with thumbnail', {
               recipientId,
               conversationId,
-              messageId: context.params.messageId,
+              messageId: event.params.messageId,
               mutableContent: true,
               pinnedActivityId: notificationData.pinnedActivityId,
               pinnedThumbnailUrl: thumbnailUrl ? thumbnailUrl.substring(0, 80) + '...' : '(empty)',
@@ -3229,7 +3242,8 @@ exports.onNewMessage = functions
       logger.error('onNewMessage: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 // =============================================================================
 // TAGGED PHOTO - ADD TO FEED
@@ -3347,7 +3361,7 @@ exports.addTaggedPhotoToFeed = onCall({ memory: '256MiB', timeoutSeconds: 60 }, 
     month: month,
     reactions: {},
     reactionCount: 0,
-    triagedAt: admin.firestore.FieldValue.serverTimestamp(),
+    triagedAt: FieldValue.serverTimestamp(),
     attribution: {
       originalPhotoId: photoId,
       photographerId: photographerId,
@@ -3362,7 +3376,7 @@ exports.addTaggedPhotoToFeed = onCall({ memory: '256MiB', timeoutSeconds: 60 }, 
   await messageRef.update({
     [`addedToFeedBy.${recipientId}`]: {
       newPhotoId: newPhotoRef.id,
-      addedAt: admin.firestore.FieldValue.serverTimestamp(),
+      addedAt: FieldValue.serverTimestamp(),
     },
   });
 
@@ -3593,13 +3607,17 @@ exports.getSignedSnapUrl = onCall({ memory: '256MiB', timeoutSeconds: 30 }, asyn
  *
  * Deletes the Storage file (best-effort -- logs errors but does not throw).
  */
-exports.onSnapViewed = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 60 })
-  .firestore.document('conversations/{conversationId}/messages/{messageId}')
-  .onUpdate(async (change, context) => {
-    const { conversationId, messageId } = context.params;
-    const before = change.before.data();
-    const after = change.after.data();
+exports.onSnapViewed = onDocumentWritten(
+  {
+    document: 'conversations/{conversationId}/messages/{messageId}',
+    memory: '256MiB',
+    timeoutSeconds: 60,
+  },
+  async event => {
+    if (!event.data || !event.data.before || !event.data.after) return null;
+    const { conversationId, messageId } = event.params;
+    const before = event.data.before.data();
+    const after = event.data.after.data();
 
     // Guard: only process snap messages
     if (after.type !== 'snap') {
@@ -3638,7 +3656,8 @@ exports.onSnapViewed = functions
     }
 
     return null;
-  });
+  }
+);
 
 /**
  * cleanupExpiredSnaps - Scheduled function to delete orphaned snap messages
@@ -3654,14 +3673,13 @@ exports.onSnapViewed = functions
  *
  * Limited to 100 messages per run to avoid timeout.
  */
-exports.cleanupExpiredSnaps = functions
-  .runWith({ memory: '512MB', timeoutSeconds: 120 })
-  .pubsub.schedule('every 2 hours')
-  .onRun(async () => {
+exports.cleanupExpiredSnaps = onSchedule(
+  { schedule: 'every 2 hours', memory: '512MiB', timeoutSeconds: 120 },
+  async () => {
     logger.info('cleanupExpiredSnaps: Starting cleanup run');
 
     try {
-      const now = admin.firestore.Timestamp.now();
+      const now = Timestamp.now();
 
       // Collection group query across all conversations' messages subcollections
       const expiredSnaps = await db
@@ -3724,7 +3742,8 @@ exports.cleanupExpiredSnaps = functions
       logger.error('cleanupExpiredSnaps: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 // =============================================================================
 // PINNED SNAP NOTIFICATION EXPIRY
@@ -3747,12 +3766,11 @@ exports.cleanupExpiredSnaps = functions
  * type, pinned, viewedAt, createdAt. The index will be created automatically when the
  * function first runs and Firestore returns an error with a direct link to create it.
  */
-exports.expirePinnedSnapNotifications = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 120 })
-  .pubsub.schedule('every 2 hours')
-  .onRun(async () => {
+exports.expirePinnedSnapNotifications = onSchedule(
+  { schedule: 'every 2 hours', memory: '256MiB', timeoutSeconds: 120 },
+  async () => {
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
-    const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoff);
+    const cutoffTimestamp = Timestamp.fromDate(cutoff);
 
     try {
       const snapshot = await db
@@ -3824,7 +3842,8 @@ exports.expirePinnedSnapNotifications = functions
       logger.error('expirePinnedSnapNotifications: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);
 
 // =============================================================================
 // STREAK EXPIRY PROCESSING
@@ -3841,14 +3860,13 @@ exports.expirePinnedSnapNotifications = functions
  *
  * Limited to 200 streaks per phase per run to avoid timeout.
  */
-exports.processStreakExpiry = functions
-  .runWith({ memory: '256MB', timeoutSeconds: 120 })
-  .pubsub.schedule('every 30 minutes')
-  .onRun(async () => {
+exports.processStreakExpiry = onSchedule(
+  { schedule: 'every 30 minutes', memory: '256MiB', timeoutSeconds: 120 },
+  async () => {
     const { sendPushNotification } = require('./notifications/sender');
 
     try {
-      const now = admin.firestore.Timestamp.now();
+      const now = Timestamp.now();
       const nowMs = now.toMillis();
 
       // 1. Process warnings: warningAt <= now AND warning == false
@@ -3954,4 +3972,5 @@ exports.processStreakExpiry = functions
       logger.error('processStreakExpiry: Error', { error: error.message });
       return null;
     }
-  });
+  }
+);

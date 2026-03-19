@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const { FieldValue } = require('firebase-admin/firestore');
 const logger = require('../logger');
 
 /**
@@ -15,7 +16,7 @@ async function storePendingReceipt(ticketId, userId, token) {
     await admin.firestore().collection('pendingReceipts').doc(ticketId).set({
       userId,
       token,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     logger.debug('storePendingReceipt: Stored receipt', {

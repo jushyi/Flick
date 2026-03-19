@@ -11,7 +11,7 @@
  * the handler directly. Handlers receive (context) with no document params.
  */
 
-const { initializeFirestore } = require('firebase-admin/firestore');
+const { initializeFirestore, Timestamp } = require('firebase-admin/firestore');
 const admin = require('firebase-admin');
 
 // Mock notifications modules for checkPushReceipts
@@ -177,7 +177,7 @@ describe('processDarkroomReveals', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Set up Timestamp.now() for the scheduled function
-    admin.firestore.Timestamp.now.mockReturnValue({
+    Timestamp.now.mockReturnValue({
       toDate: () => new Date(),
       toMillis: () => Date.now(),
     });
@@ -257,7 +257,7 @@ describe('processDarkroomReveals', () => {
 describe('processScheduledDeletions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    admin.firestore.Timestamp.now.mockReturnValue({
+    Timestamp.now.mockReturnValue({
       toDate: () => new Date(),
       toMillis: () => Date.now(),
     });
@@ -349,7 +349,7 @@ describe('processScheduledDeletions', () => {
 describe('processScheduledPhotoDeletions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    admin.firestore.Timestamp.now.mockReturnValue({
+    Timestamp.now.mockReturnValue({
       toDate: () => new Date(),
       toMillis: () => Date.now(),
     });
