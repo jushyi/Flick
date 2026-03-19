@@ -659,7 +659,9 @@ const useDarkroom = () => {
       if (photos.length === 0) return;
 
       const visiblePhotosForPrefetch = photos.filter(p => !hiddenPhotoIds.has(p.id)).slice(0, 4);
-      const urls = visiblePhotosForPrefetch.map(p => p.imageURL).filter(Boolean);
+      const urls = visiblePhotosForPrefetch
+        .map(p => p.imageURL || p.thumbnailDataURL || p.videoURL)
+        .filter(Boolean);
 
       if (urls.length === 0) return;
 

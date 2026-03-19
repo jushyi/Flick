@@ -290,6 +290,16 @@ export const styles = StyleSheet.create({
     borderRadius: layout.borderRadius.full,
     backgroundColor: colors.background.white,
   },
+  // Recording state: hide outer ring border, keep same size
+  captureButtonOuterRecording: {
+    borderColor: 'transparent',
+  },
+  captureButtonRed: {
+    backgroundColor: '#FF3B30',
+  },
+  captureButtonInnerRed: {
+    backgroundColor: '#FF3B30',
+  },
   // Flash overlay for camera shutter effect - contained within camera preview
   flashOverlay: {
     ...StyleSheet.absoluteFillObject,

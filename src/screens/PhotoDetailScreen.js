@@ -19,7 +19,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -729,6 +729,23 @@ const PhotoDetailScreen = () => {
   const isVideo = currentPhoto?.mediaType === 'video';
   const videoURL = currentPhoto?.videoURL;
 
+  // Hold-to-pause state for videos
+  const [videoPaused, setVideoPaused] = useState(false);
+
+  // Video mute flash indicator (same as feed)
+  const [muteFlash, setMuteFlash] = useState(null);
+  const prevMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    if (!isVideo) return;
+    if (prevMutedRef.current !== isMuted) {
+      setMuteFlash(isMuted ? 'muted' : 'unmuted');
+      const timer = setTimeout(() => setMuteFlash(null), 800);
+      prevMutedRef.current = isMuted;
+      return () => clearTimeout(timer);
+    }
+  }, [isMuted, isVideo]);
+
   // Disabled for own photos
   const handleAvatarPress = useCallback(() => {
     if (isOwnPhoto) return;
@@ -887,6 +904,33 @@ const PhotoDetailScreen = () => {
       captionInputRef.current?.focus();
     }, 100);
   }, [currentPhoto?.caption]);
+
+  // Handle tap on photo/video area — unified for both photos and videos
+  const handleMediaPress = useCallback(
+    event => {
+      if (isEditingCaption) {
+        Keyboard.dismiss();
+        handleSaveCaption();
+        return;
+      }
+
+      if (isVideo) {
+        if (contextMode === 'stories') {
+          const { locationX } = event.nativeEvent;
+          if (locationX < SCREEN_WIDTH * 0.3 || locationX > SCREEN_WIDTH * 0.7) {
+            handleTapNavigation(event);
+          } else {
+            toggleMute();
+          }
+        } else {
+          toggleMute();
+        }
+      } else if (contextMode === 'stories') {
+        handleTapNavigation(event);
+      }
+    },
+    [isVideo, isEditingCaption, contextMode, handleTapNavigation, toggleMute, handleSaveCaption]
+  );
 
   const handleArchive = useCallback(() => {
     setShowPhotoMenu(false);
@@ -1126,60 +1170,71 @@ const PhotoDetailScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Photo - TouchableWithoutFeedback for swipe-to-close gesture support */}
-            <TouchableWithoutFeedback
-              onPress={
-                isEditingCaption
-                  ? () => {
-                      Keyboard.dismiss();
-                      handleSaveCaption();
-                    }
-                  : contextMode === 'stories'
-                    ? handleTapNavigation
-                    : undefined
-              }
+            {/* Photo/Video tap area — handles stories navigation + video mute toggle */}
+            <Pressable
+              onPress={handleMediaPress}
+              onLongPress={isVideo ? () => setVideoPaused(true) : undefined}
+              onPressOut={isVideo ? () => setVideoPaused(false) : undefined}
+              delayLongPress={300}
+              style={styles.photoScrollView}
             >
-              <View style={styles.photoScrollView}>
-                {/* Dark loading overlay - covers photo completely during loading */}
-                {showLoadingOverlay && (
-                  <View style={localStyles.darkLoadingOverlay}>
-                    <PixelSpinner size="small" color="rgba(255, 255, 255, 0.6)" />
+              {/* Dark loading overlay - covers photo completely during loading */}
+              {showLoadingOverlay && (
+                <View style={localStyles.darkLoadingOverlay}>
+                  <PixelSpinner size="small" color="rgba(255, 255, 255, 0.6)" />
+                </View>
+              )}
+              {isVideo && videoURL ? (
+                <VideoPlayer
+                  source={videoURL}
+                  isMuted={isMuted}
+                  onToggleMute={toggleMute}
+                  loop={contextMode !== 'stories'}
+                  autoPlay={true}
+                  showControls={false}
+                  isPaused={videoPaused}
+                  onPlayToEnd={contextMode === 'stories' ? handleVideoPlayToEnd : undefined}
+                  onTimeUpdate={handleVideoTimeUpdate}
+                  style={styles.photo}
+                  contentFit="cover"
+                  isVisible={true}
+                />
+              ) : (
+                <Image
+                  source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
+                  placeholder={
+                    currentPhoto?.thumbnailDataURL
+                      ? { uri: currentPhoto.thumbnailDataURL }
+                      : undefined
+                  }
+                  placeholderContentFit="cover"
+                  style={styles.photo}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={currentPhoto?.thumbnailDataURL ? 200 : 0}
+                  priority={isTransitioning ? 'normal' : 'high'}
+                  onLoadStart={handleImageLoadStart}
+                  onLoadEnd={handleImageLoadEnd}
+                />
+              )}
+
+              {/* Mute flash indicator for videos */}
+              {isVideo && muteFlash && (
+                <View style={localStyles.muteFlashOverlay} pointerEvents="none">
+                  <View style={localStyles.muteFlashBubble}>
+                    <PixelIcon
+                      name={
+                        muteFlash === 'muted'
+                          ? 'notifications-off-outline'
+                          : 'musical-notes-outline'
+                      }
+                      size={28}
+                      color={colors.text.primary}
+                    />
                   </View>
-                )}
-                {isVideo && videoURL ? (
-                  <VideoPlayer
-                    source={videoURL}
-                    isMuted={isMuted}
-                    onToggleMute={toggleMute}
-                    loop={contextMode !== 'stories'}
-                    autoPlay={true}
-                    showControls={true}
-                    onPlayToEnd={contextMode === 'stories' ? handleVideoPlayToEnd : undefined}
-                    onTimeUpdate={contextMode === 'stories' ? handleVideoTimeUpdate : undefined}
-                    style={styles.photo}
-                    contentFit="cover"
-                    isVisible={true}
-                  />
-                ) : (
-                  <Image
-                    source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
-                    placeholder={
-                      currentPhoto?.thumbnailDataURL
-                        ? { uri: currentPhoto.thumbnailDataURL }
-                        : undefined
-                    }
-                    placeholderContentFit="cover"
-                    style={styles.photo}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                    transition={currentPhoto?.thumbnailDataURL ? 200 : 0}
-                    priority={isTransitioning ? 'normal' : 'high'}
-                    onLoadStart={handleImageLoadStart}
-                    onLoadEnd={handleImageLoadEnd}
-                  />
-                )}
-              </View>
-            </TouchableWithoutFeedback>
+                </View>
+              )}
+            </Pressable>
 
             {/* Profile photo - overlapping top left of photo, tappable to navigate to profile */}
             <TouchableOpacity
@@ -1376,8 +1431,11 @@ const PhotoDetailScreen = () => {
                 {Array.from({ length: totalPhotos }).map((_, index) => {
                   const isCurrentSegment = index === currentIndex;
                   const isPast = index < currentIndex;
-                  const isCurrentVideo =
-                    isCurrentSegment && contextPhotos[index]?.mediaType === 'video';
+                  // Use contextPhotos directly — check both mediaType and videoURL presence
+                  const photoAtIndex = contextPhotos[index];
+                  const isCurrentVideoSegment =
+                    isCurrentSegment &&
+                    (photoAtIndex?.mediaType === 'video' || !!photoAtIndex?.videoURL);
 
                   return (
                     <View
@@ -1387,13 +1445,13 @@ const PhotoDetailScreen = () => {
                         { width: segmentWidth },
                         isPast
                           ? styles.progressSegmentActive
-                          : isCurrentSegment && !isCurrentVideo
+                          : isCurrentSegment && !isCurrentVideoSegment
                             ? styles.progressSegmentActive
                             : styles.progressSegmentInactive,
                       ]}
                     >
                       {/* For current video segment, show partial fill based on video progress */}
-                      {isCurrentVideo && (
+                      {isCurrentVideoSegment && (
                         <View
                           style={[
                             styles.progressSegmentActive,
@@ -1402,7 +1460,7 @@ const PhotoDetailScreen = () => {
                               top: 0,
                               left: 0,
                               bottom: 0,
-                              width: `${videoProgress * 100}%`,
+                              width: `${(videoProgress || 0) * 100}%`,
                               borderRadius: 1,
                             },
                           ]}
@@ -1803,6 +1861,20 @@ const localStyles = StyleSheet.create({
   },
   addToFeedTextDisabled: {
     color: 'rgba(10, 10, 26, 0.5)',
+  },
+  muteFlashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 3,
+  },
+  muteFlashBubble: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.overlay.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

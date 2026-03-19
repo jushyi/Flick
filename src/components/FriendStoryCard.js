@@ -85,7 +85,10 @@ const FriendStoryCard = ({
     <View style={styles.photoContainer}>
       {thumbnailUrl ? (
         <Image
-          source={{ uri: thumbnailUrl, cacheKey: `story-thumb-${userId}` }}
+          source={{
+            uri: thumbnailUrl,
+            cacheKey: profileCacheKey(`story-thumb-${userId}`, thumbnailUrl),
+          }}
           style={styles.photoThumbnail}
           contentFit="cover"
           transition={0}

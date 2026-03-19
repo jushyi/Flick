@@ -11,7 +11,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Animated, Dimensions, Platform } from 'react-native';
-import { useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import * as ImageManipulator from 'expo-image-manipulator';
 
@@ -78,6 +78,7 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
   const route = useRoute();
 
   const [permission, requestPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
 
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState('off');
@@ -94,12 +95,17 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
 
   // Video recording state
   const [isRecording, setIsRecording] = useState(false);
-  const [cameraMode, setCameraMode] = useState('picture'); // 'picture' | 'video'
   const [recordingDuration, setRecordingDuration] = useState(0);
+  // Android can't take photos in video mode — use picture mode by default, switch for recording
+  // iOS supports both in video mode, so stay in video mode always
+  const [cameraMode, setCameraMode] = useState(Platform.OS === 'ios' ? 'video' : 'picture');
   const holdTimerRef = useRef(null);
   const recordingTimerRef = useRef(null);
   const isFacingLockedRef = useRef(false);
   const recordingDurationRef = useRef(0); // Ref mirror for async access
+  const stopRequestedRef = useRef(false);
+  const cameraReadyRef = useRef(true);
+  const cameraReadyResolverRef = useRef(null);
 
   const cameraRef = useRef(null);
   const flashOpacity = useRef(new Animated.Value(0)).current;
@@ -112,6 +118,13 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
       initializeQueue();
     }
   }, [isSnapMode]);
+
+  // Request microphone permission eagerly so first recording doesn't fail
+  useEffect(() => {
+    if (!micPermission?.granted) {
+      requestMicPermission();
+    }
+  }, [micPermission, requestMicPermission]);
 
   // Load darkroom counts on mount and poll every 30s
   useEffect(() => {
@@ -234,6 +247,28 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     };
   }, []);
 
+  // Camera ready callback (needed for Android mode switches)
+  const handleCameraReady = useCallback(() => {
+    cameraReadyRef.current = true;
+    if (cameraReadyResolverRef.current) {
+      cameraReadyResolverRef.current();
+      cameraReadyResolverRef.current = null;
+    }
+  }, []);
+
+  const waitForCameraReady = useCallback(() => {
+    if (cameraReadyRef.current) return Promise.resolve();
+    return new Promise(resolve => {
+      cameraReadyResolverRef.current = resolve;
+      setTimeout(() => {
+        if (cameraReadyResolverRef.current) {
+          cameraReadyResolverRef.current();
+          cameraReadyResolverRef.current = null;
+        }
+      }, 3000);
+    });
+  }, []);
+
   // Handle completed video recording
   const handleRecordingComplete = useCallback(
     result => {
@@ -272,12 +307,26 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
   const startRecording = useCallback(async () => {
     if (!cameraRef.current || !user) return;
 
-    try {
-      // Switch to video mode
-      setCameraMode('video');
+    // Check if stop was already requested (user released before we got here)
+    if (stopRequestedRef.current) {
+      stopRequestedRef.current = false;
+      return;
+    }
 
-      // Brief delay for camera reconfiguration
-      await new Promise(resolve => setTimeout(resolve, 100));
+    try {
+      // Android: switch to video mode and wait for camera reconfiguration
+      if (Platform.OS === 'android') {
+        cameraReadyRef.current = false;
+        setCameraMode('video');
+        await waitForCameraReady();
+
+        // Re-check stop requested after async wait
+        if (stopRequestedRef.current) {
+          stopRequestedRef.current = false;
+          setCameraMode('picture');
+          return;
+        }
+      }
 
       // Haptic feedback for recording start
       lightImpact();
@@ -316,19 +365,25 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
-      setCameraMode('picture');
+      // Android: switch back to picture mode
+      if (Platform.OS === 'android') {
+        setCameraMode('picture');
+      }
     }
-  }, [user, handleRecordingComplete]);
+  }, [user, handleRecordingComplete, waitForCameraReady]);
 
   // Handle press in (start hold timer)
   const handlePressIn = useCallback(() => {
+    // Ignore new presses while recording (prevents multi-touch interference)
+    if (isRecording) return;
+
     lightImpact(); // Immediate tactile feedback
 
     holdTimerRef.current = setTimeout(() => {
       holdTimerRef.current = null;
       startRecording();
     }, HOLD_THRESHOLD_MS);
-  }, [startRecording]);
+  }, [startRecording, isRecording]);
 
   // Take a photo (used by handlePressOut for tap-to-capture)
   const takePicture = useCallback(async () => {
@@ -413,14 +468,17 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     }
 
     // If recording, stop it
-    if (cameraRef.current && isRecording) {
+    if (isRecording && cameraRef.current) {
       lightImpact(); // Recording-stop haptic
       try {
         cameraRef.current.stopRecording();
       } catch (error) {
         logger.warn('useCameraBase: Error stopping recording', { error: error.message });
       }
-      // The recordAsync promise in startRecording will resolve and clean up state
+    } else {
+      // Recording hasn't started yet (startRecording still pending)
+      // Signal it to abort when it runs
+      stopRequestedRef.current = true;
     }
   }, [isSnapMode, onSnapCapture, isRecording, takePicture]);
 
@@ -467,6 +525,7 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     cameraMode,
     recordingDuration,
     isFacingLockedRef,
+    handleCameraReady,
 
     // Darkroom state
     darkroomCounts,

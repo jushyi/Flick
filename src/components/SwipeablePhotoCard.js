@@ -27,6 +27,7 @@ import { Image } from 'expo-image';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import PixelIcon from './PixelIcon';
+import VideoPlayer from './VideoPlayer';
 import logger from '../utils/logger';
 import useSwipeableCard from '../hooks/useSwipeableCard';
 import { styles } from '../styles/SwipeablePhotoCard.styles';
@@ -69,8 +70,9 @@ const SwipeablePhotoCard = forwardRef(
         ref,
       });
 
-    if (!photo || !photo.imageURL) {
-      logger.warn('SwipeablePhotoCard: Missing photo or imageURL', { photo });
+    const isVideo = photo?.mediaType === 'video';
+    if (!photo || (!photo.imageURL && !photo.videoURL)) {
+      logger.warn('SwipeablePhotoCard: Missing photo or media URL', { photo });
       return null;
     }
 
@@ -88,28 +90,45 @@ const SwipeablePhotoCard = forwardRef(
           !isActive && { pointerEvents: 'none' },
         ]}
       >
-        {/* Photo Image */}
-        <Image
-          source={{ uri: photo.imageURL, cacheKey: `photo-${photo.id}` }}
-          style={styles.photoImage}
-          contentFit="cover"
-          transition={200}
-          cachePolicy="memory-disk"
-          onError={error =>
-            logger.error('SwipeablePhotoCard: Image load error', {
-              photoId: photo.id,
-              error: error.error,
-            })
-          }
-          onLoad={() =>
-            logger.debug('SwipeablePhotoCard: Image loaded successfully', {
-              photoId: photo.id,
-            })
-          }
-        />
+        {/* Media content: VideoPlayer for active video cards, Image for photos/stack */}
+        {isVideo && isActive ? (
+          <VideoPlayer
+            source={photo.videoURL}
+            style={styles.photoImage}
+            isMuted={false}
+            autoPlay
+            loop
+            showControls
+            showProgressBar={false}
+            controlsPosition="top"
+          />
+        ) : isVideo ? (
+          <View style={[styles.photoImage, darkroomVideoStyles.videoPlaceholder]}>
+            <PixelIcon name="play" size={32} color={colors.text.primary} />
+          </View>
+        ) : (
+          <Image
+            source={{ uri: photo.imageURL, cacheKey: `photo-${photo.id}` }}
+            style={styles.photoImage}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+            onError={error =>
+              logger.error('SwipeablePhotoCard: Image load error', {
+                photoId: photo.id,
+                error: error.error,
+              })
+            }
+            onLoad={() =>
+              logger.debug('SwipeablePhotoCard: Image loaded successfully', {
+                photoId: photo.id,
+              })
+            }
+          />
+        )}
 
-        {/* Video icon overlay - shows play badge for video items */}
-        {photo.mediaType === 'video' && (
+        {/* Video icon overlay - shows play badge for video stack cards */}
+        {isVideo && !isActive && (
           <View style={darkroomVideoStyles.videoIcon}>
             <PixelIcon name="play" size={12} color={colors.text.primary} />
           </View>
@@ -211,6 +230,11 @@ const darkroomVideoStyles = RNStyleSheet.create({
     borderRadius: 8,
     width: 20,
     height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoPlaceholder: {
+    backgroundColor: colors.background.secondary || '#1A1A2E',
     justifyContent: 'center',
     alignItems: 'center',
   },

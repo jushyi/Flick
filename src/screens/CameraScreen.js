@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Pressable, Animated, StyleSheet } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Platform } from 'react-native';
 import { CameraView } from 'expo-camera';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -257,6 +258,7 @@ const CameraScreen = () => {
     isRecording,
     cameraMode,
     MAX_RECORDING_DURATION,
+    handleCameraReady,
 
     // Darkroom state
     darkroomCounts,
@@ -287,6 +289,62 @@ const CameraScreen = () => {
     handleBottomSheetComplete,
   } = useCamera({ mode, onSnapCapture: isSnapMode ? handleSnapResult : null });
 
+  // Disable tab swiping while recording to prevent accidental tab switches
+  useEffect(() => {
+    navigation.setOptions({ swipeEnabled: !isRecording });
+  }, [isRecording, navigation]);
+
+  // --- iOS: raw touch events with identifier tracking (reliable, tested) ---
+  const captureTouchIdRef = useRef(null);
+
+  const handleCaptureStart = useCallback(
+    e => {
+      if (isRecording) return;
+      captureTouchIdRef.current = e.nativeEvent.identifier;
+      handlePressIn();
+    },
+    [isRecording, handlePressIn]
+  );
+
+  const handleCaptureEnd = useCallback(
+    e => {
+      if (e.nativeEvent.identifier !== captureTouchIdRef.current) return;
+      captureTouchIdRef.current = null;
+      handlePressOut();
+    },
+    [handlePressOut]
+  );
+
+  // --- Android: RNGH gesture (native-level, won't be cancelled by tab navigator) ---
+  const handlePressInRef = useRef(handlePressIn);
+  const handlePressOutRef = useRef(handlePressOut);
+  const isRecordingRef = useRef(isRecording);
+  useEffect(() => {
+    handlePressInRef.current = handlePressIn;
+  }, [handlePressIn]);
+  useEffect(() => {
+    handlePressOutRef.current = handlePressOut;
+  }, [handlePressOut]);
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+
+  const captureGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .minDistance(0)
+        .onBegin(() => {
+          if (!isRecordingRef.current) {
+            handlePressInRef.current();
+          }
+        })
+        .onFinalize(() => {
+          handlePressOutRef.current();
+        })
+        .runOnJS(true),
+    []
+  );
+
   // Handle close button in snap mode
   const handleSnapClose = useCallback(() => {
     navigation.goBack();
@@ -316,7 +374,10 @@ const CameraScreen = () => {
   return (
     <View style={styles.container}>
       {/* Camera Preview Container - with rounded corners */}
-      <View style={isSnapMode ? styles.cameraContainerSnap : styles.cameraContainer}>
+      <View
+        style={isSnapMode ? styles.cameraContainerSnap : styles.cameraContainer}
+        pointerEvents={isRecording ? 'none' : 'auto'}
+      >
         <CameraView
           ref={cameraRef}
           style={styles.camera}
@@ -327,6 +388,7 @@ const CameraScreen = () => {
           mute={false}
           videoQuality="720p"
           videoBitrate={3000000}
+          onCameraReady={handleCameraReady}
           onAvailableLensesChanged={handleAvailableLensesChanged}
           {...(selectedLens && { selectedLens })}
         />
@@ -352,10 +414,17 @@ const CameraScreen = () => {
         </View>
       )}
 
-      {/* Floating Controls Row */}
-      <View style={isSnapMode ? styles.floatingControlsSnap : styles.floatingControls}>
-        {/* Flash Button (far left) */}
-        <TouchableOpacity style={styles.floatingButton} onPress={toggleFlash}>
+      {/* Floating Controls Row — block touches during recording */}
+      <View
+        style={isSnapMode ? styles.floatingControlsSnap : styles.floatingControls}
+        pointerEvents={isRecording ? 'none' : 'auto'}
+      >
+        {/* Flash Button (far left) - disabled during recording */}
+        <TouchableOpacity
+          style={[styles.floatingButton, isRecording && { opacity: 0.3 }]}
+          onPress={toggleFlash}
+          disabled={isRecording}
+        >
           <FlashIcon color={colors.icon.primary} mode={flash} />
           {flash === 'auto' && <Text style={styles.flashLabel}>A</Text>}
         </TouchableOpacity>
@@ -427,30 +496,49 @@ const CameraScreen = () => {
 
           {/* Capture Button (center) with recording progress ring */}
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <RecordingProgressRing
-              isRecording={isRecording}
-              maxDuration={MAX_RECORDING_DURATION}
-              size={108}
-            />
-            <Pressable
-              style={({ pressed }) => [
-                styles.captureButtonOuter,
-                (isCapturing || isRecording) && styles.captureButtonDisabled,
-                pressed && !isRecording && styles.captureButtonPressed,
-              ]}
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
-              disabled={isCapturing}
-            >
-              <View style={styles.captureButton}>
+            {isRecording && (
+              <RecordingProgressRing
+                isRecording={isRecording}
+                maxDuration={MAX_RECORDING_DURATION}
+                size={100}
+              />
+            )}
+            {Platform.OS === 'android' ? (
+              <GestureDetector gesture={captureGesture}>
                 <View
                   style={[
-                    styles.captureButtonInner,
-                    isRecording && { backgroundColor: '#FF3B30', borderRadius: 8 },
+                    styles.captureButtonOuter,
+                    isRecording && styles.captureButtonOuterRecording,
+                    isCapturing && styles.captureButtonDisabled,
                   ]}
-                />
+                >
+                  <View style={[styles.captureButton, isRecording && styles.captureButtonRed]}>
+                    <View
+                      style={[
+                        styles.captureButtonInner,
+                        isRecording && styles.captureButtonInnerRed,
+                      ]}
+                    />
+                  </View>
+                </View>
+              </GestureDetector>
+            ) : (
+              <View
+                onTouchStart={handleCaptureStart}
+                onTouchEnd={handleCaptureEnd}
+                style={[
+                  styles.captureButtonOuter,
+                  isRecording && styles.captureButtonOuterRecording,
+                  isCapturing && styles.captureButtonDisabled,
+                ]}
+              >
+                <View style={[styles.captureButton, isRecording && styles.captureButtonRed]}>
+                  <View
+                    style={[styles.captureButtonInner, isRecording && styles.captureButtonInnerRed]}
+                  />
+                </View>
               </View>
-            </Pressable>
+            )}
           </View>
 
           {/* Invisible spacer to balance darkroom button and center capture button */}

@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import PixelSpinner from '../components/PixelSpinner';
 import {
   getFirestore,
@@ -62,6 +62,7 @@ const FeedScreen = () => {
   const { user, userProfile } = useAuth();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
 
   // Photo detail actions only - using usePhotoDetailActions to avoid re-renders
   // when photo detail state changes (e.g. during modal close)
@@ -1129,14 +1130,14 @@ const FeedScreen = () => {
     ({ item }) => (
       <FeedPhotoCard
         photo={item}
-        isVisible={visibleItemIds.has(item.id)}
+        isVisible={visibleItemIds.has(item.id) && isFocused}
         onPress={sourceRect => handlePhotoPress(item, sourceRect)}
         onCommentPress={sourceRect => handleCommentPress(item, sourceRect)}
         onAvatarPress={handleAvatarPress}
         currentUserId={user?.uid}
       />
     ),
-    [handlePhotoPress, handleCommentPress, handleAvatarPress, user?.uid, visibleItemIds]
+    [handlePhotoPress, handleCommentPress, handleAvatarPress, user?.uid, visibleItemIds, isFocused]
   );
 
   const renderFooter = () => {

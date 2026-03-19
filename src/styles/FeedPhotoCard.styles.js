@@ -161,6 +161,21 @@ export const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.body,
   },
 
+  // Mute flash indicator (centered over video)
+  muteFlashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  muteFlashBubble: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.overlay.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   // Video icon overlay (top-left of photo/video area)
   videoIconOverlay: {
     position: 'absolute',

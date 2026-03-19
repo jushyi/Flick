@@ -1,59 +1,95 @@
 /**
- * RecordingProgressRing - Animated circular progress ring for video recording
+ * RecordingProgressRing - Segmented circular progress ring for video recording
  *
- * Fills clockwise from 12 o'clock during recording.
- * Uses Reanimated animated props on SVG circle for smooth UI-thread animation.
+ * Shows one segment per second of max recording duration.
+ * Segments fill in clockwise from 12 o'clock, one per second, with
+ * Reanimated-driven timing for perfectly linear pacing.
  *
- * Usage:
- *   <RecordingProgressRing isRecording={true} maxDuration={30} size={80} />
+ * Props:
+ *   isRecording - whether recording is active
+ *   maxDuration - total segments / seconds (default 30)
+ *   size        - diameter of the ring
  */
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import Animated, {
+import {
   Easing,
-  useAnimatedProps,
   useSharedValue,
   withTiming,
   cancelAnimation,
+  useAnimatedReaction,
+  runOnJS,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const RecordingProgressRing = ({
   isRecording = false,
   maxDuration = 30,
-  size = 80,
+  size = 100,
   strokeWidth = 4,
   color = '#FF3B30',
 }) => {
-  const progress = useSharedValue(0);
+  const progress = useSharedValue(0); // 0 → maxDuration over recording
+  const [filledCount, setFilledCount] = useState(0);
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
+  const segmentCount = maxDuration;
+  const gapAngleDeg = 4;
+  const gapLength = (gapAngleDeg / 360) * circumference;
+  const segmentLength = circumference / segmentCount - gapLength;
+
+  // Reanimated native-thread timer for perfectly linear progress
   useEffect(() => {
     if (isRecording) {
       progress.value = 0;
-      progress.value = withTiming(1, {
+      progress.value = withTiming(maxDuration, {
         duration: maxDuration * 1000,
         easing: Easing.linear,
       });
     } else {
       cancelAnimation(progress);
+      progress.value = 0;
+      setFilledCount(0);
     }
   }, [isRecording, maxDuration, progress]);
 
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: circumference * (1 - progress.value),
-  }));
+  // Update React state when progress crosses an integer boundary
+  useAnimatedReaction(
+    () => Math.floor(progress.value),
+    (current, previous) => {
+      if (current !== previous) {
+        runOnJS(setFilledCount)(current);
+      }
+    },
+    [progress]
+  );
+
+  // Build dasharray: filled segments visible, unfilled hidden
+  const buildForegroundDashArray = filled => {
+    const parts = [];
+    for (let i = 0; i < segmentCount; i++) {
+      if (i < filled) {
+        parts.push(segmentLength);
+        parts.push(gapLength);
+      } else {
+        parts.push(0);
+        parts.push(segmentLength + gapLength);
+      }
+    }
+    return parts.join(' ');
+  };
+
+  const backgroundDashArray = `${segmentLength} ${gapLength}`;
+  const foregroundDashArray = buildForegroundDashArray(filledCount);
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      <Svg width={size} height={size} style={styles.svg}>
-        {/* Background track ring */}
+      <Svg width={size} height={size}>
+        {/* Background: faint segmented track */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -61,22 +97,27 @@ const RecordingProgressRing = ({
           stroke={color}
           strokeWidth={strokeWidth}
           fill="none"
-          opacity={0.2}
-        />
-        {/* Foreground progress ring */}
-        <AnimatedCircle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          animatedProps={animatedProps}
-          strokeLinecap="round"
+          opacity={0.15}
+          strokeDasharray={backgroundDashArray}
+          strokeLinecap="butt"
           rotation={-90}
           origin={`${size / 2}, ${size / 2}`}
         />
+        {/* Foreground: filled segments */}
+        {filledCount > 0 && (
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={foregroundDashArray}
+            strokeLinecap="butt"
+            rotation={-90}
+            origin={`${size / 2}, ${size / 2}`}
+          />
+        )}
       </Svg>
     </View>
   );
@@ -87,9 +128,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  svg: {
-    transform: [{ rotateY: '0deg' }],
   },
 });
 

@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, Platform } from 'react-native';
+import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { Image } from 'expo-image';
 
 import PixelIcon from './PixelIcon';
@@ -33,12 +34,6 @@ import { profileCacheKey } from '../utils/imageUtils';
  * @param {number} seconds - Duration in seconds
  * @returns {string} Formatted duration (e.g. "0:12", "1:05")
  */
-const formatDuration = seconds => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
 const FeedPhotoCard = ({
   photo,
   onPress,
@@ -58,7 +53,6 @@ const FeedPhotoCard = ({
     user = {},
     mediaType,
     videoURL,
-    duration,
   } = photo;
 
   const isVideo = mediaType === 'video';
@@ -67,6 +61,20 @@ const FeedPhotoCard = ({
 
   // Global mute state for video playback
   const { isMuted, toggleMute } = useVideoMute();
+
+  // Mute indicator flash — triggered by isMuted changes, not by tap handler
+  const [muteFlash, setMuteFlash] = useState(null);
+  const prevMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    if (!isVideo) return;
+    if (prevMutedRef.current !== isMuted) {
+      setMuteFlash(isMuted ? 'muted' : 'unmuted');
+      const timer = setTimeout(() => setMuteFlash(null), 800);
+      prevMutedRef.current = isMuted;
+      return () => clearTimeout(timer);
+    }
+  }, [isMuted, isVideo]);
 
   const [previewComments, setPreviewComments] = useState([]);
 
@@ -149,55 +157,72 @@ const FeedPhotoCard = ({
   };
 
   return (
-    <TouchableOpacity
-      testID="feed-photo-card"
-      style={styles.card}
-      onPress={handlePhotoPress}
-      activeOpacity={0.95}
-    >
+    <View testID="feed-photo-card" style={styles.card}>
       {/* Photo/Video - full width */}
       <View ref={photoContainerRef} style={styles.photoContainer}>
         {isVideo && videoURL ? (
-          <TouchableOpacity activeOpacity={1} onPress={toggleMute}>
-            <VideoPlayer
-              source={videoURL}
-              isMuted={isMuted}
-              onToggleMute={toggleMute}
-              loop={true}
-              autoPlay={true}
-              showControls={false}
-              isVisible={isVisible}
+          <>
+            {Platform.OS === 'android' ? (
+              <GHTouchableOpacity activeOpacity={1} onPress={toggleMute} style={styles.photo}>
+                <VideoPlayer
+                  source={videoURL}
+                  isMuted={isMuted}
+                  onToggleMute={toggleMute}
+                  loop={true}
+                  autoPlay={true}
+                  showControls={false}
+                  isVisible={isVisible}
+                  contentFit="cover"
+                />
+              </GHTouchableOpacity>
+            ) : (
+              <Pressable onPress={toggleMute} style={styles.photo}>
+                <VideoPlayer
+                  source={videoURL}
+                  isMuted={isMuted}
+                  onToggleMute={toggleMute}
+                  loop={true}
+                  autoPlay={true}
+                  showControls={false}
+                  isVisible={isVisible}
+                  contentFit="cover"
+                />
+              </Pressable>
+            )}
+            {muteFlash && (
+              <View style={styles.muteFlashOverlay} pointerEvents="none">
+                <View style={styles.muteFlashBubble}>
+                  <PixelIcon
+                    name={
+                      muteFlash === 'muted' ? 'notifications-off-outline' : 'musical-notes-outline'
+                    }
+                    size={28}
+                    color={colors.text.primary}
+                  />
+                </View>
+              </View>
+            )}
+          </>
+        ) : (
+          <TouchableOpacity activeOpacity={0.95} onPress={handlePhotoPress}>
+            <Image
+              source={{ uri: imageURL, cacheKey: `photo-${id}` }}
               style={styles.photo}
               contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={0}
             />
           </TouchableOpacity>
-        ) : (
-          <Image
-            source={{ uri: imageURL, cacheKey: `photo-${id}` }}
-            style={styles.photo}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-            transition={0}
-          />
-        )}
-
-        {/* Video icon overlay */}
-        {isVideo && (
-          <View style={styles.videoIconOverlay}>
-            <PixelIcon name="play" size={14} color={colors.text.primary} />
-          </View>
-        )}
-
-        {/* Duration badge */}
-        {isVideo && duration != null && (
-          <View style={styles.durationBadge}>
-            <Text style={styles.durationBadgeText}>{formatDuration(duration)}</Text>
-          </View>
         )}
       </View>
 
-      {/* User info row - profile photo + name + timestamp */}
-      <View style={styles.infoRow}>
+      {/* User info row - tappable to open detail modal for videos */}
+      <TouchableOpacity
+        style={styles.infoRow}
+        onPress={isVideo ? handlePhotoPress : undefined}
+        activeOpacity={isVideo ? 0.7 : 1}
+        disabled={!isVideo}
+      >
         {/* Profile photo or fallback icon - tappable to navigate to profile (disabled for own photos) */}
         <TouchableOpacity
           onPress={handleAvatarPress}
@@ -228,7 +253,7 @@ const FeedPhotoCard = ({
           </StrokedNameText>
           <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Attribution line (for reshared photos) */}
       {photo.attribution && (
@@ -283,7 +308,7 @@ const FeedPhotoCard = ({
           />
         </View>
       )}
-    </TouchableOpacity>
+    </View>
   );
 };
 

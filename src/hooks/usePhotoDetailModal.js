@@ -93,6 +93,7 @@ export const usePhotoDetailModal = ({
 
   // Video progress for stories progress bar (0-1, driven by VideoPlayer time updates)
   const [videoProgress, setVideoProgress] = useState(0);
+  const videoProgressRef = useRef(0);
 
   // Auto-skip on load failure: if image doesn't load within 5 seconds, skip to next photo
   const LOAD_FAILURE_TIMEOUT = 5000; // ms
@@ -269,14 +270,16 @@ export const usePhotoDetailModal = ({
     return getCuratedEmojis(currentPhoto?.id, 5);
   }, [currentPhoto?.id]);
 
-  // Reset frozen order, custom emoji, and video progress when navigating to a different photo
-  useEffect(() => {
-    if (currentPhoto?.id) {
-      setFrozenOrder(null);
-      setCustomEmoji(null);
-      setVideoProgress(0);
-    }
-  }, [currentPhoto?.id]);
+  // Reset video progress synchronously during render when photo changes
+  // (useEffect would be one frame late, causing stale progress on the new segment)
+  const [prevPhotoId, setPrevPhotoId] = useState(currentPhoto?.id);
+  if (currentPhoto?.id && currentPhoto.id !== prevPhotoId) {
+    setPrevPhotoId(currentPhoto.id);
+    setFrozenOrder(null);
+    setCustomEmoji(null);
+    setVideoProgress(0);
+    videoProgressRef.current = 0;
+  }
 
   // Update activeCustomEmojis when reactions change (picks up new custom emojis)
   // Separated from the photo-change effect so reaction updates don't reset frozenOrder
@@ -609,10 +612,18 @@ export const usePhotoDetailModal = ({
 
   /**
    * Handle video play-to-end — auto-advance to next photo/video in stories mode
-   * Triggered by VideoPlayer onPlayToEnd callback when video finishes playing
+   * Guarded: only advance if videoProgress > 0.5 to prevent premature firing
+   * when expo-video player is created/disposed (can emit stale playToEnd events)
    */
   const handleVideoPlayToEnd = useCallback(() => {
     if (mode !== 'stories') return;
+    // Guard against premature playToEnd from player creation/disposal (progress ~0)
+    if (videoProgressRef.current < 0.1) {
+      logger.debug('usePhotoDetailModal: Ignoring premature playToEnd', {
+        progress: videoProgressRef.current,
+      });
+      return;
+    }
     logger.info('usePhotoDetailModal: Video play-to-end, auto-advancing');
     goNext();
   }, [mode, goNext]);
@@ -623,7 +634,12 @@ export const usePhotoDetailModal = ({
    */
   const handleVideoTimeUpdate = useCallback(({ currentTime, duration }) => {
     if (duration > 0) {
-      setVideoProgress(currentTime / duration);
+      const prog = currentTime / duration;
+      setVideoProgress(prog);
+      videoProgressRef.current = prog;
+    } else {
+      setVideoProgress(0);
+      videoProgressRef.current = 0;
     }
   }, []);
 
