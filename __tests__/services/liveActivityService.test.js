@@ -23,6 +23,7 @@ jest.mock('../../src/utils/logger', () => ({
 const mockStartActivity = jest.fn(() => Promise.resolve('native-activity-id-123'));
 const mockEndActivity = jest.fn(() => Promise.resolve());
 const mockEndAllActivities = jest.fn(() => Promise.resolve());
+const mockRemoveFromStack = jest.fn(() => Promise.resolve());
 
 // Mock the native module (named exports, not default)
 jest.mock('../../modules/live-activity-manager', () => ({
@@ -30,6 +31,7 @@ jest.mock('../../modules/live-activity-manager', () => ({
   startActivity: (...args) => mockStartActivity(...args),
   endActivity: (...args) => mockEndActivity(...args),
   endAllActivities: (...args) => mockEndAllActivities(...args),
+  removeFromStack: (...args) => mockRemoveFromStack(...args),
 }));
 
 // Helper to reload module with specific platform
@@ -68,6 +70,7 @@ describe('liveActivityService', () => {
     mockStartActivity.mockResolvedValue('native-activity-id-123');
     mockEndActivity.mockResolvedValue(undefined);
     mockEndAllActivities.mockResolvedValue(undefined);
+    mockRemoveFromStack.mockResolvedValue(undefined);
   });
 
   // ==========================================================================
@@ -216,6 +219,52 @@ describe('liveActivityService', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Not supported');
       expect(mockEndActivity).not.toHaveBeenCalled();
+    });
+  });
+
+  // ==========================================================================
+  // removePinnedSnap
+  // ==========================================================================
+  describe('removePinnedSnap', () => {
+    let service;
+
+    beforeAll(() => {
+      service = loadServiceWithPlatform('ios');
+    });
+
+    it('should call native removeFromStack with snapActivityId', async () => {
+      const result = await service.removePinnedSnap('snap-remove-123');
+
+      expect(result.success).toBe(true);
+      expect(mockRemoveFromStack).toHaveBeenCalledWith('snap-remove-123');
+    });
+
+    it('should return { success: false } when native module throws', async () => {
+      mockRemoveFromStack.mockRejectedValueOnce(new Error('Remove failed'));
+
+      const result = await service.removePinnedSnap('snap-remove-err');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Remove failed');
+    });
+  });
+
+  // ==========================================================================
+  // removePinnedSnap - Android
+  // ==========================================================================
+  describe('removePinnedSnap (Android)', () => {
+    let service;
+
+    beforeAll(() => {
+      service = loadServiceWithPlatform('android');
+    });
+
+    it('should not crash on Android and return { success: false }', async () => {
+      const result = await service.removePinnedSnap('snap-android-remove');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Not supported');
+      expect(mockRemoveFromStack).not.toHaveBeenCalled();
     });
   });
 

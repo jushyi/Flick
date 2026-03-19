@@ -48,7 +48,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getSignedSnapUrl, markSnapViewed } from '../services/firebase/snapService';
 import { recordScreenshot } from '../services/firebase/screenshotService';
 import { queueScreenshotEvent, processScreenshotQueue } from '../services/screenshotQueueService';
-import { endPinnedSnapActivity } from '../services/liveActivityService';
+import { removePinnedSnap } from '../services/liveActivityService';
 
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
@@ -220,9 +220,9 @@ const SnapViewer = ({
     // End Live Activity for pinned snaps (iOS only, best-effort)
     if (result.success && snapMessage.pinned && Platform.OS === 'ios') {
       try {
-        await endPinnedSnapActivity(snapMessage.id || snapMessage.pinnedActivityId);
-        logger.info('SnapViewer: Ended Live Activity for pinned snap', {
-          activityId: snapMessage.id || snapMessage.pinnedActivityId,
+        await removePinnedSnap(snapMessage.id || snapMessage.pinnedActivityId);
+        logger.info('SnapViewer: Removed pinned snap from Live Activity stack', {
+          snapActivityId: snapMessage.id || snapMessage.pinnedActivityId,
         });
       } catch (err) {
         logger.warn('SnapViewer: Failed to end Live Activity', {

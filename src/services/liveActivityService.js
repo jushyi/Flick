@@ -98,6 +98,33 @@ export const startPinnedSnapActivity = async ({
 };
 
 /**
+ * Remove a single pinned snap from the stacked Live Activity.
+ * If this was the last entry in the stack, the Live Activity ends.
+ *
+ * @param {string} snapActivityId - The snap message ID to remove
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const removePinnedSnap = async snapActivityId => {
+  if (Platform.OS !== 'ios' || !LiveActivityManager) {
+    return { success: false, error: 'Not supported' };
+  }
+
+  try {
+    await LiveActivityManager.removeFromStack(snapActivityId);
+
+    logger.info('liveActivityService: Removed snap from stack', { snapActivityId });
+
+    return { success: true };
+  } catch (error) {
+    logger.error('liveActivityService: Failed to remove snap from stack', {
+      snapActivityId,
+      error: error.message,
+    });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * End a specific pinned snap Live Activity.
  *
  * @param {string} activityId - The activity ID used when starting
