@@ -1,0 +1,33 @@
+diff --git a/node_modules/expo-modules-core/node-compat.js b/node_modules/expo-modules-core/node-compat.js
+new file mode 100644
+index 0000000..6d24cba
+--- /dev/null
++++ b/node_modules/expo-modules-core/node-compat.js
+@@ -0,0 +1,4 @@
++// Node.js compatibility stub for expo-modules-core
++// Metro bundler uses src/index.ts directly; this file is only used
++// when Node.js (e.g. npx expo config, EAS CLI) resolves this package.
++module.exports = {};
+diff --git a/node_modules/expo-modules-core/package.json b/node_modules/expo-modules-core/package.json
+index afdfe2f..1aaccd9 100644
+--- a/node_modules/expo-modules-core/package.json
++++ b/node_modules/expo-modules-core/package.json
+@@ -12,15 +12,18 @@
+     "./package.json": "./package.json",
+     ".": {
+       "types": "./build/index.d.ts",
++      "node": "./node-compat.js",
+       "default": "./src/index.ts"
+     },
+     "./types": "./types.d.ts",
+     "./src/polyfill/dangerous-internal": {
+       "types": "./build/polyfill/dangerous-internal.d.ts",
++      "node": "./node-compat.js",
+       "default": "./src/polyfill/dangerous-internal.ts"
+     },
+     "./src/uuid": {
+       "types": "./build/uuid/index.d.ts",
++      "node": "./node-compat.js",
+       "default": "./src/uuid/index.ts"
+     }
+   },
