@@ -50,8 +50,11 @@ Allow senders to pin a snap to the recipient's iOS lock screen as a Live Activit
 - 48-hour auto-expiry via staleDate
 - Viewing snap in SnapViewer calls endActivity
 
-### Multiple pinned snaps (UNCHANGED — already implemented)
-- Each pinned snap creates its own Live Activity, cap of 5
+### Multiple pinned snaps (UPDATED — stacking replaces per-snap model)
+- Multiple pinned snaps now stack into a single Live Activity with overlapping Polaroids (replaces the previous one-activity-per-snap model, cap of 5)
+- Single snap renders with existing Polaroid + caption layout; 2+ snaps show stacked Polaroids with count summary
+- Viewing a snap removes it from the stack; last snap removal ends the Live Activity
+- Stack capped at 10 entries (4KB ContentState limit)
 
 ### Verification strategy (NEW)
 - **Test setup:** Android device sends pinned snaps, iOS device receives
