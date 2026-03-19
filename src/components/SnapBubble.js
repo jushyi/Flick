@@ -122,9 +122,9 @@ const SnapBubble = ({
 
     if (isScreenshotted) {
       return (
-        <View style={[styles.snapContent, styles.openedContent]}>
-          <PixelIcon name="eye-outline" size={24} color={colors.text.secondary} />
-          <Text style={styles.openedLabel}>Screenshotted</Text>
+        <View style={styles.snapContent}>
+          <PixelIcon name="eye-outline" size={24} color={SNAP_SCREENSHOTTED_MAGENTA} />
+          <Text style={styles.screenshottedLabel}>Screenshotted</Text>
         </View>
       );
     }
