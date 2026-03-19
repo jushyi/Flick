@@ -10,6 +10,7 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const logger = require('./logger');
 const nodemailer = require('nodemailer');
+const { sendPushToStartLiveActivity } = require('./notifications/liveActivitySender');
 const {
   validateOrNull,
   DarkroomDocSchema,
@@ -3171,7 +3172,7 @@ exports.onNewMessage = onDocumentCreated(
           }
         }
 
-        // Pinned snap: generate signed URL and send richContent notification (BigPictureStyle on Android)
+        // Pinned snap: generate signed URL, attempt push-to-start, and send richContent notification
         if (messageType === 'snap' && message.pinned === true) {
           try {
             // Use pinnedThumbnailUrl for richContent if available, else generate signed URL from snap
@@ -3183,6 +3184,46 @@ exports.onNewMessage = onDocumentCreated(
                 expires: Date.now() + 30 * 60 * 1000, // 30 minutes for notification delivery
               });
               thumbnailUrl = signedUrl;
+            }
+
+            // Attempt push-to-start for iOS 17.2+ recipients
+            const pushToStartToken = recipient.pushToStartToken;
+            const fcmRegistrationToken = recipient.fcmRegistrationToken;
+
+            if (pushToStartToken && fcmRegistrationToken) {
+              logger.info('onNewMessage: Attempting push-to-start Live Activity', {
+                conversationId,
+                activityId: notificationData.pinnedActivityId,
+                hasPushToStartToken: true,
+              });
+
+              const ptsResult = await sendPushToStartLiveActivity({
+                fcmToken: fcmRegistrationToken,
+                pushToStartToken,
+                activityId: notificationData.pinnedActivityId,
+                senderName: senderName || 'Someone',
+                caption: message.caption || '',
+                conversationId,
+                thumbnailUrl: thumbnailUrl || '',
+              });
+
+              if (ptsResult.success) {
+                logger.info(
+                  'onNewMessage: Push-to-start succeeded, also sending regular notification',
+                  {
+                    conversationId,
+                    messageId: ptsResult.messageId,
+                  }
+                );
+              } else {
+                logger.warn(
+                  'onNewMessage: Push-to-start failed, falling back to regular notification',
+                  {
+                    conversationId,
+                    error: ptsResult.error,
+                  }
+                );
+              }
             }
 
             logger.info('onNewMessage: Sending PINNED snap notification with thumbnail', {
@@ -3201,6 +3242,7 @@ exports.onNewMessage = onDocumentCreated(
                 : '(missing from doc)',
             });
 
+            // Always send regular notification too (for notification banner + NSE thumbnail download)
             await sendPushNotification(
               fcmToken,
               `Pinned snap from ${senderName}`,
