@@ -7,7 +7,7 @@
  * Uses expo-file-system for cross-platform file operations.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import logger from '../utils/logger';
 
 /**

@@ -16,7 +16,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImageManipulator from 'expo-image-manipulator';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 import logger from '../utils/logger';
 import { uploadPhoto, uploadVideo } from './firebase/storageService';

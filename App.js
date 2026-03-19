@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Platform, View } from 'react-native';
 import * as Updates from 'expo-updates';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -421,6 +421,7 @@ export default function App() {
             });
           }
         })();
+        return; // Suppress in-app banner — Live Activity is the visible indicator
       }
 
       // Store notification identifier for Android pinned snap dismissal.

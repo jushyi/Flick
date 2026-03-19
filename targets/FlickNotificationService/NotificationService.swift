@@ -239,6 +239,7 @@ class NotificationService: UNNotificationServiceExtension {
 
             diag("calling_activity_request")
 
+            var liveActivityStarted = false
             do {
                 let activity = try Activity.request(
                     attributes: attributes,
@@ -246,6 +247,7 @@ class NotificationService: UNNotificationServiceExtension {
                     pushType: nil
                 )
                 diag("activity_request_SUCCESS", ["nativeId": activity.id])
+                liveActivityStarted = true
             } catch {
                 diag("activity_request_FAILED", [
                     "error": error.localizedDescription,
@@ -266,7 +268,15 @@ class NotificationService: UNNotificationServiceExtension {
 
             diag("nse_complete")
             self.writeDiagnostics()
-            contentHandler(bestAttemptContent)
+
+            // Suppress the push notification banner when Live Activity was created successfully —
+            // the Live Activity itself is the user-visible indicator, no need for a duplicate banner.
+            if liveActivityStarted {
+                let silentContent = UNMutableNotificationContent()
+                contentHandler(silentContent)
+            } else {
+                contentHandler(bestAttemptContent)
+            }
         }
         #else
         diag("exit_no_activitykit")

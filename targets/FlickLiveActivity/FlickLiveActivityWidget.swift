@@ -33,14 +33,14 @@ struct FlickLiveActivityWidget: Widget {
                     EmptyView()
                 }
             } compactLeading: {
-                thumbnailView(activityId: context.attributes.activityId, width: 24, height: 24)
+                brandBadge(size: 24)
             } compactTrailing: {
                 Text(context.attributes.senderName)
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundColor(flickTextPrimary)
                     .lineLimit(1)
             } minimal: {
-                thumbnailView(activityId: context.attributes.activityId, width: 24, height: 24)
+                brandBadge(size: 24)
             }
         }
     }
@@ -57,24 +57,20 @@ struct FlickLiveActivityWidget: Widget {
         let tiltAngle = Self.tiltDegrees(for: context.attributes.activityId)
 
         if hasCaption {
-            // Caption present: Polaroid on left, text on right
+            // Caption present: Polaroid at ~1/3 left, caption to the right
             HStack(spacing: 12) {
+                Spacer()
+
                 polaroidFrame(activityId: context.attributes.activityId)
                     .rotationEffect(.degrees(tiltAngle))
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(context.attributes.senderName)
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(flickTextSecondary)
-                        .lineLimit(1)
+                Text(context.attributes.caption!)
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundColor(flickTextPrimary)
+                    .lineLimit(3)
+                    .truncationMode(.tail)
 
-                    Text(context.attributes.caption!)
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(flickTextPrimary)
-                        .lineLimit(3)
-                        .truncationMode(.tail)
-                }
-
+                Spacer()
                 Spacer()
             }
             .padding(.horizontal, 14)
@@ -82,7 +78,7 @@ struct FlickLiveActivityWidget: Widget {
             .background(flickBackground)
             .widgetURL(URL(string: context.attributes.deepLinkUrl))
         } else {
-            // No caption: centered Polaroid only, no text
+            // No caption: centered Polaroid only
             HStack {
                 Spacer()
                 polaroidFrame(activityId: context.attributes.activityId)
@@ -152,6 +148,18 @@ struct FlickLiveActivityWidget: Widget {
         // Map to -4.0 ... +4.0 range
         let normalized = Double(hashValue % 81) / 80.0  // 0.0 to 1.0
         return (normalized * 8.0) - 4.0  // -4.0 to +4.0
+    }
+
+    // MARK: - Brand Badge (Dynamic Island)
+
+    /// App logo for Dynamic Island compact/minimal views.
+    @ViewBuilder
+    private func brandBadge(size: CGFloat) -> some View {
+        Image("AppLogo")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size, height: size)
+            .clipShape(Circle())
     }
 
     // MARK: - Thumbnail Loading
