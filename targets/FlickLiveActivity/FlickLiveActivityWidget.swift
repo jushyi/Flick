@@ -35,10 +35,17 @@ struct FlickLiveActivityWidget: Widget {
             } compactLeading: {
                 brandBadge(size: 24)
             } compactTrailing: {
-                Text(context.attributes.senderName)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(flickTextPrimary)
-                    .lineLimit(1)
+                if context.state.stack.count > 1 {
+                    Text("\(context.state.stack.count) snaps")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(flickTextPrimary)
+                        .lineLimit(1)
+                } else {
+                    Text(context.state.stack.first?.senderName ?? context.attributes.senderName)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(flickTextPrimary)
+                        .lineLimit(1)
+                }
             } minimal: {
                 brandBadge(size: 24)
             }
@@ -48,40 +55,55 @@ struct FlickLiveActivityWidget: Widget {
     // MARK: - Lock Screen Layout
 
     /// The main lock screen presentation of the Live Activity.
-    /// When caption is present: Polaroid on left, sender name + caption on right.
-    /// When no caption: centered Polaroid only, no text.
-    /// Total height budget: 6pt outer top + 133pt polaroid + 6pt outer bottom = 145pt (under 160pt max).
+    /// Routes to single or stacked layout based on stack count.
     @ViewBuilder
     private func lockScreenView(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
-        let hasCaption = context.attributes.caption != nil && !context.attributes.caption!.isEmpty
-        let tiltAngle = Self.tiltDegrees(for: context.attributes.activityId)
+        let stackCount = context.state.stack.count
+
+        if stackCount <= 1 {
+            // Single snap: existing layout (Polaroid + optional caption)
+            singleSnapLayout(context: context)
+        } else {
+            // Multiple snaps: stacked Polaroids + count summary
+            stackedLayout(context: context)
+        }
+    }
+
+    // MARK: - Single Snap Layout
+
+    /// Renders a single pinned snap with the existing Polaroid + caption layout.
+    /// When caption is present: Polaroid on left, caption on right.
+    /// When no caption: centered Polaroid only, no text.
+    @ViewBuilder
+    private func singleSnapLayout(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
+        let entry = context.state.stack.first
+        let activityId = entry?.snapActivityId ?? context.attributes.activityId
+        let hasCaption = (entry?.caption ?? context.attributes.caption) != nil &&
+                         !(entry?.caption ?? context.attributes.caption ?? "").isEmpty
+        let captionText = entry?.caption ?? context.attributes.caption ?? ""
+        let tiltAngle = Self.tiltDegrees(for: activityId)
 
         if hasCaption {
-            // Caption present: Polaroid at ~1/3 left, caption to the right
             HStack(spacing: 12) {
                 Spacer()
-
-                polaroidFrame(activityId: context.attributes.activityId)
+                polaroidFrame(activityId: activityId)
                     .rotationEffect(.degrees(tiltAngle))
-
-                Text(context.attributes.caption!)
+                Text(captionText)
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .foregroundColor(flickTextPrimary)
                     .lineLimit(3)
                     .truncationMode(.tail)
-
                 Spacer()
                 Spacer()
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
             .background(flickBackground)
-            .widgetURL(URL(string: context.attributes.deepLinkUrl))
+            .widgetURL(URL(string: "lapse://messages/\(entry?.conversationId ?? "")"))
         } else {
-            // No caption: centered Polaroid only
             HStack {
                 Spacer()
-                polaroidFrame(activityId: context.attributes.activityId)
+                polaroidFrame(activityId: activityId)
                     .rotationEffect(.degrees(tiltAngle))
                 Spacer()
             }
@@ -90,6 +112,67 @@ struct FlickLiveActivityWidget: Widget {
             .background(flickBackground)
             .widgetURL(URL(string: context.attributes.deepLinkUrl))
         }
+    }
+
+    // MARK: - Stacked Layout
+
+    /// Renders multiple pinned snaps as overlapping Polaroid frames with a count summary.
+    /// Shows up to 3 visible Polaroids with offset stacking. Displays sender names and
+    /// a "+N more" badge when more than 3 entries exist.
+    @ViewBuilder
+    private func stackedLayout(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
+        let visibleEntries = Array(context.state.stack.prefix(3))
+        let totalCount = context.state.stack.count
+
+        HStack(spacing: 12) {
+            Spacer()
+
+            // Stacked Polaroids — ZStack with offset
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(visibleEntries.enumerated().reversed()), id: \.offset) { index, entry in
+                    polaroidFrame(activityId: entry.snapActivityId)
+                        .rotationEffect(.degrees(Self.tiltDegrees(for: entry.snapActivityId)))
+                        .offset(x: CGFloat(index) * 4, y: CGFloat(index) * 3)
+                }
+            }
+
+            // Summary text
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(totalCount) pinned snaps")
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundColor(flickTextPrimary)
+
+                let senderNames = Array(Set(context.state.stack.map { $0.senderName }))
+                if senderNames.count <= 2 {
+                    Text(senderNames.joined(separator: " & "))
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(flickTextSecondary)
+                        .lineLimit(1)
+                } else {
+                    Text("\(senderNames[0]), \(senderNames[1]) +\(senderNames.count - 2)")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(flickTextSecondary)
+                        .lineLimit(1)
+                }
+
+                // Count badge if more than 3 visible
+                if totalCount > 3 {
+                    Text("+\(totalCount - 3) more")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.red.opacity(0.8))
+                        .clipShape(Capsule())
+                }
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .background(flickBackground)
+        .widgetURL(URL(string: "lapse://messages"))
     }
 
     // MARK: - Polaroid Frame

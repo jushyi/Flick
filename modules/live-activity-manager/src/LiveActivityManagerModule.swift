@@ -5,19 +5,19 @@ import Foundation
 import ActivityKit
 #endif
 
-/// Maximum number of concurrent Live Activities allowed per recipient.
-/// When cap is reached, the oldest activity is dismissed to make room.
-private let MAX_ACTIVE_ACTIVITIES = 5
+/// Maximum number of stack entries allowed per Live Activity.
+/// Keeps ContentState well under the 4KB limit (~250 bytes per entry).
+private let MAX_STACK_ENTRIES = 10
 
 /// Duration in seconds before a Live Activity auto-expires (48 hours).
 private let EXPIRY_INTERVAL: TimeInterval = 48 * 60 * 60
 
 public class LiveActivityManagerModule: Module {
-    /// Tracks activities that should be re-created if user swipes them away.
-    /// Key: activityId, Value: attributes used to create the activity.
-    /// Entries are removed ONLY when endActivity is called (snap viewed).
+    /// Tracks the stacked activity for re-creation if user swipes it away.
+    /// Key: activityId ("pinned-stack"), Value: (attributes, last known stack).
+    /// Entries are removed ONLY when the stack becomes empty or endAllActivities is called.
     #if canImport(ActivityKit)
-    private var persistentActivities: [String: PinnedSnapAttributes] = [:]
+    private var persistentActivities: [String: (attributes: PinnedSnapAttributes, lastStack: [PinnedSnapAttributes.ContentState.StackEntry])] = [:]
     #endif
 
     /// Active observation tasks, keyed by activityId, for cleanup.
@@ -54,9 +54,10 @@ public class LiveActivityManagerModule: Module {
         }
 
         // MARK: - startActivity
-        // Starts a new pinned snap Live Activity on the lock screen.
+        // Starts or updates the stacked pinned snap Live Activity on the lock screen.
+        // If an activity already exists, adds the new snap to the stack.
+        // If no activity exists, creates a new one with a single-entry stack.
         // Copies the thumbnail to the App Groups shared container for the widget to read.
-        // Enforces the 5-activity cap by ending the oldest activity if needed.
         // Throws descriptive errors to JS instead of silently returning nil.
         AsyncFunction("startActivity") { (activityId: String, senderName: String, caption: String?, deepLinkUrl: String, thumbnailUri: String) -> String? in
             #if canImport(ActivityKit)
@@ -71,32 +72,63 @@ public class LiveActivityManagerModule: Module {
                     userInfo: [NSLocalizedDescriptionKey: "Live Activities disabled in Settings (areActivitiesEnabled=false)"])
             }
 
-            // Copy thumbnail to App Groups shared container for widget access
+            // Copy thumbnail to App Groups shared container using snap-specific ID
             self.copyThumbnailToAppGroup(activityId: activityId, thumbnailUri: thumbnailUri)
 
-            // Deduplication: skip if activity with same ID already exists (NSE may have started it)
-            let currentActivities = Activity<PinnedSnapAttributes>.activities
-            for activity in currentActivities {
-                if activity.attributes.activityId == activityId {
-                    return activity.id  // Already running, return existing ID
-                }
-            }
+            // Extract conversationId from deep link URL
+            let conversationId = deepLinkUrl.replacingOccurrences(of: "lapse://messages/", with: "")
 
-            // Cap enforcement: if at max, end the oldest activity
-            if currentActivities.count >= MAX_ACTIVE_ACTIVITIES {
-                if let oldest = currentActivities.sorted(by: { $0.id < $1.id }).first {
-                    await oldest.end(nil, dismissalPolicy: .immediate)
-                }
-            }
-
-            let attributes = PinnedSnapAttributes(
-                activityId: activityId,
+            let newEntry = PinnedSnapAttributes.ContentState.StackEntry(
+                snapActivityId: activityId,
                 senderName: senderName,
                 caption: caption,
-                deepLinkUrl: deepLinkUrl
+                conversationId: conversationId
             )
 
-            let state = PinnedSnapAttributes.ContentState()
+            // Check for existing stacked activity
+            let currentActivities = Activity<PinnedSnapAttributes>.activities
+            if let existing = currentActivities.first {
+                // Add to existing stack
+                var updatedStack = existing.content.state.stack
+
+                // Dedup: skip if this snap is already in the stack
+                if updatedStack.contains(where: { $0.snapActivityId == activityId }) {
+                    return existing.id
+                }
+
+                updatedStack.insert(newEntry, at: 0)  // Newest first
+
+                // Cap at MAX_STACK_ENTRIES to stay under 4KB ContentState limit
+                if updatedStack.count > MAX_STACK_ENTRIES {
+                    updatedStack = Array(updatedStack.prefix(MAX_STACK_ENTRIES))
+                }
+
+                let newState = PinnedSnapAttributes.ContentState(stack: updatedStack)
+                let content = ActivityContent(
+                    state: newState,
+                    staleDate: Date().addingTimeInterval(EXPIRY_INTERVAL)
+                )
+                await existing.update(content)
+
+                // Update tracking
+                let stackId = existing.attributes.activityId
+                if var tracking = self.persistentActivities[stackId] {
+                    tracking.lastStack = updatedStack
+                    self.persistentActivities[stackId] = tracking
+                }
+
+                return existing.id
+            }
+
+            // No existing activity — create new with single-entry stack
+            let stackId = "pinned-stack"
+            let attributes = PinnedSnapAttributes(
+                activityId: stackId,
+                senderName: senderName,
+                caption: caption,
+                deepLinkUrl: "lapse://messages"
+            )
+            let state = PinnedSnapAttributes.ContentState(stack: [newEntry])
             let content = ActivityContent(
                 state: state,
                 staleDate: Date().addingTimeInterval(EXPIRY_INTERVAL)
@@ -108,12 +140,10 @@ public class LiveActivityManagerModule: Module {
                     content: content,
                     pushType: nil
                 )
-                // Track for persistence and start observing for dismissal
-                self.persistentActivities[activityId] = attributes
-                self.observeActivityState(activity, activityId: activityId)
+                self.persistentActivities[stackId] = (attributes: attributes, lastStack: [newEntry])
+                self.observeActivityState(activity, activityId: stackId)
                 return activity.id
             } catch {
-                // Re-throw with the actual error message so JS can log it
                 throw NSError(domain: "LiveActivityManager", code: 3,
                     userInfo: [NSLocalizedDescriptionKey: "Activity.request() failed: \(error.localizedDescription) | Full: \(String(describing: error))"])
             }
@@ -123,24 +153,99 @@ public class LiveActivityManagerModule: Module {
             #endif
         }
 
+        // MARK: - removeFromStack
+        // Removes a single pinned snap entry from the stacked Live Activity.
+        // If this was the last entry, ends the Live Activity entirely.
+        AsyncFunction("removeFromStack") { (snapActivityId: String) in
+            #if canImport(ActivityKit)
+            guard #available(iOS 16.2, *) else { return }
+
+            let currentActivities = Activity<PinnedSnapAttributes>.activities
+            guard let existing = currentActivities.first else { return }
+
+            var updatedStack = existing.content.state.stack
+            updatedStack.removeAll { $0.snapActivityId == snapActivityId }
+
+            // Clean up this snap's thumbnail
+            self.removeThumbnailFromAppGroup(activityId: snapActivityId)
+
+            if updatedStack.isEmpty {
+                // Last snap viewed — end the activity
+                let stackId = existing.attributes.activityId
+                self.persistentActivities.removeValue(forKey: stackId)
+                self.observationTasks[stackId]?.cancel()
+                self.observationTasks.removeValue(forKey: stackId)
+                await existing.end(nil, dismissalPolicy: .immediate)
+            } else {
+                // Update with reduced stack
+                let newState = PinnedSnapAttributes.ContentState(stack: updatedStack)
+                let content = ActivityContent(
+                    state: newState,
+                    staleDate: Date().addingTimeInterval(EXPIRY_INTERVAL)
+                )
+                await existing.update(content)
+
+                let stackId = existing.attributes.activityId
+                if var tracking = self.persistentActivities[stackId] {
+                    tracking.lastStack = updatedStack
+                    self.persistentActivities[stackId] = tracking
+                }
+            }
+            #endif
+        }
+
         // MARK: - endActivity
-        // Ends a specific Live Activity matching the given activityId.
-        // Removes from persistent tracking FIRST to prevent re-creation on dismissal.
+        // Ends a specific snap's Live Activity entry by removing it from the stack.
+        // If this was the last entry, ends the entire Live Activity.
+        // Falls back to removing the whole activity if the activityId matches the stack ID.
         AsyncFunction("endActivity") { (activityId: String) in
             #if canImport(ActivityKit)
             guard #available(iOS 16.2, *) else { return }
 
-            // Remove from persistent tracking FIRST -- prevents re-creation
-            self.persistentActivities.removeValue(forKey: activityId)
-            self.observationTasks[activityId]?.cancel()
-            self.observationTasks.removeValue(forKey: activityId)
+            let currentActivities = Activity<PinnedSnapAttributes>.activities
 
-            for activity in Activity<PinnedSnapAttributes>.activities {
+            // If the activityId matches the stack activity ID, end the whole thing
+            for activity in currentActivities {
                 if activity.attributes.activityId == activityId {
+                    self.persistentActivities.removeValue(forKey: activityId)
+                    self.observationTasks[activityId]?.cancel()
+                    self.observationTasks.removeValue(forKey: activityId)
                     await activity.end(nil, dismissalPolicy: .immediate)
-                    // Clean up thumbnail from App Groups container
-                    self.removeThumbnailFromAppGroup(activityId: activityId)
-                    break
+
+                    // Clean up all thumbnails for entries in the stack
+                    for entry in activity.content.state.stack {
+                        self.removeThumbnailFromAppGroup(activityId: entry.snapActivityId)
+                    }
+                    return
+                }
+            }
+
+            // Otherwise, treat as a snap-level removal (delegate to removeFromStack logic)
+            guard let existing = currentActivities.first else { return }
+
+            var updatedStack = existing.content.state.stack
+            updatedStack.removeAll { $0.snapActivityId == activityId }
+
+            self.removeThumbnailFromAppGroup(activityId: activityId)
+
+            if updatedStack.isEmpty {
+                let stackId = existing.attributes.activityId
+                self.persistentActivities.removeValue(forKey: stackId)
+                self.observationTasks[stackId]?.cancel()
+                self.observationTasks.removeValue(forKey: stackId)
+                await existing.end(nil, dismissalPolicy: .immediate)
+            } else {
+                let newState = PinnedSnapAttributes.ContentState(stack: updatedStack)
+                let content = ActivityContent(
+                    state: newState,
+                    staleDate: Date().addingTimeInterval(EXPIRY_INTERVAL)
+                )
+                await existing.update(content)
+
+                let stackId = existing.attributes.activityId
+                if var tracking = self.persistentActivities[stackId] {
+                    tracking.lastStack = updatedStack
+                    self.persistentActivities[stackId] = tracking
                 }
             }
             #endif
@@ -161,9 +266,11 @@ public class LiveActivityManagerModule: Module {
             self.observationTasks.removeAll()
 
             for activity in Activity<PinnedSnapAttributes>.activities {
+                // Clean up all thumbnails for entries in the stack
+                for entry in activity.content.state.stack {
+                    self.removeThumbnailFromAppGroup(activityId: entry.snapActivityId)
+                }
                 await activity.end(nil, dismissalPolicy: .immediate)
-                // Clean up thumbnail
-                self.removeThumbnailFromAppGroup(activityId: activity.attributes.activityId)
             }
             #endif
         }
@@ -187,6 +294,14 @@ public class LiveActivityManagerModule: Module {
                 let count = Activity<PinnedSnapAttributes>.activities.count
                 lines.append("currentActivityCount: \(count)")
 
+                // Show current stack info
+                if let existing = Activity<PinnedSnapAttributes>.activities.first {
+                    lines.append("stackSize: \(existing.content.state.stack.count)")
+                    for (i, entry) in existing.content.state.stack.enumerated() {
+                        lines.append("  stack[\(i)]: \(entry.snapActivityId) from \(entry.senderName)")
+                    }
+                }
+
                 // Try to actually request an activity with a test ID and see what error we get
                 let testAttributes = PinnedSnapAttributes(
                     activityId: "__diag_test__",
@@ -194,7 +309,7 @@ public class LiveActivityManagerModule: Module {
                     caption: nil,
                     deepLinkUrl: "lapse://test"
                 )
-                let testState = PinnedSnapAttributes.ContentState()
+                let testState = PinnedSnapAttributes.ContentState(stack: [])
                 let testContent = ActivityContent(
                     state: testState,
                     staleDate: Date().addingTimeInterval(60)
@@ -237,12 +352,14 @@ public class LiveActivityManagerModule: Module {
         }
 
         // MARK: - getActiveActivityIds
-        // Returns array of activityId attribute values for all running pinned snap Live Activities.
+        // Returns array of snapActivityId values from the stack of all running Live Activities.
         // Used by JS foreground-resume fallback to check which pinned snaps already have activities.
         AsyncFunction("getActiveActivityIds") { () -> [String] in
             #if canImport(ActivityKit)
             guard #available(iOS 16.2, *) else { return [] }
-            return Activity<PinnedSnapAttributes>.activities.map { $0.attributes.activityId }
+            return Activity<PinnedSnapAttributes>.activities.flatMap { activity in
+                activity.content.state.stack.map { $0.snapActivityId }
+            }
             #else
             return []
             #endif
@@ -280,6 +397,7 @@ public class LiveActivityManagerModule: Module {
 
     /// Observes an activity's state updates and automatically re-creates it if dismissed by the user.
     /// Only re-creates if the activityId is still in `persistentActivities` (not explicitly ended).
+    /// Re-creation preserves the full stack state from the last known update.
     #if canImport(ActivityKit)
     @available(iOS 16.2, *)
     private func observeActivityState(_ activity: Activity<PinnedSnapAttributes>, activityId: String) {
@@ -292,13 +410,13 @@ public class LiveActivityManagerModule: Module {
 
                 if state == .dismissed {
                     // Check if this activity should persist (not explicitly ended)
-                    guard let attributes = self.persistentActivities[activityId] else {
+                    guard let tracking = self.persistentActivities[activityId] else {
                         // endActivity was called -- do not re-create
                         return
                     }
 
-                    // Re-create the activity with fresh staleDate
-                    let newState = PinnedSnapAttributes.ContentState()
+                    // Re-create the activity with the last known stack state
+                    let newState = PinnedSnapAttributes.ContentState(stack: tracking.lastStack)
                     let content = ActivityContent(
                         state: newState,
                         staleDate: Date().addingTimeInterval(EXPIRY_INTERVAL)
@@ -306,7 +424,7 @@ public class LiveActivityManagerModule: Module {
 
                     do {
                         let newActivity = try Activity.request(
-                            attributes: attributes,
+                            attributes: tracking.attributes,
                             content: content,
                             pushType: nil
                         )
