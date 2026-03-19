@@ -74,6 +74,7 @@ const mockGetExpoPushTokenAsync = jest.fn(() =>
 );
 const mockScheduleNotificationAsync = jest.fn(() => Promise.resolve('notification-id'));
 const mockDismissNotificationAsync = jest.fn(() => Promise.resolve());
+const mockGetPresentedNotificationsAsync = jest.fn(() => Promise.resolve([]));
 const mockAddNotificationReceivedListener = jest.fn(() => ({ remove: jest.fn() }));
 const mockAddNotificationResponseReceivedListener = jest.fn(() => ({ remove: jest.fn() }));
 
@@ -85,6 +86,7 @@ jest.mock('expo-notifications', () => ({
   getExpoPushTokenAsync: mockGetExpoPushTokenAsync,
   scheduleNotificationAsync: mockScheduleNotificationAsync,
   dismissNotificationAsync: (...args) => mockDismissNotificationAsync(...args),
+  getPresentedNotificationsAsync: (...args) => mockGetPresentedNotificationsAsync(...args),
   addNotificationReceivedListener: mockAddNotificationReceivedListener,
   addNotificationResponseReceivedListener: mockAddNotificationResponseReceivedListener,
   AndroidImportance: { MAX: 5, HIGH: 4 },
@@ -1055,19 +1057,63 @@ describe('notificationService', () => {
   // dismissPinnedNotif tests
   // ===========================================================================
   describe('dismissPinnedNotif', () => {
-    it('should dismiss notification and remove from storage when found', async () => {
-      mockAsyncStorageGetItem.mockResolvedValueOnce(JSON.stringify({ 'sender-abc': 'notif-xyz' }));
+    it('should dismiss notification found in tray by scanning presented notifications', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([
+        {
+          request: {
+            identifier: 'tray-notif-xyz',
+            content: { data: { type: 'pinned_snap', senderId: 'sender-abc' } },
+          },
+        },
+      ]);
+      // AsyncStorage cleanup reads existing entries
+      mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
 
       await dismissPinnedNotif('sender-abc');
 
-      expect(mockDismissNotificationAsync).toHaveBeenCalledWith('notif-xyz');
+      expect(mockGetPresentedNotificationsAsync).toHaveBeenCalled();
+      expect(mockDismissNotificationAsync).toHaveBeenCalledWith('tray-notif-xyz');
+    });
+
+    it('should clean up AsyncStorage entry when dismissing via tray scan', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([
+        {
+          request: {
+            identifier: 'tray-notif-1',
+            content: { data: { type: 'pinned_snap', senderId: 'sender-1' } },
+          },
+        },
+      ]);
+      mockAsyncStorageGetItem.mockResolvedValueOnce(
+        JSON.stringify({ 'sender-1': 'old-stored-id' })
+      );
+
+      await dismissPinnedNotif('sender-1');
+
+      expect(mockDismissNotificationAsync).toHaveBeenCalledWith('tray-notif-1');
       expect(mockAsyncStorageSetItem).toHaveBeenCalledWith(
         '@pinned_snap_notifications',
         JSON.stringify({})
       );
     });
 
-    it('should not call dismissNotificationAsync when no stored ID found', async () => {
+    it('should fall back to AsyncStorage when notification not found in tray', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([]);
+      mockAsyncStorageGetItem.mockResolvedValueOnce(
+        JSON.stringify({ 'sender-abc': 'stored-notif-xyz' })
+      );
+
+      await dismissPinnedNotif('sender-abc');
+
+      expect(mockDismissNotificationAsync).toHaveBeenCalledWith('stored-notif-xyz');
+      expect(mockAsyncStorageSetItem).toHaveBeenCalledWith(
+        '@pinned_snap_notifications',
+        JSON.stringify({})
+      );
+    });
+
+    it('should not call dismissNotificationAsync when not in tray or storage', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([]);
       mockAsyncStorageGetItem.mockResolvedValueOnce(
         JSON.stringify({ 'other-sender': 'other-notif' })
       );
@@ -1075,23 +1121,52 @@ describe('notificationService', () => {
       await dismissPinnedNotif('unknown-sender');
 
       expect(mockDismissNotificationAsync).not.toHaveBeenCalled();
-      // Storage should not be updated since nothing was removed
-      expect(mockAsyncStorageSetItem).not.toHaveBeenCalled();
     });
 
     it('should not throw when notification already dismissed by user', async () => {
-      mockAsyncStorageGetItem.mockResolvedValueOnce(JSON.stringify({ 'sender-1': 'notif-1' }));
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([
+        {
+          request: {
+            identifier: 'tray-notif-1',
+            content: { data: { type: 'pinned_snap', senderId: 'sender-1' } },
+          },
+        },
+      ]);
       mockDismissNotificationAsync.mockRejectedValueOnce(new Error('Notification not found'));
 
       // Should not throw — best-effort dismissal
       await expect(dismissPinnedNotif('sender-1')).resolves.toBeUndefined();
     });
 
-    it('should handle empty AsyncStorage gracefully', async () => {
+    it('should handle empty tray and empty AsyncStorage gracefully', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([]);
       mockAsyncStorageGetItem.mockResolvedValueOnce(null);
 
       await dismissPinnedNotif('any-sender');
 
+      expect(mockDismissNotificationAsync).not.toHaveBeenCalled();
+    });
+
+    it('should only match pinned_snap type notifications in tray scan', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([
+        {
+          request: {
+            identifier: 'dm-notif',
+            content: { data: { type: 'direct_message', senderId: 'sender-1' } },
+          },
+        },
+        {
+          request: {
+            identifier: 'snap-notif',
+            content: { data: { type: 'snap', senderId: 'sender-1' } },
+          },
+        },
+      ]);
+      mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
+
+      await dismissPinnedNotif('sender-1');
+
+      // Neither should match — only pinned_snap type should be dismissed
       expect(mockDismissNotificationAsync).not.toHaveBeenCalled();
     });
   });
@@ -1100,8 +1175,31 @@ describe('notificationService', () => {
   // storePinnedNotifId + dismissPinnedNotif integration (Android pipeline)
   // ===========================================================================
   describe('Android pinned snap notification pipeline', () => {
-    it('should store notification ID then dismiss it when snap is viewed', async () => {
-      // Simulate receiving a pinned_snap notification on Android
+    it('should dismiss via tray scan even without prior storePinnedNotifId call', async () => {
+      // This is the key scenario: notification arrived while app was killed,
+      // so storePinnedNotifId was never called. dismissPinnedNotif should
+      // still find and dismiss it by scanning the notification tray.
+      const senderId = 'background-sender-123';
+
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([
+        {
+          request: {
+            identifier: 'bg-notif-456',
+            content: { data: { type: 'pinned_snap', senderId } },
+          },
+        },
+      ]);
+      // No AsyncStorage entry exists for this sender
+      mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
+
+      await dismissPinnedNotif(senderId);
+
+      expect(mockDismissNotificationAsync).toHaveBeenCalledWith('bg-notif-456');
+    });
+
+    it('should fall back to stored ID when tray scan returns empty', async () => {
+      // Notification was stored via storePinnedNotifId but user already
+      // swiped it away from tray — tray scan finds nothing, fallback works.
       const senderId = 'android-sender-456';
       const notificationIdentifier = 'android-notif-789';
 
@@ -1109,12 +1207,8 @@ describe('notificationService', () => {
       mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
       await storePinnedNotifId(senderId, notificationIdentifier);
 
-      expect(mockAsyncStorageSetItem).toHaveBeenCalledWith(
-        '@pinned_snap_notifications',
-        JSON.stringify({ [senderId]: notificationIdentifier })
-      );
-
-      // Step 2: Dismiss the notification (as ConversationScreen would do)
+      // Step 2: Dismiss — tray is empty but AsyncStorage has the ID
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([]);
       mockAsyncStorageGetItem.mockResolvedValueOnce(
         JSON.stringify({ [senderId]: notificationIdentifier })
       );
@@ -1123,8 +1217,8 @@ describe('notificationService', () => {
       expect(mockDismissNotificationAsync).toHaveBeenCalledWith(notificationIdentifier);
     });
 
-    it('should not call dismissNotificationAsync when no ID was stored for sender', async () => {
-      // dismissPinnedNotif with empty storage (the bug this gap closure fixes)
+    it('should not call dismissNotificationAsync when not in tray or storage', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([]);
       mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
       await dismissPinnedNotif('unknown-sender');
 
@@ -1136,10 +1230,16 @@ describe('notificationService', () => {
   // handleCancelPinnedSnap tests
   // ===========================================================================
   describe('handleCancelPinnedSnap', () => {
-    it('should call dismissPinnedNotif with the senderId', async () => {
-      mockAsyncStorageGetItem.mockResolvedValueOnce(
-        JSON.stringify({ 'sender-cancel': 'notif-cancel' })
-      );
+    it('should call dismissPinnedNotif with the senderId (tray scan path)', async () => {
+      mockGetPresentedNotificationsAsync.mockResolvedValueOnce([
+        {
+          request: {
+            identifier: 'notif-cancel',
+            content: { data: { type: 'pinned_snap', senderId: 'sender-cancel' } },
+          },
+        },
+      ]);
+      mockAsyncStorageGetItem.mockResolvedValueOnce('{}');
 
       await handleCancelPinnedSnap('sender-cancel');
 

@@ -742,18 +742,57 @@ export const storePinnedNotifId = async (senderId, notificationId) => {
 
 /**
  * Dismiss a pinned snap notification when the snap is viewed.
- * Reads the stored notification identifier for the sender and dismisses it.
+ * Scans the system notification tray for a pinned_snap notification from the
+ * given sender and dismisses it. This approach works regardless of whether the
+ * notification arrived while the app was foregrounded, backgrounded, or killed
+ * (unlike the previous AsyncStorage-only approach which required foreground
+ * receipt to store the notification identifier).
+ *
+ * Falls back to the AsyncStorage lookup as a belt-and-suspenders measure for
+ * edge cases where getPresentedNotificationsAsync may not return the expected
+ * notification (e.g., OS-level grouping).
+ *
  * @param {string} senderId - The sender's user ID
  */
 export const dismissPinnedNotif = async senderId => {
   try {
+    // Primary: scan the notification tray for a matching pinned_snap
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    const match = presented.find(n => {
+      const d = n.request?.content?.data;
+      return d?.type === 'pinned_snap' && d?.senderId === senderId;
+    });
+
+    if (match) {
+      await Notifications.dismissNotificationAsync(match.request.identifier);
+      logger.info('Dismissed pinned notification via tray scan', {
+        senderId,
+        notifId: match.request.identifier,
+      });
+      // Clean up AsyncStorage entry if one exists (best-effort)
+      try {
+        const existing = JSON.parse((await AsyncStorage.getItem(PINNED_NOTIF_KEY)) || '{}');
+        if (existing[senderId]) {
+          delete existing[senderId];
+          await AsyncStorage.setItem(PINNED_NOTIF_KEY, JSON.stringify(existing));
+        }
+      } catch {
+        // Ignore AsyncStorage cleanup errors
+      }
+      return;
+    }
+
+    // Fallback: try AsyncStorage lookup (covers edge cases)
     const existing = JSON.parse((await AsyncStorage.getItem(PINNED_NOTIF_KEY)) || '{}');
     const notifId = existing[senderId];
     if (notifId) {
       await Notifications.dismissNotificationAsync(notifId);
       delete existing[senderId];
       await AsyncStorage.setItem(PINNED_NOTIF_KEY, JSON.stringify(existing));
-      logger.info('Dismissed pinned notification', { senderId, notifId });
+      logger.info('Dismissed pinned notification via AsyncStorage fallback', {
+        senderId,
+        notifId,
+      });
     }
   } catch (error) {
     // Best-effort: notification may already be dismissed by user swipe
