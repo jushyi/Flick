@@ -758,10 +758,25 @@ export const dismissPinnedNotif = async senderId => {
   try {
     // Primary: scan the notification tray for a matching pinned_snap
     const presented = await Notifications.getPresentedNotificationsAsync();
-    const match = presented.find(n => {
+    let match = presented.find(n => {
       const d = n.request?.content?.data;
       return d?.type === 'pinned_snap' && d?.senderId === senderId;
     });
+
+    // Android FCM notifications delivered while app is backgrounded are "foreign notifications"
+    // whose data payload is inaccessible via getPresentedNotificationsAsync.
+    // Fall back to dismissing any foreign FCM notification in the tray.
+    if (!match && Platform.OS === 'android') {
+      match = presented.find(n =>
+        n.request?.identifier?.startsWith('expo-notifications://foreign_notifications')
+      );
+      if (match) {
+        logger.info('dismissPinnedNotif: matched Android foreign notification', {
+          senderId,
+          notifId: match.request.identifier,
+        });
+      }
+    }
 
     if (match) {
       await Notifications.dismissNotificationAsync(match.request.identifier);

@@ -199,14 +199,16 @@ const ConversationScreen = () => {
    */
   useEffect(() => {
     const autoOpenSnapId = route.params?.autoOpenSnapId;
-    if (!autoOpenSnapId || autoOpenSnapHandled.current) return;
+    // Track which snap ID was handled, not just a boolean — allows re-triggering
+    // when setParams injects a new autoOpenSnapId (e.g., already on conversation)
+    if (!autoOpenSnapId || autoOpenSnapHandled.current === autoOpenSnapId) return;
 
     // Try to find snap in currently loaded messages
     const tryOpen = () => {
-      if (autoOpenSnapHandled.current) return true;
+      if (autoOpenSnapHandled.current === autoOpenSnapId) return true;
       const snapMsg = messages.find(m => m.id === autoOpenSnapId && m.type === 'snap');
       if (snapMsg) {
-        autoOpenSnapHandled.current = true;
+        autoOpenSnapHandled.current = autoOpenSnapId;
         setTimeout(() => {
           setSnapViewerMessage(snapMsg);
         }, 300);
@@ -235,7 +237,7 @@ const ConversationScreen = () => {
       // After max wait, attempt direct Firestore fetch as last resort
       if (elapsed >= MAX_WAIT) {
         clearInterval(intervalId);
-        if (autoOpenSnapHandled.current) return;
+        if (autoOpenSnapHandled.current === autoOpenSnapId) return;
 
         logger.info(
           'ConversationScreen: Snap not found in messages after polling, fetching directly',
@@ -250,10 +252,10 @@ const ConversationScreen = () => {
           const snapDoc = await getDoc(
             doc(db, 'conversations', conversationId, 'messages', autoOpenSnapId)
           );
-          if (snapDoc.exists() && !autoOpenSnapHandled.current) {
+          if (snapDoc.exists() && autoOpenSnapHandled.current !== autoOpenSnapId) {
             const data = { id: snapDoc.id, ...snapDoc.data() };
             if (data.type === 'snap') {
-              autoOpenSnapHandled.current = true;
+              autoOpenSnapHandled.current = autoOpenSnapId;
               setSnapViewerMessage(data);
             } else {
               logger.warn('ConversationScreen: autoOpenSnapId message is not a snap', {

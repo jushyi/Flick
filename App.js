@@ -222,14 +222,30 @@ export default function App() {
           // ActivityScreen handles opening PhotoDetail with proper context
           navigationRef.current.navigate('Activity', params);
         } else if (screen === 'Conversation') {
-          // Navigate to Messages tab > Conversation screen
-          navigationRef.current.navigate('MainTabs', {
-            screen: 'Messages',
-            params: {
-              screen: 'Conversation',
-              params: params,
-            },
-          });
+          // Check if we're already on this conversation
+          const currentRoute = navigationRef.current?.getCurrentRoute?.();
+          const alreadyOnConvo =
+            currentRoute?.name === 'Conversation' &&
+            currentRoute?.params?.conversationId === params.conversationId;
+
+          if (alreadyOnConvo && params.autoOpenSnapId) {
+            // Already viewing this conversation — inject autoOpenSnapId via setParams
+            // so the existing ConversationScreen's effect picks it up
+            navigationRef.current.setParams({
+              autoOpenSnapId: params.autoOpenSnapId,
+            });
+          } else if (alreadyOnConvo) {
+            // Already on conversation, no snap to open — nothing to do
+          } else {
+            // Not on this conversation — navigate directly
+            navigationRef.current.navigate('MainTabs', {
+              screen: 'Messages',
+              params: {
+                screen: 'Conversation',
+                params: params,
+              },
+            });
+          }
         }
       };
 
