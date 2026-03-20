@@ -331,27 +331,14 @@ export default function App() {
       }
     });
 
-    // Listener for Expo push token refresh (handles token changes on app reinstall)
-    tokenRefreshListener.current = Notifications.addPushTokenListener(async ({ data }) => {
-      // data here is the raw device token — ignore it, only use as a signal to re-register
-      // Guard against re-entrancy (getExpoPushTokenAsync can trigger this listener)
-      if (tokenRefreshListener.current?._isRefreshing) return;
-      tokenRefreshListener.current._isRefreshing = true;
-      const currentUser = getAuth().currentUser;
-      if (currentUser) {
-        try {
-          const tokenResult = await getNotificationToken();
-          if (tokenResult.success && tokenResult.data) {
-            await storeNotificationToken(currentUser.uid, tokenResult.data);
-            logger.info('App: Token refreshed and stored', {
-              userId: currentUser.uid,
-            });
-          }
-        } catch (error) {
-          logger.error('App: Failed to store refreshed token', { error: error.message });
-        }
-      }
-      tokenRefreshListener.current._isRefreshing = false;
+    // Device push token refresh listener — only log, don't store
+    // The Expo push token is already registered in onAuthStateChanged above.
+    // This listener fires for raw device token changes (not Expo tokens).
+    // Storing the raw token here was overwriting the valid Expo push token.
+    tokenRefreshListener.current = Notifications.addPushTokenListener(({ data }) => {
+      logger.debug('App: Device push token changed (not storing)', {
+        tokenPrefix: typeof data === 'string' ? data.substring(0, 20) + '...' : 'non-string',
+      });
     });
 
     // Listener for notifications received while app is in foreground
