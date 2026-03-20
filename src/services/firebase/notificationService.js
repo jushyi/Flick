@@ -189,7 +189,6 @@ export const storeNotificationToken = async (userId, token) => {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
         fcmToken: token,
-        updatedAt: serverTimestamp(),
       });
 
       logger.info('Notification token stored in Firestore', {
