@@ -112,7 +112,7 @@ Plans (gap closure -- SCRN-02 snap bubble indicator):
 4. After the recipient views the snap, the Live Activity disappears
 5. If the recipient swipes away the Live Activity, it is automatically re-created until the snap is viewed
 
-**Plans:** 15 plans (7 original + 3 pivot attempts reverted + 3 gap closure R1 + 2 gap closure R2)
+**Plans:** 20 plans (7 original + 3 pivot reverted + 3 gap closure R1 + 2 gap closure R2 + 3 enhancements + 2 gap closure R3)
 
 Plans (Live Activity infrastructure -- executed):
 
@@ -138,8 +138,19 @@ Plans (gap closure R1 -- fixes from first device testing):
 
 Plans (gap closure R2 -- fixes from second device testing):
 
-- [ ] 09-14-PLAN.md — Thumbnail pipeline diagnostics + NSE fix + foreground-resume fallback for background Live Activities
-- [ ] 09-15-PLAN.md — Polaroid visual overhaul: 160pt max height, thick borders, sharp corners, tilt rotation
+- [x] 09-14-PLAN.md — Thumbnail pipeline diagnostics + NSE fix + foreground-resume fallback for background Live Activities
+- [x] 09-15-PLAN.md — Polaroid visual overhaul: 160pt max height, thick borders, sharp corners, tilt rotation
+
+Plans (enhancements -- push-to-start, stacking, Firebase v2 migration):
+
+- [x] 09-16-PLAN.md — Push-to-start Live Activities: native token observation, FCM token storage, Cloud Function delivery
+- [x] 09-17-PLAN.md — Stacked pinned snaps: array ContentState, removeFromStack, overlapping Polaroid widget layout
+- [x] 09-18-PLAN.md — Firebase Functions v1 to v2 migration: all 24 triggers, admin.firestore.FieldValue replacement
+
+Plans (gap closure R3 -- fixes from third device testing / UAT):
+
+- [ ] 09-19-PLAN.md — Fix push-to-start content-state payload, export removeFromStack from TS bridge, harden NSE suppression
+- [ ] 09-20-PLAN.md — Deep link friendId derivation, stacked layout text removal, messages list deep link
 
 ### Phase 10: Pinned Snaps Android
 
@@ -163,7 +174,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
+Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11
 
 **Build Note:** Phases 8-10 share a single EAS native build (bundles expo-screen-capture + Live Activity module). Phases 6-7 are OTA-deployable with no native build required.
 
@@ -177,7 +188,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11
 | 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
 | 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
 | 8. Screenshot Detection                      | 3/4 | Gap closure | - | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 10/15          | In Progress | -          |
+| 9. Pinned Snaps iOS                          | v1.1      | 15/20          | Gap closure R3 | -          |
 | 10. Pinned Snaps Android                     | 3/3 | Complete    | 2026-03-18 | -          |
 | 11. Add Video Support to Main Camera         | 8/8 | Complete    | 2026-03-18 | -          |
 
