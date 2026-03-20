@@ -116,15 +116,13 @@ struct FlickLiveActivityWidget: Widget {
 
     // MARK: - Stacked Layout
 
-    /// Renders multiple pinned snaps as overlapping Polaroid frames with a count summary.
-    /// Shows up to 3 visible Polaroids with offset stacking. Displays sender names and
-    /// a "+N more" badge when more than 3 entries exist.
+    /// Renders multiple pinned snaps as overlapping Polaroid frames centered on the lock screen.
+    /// Shows up to 3 visible Polaroids with offset stacking. No text overlay.
     @ViewBuilder
     private func stackedLayout(context: ActivityViewContext<PinnedSnapAttributes>) -> some View {
         let visibleEntries = Array(context.state.stack.prefix(3))
-        let totalCount = context.state.stack.count
 
-        HStack(spacing: 12) {
+        HStack {
             Spacer()
 
             // Stacked Polaroids — ZStack with offset
@@ -133,37 +131,6 @@ struct FlickLiveActivityWidget: Widget {
                     polaroidFrame(activityId: entry.snapActivityId)
                         .rotationEffect(.degrees(Self.tiltDegrees(for: entry.snapActivityId)))
                         .offset(x: CGFloat(index) * 4, y: CGFloat(index) * 3)
-                }
-            }
-
-            // Summary text
-            VStack(alignment: .leading, spacing: 4) {
-                Text("\(totalCount) pinned snaps")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundColor(flickTextPrimary)
-
-                let senderNames = Array(Set(context.state.stack.map { $0.senderName }))
-                if senderNames.count <= 2 {
-                    Text(senderNames.joined(separator: " & "))
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(flickTextSecondary)
-                        .lineLimit(1)
-                } else {
-                    Text("\(senderNames[0]), \(senderNames[1]) +\(senderNames.count - 2)")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(flickTextSecondary)
-                        .lineLimit(1)
-                }
-
-                // Count badge if more than 3 visible
-                if totalCount > 3 {
-                    Text("+\(totalCount - 3) more")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.red.opacity(0.8))
-                        .clipShape(Capsule())
                 }
             }
 
