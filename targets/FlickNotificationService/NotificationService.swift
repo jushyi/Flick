@@ -231,7 +231,13 @@ class NotificationService: UNNotificationServiceExtension {
                 deepLinkUrl: deepLinkUrl
             )
 
-            let state = PinnedSnapAttributes.ContentState()
+            let entry = PinnedSnapAttributes.ContentState.StackEntry(
+                snapActivityId: activityId,
+                senderName: senderName,
+                caption: caption,
+                conversationId: conversationId
+            )
+            let state = PinnedSnapAttributes.ContentState(stack: [entry])
             let content = ActivityContent(
                 state: state,
                 staleDate: Date().addingTimeInterval(self.expiryInterval)
