@@ -55,7 +55,19 @@ const ConversationScreen = () => {
   const { user, userProfile } = useAuth();
   const navigation = useNavigation();
   const route = useRoute();
-  const { conversationId, friendId, friendProfile, deletedAt } = route.params;
+  const { conversationId, friendProfile, deletedAt } = route.params;
+
+  // Derive friendId from conversationId when not passed (e.g., deep link navigation).
+  // Conversation IDs are formatted as [lowerUserId]_[higherUserId].
+  const paramFriendId = route.params?.friendId;
+  const derivedFriendId = React.useMemo(() => {
+    if (paramFriendId) return paramFriendId;
+    if (!conversationId || !user?.uid) return null;
+    const parts = conversationId.split('_');
+    if (parts.length !== 2) return null;
+    return parts[0] === user.uid ? parts[1] : parts[0];
+  }, [paramFriendId, conversationId, user?.uid]);
+  const friendId = derivedFriendId;
 
   const [liveFriendProfile, setLiveFriendProfile] = useState(friendProfile);
 

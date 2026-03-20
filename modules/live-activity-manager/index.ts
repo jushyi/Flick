@@ -17,6 +17,9 @@ interface LiveActivityManagerInterface {
   diagnose(): Promise<string>;
   getNSEDiagnostics(): Promise<string | null>;
   clearNSEDiagnostics(): Promise<void>;
+  removeFromStack(snapActivityId: string): Promise<void>;
+  getActiveActivityIds(): Promise<string[]>;
+  observePushToStartToken(): Promise<void>;
 }
 
 let nativeModule: LiveActivityManagerInterface | null = null;
@@ -112,4 +115,34 @@ export async function getNSEDiagnostics(): Promise<unknown[] | null> {
 export async function clearNSEDiagnostics(): Promise<void> {
   if (!nativeModule) return;
   return nativeModule.clearNSEDiagnostics();
+}
+
+/**
+ * Remove a single pinned snap from the stacked Live Activity.
+ * If the removed entry was the last in the stack, the Live Activity ends.
+ *
+ * @param snapActivityId - The snap message ID to remove from the stack
+ */
+export async function removeFromStack(snapActivityId: string): Promise<void> {
+  if (!nativeModule) return;
+  return nativeModule.removeFromStack(snapActivityId);
+}
+
+/**
+ * Get the snap activity IDs of all entries in running Live Activities.
+ *
+ * @returns Array of snapActivityId strings from all active stack entries
+ */
+export async function getActiveActivityIds(): Promise<string[]> {
+  if (!nativeModule) return [];
+  return nativeModule.getActiveActivityIds();
+}
+
+/**
+ * Start observing push-to-start token updates (iOS 17.2+).
+ * Emits "onPushToStartToken" events when a token is received.
+ */
+export async function observePushToStartToken(): Promise<void> {
+  if (!nativeModule) return;
+  return nativeModule.observePushToStartToken();
 }

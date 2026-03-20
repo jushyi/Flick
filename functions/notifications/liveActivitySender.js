@@ -41,7 +41,16 @@ async function sendPushToStartLiveActivity({
         aps: {
           timestamp: Math.floor(Date.now() / 1000),
           event: 'start',
-          'content-state': {},
+          'content-state': {
+            stack: [
+              {
+                snapActivityId: activityId,
+                senderName: senderName,
+                caption: caption || null,
+                conversationId: conversationId,
+              },
+            ],
+          },
           'attributes-type': 'PinnedSnapAttributes',
           attributes: {
             activityId: activityId,
