@@ -331,9 +331,12 @@ export default function App() {
       }
     });
 
-    // Listener for token refresh (handles token changes on app reinstall)
-    // Use addPushTokenListener to detect changes, then re-fetch the Expo push token
-    tokenRefreshListener.current = Notifications.addPushTokenListener(async () => {
+    // Listener for Expo push token refresh (handles token changes on app reinstall)
+    tokenRefreshListener.current = Notifications.addPushTokenListener(async ({ data }) => {
+      // data here is the raw device token — ignore it, only use as a signal to re-register
+      // Guard against re-entrancy (getExpoPushTokenAsync can trigger this listener)
+      if (tokenRefreshListener.current?._isRefreshing) return;
+      tokenRefreshListener.current._isRefreshing = true;
       const currentUser = getAuth().currentUser;
       if (currentUser) {
         try {
@@ -348,6 +351,7 @@ export default function App() {
           logger.error('App: Failed to store refreshed token', { error: error.message });
         }
       }
+      tokenRefreshListener.current._isRefreshing = false;
     });
 
     // Listener for notifications received while app is in foreground
