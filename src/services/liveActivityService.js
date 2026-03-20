@@ -13,7 +13,6 @@ import { Platform } from 'react-native';
 
 import { NativeModulesProxy, EventEmitter } from 'expo-modules-core';
 import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
-import messaging from '@react-native-firebase/messaging';
 
 import logger from '../utils/logger';
 
@@ -204,14 +203,15 @@ export const getActiveActivityIds = async () => {
 export const getFCMRegistrationToken = async () => {
   if (Platform.OS !== 'ios') return null;
   try {
-    // Ensure notification permission is granted before requesting token
-    const authStatus = await messaging().requestPermission();
+    // Lazy-import to avoid crash if native module isn't available
+    const { default: msg } = await import('@react-native-firebase/messaging');
+    const authStatus = await msg().requestPermission();
     const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      authStatus === msg.AuthorizationStatus.AUTHORIZED ||
+      authStatus === msg.AuthorizationStatus.PROVISIONAL;
     if (!enabled) return null;
 
-    const fcmToken = await messaging().getToken();
+    const fcmToken = await msg().getToken();
     return fcmToken;
   } catch (error) {
     logger.warn('liveActivityService: Failed to get FCM token', { error: error.message });
