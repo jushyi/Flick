@@ -278,9 +278,18 @@ class NotificationService: UNNotificationServiceExtension {
             // Suppress the push notification banner when Live Activity was created successfully —
             // the Live Activity itself is the user-visible indicator, no need for a duplicate banner.
             if liveActivityStarted {
+                // Fully suppress the push notification banner when Live Activity was created.
+                // Set all fields explicitly to prevent any residual alert, sound, or badge.
                 let silentContent = UNMutableNotificationContent()
+                silentContent.sound = nil
+                silentContent.badge = 0
+                silentContent.title = ""
+                silentContent.body = ""
+                silentContent.subtitle = ""
+                self.diag("suppressing_notification", ["reason": "live_activity_started"])
                 contentHandler(silentContent)
             } else {
+                self.diag("showing_notification", ["reason": "live_activity_failed"])
                 contentHandler(bestAttemptContent)
             }
         }
