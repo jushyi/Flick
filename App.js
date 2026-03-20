@@ -68,6 +68,7 @@ export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
   const tokenRefreshListener = useRef();
+  const tokenRegistered = useRef(false);
 
   // Actively check for OTA updates on launch and reload immediately if one is found.
   // This runs while the splash screen is still visible so the reload is seamless.
@@ -306,7 +307,8 @@ export default function App() {
     // This handles: app startup with existing session, fresh login, and re-login after logout
     const auth = getAuth();
     const unsubscribeAuth = onAuthStateChanged(auth, async firebaseUser => {
-      if (firebaseUser) {
+      if (firebaseUser && !tokenRegistered.current) {
+        tokenRegistered.current = true;
         try {
           const permResult = await checkNotificationPermissions();
           if (permResult.success && permResult.data.granted) {
@@ -328,6 +330,8 @@ export default function App() {
             logger.warn('App: Push-to-start registration failed', { error: err?.message });
           });
         }
+      } else if (!firebaseUser) {
+        tokenRegistered.current = false;
       }
     });
 
