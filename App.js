@@ -68,7 +68,6 @@ export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
   const tokenRefreshListener = useRef();
-  const tokenRegistered = useRef(false);
 
   // Actively check for OTA updates on launch and reload immediately if one is found.
   // This runs while the splash screen is still visible so the reload is seamless.
@@ -307,8 +306,7 @@ export default function App() {
     // This handles: app startup with existing session, fresh login, and re-login after logout
     const auth = getAuth();
     const unsubscribeAuth = onAuthStateChanged(auth, async firebaseUser => {
-      if (firebaseUser && !tokenRegistered.current) {
-        tokenRegistered.current = true;
+      if (firebaseUser) {
         try {
           const permResult = await checkNotificationPermissions();
           if (permResult.success && permResult.data.granted) {
@@ -330,19 +328,22 @@ export default function App() {
             logger.warn('App: Push-to-start registration failed', { error: err?.message });
           });
         }
-      } else if (!firebaseUser) {
-        tokenRegistered.current = false;
       }
     });
 
-    // Device push token refresh listener — only log, don't store
-    // The Expo push token is already registered in onAuthStateChanged above.
-    // This listener fires for raw device token changes (not Expo tokens).
-    // Storing the raw token here was overwriting the valid Expo push token.
-    tokenRefreshListener.current = Notifications.addPushTokenListener(({ data }) => {
-      logger.debug('App: Device push token changed (not storing)', {
-        tokenPrefix: typeof data === 'string' ? data.substring(0, 20) + '...' : 'non-string',
-      });
+    // Listener for token refresh (handles token changes on app reinstall)
+    tokenRefreshListener.current = Notifications.addPushTokenListener(async ({ data }) => {
+      const currentUser = getAuth().currentUser;
+      if (currentUser && data) {
+        try {
+          await storeNotificationToken(currentUser.uid, data);
+          logger.info('App: Token refreshed and stored', {
+            userId: currentUser.uid,
+          });
+        } catch (error) {
+          logger.error('App: Failed to store refreshed token', { error: error.message });
+        }
+      }
     });
 
     // Listener for notifications received while app is in foreground

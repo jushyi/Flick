@@ -170,14 +170,9 @@ export const storeNotificationToken = async (userId, token) => {
     try {
       // Check if token changed from what we have locally (detects bundle ID switches, reinstalls)
       const previousToken = await secureStorage.getItem(STORAGE_KEYS.FCM_TOKEN);
-      const tokenChanged = !previousToken || previousToken !== token;
+      const tokenChanged = previousToken && previousToken !== token;
 
-      if (!tokenChanged) {
-        logger.debug('Notification token unchanged, skipping Firestore write', { userId });
-        return { success: true };
-      }
-
-      if (previousToken) {
+      if (tokenChanged) {
         logger.warn('Notification token CHANGED - replacing stale token', {
           userId,
           oldTokenPrefix: previousToken.substring(0, 25) + '...',
@@ -189,17 +184,19 @@ export const storeNotificationToken = async (userId, token) => {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
         fcmToken: token,
+        updatedAt: serverTimestamp(),
       });
 
       logger.info('Notification token stored in Firestore', {
         userId,
         tokenPrefix: token.substring(0, 25) + '...',
+        wasRefreshed: tokenChanged,
       });
 
       // Also store locally in SecureStore for offline access and logout cleanup
       const localStored = await secureStorage.setItem(STORAGE_KEYS.FCM_TOKEN, token);
       if (localStored) {
-        logger.debug('Notification token stored in SecureStore', { userId });
+        logger.info('Notification token stored in SecureStore', { userId });
       } else {
         logger.warn('Failed to store notification token in SecureStore', { userId });
       }
