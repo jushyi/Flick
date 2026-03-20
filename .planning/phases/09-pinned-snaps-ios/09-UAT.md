@@ -61,13 +61,22 @@ skipped: 0
   test: 3
   needs_research: true
   research_notes: |
-    Push-to-start token may not be stale — tokens persist at OS level after app kill.
-    More likely root causes:
+    ARCHITECTURE DECISION: Push-to-start is the PRIMARY path for ALL app states (foreground, background, killed).
+    NSE is the FALLBACK for when push-to-start fails or device is iOS 16.2-17.1 (no push-to-start support).
+
+    Push-to-start research:
     1. content-state payload is empty {} but ContentState expects { stack: [...] } — iOS may reject mismatched shape
     2. attributes-type "PinnedSnapAttributes" may need module namespace prefix
     3. Token may never have been stored in Firestore (check recipient user doc)
+    4. Push-to-start tokens persist at OS level after app kill — likely NOT a staleness issue
     Investigate: Cloud Function logs for sendPushToStartLiveActivity errors, Firestore for token presence, APNS payload format requirements for push-to-start with custom ContentState.
-  root_cause: "Unknown — needs research. Suspected: push-to-start APNS payload has empty content-state {} which doesn't match PinnedSnapAttributes.ContentState struct (expects stack array). May also be token registration or attributes-type naming issue."
+
+    NSE fallback research:
+    5. In previous versions, NSE calling Activity.request() did NOT work when app was killed — research why
+    6. Possible iOS restriction: NSE runs in separate process, ActivityKit may require main app process context
+    7. Research if there are entitlement or capability requirements for NSE to use ActivityKit
+    8. If NSE can't create Live Activities when killed, document the limitation and rely solely on push-to-start
+  root_cause: "Unknown — needs research. Suspected: push-to-start APNS payload has empty content-state {} which doesn't match PinnedSnapAttributes.ContentState struct (expects stack array). May also be token registration or attributes-type naming issue. NSE fallback also needs research — previously didn't work when app was killed."
   artifacts:
     - path: "functions/notifications/liveActivitySender.js"
       issue: "Line 44: content-state is empty {} but ContentState expects { stack: [...] }"
@@ -75,10 +84,14 @@ skipped: 0
       issue: "Line 45: attributes-type may need module namespace prefix"
     - path: "modules/live-activity-manager/src/LiveActivityManagerModule.swift"
       issue: "pushToStartObservationTask may not emit token before app is killed"
+    - path: "targets/FlickNotificationService/NotificationService.swift"
+      issue: "NSE Activity.request() didn't work when app was killed in previous versions — needs research"
   missing:
     - "Research correct push-to-start APNS payload format for stacked ContentState"
     - "Verify pushToStartToken exists in recipient Firestore user document"
     - "Check Cloud Function logs for sendPushToStartLiveActivity call/error"
+    - "Research why NSE couldn't create Live Activities when app was killed (iOS restriction?)"
+    - "Research NSE + ActivityKit entitlement/capability requirements"
   debug_session: ""
 
 - truth: "Viewing a pinned snap removes it from the Live Activity stack"
