@@ -1,0 +1,52 @@
+# PowerSync Sync Rules
+# Defines which rows sync to which user devices
+# Docs: https://docs.powersync.com/usage/sync-rules
+
+bucket_definitions:
+  # User's own photos: last 30 days + all developing/revealed
+  user_photos:
+    parameters: SELECT request.user_id() AS user_id
+    data:
+      - SELECT id, user_id, image_url, local_uri, thumbnail_data_url,
+               status, photo_state, media_type, caption, reveal_at,
+               storage_path, comment_count, reaction_count,
+               deleted_at, created_at
+        FROM photos
+        WHERE user_id = bucket.user_id
+          AND deleted_at IS NULL
+          AND (
+            status IN ('developing', 'revealed')
+            OR created_at > NOW() - INTERVAL '30 days'
+          )
+
+  # User's conversations (metadata only, not messages)
+  user_conversations:
+    parameters: SELECT request.user_id() AS user_id
+    data:
+      - SELECT id, participant1_id, participant2_id,
+               last_message_text, last_message_at, last_message_type,
+               last_message_sender_id, unread_count_p1, unread_count_p2,
+               deleted_at_p1, deleted_at_p2, created_at
+        FROM conversations
+        WHERE participant1_id = bucket.user_id
+           OR participant2_id = bucket.user_id
+
+  # User's friendships (both directions)
+  user_friendships:
+    parameters: SELECT request.user_id() AS user_id
+    data:
+      - SELECT id, user1_id, user2_id, status, initiated_by, created_at
+        FROM friendships
+        WHERE user1_id = bucket.user_id
+           OR user2_id = bucket.user_id
+
+  # User's streaks
+  user_streaks:
+    parameters: SELECT request.user_id() AS user_id
+    data:
+      - SELECT id, user1_id, user2_id, day_count,
+               last_snap_at_user1, last_snap_at_user2,
+               last_mutual_at, expires_at, warning_sent, created_at
+        FROM streaks
+        WHERE user1_id = bucket.user_id
+           OR user2_id = bucket.user_id
