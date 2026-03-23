@@ -37,16 +37,17 @@ Snaps and streaks make messaging a daily habit — ephemeral photo messages that
 
 ### Active
 
-#### Current Milestone: v1.1 Pinned Snaps & Polish
+#### Current Milestone: v1.2 Speed & Scale
 
-**Goal:** Add Live Activity snap pinning, screenshot detection, darkroom cleanup, and resolve carried tech debt.
+**Goal:** Same app, same features — rebuilt on a faster, more scalable backend with TypeScript. Every interaction feels Instagram/TikTok-level instant.
 
 **Target features:**
 
-- Pinned Snaps via iOS Live Activities (+ Android equivalent exploration)
-- Screenshot detection and notification for snaps
-- Darkroom client-side reveal check optimization
-- Tech debt resolution (test gaps, infra config, naming)
+- Backend/database migration off Firebase to optimal performant/scalable solution
+- TypeScript migration (organic as files are touched + outlier sweep)
+- Performance overhaul across every screen (feed, darkroom, conversations, snaps, transitions)
+- Consistent loading and empty states everywhere
+- Dead code cleanup and per-screen audit
 
 ### Out of Scope
 
@@ -84,7 +85,9 @@ The messaging system now supports 5 message types (text, reaction, reply, snap, 
 - **Storage**: Snap photos cleaned up server-side after viewing (onSnapViewed + cleanupExpiredSnaps)
 - **Platform**: iOS and Android with platform guards throughout
 - **Existing patterns**: Service layer pattern, custom hooks, component structure established in v1.0
-- **Native build required**: v1.1 requires EAS build (Live Activities via ActivityKit, expo-screen-capture)
+- **Offline media capture**: Non-negotiable — photos/videos must be capturable, triageable, and uploaded when back online. Zero media loss.
+- **Dev-first migration**: Dev database and build migrated first, prod untouched until fully proven
+- **Functionally identical**: No new features — same behavior but faster and more scalable
 
 ## Key Decisions
 
@@ -109,4 +112,4 @@ The messaging system now supports 5 message types (text, reaction, reply, snap, 
 
 ---
 
-_Last updated: 2026-02-25 after v1.1 milestone started_
+_Last updated: 2026-03-23 after v1.2 milestone started_
