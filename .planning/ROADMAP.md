@@ -170,7 +170,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Schema & Infrastructure Foundation | 3/3 | Complete   | 2026-03-23 | - |
+| 12. Schema & Infrastructure Foundation | 3/3 | Complete    | 2026-03-23 | - |
 | 13. Auth & Storage Migration | v1.2 | 0/TBD | Not started | - |
 | 14. Data Layer & Caching Foundation | v1.2 | 0/2 | Not started | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
