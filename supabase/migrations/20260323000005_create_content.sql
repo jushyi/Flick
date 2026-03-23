@@ -66,7 +66,7 @@ CREATE TABLE notifications (
 );
 
 CREATE INDEX idx_notifications_user ON notifications(user_id, created_at DESC);
-CREATE INDEX idx_notifications_cleanup ON notifications(created_at) WHERE created_at < NOW() - INTERVAL '30 days';
+CREATE INDEX idx_notifications_created_at ON notifications(created_at);
 
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
