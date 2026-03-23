@@ -10,10 +10,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Infrastructure & Schema
 
 - [ ] **INFRA-01**: PostgreSQL schema designed with normalized relational tables replacing all 15 Firestore collections
-- [ ] **INFRA-02**: Supabase project provisioned with database, auth, storage, and Edge Functions configured
+- [x] **INFRA-02**: Supabase project provisioned with database, auth, storage, and Edge Functions configured
 - [ ] **INFRA-03**: PowerSync configured with sync rules for offline-capable collections (photos, darkroom, conversations, friendships)
 - [ ] **INFRA-04**: Row-level security (RLS) policies enforce per-user data access on all tables
-- [ ] **INFRA-05**: TypeScript foundation configured (tsconfig with allowJs, path aliases, Supabase-generated database types)
+- [x] **INFRA-05**: TypeScript foundation configured (tsconfig with allowJs, path aliases, Supabase-generated database types)
 
 ### Auth & Storage
 
@@ -136,10 +136,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | INFRA-01 | Phase 12 | Pending |
-| INFRA-02 | Phase 12 | Pending |
+| INFRA-02 | Phase 12 | Complete |
 | INFRA-03 | Phase 12 | Pending |
 | INFRA-04 | Phase 12 | Pending |
-| INFRA-05 | Phase 12 | Pending |
+| INFRA-05 | Phase 12 | Complete |
 | AUTH-01 | Phase 13 | Pending |
 | AUTH-02 | Phase 13 | Pending |
 | AUTH-03 | Phase 13 | Pending |
