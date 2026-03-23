@@ -13,9 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Input } from '../components';
-import { sendVerificationCode } from '../services/firebase/phoneAuthService';
+import { sendVerificationCode } from '../services/supabase/phoneAuthService';
 import { formatAsUserTypes } from '../utils/phoneUtils';
-import { usePhoneAuth } from '../context/PhoneAuthContext';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
@@ -46,7 +45,7 @@ const COUNTRY_CODES = [
 /**
  * Phone Input Screen
  * First step of phone authentication - enter phone number and receive SMS code
- * Uses React Native Firebase native phone auth
+ * Uses Supabase OTP for stateless phone verification
  */
 const PhoneInputScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -56,10 +55,6 @@ const PhoneInputScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCountryPicker, setShowCountryPicker] = useState(false);
-
-  // Get confirmationRef from context to store Firebase ConfirmationResult
-  // Using ref instead of navigation params prevents serialization crash on iOS
-  const { confirmationRef } = usePhoneAuth();
 
   // Shake animation for error feedback
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -96,19 +91,12 @@ const PhoneInputScreen = ({ navigation }) => {
 
       if (result.success) {
         logger.info('PhoneInputScreen: Code sent, navigating to verification', {
-          formattedNumber: result.formattedNumber,
+          e164: result.e164,
         });
 
-        // Store confirmation in ref (not serialized) to avoid iOS crash
-        // Firebase ConfirmationResult contains functions that cannot be serialized
-        confirmationRef.current = result.confirmation;
-        logger.debug('PhoneInputScreen: Stored confirmation in context ref', {
-          hasConfirmation: !!confirmationRef.current,
-        });
-
-        // Navigate to verification screen WITHOUT confirmation object
+        // Navigate to verification screen with E.164 phone for Supabase OTP verification
         navigation.navigate('Verification', {
-          phoneNumber: result.formattedNumber,
+          phoneNumber: `${selectedCountry.code} ${formattedPhone}`,
           e164: result.e164,
         });
       } else {

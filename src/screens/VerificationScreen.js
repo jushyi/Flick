@@ -10,9 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, AuthCodeInput } from '../components';
-import { verifyCode } from '../services/firebase/phoneAuthService';
+import { verifyCode, sendVerificationCode } from '../services/supabase/phoneAuthService';
 import { formatPhoneWithCountry } from '../utils/phoneUtils';
-import { usePhoneAuth } from '../context/PhoneAuthContext';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
@@ -21,20 +20,15 @@ import logger from '../utils/logger';
 /**
  * Verification Screen
  * Second step of phone authentication - enter 6-digit SMS code
- * Uses confirmation object from React Native Firebase
+ * Uses Supabase OTP verification (stateless -- no ConfirmationResult needed)
  */
 const VerificationScreen = ({ navigation, route }) => {
-  // Get phone number and e164 from navigation params (safe to serialize)
+  // Get phone number and e164 from navigation params
   const { phoneNumber, e164 } = route.params || {};
 
-  // Get confirmation from context ref (NOT from navigation params)
-  // Firebase ConfirmationResult contains functions that cannot be serialized
-  const { confirmationRef } = usePhoneAuth();
-  const confirmation = confirmationRef.current;
-
-  logger.debug('VerificationScreen: Reading confirmation from context ref', {
-    hasConfirmation: !!confirmation,
+  logger.debug('VerificationScreen: Mounted', {
     phoneNumber,
+    hasE164: !!e164,
   });
 
   const [code, setCode] = useState('');
@@ -56,9 +50,9 @@ const VerificationScreen = ({ navigation, route }) => {
 
   // Log mount
   useEffect(() => {
-    logger.debug('VerificationScreen: Mounted', {
-      hasConfirmation: !!confirmation,
+    logger.debug('VerificationScreen: Component ready', {
       phoneNumber,
+      hasE164: !!e164,
     });
   }, []);
 
@@ -114,13 +108,11 @@ const VerificationScreen = ({ navigation, route }) => {
     setLoading(true);
 
     try {
-      // Use confirmation object to verify code
-      const result = await verifyCode(confirmation, code);
+      // Verify code via Supabase OTP (stateless -- pass E.164 phone + code)
+      const result = await verifyCode(e164, code);
 
       if (result.success) {
-        logger.info('VerificationScreen: Verification successful', {
-          userId: result.user?.uid,
-        });
+        logger.info('VerificationScreen: Verification successful');
 
         // Auth state listener in AuthContext will handle navigation
         // If new user, they'll be directed to profile setup
@@ -148,8 +140,20 @@ const VerificationScreen = ({ navigation, route }) => {
 
     logger.info('VerificationScreen: Resend code pressed');
 
-    // Navigate back to phone input screen to resend
-    navigation.goBack();
+    try {
+      // Resend OTP via Supabase (stateless -- just call sendVerificationCode again)
+      const result = await sendVerificationCode(e164, '');
+      if (result.success) {
+        logger.info('VerificationScreen: Code resent successfully');
+        setResendTimer(60);
+        setError('');
+      } else {
+        setError(result.error || 'Failed to resend code');
+      }
+    } catch (err) {
+      logger.error('VerificationScreen: Resend failed', { error: err.message });
+      setError('Failed to resend code. Please try again.');
+    }
   };
 
   // Handle code change - clear error when user types
