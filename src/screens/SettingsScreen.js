@@ -21,6 +21,7 @@ import {
   clearNSEDiagnostics,
   diagnose,
 } from '../../modules/live-activity-manager';
+import { registerPushToStartToken } from '../services/liveActivityService';
 
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
@@ -37,7 +38,7 @@ import logger from '../utils/logger';
  */
 const SettingsScreen = () => {
   const navigation = useNavigation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   const handleSignOut = () => {
     logger.info('SettingsScreen: Sign out pressed');
@@ -82,21 +83,62 @@ const SettingsScreen = () => {
       const diagResult = await diagnose();
       logger.info('Live Activity Diagnostics:\n' + diagResult);
 
-      // Then check NSE logs
+      // Then check NSE + module logs
       const diags = await getNSEDiagnostics();
-      const nseSummary =
-        diags && diags.length > 0
-          ? diags[diags.length - 1].entries?.map(e => e.step).join(' → ') || 'No entries'
-          : 'No NSE logs';
+      let nseSummary = 'No NSE logs';
+      let moduleSummary = 'No module logs';
 
-      Alert.alert('Live Activity Diagnostics', `${diagResult}\n\n--- NSE ---\n${nseSummary}`, [
-        {
-          text: 'Clear NSE Logs',
-          onPress: () => clearNSEDiagnostics(),
-          style: 'destructive',
-        },
-        { text: 'OK' },
-      ]);
+      if (diags && diags.length > 0) {
+        // Find NSE entries (last non-module invocation)
+        const nseInvocations = diags.filter(d => d.timestamp !== 'module-logs');
+        if (nseInvocations.length > 0) {
+          const last = nseInvocations[nseInvocations.length - 1];
+          nseSummary = last.entries?.map(e => e.step).join(' → ') || 'No entries';
+        }
+
+        // Find module entries
+        const moduleInvocation = diags.find(d => d.timestamp === 'module-logs');
+        if (moduleInvocation?.entries?.length > 0) {
+          // Show last 10 module log entries with detail values
+          const recent = moduleInvocation.entries.slice(-10);
+          moduleSummary = recent
+            .map(e => {
+              const details = Object.entries(e)
+                .filter(([k]) => k !== 'step' && k !== 'time')
+                .map(([k, v]) => `${k}=${v}`)
+                .join(' ');
+              return details ? `${e.step} (${details})` : e.step;
+            })
+            .join('\n');
+        }
+      }
+
+      Alert.alert(
+        'Live Activity Diagnostics',
+        `${diagResult}\n\n--- NSE ---\n${nseSummary}\n\n--- Module ---\n${moduleSummary}`,
+        [
+          {
+            text: 'Re-register Token',
+            onPress: async () => {
+              try {
+                await registerPushToStartToken(user.uid);
+                Alert.alert(
+                  'Token Registration',
+                  'Push-to-start token observation started. Check Firestore for pushToStartToken field.'
+                );
+              } catch (err) {
+                Alert.alert('Token Error', err.message);
+              }
+            },
+          },
+          {
+            text: 'Clear Logs',
+            onPress: () => clearNSEDiagnostics(),
+            style: 'destructive',
+          },
+          { text: 'OK' },
+        ]
+      );
     } catch (error) {
       Alert.alert('Diagnostics Error', error.message);
     }

@@ -331,19 +331,14 @@ export default function App() {
       }
     });
 
-    // Listener for token refresh (handles token changes on app reinstall)
-    tokenRefreshListener.current = Notifications.addPushTokenListener(async ({ data }) => {
-      const currentUser = getAuth().currentUser;
-      if (currentUser && data) {
-        try {
-          await storeNotificationToken(currentUser.uid, data);
-          logger.info('App: Token refreshed and stored', {
-            userId: currentUser.uid,
-          });
-        } catch (error) {
-          logger.error('App: Failed to store refreshed token', { error: error.message });
-        }
-      }
+    // Device push token refresh listener — only log, don't store.
+    // addPushTokenListener fires with the raw APNs/FCM device token, NOT the
+    // Expo push token. Storing it here overwrites the valid ExponentPushToken.
+    // The correct Expo token is already registered in onAuthStateChanged above.
+    tokenRefreshListener.current = Notifications.addPushTokenListener(({ data }) => {
+      logger.debug('App: Device push token changed (not storing)', {
+        tokenPrefix: typeof data === 'string' ? data.substring(0, 20) + '...' : 'non-string',
+      });
     });
 
     // Listener for notifications received while app is in foreground
@@ -425,6 +420,15 @@ export default function App() {
               nativeActivityId: laResult.nativeActivityId,
               error: laResult.error,
             });
+
+            // After first successful Activity.request(), poll for push-to-start token.
+            // ActivityKit only generates tokens after pushType: .token is used.
+            if (laResult.success) {
+              const uid = getAuth().currentUser?.uid;
+              if (uid) {
+                registerPushToStartToken(uid).catch(() => {});
+              }
+            }
           } catch (err) {
             logger.error('App: [PIN-FAIL] Failed to start Live Activity', {
               error: err.message,

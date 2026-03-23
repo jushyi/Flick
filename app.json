@@ -43,6 +43,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
         "NSSupportsLiveActivities": true,
+        "NSSupportsLiveActivitiesFrequentUpdates": true,
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [

@@ -8,15 +8,16 @@ import ActivityKit
 
 private let log = OSLog(subsystem: "com.spoodsjs.flick.nse", category: "PinnedSnap")
 
-/// Notification Service Extension that intercepts pinned snap push notifications
-/// in all app states (foreground, background, killed) to start a Live Activity.
+/// Notification Service Extension that intercepts pinned snap push notifications.
 ///
 /// The NSE runs in a separate process with a ~30 second time limit.
-/// It downloads the snap thumbnail to the App Groups shared container
-/// so the widget extension can display it, then starts the Live Activity.
+/// It CANNOT start Live Activities (Activity.request() only works in the main app process).
+/// Instead it:
+/// 1. Downloads the snap thumbnail to App Groups (for the widget to use)
+/// 2. Checks if push-to-start already created a Live Activity — suppresses notification if so
+/// 3. Otherwise attaches the thumbnail as a rich notification image
 ///
-/// Diagnostics are written to App Groups at nse-diagnostics.json for debugging
-/// on machines without Console.app access.
+/// Diagnostics are written to App Groups at nse-diagnostics.json for debugging.
 class NotificationService: UNNotificationServiceExtension {
 
     var contentHandler: ((UNNotificationContent) -> Void)?
@@ -24,12 +25,6 @@ class NotificationService: UNNotificationServiceExtension {
 
     /// App Group identifier for sharing data between main app, widget, and NSE.
     private let appGroupId = "group.com.spoodsjs.flick"
-
-    /// Maximum number of concurrent Live Activities allowed.
-    private let maxActiveActivities = 5
-
-    /// Duration in seconds before a Live Activity auto-expires (48 hours).
-    private let expiryInterval: TimeInterval = 48 * 60 * 60
 
     /// Diagnostic log entries for this NSE invocation
     private var diagnosticEntries: [[String: Any]] = []
@@ -188,34 +183,27 @@ class NotificationService: UNNotificationServiceExtension {
             return
         }
 
-        // Deduplication: skip if activity with same activityId already exists
-        let currentActivities = Activity<PinnedSnapAttributes>.activities
-        diag("current_activities", ["count": currentActivities.count])
-        for activity in currentActivities {
-            if activity.attributes.activityId == activityId {
-                diag("exit_duplicate", ["activityId": activityId])
-                writeDiagnostics()
-                contentHandler(bestAttemptContent)
-                return
-            }
-        }
-
-        // Download thumbnail and start Live Activity
+        // NSE cannot call Activity.request() — ActivityKit only works in the main app process.
+        // Instead: download thumbnail, attach as rich notification, and check if push-to-start
+        // already created a Live Activity (suppress notification if so).
         Task {
+            // Step 1: Download thumbnail for rich notification attachment
+            var thumbnailFileURL: URL? = nil
             if !thumbnailUrlString.isEmpty, let thumbnailUrl = URL(string: thumbnailUrlString) {
                 diag("thumbnail_downloading")
                 do {
                     let (data, _) = try await URLSession.shared.data(from: thumbnailUrl)
                     diag("thumbnail_downloaded", ["bytes": data.count])
+
+                    // Save to App Groups for widget to use (if push-to-start created a Live Activity)
                     self.saveThumbnailToAppGroup(activityId: activityId, imageData: data)
 
-                    // Verify thumbnail was saved
-                    if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: self.appGroupId) {
-                        let verifyURL = containerURL.appendingPathComponent("thumbnails/\(activityId).jpg")
-                        let exists = FileManager.default.fileExists(atPath: verifyURL.path)
-                        let size = (try? FileManager.default.attributesOfItem(atPath: verifyURL.path)[.size] as? Int) ?? 0
-                        self.diag("thumbnail_verify", ["exists": exists, "bytes": size, "path": verifyURL.path])
-                    }
+                    // Also save to temp for notification attachment
+                    let tempDir = FileManager.default.temporaryDirectory
+                    let tempURL = tempDir.appendingPathComponent("\(activityId).jpg")
+                    try data.write(to: tempURL)
+                    thumbnailFileURL = tempURL
+                    self.diag("thumbnail_saved_temp", ["path": tempURL.lastPathComponent])
                 } catch {
                     diag("thumbnail_download_failed", ["error": error.localizedDescription])
                 }
@@ -223,73 +211,41 @@ class NotificationService: UNNotificationServiceExtension {
                 diag("thumbnail_skipped")
             }
 
-            let deepLinkUrl = "lapse://messages/\(conversationId)"
-            let attributes = PinnedSnapAttributes(
-                activityId: activityId,
-                senderName: senderName,
-                caption: caption,
-                deepLinkUrl: deepLinkUrl
-            )
-
-            let entry = PinnedSnapAttributes.ContentState.StackEntry(
-                snapActivityId: activityId,
-                senderName: senderName,
-                caption: caption,
-                conversationId: conversationId
-            )
-            let state = PinnedSnapAttributes.ContentState(stack: [entry])
-            let content = ActivityContent(
-                state: state,
-                staleDate: Date().addingTimeInterval(self.expiryInterval)
-            )
-
-            diag("calling_activity_request")
-
-            var liveActivityStarted = false
-            do {
-                let activity = try Activity.request(
-                    attributes: attributes,
-                    content: content,
-                    pushType: nil
-                )
-                diag("activity_request_SUCCESS", ["nativeId": activity.id])
-                liveActivityStarted = true
-            } catch {
-                diag("activity_request_FAILED", [
-                    "error": error.localizedDescription,
-                    "errorType": String(describing: type(of: error)),
-                    "errorFull": String(describing: error)
-                ])
-            }
-
-            // Cap enforcement: if over max, end the oldest
-            let allActivities = Activity<PinnedSnapAttributes>.activities
-            diag("post_request_activities", ["count": allActivities.count])
-            if allActivities.count > self.maxActiveActivities {
-                if let oldest = allActivities.sorted(by: { $0.id < $1.id }).first {
-                    diag("capping_oldest")
-                    await oldest.end(nil, dismissalPolicy: .immediate)
-                }
-            }
+            // Step 2: Check if push-to-start already created a Live Activity
+            let existingActivities = Activity<PinnedSnapAttributes>.activities
+            let hasLiveActivity = !existingActivities.isEmpty
+            diag("push_to_start_check", [
+                "hasLiveActivity": hasLiveActivity,
+                "activityCount": existingActivities.count
+            ])
 
             diag("nse_complete")
             self.writeDiagnostics()
 
-            // Suppress the push notification banner when Live Activity was created successfully —
-            // the Live Activity itself is the user-visible indicator, no need for a duplicate banner.
-            if liveActivityStarted {
-                // Fully suppress the push notification banner when Live Activity was created.
-                // Set all fields explicitly to prevent any residual alert, sound, or badge.
+            if hasLiveActivity {
+                // Push-to-start succeeded — suppress the notification banner entirely.
+                // The Live Activity on the lock screen is the user-visible indicator.
                 let silentContent = UNMutableNotificationContent()
                 silentContent.sound = nil
                 silentContent.badge = 0
                 silentContent.title = ""
                 silentContent.body = ""
                 silentContent.subtitle = ""
-                self.diag("suppressing_notification", ["reason": "live_activity_started"])
+                self.diag("suppressing_notification", ["reason": "live_activity_exists"])
                 contentHandler(silentContent)
             } else {
-                self.diag("showing_notification", ["reason": "live_activity_failed"])
+                // No Live Activity — show rich notification with thumbnail attached
+                if let fileURL = thumbnailFileURL,
+                   let attachment = try? UNNotificationAttachment(
+                       identifier: activityId,
+                       url: fileURL,
+                       options: [UNNotificationAttachmentOptionsTypeHintKey: "public.jpeg"]
+                   ) {
+                    bestAttemptContent.attachments = [attachment]
+                    self.diag("showing_notification", ["reason": "no_live_activity", "hasAttachment": true])
+                } else {
+                    self.diag("showing_notification", ["reason": "no_live_activity", "hasAttachment": false])
+                }
                 contentHandler(bestAttemptContent)
             }
         }

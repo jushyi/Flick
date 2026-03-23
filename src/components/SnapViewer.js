@@ -217,12 +217,21 @@ const SnapViewer = ({
       });
     }
 
-    // End Live Activity for pinned snaps (iOS only, best-effort)
-    if (result.success && snapMessage.pinned && Platform.OS === 'ios') {
+    // End Live Activity for pinned snaps (iOS only, best-effort).
+    // Do this regardless of markSnapViewed result — the Live Activity must be dismissed
+    // even if the viewed-status write fails (e.g., network issue).
+    if (snapMessage.pinned && Platform.OS === 'ios') {
       try {
-        await removePinnedSnap(snapMessage.id || snapMessage.pinnedActivityId);
+        const snapActivityId = snapMessage.pinnedActivityId || snapMessage.id;
+        logger.info('SnapViewer: Attempting to remove pinned snap from Live Activity', {
+          snapActivityId,
+          messageId: snapMessage.id,
+          pinnedActivityId: snapMessage.pinnedActivityId,
+          pinned: snapMessage.pinned,
+        });
+        await removePinnedSnap(snapActivityId);
         logger.info('SnapViewer: Removed pinned snap from Live Activity stack', {
-          snapActivityId: snapMessage.id || snapMessage.pinnedActivityId,
+          snapActivityId,
         });
       } catch (err) {
         logger.warn('SnapViewer: Failed to end Live Activity', {

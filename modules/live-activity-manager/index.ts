@@ -20,6 +20,7 @@ interface LiveActivityManagerInterface {
   removeFromStack(snapActivityId: string): Promise<void>;
   getActiveActivityIds(): Promise<string[]>;
   observePushToStartToken(): Promise<void>;
+  getPushToStartToken(): Promise<string | null>;
 }
 
 let nativeModule: LiveActivityManagerInterface | null = null;
@@ -145,4 +146,13 @@ export async function getActiveActivityIds(): Promise<string[]> {
 export async function observePushToStartToken(): Promise<void> {
   if (!nativeModule) return;
   return nativeModule.observePushToStartToken();
+}
+
+/**
+ * Get the last received push-to-start token directly (bypasses event system).
+ * Returns null if no token has been received yet.
+ */
+export async function getPushToStartToken(): Promise<string | null> {
+  if (!nativeModule) return null;
+  return nativeModule.getPushToStartToken();
 }

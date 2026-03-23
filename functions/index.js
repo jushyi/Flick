@@ -2965,6 +2965,7 @@ exports.onNewMessage = onDocumentCreated(
     document: 'conversations/{conversationId}/messages/{messageId}',
     memory: '256MiB',
     timeoutSeconds: 60,
+    secrets: ['APNS_KEY_ID', 'APNS_TEAM_ID', 'APNS_AUTH_KEY_P8'],
   },
   async event => {
     const { sendPushNotification } = require('./notifications/sender');
@@ -3190,7 +3191,7 @@ exports.onNewMessage = onDocumentCreated(
             const pushToStartToken = recipient.pushToStartToken;
             const fcmRegistrationToken = recipient.fcmRegistrationToken;
 
-            if (pushToStartToken && fcmRegistrationToken) {
+            if (pushToStartToken) {
               logger.info('onNewMessage: Attempting push-to-start Live Activity', {
                 conversationId,
                 activityId: notificationData.pinnedActivityId,
@@ -3198,7 +3199,6 @@ exports.onNewMessage = onDocumentCreated(
               });
 
               const ptsResult = await sendPushToStartLiveActivity({
-                fcmToken: fcmRegistrationToken,
                 pushToStartToken,
                 activityId: notificationData.pinnedActivityId,
                 senderName: senderName || 'Someone',

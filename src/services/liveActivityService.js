@@ -228,7 +228,9 @@ export const getFCMRegistrationToken = async () => {
  * @returns {object|null} Event subscription (call .remove() to unsubscribe)
  */
 export const registerPushToStartToken = async userId => {
-  if (Platform.OS !== 'ios' || !LiveActivityManager) return null;
+  if (Platform.OS !== 'ios' || !LiveActivityManager) {
+    return null;
+  }
 
   try {
     // Get and store FCM registration token
@@ -241,21 +243,24 @@ export const registerPushToStartToken = async userId => {
       logger.info('liveActivityService: Stored FCM registration token', { userId });
     }
 
-    // Start observing push-to-start token
-    LiveActivityManager.observePushToStartToken();
+    // Start observing push-to-start token (native side stores it)
+    await LiveActivityManager.observePushToStartToken();
 
-    // Listen for token events
+    // Try to get token immediately (may already be available)
+    await _pollAndStorePushToStartToken(userId);
+
+    // Also keep the event listener as backup
     const emitter = new EventEmitter(NativeModulesProxy.LiveActivityManager);
     const subscription = emitter.addListener('onPushToStartToken', async event => {
+      logger.info('liveActivityService: onPushToStartToken EVENT RECEIVED', {
+        tokenLength: event.token?.length,
+      });
       try {
         const db = getFirestore();
         await updateDoc(doc(db, 'users', userId), {
           pushToStartToken: event.token,
         });
-        logger.info('liveActivityService: Stored push-to-start token', {
-          userId,
-          tokenLength: event.token?.length,
-        });
+        logger.info('liveActivityService: Stored push-to-start token via event');
       } catch (error) {
         logger.error('liveActivityService: Failed to store push-to-start token', {
           error: error.message,
@@ -265,10 +270,34 @@ export const registerPushToStartToken = async userId => {
 
     return subscription;
   } catch (error) {
-    // iOS < 17.2 or other error — silently ignore
-    logger.warn('liveActivityService: Push-to-start observation failed', {
+    logger.error('liveActivityService: Push-to-start registration FAILED', {
       error: error.message,
     });
     return null;
   }
+};
+
+/**
+ * Poll the native module for the push-to-start token and store in Firestore.
+ * Retries a few times since the token may arrive shortly after observation starts.
+ */
+const _pollAndStorePushToStartToken = async userId => {
+  for (let i = 0; i < 5; i++) {
+    const token = await LiveActivityManager.getPushToStartToken();
+    if (token) {
+      logger.info('liveActivityService: Got push-to-start token via poll', {
+        attempt: i + 1,
+        tokenLength: token.length,
+      });
+      const db = getFirestore();
+      await updateDoc(doc(db, 'users', userId), {
+        pushToStartToken: token,
+      });
+      logger.info('liveActivityService: Stored push-to-start token in Firestore');
+      return;
+    }
+    // Wait 2 seconds between polls
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  logger.info('liveActivityService: No push-to-start token after 5 polls (10s)');
 };
