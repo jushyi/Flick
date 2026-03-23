@@ -1,378 +1,469 @@
-# Pitfalls Research: v1.1 Pinned Snaps & Polish
+# Domain Pitfalls: v1.2 Speed & Scale
 
-**Domain:** iOS Live Activities for snap pinning, Android equivalent, screenshot detection integration, darkroom optimization, and tech debt resolution -- all added to an existing production React Native + Expo app
-**Researched:** 2026-02-25
-**Confidence:** MEDIUM-HIGH (verified against official Apple/Google/Expo docs, GitHub issues, existing codebase analysis; Live Activities in RN is newer territory with fewer battle-tested patterns)
+**Domain:** Backend migration (Firebase to new backend), TypeScript conversion, and performance overhaul for an existing production React Native + Expo social media app with ~75,700 LOC
+**Researched:** 2026-03-23
+**Confidence:** MEDIUM-HIGH (verified against official Firebase docs, Supabase migration docs, RxDB official docs, React Native performance docs, and community post-mortems)
+
+---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Live Activity Widget Extension Cannot Access React Native State or Firebase SDK
-
-**What goes wrong:**
-You try to display snap data (sender name, photo thumbnail, countdown timer) in the Live Activity widget, but the widget extension runs in a completely separate process from the React Native app. It has no access to Firestore, no access to AuthContext, no access to expo-image cache, and no access to the Firebase SDK. The widget renders blank or crashes because you assumed shared state.
-
-**Why it happens:**
-iOS Widget Extensions (which power Live Activities) are isolated targets in Xcode. They have their own bundle, their own process, and cannot import React Native modules or Firebase SDKs. The Live Activity UI is SwiftUI-only -- you cannot use React Native components. Developers coming from React Native assume the widget is "just another screen" but it is architecturally a separate app.
-
-**How to avoid:**
-
-- Accept that the Live Activity widget extension is native Swift/SwiftUI only. No React Native code runs there.
-- Use **App Groups** to share data between the main app and the widget extension. The React Native side writes snap data to a shared `UserDefaults` suite (via an Expo native module), and the widget reads from the same suite.
-- Keep the Live Activity UI minimal: sender display name, countdown text ("5:00 remaining"), and a static icon. Do NOT try to load photos in the widget (Live Activities cannot make web requests and cannot easily load images hosted on the web -- they are limited to bundled assets and SF Symbols).
-- For dynamic updates, use **ActivityKit push notifications** via APNs, which requires a separate server-side push pipeline (different from the existing `expo-notifications` / FCM pipeline). The Cloud Function must send APNs pushes directly to the Live Activity push token, not through FCM.
-- Consider using `expo-live-activity` from Software Mansion Labs for a simplified bridge, but understand its limitation: it offers a predefined SwiftUI layout (title, subtitle, progress, image) with no custom SwiftUI views. If the snap pin UI needs custom layout, you will need a custom Expo native module.
-
-**Warning signs:**
-
-- Widget extension fails to build because it imports `@react-native-firebase/firestore`
-- Live Activity shows stale data because it cannot read Firestore in real-time
-- Push updates to the Live Activity fail because they use FCM instead of APNs
-
-**Phase to address:**
-Phase 1 (Live Activities for iOS) -- the architecture must be designed around the process isolation constraint from day one. This is not something you can fix with a patch later.
+Mistakes that cause data loss, extended downtime, or force rewrites.
 
 ---
 
-### Pitfall 2: Live Activity Push Token Management is Separate from FCM Tokens
+### Pitfall 1: Firebase Phone Auth Has No Password Hash to Export
 
 **What goes wrong:**
-You send a Live Activity update using the user's existing FCM push token (stored in the `users` Firestore document as `fcmToken`). Nothing happens. The Live Activity stays frozen. Meanwhile, the Activity's push token changes mid-lifecycle and you miss the update because you only captured the initial token.
+You export users from Firebase Auth using `firebase auth:export` and attempt to recreate them in your new auth system. Phone-only auth users have no password hash, no OAuth token, and no transferable credential. The exported data contains UIDs and phone numbers, but nothing that lets your new backend authenticate those users without re-verification.
 
 **Why it happens:**
-ActivityKit Live Activities have their **own push tokens** that are completely separate from the FCM/APNs push tokens used by `expo-notifications`. Each Live Activity instance generates a unique push token when started, and this token can change during the activity's lifecycle (e.g., when the activity transitions between states). The existing `fcmToken` in the user's Firestore document is useless for Live Activity updates.
+Firebase phone auth works through OTP verification -- there is no persistent secret stored on the user record. Unlike email/password users (where you can export the password hash with the scrypt parameters), phone auth users are verified in-session only. The Firebase Auth export gives you `phoneNumber` and `uid` but no portable auth state.
 
-**How to avoid:**
+**Consequences:**
+- If you switch auth backends without a migration strategy, every user must re-verify their phone number on next launch
+- Users who open the app after migration see a login screen instead of their feed -- they think the app is broken or their account is deleted
+- If you create new user records in the new backend, UIDs will differ from Firestore UIDs, breaking all data relationships (photos, friendships, conversations, streaks)
 
-- When a Live Activity is started from the React Native side (via the native module bridge), capture the activity's push token and send it to a Cloud Function that stores it in Firestore (e.g., `liveActivities/{activityId}` with `pushToken`, `userId`, `snapId`, `createdAt`).
-- Subscribe to `Activity.pushTokenUpdates` in the native module and forward new tokens to the Cloud Function whenever they change.
-- Use APNs HTTP/2 API directly from Cloud Functions to send updates (not FCM). This requires an APNs authentication key (.p8 file) stored as a Firebase secret, and a different push payload format than FCM.
-- Track multiple concurrent activities: a user could have multiple pinned snaps, each with its own push token.
+**Prevention:**
+1. **Keep Firebase Auth as the identity provider during migration.** Your new backend validates Firebase ID tokens (via Firebase Admin SDK `verifyIdToken()`) rather than replacing auth immediately. This is the only zero-downtime approach for phone auth.
+2. **Map Firebase UIDs to new backend user IDs** in a lookup table. All new backend queries use the mapped ID, but the client continues authenticating through Firebase Auth.
+3. **Migrate auth last**, not first. Move data and API layers first while Firebase Auth remains the source of truth. Only replace auth once the new backend is fully proven and you have a re-verification flow for users who need it.
+4. **If you must replace auth:** Implement a "drip migration" where users re-verify their phone number on their next app open, and the new backend creates their account at that point. Show a one-time "Verify your number to continue" screen, not a full re-onboarding flow.
 
-**Warning signs:**
+**Detection:**
+- Auth export file shows no `passwordHash` or `providerUserInfo` with usable credentials for phone users
+- Test: can a user authenticate on the new backend without re-entering their phone number? If no, you have this problem
 
-- Live Activity updates work in development (via ActivityKit local update) but fail in production (push updates do not arrive)
-- Token stored once at activity creation becomes stale and updates silently fail
-- Cloud Function uses `admin.messaging().send()` (FCM) instead of APNs HTTP/2 for Live Activity updates
-
-**Phase to address:**
-Phase 1 (Live Activities for iOS) -- token management is the hardest part of the implementation and must be solved before any push-based update logic.
+**Phase to address:** Must be designed in the architecture phase. Auth migration order is the single most consequential architectural decision in this project.
 
 ---
 
-### Pitfall 3: Removing Client-Side Darkroom Reveal Triggers Breaks the User Experience
+### Pitfall 2: Firestore Real-Time Listeners Cannot Be Incrementally Migrated
 
 **What goes wrong:**
-The v1.1 goal is to optimize darkroom reveals by reducing redundant client-side checks. You remove one or both client-side triggers (App.js foreground check, DarkroomScreen focus check) and rely solely on the `processDarkroomReveals` Cloud Function that runs every 2 minutes. Result: users open the darkroom and see "developing" photos that should have been revealed minutes ago. The app feels broken because the Cloud Function has up to a 2-minute lag, and if the function execution is delayed (cold start, GCP scheduling variance), the lag can be 3-5 minutes.
+You plan to migrate one service at a time -- move `feedService` to the new backend, then `messageService`, then `darkroomService`. But `feedService` uses `onSnapshot` for real-time feed updates, and `messageService` uses `onSnapshot` for real-time message delivery. Your new backend uses WebSockets or server-sent events instead. During the transition period, the app must maintain both Firestore listeners AND new backend subscriptions simultaneously, doubling connection overhead, battery drain, and complexity.
 
 **Why it happens:**
-The three reveal triggers exist for a reason -- they are not truly "redundant":
+Firestore's real-time listener model is deeply coupled to the SDK. Every `onSnapshot` call establishes a persistent connection to Firestore servers. You cannot redirect a Firestore listener to a non-Firestore backend. The only options are: (a) replace the entire real-time layer at once, or (b) run both systems in parallel during transition.
 
-1. **App.js foreground check** (`isDarkroomReadyToReveal` + `revealPhotos`): catches reveals when user returns to app after backgrounding
-2. **DarkroomScreen focus check** (same logic in `useDarkroom.loadDevelopingPhotos`): catches reveals when user navigates to darkroom
-3. **Cloud Function `processDarkroomReveals`** (every 2 min): catches reveals when app is not open at all
+**Consequences:**
+- Running dual real-time connections (Firestore + WebSocket) on mobile drains battery and increases data usage
+- Data consistency issues: a message sent via the new backend might not appear in a Firestore listener, or vice versa
+- The service layer abstraction (`src/services/firebase/`) makes this look easy to swap, but the real-time subscriptions in hooks (`useFeedPhotos`, `useConversation`, `useMessages`) are Firestore-specific in their snapshot handling, error recovery, and cursor pagination
 
-Removing #1 or #2 means the user must wait for #3 to run, which introduces noticeable lag. The Cloud Function is a background safety net, not the primary mechanism.
+**Prevention:**
+1. **Design the service layer with an adapter pattern** before migrating any data. Create a common subscription interface that both Firestore and the new backend can implement:
+   ```typescript
+   interface SubscriptionAdapter<T> {
+     subscribe(query: QueryParams, onData: (data: T[]) => void, onError: (err: Error) => void): Unsubscribe;
+   }
+   ```
+2. **Migrate real-time features as a single unit**, not piecemeal. All real-time subscriptions (feed, messages, darkroom, conversations) should switch to the new backend together during a coordinated cutover.
+3. **Use the existing service layer boundary** (`src/services/firebase/*.js`) as the swap point. Hooks should not import from `@react-native-firebase/firestore` directly -- they should only call service functions. Audit for any hook that imports Firestore directly.
+4. **Implement a feature flag** (`useNewBackend: boolean`) that switches all subscriptions at once, not per-feature. This allows instant rollback.
 
-**How to avoid:**
+**Detection:**
+- Grep for `onSnapshot` imports outside of `src/services/firebase/` -- any direct usage in hooks or components is a migration blocker
+- Count total active Firestore listeners in a typical session (likely 3-5 concurrent) to estimate new backend WebSocket load
 
-- **Do NOT remove** the DarkroomScreen focus check (#2). This is the critical path -- the user expects instant reveals when they open the darkroom.
-- The App.js foreground check (#1) can potentially be optimized but not removed. The optimization: only run the check if `nextRevealAt` is in the past (which it already does via `isDarkroomReadyToReveal`). The real optimization opportunity is reducing Firestore reads by caching `nextRevealAt` locally and only hitting Firestore when the cached time has passed.
-- The Cloud Function (#3) should remain as the background safety net for users who do not open the app.
-- If the goal is reducing Firestore reads, cache `nextRevealAt` in AsyncStorage after each check. On foreground/focus, compare `Date.now()` to the cached value first. Only call `isDarkroomReadyToReveal` (which does a Firestore read) if the cached time has passed.
-
-**Warning signs:**
-
-- After optimization, users report "my photos are stuck on developing"
-- Darkroom shows developing photos for several minutes after the reveal time has passed
-- The countdown timer in the darkroom reaches zero but photos do not flip to revealed
-
-**Phase to address:**
-Phase 3 (Darkroom Optimization) -- this must be approached as a caching optimization, not a trigger removal. All three triggers should remain; the optimization is in reducing unnecessary Firestore reads.
+**Phase to address:** Service layer adapter pattern must be built before any data migration begins. This is Phase 1 work.
 
 ---
 
-### Pitfall 4: `expo-screen-capture` Crashes on Android 14 with Wrong SDK Version
+### Pitfall 3: Firestore Document Structure Does Not Map to Relational Tables
 
 **What goes wrong:**
-You add `expo-screen-capture` to the project, build a new EAS binary, and it immediately crashes on Android 14 devices with the error "The current activity is no longer available" (`MissingActivity` exception in `ScreenCaptureModule`). The app is completely unusable on Android 14 -- not just the screenshot feature, but the entire app crashes on startup.
+You export Firestore collections and import them into PostgreSQL tables with a 1:1 mapping. The `photos` collection becomes a `photos` table, the `users` collection becomes a `users` table. But Firestore's denormalized structure means data is duplicated across documents (user display names embedded in photo documents, friend lists stored as arrays on user documents, `lastMessage` duplicated on conversation documents). Your relational database now has denormalized data that gets out of sync because you kept the Firestore data model instead of normalizing it.
 
 **Why it happens:**
-In `expo-screen-capture` versions prior to SDK 51, the module attempted to access the Android activity reference during initialization, which on Android 14 (SDK 34) would fail because the activity reference was not yet available. This was a hard crash, not a graceful degradation. The fix was merged in PR #28244 and shipped in Expo SDK 51.
+Firestore encourages denormalization because joins are expensive (or impossible in real-time listeners). The Flick codebase has specific denormalization patterns:
+- `conversations` documents embed `lastMessage` (duplicated from the messages subcollection)
+- `users` documents contain `friends` arrays (duplicated from `friendships` collection)
+- `photos` documents may embed user data for feed rendering
 
-**How to avoid:**
+When migrating to PostgreSQL/Supabase, developers often take the shortcut of preserving the Firestore structure using JSONB columns to "just get it working." This creates a relational database that has none of the benefits of relational modeling.
 
-- Flick uses Expo SDK 54, which includes the fix. **Verify this before building.** Check that `expo-screen-capture` resolves to version 6.x+ (the version shipped with SDK 54, not a manually pinned older version).
-- Run `npx expo install expo-screen-capture` to install the SDK-compatible version, never `npm install expo-screen-capture@latest` or a manually pinned version.
-- Test the EAS build on an Android 14 physical device before production deployment. Do not rely on emulator-only testing.
-- Wrap all `expo-screen-capture` calls in platform checks and try/catch blocks to prevent a secondary crash path:
-  ```javascript
-  try {
-    if (Platform.OS === 'android') {
-      await ScreenCapture.preventScreenCaptureAsync();
-    }
-  } catch (error) {
-    logger.warn('Screen capture prevention failed', { error: error.message });
-    // Gracefully degrade -- snap viewing still works, just without capture prevention
-  }
-  ```
+**Consequences:**
+- JSONB columns cannot be efficiently indexed for the queries you need (e.g., "get all photos from my friends ordered by date")
+- Data consistency breaks: updating a user's display name requires updating it in the users table AND every denormalized copy, just like Firestore -- you have gained nothing
+- The N+1 query patterns from Firestore (visible in `feedService.js`'s `batchFetchUserData` and `chunkArray` for the 30-item `in` operator limit) persist because the data model was not redesigned
 
-**Warning signs:**
+**Prevention:**
+1. **Normalize the data model during migration, not after.** Design proper relational tables with foreign keys:
+   - `conversations.lastMessage` becomes a JOIN on the `messages` table
+   - `users.friends` becomes a `friendships` junction table (which already exists as a Firestore collection)
+   - Photo feed queries become JOINs between `photos` and `friendships`
+2. **Write the migration script as a transformation**, not a copy. Export Firestore JSON, transform it into normalized relational inserts, then import.
+3. **Accept that queries will be different.** Firestore queries are document-fetches; SQL queries are joins and aggregations. Every service function's query logic must be rewritten, not adapted.
+4. **Start with the schema design** and validate it can serve every screen's data needs before writing any migration code. Use the existing service functions as a requirements document: each function tells you exactly what data shape each screen needs.
 
-- Android 14 crash reports immediately after EAS build deployment
-- Crash log contains `MissingActivity` or `ScreenCaptureModule` in the stack trace
-- App crashes before any screen renders (crash during module initialization, not during use)
+**Detection:**
+- If your new database schema has any JSONB columns that store arrays of IDs or embedded objects, you are preserving Firestore's denormalization
+- If your migration script is less than 200 lines, you are probably copying structure instead of transforming it
 
-**Phase to address:**
-Phase 2 (Screenshot Detection) -- verify SDK compatibility during the initial EAS build that adds the native module. This is a build-time concern, not a runtime concern.
+**Phase to address:** Database schema design must happen before data migration. This is the first deliverable of the backend migration phase.
 
 ---
 
-### Pitfall 5: Firestore TTL Policy on `messages` Collection Retroactively Deletes Existing Data
+### Pitfall 4: Signed URL Expiry Model Breaks During Backend Transition
 
 **What goes wrong:**
-You configure the Firestore TTL policy on the `messages` collection group with the `expiresAt` field (INFRA-03 from tech debt). The policy activates, and within 24 hours it bulk-deletes every existing snap message document that has an `expiresAt` timestamp in the past. This includes snap messages that were already viewed and processed correctly -- they just had not been cleaned up yet by the `cleanupExpiredSnaps` function. If any of those documents were still needed for conversation context (e.g., "Replied to a snap" references), the reply context is now orphaned.
+The app currently uses Firebase Storage signed URLs with 7-day expiry (5-minute for snaps). During migration, you move photos to a new storage backend (S3, Supabase Storage, etc.). Existing signed URLs in cached feed data, AsyncStorage, and in-flight push notifications still point to Firebase Storage. After you disable the Firebase project or change storage buckets, every cached photo URL returns 403/404. The entire feed goes blank.
 
 **Why it happens:**
-Per official Firestore TTL docs: "Applying a TTL policy on an existing collection group results in a bulk deletion of all expired data according to the new TTL policy." This is by design. The TTL system does not distinguish between "old data that should have been cleaned up" and "old data that is still needed." Any document in the `messages` collection group where `expiresAt` is in the past will be deleted once the policy is active.
+Signed URLs are time-bounded AND bucket-specific. A Firebase Storage signed URL cannot resolve against an S3 bucket. The `signedUrlService.js` generates URLs with 7-day TTL, meaning users who haven't opened the app in less than 7 days still have valid Firebase URLs cached locally. Push notifications sent before migration contain Firebase URLs in their payloads.
 
-Additionally, TTL deletion does NOT delete subcollections. If snap messages had any subcollections (they do not currently, but this is a future-proofing concern), those would be orphaned.
+**Consequences:**
+- Feed shows broken images for up to 7 days after storage migration
+- Cached photo URLs in expo-image's memory-disk cache serve stale/broken URLs
+- Snap viewing breaks if the signed URL was generated before migration but viewed after
+- `uploadQueueService` may have queued uploads targeting the old Firebase Storage bucket
 
-**How to avoid:**
+**Prevention:**
+1. **Run dual storage during transition.** Keep Firebase Storage active (read-only) for at least 14 days after migrating to the new storage backend. New uploads go to the new backend; old URLs continue to resolve from Firebase.
+2. **Implement a URL resolver layer** in the client that detects Firebase URLs and re-requests from the new backend if the Firebase URL fails. This is a client-side fallback, not a permanent solution.
+3. **Clear expo-image cache** as part of the migration cutover. Add a one-time cache bust triggered by a version flag in remote config or the new backend's health check response.
+4. **Migrate the `signedUrlService` first** before migrating any other service. This service is the gateway for all photo rendering in the app.
+5. **Drain the upload queue** before switching storage backends. Check `uploadQueueService`'s AsyncStorage queue is empty before cutover.
 
-- **Audit existing data before enabling TTL.** Run a query to count how many `messages` documents have `expiresAt` in the past:
-  ```javascript
-  // In Cloud Shell or admin script
-  const expired = await db
-    .collectionGroup('messages')
-    .where('expiresAt', '<=', admin.firestore.Timestamp.now())
-    .count()
-    .get();
-  console.log(`Documents that will be deleted: ${expired.data().count}`);
-  ```
-- Ensure that `expiresAt` is ONLY set on snap-type messages, not on text/reaction/reply/tagged_photo messages. Verify this in the `onNewMessage` Cloud Function. If any non-snap message accidentally has an `expiresAt` field, TTL will delete it.
-- Consider that `cleanupExpiredSnaps` already handles expired snaps every 2 hours. TTL is truly a safety net for edge cases where the scheduled function misses documents. The risk of enabling TTL may outweigh its benefit if the existing cleanup is reliable.
-- If proceeding: run the audit, verify only snap messages have `expiresAt`, accept that existing expired snap docs will be bulk-deleted (which is likely fine since they were already expired), and monitor for 48 hours after activation.
+**Detection:**
+- Any photo in the feed showing a loading placeholder that never resolves after migration
+- `signedUrlService` errors spiking in logs
+- Upload queue items failing with storage permission errors
 
-**Warning signs:**
-
-- After TTL activation, reply messages show broken "Replied to a snap" references because the original snap document was deleted
-- Unexpected document count drops in the `messages` collection
-- TTL policy takes over 10 minutes to become active (per docs, this is normal for large collections)
-
-**Phase to address:**
-Phase 4 (Tech Debt - INFRA-03) -- the TTL configuration is a one-time infrastructure task but requires careful auditing of existing data first.
+**Phase to address:** Storage migration must be coordinated with the feed and photo services. Cannot be done independently. Plan for a 14-day dual-storage overlap period.
 
 ---
 
-### Pitfall 6: GCS Lifecycle Rule Deletes Active (Unviewed) Snap Photos
+### Pitfall 5: Cloud Functions Business Logic Becomes Orphaned
 
 **What goes wrong:**
-You configure the Firebase Storage (GCS) lifecycle rule to delete objects in the `snap-photos/` prefix older than 7 days (INFRA-04 from tech debt). A user sends a snap, the recipient does not open the app for 8 days, and when they finally open the conversation the snap photo file is already deleted from Storage. The signed URL returns 404. The snap message document still exists in Firestore (pointing to a deleted file), so the UI shows a broken snap.
+You migrate the client to talk to a new backend API, but forget that critical business logic lives in Cloud Functions, not in the client. The `functions/index.js` is ~2,700 lines containing: streak calculations, push notification routing, reaction batching/debouncing, snap cleanup, darkroom reveal scheduling, unread count management, `lastMessage` updates, tag debouncing, and account deletion scheduling. You rebuild the API layer but miss half the background processing.
 
 **Why it happens:**
-GCS lifecycle rules evaluate objects based on their creation timestamp (`age` condition), not based on whether the photo has been viewed or is still needed. The rule is retroactive -- it applies to existing objects immediately (within 24 hours of rule activation). The 7-day window was designed as a safety net, but it becomes the primary deletion mechanism for users who do not open the app frequently.
+Cloud Functions are event-driven (Firestore triggers, scheduled functions, callable functions). They are invisible to the client -- the client writes a document and the function reacts. When you replace Firestore with a new database, these triggers stop firing because there are no Firestore writes to trigger them. The business logic they contain must be explicitly ported to the new backend.
 
-Additionally, per GCS docs: "Changes to a bucket's lifecycle configuration can take up to 24 hours to go into effect, and Object Lifecycle Management might still perform actions based on the old configuration during this time."
+**Consequences:**
+- Streaks stop updating (no `onDocumentCreated` trigger on new snap messages)
+- Push notifications stop sending (no `onNewMessage` function firing)
+- Darkroom reveals stop happening in the background (no `processDarkroomReveals` scheduled function)
+- Expired snaps stop being cleaned up (no `cleanupExpiredSnaps` scheduled function)
+- Unread counts freeze (no `onDocumentCreated` incrementing them)
 
-**How to avoid:**
+**Prevention:**
+1. **Catalog every Cloud Function** with its trigger type, input, output, and side effects before starting migration. The inventory for Flick includes:
+   - `onNewMessage` (Firestore trigger) -- lastMessage, unreadCount, push notifications, streak updates
+   - `processDarkroomReveals` (scheduled, every 2 min) -- darkroom reveal batch processing
+   - `cleanupExpiredSnaps` (scheduled) -- snap storage deletion
+   - `sendBatchedNotification` (task queue) -- reaction notification batching
+   - Various `onCall` functions for signed URLs, account deletion, etc.
+2. **Port Cloud Functions to the new backend as background jobs/webhooks** before removing Firestore triggers. Use database triggers (PostgreSQL triggers + pg_notify, or Supabase Edge Functions) or a job queue (BullMQ, pg-boss) to replace Firestore event triggers.
+3. **Test background processing independently.** Set up integration tests that verify: "when a snap is sent, the streak is updated within 5 seconds" and "when a photo is developing for 5 minutes, it is revealed."
+4. **Keep Cloud Functions running in parallel** during transition, even if the client is talking to the new backend. They can serve as a safety net for any missed background jobs.
 
-- Choose the lifecycle age carefully. 7 days may be too aggressive. The `cleanupExpiredSnaps` Cloud Function already handles cleanup of unviewed snaps after their `expiresAt` timestamp (currently set during snap creation). The GCS lifecycle rule should have a longer age than any possible snap lifetime -- e.g., 14 or 30 days -- to serve as a true last-resort safety net, not a primary cleanup path.
-- Use `matchesPrefix: ["snap-photos/"]` in the lifecycle rule condition (already planned in INFRA-04 comments) to ensure only snap photos are affected, not feed photos, profile photos, or other Storage content.
-- Verify the lifecycle rule JSON before applying to production:
-  ```json
-  {
-    "rule": [
-      {
-        "action": { "type": "Delete" },
-        "condition": { "age": 14, "matchesPrefix": ["snap-photos/"] }
-      }
-    ]
-  }
-  ```
-- Test on the dev Firebase project (`re-lapse-fa89b`) first, not production (`flick-prod-49615`). Upload test files to `snap-photos/`, wait for the rule to take effect, and verify only the intended files are deleted.
-- Verify that soft-delete is enabled on the bucket (GCS default: 7-day soft-delete retention). This provides a recovery window if the rule deletes something it should not have.
+**Detection:**
+- Streaks not incrementing after sending snaps through the new backend
+- Push notifications stop arriving
+- Darkroom photos stuck in "developing" state indefinitely
+- Snap photos remaining in storage after being viewed
 
-**Warning signs:**
-
-- Users report "snap not found" or blank snap viewers after the lifecycle rule is activated
-- Storage file count drops sharply within 24 hours of rule activation
-- The `getSignedSnapUrl` Cloud Function starts returning "File not found" errors for recently sent snaps
-
-**Phase to address:**
-Phase 4 (Tech Debt - INFRA-04) -- configure with a longer age (14+ days) and test on dev project first.
+**Phase to address:** Cloud Function audit and porting must be a dedicated sub-phase of backend migration. Cannot be deferred to "cleanup."
 
 ---
 
-### Pitfall 7: Android "Live Updates" Have No Stable React Native Bridge
+## Moderate Pitfalls
 
-**What goes wrong:**
-You commit to building an Android equivalent of iOS Live Activities using Android 14's "Live Updates" API, expecting a comparable developer experience. You discover that: (a) the Android Live Updates API requires Kotlin implementation with no React Native bridge library, (b) the API surface is completely different from ActivityKit, (c) it requires a foreground service type declaration in the manifest, and (d) the feature scope balloons into a separate native module project.
-
-**Why it happens:**
-iOS Live Activities have multiple React Native bridge libraries (`expo-live-activity`, `react-native-live-activity`, custom Expo modules). Android Live Updates (introduced in Android 14) have zero production-ready React Native libraries. The Android implementation requires:
-
-1. Kotlin native module in `android/` directory
-2. Foreground service type declaration in `AndroidManifest.xml` (`<service android:foregroundServiceType="...">`)
-3. `FOREGROUND_SERVICE` permission and type-specific permissions (e.g., `FOREGROUND_SERVICE_SPECIAL_USE`)
-4. Notification channel setup and persistent notification management
-5. Battery optimization exemptions (Android will kill foreground services in Doze mode)
-
-This is 5-10x the effort of the iOS implementation.
-
-**How to avoid:**
-
-- **Do not commit to full parity.** The v1.1 milestone should ship iOS Live Activities and defer Android to a research/exploration task, not a required deliverable.
-- For Android, use an **enhanced notification** approach instead of Live Updates: send a high-priority FCM notification with a custom layout (expandable notification with countdown) that updates via data-only FCM pushes. This uses existing infrastructure (FCM + `expo-notifications`) and requires no native module.
-- If Android Live Updates are required, budget 2-3x the iOS development time and plan for a native Kotlin module. Do not attempt to share code between iOS SwiftUI and Android Kotlin -- they are completely different APIs.
-- Be aware of Android background restrictions: manufacturers like Samsung, Xiaomi, and Huawei aggressively kill foreground services. A foreground service that works on a Pixel may not survive on a Samsung Galaxy. Use Notifee's documentation on background restrictions as a reference.
-
-**Warning signs:**
-
-- The Android implementation is scoped at "same as iOS, just Android" with equal time estimates
-- No native Android developer is available for Kotlin module development
-- Testing only on Pixel devices (which have the least aggressive battery optimization)
-
-**Phase to address:**
-Phase 1 (Live Activities) -- decide iOS-only vs cross-platform scope before any implementation begins. The milestone context suggests "Android equivalent exploration" which is the correct framing: exploration, not commitment.
+Issues that cause significant bugs, performance regressions, or wasted effort but are recoverable.
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 6: TypeScript Strict Mode Breaks Half the Codebase at Once
 
-Shortcuts that seem reasonable but create long-term problems.
+**What goes wrong:**
+You enable `strict: true` in `tsconfig.json` to get the full benefit of TypeScript. The entire codebase lights up with 500+ type errors because existing JavaScript patterns are incompatible with strict null checks, implicit any detection, and strict function types. Development grinds to a halt as every PR touches type errors in unrelated files.
 
-| Shortcut                                                               | Immediate Benefit                                        | Long-term Cost                                                                                                                      | When Acceptable                                                                                             |
-| ---------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Using `expo-live-activity` predefined layout instead of custom SwiftUI | Ship in days instead of weeks; no Swift knowledge needed | Cannot customize beyond title/subtitle/progress/image; locked to library's update cycle; must rewrite if UI needs change            | Acceptable for v1.1 MVP if the predefined layout matches snap pin requirements                              |
-| Skipping APNs push for Live Activities, using local updates only       | No server-side APNs setup needed; simpler architecture   | Live Activity cannot update when app is backgrounded or killed; snap timer freezes on lock screen                                   | Never for production -- defeats the purpose of a lock screen timer                                          |
-| Caching `nextRevealAt` in component state instead of AsyncStorage      | No async storage overhead; simpler code                  | Lost on app restart; multiple components may cache different values; no persistence across foreground/background cycles             | Only for within-session optimization; AsyncStorage needed for cross-session                                 |
-| Adding screenshot detection to all screens instead of just snap viewer | Simpler implementation (one global toggle)               | Users cannot screenshot their own feed, profile, or settings; permission dialog appears at app start instead of during snap viewing | Never -- screen capture prevention must be scoped to snap viewing only                                      |
-| Enabling Firestore TTL without auditing existing documents             | Quick one-command setup; tech debt resolved immediately  | Unexpected bulk deletion of expired documents; possible data loss for reply references                                              | Never without audit -- the 5 minutes of auditing prevents hours of debugging                                |
-| Using 7-day GCS lifecycle age matching the existing comment in code    | Matches documented plan; simple configuration            | Too aggressive for infrequent users who may not open snaps within 7 days                                                            | Only if the scheduled cleanup (`cleanupExpiredSnaps`) is verified reliable and runs before the 7-day window |
+**Why it happens:**
+The Flick codebase uses patterns that are common in JavaScript but invalid under strict TypeScript:
+- Service functions returning `{ success, error }` where `error` is `undefined` on success -- strict null checks require every consumer to handle `undefined`
+- Context values that are `null` before initialization (`useAuth()` returns `null` user during loading)
+- Firebase Timestamps that might be Firestore `Timestamp` objects or ISO strings (documented in CLAUDE.md gotcha #2)
+- `onSnapshot` callbacks where the snapshot type varies between query snapshots and document snapshots
 
-## Integration Gotchas
+**Prevention:**
+1. **Start with `strict: false`** and enable strict checks incrementally:
+   ```json
+   {
+     "strict": false,
+     "noImplicitAny": false,
+     "strictNullChecks": false
+   }
+   ```
+   Enable one flag at a time, fix all errors, then enable the next flag.
+2. **Migrate files as they are touched** during the backend migration, not as a separate sweep. When you rewrite `feedService.js` to use the new backend, that is when it becomes `feedService.ts` with proper types.
+3. **Define shared types first** before converting any files:
+   ```typescript
+   // types/api.ts
+   type ServiceResult<T> = { success: true; data: T } | { success: false; error: string };
 
-Common mistakes when connecting Live Activities and screen capture to the existing snap infrastructure.
+   // types/models.ts
+   interface Photo { id: string; userId: string; status: 'developing' | 'revealed'; ... }
+   interface User { id: string; username: string; displayName: string; ... }
+   interface Conversation { id: string; participants: string[]; ... }
+   ```
+4. **Use `// @ts-expect-error` sparingly** for known issues that will be fixed when the file is fully migrated. Never use `// @ts-ignore` (it suppresses errors silently even after they are fixed).
+5. **Keep `index.js` as the entry point.** Expo/Metro expects `index.js` -- renaming it to `index.ts` can break production builds (documented in multiple migration guides).
 
-| Integration                                                  | Common Mistake                                                                                                         | Correct Approach                                                                                                                                                                                                                      |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Live Activity + existing snap viewer                         | Starting a Live Activity for every snap received, even if the user has the app open                                    | Only start a Live Activity when the app is backgrounded or the snap is "pinned" by the user. Do not create activities for snaps the user is actively viewing.                                                                         |
-| Live Activity + `onNewMessage` Cloud Function                | Extending `onNewMessage` to also manage Live Activity push tokens and APNs updates                                     | Create a **separate** Cloud Function for Live Activity management. `onNewMessage` is already the routing hub for 5 message types -- adding APNs push logic increases its complexity and cold start time.                              |
-| `expo-screen-capture` + snap viewer                          | Calling `preventScreenCaptureAsync` globally in App.js                                                                 | Use `usePreventScreenCapture()` hook in the SnapViewer component only. Pair with `useFocusEffect` to enable on snap screen focus and disable on blur. This prevents blocking screenshots everywhere in the app.                       |
-| `expo-screen-capture` + existing camera flow                 | Forgetting that `preventScreenCaptureAsync` sets `FLAG_SECURE` on Android, which also blocks the camera preview        | If the snap camera and snap viewer share a navigation stack, ensure `allowScreenCaptureAsync()` is called before the camera screen mounts. `FLAG_SECURE` hides the entire window, including the camera viewfinder.                    |
-| Darkroom optimization + existing `ensureDarkroomInitialized` | Removing the inline reveal logic in `ensureDarkroomInitialized` (lines 182-213 of darkroomService.js) during "cleanup" | This inline logic exists to avoid circular imports with `photoService`. It also handles the stale-darkroom-on-capture case. Removing it breaks photo capture for users with overdue reveals. Optimize the callers, not this function. |
-| Firestore TTL + `cleanupExpiredSnaps` function               | Assuming TTL replaces the scheduled cleanup function and removing it                                                   | TTL takes up to 24 hours; the scheduled function runs every 2 hours. They serve different time windows. Keep both: scheduled function for prompt cleanup, TTL for true orphans.                                                       |
-| GCS lifecycle + `onSnapViewed` function                      | Assuming the lifecycle rule replaces the view-triggered deletion                                                       | The lifecycle rule uses a days-based age condition (minimum 1 day granularity). `onSnapViewed` deletes immediately on view. They cannot replace each other. Both are needed.                                                          |
+**Detection:**
+- More than 50 type errors in a single PR indicates you are trying to be too strict too fast
+- `any` types appearing in function signatures as a workaround for strict mode
 
-## Performance Traps
+**Phase to address:** TypeScript configuration must be set up at the start of the TypeScript migration phase, but strict mode flags should be enabled gradually across the milestone.
 
-Patterns that work at small scale but fail as usage grows.
+---
 
-| Trap                                                                     | Symptoms                                                                                            | Prevention                                                                                                                | When It Breaks                                                          |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Starting a Live Activity for every incoming snap                         | Battery drain, "too many activities" OS error (iOS limits to ~5 concurrent activities)              | Only start Live Activities for explicitly "pinned" snaps, not all incoming snaps. Let the user choose which snaps to pin. | > 5 concurrent snap conversations per user                              |
-| Darkroom `isDarkroomReadyToReveal` called on every foreground event      | Extra Firestore read every time user switches apps, even if reveal is hours away                    | Cache `nextRevealAt` timestamp locally. Compare `Date.now()` to cache. Only hit Firestore if cached time has passed.      | > 500 DAU foregrounding app 10+ times/day = 5000+ unnecessary reads/day |
-| `addScreenshotListener` registered globally with no cleanup              | Listener accumulates on every screen navigation (memory leak), callback fires on irrelevant screens | Use `useEffect` cleanup or `useFocusEffect` to add/remove the listener only on snap viewer screens                        | > 50 screen navigations per session (listener count grows linearly)     |
-| Live Activity push token stored only in memory, not persisted            | Token lost on app restart; Live Activity cannot receive updates until next app open                 | Store activity ID + push token mapping in Firestore via Cloud Function immediately on activity start                      | App killed by OS while Live Activity is visible on lock screen          |
-| Querying all `snap-photos/` in GCS to check lifecycle rule effectiveness | Full bucket listing on large Storage buckets is extremely slow and expensive                        | Use Firestore document queries (which have indexes) to check snap status; only access GCS for specific files              | > 10,000 snap photos in Storage                                         |
+### Pitfall 7: Premature Feed/List Optimization Breaks Existing UX
 
-## Security Mistakes
+**What goes wrong:**
+You profile the feed and see that `FlatList` re-renders on every state change. You add `React.memo()` to `FeedPhotoCard`, implement `getItemLayout` for fixed-height rows, add `removeClippedSubviews={true}`, and wrap callbacks in `useCallback`. The feed now scrolls faster but: photos sometimes show the wrong image (stale memo), the layout jumps because `getItemLayout` assumes a fixed height but photos have variable aspect ratios, and `removeClippedSubviews` causes photos to disappear when scrolling back up on Android.
 
-Domain-specific security issues for v1.1 features.
+**Why it happens:**
+Performance optimization in React Native is measurement-driven, not intuition-driven. Common "optimization" advice from blog posts applies to simple lists with uniform items. Flick's feed has:
+- Variable-height photo cards (different aspect ratios, captions, reaction counts)
+- Real-time updates (new photos appearing, reaction counts changing)
+- Signed URL refresh (URLs expire and must be regenerated, which is a prop change)
+- Multiple photo groups per friend (not a flat list of items)
 
-| Mistake                                                        | Risk                                                                                                                   | Prevention                                                                                                                                                                                                      |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Live Activity displays snap photo content on lock screen       | Anyone who picks up the phone can see the snap content without unlocking -- defeats ephemeral purpose                  | Live Activity should show only sender name and countdown timer, NEVER the snap photo. Photos are viewed only inside the authenticated app.                                                                      |
-| APNs push token for Live Activity stored without scoping       | Leaked token allows anyone to send arbitrary updates to the user's Live Activity                                       | Store tokens in Firestore with strict security rules: only the Cloud Function (admin SDK) can write, and tokens are scoped to user ID + activity ID. Delete token document when activity ends.                  |
-| `preventScreenCaptureAsync` disabled during screen transitions | Brief window between snap viewer unmount and new screen mount where FLAG_SECURE is lifted, allowing a timed screenshot | Add a small delay (100ms) before calling `allowScreenCaptureAsync()` on blur, or use a wrapper component that keeps prevention active during transitions.                                                       |
-| Screenshot notification reveals sender metadata                | Push notification for "User X screenshotted your snap" leaks that the recipient viewed the snap and when               | This is acceptable social behavior (Snapchat does this). But ensure the notification does not include additional metadata (message content, conversation ID in the payload visible to notification extensions). |
-| Firestore TTL deletes snap documents but not related data      | Snap is deleted by TTL, but the conversation's `lastMessage` preview still says "Snap" with no document to reference   | When setting `expiresAt` on snap messages, also set a `lastMessage` fallback in the conversation document that says "Snap expired" or similar, so the conversation list does not break.                         |
+Applying generic FlatList optimizations to this specific feed structure breaks things.
 
-## UX Pitfalls
+**Prevention:**
+1. **Profile before optimizing.** Use React Native's built-in performance monitor, Flipper, or React DevTools Profiler to identify actual bottlenecks. The bottleneck may be in data fetching (N+1 Firestore reads in `batchFetchUserData`), not rendering.
+2. **Never use `getItemLayout` with variable-height items.** It causes layout thrashing and incorrect scroll positions.
+3. **Be cautious with `React.memo`** on components that receive frequently-changing props (reaction counts, signed URLs). The shallow comparison cost can exceed the re-render cost.
+4. **Test `removeClippedSubviews` on both platforms.** It behaves differently on Android (more aggressive clipping, can cause blank spaces) vs iOS.
+5. **Optimize data fetching first, rendering second.** Moving from Firestore's N+1 query pattern to a single SQL query with JOINs will likely give a 10x improvement that dwarfs any rendering optimization.
 
-Common user experience mistakes for v1.1 features.
+**Detection:**
+- Photos showing wrong content after scrolling (stale memo)
+- Scroll position jumping when new items load
+- Blank spaces appearing in the feed on Android
+- Users reporting "photos disappear when I scroll"
 
-| Pitfall                                                      | User Impact                                                                                                                                                                           | Better Approach                                                                                                                                                                                                                |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Live Activity auto-starts for all snaps without user opt-in  | Lock screen fills with snap activities; feels spammy; user disables Live Activities entirely in iOS Settings                                                                          | Let the user explicitly "pin" a snap to the lock screen via a button in the snap viewer or conversation. Default: no Live Activity.                                                                                            |
-| Screenshot detection notification is delayed                 | Sender gets "X screenshotted your snap" notification 5 minutes later (if routed through FCM + Cloud Function). Feels unreliable.                                                      | Send screenshot notification via the existing `onNewMessage` pipeline with high priority. Consider local notification on the sender's device if both users are in the same conversation in real-time.                          |
-| Darkroom optimization removes visual feedback during "check" | Previously, user saw a brief loading state while darkroom checked reveal status. After optimization, cached check returns instantly but photos might not reflect latest server state. | Always show a brief loading shimmer (minimum 300ms) when entering darkroom to mask any cache-vs-server inconsistency. Fetch server state in background and update if different.                                                |
-| Screen goes completely black during snap viewing (Android)   | On Android, `preventScreenCaptureAsync` sets `FLAG_SECURE` which blacks out the entire window in recent apps / screen recording. User thinks the app crashed.                         | Show a clear "This content is protected" overlay or message when the user tries to screenshot, rather than silently blacking out. On iOS, use `enableAppSwitcherProtectionAsync(blurIntensity)` for a blurred overlay instead. |
-| Live Activity timer shows wrong time after timezone change   | User travels to a new timezone; the Live Activity countdown was calculated client-side and is now off by hours                                                                        | Calculate all countdown values server-side using UTC timestamps. The Live Activity widget should display countdown-to-UTC-target, not a duration calculated at creation time.                                                  |
+**Phase to address:** Performance optimization should come AFTER the backend migration, not during. The backend migration itself will eliminate the primary performance bottleneck (Firestore's query limitations).
 
-## "Looks Done But Isn't" Checklist
+---
 
-Things that appear complete but are missing critical pieces.
+### Pitfall 8: Upload Queue Breaks During Storage Backend Switch
 
-- [ ] **Live Activity (iOS):** Often missing push token persistence -- verify activity push tokens are sent to Cloud Function and stored in Firestore, not just held in memory
-- [ ] **Live Activity (iOS):** Often missing token refresh handling -- verify `Activity.pushTokenUpdates` is observed and new tokens are forwarded to server
-- [ ] **Live Activity (iOS):** Often missing activity cleanup -- verify `Activity.end()` is called when snap expires or is viewed, and the Firestore token document is deleted
-- [ ] **Live Activity (iOS):** Often missing App Group configuration -- verify the main app target and widget extension target share an App Group for data passing
-- [ ] **Live Activity (iOS):** Often missing APNs entitlement -- verify the widget extension has the push notification entitlement configured in the provisioning profile and EAS build config
-- [ ] **Screenshot detection:** Often missing Android permission for API < 14 -- verify `READ_MEDIA_IMAGES` is in AndroidManifest.xml and permission is requested at runtime
-- [ ] **Screenshot detection:** Often missing Android 14+ registration workaround -- verify `allowScreenCaptureAsync()` is called before `addScreenshotListener()` on Android 14+ to trigger callback registration
-- [ ] **Screenshot detection:** Often missing scope isolation -- verify `preventScreenCaptureAsync` is only active during snap viewing, not globally (which would block camera and other screens)
-- [ ] **Darkroom optimization:** Often missing fallback -- verify that removing/caching a Firestore read still falls back to a server check if cached value is stale
-- [ ] **Darkroom optimization:** Often missing `ensureDarkroomInitialized` preservation -- verify the inline reveal logic in darkroomService.js (lines 182-213) is not removed during "cleanup"
-- [ ] **Firestore TTL (INFRA-03):** Often missing data audit -- verify that ONLY snap-type messages have the `expiresAt` field before enabling TTL
-- [ ] **Firestore TTL (INFRA-03):** Often missing conversation lastMessage handling -- verify that TTL-deleted snap docs do not leave orphaned `lastMessage` references in conversation documents
-- [ ] **GCS lifecycle (INFRA-04):** Often missing dev-first testing -- verify the lifecycle rule is tested on dev project before production
-- [ ] **GCS lifecycle (INFRA-04):** Often missing age buffer -- verify the lifecycle age is longer than the maximum snap lifetime (currently `expiresAt` is ~24h, so age should be 14+ days, not 7)
+**What goes wrong:**
+The `uploadQueueService` persists queued uploads to AsyncStorage. A user captures photos while on the old Firebase Storage backend, then the app updates to the new backend version before the queue drains. The queued items contain metadata referencing Firebase Storage paths and use Firebase Storage upload functions. The queue processor crashes or uploads to the wrong destination.
 
-## Recovery Strategies
+**Why it happens:**
+`uploadQueueService.js` imports directly from `./firebase/storageService` and `@react-native-firebase/firestore`. Queue items persisted in AsyncStorage do not contain information about which storage backend they target. When the app code updates (via EAS OTA), the storage backend changes but the persisted queue items are stale.
 
-When pitfalls occur despite prevention, how to recover.
+**Consequences:**
+- Photos captured before the update are lost (upload fails, max retries exhausted, item dropped)
+- Duplicate photos if the fallback logic retries on both old and new backends
+- Darkroom state becomes inconsistent (photo document created in Firestore but file uploaded to new storage, or vice versa)
 
-| Pitfall                                                 | Recovery Cost | Recovery Steps                                                                                                                                                                                                                                                                                 |
-| ------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Live Activity stuck on lock screen (activity not ended) | LOW           | Call `Activity.end()` from the app on next launch. Add a scheduled Cloud Function that sends `end` push to activities older than 24 hours. iOS automatically removes Live Activities after 12 hours of inactivity on the lock screen (moves to notification center for 4 hours, then removed). |
-| Android crash from expo-screen-capture on Android 14    | MEDIUM        | Push an OTA update (not a new build) that wraps all screen capture calls in try/catch. If the crash is in module initialization (cannot be caught), a new EAS build with the fixed version is required.                                                                                        |
-| Darkroom reveals broken after optimization              | LOW           | Revert the optimization via OTA update. Restore the original triple-trigger pattern. No data loss since the darkroom documents in Firestore are unchanged.                                                                                                                                     |
-| Firestore TTL bulk-deletes unexpected documents         | HIGH          | Data is gone. Firestore has no built-in point-in-time recovery. If Firestore export/backup was enabled, restore from the most recent backup. If not, the documents are lost. **Prevention is the only strategy** -- audit before enabling.                                                     |
-| GCS lifecycle deletes active snap photos                | MEDIUM        | If soft-delete is enabled on the bucket (default 7-day retention), restore objects via `gsutil`. If soft-delete is disabled, files are permanently lost. Increase the lifecycle age and verify soft-delete is enabled before configuring.                                                      |
-| Screenshot listener not firing on Android               | LOW           | OTA update to add the `allowScreenCaptureAsync()` workaround before registering the listener. No native build required if the workaround is JS-only.                                                                                                                                           |
-| Live Activity shows stale data                          | LOW           | Send an `end` push notification to the stale activity and start a new one with current data. Add client-side freshness check on app foreground.                                                                                                                                                |
+**Prevention:**
+1. **Add a `backendVersion` field to queued items.** When processing, check if the item's backend version matches the current backend. If not, route to the appropriate upload function.
+2. **Drain the queue before OTA update.** Add a pre-update check: if the upload queue is non-empty, delay the EAS update application until the queue is empty. This can be done via `expo-updates` event listeners.
+3. **Implement a queue migration function** that runs once on app launch after an update. It reads old-format queue items and rewrites them with the new backend target.
+4. **Test the transition:** capture 5 photos, kill the app, update to the new backend version, relaunch, verify all 5 photos appear in the feed.
 
-## Pitfall-to-Phase Mapping
+**Detection:**
+- AsyncStorage contains queue items with no `backendVersion` field after update
+- Upload errors in logs referencing Firebase Storage after migration
+- Photos in darkroom that never reach "revealed" status
 
-How roadmap phases should address these pitfalls.
+**Phase to address:** Upload queue migration must be handled as part of the storage migration sub-phase. It is a P0 edge case.
 
-| Pitfall                                                    | Prevention Phase               | Verification                                                                                                   |
-| ---------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| Widget extension process isolation (no RN/Firebase access) | Phase 1: Live Activities iOS   | Architecture review: confirm native module bridge design before coding                                         |
-| Live Activity push token management (not FCM)              | Phase 1: Live Activities iOS   | Integration test: background the app, verify Live Activity updates via APNs push                               |
-| Android Live Updates scope creep                           | Phase 1: Live Activities iOS   | Decision document: confirm iOS-only for v1.1, Android deferred                                                 |
-| expo-screen-capture Android 14 crash                       | Phase 2: Screenshot Detection  | QA: test EAS build on physical Android 14 device, verify no crash on startup                                   |
-| Screenshot listener not firing Android 14+                 | Phase 2: Screenshot Detection  | QA: take screenshot on Android 14+ device during snap viewing, verify callback fires                           |
-| FLAG_SECURE blocking camera preview on Android             | Phase 2: Screenshot Detection  | QA: navigate from snap viewer to snap camera, verify camera viewfinder renders                                 |
-| Screen capture scope isolation                             | Phase 2: Screenshot Detection  | QA: verify screenshots work on feed, profile, settings screens while snap prevention is active                 |
-| Darkroom optimization breaking reveals                     | Phase 3: Darkroom Optimization | QA: take photo, wait for reveal time, open darkroom, verify photos are revealed (not stuck developing)         |
-| `ensureDarkroomInitialized` inline logic removal           | Phase 3: Darkroom Optimization | Code review: verify darkroomService.js lines 182-213 are preserved                                             |
-| Cached `nextRevealAt` staleness                            | Phase 3: Darkroom Optimization | QA: take photo, background app for 10 minutes, foreground, verify reveal happens (cache did not prevent check) |
-| Firestore TTL bulk deletion of existing data               | Phase 4: Tech Debt (INFRA-03)  | Audit script: run count query of expired messages documents before enabling TTL                                |
-| TTL orphaning conversation lastMessage                     | Phase 4: Tech Debt (INFRA-03)  | QA: wait for TTL to delete an expired snap, verify conversation list still renders correctly                   |
-| GCS lifecycle deleting active snap photos                  | Phase 4: Tech Debt (INFRA-04)  | QA: send snap, wait 8 days (on dev project with 7-day rule), verify 14-day rule does not delete                |
-| GCS lifecycle retroactive deletion                         | Phase 4: Tech Debt (INFRA-04)  | Test on dev project: add lifecycle rule, verify only objects older than age threshold are deleted              |
-| Test gaps in useConversation hook                          | Phase 4: Tech Debt             | Unit tests: verify Phase 2 additions to useConversation are covered                                            |
-| Stale test assertion in snapFunctions.test.js              | Phase 4: Tech Debt             | Test fix: update assertion, verify test passes                                                                 |
+---
+
+### Pitfall 9: TypeScript Migration Introduces Runtime Regressions in Untouched Files
+
+**What goes wrong:**
+You rename `feedService.js` to `feedService.ts` and add type annotations. Metro bundler now resolves imports differently -- other files that `import { getFeedPhotos } from './feedService'` may resolve to a cached `.js` version or fail to find the `.ts` file. Worse, you change the return type signature to be more precise, which makes the function behave identically at runtime but causes TypeScript to flag every caller that does not handle the new type shape.
+
+**Why it happens:**
+Metro bundler resolves files by extension priority. When both `feedService.js` and `feedService.ts` exist (during transition), Metro may pick the wrong one depending on configuration. Additionally, changing a file extension resets Metro's module cache for that file, which can cause stale imports in hot reload during development.
+
+**Consequences:**
+- Runtime errors in production from mismatched imports
+- Developer confusion: "I converted this file but nothing changed" (Metro serving the old `.js` file)
+- Type errors cascading to every file that imports from the converted module
+
+**Prevention:**
+1. **Delete the `.js` file immediately after creating the `.ts` file.** Never have both extensions coexist for the same module. Use `git mv` to preserve history.
+2. **Configure Metro to prefer `.ts`/`.tsx` extensions** in `metro.config.js`:
+   ```javascript
+   resolver: {
+     sourceExts: ['ts', 'tsx', 'js', 'jsx', 'json'],
+   }
+   ```
+3. **Clear Metro cache after each batch of file conversions:** `npx expo start --clear`
+4. **Convert files bottom-up** (leaf dependencies first, then their consumers). This means: utilities and types first, then services, then hooks, then components, then screens. This order minimizes cascade errors.
+5. **Run the full test suite after each batch of conversions**, not just the tests for the converted files. TypeScript conversion can change module resolution in ways that affect unrelated files.
+
+**Detection:**
+- `ls src/services/firebase/ | sort | uniq -d` shows duplicate filenames with different extensions
+- Hot reload stops picking up changes to recently converted files
+- Tests pass locally but fail in CI due to module resolution differences
+
+**Phase to address:** Establish the TypeScript conversion protocol at the start of the TS migration phase. The protocol must include the "delete old file" step.
+
+---
+
+### Pitfall 10: Offline-First Conflict Resolution for Social Features is Extremely Hard
+
+**What goes wrong:**
+You implement offline-first for the darkroom and feed. A user captures photos offline, and another friend reacts to existing photos offline. When both come online, the system must reconcile: new photos need to be uploaded, reactions need to be applied, but the photo that was reacted to might have been deleted by the author while both users were offline. The conflict resolution for social interactions (reactions, comments, friendships, streaks) is exponentially more complex than single-user document sync.
+
+**Why it happens:**
+Offline-first architectures are designed for single-user or collaborative document editing, not for social graphs. Social features have multi-party invariants:
+- A reaction requires the photo to still exist
+- A friend request requires the target user to not have blocked the sender
+- A streak requires mutual daily engagement -- if one side is offline for 3 days, the streak must break even though they "intended" to maintain it
+- Darkroom reveals are time-based -- offline users cannot reveal photos because the server-authoritative reveal logic cannot run
+
+**Consequences:**
+- Ghost reactions on deleted photos
+- Streak desync: client shows streak alive but server broke it while user was offline
+- Darkroom stuck in "developing" state because reveal requires server-side timestamp check
+- Conflict resolution code becomes the most complex and bug-prone part of the app
+
+**Prevention:**
+1. **Limit offline-first to media capture and queue-based uploads only.** This is already the constraint in PROJECT.md: "photos/videos must be capturable, triageable, and uploaded when back online. Zero media loss." Do NOT extend offline-first to social interactions (reactions, comments, friendships, streaks).
+2. **Use optimistic UI, not offline-first, for social features.** Show the reaction/comment immediately in the UI, send it to the server, and revert if the server rejects it. This is fundamentally different from offline-first (which queues operations for later sync).
+3. **Keep darkroom reveals server-authoritative.** The existing architecture already has three reveal triggers (app foreground, screen focus, Cloud Function). This pattern works -- do not move reveal logic to the client.
+4. **For the upload queue specifically:** the existing `uploadQueueService` with AsyncStorage persistence is the correct pattern. Extend it to work with the new storage backend, but do not generalize it into a full offline-first sync engine.
+
+**Detection:**
+- Design documents that describe "syncing reactions offline" or "offline streak tracking"
+- Library evaluation that includes CRDTs or event sourcing for social features
+- Any conflict resolution logic that handles more than upload retries
+
+**Phase to address:** Architecture phase must explicitly scope offline-first to media capture only. Document this as a hard boundary.
+
+---
+
+### Pitfall 11: Firestore Security Rules Have No Equivalent in the New Backend
+
+**What goes wrong:**
+Firestore security rules enforce access control at the database level (users can only read their friends' photos, users can only write their own documents). When you move to a new backend with a REST/GraphQL API, these rules must be reimplemented as API middleware or database row-level security. If you forget to port a rule, you create a data access vulnerability.
+
+**Why it happens:**
+Firestore security rules are declarative and colocated with the database. Developers often do not document them separately because they are "just part of Firestore." When migrating, the rules file (`firestore.rules`) is the only documentation of the app's access control model, and it is easy to overlook rules for edge cases (blocked users cannot see each other's photos, deleted accounts' data is inaccessible, etc.).
+
+**Prevention:**
+1. **Export and document every Firestore security rule** as a requirements document before migration. Convert each rule into an English-language access control requirement.
+2. **If using Supabase:** implement Row Level Security (RLS) policies that mirror Firestore rules. RLS is the closest equivalent to Firestore security rules in PostgreSQL.
+3. **If using a custom API:** implement authorization middleware for every endpoint. Use a test suite that specifically tests access control: "user A cannot read user B's messages if they are not friends."
+4. **Test blocked user scenarios specifically.** The `blockService` in Flick prevents blocked users from seeing each other. This must be enforced at the API/database level, not just in the client UI.
+
+**Detection:**
+- API endpoints that return data without checking the requesting user's relationship to the data owner
+- Missing RLS policies on tables containing user-generated content
+- Blocked user's content appearing in another user's feed
+
+**Phase to address:** Security/access control must be implemented before any data migration, not after. Write RLS policies or middleware as part of schema design.
+
+---
+
+## Minor Pitfalls
+
+Issues that cause developer friction, minor bugs, or suboptimal patterns but are easily fixable.
+
+---
+
+### Pitfall 12: Context API Re-Render Cascade During TypeScript Conversion
+
+**What goes wrong:**
+While adding TypeScript types to `AuthContext`, `PhotoDetailContext`, and `VideoMuteContext`, you refactor the context value shape to be more type-safe. This changes the object reference on every render, causing all consumers to re-render. The existing `usePhotoDetailActions()` hook (which exists specifically to avoid re-renders) breaks because the TypeScript refactor changed the memoization boundaries.
+
+**Prevention:**
+1. When typing contexts, preserve the exact same memoization structure. Add types to the existing `useMemo` calls, do not restructure them.
+2. Use `as const` assertions for static values rather than creating new objects.
+3. Test re-render counts before and after conversion using React DevTools Profiler.
+
+---
+
+### Pitfall 13: EAS OTA Update Size Explodes After TypeScript Conversion
+
+**What goes wrong:**
+TypeScript compilation adds type-checking overhead to the build process but should not change bundle size. However, if you add runtime type validation libraries (io-ts, zod on the client, runtypes) as part of the TypeScript migration, the bundle size increases significantly. EAS OTA updates become larger and slower to download.
+
+**Prevention:**
+1. TypeScript types are compile-time only -- they add zero bytes to the production bundle. Do not add runtime type validation on the client unless you have a specific need.
+2. Keep Zod on the server side only (it is already used in `functions/validation.js`).
+3. Monitor EAS update size before and after TypeScript migration. If it increases by more than 5%, investigate.
+
+---
+
+### Pitfall 14: Conversation ID Format Breaks During Data Migration
+
+**What goes wrong:**
+Conversations in Firestore use deterministic IDs: `[lowerUserId]_[higherUserId]`. This format is referenced in `messageService.js` and used by the client to construct conversation document paths without a server lookup. If the new backend uses auto-generated IDs (UUIDs, serial integers), every reference to a conversation by constructed ID breaks. The client must now query for conversations by participants instead of constructing the ID directly.
+
+**Prevention:**
+1. Preserve the deterministic ID format in the new backend, or create a lookup index on `(participant1, participant2)` that returns the conversation ID.
+2. Audit all code that constructs conversation IDs client-side (search for `_` concatenation patterns in message-related files).
+3. If using auto-generated IDs, add a `getOrCreateConversation(userId1, userId2)` API endpoint that handles the lookup/creation atomically.
+
+---
+
+### Pitfall 15: Performance Monitoring Metrics Become Incomparable After Migration
+
+**What goes wrong:**
+Firebase Performance Monitoring (`useScreenTrace`, `withTrace` in `performanceService.js`) provides screen load times and custom traces. After migrating to a new backend, network request timing and screen load patterns change fundamentally. Historical metrics become incomparable -- you cannot tell if the new backend is faster or slower because the measurement infrastructure changed simultaneously with the thing being measured.
+
+**Prevention:**
+1. Establish performance baselines BEFORE starting the backend migration. Record p50/p90/p99 for: feed load time, message send latency, photo upload time, darkroom reveal time, app cold start time.
+2. Keep Firebase Performance Monitoring active during and after migration, even if you add additional monitoring. This provides a consistent measurement baseline.
+3. Add custom traces around the specific operations being migrated so you can compare old vs new backend performance for the same operation.
+
+---
+
+### Pitfall 16: React Navigation Type Safety is Deceptively Complex
+
+**What goes wrong:**
+You add TypeScript to the navigation structure and attempt to type all route params. React Navigation 7's type system requires a `ParamList` type for each navigator, and nested navigators require compositing these types. The Flick app has 4+ levels of nesting (Root Stack > Main Tabs > Profile Stack > screens) with cross-navigator navigation (e.g., `PhotoDetail` opened from Feed tab but navigating to Profile). Typing this correctly takes longer than expected and produces cryptic type errors.
+
+**Prevention:**
+1. Start with `RootStackParamList` and type only the top-level routes. Leave nested navigators as `undefined` params initially.
+2. Use React Navigation's `NavigatorScreenParams` type for nested navigators rather than trying to flatten all params.
+3. Accept that `navigationRef.current.navigate()` calls with `setTimeout` (used for nested tab navigation, documented in CLAUDE.md gotcha #4) will be hard to type correctly. Use type assertions for these specific patterns rather than fighting the type system.
+4. Reference React Navigation 7's TypeScript guide -- the typing API changed significantly from v6.
+
+---
+
+## Phase-Specific Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|---|---|---|
+| Database schema design | Copying Firestore structure into JSONB columns (Pitfall 3) | Normalize during migration, design schema before writing code |
+| Auth migration | Attempting to replace Firebase Auth before data migration (Pitfall 1) | Keep Firebase Auth as identity provider, migrate auth last |
+| Storage migration | Breaking cached signed URLs (Pitfall 4) | 14-day dual-storage overlap, client-side URL fallback |
+| Real-time features | Migrating listeners one at a time (Pitfall 2) | Adapter pattern, feature flag for all-at-once switch |
+| Cloud Functions | Forgetting to port background processing (Pitfall 5) | Full function inventory and porting checklist |
+| TypeScript setup | Enabling strict mode immediately (Pitfall 6) | Incremental strict flag enablement |
+| TypeScript conversion | Dual file extensions causing Metro confusion (Pitfall 9) | Delete .js immediately after creating .ts |
+| Feed optimization | Applying generic FlatList advice (Pitfall 7) | Profile first, optimize data fetching before rendering |
+| Offline-first scope | Extending offline-first beyond media capture (Pitfall 10) | Hard boundary: offline = capture + upload queue only |
+| Upload queue | Queue items targeting wrong storage backend after update (Pitfall 8) | Backend version field, queue drain before update |
+| Security | Missing access control rules in new backend (Pitfall 11) | Document Firestore rules, implement RLS/middleware before data migration |
 
 ## Sources
 
-- [Using Live Activities in a React Native App - AddJam](https://addjam.com/blog/2025-02-04/using-live-activities-react-native-app/) -- App Groups, token management, push notification requirements (MEDIUM confidence)
-- [Implementing Live Activities in React-Native with Expo - Fizl](https://fizl.io/blog/posts/live-activities) -- Attributes.swift synchronization, widget extension setup, 12-hour timeout (MEDIUM confidence)
-- [expo-live-activity - Software Mansion Labs](https://github.com/software-mansion-labs/expo-live-activity) -- Predefined layout limitations, no custom SwiftUI, enablePushNotifications prop (MEDIUM confidence -- library is in labs, not stable release)
-- [Expo ScreenCapture Documentation](https://docs.expo.dev/versions/latest/sdk/screen-capture/) -- API reference, platform differences, permission requirements (HIGH confidence)
-- [expo-screen-capture Android 14 Crash - GitHub Issue #27921](https://github.com/expo/expo/issues/27921) -- MissingActivity exception, fixed in SDK 51 via PR #28244 (HIGH confidence)
-- [expo-screen-capture Android 14+ Screenshot Detection - GitHub Issue #31678](https://github.com/expo/expo/issues/31678) -- Listener not firing, fix in PR #31702, workaround: call allowScreenCaptureAsync first (HIGH confidence)
-- [Firestore TTL Policies - Official Firebase Docs](https://firebase.google.com/docs/firestore/ttl) -- Deletion within 24 hours, bulk deletion on existing data, no subcollection deletion (HIGH confidence)
-- [Firestore TTL - Google Cloud Docs](https://docs.cloud.google.com/firestore/docs/ttl) -- TTL field requirements, timing caveats, lower priority than other operations (HIGH confidence)
-- [GCS Object Lifecycle Management](https://docs.cloud.google.com/storage/docs/lifecycle) -- matchesPrefix condition, retroactive application, 24-hour propagation delay, age evaluation (HIGH confidence)
-- [Android Foreground Service in React Native - Varun Kukade](https://medium.com/@varunkukade999/part-1-realtime-live-notifications-via-android-foreground-service-in-react-native-865dc0c29841) -- Service type requirements, Android 14 restrictions (MEDIUM confidence)
-- [Notifee Background Restrictions](https://notifee.app/react-native/docs/android/background-restrictions/) -- Manufacturer-specific battery optimization killing foreground services (MEDIUM confidence)
-- [Android Foreground Services in Android 14 - ProAndroidDev](https://proandroiddev.com/foreground-services-in-android-14-whats-changing-dcd56ad72788) -- FOREGROUND_SERVICE_TYPE requirements, permission declarations (MEDIUM confidence)
-- Existing codebase analysis: `darkroomService.js`, `useDarkroom.js`, `App.js` foreground check, `functions/index.js` (INFRA-03/INFRA-04 comments, `processDarkroomReveals`, `onSnapViewed`, `cleanupExpiredSnaps`) (HIGH confidence -- direct code inspection)
-
----
-
-_Pitfalls research for: Flick v1.1 -- Pinned Snaps, Screenshot Detection, Darkroom Optimization, Tech Debt_
-_Researched: 2026-02-25_
+- [Firebase auth:import and auth:export documentation](https://firebase.google.com/docs/cli/auth)
+- [How I Migrated from Firebase Auth to Better Auth Without Downtime](https://saulotauil.com/2025/04/17/firebase-auth-to-better-auth.html)
+- [Supabase: Migrate from Firebase Firestore](https://supabase.com/docs/guides/platform/migrating-to-supabase/firestore-data)
+- [RxDB: Downsides of Offline-First](https://rxdb.info/downsides-of-offline-first.html)
+- [React Native Performance Overview (official docs)](https://reactnative.dev/docs/performance)
+- [React Native Performance Optimization 2026 - Quokka Labs](https://quokkalabs.com/blog/react-native-performance/)
+- [React Native JS to TypeScript Migration Guide](https://www.creolestudios.com/react-native-javascript-to-typescript-migration/)
+- [Using TypeScript - Expo Documentation](https://docs.expo.dev/guides/typescript/)
+- [Overcome Firestore Limitations by Migrating to MongoDB](https://www.d3vtech.com/insights/overcome-firestores-limitations-by-migrating-to-mongodb/)
+- [Why RxDB Fails in WebViews](https://medium.com/@MhamadHFarhan/why-rxdb-fails-in-webviews-react-native-electron-and-how-to-avoid-data-loss-5b9cd04f3587)
+- [How to Migrate from Firebase (FusionAuth)](https://fusionauth.io/blog/how-to-migrate-from-firebase)

@@ -1,868 +1,770 @@
-# Architecture Research: v1.1 Pinned Snaps, Screenshot Detection, Darkroom Optimization
+# Architecture Patterns
 
-**Domain:** Social messaging -- Live Activity snap pinning, screenshot detection, darkroom optimization, tech debt
-**Researched:** 2026-02-25
-**Confidence:** MEDIUM (Live Activities in React Native is actively evolving; expo-screen-capture is stable and verified; darkroom optimization is straightforward refactoring)
+**Domain:** Firebase-to-Supabase migration for React Native social media app
+**Researched:** 2026-03-23
 
-## System Overview
+## Recommended Architecture
 
-v1.1 adds three new capability layers to the existing architecture: a native iOS widget extension for Live Activities, screenshot detection wiring into the snap viewing flow, and a restructured darkroom reveal check. All three integrate into existing layers without replacing them.
+### Dual-Backend Coexistence Pattern (Strangler Fig)
 
-```
-+------------------------------------------------------------------+
-|                     SCREENS (UI Layer)                            |
-|  ConversationScreen  DarkroomScreen  SettingsScreen              |
-|  [extend snap view]  [optimize]      [screenshot settings]       |
-+--------+---------+--------+--------+--------+-------------------+
-         |         |        |        |        |
-+--------+---------+--------+--------+--------+-------------------+
-|                     HOOKS (Business Logic)                       |
-|  useConversation  useDarkroom    useScreenshotDetection          |
-|  [extend]         [restructure]  [NEW]                           |
-+--------+---------+--------+--------+--------+-------------------+
-         |         |        |        |        |
-+--------+---------+--------+--------+--------+-------------------+
-|                   SERVICES (Firebase Abstraction)                 |
-|  snapService      darkroomService  liveActivityService           |
-|  [extend]         [optimize]       [NEW]                         |
-+--------+---------+--------+--------+--------+-------------------+
-         |         |        |        |        |
-+--------+---------+--------+--------+--------+-------------------+
-|                NATIVE MODULE / EXPO PACKAGES                     |
-|  expo-screen-capture    expo-live-activity (or expo-widgets*)    |
-|  [NEW dependency]       [NEW dependency + Swift widget target]   |
-+--------+---------+--------+--------+--------+-------------------+
-         |         |        |        |        |
-+--------+---------+--------+--------+--------+-------------------+
-|                   CLOUD FUNCTIONS (Server-side)                   |
-|  onSnapScreenshot   sendLiveActivityUpdate   (darkroom: no new)  |
-|  [NEW callable]     [NEW callable]                               |
-+--------+---------+--------+--------+--------+-------------------+
-         |         |        |        |        |
-+--------+---------+--------+--------+--------+-------------------+
-|                   FIRESTORE + APNs                                |
-|  conversations/messages/   users/    APNs liveactivity push      |
-|  [add screenshotAt field]  [add LA token] [NEW push channel]     |
-+------------------------------------------------------------------+
-```
-
-\*Note: `expo-widgets` is available in Expo SDK 55 (currently beta). Since the project is on SDK 54, the recommended approach for v1.1 is `expo-live-activity` from Software Mansion. See Stack Decision section for full rationale.
-
-### Component Responsibilities
-
-| Component                               | Status | Responsibility                                                                               | Communicates With                        |
-| --------------------------------------- | ------ | -------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `liveActivityService.js`                | NEW    | Start/update/stop Live Activities, manage push tokens, deep link configuration               | expo-live-activity, Cloud Functions      |
-| `useScreenshotDetection` hook           | NEW    | Mount-scoped screenshot listener, prevention toggle, notification trigger                    | expo-screen-capture, snapService         |
-| `SnapViewer` component                  | EXTEND | Add screenshot prevention on mount, screenshot listener callback                             | useScreenshotDetection, snapService      |
-| `onSnapScreenshot` Cloud Function       | NEW    | Receive screenshot event, send push notification to snap sender                              | Firestore, FCM/Expo Push                 |
-| `sendLiveActivityUpdate` Cloud Function | NEW    | Send APNs liveactivity push to update/end pinned snap Live Activity                          | APNs HTTP/2 (direct, not FCM), Firestore |
-| `useDarkroom` hook                      | MODIFY | Replace 3-trigger reveal check with single optimized pattern                                 | darkroomService (simplified)             |
-| `darkroomService.js`                    | MODIFY | Remove redundant `isDarkroomReadyToReveal` client calls, consolidate to server-authoritative | Firestore darkrooms collection           |
-| Swift Widget Target                     | NEW    | SwiftUI Live Activity layout for pinned snaps (Polaroid mini frame)                          | ActivityKit, App Groups                  |
-
-## Key Stack Decision: Live Activities Library
-
-### Decision: Use `expo-live-activity` on SDK 54, plan migration to `expo-widgets` on SDK 55
-
-**Rationale:**
-
-| Factor                    | expo-live-activity                                  | expo-widgets                                     |
-| ------------------------- | --------------------------------------------------- | ------------------------------------------------ |
-| SDK compatibility         | Works with SDK 54 (current)                         | Requires SDK 55 (beta, not production-ready)     |
-| Maturity                  | Early but functional, published by Software Mansion | Alpha, subject to breaking changes               |
-| Setup complexity          | Config plugin + custom Swift widget target          | Config plugin, no Swift code needed              |
-| Push notification support | Supported with `enablePushNotifications: true`      | Supported with `enablePushNotifications: true`   |
-| Dynamic Island support    | Yes (compact, expanded, minimal layouts)            | Yes (banner, compact, expanded, minimal layouts) |
-| Deep linking              | Supported via config                                | Supported via config                             |
-| Migration path            | Can migrate to expo-widgets when SDK 55 is stable   | N/A (target)                                     |
-
-**Recommendation:** Ship v1.1 with `expo-live-activity` on SDK 54. When Expo SDK 55 reaches stable release (likely mid-2026), migrate to `expo-widgets` as part of a routine SDK upgrade. The Live Activity UI layout (SwiftUI in both cases) will need minimal changes.
-
-**Confidence:** MEDIUM -- `expo-live-activity` is from Software Mansion Labs (experimental namespace), not a stable release. The core API (startActivity, updateActivity, stopActivity, push token management) is functional but breaking changes in minor versions are possible. Pin the version strictly.
-
-### Android Strategy: Defer to Rich Notification
-
-Android does not have an equivalent to iOS Live Activities until Android 16 (Live Updates). Android 16 adoption will be minimal in 2026. Samsung One UI 7 has "Now Bar" support but requires app whitelisting.
-
-**Recommendation:** For v1.1, implement pinned snaps as iOS-only Live Activities. On Android, use an enhanced ongoing notification via `expo-notifications` with a custom notification channel (`priority: max`, `ongoing: true` if Notifee is added). This gives Android users a persistent lock-screen notification that opens the snap viewer on tap -- functionally equivalent, visually simpler.
-
-**Confidence:** HIGH -- Android ongoing notifications are well-established. The gap is visual polish, not functionality.
-
-## Feature Architecture: Pinned Snap Live Activities
-
-### How Live Activities Work (iOS)
-
-Live Activities are iOS widgets that display real-time information on the Lock Screen and in the Dynamic Island. They are powered by ActivityKit (native Swift framework) and can be:
-
-1. **Started locally** from the app via `ActivityKit.startActivity()`
-2. **Updated remotely** via APNs push notifications with `apns-push-type: liveactivity`
-3. **Ended** either locally or remotely
-4. **Auto-terminated** by iOS after 12 hours maximum
-
-Each Live Activity has:
-
-- A **push token** (unique per activity instance, can change over time)
-- A **content-state** (the data displayed, updated via pushes)
-- Layout sections: `compactLeading`, `compactTrailing` (Dynamic Island pills), `expanded` (full Dynamic Island), `banner` (Lock Screen)
-
-### Pinned Snap Data Flow
+The migration uses a **Strangler Fig** pattern: new Supabase services wrap the existing Firebase services, replacing them one-by-one while both backends run simultaneously. No big-bang cutover. Each service is migrated, tested, and shipped independently.
 
 ```
-[Sender sends snap in ConversationScreen]
-    |
-    | 1. snapService.uploadAndSendSnap() -- existing flow, unchanged
-    v
-[onNewMessage Cloud Function fires]
-    |
-    | 2. Detect type='snap'
-    | 3. Check recipient's liveActivityToken in users/{recipientId} doc
-    | 4. If token exists AND recipient has LA enabled:
-    |    a. Send APNs liveactivity push with event:"start" to start Live Activity
-    |    OR
-    |    b. Send standard push notification (existing behavior) as fallback
-    v
-[Recipient's Lock Screen / Dynamic Island]
-    |
-    | 5. Live Activity appears: "New snap from [SenderName]" with Polaroid mini icon
-    | 6. Timer shows time remaining before snap expires (48h from creation)
-    | 7. Tap deep links to ConversationScreen with autoOpenSnapId param
-    v
-[Recipient opens snap via Live Activity tap or ConversationScreen]
-    |
-    | 8. SnapViewer opens (existing flow)
-    | 9. On dismiss: markSnapViewed() -- existing flow
-    | 10. Client calls liveActivityService.stopActivity(activityId)
-    | 11. OR: Cloud Function sends APNs liveactivity push with event:"end"
-    v
-[Live Activity dismissed from Lock Screen]
+                    BEFORE                              AFTER
+                    ------                              -----
+  Hook/Screen                                Hook/Screen
+      |                                          |
+  firebaseService.js              supabaseService.ts (new interface, same shape)
+      |                                          |
+  Firestore/Storage               Supabase Postgres / Storage / PowerSync
 ```
 
-### Push Token Management
+The critical insight: **hooks and screens never import from Firebase directly** -- they go through the service layer in `src/services/firebase/`. This existing abstraction is the migration's greatest asset. Hooks call `feedService.getFeedPhotos()`, not `getDocs(query(...))`. Replace the service implementation, hooks stay unchanged.
 
-Live Activity push tokens are different from regular FCM/APNs push tokens. Each Live Activity instance gets its own unique token that must be:
+### Architecture Layers (Post-Migration)
 
-1. Captured on the client when the app starts or a Live Activity is created
-2. Sent to the server (stored in Firestore `users/{userId}.liveActivityPushToken`)
-3. Monitored for changes (tokens can rotate during an activity's lifetime)
-4. Invalidated when the activity ends
-
-```javascript
-// In liveActivityService.js
-import * as LiveActivity from 'expo-live-activity';
-import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
-
-const db = getFirestore();
-
-/**
- * Register for Live Activity push token updates.
- * Called once at app startup if user has LA enabled.
- * Stores the push-to-start token in Firestore for server-side activity starts.
- */
-export const registerLiveActivityTokenListener = userId => {
-  // Push-to-start token listener (for server-initiated activities)
-  const startTokenSub = LiveActivity.addActivityPushToStartTokenListener(event => {
-    const { activityPushToStartToken } = event;
-    // Store in Firestore for Cloud Function to use
-    updateDoc(doc(db, 'users', userId), {
-      liveActivityPushToStartToken: activityPushToStartToken,
-    });
-  });
-
-  // Per-activity token listener (for updates to running activities)
-  const tokenSub = LiveActivity.addActivityTokenListener(event => {
-    const { activityID, activityPushToken } = event;
-    // Store mapping: activityId -> pushToken
-    updateDoc(doc(db, 'users', userId), {
-      [`liveActivityTokens.${activityID}`]: activityPushToken,
-    });
-  });
-
-  return { startTokenSub, tokenSub };
-};
+```
++-----------------------------------------------------------+
+|                    Screens / Components                     |
++-----------------------------------------------------------+
+|                    Custom Hooks Layer                       |
+|  (useCamera, useDarkroom, useFeedPhotos, useMessages...)   |
++-----------------------------------------------------------+
+|                    Context Providers                        |
+|  (AuthContext, PhotoDetailContext, PhoneAuthContext)         |
++-----------------------------------------------------------+
+|                Service Layer (NEW: TypeScript)              |
+|  src/services/supabase/*.ts  (same export signatures)      |
++-----------------------------------------------------------+
+|              Data Access / Sync Layer                       |
+|  PowerSync (local SQLite) <-> Supabase Postgres            |
+|  Supabase Storage (photos, snaps, profiles)                |
+|  Supabase Auth (phone OTP via Twilio)                      |
++-----------------------------------------------------------+
+|              Server-Side Logic                              |
+|  Supabase Edge Functions (Deno) + DB triggers + pg_cron    |
++-----------------------------------------------------------+
 ```
 
-### Cloud Function: APNs Live Activity Push
+## Component Boundaries
 
-Firebase Cloud Messaging (FCM) now supports Live Activities through the HTTP v1 API. The payload structure differs from regular push notifications:
+### What Changes
 
-```javascript
-// In Cloud Functions: sendLiveActivityUpdate
-const { google } = require('googleapis');
+| Component | Current | New | Migration Effort |
+|-----------|---------|-----|-----------------|
+| **Service layer** | `src/services/firebase/*.js` (20 files, ~7,800 LOC) | `src/services/supabase/*.ts` (same exports, SQL-backed) | HIGH -- complete rewrite of internals |
+| **Auth context** | `AuthContext.js` using RN Firebase Auth | `AuthContext.ts` using `@supabase/supabase-js` auth | HIGH -- different auth state model |
+| **Upload queue** | `uploadQueueService.js` using AsyncStorage + Firebase Storage | `uploadQueueService.ts` using PowerSync local DB + Supabase Storage | HIGH -- fundamental storage change |
+| **Cloud Functions** | `functions/index.js` (2,616 LOC, 25+ exports) | Edge Functions + DB triggers + pg_cron | HIGH -- complete rewrite |
+| **Realtime listeners** | Firestore `onSnapshot` (8 listener locations) | Supabase Realtime channels OR PowerSync reactive queries | MEDIUM -- different subscription API |
+| **Storage service** | Firebase Storage with signed URLs | Supabase Storage with signed URLs | MEDIUM -- similar concepts, different API |
+| **Phone auth** | RN Firebase Auth (native SDK, reCAPTCHA) | Supabase Auth phone OTP (JS SDK, Twilio) | MEDIUM -- simpler flow actually |
 
-/**
- * Send a Live Activity update via FCM HTTP v1 API.
- * FCM acts as the bridge to APNs for liveactivity push type.
- *
- * @param {string} fcmToken - Device FCM registration token
- * @param {string} liveActivityToken - Apple Live Activity push token
- * @param {string} event - 'start' | 'update' | 'end'
- * @param {object} contentState - Live Activity content state
- * @param {object} attributes - Only needed for 'start' event
- */
-async function sendLiveActivityPush(fcmToken, liveActivityToken, event, contentState, attributes) {
-  const projectId = process.env.GCLOUD_PROJECT;
-  const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+### What Stays Unchanged
 
-  // FCM handles OAuth2 authentication automatically with admin SDK
-  const auth = new google.auth.GoogleAuth({
-    scopes: ['https://www.googleapis.com/auth/firebase.messaging'],
-  });
-  const accessToken = await auth.getAccessToken();
+| Component | Why It Stays |
+|-----------|-------------|
+| **Custom hooks** (`src/hooks/*.js`) | Consume service layer; no direct Firebase imports (except two leaks noted below) |
+| **Screens** (`src/screens/*.js`) | Consume hooks and context; zero Firebase coupling |
+| **Components** (`src/components/*.js`) | Pure UI; no data layer coupling |
+| **Navigation structure** | Completely independent of backend |
+| **Non-Firebase services** | `iapService`, `audioPlayer`, `iTunesService`, `liveActivityService`, `secureStorageService` -- untouched |
+| **Context providers** (mostly) | `PhotoDetailContext`, `ThemeContext`, `VideoMuteContext` -- no Firebase dependency |
 
-  const payload = {
-    message: {
-      token: fcmToken,
-      apns: {
-        live_activity_token: liveActivityToken,
-        headers: {
-          'apns-priority': '10',
-        },
-        payload: {
-          aps: {
-            timestamp: Math.floor(Date.now() / 1000),
-            event,
-            'content-state': contentState,
-            ...(event === 'start' && {
-              'attributes-type': 'LiveActivityAttributes',
-              attributes,
-            }),
-            ...(event === 'end' && {
-              'dismissal-date': Math.floor(Date.now() / 1000) + 5, // dismiss 5s after end
-            }),
-          },
-        },
-      },
-    },
-  };
+### Hooks With Firebase Leakage (Must Fix)
 
-  // Send via FCM HTTP v1 API
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+Two hooks import Firebase directly instead of going through the service layer. These must be refactored during migration:
 
-  return response;
+1. **`useConversation.js` (line 19)** -- imports `onSnapshot` from `@react-native-firebase/firestore` directly for conversation document listening. Must move to service layer subscription.
+2. **`useCameraBase.js`** -- imports Firestore directly for photo document creation. Must route through service layer.
+
+## Service Layer Restructuring Strategy
+
+### Phase 1: Create Adapter Interface
+
+Before rewriting any service, establish a **TypeScript interface** that both Firebase and Supabase implementations can satisfy. This is the migration's foundation.
+
+```typescript
+// src/services/types/photoService.types.ts
+export interface PhotoServiceResult<T = void> {
+  success: boolean;
+  error?: string;
+  data?: T;
+}
+
+export interface IPhotoService {
+  createPhoto(userId: string, photoUri: string, options?: CreatePhotoOptions): Promise<PhotoServiceResult<PhotoDoc>>;
+  getUserPhotos(userId: string, options?: GetPhotosOptions): Promise<PhotoServiceResult<PhotoDoc[]>>;
+  getDevelopingPhotos(userId: string): Promise<PhotoServiceResult<PhotoDoc[]>>;
+  revealPhotos(userId: string): Promise<PhotoServiceResult<{ revealedCount: number }>>;
+  triagePhoto(photoId: string, state: 'journal' | 'archive'): Promise<PhotoServiceResult>;
+  // ... etc
 }
 ```
 
-**Key constraint:** APNs Live Activity pushes require token-based authentication (not certificate-based). Firebase projects using FCM already have this configured. The `live_activity_token` field in the FCM payload bridges to Apple's `liveactivity` push type.
+### Phase 2: Re-Export Through Barrel
 
-### Swift Widget Target (Xcode Side)
+The barrel file `src/services/firebase/index.js` already exports all public functions. Create a parallel barrel:
 
-The Live Activity requires a Widget Extension target in the iOS project. With `expo-live-activity`, this is created via the config plugin, but the SwiftUI layout must be defined in Swift:
+```typescript
+// src/services/index.ts -- THE NEW ENTRY POINT
+// During migration, this switches between implementations:
 
-```swift
-// In widget target: FlickLiveActivity.swift
-import ActivityKit
-import SwiftUI
-import WidgetKit
+// OPTION A: Firebase (current)
+export { getFeedPhotos, subscribeFeedPhotos } from './firebase/feedService';
 
-struct LiveActivityAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        var title: String
-        var subtitle: String
-    }
-    var senderName: String
-    var deepLinkUrl: String
-}
-
-struct FlickLiveActivityWidget: Widget {
-    var body: some WidgetConfiguration {
-        ActivityConfiguration(for: LiveActivityAttributes.self) { context in
-            // Lock Screen banner
-            HStack {
-                Image("polaroid_mini")
-                    .resizable()
-                    .frame(width: 40, height: 40)
-                VStack(alignment: .leading) {
-                    Text(context.state.title)
-                        .font(.system(size: 14, weight: .bold))
-                    Text(context.state.subtitle)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                }
-                Spacer()
-            }
-            .padding()
-        } dynamicIsland: { context in
-            DynamicIsland {
-                DynamicIslandExpandedRegion(.leading) {
-                    Image("polaroid_mini")
-                }
-                DynamicIslandExpandedRegion(.center) {
-                    Text(context.state.title)
-                }
-                DynamicIslandExpandedRegion(.bottom) {
-                    Text("Tap to view")
-                }
-            } compactLeading: {
-                Image("camera_icon")
-            } compactTrailing: {
-                Text(context.state.subtitle)
-            } minimal: {
-                Image("camera_icon")
-            }
-        }
-    }
-}
+// OPTION B: Supabase (migrated)
+// export { getFeedPhotos, subscribeFeedPhotos } from './supabase/feedService';
 ```
 
-### EAS Build Configuration
+This lets you flip individual services without touching any consumers. Toggle one export line, the entire app uses the new backend for that feature.
 
-Adding Live Activities requires changes to `app.json` and a new EAS build (not OTA-updatable):
+### Phase 3: Implement Supabase Services
 
-```json
-// In app.json ios section -- additions needed
-{
-  "ios": {
-    "infoPlist": {
-      "NSSupportsLiveActivities": true,
-      "NSSupportsLiveActivitiesFrequentUpdates": true
-    }
-  },
-  "plugins": [["expo-live-activity", { "enablePushNotifications": true }]]
-}
-```
-
-**Critical:** This is a native code change. It requires a full EAS build (`eas build --platform ios`), not an OTA update via `eas update`.
-
-## Feature Architecture: Screenshot Detection
-
-### Integration with Existing SnapViewer
-
-`expo-screen-capture` is fully compatible with Expo SDK 54. It provides two complementary capabilities:
-
-1. **Prevention** -- `preventScreenCaptureAsync()` blocks iOS screenshots (iOS 13+) and screen recordings (iOS 11+). On Android, it sets `FLAG_SECURE` on the window.
-2. **Detection** -- `addScreenshotListener()` fires a callback when a screenshot is taken despite prevention (some bypass methods exist, and Android 13- cannot fully prevent).
-
-The integration point is the existing `SnapViewer` component, which already handles the full snap viewing lifecycle (load signed URL, display, dismiss, mark viewed).
-
-### Screenshot Detection Flow
+Each service file gets a TypeScript counterpart in `src/services/supabase/`:
 
 ```
-[SnapViewer mounts with visible=true]
-    |
-    | 1. useScreenshotDetection hook activates:
-    |    a. preventScreenCaptureAsync('snap-viewer')
-    |    b. addScreenshotListener(handleScreenshot)
-    v
-[User takes screenshot while SnapViewer is open]
-    |
-    | 2. handleScreenshot callback fires
-    | 3. Write screenshotAt timestamp to snap message document:
-    |    updateDoc(messageRef, { screenshotAt: serverTimestamp() })
-    | 4. Call Cloud Function: onSnapScreenshot(conversationId, messageId)
-    | 5. Show brief toast to screenshotter: "Screenshot detected"
-    v
-[onSnapScreenshot Cloud Function]
-    |
-    | 6. Look up snap sender's FCM token
-    | 7. Send push notification: "[RecipientName] screenshotted your snap"
-    | 8. Create notification document in notifications/ collection
-    v
-[SnapViewer unmounts or visible becomes false]
-    |
-    | 9. allowScreenCaptureAsync('snap-viewer')
-    | 10. Listener subscription removed
+src/services/
+  firebase/           # Existing (untouched during migration)
+    photoService.js
+    feedService.js
+    ...
+  supabase/           # New (TypeScript from day one)
+    photoService.ts
+    feedService.ts
+    ...
+    client.ts         # Supabase client singleton
+    powerSync.ts      # PowerSync setup & sync rules
+  types/              # Shared interfaces
+    photo.types.ts
+    feed.types.ts
+    ...
+  index.ts            # Barrel that chooses implementation
 ```
 
-### useScreenshotDetection Hook
+### Phase 4: Swap One Service at a Time
 
-```javascript
-// src/hooks/useScreenshotDetection.js
-import { useEffect, useRef } from 'react';
-import * as ScreenCapture from 'expo-screen-capture';
-import { Platform } from 'react-native';
+For each service migration:
+1. Write the Supabase implementation matching the existing export signatures
+2. Update the barrel to point to the new implementation
+3. Test the affected screens/hooks
+4. Ship via OTA update
+5. Monitor for 24-48 hours
+6. Move to next service
 
-/**
- * Hook to prevent screen capture and detect screenshots.
- * Activates when `active` is true, deactivates on false or unmount.
- *
- * @param {boolean} active - Whether detection is active
- * @param {Function} onScreenshot - Callback when screenshot is detected
- * @param {string} key - Unique key for this prevention instance
- */
-const useScreenshotDetection = (active, onScreenshot, key = 'snap-viewer') => {
-  const listenerRef = useRef(null);
+## Data Flow Changes
 
-  useEffect(() => {
-    if (!active) return;
-
-    // Prevent screen capture
-    ScreenCapture.preventScreenCaptureAsync(key);
-
-    // Listen for screenshots
-    listenerRef.current = ScreenCapture.addScreenshotListener(() => {
-      onScreenshot?.();
-    });
-
-    return () => {
-      // Re-enable screen capture
-      ScreenCapture.allowScreenCaptureAsync(key);
-      // Remove listener
-      if (listenerRef.current) {
-        listenerRef.current.remove();
-        listenerRef.current = null;
-      }
-    };
-  }, [active, onScreenshot, key]);
-};
-
-export default useScreenshotDetection;
-```
-
-### SnapViewer Integration Point
-
-The existing `SnapViewer` component (lines 68-179 in current code) needs minimal changes:
-
-```javascript
-// In SnapViewer.js -- additions to existing component
-import useScreenshotDetection from '../hooks/useScreenshotDetection';
-import { getFirestore, doc, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import { getFunctions, httpsCallable } from '@react-native-firebase/functions';
-
-// Inside SnapViewer component:
-const handleScreenshot = useCallback(async () => {
-  if (!conversationId || !snapMessage?.id) return;
-
-  // 1. Write screenshotAt to message document
-  const db = getFirestore();
-  const messageRef = doc(db, 'conversations', conversationId, 'messages', snapMessage.id);
-  await updateDoc(messageRef, { screenshotAt: serverTimestamp() });
-
-  // 2. Notify sender via Cloud Function
-  const functions = getFunctions();
-  const notifyScreenshot = httpsCallable(functions, 'onSnapScreenshot');
-  await notifyScreenshot({ conversationId, messageId: snapMessage.id });
-
-  // 3. Show brief toast (optional -- could use a simple overlay text)
-  logger.info('SnapViewer: Screenshot detected and reported', {
-    conversationId,
-    messageId: snapMessage.id,
-  });
-}, [conversationId, snapMessage?.id]);
-
-// Hook activation: active when viewer is visible and not the sender
-const isRecipient = snapMessage?.senderId !== currentUserId;
-useScreenshotDetection(visible && isRecipient, handleScreenshot);
-```
-
-### Firestore Schema Extension
-
-Add `screenshotAt` field to snap message documents:
-
-```javascript
-// Extended snap message schema
-{
-  // ... existing fields unchanged
-  senderId: string,
-  type: 'snap',
-  snapStoragePath: string,
-  caption: string | null,
-  viewedAt: Timestamp | null,
-  expiresAt: Timestamp,
-  createdAt: Timestamp,
-
-  // NEW field
-  screenshotAt: Timestamp | null,  // Set when recipient screenshots the snap
-}
-```
-
-### Firestore Security Rules Extension
-
-The existing rules already allow recipient-only updates on snap messages for `viewedAt`. Extend to include `screenshotAt`:
+### Current: Firestore-Centric
 
 ```
-// In firestore.rules -- update the snap message update rule
-allow update: if isConversationMemberById(conversationId) &&
-                 request.auth.uid != resource.data.senderId &&
-                 resource.data.type == 'snap' &&
-                 request.resource.data.diff(resource.data).affectedKeys()
-                   .hasOnly(['viewedAt', 'screenshotAt']);
+Camera Capture
+  -> uploadQueueService (AsyncStorage persistence)
+  -> storageService.uploadPhoto (Firebase Storage)
+  -> photoService.createPhoto (Firestore doc)
+  -> darkroomService.ensureDarkroomInitialized (Firestore doc)
+  -> [Wait for reveal timer]
+  -> processDarkroomReveals (Cloud Function, 2min cron)
+  -> feedService.subscribeFeedPhotos (onSnapshot listener)
+  -> FeedScreen renders
 ```
 
-### Android Permissions Note
-
-- **Android 14+**: No additional permissions needed for screenshot detection.
-- **Android 13 and below**: Requires `READ_MEDIA_IMAGES` permission, which has Google Play policy restrictions. Since Flick targets modern devices and this is a detection feature (not blocking), the permission trade-off is acceptable.
-- The `expo-screen-capture` config plugin handles the Android manifest entry automatically when installed.
-
-### EAS Build Requirement
-
-Adding `expo-screen-capture` is a **native module addition** (it links native code for both iOS and Android). This requires a new EAS build, not an OTA update. Plan this build alongside the Live Activity native changes to avoid two separate build cycles.
-
-## Feature Architecture: Darkroom Reveal Optimization
-
-### Current Problem
-
-The darkroom reveal system has 3 independent triggers, each making a Firestore read to check `isDarkroomReadyToReveal`:
-
-1. **App.js `AppState` listener** (line 370-401): On every foreground event, reads `darkrooms/{userId}` to check `nextRevealAt`. This fires on every app resume, even if the user is not going to the darkroom.
-
-2. **`useDarkroom` hook `useFocusEffect`** (line 105-213): When DarkroomScreen gains focus, reads `isDarkroomReadyToReveal` AND then reads all developing photos. Both trigger 1 and trigger 2 may fire simultaneously if the user opens the app directly to the darkroom.
-
-3. **`processDarkroomReveals` Cloud Function** (every 2 minutes): Server-side catch-all that queries ALL darkrooms where `nextRevealAt <= now`. This is the safety net.
-
-**Issues:**
-
-- Triggers 1 and 2 are redundant when both fire at the same time.
-- Trigger 1 fires on EVERY foreground event, even for users with zero developing photos. This is a wasted Firestore read.
-- The client-side reveal logic in `useDarkroom` (lines 111-213) duplicates what the Cloud Function does, including inline reveal logic (lines 182-213 in `darkroomService.ensureDarkroomInitialized`) that exists to avoid circular imports.
-
-### Recommended Restructuring
-
-**Goal:** Eliminate redundant Firestore reads while maintaining reliable reveal timing.
+### New: Supabase + PowerSync
 
 ```
-BEFORE (3 triggers, redundant reads):
-  App.js foreground   --> isDarkroomReadyToReveal() --> Firestore read
-  useDarkroom focus   --> isDarkroomReadyToReveal() --> Firestore read
-  Cloud Function 2min --> query all darkrooms       --> Firestore reads
-
-AFTER (2 triggers, no redundancy):
-  App.js foreground   --> REMOVED (no longer checks darkroom on every foreground)
-  useDarkroom focus   --> loadAndRevealIfReady()    --> Single Firestore read + conditional reveal
-  Cloud Function 2min --> query all darkrooms       --> Firestore reads (unchanged, safety net)
+Camera Capture
+  -> PowerSync local SQLite write (instant, offline-capable)
+      { id, user_id, status: 'developing', local_uri, image_url: null }
+  -> Photo visible in YOUR darkroom immediately (local query)
+  -> Background upload: Supabase Storage (when online)
+  -> Update record: image_url = uploaded URL
+  -> PowerSync syncs to Supabase Postgres
+  -> [Reveal timer via pg_cron or Edge Function]
+  -> DB trigger updates status to 'revealed'
+  -> PowerSync syncs revealed photos to friends' devices
+  -> Feed renders from local SQLite (reactive query)
 ```
 
-### Changes Required
+Key differences:
+- **Offline-first**: Photos exist locally before upload. Current system loses photos after 3 retries.
+- **No signed URL complexity**: Supabase Storage can use public buckets with UUID filenames (equally secure, simpler) or transform-based URLs.
+- **No chunked queries**: SQL `WHERE user_id IN (...)` has no 30-item limit. Feed query goes from N Firestore chunks to 1 SQL query.
+- **Server timestamps**: PowerSync local writes use device clock. Ordering must use server-assigned timestamps post-sync, not local timestamps.
 
-**1. Remove App.js foreground darkroom check:**
+### Realtime Subscription Changes
 
-The App.js `AppState` listener (lines 370-401) should be removed entirely. The Cloud Function already runs every 2 minutes as a background catch-all. The `useDarkroom` hook handles checking when the user actually navigates to the darkroom. The App.js check only saves ~2 minutes of reveal latency in the worst case, at the cost of a Firestore read on every single app foreground event.
+| Current (Firestore onSnapshot) | New (Options) |
+|-------------------------------|---------------|
+| `feedService.subscribeFeedPhotos` | PowerSync reactive query (preferred -- works offline) |
+| `commentService.subscribeToComments` | Supabase Realtime channel on `comments` table |
+| `messageService.subscribeToConversations` | Supabase Realtime channel on `conversations` table |
+| `messageService.subscribeToMessages` | Supabase Realtime channel on `messages` table |
+| `friendshipService` listener | PowerSync reactive query |
+| `streakService.subscribeToStreak` | PowerSync reactive query |
+| `photoService` listener (darkroom) | PowerSync reactive query (critical for offline darkroom) |
 
-```javascript
-// App.js -- REMOVE this entire useEffect block (lines 370-401)
-// The processDarkroomReveals Cloud Function (every 2 min) serves as the
-// background catch-all. useDarkroom checks on DarkroomScreen focus.
-```
+**Recommendation**: Use PowerSync reactive queries for data that benefits from offline access (feed, darkroom, friendships, streaks). Use Supabase Realtime channels for data that is inherently online-only (messages, comments -- you cannot comment offline anyway).
 
-**2. Consolidate useDarkroom reveal logic:**
+## Cloud Functions Replacement Map
 
-The current `loadDevelopingPhotos` function in `useDarkroom` (lines 111-213) has two reveal paths: a primary check and a catch-up mechanism. Consolidate into a single, clearer flow:
+### Firestore Triggers -> Database Triggers + Edge Functions
 
-```javascript
-// Simplified loadDevelopingPhotos in useDarkroom
-const loadDevelopingPhotos = async () => {
-  if (!user) return;
-  setLoading(true);
+| Current Function | Trigger | Replacement | Rationale |
+|-----------------|---------|-------------|-----------|
+| `sendPhotoRevealNotification` | onDocumentWritten (photos) | DB trigger on `photos.status` update -> Edge Function webhook | DB trigger detects change, calls Edge Function for push |
+| `sendFriendRequestNotification` | onDocumentCreated (friendships) | DB trigger on `friendships` INSERT | Same pattern |
+| `sendFriendAcceptedNotification` | onDocumentWritten (friendships) | DB trigger on `friendships.status` UPDATE | Same pattern |
+| `sendReactionNotification` | onDocumentWritten (photos) | DB trigger on `photo_reactions` INSERT -> Edge Function with batching | Needs batching logic in Edge Function |
+| `sendTaggedPhotoNotification` | onDocumentWritten (photos) | DB trigger on `photo_tags` INSERT -> Edge Function with debounce | 30s debounce window |
+| `sendCommentNotification` | onDocumentCreated (comments) | DB trigger on `comments` INSERT -> Edge Function | Straightforward |
+| `incrementFriendCountOnAccept` | onDocumentWritten (friendships) | DB trigger with SQL UPDATE (no Edge Function needed) | SQL can do this atomically inline |
+| `decrementFriendCountOnRemove` | onDocumentDeleted (friendships) | DB trigger with SQL UPDATE | Same -- pure SQL |
+| `onReportCreated` | onDocumentCreated (reports) | DB trigger -> Edge Function (email via Nodemailer) | Needs network access for email |
+| `onSupportRequestCreated` | onDocumentCreated (supportRequests) | DB trigger -> Edge Function (email) | Same |
+| `onPhotoSoftDeleted` | onDocumentWritten (photos) | DB trigger on `photos.deleted_at` UPDATE | Clean up related data |
+| `onNewMessage` | onDocumentCreated (messages) | DB trigger on `messages` INSERT -> Edge Function | Central routing hub -- most complex |
+| `onSnapViewed` | onDocumentWritten (messages) | DB trigger on `messages.viewed_at` UPDATE -> Edge Function | Storage cleanup |
 
+### Scheduled Functions -> pg_cron
+
+| Current Function | Schedule | Replacement |
+|-----------------|----------|-------------|
+| `processDarkroomReveals` | Every 2 min | pg_cron calling a DB function that updates `photos.status` where `reveal_at <= now()` |
+| `checkPushReceipts` | Every 5 min | pg_cron -> Edge Function (needs Expo Push API call) |
+| `cleanupOldNotifications` | Daily | pg_cron DELETE with 30-day cutoff (pure SQL) |
+| `sendDeletionReminderNotification` | Daily | pg_cron -> Edge Function |
+| `processScheduledDeletions` | Daily | pg_cron -> Edge Function (cascading deletes + storage cleanup) |
+| `processScheduledPhotoDeletions` | Daily | pg_cron -> Edge Function (storage cleanup) |
+| `cleanupExpiredSnaps` | Every 15 min | pg_cron -> Edge Function (storage cleanup) |
+| `expirePinnedSnapNotifications` | Every 5 min | pg_cron calling DB function (pure SQL update) |
+| `processStreakExpiry` | Every hour | pg_cron -> Edge Function (needs push notification) |
+
+### Callable Functions -> Edge Functions (HTTP)
+
+| Current Function | Replacement |
+|-----------------|-------------|
+| `getSignedPhotoUrl` | Edge Function OR Supabase Storage `createSignedUrl` client-side (simpler) |
+| `getSignedSnapUrl` | Edge Function OR client-side signed URL |
+| `deleteUserAccount` | Edge Function (complex cascading delete) |
+| `getMutualFriendSuggestions` | Edge Function OR DB function (SQL is actually better for this) |
+| `getMutualFriendsForComments` | DB function (pure SQL join -- no Edge Function needed) |
+| `scheduleUserAccountDeletion` | Edge Function |
+| `cancelUserAccountDeletion` | Edge Function |
+| `unsendMessage` | Edge Function (needs auth verification + cascade) |
+| `addTaggedPhotoToFeed` | Edge Function |
+| `backfillFriendCounts` | DB function (one-time admin operation) |
+| `sendBatchedNotification` | Edge Function (called by pg_cron or DB trigger) |
+
+## Migration Build Order
+
+The order respects data dependencies: auth must exist before anything else, storage before photos, photos before feed.
+
+### Phase 0: Foundation (no backend changes yet)
+**Goal:** Set up infrastructure, create TypeScript interfaces, establish the barrel-switch pattern.
+
+1. Set up Supabase project (dev)
+2. Design PostgreSQL schema (normalize Firestore patterns)
+3. Create TypeScript interfaces for all service contracts
+4. Create `src/services/supabase/client.ts` (Supabase client singleton)
+5. Create `src/services/index.ts` barrel that initially re-exports from `firebase/`
+6. Update all consumer imports to use the new barrel (not `firebase/` directly)
+
+**Dependency:** None. This is pure setup.
+
+### Phase 1: Auth Migration
+**Goal:** Users can sign in via Supabase Auth with phone OTP.
+
+1. Configure Supabase Auth with Twilio phone provider
+2. Write `src/services/supabase/phoneAuthService.ts`
+3. Rewrite `AuthContext` to use Supabase session management
+4. Handle auth state persistence (`@supabase/supabase-js` uses AsyncStorage by default)
+5. Data migration: Import Firebase Auth users into Supabase Auth (preserve UIDs)
+
+**Dependency:** Phase 0. Everything depends on auth.
+**Risk:** UID preservation is non-negotiable. Supabase Admin API supports setting custom UUIDs during user import.
+
+### Phase 2: Storage Migration
+**Goal:** Photos upload to and serve from Supabase Storage.
+
+1. Create Supabase Storage buckets: `photos`, `snaps`, `profiles`
+2. Configure bucket policies (RLS or public with UUID paths)
+3. Write `src/services/supabase/storageService.ts`
+4. Migrate `signedUrlService` (may become unnecessary with public buckets + UUID paths)
+5. Data migration: Copy files from Firebase Storage to Supabase Storage
+
+**Dependency:** Phase 1 (auth required for RLS policies).
+**Note:** Old Firebase Storage URLs continue working. No need to update existing photo URLs immediately. Can do lazy migration (re-upload on next access).
+
+### Phase 3: Core Data Migration (Users, Photos, Darkroom)
+**Goal:** Core data reads/writes go through Supabase.
+
+1. Set up PowerSync with Supabase connector
+2. Define sync rules (user data, photos, darkroom state)
+3. Write `src/services/supabase/userService.ts`
+4. Write `src/services/supabase/photoService.ts`
+5. Write `src/services/supabase/darkroomService.ts`
+6. Rewrite `uploadQueueService.ts` for PowerSync local writes + Supabase Storage uploads
+7. Set up `processDarkroomReveals` as pg_cron job
+8. Data migration: Export Firestore users/photos/darkrooms -> PostgreSQL
+
+**Dependency:** Phase 1 + 2. Photos need auth + storage.
+**Risk:** Photo upload race condition (metadata syncs before file upload). Handle with `image_url IS NULL` check in feed queries.
+
+### Phase 4: Social Graph (Friendships, Blocks, Reports)
+**Goal:** Friend relationships work on Supabase.
+
+1. Write `src/services/supabase/friendshipService.ts`
+2. Write `src/services/supabase/blockService.ts`
+3. Write `src/services/supabase/reportService.ts`
+4. Write `src/services/supabase/contactSyncService.ts`
+5. Set up friend count triggers (pure SQL, no Edge Function needed)
+6. Data migration: Export friendships/blocks/reports
+
+**Dependency:** Phase 3 (friend queries join with users table).
+
+### Phase 5: Feed + Comments + Albums
+**Goal:** Feed renders from Supabase data.
+
+1. Write `src/services/supabase/feedService.ts` (biggest win -- SQL JOINs replace chunked queries)
+2. Write `src/services/supabase/commentService.ts`
+3. Write `src/services/supabase/albumService.ts`
+4. Write `src/services/supabase/monthlyAlbumService.ts`
+5. Write `src/services/supabase/viewedStoriesService.ts`
+6. Set up PowerSync reactive queries for feed/comments
+
+**Dependency:** Phase 3 + 4 (feed needs photos + friendships).
+
+### Phase 6: Messaging + Snaps + Streaks
+**Goal:** DM system runs on Supabase.
+
+1. Write `src/services/supabase/messageService.ts`
+2. Write `src/services/supabase/snapService.ts`
+3. Write `src/services/supabase/streakService.ts`
+4. Write `src/services/supabase/photoTagService.ts`
+5. Set up Supabase Realtime channels for message subscriptions
+6. Set up streak expiry pg_cron job
+7. Set up snap cleanup pg_cron job
+8. Data migration: Export conversations/messages/streaks
+
+**Dependency:** Phase 4 (messaging requires friendship data).
+
+### Phase 7: Notifications + Edge Functions
+**Goal:** Push notifications fire from Supabase backend.
+
+1. Write notification Edge Functions (the `onNewMessage` hub is the most complex)
+2. Set up DB triggers for all notification-producing events
+3. Write `src/services/supabase/notificationService.ts`
+4. Implement notification batching (replace Cloud Tasks with Edge Function + pg_cron)
+5. Set up all remaining pg_cron jobs (cleanup, deletion processing, receipts)
+6. Write account deletion Edge Functions
+
+**Dependency:** Phase 3-6 (triggers depend on tables existing).
+
+### Phase 8: Cleanup + TypeScript Sweep
+**Goal:** Remove Firebase, complete TypeScript migration.
+
+1. Remove all `@react-native-firebase/*` packages (requires new native build via EAS)
+2. Remove `firebase-admin`, Cloud Functions code
+3. Remove Firebase config files
+4. Convert remaining JS files to TypeScript (hooks, contexts, components, screens)
+5. Clean up dead code
+
+**Dependency:** All phases complete.
+
+## TypeScript Migration Strategy
+
+TypeScript conversion happens **organically with each phase**, not as a separate effort:
+
+- Service files are written in TypeScript from the start (Phase 0+)
+- When a hook is touched to update its service imports, convert it to TypeScript
+- When a context is rewritten (AuthContext in Phase 1), write it in TypeScript
+- After all phases, do a sweep of remaining JS files (screens, components, utils)
+
+Priority order for the sweep:
+1. `src/services/` -- already done during migration
+2. `src/context/` -- already done during migration
+3. `src/hooks/` -- small files, high value
+4. `src/utils/` -- small files, easy wins
+5. `src/components/` -- larger effort, lower urgency
+6. `src/screens/` -- largest files, last
+
+## Patterns to Follow
+
+### Pattern 1: Service Contract Preservation
+
+**What:** New Supabase services must return the exact same `{ success, error, data }` shape as existing Firebase services.
+
+**When:** Every service rewrite.
+
+**Why:** This is what makes the barrel-switch pattern work. If the return shape changes, every consumer breaks.
+
+```typescript
+// src/services/supabase/photoService.ts
+export const createPhoto = async (
+  userId: string,
+  photoUri: string,
+  options: CreatePhotoOptions = {}
+): Promise<{ success: boolean; error?: string; photoId?: string }> => {
   try {
-    // Step 1: Check if reveal is ready AND get all photos in one pass
-    const isReady = await isDarkroomReadyToReveal(user.uid);
+    // Supabase implementation...
+    const { data, error } = await supabase
+      .from('photos')
+      .insert({ user_id: userId, status: 'developing', /* ... */ })
+      .select('id')
+      .single();
 
-    if (isReady) {
-      // Reveal all developing photos
-      await revealPhotos(user.uid);
-      await scheduleNextReveal(user.uid);
-    }
-
-    // Step 2: Load current state (developing + revealed)
-    const result = await getDevelopingPhotos(user.uid);
-
-    if (result.success && result.photos) {
-      // Only show revealed photos for triage
-      const revealed = result.photos.filter(p => p.status === 'revealed');
-
-      // If there are still developing photos alongside revealed ones,
-      // auto-reveal them (catch-up for edge cases)
-      const developing = result.photos.filter(p => p.status === 'developing');
-      if (revealed.length > 0 && developing.length > 0) {
-        await revealPhotos(user.uid);
-        const updated = await getDevelopingPhotos(user.uid);
-        setPhotos(updated.success ? updated.photos.filter(p => p.status === 'revealed') : revealed);
-      } else {
-        setPhotos(revealed);
-      }
-    } else {
-      setPhotos([]);
-    }
-
-    // Reset all local state
-    setHiddenPhotoIds(new Set());
-    setUndoStack([]);
-    setPhotoTags({});
-    setPhotoCaptions({});
+    if (error) throw error;
+    return { success: true, photoId: data.id };
   } catch (error) {
-    logger.error('useDarkroom: Error loading photos', error);
-  } finally {
-    setLoading(false);
+    return { success: false, error: error.message };
   }
 };
 ```
 
-**3. Simplify `ensureDarkroomInitialized` in darkroomService:**
+### Pattern 2: PowerSync Reactive Queries for Offline-Relevant Data
 
-Remove the inline reveal logic (lines 182-213 in `darkroomService.js`) that was added to avoid circular imports. Instead, have `ensureDarkroomInitialized` only handle timing initialization, not reveal execution:
+**What:** Use PowerSync's `useQuery` hook (or `watch()`) for data that should work offline. Use Supabase Realtime only for inherently-online data.
 
-```javascript
-// Simplified ensureDarkroomInitialized -- only manages timing, no reveals
-export const ensureDarkroomInitialized = async userId => {
-  const darkroomRef = doc(db, 'darkrooms', userId);
-  const darkroomDoc = await getDoc(darkroomRef);
+**When:** Feed, darkroom, user profiles, friendships, streaks.
 
-  if (!darkroomDoc.exists()) {
-    const nextRevealAt = calculateNextRevealTime();
-    await setDoc(darkroomRef, {
-      userId,
-      nextRevealAt,
-      lastRevealedAt: null,
-      createdAt: Timestamp.now(),
-    });
-    return { success: true, created: true };
-  }
+```typescript
+// In a hook, using PowerSync reactive query
+import { useQuery } from '@powersync/react-native';
 
-  // If nextRevealAt is stale, just reset the timer
-  // Don't do reveals here -- that's the hook's or Cloud Function's job
-  const { nextRevealAt } = darkroomDoc.data();
-  if (!nextRevealAt || nextRevealAt.seconds < Timestamp.now().seconds) {
-    const newNextRevealAt = calculateNextRevealTime();
-    await updateDoc(darkroomRef, {
-      nextRevealAt: newNextRevealAt,
-    });
-    return { success: true, refreshed: true };
-  }
-
-  return { success: true };
+const useDarkroomPhotos = (userId: string) => {
+  const { data: photos, isLoading } = useQuery(
+    `SELECT * FROM photos WHERE user_id = ? AND status IN ('developing', 'revealed') ORDER BY created_at DESC`,
+    [userId]
+  );
+  return { photos, isLoading };
 };
 ```
 
-### Impact Assessment
+### Pattern 3: PowerSync Upload Queue
 
-| Metric                             | Before                                                    | After                            |
-| ---------------------------------- | --------------------------------------------------------- | -------------------------------- |
-| Firestore reads per app foreground | 1 (darkroom check)                                        | 0                                |
-| Firestore reads per darkroom open  | 2-3 (check + photos + possible re-check)                  | 1-2 (check + photos)             |
-| Worst-case reveal latency          | ~0s (instant on foreground)                               | ~2 min (Cloud Function interval) |
-| Code complexity in darkroomService | High (inline reveal logic)                                | Low (timing only)                |
-| Circular import risk               | Present (darkroomService imports photoService indirectly) | Eliminated                       |
+**What:** Replace AsyncStorage-based upload queue with PowerSync local writes.
 
-The 2-minute worst-case latency is acceptable because:
+**When:** Photo capture, snap sending.
 
-- Users who open the darkroom directly still get instant reveals (useDarkroom checks on focus).
-- The only scenario affected is: user has developing photos, brings app to foreground, does NOT open darkroom. In this case, they wait up to 2 minutes for the Cloud Function instead of getting an instant reveal. Since they are not looking at the darkroom, this delay is invisible.
+```typescript
+// Camera capture -> immediate local write
+const capturePhoto = async (userId: string, localUri: string) => {
+  const photoId = generateUUID();
 
-## New Cloud Function Endpoints
-
-### 1. `onSnapScreenshot` (callable)
-
-Receives screenshot events from the client and sends push notifications to the snap sender.
-
-```javascript
-// In functions/index.js
-exports.onSnapScreenshot = onCall({ memory: '256MiB', timeoutSeconds: 30 }, async request => {
-  const { conversationId, messageId } = request.data;
-  const callerId = request.auth?.uid;
-
-  // Validate caller is a participant
-  const parts = conversationId.split('_');
-  if (!parts.includes(callerId)) {
-    throw new HttpsError('permission-denied', 'Not a participant');
-  }
-
-  // Get snap message to find sender
-  const messageDoc = await db
-    .collection('conversations')
-    .doc(conversationId)
-    .collection('messages')
-    .doc(messageId)
-    .get();
-
-  if (!messageDoc.exists || messageDoc.data().type !== 'snap') {
-    throw new HttpsError('not-found', 'Snap message not found');
-  }
-
-  const senderId = messageDoc.data().senderId;
-  if (senderId === callerId) return { success: true }; // Sender screenshotting own snap, ignore
-
-  // Get sender's FCM token and notification preferences
-  const senderDoc = await db.collection('users').doc(senderId).get();
-  if (!senderDoc.exists) return { success: true };
-
-  const { fcmToken, notificationPreferences } = senderDoc.data();
-  if (!fcmToken) return { success: true };
-
-  // Check notification preferences
-  const masterEnabled = notificationPreferences?.masterEnabled !== false;
-  const dmEnabled = notificationPreferences?.directMessages !== false;
-  if (!masterEnabled || !dmEnabled) return { success: true };
-
-  // Get screenshotter's name
-  const screenshotterDoc = await db.collection('users').doc(callerId).get();
-  const screenshotterName = screenshotterDoc.data()?.displayName || 'Someone';
-
-  // Send push notification
-  const { sendPushNotification } = require('./notifications/sender');
-  await sendPushNotification(
-    fcmToken,
-    screenshotterName,
-    'screenshotted your snap',
-    {
-      type: 'snap_screenshot',
-      conversationId,
-      messageId,
-    },
-    senderId
+  // Write to local PowerSync DB (instant, works offline)
+  await db.execute(
+    `INSERT INTO photos (id, user_id, status, local_uri, image_url, created_at)
+     VALUES (?, ?, 'developing', ?, NULL, datetime('now'))`,
+    [photoId, userId, localUri]
   );
 
-  return { success: true };
+  // Queue background upload (PowerSync handles sync when online)
+  backgroundUpload(photoId, localUri);
+};
+```
+
+### Pattern 4: Edge Function Notification Hub
+
+**What:** A single Edge Function that handles push notification dispatch, called by DB triggers via `pg_net`.
+
+**When:** Any event that produces a push notification.
+
+```typescript
+// supabase/functions/send-notification/index.ts
+import { serve } from 'https://deno.land/std/http/server.ts';
+import { Expo } from 'expo-server-sdk';
+
+serve(async (req) => {
+  const { type, payload } = await req.json();
+
+  switch (type) {
+    case 'photo_reveal':
+      return handlePhotoReveal(payload);
+    case 'friend_request':
+      return handleFriendRequest(payload);
+    case 'new_message':
+      return handleNewMessage(payload);
+    // ... etc
+  }
 });
 ```
 
-### 2. `sendLiveActivityUpdate` (callable, iOS only)
+### Pattern 5: Dual-Backend Feature Flags (During Migration)
 
-Handles starting, updating, and ending Live Activities for pinned snaps via FCM-to-APNs bridge. This is called by existing Cloud Functions (e.g., `onNewMessage` for snap sends, `onSnapViewed` for snap viewed) rather than directly by clients.
+**What:** The barrel file acts as the migration switch, but for complex cases (e.g., auth), use a simple config flag.
 
-### 3. No new darkroom Cloud Functions needed
+**When:** During the transition period when some features run on Firebase and others on Supabase.
 
-The existing `processDarkroomReveals` (every 2 minutes) remains unchanged as the server-side safety net. The optimization is entirely client-side (removing the App.js trigger and simplifying the hook).
-
-## Firestore Schema Changes
-
-### Extended: `users/{userId}`
-
-```javascript
-{
-  // ... existing fields unchanged
-
-  // NEW fields for Live Activities
-  liveActivityEnabled: boolean,                    // User preference toggle
-  liveActivityPushToStartToken: string | null,     // For server-started activities
-  liveActivityTokens: {                            // Active activity tokens
-    [activityId]: string,                          // Push token per activity
-  } | null,
-}
-```
-
-### Extended: `conversations/{conversationId}/messages/{messageId}` (snap type)
-
-```javascript
-{
-  // ... existing snap fields unchanged
-  screenshotAt: Timestamp | null,  // NEW: When recipient screenshotted
-}
+```typescript
+// src/config/backend.ts
+export const BACKEND = {
+  auth: 'supabase',       // Phase 1 complete
+  storage: 'supabase',    // Phase 2 complete
+  photos: 'supabase',     // Phase 3 complete
+  friendships: 'firebase', // Not yet migrated
+  feed: 'firebase',       // Not yet migrated
+  messages: 'firebase',   // Not yet migrated
+} as const;
 ```
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Starting Live Activities from the Client on Snap Send
+### Anti-Pattern 1: Direct Supabase Client in Components/Screens
+**What:** Importing `supabase` client directly in screens or components.
+**Why bad:** Couples UI to backend. Makes testing impossible. Breaks the service layer pattern that currently exists.
+**Instead:** All Supabase calls go through `src/services/supabase/*.ts`. Screens/components only import from hooks and context.
 
-**What people do:** Have the sender's client start a Live Activity on the recipient's device.
-**Why it's wrong:** The sender cannot start an activity on another user's device. Live Activities are started either locally on the same device or via server-side APNs push.
-**Do this instead:** The sender's client sends the snap normally. The `onNewMessage` Cloud Function detects the snap and sends an APNs Live Activity push to the recipient's device using their stored push-to-start token.
+### Anti-Pattern 2: Migrating Everything at Once
+**What:** Rewriting all 20 service files before shipping any of them.
+**Why bad:** 35-47 day timeline with no intermediate verification. Bugs compound. Impossible to bisect regressions.
+**Instead:** Ship each service migration independently. Feed from Supabase while messaging still runs on Firebase. The barrel-switch pattern supports this.
 
-### Anti-Pattern 2: Using FCM `data` Messages for Live Activity Updates
+### Anti-Pattern 3: Storing Supabase Storage URLs Directly
+**What:** Saving the full `https://[project].supabase.co/storage/v1/...` URL in the database.
+**Why bad:** If you change Supabase projects, custom domains, or CDN config, every URL breaks.
+**Instead:** Store the storage path (`photos/userId/photoId.jpg`). Generate the full URL at read time using the Supabase client.
 
-**What people do:** Send a regular FCM data message and have the client start/update the Live Activity.
-**Why it's wrong:** FCM data messages are not guaranteed to be delivered immediately (especially in background/terminated state). Live Activities should appear immediately on the Lock Screen.
-**Do this instead:** Use the FCM HTTP v1 API with the `live_activity_token` field, which maps directly to APNs `liveactivity` push type. These are delivered with high priority and processed by iOS even when the app is not running.
+### Anti-Pattern 4: Using Supabase Realtime for Everything
+**What:** Setting up Realtime channels for feed, darkroom, friendships, etc.
+**Why bad:** Supabase Realtime has no offline support. PowerSync provides the same reactivity PLUS offline access. Using Realtime for feed means the feed is blank when offline.
+**Instead:** PowerSync reactive queries for anything that should work offline. Supabase Realtime only for inherently-online features (active conversation messages).
 
-### Anti-Pattern 3: Polling `isDarkroomReadyToReveal` from Multiple Locations
+### Anti-Pattern 5: Local Timestamps for Ordering
+**What:** Using `Date.now()` or `new Date()` for `created_at` in PowerSync local writes.
+**Why bad:** Device clocks can be wrong. Two users' photos could be misordered.
+**Instead:** Use local timestamps for immediate display, but let the server assign authoritative timestamps via `DEFAULT NOW()`. PowerSync sync will update the record with the server timestamp. UI should re-sort after sync.
 
-**What people do:** Check darkroom status from App.js, DarkroomScreen, and any other entry point "just to be safe."
-**Why it's wrong:** Each check is a Firestore read. With N users foregrounding the app M times per day, this adds N\*M unnecessary reads. The Cloud Function already guarantees reveals happen within 2 minutes.
-**Do this instead:** Check darkroom status only when the user is actually viewing the DarkroomScreen (useDarkroom hook). Use the Cloud Function as the always-on safety net.
+### Anti-Pattern 6: Removing Firebase Before Full Verification
+**What:** Uninstalling `@react-native-firebase/*` packages as soon as Supabase services are written.
+**Why bad:** Removing RN Firebase packages requires a new native build (EAS Build). If something breaks, you cannot roll back via OTA -- you need another native build.
+**Instead:** Keep Firebase packages installed until ALL services are verified on Supabase. Do one final native build to remove them.
 
-### Anti-Pattern 4: Storing Screenshot State as a Boolean
+## Scalability Considerations
 
-**What people do:** Use `screenshotted: boolean` on the snap message.
-**Why it's wrong:** You lose when the screenshot happened. A timestamp (`screenshotAt`) gives you the boolean check (`screenshotAt !== null`) PLUS timing information for future features (e.g., "screenshotted 2 minutes ago").
-**Do this instead:** Use `screenshotAt: Timestamp | null`. Check for null to determine if screenshotted.
+| Concern | At 100 users | At 10K users | At 1M users |
+|---------|--------------|--------------|-------------|
+| Feed query | Single SQL JOIN, <50ms | Add indexes on (user_id, status, created_at), still fast | Partition photos table by created_at month, connection pooling via PgBouncer |
+| Photo storage | Single Supabase Storage bucket | CDN in front of storage (Supabase includes this) | Consider dedicated CDN (Cloudflare R2 or Bunny) |
+| Realtime channels | Default Supabase plan handles easily | May need to upgrade Supabase plan for concurrent connections | Evaluate dedicated Realtime infra or polling fallback |
+| PowerSync sync | Starter plan ($49/mo) handles easily | May need PowerSync growth plan | PowerSync scales horizontally; evaluate costs |
+| Push notifications | Single Edge Function instance | Edge Function auto-scales | Add queue (Supabase Queues or BullMQ) to handle burst |
+| pg_cron jobs | Fine as-is | Monitor execution time; batch operations | Split large batch jobs into chunked processing |
 
-## Build Order (Dependencies)
+## PostgreSQL Schema Design (Key Tables)
 
-The v1.1 features have a clear dependency chain:
+```sql
+-- Users (preserves Firebase Auth UIDs)
+CREATE TABLE users (
+  id UUID PRIMARY KEY,  -- Firebase Auth UID imported as-is
+  phone TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE,
+  display_name TEXT,
+  profile_photo_path TEXT,  -- Storage path, not URL
+  name_color TEXT,
+  friend_count INTEGER DEFAULT 0,
+  daily_photo_count INTEGER DEFAULT 0,
+  last_photo_date DATE,
+  fcm_token TEXT,
+  profile_setup_completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
+-- Photos (denormalized from Firestore)
+CREATE TABLE photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  image_url TEXT,          -- NULL until upload completes
+  local_uri TEXT,          -- Client-side only (PowerSync)
+  thumbnail_data_url TEXT, -- Base64 progressive loading placeholder
+  status TEXT NOT NULL DEFAULT 'developing',  -- developing, revealed
+  photo_state TEXT,        -- NULL, journal, archive
+  reveal_at TIMESTAMPTZ,   -- When to reveal
+  storage_path TEXT,       -- Supabase Storage path
+  deleted_at TIMESTAMPTZ,  -- Soft delete
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_photos_user_status ON photos(user_id, status);
+CREATE INDEX idx_photos_reveal ON photos(status, reveal_at) WHERE status = 'developing';
+
+-- Photo reactions (normalized from nested Firestore map)
+CREATE TABLE photo_reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  photo_id UUID REFERENCES photos(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(photo_id, user_id, emoji)
+);
+
+-- Photo tags (normalized from array)
+CREATE TABLE photo_tags (
+  photo_id UUID REFERENCES photos(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY (photo_id, user_id)
+);
+
+-- Comments (moved from subcollection to table)
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  photo_id UUID REFERENCES photos(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  mentions UUID[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_comments_photo ON comments(photo_id, created_at);
+
+-- Comment likes (was nested subcollection)
+CREATE TABLE comment_likes (
+  comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (comment_id, user_id)
+);
+
+-- Friendships
+CREATE TABLE friendships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user1_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user2_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending',
+  initiated_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user1_id, user2_id),
+  CHECK (user1_id < user2_id)
+);
+CREATE INDEX idx_friendships_user1 ON friendships(user1_id, status);
+CREATE INDEX idx_friendships_user2 ON friendships(user2_id, status);
+
+-- Conversations (DMs)
+CREATE TABLE conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  participant1_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  participant2_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  last_message_text TEXT,
+  last_message_at TIMESTAMPTZ,
+  last_message_type TEXT,
+  unread_count_p1 INTEGER DEFAULT 0,
+  unread_count_p2 INTEGER DEFAULT 0,
+  deleted_at_p1 TIMESTAMPTZ,
+  deleted_at_p2 TIMESTAMPTZ,
+  UNIQUE(participant1_id, participant2_id),
+  CHECK (participant1_id < participant2_id)
+);
+
+-- Messages
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL DEFAULT 'text',
+  text TEXT,
+  gif_url TEXT,
+  reply_to_id UUID REFERENCES messages(id),
+  snap_storage_path TEXT,
+  snap_viewed_at TIMESTAMPTZ,
+  tagged_photo_id UUID REFERENCES photos(id),
+  unsent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_messages_conversation ON messages(conversation_id, created_at DESC);
+
+-- Streaks
+CREATE TABLE streaks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user1_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user2_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  day_count INTEGER DEFAULT 0,
+  last_snap_at_user1 TIMESTAMPTZ,
+  last_snap_at_user2 TIMESTAMPTZ,
+  last_mutual_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  warning_sent BOOLEAN DEFAULT FALSE,
+  UNIQUE(user1_id, user2_id),
+  CHECK (user1_id < user2_id)
+);
+
+-- Albums
+CREATE TABLE albums (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  cover_photo_id UUID REFERENCES photos(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Album photos (junction table, replaces photoIds array)
+CREATE TABLE album_photos (
+  album_id UUID REFERENCES albums(id) ON DELETE CASCADE,
+  photo_id UUID REFERENCES photos(id) ON DELETE CASCADE,
+  added_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (album_id, photo_id)
+);
+
+-- Notifications
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT,
+  body TEXT,
+  data JSONB DEFAULT '{}',
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_notifications_user ON notifications(user_id, created_at DESC);
+
+-- Blocks
+CREATE TABLE blocks (
+  blocker_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (blocker_id, blocked_id)
+);
+
+-- Viewed photos (was subcollection)
+CREATE TABLE viewed_photos (
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  photo_id UUID REFERENCES photos(id) ON DELETE CASCADE,
+  viewed_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, photo_id)
+);
+
+-- Reports
+CREATE TABLE reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  reported_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  details TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Support requests
+CREATE TABLE support_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
-Phase 1: Tech Debt + Screenshot Detection (no native build needed yet)
-  - Fix test gaps (useConversation hook tests, snapFunctions assertion)
-  - Fix hoursSinceLastMutual naming
-  - Add expo-screen-capture to project
-  - Build useScreenshotDetection hook
-  - Integrate into SnapViewer
-  - Add onSnapScreenshot Cloud Function
-  - Add screenshotAt field to snap messages + security rules update
-  --> Requires EAS build (expo-screen-capture is a native module)
-
-Phase 2: Darkroom Optimization (OTA-updatable after Phase 1 build)
-  - Remove App.js foreground darkroom check
-  - Simplify useDarkroom reveal logic
-  - Simplify darkroomService.ensureDarkroomInitialized
-  - Verify processDarkroomReveals Cloud Function covers all cases
-  --> Pure JS refactoring, can be OTA updated
-
-Phase 3: Live Activity Foundation (requires EAS build)
-  - Add expo-live-activity package + config plugin
-  - Create Swift widget target with FlickLiveActivity layout
-  - Build liveActivityService.js (start, update, stop, token management)
-  - Add Live Activity token fields to users/ collection
-  - Update app.json with NSSupportsLiveActivities
-  --> Requires EAS build (native Swift code + new plugin)
-  --> COMBINE with Phase 1 EAS build if possible
-
-Phase 4: Live Activity Server Integration
-  - Add sendLiveActivityUpdate Cloud Function
-  - Extend onNewMessage to trigger Live Activity start on snap sends
-  - Extend onSnapViewed to trigger Live Activity end on snap view
-  - Deep link wiring: Live Activity tap opens ConversationScreen
-  - Android fallback: enhanced ongoing notification for snap alerts
-  --> Cloud Function + JS changes, OTA-updatable after Phase 3 build
-
-Phase 5: Infra Debt (independent, any time)
-  - INFRA-03: Configure Firestore TTL policy for snap messages
-  - INFRA-04: Configure Firebase Storage lifecycle rule for snap-photos/
-  --> Firebase console configuration, no code changes
-```
-
-**Build optimization:** Combine Phase 1 and Phase 3 into a single EAS build to avoid two native build cycles. Both add native modules (`expo-screen-capture` and `expo-live-activity`). The JS work for each can be developed independently and merged before the combined build.
-
-### Why this order:
-
-1. **Tech debt first** -- Tests and naming fixes are quick wins that reduce risk for subsequent changes.
-2. **Screenshot detection before Live Activities** -- Simpler feature, validates the native build pipeline, and is completely independent of Live Activities.
-3. **Darkroom optimization is pure JS** -- Can be OTA-deployed immediately after the Phase 1 build, no native changes needed.
-4. **Live Activity foundation before server integration** -- Must have the Swift widget target and client-side service working before the Cloud Functions can send pushes to it.
-5. **Infra debt is independent** -- Firebase console configuration can happen any time without code deployment.
-
-## Integration Points
-
-### External Services
-
-| Service               | Integration Pattern                                                                                                  | Notes                                                                                                                                                              |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `expo-screen-capture` | Hook-based (`useScreenshotDetection` wrapping `preventScreenCaptureAsync` + `addScreenshotListener`)                 | Compatible with SDK 54. Native module, requires EAS build. No additional iOS permissions. Android 14+ needs no permissions; Android 13- needs `READ_MEDIA_IMAGES`. |
-| `expo-live-activity`  | Service-based (`liveActivityService.js` wrapping `startActivity`, `updateActivity`, `stopActivity`, token listeners) | iOS 16.2+ only. Push notifications require iOS 17.2+. NOT supported in Expo Go -- requires dev client. Early development stage, pin version strictly.              |
-| FCM HTTP v1 API       | Cloud Function sends Live Activity pushes via `live_activity_token` field in FCM payload                             | Requires OAuth2 access token (handled by Admin SDK). Only works for APNs (iOS). Not available for Android.                                                         |
-| APNs                  | Receives liveactivity push type from FCM bridge                                                                      | Token-based auth only (cert-based not supported for Live Activities). Push token is per-activity, not per-device.                                                  |
-
-### Internal Boundaries
-
-| Boundary                                  | Communication                                                                                      | Notes                                                                                                                                                                         |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SnapViewer <-> useScreenshotDetection     | Hook provides prevention + detection; SnapViewer provides activation state and screenshot callback | Clean separation: hook manages expo-screen-capture lifecycle, component handles business logic (write to Firestore, call Cloud Function).                                     |
-| liveActivityService <-> onNewMessage CF   | Cloud Function starts Live Activity via FCM push; client service manages local activity state      | Server starts activity remotely. Client tracks activity IDs for local updates/stops. Token sync via Firestore `users/` document.                                              |
-| useDarkroom <-> processDarkroomReveals CF | Hook checks on screen focus. Cloud Function checks every 2 minutes. Both can trigger reveals.      | After optimization: hook is the primary trigger when user is in darkroom. Cloud Function is the catch-all for background reveals. No conflict because reveals are idempotent. |
-| App.js <-> useDarkroom                    | After optimization: App.js no longer checks darkroom. All darkroom logic is in useDarkroom hook.   | Clean removal of responsibility from App.js. Reduces App.js complexity.                                                                                                       |
 
 ## Sources
 
-- [Expo ScreenCapture API (SDK 54)](https://docs.expo.dev/versions/v54.0.0/sdk/screen-capture/) -- HIGH confidence (official Expo docs, verified via WebFetch)
-- [expo-live-activity GitHub (Software Mansion Labs)](https://github.com/software-mansion-labs/expo-live-activity) -- MEDIUM confidence (official repo, but "early development stage" warning)
-- [expo-widgets (SDK 55)](https://docs.expo.dev/versions/v55.0.0/sdk/widgets/) -- MEDIUM confidence (alpha, SDK 55 beta only)
-- [Firebase Cloud Messaging Live Activity Support](https://firebase.google.com/docs/cloud-messaging/customize-messages/live-activity) -- HIGH confidence (official Firebase docs)
-- [Apple ActivityKit Push Notifications](https://developer.apple.com/documentation/activitykit/starting-and-updating-live-activities-with-activitykit-push-notifications) -- HIGH confidence (official Apple docs)
-- [Android 16 Live Updates](https://www.androidauthority.com/android-16-live-notifications-3518375/) -- MEDIUM confidence (tech press, not yet released)
-- [Expo SDK 55 Beta Changelog](https://expo.dev/changelog/sdk-55-beta) -- HIGH confidence (official Expo changelog)
-- [Implementing Live Activities in React Native with Expo (Fizl)](https://fizl.io/blog/posts/live-activities) -- MEDIUM confidence (community implementation guide)
-- [IOS Live Activities with Expo & React Native (Kutay, Dec 2025)](https://medium.com/@kutaui/ios-live-activities-with-expo-react-native-fa84c8e5a9b7) -- MEDIUM confidence (community guide)
-- Existing codebase analysis: `snapService.js`, `darkroomService.js`, `useDarkroom.js`, `SnapViewer.js`, `App.js`, `functions/index.js`, `app.json`, `package.json` -- HIGH confidence (primary source)
-
----
-
-_Architecture research for: Flick v1.1 Pinned Snaps, Screenshot Detection, Darkroom Optimization_
-_Researched: 2026-02-25_
+- [Supabase + Expo React Native Quickstart](https://supabase.com/docs/guides/getting-started/quickstarts/expo-react-native)
+- [Supabase Auth with React Native](https://supabase.com/docs/guides/auth/quickstarts/react-native)
+- [PowerSync + Supabase Integration Guide](https://docs.powersync.com/integration-guides/supabase-+-powersync)
+- [PowerSync React Native SDK](https://docs.powersync.com/client-sdks/reference/react-native-and-expo)
+- [Supabase Cron (pg_cron)](https://supabase.com/docs/guides/cron)
+- [Supabase Edge Functions Scheduling](https://supabase.com/docs/guides/functions/schedule-functions)
+- [Firebase to Supabase Migration (Official)](https://supabase.com/docs/guides/platform/migrating-to-supabase/firestore-data)
+- [Firebase Auth to Supabase Migration](https://supabase.com/docs/guides/platform/migrating-to-supabase/firebase-auth)
+- [Firebase Storage to Supabase Migration](https://supabase.com/docs/guides/platform/migrating-to-supabase/firebase-storage)
+- [PowerSync Offline-First Chat Demo](https://github.com/powersync-ja/powersync-js/blob/main/demos/react-native-supabase-group-chat/README.md)
+- [Supabase React Native File Upload](https://supabase.com/blog/react-native-storage)
+- [Supabase vs Firebase Realtime Comparison (Ably)](https://ably.com/compare/firebase-vs-supabase)
+- [Firebase to Supabase Migration Playbook (2025)](https://the-expert-developer.medium.com/from-firebase-to-supabase-in-react-native-2025-a-zero-guesswork-copy-paste-migration-8998ba7cc81a)
+- [supabase-community/firebase-to-supabase](https://github.com/supabase-community/firebase-to-supabase)
+- [PowerSync + Supabase Offline-First Blog](https://www.powersync.com/blog/offline-first-apps-made-simple-supabase-powersync)

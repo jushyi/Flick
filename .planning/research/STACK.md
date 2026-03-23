@@ -1,369 +1,255 @@
-# Stack Research: v1.1 Pinned Snaps & Polish
+# Technology Stack
 
-**Domain:** iOS Live Activities, Android persistent notifications, screenshot detection, darkroom optimization
-**Researched:** 2026-02-25
-**Confidence:** MEDIUM-HIGH (Live Activities libraries are rapidly evolving; screenshot detection is stable)
+**Project:** Flick v1.2 -- Backend Migration, TypeScript, Performance Overhaul
+**Researched:** 2026-03-23
 
-## Existing Stack (No Changes Needed)
+## Recommended Stack
 
-These packages are already installed and cover the bulk of v1.1 work. Listed here to prevent redundant additions.
+### Backend Platform: Supabase
 
-| Technology                                  | Version  | v1.1 Role                                                               |
-| ------------------------------------------- | -------- | ----------------------------------------------------------------------- |
-| `@react-native-firebase/firestore`          | ^23.8.6  | Darkroom optimization (cached `nextRevealAt`), screenshot event logging |
-| `@react-native-firebase/functions`          | ^23.8.6  | Screenshot notification Cloud Function, pinned snap push updates        |
-| `expo-notifications`                        | ~0.32.16 | Screenshot alert push notifications, pinned snap status notifications   |
-| `react-native-reanimated`                   | ~4.1.1   | Pinned snap UI animations, darkroom transitions                         |
-| `@react-native-async-storage/async-storage` | 2.2.0    | Client-side darkroom `nextRevealAt` cache                               |
-| `date-fns`                                  | ^4.1.0   | Countdown timer formatting for pinned snap duration display             |
-| `expo-haptics`                              | ~15.0.8  | Haptic feedback on pin/unpin actions                                    |
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| `@supabase/supabase-js` | ^2.99.3 | Database, Auth, Storage, Realtime, Edge Functions client | Full BaaS replacing all 7 Firebase services. PostgreSQL gives SQL joins (eliminates chunked `in` queries), `COUNT(*)`, full-text search. Same managed experience as Firebase but relational. User already has other Supabase projects -- single dashboard. |
+| Supabase Auth (Twilio) | Managed | Phone OTP authentication | Direct replacement for Firebase Phone Auth. Uses `signInWithOtp()` + `verifyOtp()`. Eliminates reCAPTCHA/APNs complexity. Requires Twilio account ($0.0079/SMS US). |
+| Supabase Storage | Managed | Photo/snap/profile file storage | S3-compatible. Supports resumable uploads via TUS protocol (6MB chunks). RLS on buckets. Signed URLs built-in. |
+| Supabase Realtime | Managed | Live subscriptions for feed, comments, messages | Postgres Changes for DB-driven updates + Broadcast for ephemeral events. Replaces 6 Firestore `onSnapshot` listeners. |
+| Supabase Edge Functions | Managed (Deno) | Server-side logic replacing Cloud Functions | 100-200ms cold starts vs Firebase's 300-500ms. Written in TypeScript/Deno. Triggered by database webhooks, HTTP, or pg_cron. |
+| `pg_cron` + `pg_net` | Managed extensions | Scheduled jobs (darkroom reveals, cleanup, notifications) | Replaces 7 Firebase scheduled functions. Runs inside Postgres -- no cold starts for DB operations. |
 
-**Key insight:** v1.1 requires 2 new native dependencies (`expo-screen-capture` and a Live Activities library) and one darkroom optimization that uses only existing packages. Both new dependencies require a new EAS native build.
+### Offline Sync: PowerSync
 
-## New Dependencies Required
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| `@powersync/react-native` | ^1.29.0 | Bidirectional offline sync (SQLite <-> PostgreSQL) | Non-negotiable requirement: offline photo capture. PowerSync gives local SQLite that syncs to Supabase. Photos appear in darkroom instantly even offline. Better than Firestore's cache (full SQL locally, explicit sync rules, no silent data loss). Rust-based sync client now enabled by default. |
+| `@powersync/react` | ^1.11.0 | React hooks for PowerSync queries | `useQuery()`, `useStatus()` hooks for reactive UI. |
 
-### 1. expo-screen-capture (Screenshot Detection)
+### TypeScript Migration
 
-| Field                     | Value                                                                                |
-| ------------------------- | ------------------------------------------------------------------------------------ |
-| **Package**               | `expo-screen-capture`                                                                |
-| **Install**               | `npx expo install expo-screen-capture` (auto-resolves SDK 54 compatible version)     |
-| **Version**               | ~8.0.x (SDK 54 compatible; `npx expo install` selects correct version)               |
-| **Purpose**               | Detect screenshots while viewing snaps; prevent screen recording during snap viewing |
-| **Confidence**            | HIGH -- Official Expo SDK package, documented for SDK 54                             |
-| **Requires Native Build** | YES -- Contains native iOS/Android modules                                           |
-| **Config Plugin**         | NO -- Does not require a plugin entry in `app.json`                                  |
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| `typescript` | ^5.9.3 | Type safety across codebase | Already in devDependencies. Expo SDK 54 has full TS support via `expo/tsconfig.base`. React Native 0.81 ships Strict TypeScript API. |
+| `@types/react` | ~19.1.10 | React type definitions | Already installed. |
+| tsconfig.json | -- | Extend `expo/tsconfig.base` with `allowJs: true`, `strict: true` | Existing tsconfig extends expo base. Add `allowJs: true` for incremental migration, `strict: true` for new files. |
 
-**Why this library:**
+### Performance Monitoring (replacing Firebase Performance)
 
-- Official Expo package -- guaranteed SDK 54 + RN 0.81.5 compatibility, maintained by Expo team
-- Provides both detection (`useScreenshotListener` hook) AND prevention (`usePreventScreenCapture` hook)
-- Already deferred from v1.0 specifically for this milestone (PROJECT.md line 60)
-- The snap viewer needs both: block screen recording while viewing AND detect+notify on screenshot
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| `@sentry/react-native` | ^6.x | Crash reporting + performance monitoring | Replaces `@react-native-firebase/perf`. Production-grade APM with transaction tracing, slow frame detection, app start metrics. Free tier: 5K transactions/mo. Industry standard for RN apps. |
 
-**API usage for Flick:**
+### Supporting Libraries
 
-```javascript
-import * as ScreenCapture from 'expo-screen-capture';
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| `tus-js-client` | ^4.x | Resumable file uploads | For photos >6MB or unstable networks. Supabase Storage uses TUS protocol natively. |
+| `expo-secure-store` | ~15.0.8 | Secure token storage | Already installed. Store Supabase session tokens securely. |
+| `@react-native-async-storage/async-storage` | 2.2.0 | General persistence | Already installed. Keep for non-sync app state. PowerSync replaces it for synced data. |
+| `zod` | ^3.x | Request/response validation | Already used in Cloud Functions. Bring to client side for Supabase RPC type validation and runtime type checking. |
 
-// In SnapViewer component:
-// 1. Prevent screen recording while snap is visible
-ScreenCapture.usePreventScreenCapture('snap-viewer');
+## What to Remove
 
-// 2. Detect screenshots and notify sender
-ScreenCapture.useScreenshotListener(() => {
-  // Cloud Function sends push notification to snap sender
-  screenshotService.reportScreenshot(conversationId, messageId, currentUserId);
-});
+| Package | Why Remove |
+|---------|-----------|
+| `@react-native-firebase/app` | Replaced by `@supabase/supabase-js` |
+| `@react-native-firebase/auth` | Replaced by Supabase Auth |
+| `@react-native-firebase/firestore` | Replaced by Supabase + PowerSync |
+| `@react-native-firebase/functions` | Replaced by Supabase Edge Functions |
+| `@react-native-firebase/messaging` | App uses `expo-notifications` for push delivery. This package was only for FCM token registration. Push tokens stored in Supabase instead. |
+| `@react-native-firebase/perf` | Replaced by Sentry |
+| `@react-native-firebase/storage` | Replaced by Supabase Storage |
+| `firestore-jest-mock` (devDep) | No Firestore to mock. Replace with Supabase local dev or direct PostgreSQL test utilities. |
+| `GoogleService-Info.plist` | No Firebase native config needed |
+| `google-services.json` | No Firebase native config needed |
+| `firebase.json` | No Firebase CLI config needed |
+| `firestore.rules` (389 lines) | Replaced by Supabase RLS policies |
+| `storage.rules` (53 lines) | Replaced by Supabase Storage RLS |
+| `withFirebaseFix.js` plugin | iOS-only Podfile fix for Firebase + Expo 54 -- no longer needed |
 
-// 3. App switcher privacy (blur on iOS, blank on Android)
-ScreenCapture.enableAppSwitcherProtectionAsync(50); // blur intensity
-```
+**CRITICAL:** Removing all `@react-native-firebase/*` packages removes native modules. The next build MUST be a full EAS native build -- OTA update will NOT work. Same applies when adding PowerSync (native SQLite module). Plan for a single native rebuild that removes Firebase and adds PowerSync + Supabase simultaneously.
 
-**Platform behavior:**
+## Backend Comparison Matrix
 
-| Platform             | Screenshot Detection         | Screen Recording Prevention | App Switcher Protection | Permissions       |
-| -------------------- | ---------------------------- | --------------------------- | ----------------------- | ----------------- |
-| iOS 13+              | Works                        | Works                       | Blur overlay            | None needed       |
-| Android 14+          | Works                        | Works (FLAG_SECURE)         | Blank preview           | None needed       |
-| Android 13 and below | Requires `READ_MEDIA_IMAGES` | Works (FLAG_SECURE)         | Blank preview           | Permission prompt |
+### Candidates Evaluated
 
-**Known issue:** GitHub issue #31678 reported screenshot listener not firing on Android 14+ in some cases. Fix merged in PR #31702. Verify behavior in SDK 54 build during development. Workaround: call `allowScreenCaptureAsync()` before registering listener.
+| Criterion | Supabase + PowerSync | Custom API (Node/Fastify + PostgreSQL + Redis) | Neon + Pocketbase / Cobbled Services |
+|-----------|---------------------|-----------------------------------------------|--------------------------------------|
+| **Real-time subscriptions** | Built-in Postgres Changes + Broadcast. Single-threaded ordering (can bottleneck at scale). Reconnection gap mitigated by PowerSync local cache. | WebSocket server (Socket.io/ws). Full control, proven at scale. Must build, deploy, and maintain. | No built-in. Must add Socket.io layer. |
+| **File storage** | Built-in S3-compatible. Resumable uploads (TUS). RLS on buckets. Signed URLs. Dashboard management. | Self-managed S3/R2/Backblaze B2. Full control, more config. | No storage. Add S3/R2 separately. |
+| **Phone auth** | Built-in via Twilio/MessageBird/Vonage. Dashboard config. `signInWithOtp()` API. | Build auth service with Twilio API directly + JWT management. More control, more code, more security surface. | No auth. Add Auth0/Clerk ($25+/mo). |
+| **Cloud functions equivalent** | Edge Functions (Deno, 100-200ms cold start). Database webhooks + pg_cron for triggers/schedules. | Express/Fastify routes. Zero cold start if always-on. Full Node.js ecosystem. | No functions. Need separate compute (Railway/Fly.io). |
+| **Offline support** | PowerSync ($49/mo). Local SQLite, bidirectional sync, conflict resolution. Battle-tested with Supabase. | Build custom sync with WatermelonDB or similar. 2-4 months of work alone. | Same as custom -- no built-in offline. |
+| **Push notifications** | Edge Function + Expo push service (same architecture as current). Database webhook triggers on insert. | Express route + Expo push service. Same effort either way. | N/A -- need separate compute. |
+| **Cost (<1K users)** | ~$74/mo (Supabase Pro $25 + PowerSync Pro $49) | ~$40-100/mo (VPS + managed Postgres + Redis + S3) | ~$75-150/mo (Neon + compute + storage + auth service) |
+| **Cost (10K users)** | ~$150-250/mo (Pro + usage overages) | ~$150-400/mo (scaling compute, DB, cache, monitoring) | ~$200-400/mo (scaling all separate services) |
+| **Migration effort** | 35-47 days (per existing analysis). Service-by-service rewrite. | 70-100+ days. Build entire API layer, auth, storage, realtime, offline sync from scratch. | 55-80+ days. Database only managed -- everything else DIY. |
+| **Ongoing maintenance** | Low -- managed platform. Auto-backups, scaling, dashboard, monitoring built-in. | High -- deployments, security patches, scaling decisions, monitoring setup, on-call. | Medium-High -- database managed, 4+ other services self-maintained. |
+| **Risk level** | Medium -- Supabase Realtime younger than Firestore. PowerSync adds dependency. Both well-mitigated. | Low technical risk, high execution risk -- massive scope, many architectural decisions, long timeline for solo dev. | High -- integrating 5+ services creates many failure points. |
+| **TypeScript support** | Excellent -- `supabase gen types typescript` generates DB types automatically. Edge Functions are TypeScript-native. | Excellent -- full control over types. | Varies by service. |
 
-**Android permission addition needed:**
+### Recommendation: Supabase + PowerSync
+
+**Why Supabase wins for this project:**
+
+1. **Migration effort is 2-3x less** than custom backend. The 20 existing service files (~7,800 lines) map cleanly to Supabase equivalents. A custom API requires building auth, storage, realtime, and offline sync from zero.
+
+2. **SQL solves the actual performance problems.** The feed uses chunked `in` queries (30-ID max per chunk) because Firestore has no joins. A single SQL `SELECT ... JOIN friendships ... WHERE status = 'accepted'` replaces this entirely. Darkroom reveals, comment threading, friend suggestions, unread counts -- all become single queries.
+
+3. **PowerSync solves offline better than Firestore ever did.** Photos taken offline appear in darkroom immediately (current system does not do this). Triage decisions (journal/archive/delete) work offline. No silent photo loss after 3 retries. Full SQL locally means complex queries work offline too.
+
+4. **User already has Supabase experience** with other projects. Familiar with dashboard, RLS patterns, Edge Functions. Zero learning curve on the platform itself.
+
+5. **Cost is predictable and lower.** Firebase charges per document read/write -- social apps with feeds generate heavy read amplification. Supabase's compute-based pricing doesn't penalize read-heavy patterns.
+
+6. **TypeScript generation from schema** is a massive DX win. `supabase gen types typescript` produces exact types for every table, view, and function. No manual type maintenance.
+
+**Why NOT custom backend (Node + PostgreSQL + Redis):**
+- Solo developer maintaining a social app. Infrastructure management (deployments, scaling, monitoring, security patches, SSL, CORS) is a full-time distraction that adds zero user value.
+- Building offline sync from scratch is a multi-month sub-project alone.
+- No team to distribute operational burden. On-call for self-hosted infra is brutal solo.
+
+**Why NOT Neon + cobbled services:**
+- Neon is a database, not a BaaS. Requires adding auth (Clerk/Auth0: $25+/mo), storage (S3: $5+/mo), realtime (custom Socket.io on Railway: $10+/mo), compute (Railway: $10+/mo), and offline sync (custom build) separately. More services = more integration points = more failure modes = higher total cost.
+- Neon was acquired by Databricks in May 2025 -- strategic direction uncertain for indie developer use cases.
+
+## Supabase Plan Requirements
+
+| Service | Plan | Cost | Key Limits |
+|---------|------|------|------------|
+| Supabase | Pro | $25/mo | 8GB DB, 100GB file storage, 100K MAUs, 500 concurrent Realtime connections |
+| PowerSync | Pro | $49/mo | 30GB synced/mo, 1K peak connections, 10GB hosted data |
+| Twilio | Pay-as-you-go | ~$5-20/mo | $0.0079/SMS (US), $0.05/SMS (intl). Only charged on actual OTP sends. |
+| Sentry | Free or Team | $0-26/mo | Free: 5K transactions. Team: 50K transactions. |
+| **Total** | | **~$79-120/mo** | Scales predictably with usage |
+
+**Comparison:** Firebase current cost is variable per-read/write. A social app feed where 100 users each view 20 photos = 2,000 document reads per feed load. With Supabase this is 100 SQL queries (one per user). The read amplification penalty disappears.
+
+## TypeScript Migration Strategy
+
+**Approach:** Incremental with `allowJs: true`. Convert files organically as they are touched for the Supabase migration.
 
 ```json
-// app.json - only needed if supporting Android 13 and below
-"android": {
-  "permissions": [
-    "android.permission.CAMERA",
-    "android.permission.RECORD_AUDIO",
-    "android.permission.READ_MEDIA_IMAGES"
+// tsconfig.json (updated)
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*", "app.config.js"],
+  "exclude": ["node_modules", "functions"]
+}
+```
+
+**Migration order (tied to Supabase migration):**
+1. **Types first** -- Create `src/types/` with Supabase-generated types (`supabase gen types typescript --project-id <id> --schema public > src/types/database.ts`). This single file gives typed access to every table.
+2. **Services** -- Convert each service file `.js` -> `.ts` as it is rewritten for Supabase. This is the natural entry point since every service file must be rewritten anyway.
+3. **Hooks** -- Convert custom hooks (high value: type-safe return values prevent misuse).
+4. **Context** -- Convert providers (type-safe context values eliminate null-check bugs).
+5. **Components** -- Convert as touched during performance work.
+6. **Sweep** -- Final pass for remaining `.js` files after major work completes.
+
+**Lint-staged update needed:**
+```json
+"lint-staged": {
+  "*.{js,jsx,ts,tsx}": [
+    "eslint --fix",
+    "prettier --write"
+  ],
+  "*.{json,md}": [
+    "prettier --write"
   ]
 }
 ```
 
-**IMPORTANT:** Adding `READ_MEDIA_IMAGES` triggers Google Play's photo/video policy review. Since the app targets Android 14+ as the primary experience, consider skipping this permission and accepting that screenshot detection degrades gracefully on Android 13 and below.
+**Do NOT:**
+- Convert all files at once (blocks development, creates merge conflicts)
+- Use `any` to silence type errors (defeats the purpose -- use `unknown` and narrow)
+- Convert test files before their source files
+- Create a separate `tsconfig.strict.json` -- one config is simpler
 
----
+## Edge Functions Structure (replacing Cloud Functions)
 
-### 2. expo-live-activity (iOS Live Activities)
-
-| Field                     | Value                                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Package**               | `expo-live-activity`                                                                                   |
-| **Install**               | `npm install expo-live-activity`                                                                       |
-| **Version**               | 0.4.x (latest on npm; early development stage)                                                         |
-| **Purpose**               | Display pinned snap on iOS lock screen via ActivityKit Live Activity                                   |
-| **Confidence**            | MEDIUM -- Library works but is in "early development" with breaking changes possible in minor versions |
-| **Requires Native Build** | YES -- Creates a Swift widget extension target                                                         |
-| **Config Plugin**         | YES -- Must add `"expo-live-activity"` to plugins array in `app.json`                                  |
-| **iOS Only**              | YES -- No Android support (Android requires separate approach)                                         |
-| **Min iOS**               | 16.2                                                                                                   |
-
-**Why `expo-live-activity` over alternatives:**
-
-| Library                                        | Approach                                        | Maturity        | Flick Fit                                                                              | Verdict                               |
-| ---------------------------------------------- | ----------------------------------------------- | --------------- | -------------------------------------------------------------------------------------- | ------------------------------------- |
-| **expo-live-activity** (Software Mansion)      | Predefined layouts via config, simple JS API    | Early (0.4.x)   | Good -- simple API matches the limited UI needed (photo thumbnail + countdown + title) | **RECOMMENDED**                       |
-| **Voltra** (Callstack)                         | JSX-to-SwiftUI renderer, write React components | Stable (v1.2.0) | Overkill -- Flick needs a simple pinned snap display, not custom SwiftUI layouts       | Too much complexity for this use case |
-| **@kingstinct/react-native-activity-kit**      | Direct ActivityKit bindings via Nitro Modules   | Active          | Low-level -- requires writing your own SwiftUI widget target manually                  | Too much native Swift work            |
-| **Custom Expo Module** (@bacons/apple-targets) | Manual Swift widget + Expo Module API bridge    | DIY             | Full control but requires Swift knowledge and maintenance                              | Only if library approach fails        |
-
-**Rationale:** Flick's pinned snap Live Activity is simple -- show a photo thumbnail, the sender's name, a countdown timer, and a deep link back to the conversation. `expo-live-activity` provides exactly this through its predefined layout options (image, title, subtitle, progress/countdown timer). Voltra's JSX-to-SwiftUI approach is impressive but introduces unnecessary complexity for a UI that fits within preset templates.
-
-**Risk mitigation:** `expo-live-activity` is in early development. If it breaks in a future Expo SDK upgrade or has missing features:
-
-- Fallback to Voltra (v1.2.0, stable, production-ready) -- same config plugin pattern, just swap the library
-- Fallback to custom Expo Module with @bacons/apple-targets -- more work but full control
-
-**API usage for Flick:**
-
-```javascript
-import { startActivity, updateActivity, stopActivity } from 'expo-live-activity';
-
-// When user pins a snap
-const activityId = await startActivity(
-  {
-    title: `${senderName}'s Snap`,
-    subtitle: 'Tap to view',
-    imageName: 'snap_thumbnail', // Must be in widget assets
-    progressBar: { type: 'countdown', endTime: expiresAt },
-  },
-  { deepLink: `lapse://messages/${conversationId}` }
-);
-
-// When snap is viewed or expires
-await stopActivity(activityId, { title: 'Snap viewed' });
+```
+supabase/
+  functions/
+    send-push-notification/    # Replaces onNewMessage, sendReactionNotification
+    process-darkroom-reveals/  # Replaces processDarkroomReveals (called by pg_cron)
+    get-signed-url/            # Replaces getSignedPhotoUrl
+    delete-user-account/       # Replaces deleteUserAccount
+    process-scheduled-deletions/ # Replaces processScheduledDeletions
+    cleanup-old-notifications/ # Replaces cleanupOldNotifications
+    cleanup-expired-snaps/     # Replaces cleanupExpiredSnaps
+    get-mutual-suggestions/    # Replaces getMutualFriendSuggestions
+    send-batched-notification/ # Replaces sendBatchedNotification (Cloud Tasks -> pg_cron)
+  migrations/                  # SQL migration files
+  seed.sql                     # Dev data seeding
+  config.toml                  # Supabase project config
 ```
 
-**Setup requirements:**
+**Key change:** Firestore triggers (11 functions) become PostgreSQL triggers + database webhooks. Simple operations (increment friend count, update lastMessage) run as PL/pgSQL functions directly in the database -- zero cold start, zero network hop.
 
-1. Add plugin to `app.json`:
-
-   ```json
-   "plugins": [
-     "expo-live-activity",
-     // ... existing plugins
-   ]
-   ```
-
-2. Add snap thumbnail images to `assets/live-activity/` folder (must be < 4KB per iOS limit)
-
-3. Run `npx expo prebuild --clean` to generate the Swift widget extension target
-
-4. Create new EAS build (widget extension is native code)
-
-5. Add `NSSupportsLiveActivities` to Info.plist (handled by config plugin)
-
-**Deployment note:** Live Activity updates can be pushed via APNs push notifications from Cloud Functions. This is required because the app cannot update Live Activities when backgrounded/killed. The `startActivity` call returns a push token that must be stored server-side.
-
----
-
-### 3. Android Equivalent: expo-notifications Ongoing Notification (NOT a new dependency)
-
-| Field               | Value                                                                           |
-| ------------------- | ------------------------------------------------------------------------------- |
-| **Package**         | `expo-notifications` (ALREADY INSTALLED)                                        |
-| **New Dependency?** | NO                                                                              |
-| **Purpose**         | Display pinned snap as a persistent/ongoing notification on Android lock screen |
-| **Confidence**      | HIGH -- Uses existing package with `sticky: true` and custom channel            |
-
-**Why NOT add Notifee or a separate Android library:**
-
-- `expo-notifications` already supports `sticky` (ongoing) notifications and custom notification channels
-- Adding `@notifee/react-native` would create a second notification system alongside `expo-notifications`
-- The pinned snap notification on Android is intentionally simpler than iOS Live Activities -- it is a persistent notification with a photo, sender name, and deep link
-- Android does not have Live Activities (Android 14's "Live Updates" are just progress-style ongoing notifications)
-
-**Implementation approach:**
-
-```javascript
-import * as Notifications from 'expo-notifications';
-
-// Create a dedicated channel for pinned snaps
-await Notifications.setNotificationChannelAsync('pinned-snaps', {
-  name: 'Pinned Snaps',
-  importance: Notifications.AndroidImportance.HIGH,
-  lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-});
-
-// Display ongoing notification (cannot be swiped away)
-await Notifications.scheduleNotificationAsync({
-  content: {
-    title: `${senderName}'s Snap`,
-    body: 'Tap to view',
-    data: { conversationId, messageId, type: 'pinned_snap' },
-    sticky: true, // Cannot be dismissed
-    autoDismiss: false,
-    categoryIdentifier: 'pinned-snap',
-  },
-  trigger: null, // Show immediately
-});
-
-// Dismiss when snap is viewed
-await Notifications.dismissNotificationAsync(notificationId);
-```
-
-**Platform guard required:**
-
-```javascript
-if (Platform.OS === 'android') {
-  // Show ongoing notification
-} else if (Platform.OS === 'ios') {
-  // Start Live Activity
-}
-```
-
----
-
-## Darkroom Optimization (No New Dependencies)
-
-The darkroom client-side reveal check optimization uses ONLY existing packages. No new dependencies needed.
-
-**Current problem:** `isDarkroomReadyToReveal()` makes a Firestore `getDoc` call every time:
-
-- App comes to foreground (App.js AppState listener)
-- DarkroomScreen gains focus (useFocusEffect)
-- This is 2+ Firestore reads per app open, even when `nextRevealAt` is minutes away
-
-**Optimization approach:** Cache `nextRevealAt` in AsyncStorage after each read, compare against `Date.now()` client-side before making Firestore call.
-
-```javascript
-// darkroomService.js optimization
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export const isDarkroomReadyToReveal = async userId => {
-  // Check cached value first (avoid Firestore read)
-  const cached = await AsyncStorage.getItem(`darkroom_nextRevealAt_${userId}`);
-  if (cached) {
-    const cachedTime = parseInt(cached, 10);
-    const now = Date.now();
-    if (cachedTime > now) {
-      // Not ready yet, skip Firestore read
-      return false;
-    }
-  }
-
-  // Cache expired or missing -- check Firestore
-  const result = await getDarkroom(userId);
-  if (!result.success) return false;
-
-  const { nextRevealAt } = result.darkroom;
-
-  // Cache the value for future checks
-  if (nextRevealAt) {
-    await AsyncStorage.setItem(
-      `darkroom_nextRevealAt_${userId}`,
-      String(nextRevealAt.seconds * 1000)
-    );
-  }
-
-  const now = Timestamp.now();
-  return nextRevealAt && nextRevealAt.seconds <= now.seconds;
-};
-```
-
-**Savings:** Eliminates ~80% of unnecessary Firestore reads for darkroom checks. The 0-5 minute reveal window means most foreground checks will hit the cache and short-circuit.
-
-## What NOT to Install
-
-| Library                                   | Why You Might Consider It                                         | Why NOT to Use It                                                                                                                                                                                                                                                             |
-| ----------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Voltra** (v1.2.0)                       | Full Live Activity + Widget support with JSX-to-SwiftUI rendering | Overkill for a simple pinned snap display. `expo-live-activity` covers the needed UI with less complexity. Voltra adds ~60% more build complexity (custom renderer, Brotli compression, 4KB payload management). Reconsider only if `expo-live-activity` proves insufficient. |
-| **@kingstinct/react-native-activity-kit** | Direct ActivityKit bindings with Nitro Modules                    | Requires writing your own SwiftUI widget UI manually. More work than needed when `expo-live-activity` provides preset layouts.                                                                                                                                                |
-| **@notifee/react-native**                 | Foreground service + ongoing notifications on Android             | Creates a duplicate notification system. `expo-notifications` already supports `sticky` (ongoing) notifications, custom channels, and notification dismissal. Adding Notifee would mean maintaining two notification stacks.                                                  |
-| **react-native-capture-protection**       | More aggressive screenshot blocking (app switcher protection)     | `expo-screen-capture` already provides app switcher protection via `enableAppSwitcherProtectionAsync()`. The third-party lib adds no value over the official Expo package.                                                                                                    |
-| **expo-widgets** (Expo official)          | Expo SDK 55+ widget system                                        | Only available in Expo SDK 55 beta, not SDK 54. The project is on SDK 54. `expo-live-activity` works on SDK 54.                                                                                                                                                               |
-
-## Installation Commands
+## Installation
 
 ```bash
-# New dependencies (both require native rebuild):
-npx expo install expo-screen-capture
-npm install expo-live-activity
+# Core -- Supabase client
+npm install @supabase/supabase-js
 
-# IMPORTANT: After installing, update app.json plugins, then:
-npx expo prebuild --clean
-# Then create new EAS builds:
-eas build --platform ios --profile production
-eas build --platform android --profile production
+# Offline sync -- PowerSync (requires native rebuild)
+npm install @powersync/react-native @powersync/react
+
+# Performance monitoring (replacing Firebase Perf)
+npm install @sentry/react-native
+
+# Resumable uploads for large photos
+npm install tus-js-client
+
+# Validation (bring to client from functions/)
+npm install zod
+
+# Supabase CLI (for Edge Functions, migrations, type generation)
+npm install -D supabase
+
+# After migration is COMPLETE -- remove Firebase (NOT before)
+npm uninstall @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore @react-native-firebase/functions @react-native-firebase/messaging @react-native-firebase/perf @react-native-firebase/storage
+npm uninstall -D firestore-jest-mock
 ```
 
-## app.json Changes Required
-
-```json
-{
-  "expo": {
-    "plugins": [
-      "expo-live-activity"
-      // ... all existing plugins unchanged
-    ],
-    "android": {
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.READ_MEDIA_IMAGES"
-      ]
-    },
-    "ios": {
-      "infoPlist": {
-        "NSSupportsLiveActivities": true
-      }
-    }
-  }
-}
-```
-
-**Note:** `NSSupportsLiveActivities` may be handled automatically by the `expo-live-activity` config plugin. Verify during implementation and remove manual entry if redundant.
-
-## Backend Dependencies (Cloud Functions)
-
-No new npm packages needed in `functions/`. Existing packages cover all server-side needs:
-
-| Existing Package            | v1.1 Role                                                                              |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| `firebase-admin` ^12.0.0    | Store Live Activity push tokens, write screenshot events to Firestore                  |
-| `firebase-functions` ^4.5.0 | `onDocumentWritten` trigger for screenshot notifications, scheduled pinned snap expiry |
-| `expo-server-sdk` ^5.0.0    | Push notifications for screenshot alerts ("X took a screenshot of your snap")          |
-
-**New Cloud Function needed:** `onSnapScreenshot` -- triggered when client writes a screenshot event document. Sends push notification to snap sender with randomized message template (consistent with existing notification style).
-
-**Live Activity push updates:** APNs push notifications to update/end Live Activities. Requires storing the activity push token (returned by `startActivity()`) in Firestore. The `firebase-admin` SDK can send APNs pushes directly, but the simpler approach is to use `expo-server-sdk` for the push and let the Live Activity end when the user taps into the app.
-
-## Version Compatibility Matrix
-
-| Package                                                | Version  | Expo SDK 54 | RN 0.81.5 | Native Build Required | Notes                                                                                       |
-| ------------------------------------------------------ | -------- | ----------- | --------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| `expo-screen-capture`                                  | ~8.0.x   | YES         | YES       | YES                   | Official Expo package, auto-versioned by `npx expo install`                                 |
-| `expo-live-activity`                                   | 0.4.x    | LIKELY      | LIKELY    | YES                   | Software Mansion Labs; early development. Uses Expo Module API which is SDK-version-stable. |
-| `expo-notifications` (existing)                        | ~0.32.16 | YES         | YES       | Already built         | Used for Android ongoing notification (no new install)                                      |
-| `@react-native-async-storage/async-storage` (existing) | 2.2.0    | YES         | YES       | Already built         | Used for darkroom cache (no new install)                                                    |
-
-## Confidence Assessment
-
-| Recommendation                                        | Confidence | Basis                                                                                                                                     |
-| ----------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `expo-screen-capture` for screenshot detection        | HIGH       | Official Expo SDK package, documented for SDK 54, API verified in official docs                                                           |
-| `expo-live-activity` for iOS Live Activities          | MEDIUM     | Library works and is from Software Mansion, but "early development" status means breaking changes possible. Fallback (Voltra) documented. |
-| `expo-notifications` ongoing notification for Android | HIGH       | Uses existing package; `sticky` and custom channels are documented Expo features                                                          |
-| AsyncStorage darkroom cache optimization              | HIGH       | Standard caching pattern; uses existing dependency; no risk                                                                               |
-| Skip Notifee / Voltra                                 | HIGH       | Justified: Notifee duplicates existing notification stack; Voltra is overkill for simple pinned snap UI                                   |
-| `expo-live-activity` SDK 54 compatibility             | MEDIUM     | Not explicitly documented but uses Expo Module API which is SDK-stable. Verify with `npx expo prebuild` during implementation.            |
+**IMPORTANT: Build order matters.**
+1. Install Supabase + PowerSync + Sentry
+2. Run dual-stack during migration (both Firebase and Supabase active)
+3. Remove Firebase packages only after ALL services are migrated and tested
+4. Single EAS native rebuild after Firebase removal + PowerSync addition
+5. PowerSync's `@powersync/react-native` includes native SQLite -- requires EAS Build, not OTA
 
 ## Sources
 
-- [Expo ScreenCapture Documentation (SDK 54)](https://docs.expo.dev/versions/v54.0.0/sdk/screen-capture/) -- HIGH confidence, official docs
-- [expo-live-activity GitHub (Software Mansion Labs)](https://github.com/software-mansion-labs/expo-live-activity) -- MEDIUM confidence, early development
-- [Voltra GitHub (Callstack)](https://github.com/callstackincubator/voltra) -- HIGH confidence for evaluation, rejected for use
-- [Voltra Blog Post (Callstack)](https://www.callstack.com/blog/live-activities-and-widgets-with-react-say-hello-to-voltra) -- HIGH confidence comparison
-- [Expo Notifications Documentation](https://docs.expo.dev/versions/latest/sdk/notifications/) -- HIGH confidence, official docs
-- [expo-live-activity Tutorial (kutay.boo)](https://kutay.boo/blog/expo-live-activity/) -- MEDIUM confidence, third-party tutorial
-- [Live Activities Implementation Guide (fizl.io)](https://fizl.io/blog/posts/live-activities) -- MEDIUM confidence, third-party tutorial
-- [Notifee Foreground Service Documentation](https://notifee.app/react-native/docs/android/foreground-service/) -- HIGH confidence, evaluated and rejected
-- [expo-screen-capture Android 14+ Bug (GitHub #31678)](https://github.com/expo/expo/issues/31678) -- HIGH confidence, fix confirmed merged
+- [Supabase JS SDK (npm)](https://www.npmjs.com/package/@supabase/supabase-js) -- v2.99.3, published 3 days ago
+- [PowerSync React Native (npm)](https://www.npmjs.com/package/@powersync/react-native) -- v1.29.0, published 17 days ago
+- [Supabase Pricing](https://supabase.com/pricing) -- Pro $25/mo, verified 2026-03-23
+- [PowerSync Pricing](https://www.powersync.com/pricing) -- Pro from $49/mo, verified 2026-03-23
+- [Supabase Phone Auth Docs](https://supabase.com/docs/guides/auth/phone-login) -- OTP via Twilio
+- [Supabase Realtime Limits](https://supabase.com/docs/guides/realtime/limits) -- Single-threaded Postgres Changes
+- [Supabase Realtime Troubleshooting](https://supabase.com/docs/guides/realtime/troubleshooting) -- Reconnection data loss documented
+- [Supabase Edge Functions Architecture](https://supabase.com/docs/guides/functions/architecture) -- Deno runtime, global deployment
+- [Supabase Resumable Uploads](https://supabase.com/docs/guides/storage/uploads/resumable-uploads) -- TUS protocol, 6MB chunks
+- [Supabase Cron (pg_cron)](https://supabase.com/docs/guides/cron) -- Schedule Edge Functions + DB functions
+- [Supabase Database Webhooks](https://supabase.com/docs/guides/database/webhooks) -- Trigger Edge Functions from DB events
+- [PowerSync + Supabase Integration](https://docs.powersync.com/integration-guides/supabase-+-powersync) -- Official guide
+- [PowerSync React Native Group Chat Demo](https://github.com/powersync-ja/powersync-js/blob/main/demos/react-native-supabase-group-chat/README.md) -- Reference architecture
+- [Expo TypeScript Guide](https://docs.expo.dev/guides/typescript/) -- tsconfig.base extension
+- [Supabase + Expo Quickstart](https://supabase.com/docs/guides/getting-started/quickstarts/expo-react-native)
+- [Supabase Push Notifications Guide](https://supabase.com/docs/guides/functions/examples/push-notifications) -- Edge Function + Expo pattern
+- [Neon vs Supabase](https://www.bytebase.com/blog/neon-vs-supabase/) -- Comparison reference
+- [Existing Migration Analysis](../SUPABASE-MIGRATION-ANALYSIS.md) -- 2026-03-18, codebase audit
+- [Supabase vs Firebase 2026 Tests](https://tech-insider.org/supabase-vs-firebase-2026/) -- Cold start benchmarks
+- [React Native JS to TS Migration Guide](https://www.creolestudios.com/react-native-javascript-to-typescript-migration/) -- Incremental patterns
 
 ---
 
-_Stack research for: Flick v1.1 Pinned Snaps & Polish_
-_Researched: 2026-02-25_
+_Stack research for: Flick v1.2 Speed & Scale_
+_Researched: 2026-03-23_
