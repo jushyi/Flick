@@ -1,89 +1,14 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-// Use React Native Firebase for auth and firestore (required for phone auth)
-import {
-  getAuth,
-  onAuthStateChanged as firebaseOnAuthStateChanged,
-} from '@react-native-firebase/auth';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-} from '@react-native-firebase/firestore';
+
+import { getAuth } from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
+
+import { supabase } from '../lib/supabase';
+
 import logger from '../utils/logger';
 import { clearLocalNotificationToken } from '../services/firebase/notificationService';
 import { secureStorage } from '../services/secureStorageService';
-import { cancelAccountDeletion } from '../services/firebase/accountService';
-const db = getFirestore();
-
-// React Native Firebase Firestore functions for phone auth users
-// These use the native SDK which shares auth state with RN Firebase Auth
-const createUserDocumentNative = async (userId, userData) => {
-  try {
-    const userRef = doc(db, 'users', userId);
-    await setDoc(userRef, {
-      ...userData,
-      createdAt: serverTimestamp(),
-      dailyPhotoCount: 0,
-      lastPhotoDate: new Date().toISOString().split('T')[0],
-    });
-    return { success: true };
-  } catch (error) {
-    logger.error('createUserDocumentNative: Failed', { error: error.message });
-    return { success: false, error: error.message };
-  }
-};
-
-const getUserDocumentNative = async userId => {
-  try {
-    logger.debug('getUserDocumentNative: Fetching user document', { userId });
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-    // Modular API uses exists() as a method
-    const docExists = userDoc.exists();
-    logger.debug('getUserDocumentNative: Document fetched', {
-      userId,
-      exists: docExists,
-      hasData: !!userDoc.data(),
-    });
-    if (docExists) {
-      const data = userDoc.data();
-      logger.debug('getUserDocumentNative: User found', {
-        userId,
-        profileSetupCompleted: data?.profileSetupCompleted,
-      });
-      return { success: true, data: { id: userDoc.id, ...data } };
-    }
-    logger.debug('getUserDocumentNative: User not found', { userId });
-    return { success: false, error: 'User not found' };
-  } catch (error) {
-    logger.error('getUserDocumentNative: Failed', { error: error.message });
-    return { success: false, error: error.message };
-  }
-};
-
-const updateUserDocumentNative = async (userId, updateData) => {
-  try {
-    logger.debug('updateUserDocumentNative: Updating user document', {
-      userId,
-      fields: Object.keys(updateData),
-    });
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      ...updateData,
-      updatedAt: serverTimestamp(),
-    });
-    logger.info('updateUserDocumentNative: Success', { userId });
-    return { success: true };
-  } catch (error) {
-    logger.error('updateUserDocumentNative: Failed', { error: error.message });
-    return { success: false, error: error.message };
-  }
-};
 
 const AuthContext = createContext({});
 
@@ -95,109 +20,122 @@ export const useAuth = () => {
   return context;
 };
 
+/**
+ * Fetch user profile from Supabase users table
+ */
+const getUserProfile = async userId => {
+  try {
+    logger.debug('AuthContext.getUserProfile: Fetching', { userId });
+    const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
+
+    if (error) {
+      logger.error('AuthContext.getUserProfile: Failed', { error: error.message });
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    logger.error('AuthContext.getUserProfile: Exception', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update user document in Supabase users table
+ */
+const updateUserDocument = async (userId, updateData) => {
+  try {
+    logger.debug('AuthContext.updateUserDocument: Updating', {
+      userId,
+      fields: Object.keys(updateData),
+    });
+
+    const { error } = await supabase
+      .from('users')
+      .update({ ...updateData, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    if (error) {
+      logger.error('AuthContext.updateUserDocument: Failed', { error: error.message });
+      return { success: false, error: error.message };
+    }
+
+    logger.info('AuthContext.updateUserDocument: Success', { userId });
+    return { success: true };
+  } catch (error) {
+    logger.error('AuthContext.updateUserDocument: Exception', { error: error.message });
+    return { success: false, error: error.message };
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [pendingDeletion, setPendingDeletion] = useState(null);
-  // { isScheduled: boolean, scheduledDate: Date } or null
 
-  // Listen to React Native Firebase auth state changes
+  // Listen to Supabase auth state changes
   useEffect(() => {
-    logger.debug('AuthContext: Setting up auth state listener');
+    logger.debug('AuthContext: Setting up Supabase auth state listener');
 
-    const auth = getAuth();
-    const unsubscribe = firebaseOnAuthStateChanged(auth, async firebaseUser => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       logger.debug('AuthContext: Auth state changed', {
-        hasUser: !!firebaseUser,
-        userId: firebaseUser?.uid,
+        event,
+        hasSession: !!session,
+        userId: session?.user?.id,
       });
 
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        // Reset userProfile to null while we fetch/create it
-        // This triggers loading state in AppNavigator
-        setUserProfile(null);
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          setUser(session.user);
 
-        // Fetch user profile from Firestore using native SDK (shares auth state with RN Firebase Auth)
-        logger.debug('AuthContext: Fetching user profile from Firestore (native)', {
-          userId: firebaseUser.uid,
-        });
-        const profileResult = await getUserDocumentNative(firebaseUser.uid);
-        logger.debug('AuthContext: getUserDocumentNative result', {
-          success: profileResult.success,
-          hasData: !!profileResult.data,
-          error: profileResult.error,
-        });
-        if (profileResult.success) {
-          logger.info('AuthContext: User profile loaded - checking setup status', {
-            profileSetupCompleted: profileResult.data?.profileSetupCompleted,
-            selectsCompleted: profileResult.data?.selectsCompleted,
-            willShowProfileSetup: profileResult.data?.profileSetupCompleted !== true,
-            willShowSelects:
-              profileResult.data?.profileSetupCompleted === true &&
-              profileResult.data?.selectsCompleted !== true,
-          });
-          setUserProfile(profileResult.data);
+          // Fetch user profile from Supabase
+          const profileResult = await getUserProfile(session.user.id);
 
-          // Check for pending deletion
-          if (profileResult.data?.scheduledForDeletionAt) {
-            const scheduledDate = profileResult.data.scheduledForDeletionAt.toDate
-              ? profileResult.data.scheduledForDeletionAt.toDate()
-              : new Date(profileResult.data.scheduledForDeletionAt);
-
-            setPendingDeletion({
-              isScheduled: true,
-              scheduledDate: scheduledDate,
+          if (profileResult.success) {
+            logger.info('AuthContext: User profile loaded', {
+              profileSetupCompleted: profileResult.data?.profile_setup_completed,
             });
-            logger.info('AuthContext: User has pending deletion', {
-              scheduledDate: scheduledDate.toISOString(),
-            });
-          } else {
-            setPendingDeletion(null);
-          }
-        } else {
-          // New user via phone auth - create profile using native Firestore
-          logger.debug('AuthContext: No user profile found, creating for new user');
-          const userDoc = {
-            uid: firebaseUser.uid,
-            phoneNumber: firebaseUser.phoneNumber || '',
-            email: firebaseUser.email || '',
-            username: `user_${Date.now()}`,
-            displayName: firebaseUser.displayName || 'New User',
-            photoURL: firebaseUser.photoURL || null,
-            bio: '',
-            friends: [],
-            profileSetupCompleted: false,
-            selectsCompleted: false,
-          };
+            setUserProfile(profileResult.data);
 
-          const createResult = await createUserDocumentNative(firebaseUser.uid, userDoc);
-          if (createResult.success) {
-            const newProfile = { ...userDoc, createdAt: new Date() };
-            logger.info('AuthContext: New user profile created - setting userProfile', {
-              profileSetupCompleted: newProfile.profileSetupCompleted,
-              willShowProfileSetup: newProfile.profileSetupCompleted === false,
-            });
+            // Check for pending deletion
+            if (profileResult.data?.scheduled_for_deletion_at) {
+              const scheduledDate = new Date(profileResult.data.scheduled_for_deletion_at);
+              setPendingDeletion({
+                isScheduled: true,
+                scheduledDate,
+              });
+              logger.info('AuthContext: User has pending deletion', {
+                scheduledDate: scheduledDate.toISOString(),
+              });
+            } else {
+              setPendingDeletion(null);
+            }
+          } else if (event === 'SIGNED_IN') {
+            // New user - create minimal profile
+            logger.debug('AuthContext: No profile found, creating for new user');
+            const newProfile = {
+              id: session.user.id,
+              phone_number: session.user.phone || '',
+              username: `user_${Date.now()}`,
+              display_name: 'New User',
+              photo_url: null,
+              bio: '',
+              profile_setup_completed: false,
+              selects_completed: false,
+            };
             setUserProfile(newProfile);
-          } else {
-            // Even if Firestore write fails, use the local userDoc
-            // so user can still proceed to ProfileSetup
-            logger.error('AuthContext: Failed to create user document in Firestore', {
-              error: createResult.error,
-            });
-            const fallbackProfile = { ...userDoc, createdAt: new Date() };
-            logger.info('AuthContext: Using fallback profile - setting userProfile', {
-              profileSetupCompleted: fallbackProfile.profileSetupCompleted,
-              willShowProfileSetup: fallbackProfile.profileSetupCompleted === false,
-            });
-            setUserProfile(fallbackProfile);
           }
         }
-      } else {
+      }
+
+      if (event === 'SIGNED_OUT') {
         setUser(null);
         setUserProfile(null);
+        setPendingDeletion(null);
       }
 
       if (initializing) {
@@ -206,42 +144,76 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // Silent migration bridge: detect Firebase token on mount, call Edge Function, call setSession
+  useEffect(() => {
+    const attemptMigration = async () => {
+      try {
+        const firebaseAuth = getAuth();
+        const firebaseUser = firebaseAuth.currentUser;
+        if (firebaseUser) {
+          logger.info('AuthContext: Firebase user detected, attempting migration', {
+            uid: firebaseUser.uid,
+          });
+
+          const firebaseToken = await firebaseUser.getIdToken();
+          const { data, error } = await supabase.functions.invoke('migrate-firebase-auth', {
+            body: { firebaseToken },
+          });
+
+          if (error) {
+            logger.warn('AuthContext: Migration failed, user will re-verify', {
+              error: error.message,
+            });
+          } else if (data?.access_token && data?.refresh_token) {
+            // CRITICAL: Set the Supabase session with real tokens from Edge Function
+            await supabase.auth.setSession({
+              access_token: data.access_token,
+              refresh_token: data.refresh_token,
+            });
+            // onAuthStateChange will fire SIGNED_IN -> AuthContext picks up session
+            logger.info('AuthContext: Silent migration completed', { migrated: data.migrated });
+          }
+
+          // Sign out of Firebase after migration attempt (success or failure)
+          await firebaseAuth.signOut();
+          logger.info('AuthContext: Firebase sign out after migration');
+        }
+      } catch (error) {
+        logger.warn('AuthContext: Migration attempt failed', { error: error.message });
+      }
+    };
+
+    attemptMigration();
   }, []);
 
   const signOut = async () => {
     logger.info('AuthContext: Sign out requested - starting comprehensive cleanup');
     try {
       setLoading(true);
-      const userId = user?.uid;
+      const userId = user?.id;
 
-      // Step 1: Clear FCM token from Firestore FIRST (while still authenticated)
-      // This MUST happen before auth.signOut() - user loses write permission after
+      // Step 1: Clear FCM token from Supabase (while still authenticated)
       if (userId) {
         try {
-          logger.debug('AuthContext: Clearing FCM token from Firestore', { userId });
-          const userRef = doc(db, 'users', userId);
-          await updateDoc(userRef, {
-            fcmToken: null,
-            updatedAt: serverTimestamp(),
-          });
-          logger.info('AuthContext: FCM token cleared from Firestore');
+          logger.debug('AuthContext: Clearing FCM token from Supabase', { userId });
+          await supabase
+            .from('users')
+            .update({ fcm_token: null, updated_at: new Date().toISOString() })
+            .eq('id', userId);
+          logger.info('AuthContext: FCM token cleared');
         } catch (fcmError) {
-          // Non-fatal - continue with logout even if this fails
-          logger.warn('AuthContext: Failed to clear FCM token from Firestore', {
+          logger.warn('AuthContext: Failed to clear FCM token', {
             error: fcmError.message,
           });
         }
       }
 
-      // Step 2: Delete local FCM token from messaging SDK
-      // Note: @react-native-firebase/messaging not installed in this project
-      // The notification service uses expo-notifications instead
-      // Per research: "Don't rely on token regeneration; focus on server-side cleanup"
-      // Step 2 is handled via clearLocalNotificationToken below
-      logger.debug('AuthContext: Skipping messaging().deleteToken() - using expo-notifications');
-
-      // Step 3: Clear SecureStore items (FCM token stored locally)
+      // Step 2: Clear SecureStore items
       try {
         await secureStorage.clearAll();
         logger.info('AuthContext: SecureStore cleared');
@@ -251,7 +223,7 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Step 4: Clear local notification token reference
+      // Step 3: Clear local notification token reference
       try {
         await clearLocalNotificationToken();
         logger.info('AuthContext: Local notification token cleared');
@@ -261,7 +233,7 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Step 5: Clear AsyncStorage (non-sensitive cached data like upload queue)
+      // Step 4: Clear AsyncStorage
       try {
         await AsyncStorage.clear();
         logger.info('AuthContext: AsyncStorage cleared');
@@ -271,7 +243,7 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Step 6: Clear expo-image cache (prevents stale gray photos on re-login)
+      // Step 5: Clear expo-image cache
       try {
         await Image.clearMemoryCache();
         await Image.clearDiskCache();
@@ -282,9 +254,8 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Step 7: Sign out from Firebase Auth (LAST - after all cleanup)
-      const auth = getAuth();
-      await auth.signOut();
+      // Step 6: Sign out from Supabase Auth (LAST - after all cleanup)
+      await supabase.auth.signOut();
 
       setUser(null);
       setUserProfile(null);
@@ -300,18 +271,24 @@ export const AuthProvider = ({ children }) => {
 
   const cancelDeletion = async () => {
     try {
-      const result = await cancelAccountDeletion();
-      if (result.success) {
-        setPendingDeletion(null);
-        // Refresh user profile to clear the field
-        const refreshedProfile = await getUserDocumentNative(user.uid);
-        if (refreshedProfile.success) {
-          setUserProfile(refreshedProfile.data);
-        }
-        logger.info('AuthContext: Deletion canceled');
-        return { success: true };
+      const { error } = await supabase
+        .from('users')
+        .update({ scheduled_for_deletion_at: null, deletion_reason: null })
+        .eq('id', user.id);
+
+      if (error) {
+        logger.error('AuthContext: Failed to cancel deletion', { error: error.message });
+        return { success: false, error: error.message };
       }
-      return result;
+
+      setPendingDeletion(null);
+      // Refresh user profile
+      const refreshedProfile = await getUserProfile(user.id);
+      if (refreshedProfile.success) {
+        setUserProfile(refreshedProfile.data);
+      }
+      logger.info('AuthContext: Deletion canceled');
+      return { success: true };
     } catch (error) {
       logger.error('AuthContext: Failed to cancel deletion', { error: error.message });
       return { success: false, error: error.message };
@@ -323,17 +300,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const refreshUserProfile = async () => {
-    if (!user?.uid) {
+    if (!user?.id) {
       logger.warn('refreshUserProfile: No user to refresh');
       return { success: false, error: 'No user' };
     }
     try {
-      logger.debug('refreshUserProfile: Fetching latest user profile', { userId: user.uid });
-      const profileResult = await getUserDocumentNative(user.uid);
+      logger.debug('refreshUserProfile: Fetching latest user profile', { userId: user.id });
+      const profileResult = await getUserProfile(user.id);
       if (profileResult.success) {
-        logger.info('refreshUserProfile: Profile refreshed', {
-          contactsSyncCompleted: profileResult.data?.contactsSyncCompleted,
-        });
+        logger.info('refreshUserProfile: Profile refreshed');
         setUserProfile(profileResult.data);
         return { success: true, data: profileResult.data };
       }
@@ -351,13 +326,11 @@ export const AuthProvider = ({ children }) => {
     loading,
     initializing,
     pendingDeletion,
-    // Phone-only auth
     signOut,
     cancelDeletion,
     updateUserProfile,
     refreshUserProfile,
-    // Native Firestore operations (required for phone auth users)
-    updateUserDocumentNative,
+    updateUserDocument,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

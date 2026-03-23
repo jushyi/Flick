@@ -1,44 +1,37 @@
-import React, { createContext, useContext, useRef } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import logger from '../utils/logger';
 
 /**
  * PhoneAuthContext
  *
- * Provides a way to share the Firebase ConfirmationResult between
- * PhoneInputScreen and VerificationScreen without serialization.
- *
- * Firebase ConfirmationResult contains functions (like .confirm()) that cannot
- * be serialized through React Navigation params. Using a ref stored in context
- * allows us to pass this object by reference instead.
- *
- * Usage:
- * - Wrap auth screens with <PhoneAuthProvider>
- * - In PhoneInputScreen: confirmationRef.current = result.confirmation
- * - In VerificationScreen: const confirmation = confirmationRef.current
+ * Simplified for Supabase OTP flow. Stores E.164 phone number between
+ * PhoneInputScreen and VerificationScreen. No ConfirmationResult needed --
+ * Supabase OTP is inherently stateless.
  */
 const PhoneAuthContext = createContext(null);
 
 /**
  * PhoneAuthProvider
- * Provides confirmationRef to child components via context.
- * The ref is used to store Firebase ConfirmationResult without serialization.
+ * Provides E.164 phone state to child components via context.
  */
 export const PhoneAuthProvider = ({ children }) => {
-  const confirmationRef = useRef(null);
+  const [e164Phone, setE164Phone] = useState(null);
 
   logger.debug('PhoneAuthProvider: Mounted');
 
   return (
-    <PhoneAuthContext.Provider value={{ confirmationRef }}>{children}</PhoneAuthContext.Provider>
+    <PhoneAuthContext.Provider value={{ e164Phone, setE164Phone }}>
+      {children}
+    </PhoneAuthContext.Provider>
   );
 };
 
 /**
  * usePhoneAuth hook
- * Access the phone auth context containing confirmationRef.
+ * Access the phone auth context containing E.164 phone state.
  * Must be used within a PhoneAuthProvider.
  *
- * @returns {{ confirmationRef: React.MutableRefObject<any> }}
+ * @returns {{ e164Phone: string | null, setE164Phone: (phone: string | null) => void }}
  */
 export const usePhoneAuth = () => {
   const context = useContext(PhoneAuthContext);
