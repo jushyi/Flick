@@ -42,7 +42,7 @@ Declared values (from existing `src/constants/spacing.js` -- no changes):
 | xxl | 40px | Section spacing |
 | xxxl | 48px | Major section breaks |
 
-Exceptions: none -- existing scale preserved exactly
+**Project-specific exceptions:** 12px (`sm`) and 40px (`xxl`) are established in `src/constants/spacing.js` and unchanged from the existing system. These are project-specific additions to the standard 8-point grid, present since the app's initial build and used consistently across all screens. They are not introduced by this phase.
 
 ---
 
@@ -68,10 +68,10 @@ Existing system from `src/constants/colors.js` -- no changes:
 |------|-------|-------|
 | Dominant (60%) | #0A0A1A | CRT navy-black screen backgrounds |
 | Secondary (30%) | #161628 | Cards, modals, input backgrounds, country picker |
-| Accent (10%) | #00D4FF | Primary CTA button ("Send Code", "Verify"), interactive highlights |
+| Accent (10%) | #00D4FF | Primary CTA button ("Send Code", "Verify Code"), interactive highlights |
 | Destructive | #FF3333 | Error text, validation shake feedback |
 
-Accent reserved for: primary action buttons on auth screens only (Send Code, Verify buttons). No new accent usages in this phase.
+Accent reserved for: primary action buttons on auth screens only (Send Code, Verify Code buttons). No new accent usages in this phase.
 
 ---
 
@@ -82,7 +82,7 @@ Auth screens are rewritten but copy stays functionally identical. The Supabase O
 | Element | Copy |
 |---------|------|
 | Primary CTA (PhoneInput) | "Send Code" (loading: "Sending...") |
-| Primary CTA (Verification) | "Verify" (loading: "Verifying...") |
+| Primary CTA (Verification) | "Verify Code" (loading: "Verifying...") |
 | Phone input description | "We'll send you a verification code to confirm your number." |
 | Phone input placeholder | "(555) 555-5555" |
 | Verification subtitle | "Enter the code we sent to {formatted phone}" |
@@ -116,6 +116,8 @@ This reuses the existing PhoneInputScreen layout. No new screen is needed.
 
 Visual layout identical. Behavioral changes:
 
+**Focal point:** The "Send Code" accent CTA button is the visual anchor -- unchanged from existing layout. Phone number input field sits above it as the primary interaction target.
+
 | State | Current (Firebase) | After (Supabase) | Visual Change |
 |-------|-------------------|-------------------|---------------|
 | Send code | Calls `signInWithPhoneNumber()`, stores ConfirmationResult in ref | Calls `supabase.auth.signInWithOtp({ phone })`, no ref stored | None |
@@ -127,6 +129,8 @@ Visual layout identical. Behavioral changes:
 ### VerificationScreen (rewritten for Supabase)
 
 Visual layout identical. Behavioral changes:
+
+**Focal point:** The 6-digit code input row is the visual anchor and primary interaction target. The "Verify Code" accent CTA button sits below it -- unchanged from existing layout.
 
 | State | Current (Firebase) | After (Supabase) | Visual Change |
 |-------|-------------------|-------------------|---------------|
