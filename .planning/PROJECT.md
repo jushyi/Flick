@@ -48,6 +48,7 @@ Snaps and streaks make messaging a daily habit — ephemeral photo messages that
 - Performance overhaul across every screen (feed, darkroom, conversations, snaps, transitions)
 - Consistent loading and empty states everywhere
 - Dead code cleanup and per-screen audit
+- Fix Live Activities (push-to-start APNS, deep links, stacked layout) — resolve v1.1 gaps while touching those screens
 
 ### Out of Scope
 
@@ -58,7 +59,6 @@ Snaps and streaks make messaging a daily habit — ephemeral photo messages that
 - Message search — requires Algolia/Elasticsearch; low-value for ephemeral-focused app
 - Gallery photo picks in snaps — camera-only keeps it authentic
 - Drawing/doodle on snaps — caption text sufficient for v1; can add later
-- Screenshot detection — deferred to v2 to avoid native rebuild (requires `expo-screen-capture` + EAS build)
 - Auto-disappearing text messages — ephemerality is for snaps specifically
 
 ## Context

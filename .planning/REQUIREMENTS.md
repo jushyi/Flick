@@ -1,149 +1,147 @@
-# Requirements: Flick v1.1 Pinned Snaps & Polish
+# Requirements: Flick v1.2 Speed & Scale
 
-**Defined:** 2026-02-25
-**Core Value:** Snaps and streaks make messaging a daily habit
+**Defined:** 2026-03-23
+**Core Value:** Same app, same features — rebuilt on a faster, more scalable backend. Every interaction feels instant.
 
-## v1.1 Requirements
+## v1.2 Requirements
 
 Requirements for this milestone. Each maps to roadmap phases.
 
-### Screenshot Detection
+### Infrastructure & Schema
 
-- [x] **SCRN-01**: Sender receives push notification when recipient screenshots their snap
-- [x] **SCRN-02**: Screenshotted snaps display a visual indicator on the snap bubble in conversation
-- [x] **SCRN-03**: Screenshot event is recorded on the snap message document (`screenshottedAt` field)
+- [ ] **INFRA-01**: PostgreSQL schema designed with normalized relational tables replacing all 15 Firestore collections
+- [ ] **INFRA-02**: Supabase project provisioned with database, auth, storage, and Edge Functions configured
+- [ ] **INFRA-03**: PowerSync configured with sync rules for offline-capable collections (photos, darkroom, conversations, friendships)
+- [ ] **INFRA-04**: Row-level security (RLS) policies enforce per-user data access on all tables
+- [ ] **INFRA-05**: TypeScript foundation configured (tsconfig with allowJs, path aliases, Supabase-generated database types)
 
-### Pinned Snaps — iOS
+### Auth & Storage
 
-- [x] **PINI-01**: Sender can toggle "pin to screen" when sending a snap
-- [x] **PINI-02**: Recipient sees a Live Activity on lock screen with snap photo thumbnail, sender name, and optional caption
-- [x] **PINI-03**: Tapping the Live Activity opens the conversation (same deeplink as push notification)
-- [x] **PINI-04**: Live Activity disappears after recipient views the snap
-- [x] **PINI-05**: Live Activity auto-expires after 48 hours if snap is never viewed
+- [ ] **AUTH-01**: User can authenticate via phone OTP through Supabase Auth + Twilio (replacing Firebase Phone Auth)
+- [ ] **AUTH-02**: Existing user accounts migrated with preserved UIDs so all relationships remain intact
+- [ ] **AUTH-03**: Re-authentication via OTP works for sensitive operations (account deletion)
+- [ ] **STOR-01**: Photos and videos upload to Supabase Storage (S3-compatible) with CDN-backed URLs
+- [ ] **STOR-02**: Snap photos upload to Supabase Storage with short-lived signed URLs (5-minute expiry)
+- [ ] **STOR-03**: Upload queue service works against new storage backend with same retry/persistence behavior
+- [ ] **STOR-04**: Data migration script transfers all existing photos, videos, and profile images from Firebase Storage to Supabase Storage
 
-### Pinned Snaps — Android
+### Core Services
 
-- [x] **PINA-01**: Recipient sees a persistent ongoing notification with snap photo thumbnail for pinned snaps
-- [x] **PINA-02**: Tapping the notification opens the conversation
-- [x] **PINA-03**: Notification dismisses when recipient views the snap
+- [ ] **CORE-01**: Photo service rewritten for Supabase — CRUD, reveal, triage, batch triage, soft delete all functional
+- [ ] **CORE-02**: Feed loads via single SQL JOIN query replacing chunked Firestore `in` queries (30-ID limit eliminated)
+- [ ] **CORE-03**: Darkroom service rewritten — developing/revealed state, reveal scheduling, countdown timer all functional
+- [ ] **CORE-04**: Friendship service rewritten — send/accept/decline requests, friend list, mutual friends all functional
+- [ ] **CORE-05**: Comment service rewritten — CRUD, real-time subscriptions, @mention parsing all functional
+- [ ] **CORE-06**: Album and monthly album services rewritten for Supabase
+- [ ] **CORE-07**: User profile service rewritten — CRUD, search, friend count all functional
+- [ ] **CORE-08**: Block and report services rewritten for Supabase
+- [ ] **CORE-09**: Contact sync service works against new user lookup endpoints
+- [ ] **CORE-10**: Real-time subscriptions work for feed, friend requests, and notifications via Supabase Realtime
 
-### Story Viewing Performance
+### Messaging & Social
 
-- [x] **PERF-01**: Photos display a blurred placeholder that crossfades to full resolution over 200ms (progressive loading)
-- [x] **PERF-02**: Tapping to next photo immediately shows dark background + spinner instead of lingering on previous image
-- [x] **PERF-03**: Cube transition between friends runs on the UI thread via Reanimated at 60fps
-- [x] **PERF-04**: Next friend's first photo is prefetched while viewing current friend; next 2-3 photos within current friend are prefetched
-- [x] **PERF-05**: Feed story cards load in paginated batches with a "Load more" button
-- [x] **PERF-06**: Firestore real-time listeners pause during photo/friend transitions and resume after settling
-- [x] **PERF-07**: Failed image loads auto-skip to the next photo after a timeout
-- [x] **PERF-08**: New photos generate a tiny thumbnail at upload time stored as base64 data URL in Firestore
+- [ ] **MSG-01**: Conversation service rewritten — list, create, soft delete, unread counts all functional via Supabase
+- [ ] **MSG-02**: Message service rewritten — send, paginate, real-time subscription all functional
+- [ ] **MSG-03**: All 5 message types (text, reaction, reply, snap, tagged_photo) work identically to current behavior
+- [ ] **MSG-04**: Snap lifecycle rewritten — upload, send, view-once, auto-cleanup via Supabase Storage + Edge Functions
+- [ ] **MSG-05**: Streak engine rewritten — 3-day activation, tiered expiry, warning notifications all server-authoritative
+- [ ] **MSG-06**: Read receipts with privacy toggle work via Supabase (conversation-level, mutual model)
+- [ ] **MSG-07**: Message reactions (double-tap heart + 6-emoji picker) work with new backend
+- [ ] **MSG-08**: Swipe-to-reply with quoted context works with new backend
+- [ ] **MSG-09**: Message deletion (unsend) and delete-for-me work via Edge Functions
+- [ ] **MSG-10**: Screenshot detection and notification work with new backend
+- [ ] **MSG-11**: Tagged photo DM pipeline works — auto-send tagged photos, add-to-feed resharing with attribution
 
-### Darkroom Optimization
+### Background Jobs
 
-- [ ] **DARK-01**: Darkroom reveal checks use local timestamp cache to avoid redundant Firestore reads
-- [ ] **DARK-02**: Cache invalidates on new photo capture and after reveal processing
+- [ ] **JOBS-01**: Darkroom reveal processing runs every 2 minutes via pg_cron (replaces processDarkroomReveals Cloud Function)
+- [ ] **JOBS-02**: Streak expiry processing checks all active streaks, expires stale ones, sends 4h warning notifications
+- [ ] **JOBS-03**: Snap cleanup deletes expired snap photos from storage (replaces cleanupExpiredSnaps)
+- [ ] **JOBS-04**: Notification TTL cleanup deletes notifications older than 30 days
+- [ ] **JOBS-05**: Account deletion cascade executes scheduled deletions with full data cleanup
+- [ ] **JOBS-06**: Push notifications sent via Edge Functions using Expo Server SDK (all notification types ported)
+- [ ] **JOBS-07**: Notification debouncing/batching for reactions and tags (replaces Cloud Tasks 30s windows)
+- [ ] **JOBS-08**: Friend count maintenance via PostgreSQL triggers (replaces increment/decrement Cloud Functions)
+- [ ] **JOBS-09**: Photo soft-delete cascade (album removal, etc.) via PostgreSQL triggers
+- [ ] **JOBS-10**: Pinned snap notification expiry processing (48h auto-dismiss)
 
-### Tech Debt
+### Performance
 
-- [ ] **DEBT-01**: useConversation hook Phase 2 additions have dedicated unit tests
-- [x] **DEBT-02**: Stale test assertion in snapFunctions.test.js line 522 is fixed
-- [ ] **DEBT-03**: Firestore TTL policy configured for snap message auto-cleanup
-- [ ] **DEBT-04**: Firebase Storage lifecycle rule configured for orphaned snap photo cleanup
-- [x] **DEBT-05**: `hoursSinceLastMutual` variable renamed to accurately reflect its calculation
+- [ ] **PERF-01**: TanStack Query integrated — all data fetching uses useQuery/useMutation with automatic caching
+- [ ] **PERF-02**: Stale-while-revalidate pattern on feed, conversations, and profile screens (cached data renders in <100ms)
+- [ ] **PERF-03**: Skeleton screens on all list views (feed, conversations, friends, comments, notifications, albums)
+- [ ] **PERF-04**: Optimistic updates for message sending, reactions, friend requests, photo triage, and read receipts
+- [ ] **PERF-05**: Photo/video loading uses CDN-backed permanent URLs or pre-refreshed signed URLs (no expired URL flash)
+- [ ] **PERF-06**: Feed images served at appropriate sizes (400px for cards, full-res only in PhotoDetail)
+- [ ] **PERF-07**: Consistent empty state screens across all list views
+- [ ] **PERF-08**: Offline query persistence via TanStack Query + AsyncStorage (app opens instantly with cached data)
+- [ ] **PERF-09**: PowerSync local SQLite provides instant reads for photos, darkroom, conversations, friendships (0ms network latency)
+- [ ] **PERF-10**: New story photos from friends load within 1-2 seconds — CDN edge caching, aggressive prefetching of next friend's photos, and optimized image sizing for feed/story views
+- [ ] **PERF-11**: Feed and story image prefetching loads next N images while viewing current (existing v1.1 prefetching enhanced with CDN + size optimization)
 
-### Video Support
+### Live Activity Fixes
 
-- [x] **VID-01**: Hold shutter for ~500ms starts video recording; tap takes photo (no toggle UI)
-- [x] **VID-02**: Circular progress ring fills around shutter button during recording (30s max)
-- [x] **VID-03**: Video uploads create Firestore documents with mediaType, videoURL, and duration fields
-- [x] **VID-04**: Videos develop and reveal identically to photos in darkroom with video icon overlay
-- [x] **VID-05**: Feed autoplays videos muted; tap to unmute persists across subsequent videos
-- [x] **VID-06**: Video cards display a duration badge (e.g. "0:12") in the corner
-- [x] **VID-07**: PhotoDetail plays videos with progress bar and mute toggle, looping in feed mode
-- [x] **VID-08**: Stories plays videos once to completion then auto-advances to next story
-- [x] **VID-09**: expo-video installed, microphone permission configured, storage rules allow video content types
-- [x] **VID-10**: Video thumbnail placeholder generated at capture time for progressive loading
+- [ ] **LIVE-01**: Push-to-start Live Activities work from background/killed state (fix APNS BadDeviceToken token acceptance)
+
+### TypeScript Migration
+
+- [ ] **TS-01**: All rewritten service files are TypeScript (.ts) with Supabase-generated database types
+- [ ] **TS-02**: All rewritten hooks are TypeScript (.ts/.tsx) with proper type annotations
+- [ ] **TS-03**: Remaining untouched JS files converted to TypeScript after main migration
+- [ ] **TS-04**: Zero `any` types in rewritten code (strict typing for new code, allowJs for legacy)
+
+### Cleanup
+
+- [ ] **CLEAN-01**: All 7 @react-native-firebase/* packages removed (single EAS native build)
+- [ ] **CLEAN-02**: Firebase Cloud Functions directory (functions/) removed after all jobs ported
+- [ ] **CLEAN-03**: Dead code identified and removed during per-screen audit
+- [ ] **CLEAN-04**: Firebase-specific config files (GoogleService-Info.plist, google-services.json) removed
+- [ ] **CLEAN-05**: Sentry replaces Firebase Performance Monitoring for error tracking and traces
 
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
 
-### Screenshot Enhancement
+### Advanced Performance
 
-- **SCRN-04**: Screen recording prevention during snap viewing (FLAG_SECURE on Android, preventScreenCapture on iOS)
-- **SCRN-05**: Screenshot detection for all ephemeral message types (not just snaps)
+- **PERF-12**: BlurHash placeholders replace base64 thumbnails for smaller payload + better visual quality
+- **PERF-13**: Image CDN with on-the-fly resizing (Cloudflare Images, imgproxy)
 
-### Live Activity Enhancement
+### Advanced Offline
 
-- **PINI-06**: Push-to-start Live Activities from server without app involvement (iOS 17.2+)
-- **PINI-07**: Darkroom countdown Live Activity showing developing photo timer on lock screen
+- **OFFLINE-01**: Offline photo triage (journal/archive) syncs when back online
+- **OFFLINE-02**: Offline friend request accept/decline syncs when back online
 
-### Android Enhancement
+### Monitoring
 
-- **PINA-04**: Android Live Updates (native progress notifications) when Android 16 adoption is sufficient
-- **PINA-05**: Rich snap notification with custom BigPictureStyle layout (sender avatar + styled text)
+- **MON-01**: Real-time dashboard for API latency, error rates, and database query performance
+- **MON-02**: User session replay for debugging production issues
 
 ## Out of Scope
 
-| Feature                                          | Reason                                                                                                               |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| Screenshot blocking (prevent all screenshots)    | iOS does not allow apps to fully block screenshots; creates poor UX on Android; industry standard is detect + notify |
-| Screenshot detection for non-snap messages       | Creates social anxiety for normal conversations; Instagram model scopes to ephemeral content only                    |
-| Live Activity showing full-resolution snap photo | 4KB ActivityKit data limit; App Groups workaround uses compressed thumbnail instead                                  |
-| Dynamic Island snap display                      | Adds complexity without proportional user value; lock screen is the primary surface                                  |
-| Group DM pinned snaps                            | 1-on-1 foundation needs to be solid first                                                                            |
-| Snap replay (view a second time)                 | Undermines view-once ephemerality model; disposable camera metaphor                                                  |
+| Feature | Reason |
+|---------|--------|
+| GraphQL API | REST with TypeScript types sufficient at this scale; GraphQL adds schema/resolver/codegen complexity |
+| Full offline-first with CRDTs | Social features are inherently online; offline scoped to media capture only |
+| Microservices architecture | ~75K LOC, solo developer — modular monolith is appropriate |
+| Custom CDN for images | Supabase Storage has built-in CDN; revisit at 1M+ images/day |
+| WebSocket real-time for everything | Only 7 of 15 data types need real-time; rest use REST + TanStack Query |
+| New user-facing features | Migration only — functionally identical app |
+| Database-level RLS without API layer | API-level auth checks simpler to debug for small team |
 
 ## Traceability
 
 Which phases cover which requirements. Updated during roadmap creation.
 
-| Requirement | Phase | Status  |
-| ----------- | ----- | ------- |
-| PERF-01     | 7     | Complete |
-| PERF-02     | 7     | Complete |
-| PERF-03     | 7     | Complete |
-| PERF-04     | 7     | Complete |
-| PERF-05     | 7     | Complete |
-| PERF-06     | 7     | Complete |
-| PERF-07     | 7     | Complete |
-| PERF-08     | 7     | Complete |
-| SCRN-01     | 8     | Complete |
-| SCRN-02     | 8     | Complete |
-| SCRN-03     | 8     | Complete |
-| PINI-01     | 9     | Complete |
-| PINI-02     | 9     | Complete |
-| PINI-03     | 9     | Complete |
-| PINI-04     | 9     | Complete |
-| PINI-05     | 9     | Complete |
-| PINA-01     | 10    | Complete |
-| PINA-02     | 10    | Complete |
-| PINA-03     | 10    | Complete |
-| DARK-01     | 6     | Pending |
-| DARK-02     | 6     | Pending |
-| DEBT-01     | 6     | Pending |
-| DEBT-02     | 6     | Complete |
-| DEBT-03     | 6     | Pending |
-| DEBT-04     | 6     | Pending |
-| DEBT-05     | 6     | Complete |
-| VID-01      | 11    | Complete |
-| VID-02      | 11    | Complete |
-| VID-03      | 11    | Complete |
-| VID-04      | 11    | Complete |
-| VID-05      | 11    | Complete |
-| VID-06      | 11    | Complete |
-| VID-07      | 11    | Complete |
-| VID-08      | 11    | Complete |
-| VID-09      | 11    | Complete |
-| VID-10      | 11    | Complete |
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| (populated during roadmap creation) | | |
 
 **Coverage:**
-
-- v1.1 requirements: 36 total
-- Mapped to phases: 36
-- Unmapped: 0
+- v1.2 requirements: 57 total
+- Mapped to phases: 0
+- Unmapped: 57
 
 ---
-
-_Requirements defined: 2026-02-25_
-_Last updated: 2026-03-04 — Added VID-01 through VID-10 for Phase 11 (video support)_
+*Requirements defined: 2026-03-23*
+*Last updated: 2026-03-23 after initial definition*
