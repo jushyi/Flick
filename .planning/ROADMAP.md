@@ -74,7 +74,7 @@ Plans:
   4. Photos and videos upload to Supabase Storage and are accessible via CDN-backed URLs
   5. Snap photos upload with 5-minute signed URLs matching current ephemeral behavior
   6. The upload queue service retries failed uploads and persists queue across app restarts against the new storage backend
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [ ] 13-01-PLAN.md -- Jest TS config, Supabase mocks, phone auth service, signed URL service
@@ -177,7 +177,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. Schema & Infrastructure Foundation | 3/3 | Complete    | 2026-03-23 | - |
-| 13. Auth & Storage Migration | 2/4 | In Progress|  | - |
+| 13. Auth & Storage Migration | 3/4 | In Progress|  | - |
 | 14. Data Layer & Caching Foundation | v1.2 | 0/2 | Not started | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
 | 16. Core Services -- Social & Albums | v1.2 | 0/TBD | Not started | - |
