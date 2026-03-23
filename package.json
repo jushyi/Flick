@@ -14,7 +14,11 @@
     "format": "prettier --write \"src/**/*.{js,jsx,json}\" \"*.{js,json}\"",
     "test": "jest && cd functions && npx jest",
     "test:watch": "jest --watchAll",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "db:migrate": "npx supabase db push",
+    "db:reset": "npx supabase db reset --linked",
+    "db:types": "npx supabase gen types typescript --linked > src/types/database.ts",
+    "db:new-migration": "npx supabase migration new"
   },
   "dependencies": {
     "@bacons/apple-targets": "^4.0.6",
@@ -35,6 +39,7 @@
     "@react-navigation/material-top-tabs": "^7.4.13",
     "@react-navigation/native": "^7.1.26",
     "@react-navigation/native-stack": "^7.9.0",
+    "@supabase/supabase-js": "^2.100.0",
     "date-fns": "^4.1.0",
     "expo": "~54.0.33",
     "expo-application": "~7.0.8",
@@ -96,6 +101,7 @@
     "patch-package": "^8.0.1",
     "prettier": "^3.8.1",
     "react-native-dotenv": "^3.4.11",
+    "supabase": "^2.83.0",
     "typescript": "^5.9.3"
   },
   "optionalDependencies": {
