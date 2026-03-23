@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
 stopped_at: Completed 13-01-PLAN.md
-last_updated: "2026-03-23T18:39:00Z"
-last_activity: 2026-03-23 -- Completed Plan 13-01
+last_updated: "2026-03-23T18:40:50.322Z"
+last_activity: 2026-03-23 -- Completed Plan 13-02
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 9
-  completed_plans: 4
+  completed_plans: 5
   percent: 44
 ---
 
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 13 of 20 (Auth & Storage Migration)
-Plan: 1 of 3 in current phase (completed)
-Status: Plan 13-01 Complete
-Last activity: 2026-03-23 -- Completed Plan 13-01
+Plan: 2 of 4 in current phase (completed)
+Status: Plan 13-02 Complete
+Last activity: 2026-03-23 -- Completed Plan 13-02
 
 Progress: [████------] 44%
 
@@ -72,6 +72,13 @@ Progress: [████------] 44%
 - Supabase service files in src/services/supabase/ with {success, error} return pattern
 - Supabase mocks on global.__supabaseMocks for test access
 
+**Phase 13-02 decisions:**
+- WebP compression: 0.9 for photos/snaps at 1080px, 0.7 for profile at 400px
+- Edge Function uses Google Identity Toolkit REST API (not Firebase Admin SDK) for Deno compatibility
+- GoTrue session tokens via temporary password strategy for silent auth migration
+- Phone user lookup via direct users table query, not auth.admin.listUsers()
+- base64-arraybuffer decode pattern for all React Native file uploads to Supabase Storage
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -86,6 +93,6 @@ Progress: [████------] 44%
 
 ## Session Continuity
 
-Last session: 2026-03-23T18:39:00Z
-Stopped at: Completed 13-01-PLAN.md
-Resume file: .planning/phases/13-auth-storage-migration/13-01-SUMMARY.md
+Last session: 2026-03-23T18:40:50Z
+Stopped at: Completed 13-02-PLAN.md
+Resume file: .planning/phases/13-auth-storage-migration/13-02-SUMMARY.md

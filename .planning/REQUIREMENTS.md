@@ -20,8 +20,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **AUTH-01**: User can authenticate via phone OTP through Supabase Auth + Twilio (replacing Firebase Phone Auth)
 - [x] **AUTH-02**: Existing user accounts migrated with preserved UIDs so all relationships remain intact
 - [x] **AUTH-03**: Re-authentication via OTP works for sensitive operations (account deletion)
-- [ ] **STOR-01**: Photos and videos upload to Supabase Storage (S3-compatible) with CDN-backed URLs
-- [ ] **STOR-02**: Snap photos upload to Supabase Storage with short-lived signed URLs (5-minute expiry)
+- [x] **STOR-01**: Photos and videos upload to Supabase Storage (S3-compatible) with CDN-backed URLs
+- [x] **STOR-02**: Snap photos upload to Supabase Storage with short-lived signed URLs (5-minute expiry)
 - [ ] **STOR-03**: Upload queue service works against new storage backend with same retry/persistence behavior
 - [ ] **STOR-04**: Data migration script transfers all existing photos, videos, and profile images from Firebase Storage to Supabase Storage
 
@@ -143,8 +143,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-01 | Phase 13 | Complete |
 | AUTH-02 | Phase 13 | Complete |
 | AUTH-03 | Phase 13 | Complete |
-| STOR-01 | Phase 13 | Pending |
-| STOR-02 | Phase 13 | Pending |
+| STOR-01 | Phase 13 | Complete |
+| STOR-02 | Phase 13 | Complete |
 | STOR-03 | Phase 13 | Pending |
 | STOR-04 | Phase 13 | Pending |
 | PERF-01 | Phase 14 | Pending |
