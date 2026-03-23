@@ -2,21 +2,21 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
-status: planning
-stopped_at: Phase 16 context gathered
-last_updated: "2026-03-23T18:36:37.255Z"
-last_activity: 2026-03-23 -- Completed Plan 12-03
+status: executing
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-03-23T18:39:00Z"
+last_activity: 2026-03-23 -- Completed Plan 13-01
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 9
-  completed_plans: 3
-  percent: 100
+  completed_plans: 4
+  percent: 44
 ---
 
 # Project State: Flick
 
-**Status:** Ready to plan
+**Status:** Executing Phase 13
 **Last Updated:** 2026-03-23
 
 ## Project Reference
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Same app, same features -- rebuilt on a faster, more scalable backend with TypeScript
-**Current focus:** Phase 12 -- Schema & Infrastructure Foundation
+**Current focus:** Phase 13 -- Auth & Storage Migration
 
 ## Current Position
 
-Phase: 12 of 20 (Schema & Infrastructure Foundation)
-Plan: 3 of 3 in current phase (completed)
-Status: Phase 12 Complete
-Last activity: 2026-03-23 -- Completed Plan 12-03
+Phase: 13 of 20 (Auth & Storage Migration)
+Plan: 1 of 3 in current phase (completed)
+Status: Plan 13-01 Complete
+Last activity: 2026-03-23 -- Completed Plan 13-01
 
-Progress: [██████████] 100%
+Progress: [████------] 44%
 
 ## Milestone History
 
@@ -66,6 +66,12 @@ Progress: [██████████] 100%
 - SQLite uses integer 0/1 for boolean fields (warning_sent on streaks)
 - Admin-only operations (notification creation, streak CRUD) use service_role bypass
 
+**Phase 13-01 decisions:**
+- Stateless OTP pattern: no ConfirmationResult stored (Supabase handles state server-side)
+- Public CDN URLs for photos (synchronous), 5-minute signed URLs for snaps (async)
+- Supabase service files in src/services/supabase/ with {success, error} return pattern
+- Supabase mocks on global.__supabaseMocks for test access
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -80,6 +86,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-23T18:36:37.253Z
-Stopped at: Phase 16 context gathered
-Resume file: .planning/phases/16-core-services-social-albums/16-CONTEXT.md
+Last session: 2026-03-23T18:39:00Z
+Stopped at: Completed 13-01-PLAN.md
+Resume file: .planning/phases/13-auth-storage-migration/13-01-SUMMARY.md
