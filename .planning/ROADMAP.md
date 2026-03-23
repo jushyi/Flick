@@ -2,224 +2,171 @@
 
 ## Milestones
 
-- ✅ **v1.0 Messaging Upgrade** — Phases 1-5 (shipped 2012-02-25)
-- 🚧 **v1.1 Pinned Snaps & Polish** — Phases 6-10 (in progress)
+- ✅ **v1.0 Messaging Upgrade** -- Phases 1-5 (shipped 2026-02-25)
+- ✅ **v1.1 Pinned Snaps & Polish** -- Phases 6-11 (shipped 2026-03-20)
+- 🚧 **v1.2 Speed & Scale** -- Phases 12-20 (in progress)
 
 ## Phases
 
 <details>
-<summary>✅ v1.0 Messaging Upgrade (Phases 1-5) — SHIPPED 2012-02-25</summary>
+<summary>v1.0 Messaging Upgrade (Phases 1-5) -- SHIPPED 2026-02-25</summary>
 
-- [x] Phase 1: Message Infrastructure & Read Receipts (2/2 plans) — completed 2012-02-23
-- [x] Phase 2: Message Interactions (6/6 plans) — completed 2012-02-24
-- [x] Phase 3: Snap Messages (8/8 plans) — completed 2012-02-24
-- [x] Phase 4: Snap Streaks (4/4 plans) — completed 2012-02-24
-- [x] Phase 5: Photo Tag Integration (4/4 plans) — completed 2012-02-25
+- [x] Phase 1: Message Infrastructure & Read Receipts (2/2 plans)
+- [x] Phase 2: Message Interactions (6/6 plans)
+- [x] Phase 3: Snap Messages (8/8 plans)
+- [x] Phase 4: Snap Streaks (4/4 plans)
+- [x] Phase 5: Photo Tag Integration (4/4 plans)
 
 </details>
 
-### v1.1 Pinned Snaps & Polish
+<details>
+<summary>v1.1 Pinned Snaps & Polish (Phases 6-11) -- SHIPPED 2026-03-20</summary>
 
-- [ ] **Phase 6: Tech Debt & Darkroom Optimization** — Resolve carried tech debt and optimize darkroom reveal checks with local caching
-- [x] **Phase 7: Performance Enhancements to Story Viewing** — Optimize story viewing performance for smoother user experience (completed 2012-02-25)
-- [ ] **Phase 8: Screenshot Detection** — Detect and notify when a recipient screenshots a snap (gap closure in progress)
-- [ ] **Phase 9: Pinned Snaps iOS** — Pin snaps to the lock screen via Live Activities with photo thumbnail, sender info, and deep linking
-- [x] **Phase 10: Pinned Snaps Android** — Pin snaps via persistent ongoing notifications with photo thumbnail and deep linking (completed 2026-03-18)
+- [x] Phase 6: Tech Debt & Darkroom Optimization (5 plans)
+- [x] Phase 7: Performance Enhancements to Story Viewing (4 plans)
+- [x] Phase 8: Screenshot Detection (4 plans)
+- [x] Phase 9: Pinned Snaps iOS (20 plans)
+- [x] Phase 10: Pinned Snaps Android (3 plans)
+- [x] Phase 11: Add Video Support to Main Camera (8 plans)
+
+</details>
+
+### v1.2 Speed & Scale
+
+**Milestone Goal:** Same app, same features -- rebuilt on Supabase + PowerSync with TypeScript. Every interaction feels Instagram/TikTok-level instant.
+
+- [ ] **Phase 12: Schema & Infrastructure Foundation** - PostgreSQL schema, Supabase project, PowerSync config, TypeScript foundation
+- [ ] **Phase 13: Auth & Storage Migration** - Phone auth via Supabase/Twilio, photo storage migration, upload queue
+- [ ] **Phase 14: Data Layer & Caching Foundation** - TanStack Query integration, PowerSync local SQLite, offline query persistence
+- [ ] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles
+- [ ] **Phase 16: Core Services -- Social & Albums** - Friendships, comments, albums, blocks/reports, contacts, real-time subscriptions
+- [ ] **Phase 17: Messaging & Social** - Conversations, messages, snaps, streaks, reactions, replies, tagged photos
+- [ ] **Phase 18: Background Jobs & Notifications** - pg_cron jobs, Edge Functions, push notifications, triggers, Live Activity fix
+- [ ] **Phase 19: Performance Polish** - Skeleton screens, optimistic updates, CDN URLs, image sizing, empty states, prefetching
+- [ ] **Phase 20: TypeScript Sweep & Firebase Removal** - Convert remaining JS files, remove all Firebase packages, dead code cleanup
 
 ## Phase Details
 
-### Phase 6: Tech Debt & Darkroom Optimization
-
-**Goal**: The codebase has zero carried tech debt from v1.0 and darkroom reveal checks no longer make redundant Firestore reads
-**Depends on**: Phase 5 (v1.0 complete)
-**Requirements**: DEBT-01, DEBT-02, DEBT-03, DEBT-04, DEBT-05, DARK-01, DARK-02
+### Phase 12: Schema & Infrastructure Foundation
+**Goal**: The data foundation is proven -- a normalized PostgreSQL schema exists with tables for all 15 Firestore collections, Supabase services are provisioned, PowerSync sync rules are configured, and TypeScript tooling is ready
+**Depends on**: Nothing (first phase of v1.2)
+**Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05
 **Success Criteria** (what must be TRUE):
+  1. A PostgreSQL schema exists in Supabase with normalized relational tables and foreign keys replacing all Firestore collections (users, photos, friendships, comments, albums, notifications, blocks, reports, reactionBatches, conversations, messages, and darkroom state)
+  2. PowerSync sync rules are configured and tested for offline-capable collections (photos, darkroom, conversations, friendships) -- local SQLite reads return data without network
+  3. Row-level security policies on all tables enforce that users can only read/write their own data and data shared with them (friends' photos, mutual conversations)
+  4. TypeScript compiles with allowJs enabled, path aliases resolve, and `supabase gen types typescript` produces database types that import cleanly into service files
+**Plans**: TBD
 
-1. useConversation hook Phase 2 features (reactions, replies, deletion) have dedicated unit tests that pass
-2. snapFunctions.test.js passes without stale assertions (line 522 fixed)
-3. Firestore TTL policy is configured in Firebase console and auto-deletes expired snap messages
-4. Firebase Storage lifecycle rule is configured in GCS console and auto-deletes orphaned snap photos
-5. Darkroom reveal checks on app foreground use a cached timestamp and skip Firestore reads when the cached time has not elapsed
-
-**Plans:** 5 plans
-
-Plans:
-
-- [ ] 06-01-PLAN.md — Darkroom cache: write failing tests for isDarkroomReadyToReveal cache behavior (TDD RED)
-- [ ] 06-02-PLAN.md — Darkroom cache: implement module-level cache + wire clearRevealCache in App.js, useDarkroom.js, uploadQueueService.js (TDD GREEN)
-- [ ] 06-03-PLAN.md — DEBT-01: add useConversation Phase 2 tests (reactions, replies, soft deletion)
-- [ ] 06-04-PLAN.md — DEBT-02/05: audit snapFunctions.test.js + rename hoursSinceLastMutual to daysSinceLastMutual
-- [ ] 06-05-PLAN.md — DEBT-03/04: configure Firestore TTL and GCS Storage lifecycle rule (includes human checkpoint)
-
-### Phase 7: Performance Enhancements to Story Viewing
-
-**Goal:** Story viewing feels instant and smooth — 60fps cube transitions, progressive image loading with placeholder crossfade, immediate dark loading states, smart prefetching, and paginated feed story cards
-**Depends on:** Phase 6
-**Requirements**: PERF-01, PERF-02, PERF-03, PERF-04, PERF-05, PERF-06, PERF-07, PERF-08
+### Phase 13: Auth & Storage Migration
+**Goal**: Users can authenticate and upload/view media through Supabase -- phone OTP login works, existing accounts are migrated, and all photo/video/snap storage operations target Supabase Storage
+**Depends on**: Phase 12
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, STOR-01, STOR-02, STOR-03, STOR-04
 **Success Criteria** (what must be TRUE):
+  1. A new user can sign up with phone number, receive an OTP via Twilio, verify it, and land on the profile setup screen
+  2. An existing user's account has been migrated with preserved UID so all friendships, photos, and conversations remain linked
+  3. Re-authentication via OTP works for account deletion flow
+  4. Photos and videos upload to Supabase Storage and are accessible via CDN-backed URLs
+  5. Snap photos upload with 5-minute signed URLs matching current ephemeral behavior
+  6. The upload queue service retries failed uploads and persists queue across app restarts against the new storage backend
+**Plans**: TBD
 
-1. Tapping to the next photo immediately shows dark background + spinner, not the previous image
-2. New photos display a blurred placeholder that crossfades to full resolution over 200ms
-3. Cube transition between friends runs at 60fps via Reanimated on the UI thread
-4. Next friend's first photo is prefetched while viewing the current friend
-5. Feed story cards load in batches with a "Load more" button
-6. Firestore real-time listeners pause during transitions and resume after settling
-7. Failed image loads auto-skip to the next photo after 5 seconds
-8. New photos generate a thumbnail at upload time for progressive loading
-
-**Plans:** 4/4 plans complete
-
-Plans:
-
-- [x] 07-00-PLAN.md — Wave 0: Test scaffolds for Phase 7 behaviors (RED tests)
-- [x] 07-01-PLAN.md — Feed story card pagination + thumbnail generation at upload
-- [x] 07-02-PLAN.md — Cube transition Reanimated migration (SharedValue + Gesture Handler) + Android back button dismiss
-- [x] 07-03-PLAN.md — Progressive loading + dark loading states + subscription management + auto-skip + prefetching
-
-### Phase 8: Screenshot Detection
-
-**Goal**: Snap senders are notified when a recipient screenshots their snap, with a persistent visual record in the conversation
-**Depends on**: Phase 7
-**Requirements**: SCRN-01, SCRN-02, SCRN-03
+### Phase 14: Data Layer & Caching Foundation
+**Goal**: The app has a unified data-fetching layer -- TanStack Query manages all server state with caching, PowerSync provides instant local reads, and the app opens with cached data instead of loading spinners
+**Depends on**: Phase 13
+**Requirements**: PERF-01, PERF-08, PERF-09
 **Success Criteria** (what must be TRUE):
+  1. All data fetching uses useQuery/useMutation hooks with automatic cache management (no manual state tracking for server data)
+  2. Opening the app after a cold start renders cached feed, conversations, and profile data from AsyncStorage before any network request completes
+  3. PowerSync local SQLite provides instant reads (0ms network latency) for photos, darkroom state, conversations, and friendships -- data appears immediately on screen navigation
+**Plans**: TBD
 
-1. When a recipient takes a screenshot while viewing a snap, the sender receives a push notification identifying which snap was screenshotted
-2. A screenshotted snap displays a visual indicator (e.g., sparkle/eye icon) on its bubble in the conversation thread
-3. The snap message document in Firestore contains a `screenshottedAt` timestamp field after a screenshot event
-
-**Plans:** 4 plans (3 original + 1 gap closure)
-
-Plans:
-
-- [x] 08-00-PLAN.md — Wave 0: Test scaffolds for screenshotService and Cloud Function notification handling (RED tests)
-- [x] 08-01-PLAN.md — Service layer: expo-screen-capture install, Firestore rules update, screenshotService, screenshotQueueService, Cloud Function extension, notification deep-link
-- [x] 08-02-PLAN.md — UI integration: useScreenshotDetection hook, SystemMessage component, SnapViewer wiring, ConversationScreen rendering
-
-Plans (gap closure -- SCRN-02 snap bubble indicator):
-
-- [ ] 08-03-PLAN.md — Add 5th "Screenshotted" visual state to SnapBubble (eye-outline icon, dimmed amber, "Screenshotted" label)
-
-### Phase 9: Pinned Snaps iOS
-
-**Goal**: Senders can pin a snap to the recipient's iOS lock screen as a Live Activity with photo thumbnail, sender name, and a tap-to-open action that persists until the snap is viewed
-**Depends on**: Phase 8 (shared EAS native build)
-**Requirements**: PINI-01, PINI-02, PINI-03, PINI-04, PINI-05
+### Phase 15: Core Services -- Photos, Feed, Darkroom
+**Goal**: The photo lifecycle works end-to-end through Supabase -- capture, upload, develop, reveal, triage, and feed display all function identically to current behavior but faster
+**Depends on**: Phase 14
+**Requirements**: CORE-01, CORE-02, CORE-03, CORE-07
 **Success Criteria** (what must be TRUE):
+  1. User can capture a photo/video, see it enter the darkroom as "developing," and have it reveal after the random timer expires
+  2. The feed loads via a single SQL JOIN query and renders all friends' revealed photos without the previous 30-ID chunking limitation
+  3. User profile CRUD (display name, username, profile photo, song, selects) works against Supabase with no behavior change
+  4. Photo triage (journal/archive), batch triage, and soft delete all function identically to current behavior
+**Plans**: TBD
 
-1. When composing a snap, the sender can toggle a "pin to screen" option before sending
-2. The recipient sees a Live Activity on their iOS lock screen showing the snap photo thumbnail, sender display name, and optional caption
-3. Tapping the Live Activity opens the app directly to the conversation with the sender
-4. After the recipient views the snap, the Live Activity disappears
-5. If the recipient swipes away the Live Activity, it is automatically re-created until the snap is viewed
-
-**Plans:** 20 plans (7 original + 3 pivot reverted + 3 gap closure R1 + 2 gap closure R2 + 3 enhancements + 2 gap closure R3)
-
-Plans (Live Activity infrastructure -- executed):
-
-- [x] 09-01-PLAN.md — Native infrastructure: @bacons/apple-targets, local Expo module (ActivityKit bridge), SwiftUI widget extension, App Groups
-- [x] 09-02-PLAN.md — JS pin toggle UI: usePinPreference hook, PinToggle component, PinTooltip component, unit tests
-- [x] 09-03-PLAN.md — JS service layer: liveActivityService.js, snapService pinned flag, SnapPreviewScreen send flow wiring
-- [x] 09-04-PLAN.md — Recipient-side wiring: Cloud Function pinned notification payload, App.js Live Activity trigger, SnapViewer dismissal
-- [ ] 09-05-PLAN.md — (SUPERSEDED) Checkpoint: end-to-end verification on physical iOS device
-- [x] 09-06-PLAN.md — NSE for background Live Activities, mutableContent flag, native deduplication
-- [x] 09-07-PLAN.md — Fix NSE plist blocker: rewrite withNSELiveActivities.js to use @bacons/apple-targets API
-
-Plans (persistent notification pivot -- REVERTED, Live Activities restored):
-
-- [ ] 09-08-PLAN.md — (REVERTED) Remove Live Activity infrastructure
-- [ ] 09-09-PLAN.md — (REVERTED) Recipient-side notification dismissal
-- [ ] 09-10-PLAN.md — (REVERTED) End-to-end verification checkpoint
-
-Plans (gap closure R1 -- fixes from first device testing):
-
-- [x] 09-11-PLAN.md — Fix thumbnail display: download thumbnail in JS handler, increase resolution to 300px
-- [x] 09-12-PLAN.md — Widget visual polish: portrait aspect ratio, Polaroid frame, conditional text layout
-- [x] 09-13-PLAN.md — Live Activity persistence: auto re-create on swipe-away via ActivityState observation
-
-Plans (gap closure R2 -- fixes from second device testing):
-
-- [x] 09-14-PLAN.md — Thumbnail pipeline diagnostics + NSE fix + foreground-resume fallback for background Live Activities
-- [x] 09-15-PLAN.md — Polaroid visual overhaul: 160pt max height, thick borders, sharp corners, tilt rotation
-
-Plans (enhancements -- push-to-start, stacking, Firebase v2 migration):
-
-- [x] 09-16-PLAN.md — Push-to-start Live Activities: native token observation, FCM token storage, Cloud Function delivery
-- [x] 09-17-PLAN.md — Stacked pinned snaps: array ContentState, removeFromStack, overlapping Polaroid widget layout
-- [x] 09-18-PLAN.md — Firebase Functions v1 to v2 migration: all 24 triggers, admin.firestore.FieldValue replacement
-
-Plans (gap closure R3 -- fixes from third device testing / UAT):
-
-- [ ] 09-19-PLAN.md — Fix push-to-start content-state payload, export removeFromStack from TS bridge, harden NSE suppression
-- [ ] 09-20-PLAN.md — Deep link friendId derivation, stacked layout text removal, messages list deep link
-
-### Phase 10: Pinned Snaps Android
-
-**Goal**: Android recipients see a persistent notification for pinned snaps with the snap photo thumbnail and tap-to-open behavior, matching the iOS experience as closely as possible
-**Depends on**: Phase 9 (iOS implementation informs Android UX decisions)
-**Requirements**: PINA-01, PINA-02, PINA-03
+### Phase 16: Core Services -- Social & Albums
+**Goal**: All social features work through Supabase -- friendships, comments, albums, blocking, reporting, and contact sync function identically with real-time updates
+**Depends on**: Phase 15
+**Requirements**: CORE-04, CORE-05, CORE-06, CORE-08, CORE-09, CORE-10
 **Success Criteria** (what must be TRUE):
+  1. User can send, accept, and decline friend requests, and the friend list updates in real-time via Supabase Realtime
+  2. Comments with @mention parsing and autocomplete work on any photo
+  3. User-created albums and auto-generated monthly albums display correctly with all CRUD operations
+  4. Block and report flows work -- blocked users disappear from feed and friend suggestions
+  5. Contact sync finds friends by phone number against the new user lookup
+**Plans**: TBD
 
-1. When a pinned snap is received on Android, the recipient sees a persistent ongoing notification showing the snap photo thumbnail, sender name, and caption
-2. Tapping the notification opens the app directly to the conversation with the sender
-3. After the recipient views the snap, the notification is automatically dismissed
+### Phase 17: Messaging & Social
+**Goal**: The entire messaging system works through Supabase -- all 5 message types, snap lifecycle, streaks, read receipts, reactions, replies, and tagged photo pipeline function identically
+**Depends on**: Phase 16
+**Requirements**: MSG-01, MSG-02, MSG-03, MSG-04, MSG-05, MSG-06, MSG-07, MSG-08, MSG-09, MSG-10, MSG-11
+**Success Criteria** (what must be TRUE):
+  1. Conversation list loads with unread counts, and creating/soft-deleting conversations works
+  2. All 5 message types (text, reaction, reply, snap, tagged_photo) send and display identically to current behavior
+  3. Snap lifecycle works end-to-end: upload, send, view-once Polaroid viewer, auto-cleanup from storage
+  4. Streak engine maintains 3-day activation, tiered expiry windows, and warning notifications (all server-authoritative)
+  5. Read receipts with privacy toggle, emoji reactions, swipe-to-reply, message unsend, and delete-for-me all work
+**Plans**: TBD
 
-**Plans:** 3/3 plans complete
+### Phase 18: Background Jobs & Notifications
+**Goal**: All server-side automation runs on Supabase infrastructure -- scheduled jobs via pg_cron, event-driven Edge Functions, PostgreSQL triggers, and push notifications all replace Cloud Functions with identical behavior
+**Depends on**: Phase 17
+**Requirements**: JOBS-01, JOBS-02, JOBS-03, JOBS-04, JOBS-05, JOBS-06, JOBS-07, JOBS-08, JOBS-09, JOBS-10, LIVE-01
+**Success Criteria** (what must be TRUE):
+  1. Darkroom reveals process every 2 minutes via pg_cron and photos transition from developing to revealed
+  2. Streak expiry checks run on schedule, expire stale streaks, and send 4-hour warning push notifications
+  3. Push notifications deliver for all event types (new message, friend request, photo reveal, snap received, tag, streak warning) via Edge Functions using Expo Server SDK
+  4. Snap cleanup, notification TTL, and account deletion cascade all run on schedule without manual intervention
+  5. Friend count and photo soft-delete cascades execute via PostgreSQL triggers
+  6. Push-to-start Live Activities work from background/killed state (APNS token acceptance fixed)
+**Plans**: TBD
 
-Plans:
+### Phase 19: Performance Polish
+**Goal**: Every screen feels instant -- cached data renders in under 100ms, skeleton screens replace loading spinners, optimistic updates make interactions feel zero-latency, and images load without expired URL flashes
+**Depends on**: Phase 18
+**Requirements**: PERF-02, PERF-03, PERF-04, PERF-05, PERF-06, PERF-07, PERF-10, PERF-11
+**Success Criteria** (what must be TRUE):
+  1. Feed, conversations, and profile screens render cached data while revalidating in the background (stale-while-revalidate, cached data visible in under 100ms)
+  2. All list views (feed, conversations, friends, comments, notifications, albums) show skeleton screens during initial load instead of blank screens or spinners
+  3. Sending a message, reacting, accepting a friend request, triaging a photo, and marking as read all update the UI instantly before the server confirms
+  4. Photos and videos load via CDN-backed permanent URLs or pre-refreshed signed URLs with no expired URL flash or re-fetch delay
+  5. Feed images are served at 400px for cards and full-res only in PhotoDetail, reducing bandwidth and load time
+  6. All list views have consistent empty state screens (no blank white/dark screens)
+**Plans**: TBD
 
-- [x] 10-01-PLAN.md — Notification infrastructure: extend sendPushNotification with richContent, pinned-snaps channel, pinned_snap tap handler, onNewMessage pinned snap branch
-- [x] 10-02-PLAN.md — Pin toggle UI, isPinned field, notification dismissal on snap view, 48h expiry cloud function
-- [ ] 10-03-PLAN.md — Gap closure: wire storePinnedNotifId in App.js notification listener for Android, fix PinToggle docstring
+### Phase 20: TypeScript Sweep & Firebase Removal
+**Goal**: The codebase is fully TypeScript with zero Firebase dependencies -- all remaining JS files are converted, Firebase packages are removed in a single EAS build, and dead code is cleaned up
+**Depends on**: Phase 19
+**Requirements**: TS-01, TS-02, TS-03, TS-04, CLEAN-01, CLEAN-02, CLEAN-03, CLEAN-04, CLEAN-05
+**Success Criteria** (what must be TRUE):
+  1. All service files (.ts) and hook files (.ts/.tsx) use Supabase-generated database types with zero `any` types
+  2. All remaining JS files that were not touched during migration are converted to TypeScript
+  3. All 7 @react-native-firebase/* packages are removed from package.json and the app builds successfully via EAS
+  4. The functions/ directory (Firebase Cloud Functions) is removed with all jobs confirmed running on Supabase
+  5. Sentry is integrated for error tracking and performance traces, replacing Firebase Performance Monitoring
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11
+Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20
 
-**Build Note:** Phases 8-10 share a single EAS native build (bundles expo-screen-capture + Live Activity module). Phases 6-7 are OTA-deployable with no native build required.
-
-| Phase                                        | Milestone | Plans Complete | Status      | Completed  |
-| -------------------------------------------- | --------- | -------------- | ----------- | ---------- |
-| 1. Message Infrastructure & Read Receipts    | v1.0      | 2/2            | Complete    | 2012-02-23 |
-| 2. Message Interactions                      | v1.0      | 6/6            | Complete    | 2012-02-24 |
-| 3. Snap Messages                             | v1.0      | 8/8            | Complete    | 2012-02-24 |
-| 4. Snap Streaks                              | v1.0      | 4/4            | Complete    | 2012-02-24 |
-| 5. Photo Tag Integration                     | v1.0      | 4/4            | Complete    | 2012-02-25 |
-| 6. Tech Debt & Darkroom Optimization         | v1.1      | 0/5            | Not started | -          |
-| 7. Performance Enhancements to Story Viewing | v1.1      | Complete    | 2012-02-25 | 2012-02-25 |
-| 8. Screenshot Detection                      | 3/4 | Gap closure | - | -          |
-| 9. Pinned Snaps iOS                          | v1.1      | 15/20          | Gap closure R3 | -          |
-| 10. Pinned Snaps Android                     | 3/3 | Complete    | 2026-03-18 | -          |
-| 11. Add Video Support to Main Camera         | 8/8 | Complete    | 2026-03-18 | -          |
-
-### Phase 11: Add Video Support to Main Camera
-
-**Goal:** Users can capture, upload, develop, and view videos alongside photos using the same camera interface, darkroom workflow, feed, PhotoDetail, and stories views
-**Depends on:** Phase 10
-**Requirements:** VID-01, VID-02, VID-03, VID-04, VID-05, VID-06, VID-07, VID-08, VID-09, VID-10
-**Success Criteria** (what must be TRUE):
-
-1. Tapping the shutter button takes a photo; holding for ~500ms starts video recording with haptic feedback
-2. A circular progress ring fills around the shutter button during recording (30s max)
-3. Recorded videos upload to Firebase Storage and create Firestore documents with mediaType, videoURL, and duration fields
-4. Videos develop and reveal identically to photos in darkroom, with a small video icon overlay
-5. Feed autoplays videos muted when scrolled into view; tapping unmutes with state persisting across subsequent videos
-6. Video cards show a duration badge (e.g. "0:12") in the corner
-7. PhotoDetail plays videos with progress bar and mute toggle, looping in feed mode
-8. Stories plays videos once to completion then auto-advances to the next story
-9. expo-video installed, microphone permission configured, storage rules updated for video content types
-10. Video thumbnail placeholder generated at capture time for progressive loading
-
-**Plans:** 8/8 plans complete
-
-Plans:
-- [x] 11-00-PLAN.md — Wave 0: RED test scaffolds for useCameraBase, uploadQueueService, VideoMuteContext
-- [x] 11-01-PLAN.md — Native config: expo-video install, microphone permission, storage rules, storageService uploadVideo, jest mock
-- [x] 11-02-PLAN.md — Upload queue video support (mediaType/duration/videoURL/thumbnail), VideoMuteContext, App.js provider wiring
-- [x] 11-03-PLAN.md — UI components: RecordingProgressRing (animated SVG), VideoPlayer wrapper (expo-video)
-- [x] 11-04-PLAN.md — Camera hold-to-record: useCameraBase recording logic, CameraScreen progress ring integration
-- [x] 11-05-PLAN.md — Feed video playback: FeedPhotoCard video rendering, viewport detection, duration badge
-- [x] 11-06-PLAN.md — PhotoDetail/Stories video playback, stories auto-advance, darkroom video icon overlay
-- [x] 11-07-PLAN.md — Full test suite + lint verification, end-to-end checkpoint on physical device
-
-**Build Note:** Phase 11 requires a new EAS build (expo-video native module + microphone permission). Storage rules must be deployed separately: `firebase deploy --only storage`.
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 12. Schema & Infrastructure Foundation | v1.2 | 0/TBD | Not started | - |
+| 13. Auth & Storage Migration | v1.2 | 0/TBD | Not started | - |
+| 14. Data Layer & Caching Foundation | v1.2 | 0/TBD | Not started | - |
+| 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
+| 16. Core Services -- Social & Albums | v1.2 | 0/TBD | Not started | - |
+| 17. Messaging & Social | v1.2 | 0/TBD | Not started | - |
+| 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
+| 19. Performance Polish | v1.2 | 0/TBD | Not started | - |
+| 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/TBD | Not started | - |

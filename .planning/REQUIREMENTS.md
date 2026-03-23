@@ -135,13 +135,76 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| INFRA-01 | Phase 12 | Pending |
+| INFRA-02 | Phase 12 | Pending |
+| INFRA-03 | Phase 12 | Pending |
+| INFRA-04 | Phase 12 | Pending |
+| INFRA-05 | Phase 12 | Pending |
+| AUTH-01 | Phase 13 | Pending |
+| AUTH-02 | Phase 13 | Pending |
+| AUTH-03 | Phase 13 | Pending |
+| STOR-01 | Phase 13 | Pending |
+| STOR-02 | Phase 13 | Pending |
+| STOR-03 | Phase 13 | Pending |
+| STOR-04 | Phase 13 | Pending |
+| PERF-01 | Phase 14 | Pending |
+| PERF-08 | Phase 14 | Pending |
+| PERF-09 | Phase 14 | Pending |
+| CORE-01 | Phase 15 | Pending |
+| CORE-02 | Phase 15 | Pending |
+| CORE-03 | Phase 15 | Pending |
+| CORE-07 | Phase 15 | Pending |
+| CORE-04 | Phase 16 | Pending |
+| CORE-05 | Phase 16 | Pending |
+| CORE-06 | Phase 16 | Pending |
+| CORE-08 | Phase 16 | Pending |
+| CORE-09 | Phase 16 | Pending |
+| CORE-10 | Phase 16 | Pending |
+| MSG-01 | Phase 17 | Pending |
+| MSG-02 | Phase 17 | Pending |
+| MSG-03 | Phase 17 | Pending |
+| MSG-04 | Phase 17 | Pending |
+| MSG-05 | Phase 17 | Pending |
+| MSG-06 | Phase 17 | Pending |
+| MSG-07 | Phase 17 | Pending |
+| MSG-08 | Phase 17 | Pending |
+| MSG-09 | Phase 17 | Pending |
+| MSG-10 | Phase 17 | Pending |
+| MSG-11 | Phase 17 | Pending |
+| JOBS-01 | Phase 18 | Pending |
+| JOBS-02 | Phase 18 | Pending |
+| JOBS-03 | Phase 18 | Pending |
+| JOBS-04 | Phase 18 | Pending |
+| JOBS-05 | Phase 18 | Pending |
+| JOBS-06 | Phase 18 | Pending |
+| JOBS-07 | Phase 18 | Pending |
+| JOBS-08 | Phase 18 | Pending |
+| JOBS-09 | Phase 18 | Pending |
+| JOBS-10 | Phase 18 | Pending |
+| LIVE-01 | Phase 18 | Pending |
+| PERF-02 | Phase 19 | Pending |
+| PERF-03 | Phase 19 | Pending |
+| PERF-04 | Phase 19 | Pending |
+| PERF-05 | Phase 19 | Pending |
+| PERF-06 | Phase 19 | Pending |
+| PERF-07 | Phase 19 | Pending |
+| PERF-10 | Phase 19 | Pending |
+| PERF-11 | Phase 19 | Pending |
+| TS-01 | Phase 20 | Pending |
+| TS-02 | Phase 20 | Pending |
+| TS-03 | Phase 20 | Pending |
+| TS-04 | Phase 20 | Pending |
+| CLEAN-01 | Phase 20 | Pending |
+| CLEAN-02 | Phase 20 | Pending |
+| CLEAN-03 | Phase 20 | Pending |
+| CLEAN-04 | Phase 20 | Pending |
+| CLEAN-05 | Phase 20 | Pending |
 
 **Coverage:**
-- v1.2 requirements: 57 total
-- Mapped to phases: 0
-- Unmapped: 57
+- v1.2 requirements: 64 total
+- Mapped to phases: 64
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-23*
-*Last updated: 2026-03-23 after initial definition*
+*Last updated: 2026-03-23 after roadmap creation*

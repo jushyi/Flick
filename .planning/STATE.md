@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
-status: planning
+status: ready_to_plan
 stopped_at: null
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 — Milestone v1.2 started"
+last_activity: "2026-03-23 — Roadmap created (9 phases, 64 requirements mapped)"
 progress:
-  total_phases: 0
+  total_phases: 9
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,22 +16,24 @@ progress:
 
 # Project State: Flick
 
-**Status:** Defining requirements
+**Status:** Ready to plan Phase 12
 **Last Updated:** 2026-03-23
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-23)
 
-**Core value:** Snaps and streaks make messaging a daily habit
-**Current focus:** Milestone v1.2 — Speed & Scale
+**Core value:** Same app, same features -- rebuilt on a faster, more scalable backend with TypeScript
+**Current focus:** Phase 12 -- Schema & Infrastructure Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-23 — Milestone v1.2 started
+Phase: 12 of 20 (Schema & Infrastructure Foundation)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-03-23 -- Roadmap created
+
+Progress: [..........] 0%
 
 ## Milestone History
 
@@ -45,14 +47,20 @@ Last activity: 2026-03-23 — Milestone v1.2 started
 
 **Decisions:** See PROJECT.md Key Decisions table (full log)
 
-**v1.0 key patterns:** Service layer pattern ({success, error} returns), custom hooks for business logic, React Native Firebase SDK (not web SDK), 5 message types via type discriminator, server-authoritative streaks via Cloud Functions.
+**v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
-**v1.1 key patterns:** @bacons/apple-targets for widget extension, NSE for background thumbnail attachment, push-to-start Live Activities, expo-video for video capture/playback, viewport-driven autoplay, RecordingProgressRing animated SVG, VideoMuteContext for cross-navigator mute state.
+**Research flags:**
+- Phase 13: Auth migration strategy needs design (keep Firebase Auth during transition vs. re-verification)
+- Phase 14: PowerSync sync rules need validation against all access patterns
+- Phase 17: Supabase Realtime reconnection reliability needs testing
+- Phase 18: Edge Functions Deno compatibility for Expo Server SDK needs verification
 
-**Known tech debt carried into v1.2:**
-- Phase 6 incomplete: DARK-01/02 (darkroom cache), DEBT-01 (useConversation tests), DEBT-03/04 (Firestore TTL + Storage lifecycle)
-- Phase 8 gap: 08-03 (SnapBubble screenshotted visual state)
-- Phase 9 gaps: 09-19, 09-20 (push-to-start fixes, deep link fixes)
-- Phase 10 gap: 10-03 (Android pinnedNotifId wiring)
-- React Native Firebase deprecated namespaced API warnings (putFile, getDownloadURL)
-- Multiple pins in a row may cause issues (needs investigation)
+**Known tech debt carried from v1.1:**
+- Phase 6/8/9/10 gaps deferred (will be resolved by full rewrite in v1.2)
+- React Native Firebase deprecated API warnings (eliminated by removal in Phase 20)
+
+## Session Continuity
+
+Last session: 2026-03-23
+Stopped at: Roadmap created, ready to plan Phase 12
+Resume file: None
