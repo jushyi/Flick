@@ -65,5 +65,8 @@ google-services-prod.json
 # Firebase Admin SDK service account keys (never commit)
 *-firebase-adminsdk-*.json
 
+# Migration progress (resume file, not committed)
+scripts/.migration-progress.json
+
 # MCP config
 .mcp.json
