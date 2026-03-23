@@ -31,6 +31,8 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^expo-screen-capture$': '<rootDir>/__tests__/__mocks__/expo-screen-capture.js',
+    '^react-native-url-polyfill/dist/polyfill$':
+      '<rootDir>/__tests__/__mocks__/react-native-url-polyfill.js',
   },
 
   // Transform ignore patterns - jest-expo handles most, but add any custom ones here
