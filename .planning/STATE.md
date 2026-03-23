@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Phase 14 context gathered
-last_updated: "2026-03-23T17:31:31.653Z"
-last_activity: 2026-03-23 -- Completed Plan 12-01
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-23T17:35:24Z"
+last_activity: 2026-03-23 -- Completed Plan 12-02
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
-  percent: 11
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State: Flick
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 12 of 20 (Schema & Infrastructure Foundation)
-Plan: 1 of 3 in current phase (completed)
+Plan: 2 of 3 in current phase (completed)
 Status: Executing
-Last activity: 2026-03-23 -- Completed Plan 12-01
+Last activity: 2026-03-23 -- Completed Plan 12-02
 
-Progress: [#.........] 11%
+Progress: [███████░░░] 67%
 
 ## Milestone History
 
@@ -52,6 +52,13 @@ Progress: [#.........] 11%
 - allowJs:true so .js and .ts files coexist
 - @/* path alias for clean imports from src/
 
+**Phase 12-02 decisions:**
+- UUID primary keys on all tables for Supabase Auth compatibility
+- JSONB only for flexible data (selects, song, pinned_snap_data, notification data, reaction batches)
+- CHECK(user1_id < user2_id) on all pair tables (friendships, conversations, streaks)
+- Per-participant soft delete on conversations (deleted_at_p1/p2)
+- UUID[] for comment mentions instead of JSONB for native PostgreSQL array operations
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -66,6 +73,6 @@ Progress: [#.........] 11%
 
 ## Session Continuity
 
-Last session: 2026-03-23T17:31:31.651Z
-Stopped at: Phase 14 context gathered
-Resume file: .planning/phases/14-data-layer-caching-foundation/14-CONTEXT.md
+Last session: 2026-03-23T17:35:24Z
+Stopped at: Completed 12-02-PLAN.md
+Resume file: .planning/phases/12-schema-infrastructure-foundation/12-02-SUMMARY.md

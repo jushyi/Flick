@@ -56,7 +56,7 @@
   2. PowerSync sync rules are configured and tested for offline-capable collections (photos, darkroom, conversations, friendships) -- local SQLite reads return data without network
   3. Row-level security policies on all tables enforce that users can only read/write their own data and data shared with them (friends' photos, mutual conversations)
   4. TypeScript compiles with allowJs enabled, path aliases resolve, and `supabase gen types typescript` produces database types that import cleanly into service files
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 12-01-PLAN.md -- Supabase CLI setup + TypeScript foundation
@@ -166,7 +166,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Schema & Infrastructure Foundation | 1/3 | In Progress|  | - |
+| 12. Schema & Infrastructure Foundation | 2/3 | In Progress|  | - |
 | 13. Auth & Storage Migration | v1.2 | 0/TBD | Not started | - |
 | 14. Data Layer & Caching Foundation | v1.2 | 0/TBD | Not started | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
