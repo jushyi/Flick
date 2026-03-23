@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-03-23T17:35:24Z"
-last_activity: 2026-03-23 -- Completed Plan 12-02
+stopped_at: Completed 12-03-PLAN.md (Phase 12 complete)
+last_updated: "2026-03-23T17:40:56Z"
+last_activity: 2026-03-23 -- Completed Plan 12-03 (Phase 12 complete)
 progress:
   total_phases: 9
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 67
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State: Flick
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 12 of 20 (Schema & Infrastructure Foundation)
-Plan: 2 of 3 in current phase (completed)
-Status: Executing
-Last activity: 2026-03-23 -- Completed Plan 12-02
+Plan: 3 of 3 in current phase (completed)
+Status: Phase 12 Complete
+Last activity: 2026-03-23 -- Completed Plan 12-03
 
-Progress: [███████░░░] 67%
+Progress: [██████████] 100%
 
 ## Milestone History
 
@@ -59,6 +59,13 @@ Progress: [███████░░░] 67%
 - Per-participant soft delete on conversations (deleted_at_p1/p2)
 - UUID[] for comment mentions instead of JSONB for native PostgreSQL array operations
 
+**Phase 12-03 decisions:**
+- 50 RLS policies across all 18 tables with block enforcement on every friend-visibility policy
+- PowerSync syncs only user's OWN photos with 30-day + developing/revealed window
+- Conversations sync metadata only (not messages) for lightweight offline DB
+- SQLite uses integer 0/1 for boolean fields (warning_sent on streaks)
+- Admin-only operations (notification creation, streak CRUD) use service_role bypass
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -73,6 +80,6 @@ Progress: [███████░░░] 67%
 
 ## Session Continuity
 
-Last session: 2026-03-23T17:35:24Z
-Stopped at: Completed 12-02-PLAN.md
-Resume file: .planning/phases/12-schema-infrastructure-foundation/12-02-SUMMARY.md
+Last session: 2026-03-23T17:40:56Z
+Stopped at: Completed 12-03-PLAN.md (Phase 12 complete)
+Resume file: .planning/phases/12-schema-infrastructure-foundation/12-03-SUMMARY.md

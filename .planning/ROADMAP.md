@@ -35,7 +35,7 @@
 
 **Milestone Goal:** Same app, same features -- rebuilt on Supabase + PowerSync with TypeScript. Every interaction feels Instagram/TikTok-level instant.
 
-- [ ] **Phase 12: Schema & Infrastructure Foundation** - PostgreSQL schema, Supabase project, PowerSync config, TypeScript foundation
+- [x] **Phase 12: Schema & Infrastructure Foundation** - PostgreSQL schema, Supabase project, PowerSync config, TypeScript foundation (completed 2026-03-23)
 - [ ] **Phase 13: Auth & Storage Migration** - Phone auth via Supabase/Twilio, photo storage migration, upload queue
 - [ ] **Phase 14: Data Layer & Caching Foundation** - TanStack Query integration, PowerSync local SQLite, offline query persistence
 - [ ] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles
@@ -56,7 +56,7 @@
   2. PowerSync sync rules are configured and tested for offline-capable collections (photos, darkroom, conversations, friendships) -- local SQLite reads return data without network
   3. Row-level security policies on all tables enforce that users can only read/write their own data and data shared with them (friends' photos, mutual conversations)
   4. TypeScript compiles with allowJs enabled, path aliases resolve, and `supabase gen types typescript` produces database types that import cleanly into service files
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 12-01-PLAN.md -- Supabase CLI setup + TypeScript foundation
@@ -166,7 +166,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Schema & Infrastructure Foundation | 2/3 | In Progress|  | - |
+| 12. Schema & Infrastructure Foundation | 3/3 | Complete   | 2026-03-23 | - |
 | 13. Auth & Storage Migration | v1.2 | 0/TBD | Not started | - |
 | 14. Data Layer & Caching Foundation | v1.2 | 0/TBD | Not started | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
