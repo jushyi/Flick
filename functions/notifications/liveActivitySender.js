@@ -142,98 +142,121 @@ async function sendPushToStartLiveActivity({
 
   const topic = `${IOS_BUNDLE_ID}.push-type.liveactivity`;
 
-  try {
-    const jwt = getApnsJwt();
+  // Try both APNS environments — dev builds can use either depending on EAS profile
+  const hosts = [
+    APNS_HOST,
+    APNS_HOST === 'api.sandbox.push.apple.com'
+      ? 'api.push.apple.com'
+      : 'api.sandbox.push.apple.com',
+  ];
 
-    logger.info('sendPushToStartLiveActivity: Sending direct to APNS', {
-      activityId,
-      senderName,
-      conversationId,
-      host: APNS_HOST,
-      topic,
-      pushToStartTokenLength: pushToStartToken ? pushToStartToken.length : 0,
-      pushToStartToken: pushToStartToken,
-      devicePath: `/3/device/${pushToStartToken}`,
-      bundleId: IOS_BUNDLE_ID,
-    });
+  for (const host of hosts) {
+    try {
+      const jwt = getApnsJwt();
 
-    const result = await new Promise((resolve, reject) => {
-      const client = http2.connect(`https://${APNS_HOST}`);
-
-      client.on('error', err => {
-        client.close();
-        reject(err);
-      });
-
-      const req = client.request({
-        ':method': 'POST',
-        ':path': `/3/device/${pushToStartToken}`,
-        authorization: `bearer ${jwt}`,
-        'apns-topic': topic,
-        'apns-push-type': 'liveactivity',
-        'apns-priority': '10',
-        'content-type': 'application/json',
-      });
-
-      let body = '';
-      let statusCode = 0;
-      let responseHeaders = {};
-
-      req.on('response', headers => {
-        statusCode = headers[':status'];
-        responseHeaders = headers;
-      });
-
-      req.on('data', chunk => {
-        body += chunk;
-      });
-
-      req.on('end', () => {
-        client.close();
-        resolve({
-          statusCode,
-          headers: responseHeaders,
-          body: body || null,
-        });
-      });
-
-      req.on('error', err => {
-        client.close();
-        reject(err);
-      });
-
-      req.write(payload);
-      req.end();
-    });
-
-    if (result.statusCode === 200) {
-      const apnsId = result.headers['apns-id'] || null;
-      logger.info('sendPushToStartLiveActivity: Success', {
+      logger.info('sendPushToStartLiveActivity: Trying APNS', {
         activityId,
-        apnsId,
-        statusCode: result.statusCode,
+        host,
+        topic,
+        pushToStartTokenLength: pushToStartToken ? pushToStartToken.length : 0,
+        bundleId: IOS_BUNDLE_ID,
       });
-      return { success: true, apnsId };
-    } else {
+
+      const result = await sendToApns(host, pushToStartToken, topic, jwt, payload);
+
+      if (result.statusCode === 200) {
+        const apnsId = result.headers['apns-id'] || null;
+        logger.info('sendPushToStartLiveActivity: Success', {
+          activityId,
+          apnsId,
+          host,
+        });
+        return { success: true, apnsId };
+      }
+
       const errorBody = result.body ? JSON.parse(result.body) : {};
+      const reason = errorBody.reason || 'unknown';
+
+      // If wrong environment, try the other one
+      if (reason === 'BadDeviceToken' || reason === 'BadEnvironmentKeyInToken') {
+        logger.warn('sendPushToStartLiveActivity: Rejected, trying other environment', {
+          activityId,
+          host,
+          reason,
+        });
+        continue;
+      }
+
+      // Other error — don't retry
       logger.error('sendPushToStartLiveActivity: APNS rejected', {
         activityId,
         statusCode: result.statusCode,
-        reason: errorBody.reason || 'unknown',
-        body: result.body,
+        reason,
+        host,
       });
-      return {
-        success: false,
-        error: `APNS ${result.statusCode}: ${errorBody.reason || result.body}`,
-      };
+      return { success: false, error: `APNS ${result.statusCode}: ${reason}` };
+    } catch (error) {
+      logger.error('sendPushToStartLiveActivity: Failed on host', {
+        activityId,
+        host,
+        error: error.message,
+      });
+      continue;
     }
-  } catch (error) {
-    logger.error('sendPushToStartLiveActivity: Failed', {
-      activityId,
-      error: error.message,
-    });
-    return { success: false, error: error.message };
   }
+
+  logger.error('sendPushToStartLiveActivity: All APNS hosts failed', { activityId });
+  return { success: false, error: 'All APNS hosts rejected the token' };
+}
+
+/**
+ * Send payload to APNS via HTTP/2.
+ */
+function sendToApns(host, deviceToken, topic, jwt, payload) {
+  return new Promise((resolve, reject) => {
+    const client = http2.connect(`https://${host}`);
+
+    client.on('error', err => {
+      client.close();
+      reject(err);
+    });
+
+    const req = client.request({
+      ':method': 'POST',
+      ':path': `/3/device/${deviceToken}`,
+      authorization: `bearer ${jwt}`,
+      'apns-topic': topic,
+      'apns-push-type': 'liveactivity',
+      'apns-priority': '10',
+      'content-type': 'application/json',
+    });
+
+    let body = '';
+    let statusCode = 0;
+    let responseHeaders = {};
+
+    req.on('response', headers => {
+      statusCode = headers[':status'];
+      responseHeaders = headers;
+    });
+
+    req.on('data', chunk => {
+      body += chunk;
+    });
+
+    req.on('end', () => {
+      client.close();
+      resolve({ statusCode, headers: responseHeaders, body: body || null });
+    });
+
+    req.on('error', err => {
+      client.close();
+      reject(err);
+    });
+
+    req.write(payload);
+    req.end();
+  });
 }
 
 module.exports = { sendPushToStartLiveActivity };
