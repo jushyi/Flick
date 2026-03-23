@@ -54,11 +54,29 @@ const streaks = new Table({
   created_at: column.text,
 });
 
+const upload_queue = new Table(
+  {
+    user_id: column.text,
+    media_uri: column.text,
+    media_type: column.text, // 'photo' | 'video' | 'snap'
+    duration: column.real,
+    status: column.text, // 'pending' | 'processing' | 'completed' | 'failed' | 'retry'
+    attempts: column.integer,
+    created_at: column.integer,
+    backend: column.text, // 'supabase' | 'firebase'
+    error_message: column.text,
+    photo_id: column.text,
+    thumbnail: column.text,
+  },
+  { localOnly: true }
+);
+
 export const AppSchema = new Schema({
   photos,
   conversations,
   friendships,
   streaks,
+  upload_queue,
 });
 
 export type Database = (typeof AppSchema)['types'];
@@ -66,3 +84,4 @@ export type PhotoRow = Database['photos'];
 export type ConversationRow = Database['conversations'];
 export type FriendshipRow = Database['friendships'];
 export type StreakRow = Database['streaks'];
+export type UploadQueueRow = Database['upload_queue'];
