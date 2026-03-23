@@ -18,8 +18,8 @@ created: 2026-03-23
 | Property | Value |
 |----------|-------|
 | **Framework** | jest 29.x (jest-expo preset) |
-| **Config file** | package.json (jest config section) |
-| **Quick run command** | `npm test -- --testPathPattern="src/(services\|hooks\|providers).*\\.test"` |
+| **Config file** | jest.config.js |
+| **Quick run command** | `npx jest --testPathPattern="__tests__/(lib\|hooks)" --no-coverage` |
 | **Full suite command** | `npm test` |
 | **Estimated runtime** | ~30 seconds |
 
@@ -27,7 +27,7 @@ created: 2026-03-23
 
 ## Sampling Rate
 
-- **After every task commit:** Run `npm test -- --testPathPattern="src/(services|hooks|providers).*\.test"`
+- **After every task commit:** Run `npx jest --testPathPattern="__tests__/(lib|hooks)" --no-coverage`
 - **After every plan wave:** Run `npm test`
 - **Before `/gsd:verify-work`:** Full suite must be green
 - **Max feedback latency:** 30 seconds
@@ -38,23 +38,24 @@ created: 2026-03-23
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 14-01-01 | 01 | 1 | PERF-01 | unit | `npm test -- --testPathPattern="queryClient"` | ❌ W0 | ⬜ pending |
-| 14-01-02 | 01 | 1 | PERF-08 | unit | `npm test -- --testPathPattern="persistence"` | ❌ W0 | ⬜ pending |
-| 14-02-01 | 02 | 1 | PERF-09 | unit | `npm test -- --testPathPattern="powerSync"` | ❌ W0 | ⬜ pending |
-| 14-03-01 | 03 | 2 | PERF-01 | integration | `npm test -- --testPathPattern="useQuery"` | ❌ W0 | ⬜ pending |
+| 14-01-01 | 01 | 1 | PERF-01, PERF-08 | unit | `npx jest --testPathPattern="queryClient" --no-coverage` | W0 (created in 14-02) | pending |
+| 14-01-02 | 01 | 1 | PERF-09 | unit | `npx jest --testPathPattern="(powersync\|supabaseConnector)" --no-coverage` | W0 (created in 14-02) | pending |
+| 14-02-01 | 02 | 2 | PERF-01, PERF-08, PERF-09 | unit | `npx jest --testPathPattern="__tests__/(lib\|hooks)" --no-coverage` | created in this task | pending |
+| 14-02-02 | 02 | 2 | PERF-01 | unit | `npx jest --testPathPattern="useProfile" --no-coverage` | created in this task | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `__tests__/services/queryClient.test.js` — TanStack Query client config tests
-- [ ] `__tests__/services/persistence.test.js` — AsyncStorage persister tests
-- [ ] `__tests__/services/powerSync.test.js` — PowerSync schema/init tests
-- [ ] `__tests__/hooks/useQuery.test.js` — Hook integration stubs
+- [ ] `__tests__/lib/queryClient.test.ts` — TanStack Query client config + AsyncStorage persister tests
+- [ ] `__tests__/lib/queryKeys.test.ts` — Query key factory tests
+- [ ] `__tests__/lib/powersync.test.ts` — PowerSync schema tests
+- [ ] `__tests__/lib/supabaseConnector.test.ts` — SupabaseConnector CRUD + error handling tests
+- [ ] `__tests__/hooks/useProfile.test.ts` — useProfile PoC hook integration tests
 
-*Existing jest infrastructure covers framework needs. Wave 0 adds test files only.*
+*All test files are created in Plan 14-02 Task 2. Existing jest infrastructure covers framework needs.*
 
 ---
 
