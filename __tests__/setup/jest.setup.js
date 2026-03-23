@@ -352,6 +352,7 @@ jest.mock('expo-image-manipulator', () => ({
   SaveFormat: {
     JPEG: 'jpeg',
     PNG: 'png',
+    WEBP: 'webp',
   },
 }));
 
@@ -573,6 +574,94 @@ jest.mock('expo', () => ({
   __esModule: true,
   useEvent: jest.fn((target, eventName, initialValue) => initialValue || {}),
 }));
+
+// ============================================================================
+// Global Test Utilities
+// ============================================================================
+
+// ============================================================================
+// expo-file-system/legacy Mock
+// ============================================================================
+const mockReadAsStringAsync = jest.fn(() => Promise.resolve('bW9ja0Jhc2U2NERhdGE='));
+
+jest.mock('expo-file-system/legacy', () => ({
+  readAsStringAsync: mockReadAsStringAsync,
+  EncodingType: {
+    Base64: 'base64',
+    UTF8: 'utf8',
+  },
+  documentDirectory: 'file:///mock-document-dir/',
+  cacheDirectory: 'file:///mock-cache-dir/',
+}));
+
+global.mockReadAsStringAsync = mockReadAsStringAsync;
+
+// ============================================================================
+// base64-arraybuffer Mock
+// ============================================================================
+jest.mock('base64-arraybuffer', () => ({
+  decode: jest.fn(base64 => new ArrayBuffer(base64.length)),
+  encode: jest.fn(() => 'bW9ja0Jhc2U2NERhdGE='),
+}));
+
+// ============================================================================
+// Supabase Client Mock
+// ============================================================================
+const mockSupabaseAuth = {
+  signInWithOtp: jest.fn(),
+  verifyOtp: jest.fn(),
+  signOut: jest.fn(),
+  getSession: jest.fn(),
+  setSession: jest.fn(),
+  onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
+  getUser: jest.fn(),
+};
+
+const mockSupabaseStorage = {
+  from: jest.fn(() => ({
+    upload: jest.fn(),
+    remove: jest.fn(),
+    getPublicUrl: jest.fn(path => ({
+      data: { publicUrl: `https://test.supabase.co/storage/v1/object/public/photos/${path}` },
+    })),
+    createSignedUrl: jest.fn((path, expiresIn) =>
+      Promise.resolve({
+        data: {
+          signedUrl: `https://test.supabase.co/storage/v1/object/sign/snaps/${path}?token=abc&expires=${expiresIn}`,
+        },
+        error: null,
+      })
+    ),
+    list: jest.fn(),
+  })),
+};
+
+const mockSupabaseFunctions = {
+  invoke: jest.fn(),
+};
+
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({
+    auth: mockSupabaseAuth,
+    storage: mockSupabaseStorage,
+    functions: mockSupabaseFunctions,
+    from: jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+    })),
+  })),
+}));
+
+// Export mocks for test access
+global.__supabaseMocks = {
+  auth: mockSupabaseAuth,
+  storage: mockSupabaseStorage,
+  functions: mockSupabaseFunctions,
+};
 
 // ============================================================================
 // Global Test Utilities

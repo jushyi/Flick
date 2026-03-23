@@ -22,7 +22,7 @@ module.exports = {
   ],
 
   // Only match test files in __tests__ directory
-  testMatch: ['**/__tests__/**/*.test.js'],
+  testMatch: ['**/__tests__/**/*.test.{js,ts}'],
 
   // Auto-clear mocks between tests for clean test isolation
   clearMocks: true,
@@ -35,11 +35,15 @@ module.exports = {
 
   // Transform ignore patterns - jest-expo handles most, but add any custom ones here
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@react-native-firebase/.*)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@react-native-firebase/.*|@supabase/supabase-js)',
   ],
 
   // Collect coverage from src directory
-  collectCoverageFrom: ['src/**/*.{js,jsx}', '!src/**/*.test.{js,jsx}', '!**/node_modules/**'],
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.test.{js,jsx,ts,tsx}',
+    '!**/node_modules/**',
+  ],
 
   // Coverage directory
   coverageDirectory: 'coverage',
