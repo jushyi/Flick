@@ -21,7 +21,7 @@ jest.mock('../../src/utils/logger', () => ({
 
 // Mock PowerSync database
 const mockExecute = jest.fn(() => Promise.resolve());
-const mockGetAll = jest.fn(() => Promise.resolve([]));
+const mockGetAll = jest.fn(() => Promise.resolve([] as any[]));
 const mockGet = jest.fn(() => Promise.resolve({ count: 0 }));
 
 const mockPowerSyncDb = {
@@ -77,7 +77,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   clear: jest.fn(() => Promise.resolve()),
 }));
 
-// Mock Supabase client (for photo record creation)
+// Mock Supabase client
 jest.mock('../../src/lib/supabase', () => ({
   supabase: {
     from: jest.fn(() => ({
@@ -92,20 +92,25 @@ import {
   processQueue,
   getQueueLength,
   clearFailedItems,
+  _resetForTesting,
 } from '../../src/services/uploadQueueService';
 
 describe('uploadQueueService (Supabase + PowerSync)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    _resetForTesting();
     mockGetAll.mockResolvedValue([]);
     mockGet.mockResolvedValue({ count: 0 });
     mockExecute.mockResolvedValue(undefined);
     mockAsyncStorageGetItem.mockResolvedValue(null);
+    mockSupabaseUploadPhoto.mockResolvedValue({ success: true, url: 'https://supabase.co/photo.webp', storagePath: 'photos/user1/photo1.webp' });
+    mockSupabaseUploadVideo.mockResolvedValue({ success: true, url: 'https://supabase.co/video.mp4', storagePath: 'photos/user1/video1.mp4' });
+    mockSupabaseUploadSnapPhoto.mockResolvedValue({ success: true, storagePath: 'snaps/user1/snap1.webp' });
+    mockGenerateThumbnail.mockResolvedValue('data:image/jpeg;base64,abc123');
   });
 
   describe('initializeQueue', () => {
     it('drains old Firebase queue items from AsyncStorage', async () => {
-      // Simulate old queue items in AsyncStorage
       const oldItems = JSON.stringify([
         { id: 'old-1', userId: 'user1', photoUri: 'file:///old-photo.jpg', status: 'pending', attempts: 0 },
       ]);
@@ -113,11 +118,8 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
 
       await initializeQueue();
 
-      // Should have checked AsyncStorage for old items
       expect(mockAsyncStorageGetItem).toHaveBeenCalledWith('@uploadQueue');
-      // Should have drained old items via Firebase path
       expect(mockFirebaseUploadPhoto).toHaveBeenCalled();
-      // Should have cleared old queue from AsyncStorage
       expect(mockAsyncStorageRemoveItem).toHaveBeenCalledWith('@uploadQueue');
     });
 
@@ -162,15 +164,8 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
     it('calls Supabase uploadPhoto for photo items', async () => {
       mockGetAll.mockResolvedValueOnce([
         {
-          id: 'q1',
-          user_id: 'user1',
-          media_uri: 'file:///photo.jpg',
-          media_type: 'photo',
-          photo_id: 'photo-1',
-          status: 'pending',
-          attempts: 0,
-          backend: 'supabase',
-          created_at: Date.now(),
+          id: 'q1', user_id: 'user1', media_uri: 'file:///photo.jpg', media_type: 'photo',
+          photo_id: 'photo-1', status: 'pending', attempts: 0, backend: 'supabase', created_at: Date.now(),
         },
       ]);
 
@@ -182,15 +177,8 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
     it('calls Supabase uploadVideo for video items', async () => {
       mockGetAll.mockResolvedValueOnce([
         {
-          id: 'q2',
-          user_id: 'user1',
-          media_uri: 'file:///video.mp4',
-          media_type: 'video',
-          photo_id: 'video-1',
-          status: 'pending',
-          attempts: 0,
-          backend: 'supabase',
-          created_at: Date.now(),
+          id: 'q2', user_id: 'user1', media_uri: 'file:///video.mp4', media_type: 'video',
+          photo_id: 'video-1', status: 'pending', attempts: 0, backend: 'supabase', created_at: Date.now(),
         },
       ]);
 
@@ -202,15 +190,8 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
     it('calls Supabase uploadSnapPhoto for snap items', async () => {
       mockGetAll.mockResolvedValueOnce([
         {
-          id: 'q3',
-          user_id: 'user1',
-          media_uri: 'file:///snap.jpg',
-          media_type: 'snap',
-          photo_id: 'snap-1',
-          status: 'pending',
-          attempts: 0,
-          backend: 'supabase',
-          created_at: Date.now(),
+          id: 'q3', user_id: 'user1', media_uri: 'file:///snap.jpg', media_type: 'snap',
+          photo_id: 'snap-1', status: 'pending', attempts: 0, backend: 'supabase', created_at: Date.now(),
         },
       ]);
 
@@ -222,15 +203,8 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
     it('marks items as completed on success', async () => {
       mockGetAll.mockResolvedValueOnce([
         {
-          id: 'q1',
-          user_id: 'user1',
-          media_uri: 'file:///photo.jpg',
-          media_type: 'photo',
-          photo_id: 'photo-1',
-          status: 'pending',
-          attempts: 0,
-          backend: 'supabase',
-          created_at: Date.now(),
+          id: 'q1', user_id: 'user1', media_uri: 'file:///photo.jpg', media_type: 'photo',
+          photo_id: 'photo-1', status: 'pending', attempts: 0, backend: 'supabase', created_at: Date.now(),
         },
       ]);
 
@@ -243,25 +217,17 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
     });
 
     it('retries failed items with exponential backoff (max 3 attempts)', async () => {
-      mockSupabaseUploadPhoto.mockRejectedValue(new Error('Network error'));
+      mockSupabaseUploadPhoto.mockRejectedValueOnce(new Error('Network error'));
 
       mockGetAll.mockResolvedValueOnce([
         {
-          id: 'q1',
-          user_id: 'user1',
-          media_uri: 'file:///photo.jpg',
-          media_type: 'photo',
-          photo_id: 'photo-1',
-          status: 'pending',
-          attempts: 2,
-          backend: 'supabase',
-          created_at: Date.now(),
+          id: 'q1', user_id: 'user1', media_uri: 'file:///photo.jpg', media_type: 'photo',
+          photo_id: 'photo-1', status: 'pending', attempts: 2, backend: 'supabase', created_at: Date.now(),
         },
       ]);
 
       await processQueue();
 
-      // After 3rd attempt (2 previous + 1 now), should mark as failed
       expect(mockExecute).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE upload_queue SET status'),
         expect.arrayContaining(['failed', 'q1'])
