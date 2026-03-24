@@ -154,3 +154,5 @@ export function useFeedPhotos(userId: string | undefined) {
     error: query.error,
   };
 }
+
+export default useFeedPhotos;

@@ -36,12 +36,8 @@ import {
   markNotificationReadFromPushData,
   storePinnedNotifId,
 } from './src/services/firebase/notificationService';
-import {
-  isDarkroomReadyToReveal,
-  scheduleNextReveal,
-  clearRevealCache,
-} from './src/services/firebase/darkroomService';
-import { revealPhotos, getPhotoById } from './src/services/firebase/photoService';
+import { checkAndRevealPhotos } from './src/services/supabase/darkroomService';
+// getPhotoById available from './src/services/supabase/photoService' if needed for notification handlers
 import { initializeGiphy } from './src/components/comments/GifPicker';
 import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
@@ -529,34 +525,31 @@ export default function App() {
   }, []);
 
   // Check for pending photo reveals when app comes to foreground
+  // Uses Supabase auth + PowerSync (single checkAndRevealPhotos call replaces
+  // isDarkroomReadyToReveal + revealPhotos + scheduleNextReveal + clearRevealCache)
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async nextAppState => {
       if (nextAppState === 'active') {
-        const currentUser = getAuth().currentUser;
-        if (currentUser) {
-          logger.debug('App: Checking for pending reveals on foreground', {
-            userId: currentUser.uid,
-          });
-          try {
-            const isReady = await isDarkroomReadyToReveal(currentUser.uid);
-            if (isReady) {
-              logger.info('App: Revealing photos on foreground', {
-                userId: currentUser.uid,
-              });
-              const revealResult = await revealPhotos(currentUser.uid);
-              await scheduleNextReveal(currentUser.uid);
-              clearRevealCache(); // Invalidate cache so next foreground check re-fetches fresh nextRevealAt
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session?.user) {
+            logger.debug('App: Checking for pending reveals on foreground', {
+              userId: session.user.id,
+            });
+            const revealedCount = await checkAndRevealPhotos(session.user.id);
+            if (revealedCount > 0) {
               logger.info('App: Foreground reveal complete', {
-                userId: currentUser.uid,
-                revealedCount: revealResult.count,
+                userId: session.user.id,
+                revealedCount,
               });
             }
-          } catch (error) {
-            logger.error('App: Failed to check/reveal photos on foreground', {
-              userId: currentUser.uid,
-              error: error.message,
-            });
           }
+        } catch (error) {
+          logger.error('App: Failed to check/reveal photos on foreground', {
+            error: error.message,
+          });
         }
       }
     });

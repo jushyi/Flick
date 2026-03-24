@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -106,16 +106,40 @@ const FeedScreen = () => {
   const { markLoaded } = useScreenTrace('FeedScreen');
   const screenTraceMarkedRef = useRef(false);
 
+  // New Supabase/TanStack-based feed hook (auto-resolved from .ts by Metro)
   const {
     photos,
-    loading,
-    refreshing,
-    loadingMore,
-    error,
-    loadMorePhotos,
-    refreshFeed,
-    updatePhotoInState,
-  } = useFeedPhotos(true, true); // realTimeUpdates=true, hotOnly=true
+    isLoading: loading,
+    isRefreshing: refreshing,
+    isFetchingNextPage: loadingMore,
+    error: feedError,
+    hasNextPage: hasMore,
+    fetchNextPage: loadMorePhotos,
+    refresh: refreshFeed,
+  } = useFeedPhotos(user?.uid);
+
+  // Error is an Error object in new hook; convert to string for backwards compat
+  const error = feedError?.message ?? null;
+
+  // Optimistic photo update helper (replaces updatePhotoInState from old hook)
+  // TanStack Query cache is read-only; maintain local overlay for optimistic updates
+  const [photoOverrides, setPhotoOverrides] = useState({});
+  const updatePhotoInState = useCallback((photoId, updatedPhoto) => {
+    setPhotoOverrides(prev => ({ ...prev, [photoId]: updatedPhoto }));
+  }, []);
+
+  // Merge TanStack photos with local optimistic overrides
+  const mergedPhotos = useMemo(
+    () => photos.map(p => photoOverrides[p.id] || p),
+    [photos, photoOverrides]
+  );
+
+  // Clear overrides when feed refreshes (TanStack data is fresh)
+  useEffect(() => {
+    if (!refreshing && Object.keys(photoOverrides).length > 0) {
+      setPhotoOverrides({});
+    }
+  }, [refreshing]);
 
   // Stories state
   const [friendStories, setFriendStories] = useState([]);
@@ -1411,7 +1435,7 @@ const FeedScreen = () => {
           <Animated.FlatList
             testID="feed-list"
             ref={flatListRef}
-            data={photos.length > 0 ? photos : archivePhotos}
+            data={mergedPhotos.length > 0 ? mergedPhotos : archivePhotos}
             renderItem={renderFeedItem}
             keyExtractor={item => item.id}
             contentContainerStyle={[styles.feedList, { paddingTop: HEADER_HEIGHT }]}
@@ -1435,7 +1459,7 @@ const FeedScreen = () => {
             windowSize={5}
             removeClippedSubviews={true}
             updateCellsBatchingPeriod={50}
-            onEndReached={photos.length > 0 ? loadMorePhotos : null}
+            onEndReached={mergedPhotos.length > 0 ? loadMorePhotos : null}
             onEndReachedThreshold={0.5}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
