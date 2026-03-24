@@ -38,7 +38,7 @@
 - [x] **Phase 12: Schema & Infrastructure Foundation** - PostgreSQL schema, Supabase project, PowerSync config, TypeScript foundation (completed 2026-03-23)
 - [x] **Phase 13: Auth & Storage Migration** - Phone auth via Supabase/Twilio, photo storage migration, upload queue (completed 2026-03-24)
 - [x] **Phase 14: Data Layer & Caching Foundation** - TanStack Query integration, PowerSync local SQLite, offline query persistence (completed 2026-03-24)
-- [ ] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles
+- [x] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles (completed 2026-03-24)
 - [ ] **Phase 16: Core Services -- Social & Albums** - Friendships, comments, albums, blocks/reports, contacts, real-time subscriptions
 - [ ] **Phase 17: Messaging & Social** - Conversations, messages, snaps, streaks, reactions, replies, tagged photos
 - [ ] **Phase 18: Background Jobs & Notifications** - pg_cron jobs, Edge Functions, push notifications, triggers, Live Activity fix
@@ -105,13 +105,13 @@ Plans:
   2. The feed loads via a single SQL JOIN query and renders all friends' revealed photos without the previous 30-ID chunking limitation
   3. User profile CRUD (display name, username, profile photo, song, selects) works against Supabase with no behavior change
   4. Photo triage (journal/archive), batch triage, and soft delete all function identically to current behavior
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 15-01-PLAN.md -- photoService.ts + darkroomService.ts + uploadQueue wiring (PowerSync local writes, reveal logic)
 - [x] 15-02-PLAN.md -- get_feed RPC migration + feedService.ts + profileService.ts
 - [x] 15-03-PLAN.md -- useDarkroom.ts + useFeedPhotos.ts hook rewrites
-- [ ] 15-04-PLAN.md -- Screen wiring (DarkroomScreen, FeedScreen, useCameraBase, App.js strangler fig switch)
+- [x] 15-04-PLAN.md -- Screen wiring (DarkroomScreen, FeedScreen, useCameraBase, App.js strangler fig switch)
 
 ### Phase 16: Core Services -- Social & Albums
 **Goal**: All social features work through Supabase -- friendships, comments, albums, blocking, reporting, and contact sync function identically with real-time updates
@@ -198,7 +198,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 12. Schema & Infrastructure Foundation | 3/3 | Complete    | 2026-03-23 | - |
 | 13. Auth & Storage Migration | 4/4 | Complete   | 2026-03-24 | - |
 | 14. Data Layer & Caching Foundation | 2/2 | Complete    | 2026-03-24 | - |
-| 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 3/4 | In Progress|  |
+| 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 4/4 | Complete    | 2026-03-24 |
 | 16. Core Services -- Social & Albums | v1.2 | 0/4 | Not started | - |
 | 17. Messaging & Social | v1.2 | 0/5 | Not started | - |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
