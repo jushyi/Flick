@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { uploadPhoto, uploadVideo, uploadSnapPhoto, generateThumbnail } from './supabase/storageService';
 import { uploadPhoto as firebaseUploadPhoto, uploadVideo as firebaseUploadVideo } from './firebase/storageService';
+import { updatePhotoAfterUpload } from './supabase/photoService';
 import { getPowerSyncDb } from '../lib/powersync/PowerSyncProvider';
 import { supabase } from '../lib/supabase';
 
@@ -237,6 +238,24 @@ export const processQueue = async (): Promise<void> => {
 
         if (!uploadResult.success) {
           throw new Error(uploadResult.error || 'Upload failed');
+        }
+
+        // Update photo record with the uploaded URL and storage path
+        // (RESEARCH.md Pitfall 1: without this, photos have image_url=NULL permanently)
+        if (uploadResult.url && uploadResult.storagePath && item.media_type !== 'snap') {
+          try {
+            await updatePhotoAfterUpload(item.photo_id, uploadResult.url, uploadResult.storagePath);
+            logger.info('UploadQueueService.processQueue: Photo record updated', {
+              photoId: item.photo_id,
+              imageUrl: uploadResult.url,
+            });
+          } catch (updateError: any) {
+            // Log but don't fail the upload -- the URL is in storage, photo record can be updated later
+            logger.warn('UploadQueueService.processQueue: Failed to update photo record', {
+              photoId: item.photo_id,
+              error: updateError.message,
+            });
+          }
         }
 
         // Mark as completed
