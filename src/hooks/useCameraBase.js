@@ -16,10 +16,20 @@ import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/nativ
 import * as ImageManipulator from 'expo-image-manipulator';
 
 import { useAuth } from '../context/AuthContext';
-import { getDarkroomCounts } from '../services/firebase/photoService';
+import { createPhotoRecord } from '../services/supabase/photoService';
+import { calculateBatchRevealAt } from '../services/supabase/darkroomService';
+import { getPowerSyncDb } from '../lib/powersync/PowerSyncProvider';
 import { addToQueue, initializeQueue } from '../services/uploadQueueService';
 import logger from '../utils/logger';
 import { lightImpact, mediumImpact } from '../utils/haptics';
+
+// Generate UUID v4 (same pattern as uploadQueueService)
+const generateUUID = () =>
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 
 // Recording constants
 export const HOLD_THRESHOLD_MS = 500;
@@ -126,14 +136,38 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     }
   }, [micPermission, requestMicPermission]);
 
-  // Load darkroom counts on mount and poll every 30s
+  // Load darkroom counts from PowerSync local SQLite on mount and poll every 30s
   useEffect(() => {
     if (!user) return;
 
     const loadDarkroomCounts = async () => {
-      const counts = await getDarkroomCounts(user.uid);
-      logger.debug('useCameraBase: Darkroom counts updated', counts);
-      setDarkroomCounts(counts);
+      const db = getPowerSyncDb();
+      if (!db) return;
+
+      try {
+        const [devResult, revResult] = await Promise.all([
+          db.get(
+            "SELECT COUNT(*) as count FROM photos WHERE user_id = ? AND status = 'developing' AND deleted_at IS NULL",
+            [user.uid]
+          ),
+          db.get(
+            "SELECT COUNT(*) as count FROM photos WHERE user_id = ? AND status = 'revealed' AND deleted_at IS NULL",
+            [user.uid]
+          ),
+        ]);
+
+        const developingCount = devResult?.count ?? 0;
+        const revealedCount = revResult?.count ?? 0;
+        const counts = {
+          totalCount: developingCount + revealedCount,
+          developingCount,
+          revealedCount,
+        };
+        logger.debug('useCameraBase: Darkroom counts updated', counts);
+        setDarkroomCounts(counts);
+      } catch (error) {
+        logger.warn('useCameraBase: Failed to load darkroom counts', { error: error.message });
+      }
     };
 
     loadDarkroomCounts();
@@ -148,10 +182,36 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
       if (!user) return;
 
       const loadDarkroomCounts = async () => {
-        logger.info('useCameraBase: Reloading darkroom counts on focus');
-        const counts = await getDarkroomCounts(user.uid);
-        logger.debug('useCameraBase: Darkroom counts after focus', counts);
-        setDarkroomCounts(counts);
+        const db = getPowerSyncDb();
+        if (!db) return;
+
+        try {
+          logger.info('useCameraBase: Reloading darkroom counts on focus');
+          const [devResult, revResult] = await Promise.all([
+            db.get(
+              "SELECT COUNT(*) as count FROM photos WHERE user_id = ? AND status = 'developing' AND deleted_at IS NULL",
+              [user.uid]
+            ),
+            db.get(
+              "SELECT COUNT(*) as count FROM photos WHERE user_id = ? AND status = 'revealed' AND deleted_at IS NULL",
+              [user.uid]
+            ),
+          ]);
+
+          const developingCount = devResult?.count ?? 0;
+          const revealedCount = revResult?.count ?? 0;
+          const counts = {
+            totalCount: developingCount + revealedCount,
+            developingCount,
+            revealedCount,
+          };
+          logger.debug('useCameraBase: Darkroom counts after focus', counts);
+          setDarkroomCounts(counts);
+        } catch (error) {
+          logger.warn('useCameraBase: Failed to reload darkroom counts on focus', {
+            error: error.message,
+          });
+        }
       };
 
       loadDarkroomCounts();
@@ -167,9 +227,32 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
       const refreshAndOpen = async () => {
         if (user) {
           logger.info('useCameraBase: Refreshing darkroom counts before opening sheet');
-          const counts = await getDarkroomCounts(user.uid);
-          logger.debug('useCameraBase: Fresh counts from notification', counts);
-          setDarkroomCounts(counts);
+          const db = getPowerSyncDb();
+          if (db) {
+            try {
+              const [devResult, revResult] = await Promise.all([
+                db.get(
+                  "SELECT COUNT(*) as count FROM photos WHERE user_id = ? AND status = 'developing' AND deleted_at IS NULL",
+                  [user.uid]
+                ),
+                db.get(
+                  "SELECT COUNT(*) as count FROM photos WHERE user_id = ? AND status = 'revealed' AND deleted_at IS NULL",
+                  [user.uid]
+                ),
+              ]);
+              const developingCount = devResult?.count ?? 0;
+              const revealedCount = revResult?.count ?? 0;
+              const counts = {
+                totalCount: developingCount + revealedCount,
+                developingCount,
+                revealedCount,
+              };
+              logger.debug('useCameraBase: Fresh counts from notification', counts);
+              setDarkroomCounts(counts);
+            } catch (error) {
+              logger.warn('useCameraBase: Failed to refresh counts', { error: error.message });
+            }
+          }
         }
         setIsBottomSheetVisible(true);
       };
@@ -271,7 +354,7 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
 
   // Handle completed video recording
   const handleRecordingComplete = useCallback(
-    result => {
+    async result => {
       if (!result?.uri) {
         logger.warn('useCameraBase: recordAsync resolved with no URI');
         return;
@@ -285,8 +368,13 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         return;
       }
 
-      // Normal mode: queue for background upload
-      addToQueue(user.uid, result.uri, 'video', duration);
+      // Create video record in PowerSync local SQLite (immediate darkroom visibility)
+      const videoId = generateUUID();
+      const revealAt = await calculateBatchRevealAt(user.uid);
+      await createPhotoRecord(user.uid, videoId, result.uri, revealAt, 'video');
+
+      // Normal mode: queue for background upload — passes videoId for post-upload URL update
+      addToQueue(user.uid, result.uri, 'video', duration, videoId);
 
       // Play card stack animation (same as photo)
       playCardCaptureAnimation();
@@ -298,7 +386,7 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         totalCount: prev.totalCount + 1,
       }));
 
-      logger.info('useCameraBase: Video queued for background upload');
+      logger.info('useCameraBase: Video record created and queued for upload', { videoId });
     },
     [isSnapMode, onSnapCapture, user, playCardCaptureAnimation]
   );
@@ -426,8 +514,13 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         return photoUri;
       }
 
-      // Queue for background upload (non-blocking)
-      addToQueue(user.uid, photoUri);
+      // Create photo record in PowerSync local SQLite (immediate darkroom visibility)
+      const photoId = generateUUID();
+      const revealAt = await calculateBatchRevealAt(user.uid);
+      await createPhotoRecord(user.uid, photoId, photoUri, revealAt, 'photo');
+
+      // Queue for background upload (non-blocking) — passes photoId for post-upload URL update
+      addToQueue(user.uid, photoUri, 'photo', null, photoId);
 
       // Play card stack animation (fan out + scale)
       playCardCaptureAnimation();
@@ -439,7 +532,7 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         totalCount: prev.totalCount + 1,
       }));
 
-      logger.info('useCameraBase: Photo queued for background upload');
+      logger.info('useCameraBase: Photo record created and queued for upload', { photoId });
     } catch (error) {
       logger.error('useCameraBase: Error capturing photo', error);
     } finally {

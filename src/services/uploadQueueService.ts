@@ -149,10 +149,11 @@ export const addToQueue = async (
   userId: string,
   mediaUri: string,
   mediaType: string = 'photo',
-  duration: number | null = null
+  duration: number | null = null,
+  existingPhotoId: string | null = null
 ): Promise<{ photoId: string; thumbnail: string | null }> => {
   const id = generateUUID();
-  const photoId = generateUUID();
+  const photoId = existingPhotoId || generateUUID();
   const createdAt = Date.now();
 
   logger.info('UploadQueueService.addToQueue: Adding item', {

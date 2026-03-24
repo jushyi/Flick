@@ -24,16 +24,15 @@ import { Image as ExpoImage } from 'expo-image';
 import { useSharedValue } from 'react-native-reanimated';
 import { useAuth } from '../context/AuthContext';
 import {
-  getDevelopingPhotos,
-  revealPhotos,
-  batchTriagePhotos,
-} from '../services/firebase/photoService';
+  checkAndRevealPhotos,
+  getDevelopingPhotos as getDevelopingPhotosSupabase,
+  getRevealedPhotos as getRevealedPhotosSupabase,
+} from '../services/supabase/darkroomService';
 import {
-  isDarkroomReadyToReveal,
-  scheduleNextReveal,
-  recordTriageCompletion,
-  clearRevealCache,
-} from '../services/firebase/darkroomService';
+  triagePhoto as triagePhotoSupabase,
+  softDeletePhoto,
+  updatePhotoCaption as updatePhotoCaptionSupabase,
+} from '../services/supabase/photoService';
 import { successNotification } from '../utils/haptics';
 import { playSuccessSound } from '../utils/soundUtils';
 import logger from '../utils/logger';
@@ -117,98 +116,60 @@ const useDarkroom = () => {
 
       logger.debug('useDarkroom: Loading photos', { userId: user.uid });
 
-      const isReady = await isDarkroomReadyToReveal(user.uid);
-      logger.info('useDarkroom: Darkroom ready status', { isReady });
-
-      if (isReady) {
-        logger.info('useDarkroom: Revealing photos (scheduled reveal time reached)');
-        // Reveal ALL developing photos
-        const revealResult = await revealPhotos(user.uid);
-        logger.info('useDarkroom: Photos revealed', {
-          count: revealResult.count,
-          success: revealResult.success,
-          error: revealResult.error,
-        });
-
-        // Schedule next reveal time (0-15 minutes from now)
-        await scheduleNextReveal(user.uid);
-        clearRevealCache(); // Invalidate cache after reveal so next check fetches updated nextRevealAt
-        logger.debug('useDarkroom: Next reveal scheduled');
-      } else {
-        logger.warn('useDarkroom: Darkroom not ready to reveal - photos still developing');
+      // Check and reveal any photos whose reveal_at has passed (single call replaces
+      // isDarkroomReadyToReveal + revealPhotos + scheduleNextReveal + clearRevealCache)
+      const revealedCount = await checkAndRevealPhotos(user.uid);
+      if (revealedCount > 0) {
+        logger.info('useDarkroom: Photos revealed on load', { count: revealedCount });
       }
 
-      // Load all developing/revealed photos
-      const result = await getDevelopingPhotos(user.uid);
-      logger.info('useDarkroom: getDevelopingPhotos result', {
-        success: result.success,
-        photoCount: result.photos?.length,
-        error: result.error,
+      // Load developing and revealed photos from PowerSync local SQLite
+      const [developingPhotos, revealedPhotos] = await Promise.all([
+        getDevelopingPhotosSupabase(user.uid),
+        getRevealedPhotosSupabase(user.uid),
+      ]);
+
+      logger.info('useDarkroom: Photos loaded', {
+        developingCount: developingPhotos.length,
+        revealedCount: revealedPhotos.length,
       });
 
-      if (result.success && result.photos) {
-        logger.debug('useDarkroom: All photos', {
-          photos: result.photos.map(p => ({
-            id: p.id,
-            status: p.status,
-            photoState: p.photoState,
-          })),
+      // Catch-up mechanism: If ANY photos are revealed AND there are developing photos,
+      // auto-reveal all developing photos to add them to this triage session
+      if (revealedPhotos.length > 0 && developingPhotos.length > 0) {
+        logger.info('useDarkroom: Catch-up reveal triggered', {
+          revealedCount: revealedPhotos.length,
+          developingCount: developingPhotos.length,
+          reason: 'User opened darkroom with revealed photos, auto-revealing remaining photos',
         });
 
-        // Catch-up mechanism: If ANY photos are revealed AND there are developing photos,
-        // auto-reveal all developing photos to add them to this triage session
-        const revealedPhotos = result.photos.filter(photo => photo.status === 'revealed');
-        const developingPhotos = result.photos.filter(photo => photo.status === 'developing');
+        // Force-reveal the developing photos (checkAndRevealPhotos handles all in one call)
+        const catchUpCount = await checkAndRevealPhotos(user.uid);
+        logger.info('useDarkroom: Catch-up reveal complete', { count: catchUpCount });
 
-        if (revealedPhotos.length > 0 && developingPhotos.length > 0) {
-          logger.info('useDarkroom: Catch-up reveal triggered', {
-            revealedCount: revealedPhotos.length,
-            developingCount: developingPhotos.length,
-            reason: 'User opened darkroom with revealed photos, auto-revealing remaining photos',
-          });
-
-          // Reveal the developing photos
-          const catchUpResult = await revealPhotos(user.uid);
-          logger.info('useDarkroom: Catch-up reveal complete', {
-            count: catchUpResult.count,
-            success: catchUpResult.success,
-          });
-
-          // Re-fetch photos to get updated statuses
-          const updatedResult = await getDevelopingPhotos(user.uid);
-          if (updatedResult.success && updatedResult.photos) {
-            const allRevealed = updatedResult.photos.filter(photo => photo.status === 'revealed');
-            logger.info('useDarkroom: After catch-up reveal', {
-              totalRevealed: allRevealed.length,
-            });
-            setPhotos(allRevealed);
-          } else {
-            setPhotos(revealedPhotos);
-          }
-        } else {
-          logger.info('useDarkroom: No catch-up needed', {
-            revealedCount: revealedPhotos.length,
-            developingCount: developingPhotos.length,
-          });
-          setPhotos(revealedPhotos);
-        }
-
-        // Clear hidden state when photos reload to prevent stale state
-        setHiddenPhotoIds(new Set());
-        // Also clear undo stack, tags, and captions since these are fresh photos
-        setUndoStack([]);
-        setPhotoTags({});
-        setPhotoCaptions({});
+        // Re-fetch revealed photos to get updated statuses
+        const allRevealed = await getRevealedPhotosSupabase(user.uid);
+        logger.info('useDarkroom: After catch-up reveal', {
+          totalRevealed: allRevealed.length,
+        });
+        setPhotos(allRevealed);
       } else {
-        logger.warn('useDarkroom: Failed to get photos or no photos returned');
-        setPhotos([]);
-        setHiddenPhotoIds(new Set());
-        setUndoStack([]);
-        setPhotoTags({});
-        setPhotoCaptions({});
+        setPhotos(revealedPhotos);
       }
+
+      // Clear hidden state when photos reload to prevent stale state
+      setHiddenPhotoIds(new Set());
+      // Also clear undo stack, tags, and captions since these are fresh photos
+      setUndoStack([]);
+      setPhotoTags({});
+      setPhotoCaptions({});
     } catch (error) {
       logger.error('useDarkroom: Error loading developing photos', error);
+      setPhotos([]);
+      setHiddenPhotoIds(new Set());
+      setUndoStack([]);
+      setPhotoTags({});
+      setPhotoCaptions({});
     } finally {
       setLoading(false);
     }
@@ -329,27 +290,41 @@ const useDarkroom = () => {
       action: entry.action,
     }));
 
-    // Batch save to Firestore (pass photoTags for tagged photo notifications, photoCaptions for captions)
-    const result = await batchTriagePhotos(decisions, photoTags, photoCaptions);
+    // Batch save via PowerSync local writes (synced to Supabase automatically)
+    try {
+      let journaledCount = 0;
 
-    if (!result.success) {
-      logger.error('useDarkroom: Batch save failed', { error: result.error });
+      for (const { photoId, action } of decisions) {
+        // Write caption before triaging if photo has a caption
+        const caption = photoCaptions[photoId];
+        if (caption && caption.trim().length > 0) {
+          await updatePhotoCaptionSupabase(photoId, caption.trim());
+        }
+
+        if (action === 'delete') {
+          await softDeletePhoto(photoId);
+        } else {
+          await triagePhotoSupabase(photoId, action);
+          if (action === 'journal') journaledCount++;
+        }
+      }
+
+      logger.info('useDarkroom: Batch triage complete', {
+        count: decisions.length,
+        journaledCount,
+      });
+
+      // TODO: recordTriageCompletion for story notifications will be handled
+      // by a Supabase Edge Function / database trigger in Phase 18
+
+      // Success - close immediately
+      successNotification();
+      navigation.goBack();
+    } catch (error) {
+      logger.error('useDarkroom: Batch save failed', { error: error.message });
       setSaving(false);
       Alert.alert('Save Failed', 'Could not save your decisions. Please try again.');
-      return;
     }
-
-    // Record triage completion if any photos were journaled (triggers story notifications)
-    if (result.journaledCount > 0) {
-      logger.debug('useDarkroom: Recording triage completion for story notifications', {
-        journaledCount: result.journaledCount,
-      });
-      await recordTriageCompletion(user.uid, result.journaledCount);
-    }
-
-    // Success - close immediately
-    successNotification();
-    navigation.goBack();
   };
 
   /**

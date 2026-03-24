@@ -17,7 +17,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedAnimated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
-import useDarkroom from '../hooks/useDarkroom';
+// Explicit .js extension to avoid Metro resolving useDarkroom.ts (lean data hook)
+// The .js hook contains full UI logic (undo stack, triage, animations) with Supabase services
+import useDarkroom from '../hooks/useDarkroom.js';
 import { SwipeablePhotoCard, TagFriendsModal } from '../components';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { styles } from '../styles/DarkroomScreen.styles';
