@@ -39,6 +39,8 @@ Convert all **remaining** JS files to TypeScript with full strict typing (Phases
 ### Full Migration Testing
 - **D-15:** Run a complete end-to-end migration test against the dev Firebase project data. Validate that all dev data (users, photos, friendships, conversations, etc.) migrates correctly to Supabase and the app functions fully on the new backend with zero Firebase fallbacks.
 - **D-16:** This is the final validation gate before Firebase removal — confirm every service, hook, and screen works against Supabase before deleting Firebase packages.
+- **D-18:** Migration must be **repeatable and resettable**. Build a reset script that wipes the dev Supabase database (tables, storage buckets, auth users) back to a clean state so the full migration can be re-run from Firebase dev data. The user will iterate on this cycle (reset → migrate → test → fix → reset → migrate) until everything works perfectly before attempting prod migration.
+- **D-19:** Prod migration only happens after dev migration passes all validation. The same migration scripts used on dev will run against prod Firebase data — dev iterations are the dress rehearsal.
 
 ### Claude's Discretion
 - Per-file judgment on which comments to keep vs remove during the comment audit
