@@ -194,7 +194,15 @@ Plans:
   3. All 7 @react-native-firebase/* packages are removed from package.json and the app builds successfully via EAS
   4. The functions/ directory (Firebase Cloud Functions) is removed with all jobs confirmed running on Supabase
   5. Sentry is integrated for error tracking and performance traces, replacing Firebase Performance Monitoring
-**Plans**: TBD
+**Plans:** 6 plans
+
+Plans:
+- [ ] 20-01-PLAN.md -- Delete Firebase dead code (26 services, functions/, config files) + create shared TypeScript type definitions
+- [ ] 20-02-PLAN.md -- Install Sentry + create sentryService.ts + port useScreenTrace to Sentry spans
+- [ ] 20-03-PLAN.md -- TS sweep: constants, utils, styles, config, non-Firebase services, context providers
+- [ ] 20-04-PLAN.md -- TS sweep: all hooks (camera, messaging, social, interaction)
+- [ ] 20-05-PLAN.md -- TS sweep: all components, screens, navigation, App.tsx
+- [ ] 20-06-PLAN.md -- Firebase package removal + strict:true + test infrastructure rewrite + CLAUDE.md rewrite + EAS build verification
 
 ## Progress
 
@@ -211,7 +219,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 17. Messaging & Social | v1.2 | 1/5 | In Progress|  |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
 | 19. Performance Polish | v1.2 | 0/5 | Not started | - |
-| 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/TBD | Not started | - |
+| 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/6 | Not started | - |
 
 ### Phase 21: Full verification of phases 13-20 - guided UAT of Supabase migration
 
