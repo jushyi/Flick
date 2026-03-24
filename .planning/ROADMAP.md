@@ -123,13 +123,14 @@ Plans:
   3. User-created albums and auto-generated monthly albums display correctly with all CRUD operations
   4. Block and report flows work -- blocked users disappear from feed and friend suggestions
   5. Contact sync finds friends by phone number against the new user lookup
-**Plans:** 4/4 plans complete
+**Plans:** 5 plans (4 complete + 1 gap closure)
 
 Plans:
 - [x] 16-01-PLAN.md -- Query keys, DB triggers/RPCs, friendship service (PowerSync local writes)
 - [x] 16-02-PLAN.md -- Comment service, useComments with Supabase Realtime, @mention autocomplete
 - [x] 16-03-PLAN.md -- Album service (junction table), monthly albums RPC, hooks with optimistic updates
 - [x] 16-04-PLAN.md -- Block/report services, contact sync via Supabase RPC
+- [ ] 16-05-PLAN.md -- Gap closure: useFriendships TanStack Query hooks wrapping friendshipService
 
 ### Phase 17: Messaging & Social
 **Goal**: The entire messaging system works through Supabase -- all 5 message types, snap lifecycle, streaks, read receipts, reactions, replies, and tagged photo pipeline function identically
@@ -206,7 +207,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 13. Auth & Storage Migration | 4/4 | Complete   | 2026-03-24 | - |
 | 14. Data Layer & Caching Foundation | 2/2 | Complete    | 2026-03-24 | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 4/4 | Complete    | 2026-03-24 |
-| 16. Core Services -- Social & Albums | v1.2 | 4/4 | Complete   | 2026-03-24 |
+| 16. Core Services -- Social & Albums | v1.2 | 4/5 | Gap closure | 2026-03-24 |
 | 17. Messaging & Social | v1.2 | 0/5 | Not started | - |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
 | 19. Performance Polish | v1.2 | 0/5 | Not started | - |
