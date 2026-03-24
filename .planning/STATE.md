@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-03-24T13:52:41Z"
-last_activity: 2026-03-24 -- Completed Plan 14-01 (Data Layer Foundation)
+stopped_at: Completed 14-02-PLAN.md
+last_updated: "2026-03-24T14:00:36Z"
+last_activity: 2026-03-24 -- Completed Plan 14-02 (Provider Integration & Tests)
 progress:
   total_phases: 9
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 9
-  percent: 82
+  completed_plans: 10
+  percent: 86
 ---
 
 # Project State: Flick
 
-**Status:** Executing Phase 14
+**Status:** Phase 14 Complete
 **Last Updated:** 2026-03-24
 
 ## Project Reference
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 
 ## Current Position
 
-Phase: 14 of 20 (Data Layer & Caching Foundation)
-Plan: 1 of 2 in current phase (completed)
-Status: Plan 14-01 complete -- ready for Plan 14-02
-Last activity: 2026-03-24 -- Completed Plan 14-01 (Data Layer Foundation)
+Phase: 14 of 20 (Data Layer & Caching Foundation) -- COMPLETE
+Plan: 2 of 2 in current phase (completed)
+Status: Phase 14 complete -- ready for Phase 15
+Last activity: 2026-03-24 -- Completed Plan 14-02 (Provider Integration & Tests)
 
-Progress: [████████▒-] 82%
+Progress: [█████████-] 86%
 
 ## Milestone History
 
@@ -96,6 +96,13 @@ Progress: [████████▒-] 82%
 - 24-hour maxAge for persisted cache with 1-second throttle on AsyncStorage writes
 - Fatal PostgreSQL error codes (22xxx, 23xxx, 42501) discard transactions to avoid infinite retry
 
+**Phase 14-02 decisions:**
+- PowerSync gated on supabase.auth.onAuthStateChange (not Firebase auth)
+- wasAuthenticatedRef prevents disconnect on initial null state at cold start
+- PersistQueryClientProvider placed outermost, PowerSyncContext inside it
+- useProfile pattern: useQuery + queryKeys factory + meta.persist for cacheable hooks
+- useUpdateProfile pattern: useMutation + invalidateQueries (not setQueryData)
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -110,6 +117,6 @@ Progress: [████████▒-] 82%
 
 ## Session Continuity
 
-Last session: 2026-03-24T13:52:41Z
-Stopped at: Completed 14-01-PLAN.md
-Resume file: .planning/phases/14-data-layer-caching-foundation/14-01-SUMMARY.md
+Last session: 2026-03-24T14:00:36Z
+Stopped at: Completed 14-02-PLAN.md
+Resume file: .planning/phases/14-data-layer-caching-foundation/14-02-SUMMARY.md
