@@ -34,8 +34,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **CORE-05**: Comment service rewritten — CRUD, real-time subscriptions, @mention parsing all functional
 - [x] **CORE-06**: Album and monthly album services rewritten for Supabase
 - [x] **CORE-07**: User profile service rewritten — CRUD, search, friend count all functional
-- [ ] **CORE-08**: Block and report services rewritten for Supabase
-- [ ] **CORE-09**: Contact sync service works against new user lookup endpoints
+- [x] **CORE-08**: Block and report services rewritten for Supabase
+- [x] **CORE-09**: Contact sync service works against new user lookup endpoints
 - [x] **CORE-10**: Real-time subscriptions work for feed, friend requests, and notifications via Supabase Realtime
 
 ### Messaging & Social
@@ -157,8 +157,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-04 | Phase 16 | Complete |
 | CORE-05 | Phase 16 | Complete |
 | CORE-06 | Phase 16 | Complete |
-| CORE-08 | Phase 16 | Pending |
-| CORE-09 | Phase 16 | Pending |
+| CORE-08 | Phase 16 | Complete |
+| CORE-09 | Phase 16 | Complete |
 | CORE-10 | Phase 16 | Complete |
 | MSG-01 | Phase 17 | Pending |
 | MSG-02 | Phase 17 | Pending |
