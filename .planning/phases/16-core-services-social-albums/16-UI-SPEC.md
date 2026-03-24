@@ -53,20 +53,21 @@ Exceptions: Touch targets use 44px minimum (iOS HIG) for all interactive element
 
 ## Typography
 
-Existing system -- preserved exactly. Pixel fonts render visually larger than standard fonts, so sizes are reduced.
+Existing system -- preserved exactly. Pixel fonts render visually larger than standard fonts, so sizes are reduced. 4 distinct sizes, 2 weights.
 
 | Role | Size | Font Family | Line Height |
 |------|------|-------------|-------------|
-| Body | 14px | SpaceMono_400Regular | 20px (1.43) |
-| Label / Button | 12px | Silkscreen_700Bold | 16px (1.33) |
+| Caption / Label / Button | 12px | Silkscreen_700Bold (buttons), SpaceMono_400Regular (captions, timestamps, meta text) | 16px (1.33) |
+| Body / Input | 14px | SpaceMono_400Regular | 20px (1.43) |
 | Subheading | 16px | Silkscreen_400Regular | 22px (1.375) |
 | Title | 18px | PressStart2P_400Regular | 24px (1.33) |
-| Display | 22px | PressStart2P_400Regular | 28px (1.27) |
 
-Additional sizes used in this phase's screens:
-- Caption: 10px SpaceMono_400Regular (timestamps, meta text)
-- Input text: 14px SpaceMono_400Regular (comment input, album name input)
-- @mention highlight: 14px SpaceMono_700Bold (bold variant of body for mentioned usernames)
+Font weights (2 total): Regular (400), Bold (700).
+
+Role mappings within the 4-size system:
+- Input text: 14px SpaceMono_400Regular (comment input, album name input) -- uses Body size
+- @mention highlight: 14px SpaceMono_700Bold (bold variant of Body for mentioned usernames)
+- Timestamps and meta text: 12px SpaceMono_400Regular -- uses Caption/Label size
 
 ---
 
