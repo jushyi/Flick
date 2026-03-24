@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Phase 19 context gathered
-last_updated: "2026-03-24T15:07:57.814Z"
+stopped_at: Completed 15-01-PLAN.md
+last_updated: "2026-03-24T15:12:01.810Z"
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 22
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State: Flick
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 15 (core-services-photos-feed-darkroom) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 ## Milestone History
 
@@ -106,6 +106,14 @@ Plan: 2 of 4
 - useProfile pattern: useQuery + queryKeys factory + meta.persist for cacheable hooks
 - useUpdateProfile pattern: useMutation + invalidateQueries (not setQueryData)
 
+**Phase 15-01 decisions:**
+
+- Reactions use Supabase client directly (not PowerSync) since photo_reactions not in SQLite schema
+- reaction_count on photos table NOT updated by client -- Phase 18 will add a DB trigger
+- Batch reveal coordination: new photos join existing developing batch timestamp
+- Snaps excluded from updatePhotoAfterUpload (use signed URLs, not permanent CDN)
+- Throw-on-error pattern for all Supabase services (not { success, error } returns)
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -128,6 +136,6 @@ Plan: 2 of 4
 
 ## Session Continuity
 
-Last session: 2026-03-24T15:07:57.812Z
-Stopped at: Phase 19 context gathered
-Resume file: .planning/phases/19-performance-polish/19-CONTEXT.md
+Last session: 2026-03-24T15:12:01.807Z
+Stopped at: Completed 15-01-PLAN.md
+Resume file: None
