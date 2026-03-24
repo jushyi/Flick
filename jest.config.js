@@ -34,6 +34,8 @@ module.exports = {
     '^expo-screen-capture$': '<rootDir>/__tests__/__mocks__/expo-screen-capture.js',
     '^react-native-url-polyfill/dist/polyfill$':
       '<rootDir>/__tests__/__mocks__/react-native-url-polyfill.js',
+    '^react-native-url-polyfill/auto$':
+      '<rootDir>/__tests__/__mocks__/react-native-url-polyfill.js',
     '^@powersync/react-native$': '<rootDir>/__tests__/__mocks__/@powersync/react-native.js',
     '^@powersync/react$': '<rootDir>/__tests__/__mocks__/@powersync/react.js',
   },
