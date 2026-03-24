@@ -38,7 +38,7 @@
 - [x] **Phase 12: Schema & Infrastructure Foundation** - PostgreSQL schema, Supabase project, PowerSync config, TypeScript foundation (completed 2026-03-23)
 - [x] **Phase 13: Auth & Storage Migration** - Phone auth via Supabase/Twilio, photo storage migration, upload queue (completed 2026-03-24)
 - [x] **Phase 14: Data Layer & Caching Foundation** - TanStack Query integration, PowerSync local SQLite, offline query persistence (completed 2026-03-24)
-- [x] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles (completed 2026-03-24)
+- [x] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles (completed 2026-03-24)
 - [ ] **Phase 16: Core Services -- Social & Albums** - Friendships, comments, albums, blocks/reports, contacts, real-time subscriptions
 - [ ] **Phase 17: Messaging & Social** - Conversations, messages, snaps, streaks, reactions, replies, tagged photos
 - [ ] **Phase 18: Background Jobs & Notifications** - pg_cron jobs, Edge Functions, push notifications, triggers, Live Activity fix
@@ -174,7 +174,13 @@ Plans:
   4. Photos and videos load via CDN-backed permanent URLs or pre-refreshed signed URLs with no expired URL flash or re-fetch delay
   5. Feed images are served at 400px for cards and full-res only in PhotoDetail, reducing bandwidth and load time
   6. All list views have consistent empty state screens (no blank white/dark screens)
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 19-01-PLAN.md -- SkeletonBase primitive + 9 skeleton screen components + Toast config + react-native-toast-message install
+- [ ] 19-02-PLAN.md -- imageUrl.ts utility (CDN transforms, signed URL expiry) + EmptyState component
+- [ ] 19-03-PLAN.md -- useOptimisticMutation helper hook + stale-while-revalidate verification
+- [ ] 19-04-PLAN.md -- Screen integration (wire skeletons, empty states, image transforms, prefetching into all 9 screens) + human verification
 
 ### Phase 20: TypeScript Sweep & Firebase Removal
 **Goal**: The codebase is fully TypeScript with zero Firebase dependencies -- all remaining JS files are converted, Firebase packages are removed in a single EAS build, and dead code is cleaned up
@@ -202,5 +208,15 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 16. Core Services -- Social & Albums | v1.2 | 0/4 | Not started | - |
 | 17. Messaging & Social | v1.2 | 0/5 | Not started | - |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
-| 19. Performance Polish | v1.2 | 0/TBD | Not started | - |
+| 19. Performance Polish | v1.2 | 0/4 | Not started | - |
 | 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/TBD | Not started | - |
+
+### Phase 21: Full verification of phases 13-20 - guided UAT of Supabase migration
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 20
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 21 to break down)
