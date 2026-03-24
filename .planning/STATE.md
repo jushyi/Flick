@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Completed 15-01-PLAN.md
-last_updated: "2026-03-24T15:12:01.810Z"
+stopped_at: Completed 15-02-PLAN.md
+last_updated: "2026-03-24T15:18:02.557Z"
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 22
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State: Flick
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 15 (core-services-photos-feed-darkroom) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 
 ## Milestone History
 
@@ -114,6 +114,13 @@ Plan: 3 of 4
 - Snaps excluded from updatePhotoAfterUpload (use signed URLs, not permanent CDN)
 - Throw-on-error pattern for all Supabase services (not { success, error } returns)
 
+**Phase 15-02 decisions:**
+
+- SQL RPC for feed query replaces Firestore chunked in() queries with single JOIN
+- SECURITY DEFINER on both RPCs for RLS bypass in server-side functions
+- (supabase as any) casts for tables not yet in Database types (placeholder until schema deployed)
+- getPhotoByIdWithUser uses inner JOIN via Supabase query builder (not RPC) for single photo lookups
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -136,6 +143,6 @@ Plan: 3 of 4
 
 ## Session Continuity
 
-Last session: 2026-03-24T15:12:01.807Z
-Stopped at: Completed 15-01-PLAN.md
+Last session: 2026-03-24T15:18:02.555Z
+Stopped at: Completed 15-02-PLAN.md
 Resume file: None

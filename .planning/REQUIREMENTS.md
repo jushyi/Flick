@@ -27,13 +27,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Core Services
 
-- [ ] **CORE-01**: Photo service rewritten for Supabase — CRUD, reveal, triage, batch triage, soft delete all functional
-- [ ] **CORE-02**: Feed loads via single SQL JOIN query replacing chunked Firestore `in` queries (30-ID limit eliminated)
-- [ ] **CORE-03**: Darkroom service rewritten — developing/revealed state, reveal scheduling, countdown timer all functional
+- [x] **CORE-01**: Photo service rewritten for Supabase — CRUD, reveal, triage, batch triage, soft delete all functional
+- [x] **CORE-02**: Feed loads via single SQL JOIN query replacing chunked Firestore `in` queries (30-ID limit eliminated)
+- [x] **CORE-03**: Darkroom service rewritten — developing/revealed state, reveal scheduling, countdown timer all functional
 - [ ] **CORE-04**: Friendship service rewritten — send/accept/decline requests, friend list, mutual friends all functional
 - [ ] **CORE-05**: Comment service rewritten — CRUD, real-time subscriptions, @mention parsing all functional
 - [ ] **CORE-06**: Album and monthly album services rewritten for Supabase
-- [ ] **CORE-07**: User profile service rewritten — CRUD, search, friend count all functional
+- [x] **CORE-07**: User profile service rewritten — CRUD, search, friend count all functional
 - [ ] **CORE-08**: Block and report services rewritten for Supabase
 - [ ] **CORE-09**: Contact sync service works against new user lookup endpoints
 - [ ] **CORE-10**: Real-time subscriptions work for feed, friend requests, and notifications via Supabase Realtime
@@ -150,10 +150,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-01 | Phase 14 | Complete |
 | PERF-08 | Phase 14 | Complete |
 | PERF-09 | Phase 14 | Complete |
-| CORE-01 | Phase 15 | Pending |
-| CORE-02 | Phase 15 | Pending |
-| CORE-03 | Phase 15 | Pending |
-| CORE-07 | Phase 15 | Pending |
+| CORE-01 | Phase 15 | Complete |
+| CORE-02 | Phase 15 | Complete |
+| CORE-03 | Phase 15 | Complete |
+| CORE-07 | Phase 15 | Complete |
 | CORE-04 | Phase 16 | Pending |
 | CORE-05 | Phase 16 | Pending |
 | CORE-06 | Phase 16 | Pending |
