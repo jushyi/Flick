@@ -26,8 +26,6 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
-import logger from '../utils/logger';
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -65,10 +63,9 @@ export function useStreak(friendId: string): StreakInfo {
 
   const streakId = userId && friendId ? generateStreakId(userId, friendId) : '';
 
-  const { data: rows, isLoading } = usePowerSyncQuery(
-    'SELECT * FROM streaks WHERE id = ?',
-    [streakId],
-  );
+  const { data: rows, isLoading } = usePowerSyncQuery('SELECT * FROM streaks WHERE id = ?', [
+    streakId,
+  ]);
 
   const result = useMemo(() => {
     const streak = (rows && rows.length > 0 ? rows[0] : null) as StreakData | null;
@@ -106,15 +103,16 @@ export function useStreak(friendId: string): StreakInfo {
  * @param friendIds - Array of friend user IDs (optional, for documentation; all user streaks are fetched)
  * @returns Map of friendId to streak info, plus loading state
  */
-export function useStreakMap(
-  friendIds?: string[],
-): { streakMap: Map<string, StreakMapEntry>; loading: boolean } {
+export function useStreakMap(friendIds?: string[]): {
+  streakMap: Map<string, StreakMapEntry>;
+  loading: boolean;
+} {
   const { userProfile } = useAuth() as { userProfile: { uid: string } | null };
   const userId = userProfile?.uid;
 
   const { data: rows, isLoading } = usePowerSyncQuery(
     'SELECT * FROM streaks WHERE user1_id = ? OR user2_id = ?',
-    [userId ?? '', userId ?? ''],
+    [userId ?? '', userId ?? '']
   );
 
   const streakMap = useMemo(() => {
@@ -124,10 +122,9 @@ export function useStreakMap(
 
     const now = Date.now();
 
-    (rows as StreakData[]).forEach((streak) => {
+    (rows as StreakData[]).forEach(streak => {
       // Determine the friend ID (the other participant)
-      const friendId =
-        streak.user1_id === userId ? streak.user2_id : streak.user1_id;
+      const friendId = streak.user1_id === userId ? streak.user2_id : streak.user1_id;
 
       let state = deriveStreakState(streak, userId);
       let dayCount = streak.day_count || 0;

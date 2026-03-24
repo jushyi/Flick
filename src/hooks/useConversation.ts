@@ -13,7 +13,7 @@
  */
 import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 
 import { supabase } from '@/lib/supabase';
@@ -58,15 +58,11 @@ const STALE_TIME = 30_000; // 30 seconds (project convention)
 const dismissConversationNotifications = async (convId: string) => {
   try {
     const presented = await Notifications.getPresentedNotificationsAsync();
-    const toDelete = presented.filter(
-      (n) => n.request.content.data?.conversationId === convId,
-    );
+    const toDelete = presented.filter(n => n.request.content.data?.conversationId === convId);
     await Promise.all(
-      toDelete.map((n) =>
-        Notifications.dismissNotificationAsync(n.request.identifier),
-      ),
+      toDelete.map(n => Notifications.dismissNotificationAsync(n.request.identifier))
     );
-  } catch (_err) {
+  } catch {
     // Notification dismissal is best-effort
   }
 };
@@ -87,7 +83,7 @@ export interface UseConversationResult {
   sendReply: (
     text: string,
     replyToId: string,
-    replyPreview: { sender_id: string; type: string; text: string | null },
+    replyPreview: { sender_id: string; type: string; text: string | null }
   ) => Promise<{ messageId: string }>;
   unsendMessage: (messageId: string) => Promise<void>;
   deleteMessage: (messageId: string) => Promise<void>;
@@ -150,11 +146,11 @@ export function useConversation(conversationId: string): UseConversationResult {
     if (!data?.pages) return [];
 
     const map = new Map<string, MessageRow>();
-    data.pages.flat().forEach((msg) => map.set(msg.id, msg));
+    data.pages.flat().forEach(msg => map.set(msg.id, msg));
 
     // Return sorted by created_at descending (newest first for inverted FlatList)
     return Array.from(map.values()).sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   }, [data]);
 
@@ -182,7 +178,7 @@ export function useConversation(conversationId: string): UseConversationResult {
           queryClient.invalidateQueries({
             queryKey: queryKeys.conversations.messages(conversationId),
           });
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -197,7 +193,7 @@ export function useConversation(conversationId: string): UseConversationResult {
           queryClient.invalidateQueries({
             queryKey: queryKeys.conversations.messages(conversationId),
           });
-        },
+        }
       )
       .subscribe();
 
@@ -216,7 +212,7 @@ export function useConversation(conversationId: string): UseConversationResult {
 
     const doMarkRead = () => {
       if (readReceiptsEnabled) {
-        markConversationRead(conversationId, userId).catch((err) => {
+        markConversationRead(conversationId, userId).catch(err => {
           logger.error('useConversation: markConversationRead failed', {
             conversationId,
             error: err.message,
@@ -232,7 +228,7 @@ export function useConversation(conversationId: string): UseConversationResult {
     dismissConversationNotifications(conversationId);
 
     // Mark as read when app returns to foreground
-    const subscription = AppState.addEventListener('change', (nextState) => {
+    const subscription = AppState.addEventListener('change', nextState => {
       if (appStateRef.current !== 'active' && nextState === 'active') {
         doMarkRead();
       }
@@ -266,7 +262,7 @@ export function useConversation(conversationId: string): UseConversationResult {
       invalidateMessages();
       return result;
     },
-    [conversationId, userId, invalidateMessages],
+    [conversationId, userId, invalidateMessages]
   );
 
   // 2. Send reaction
@@ -276,7 +272,7 @@ export function useConversation(conversationId: string): UseConversationResult {
       invalidateMessages();
       return result;
     },
-    [conversationId, userId, invalidateMessages],
+    [conversationId, userId, invalidateMessages]
   );
 
   // 3. Remove reaction
@@ -285,7 +281,7 @@ export function useConversation(conversationId: string): UseConversationResult {
       await removeReaction(conversationId, userId, targetMessageId);
       invalidateMessages();
     },
-    [conversationId, userId, invalidateMessages],
+    [conversationId, userId, invalidateMessages]
   );
 
   // 4. Send reply
@@ -293,7 +289,7 @@ export function useConversation(conversationId: string): UseConversationResult {
     async (
       text: string,
       replyToId: string,
-      replyPreview: { sender_id: string; type: string; text: string | null },
+      replyPreview: { sender_id: string; type: string; text: string | null }
     ) => {
       const result = await sendReply({
         conversationId,
@@ -305,7 +301,7 @@ export function useConversation(conversationId: string): UseConversationResult {
       invalidateMessages();
       return result;
     },
-    [conversationId, userId, invalidateMessages],
+    [conversationId, userId, invalidateMessages]
   );
 
   // 5. Unsend message
@@ -314,7 +310,7 @@ export function useConversation(conversationId: string): UseConversationResult {
       await unsendMessage(messageId);
       invalidateMessages();
     },
-    [invalidateMessages],
+    [invalidateMessages]
   );
 
   // 6. Delete message for me
@@ -323,22 +319,17 @@ export function useConversation(conversationId: string): UseConversationResult {
       await deleteMessageForMe(messageId, userId);
       invalidateMessages();
     },
-    [userId, invalidateMessages],
+    [userId, invalidateMessages]
   );
 
   // 7. Send snap
   const handleSendSnap = useCallback(
     async (localUri: string, caption?: string) => {
-      const result = await uploadAndSendSnap(
-        conversationId,
-        userId,
-        localUri,
-        caption ?? null,
-      );
+      const result = await uploadAndSendSnap(conversationId, userId, localUri, caption ?? null);
       invalidateMessages();
       return result;
     },
-    [conversationId, userId, invalidateMessages],
+    [conversationId, userId, invalidateMessages]
   );
 
   // 8. Mark snap viewed
@@ -347,16 +338,13 @@ export function useConversation(conversationId: string): UseConversationResult {
       await markSnapViewed(messageId);
       invalidateMessages();
     },
-    [invalidateMessages],
+    [invalidateMessages]
   );
 
   // 9. Get snap URL
-  const handleGetSnapUrl = useCallback(
-    async (storagePath: string) => {
-      return getSignedSnapUrl(storagePath);
-    },
-    [],
-  );
+  const handleGetSnapUrl = useCallback(async (storagePath: string) => {
+    return getSignedSnapUrl(storagePath);
+  }, []);
 
   // 10. Send tagged photo
   const handleSendTaggedPhoto = useCallback(
@@ -365,7 +353,7 @@ export function useConversation(conversationId: string): UseConversationResult {
       invalidateMessages();
       return result;
     },
-    [conversationId, userId, invalidateMessages],
+    [conversationId, userId, invalidateMessages]
   );
 
   return {

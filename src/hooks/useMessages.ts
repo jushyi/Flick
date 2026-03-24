@@ -8,14 +8,11 @@
  * This is the NEW hook (.ts) for the Supabase migration. The old .js file
  * is preserved for strangler fig -- screens will be switched later.
  */
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useQuery as usePowerSyncQuery } from '@powersync/react';
 
-import {
-  softDeleteConversation,
-  type ConversationRow,
-} from '../services/supabase/messageService';
+import { softDeleteConversation, type ConversationRow } from '../services/supabase/messageService';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -53,7 +50,7 @@ export function useMessages() {
      WHERE (participant1_id = ? OR participant2_id = ?)
      AND last_message_at IS NOT NULL
      ORDER BY last_message_at DESC`,
-    [userId ?? '', userId ?? ''],
+    [userId ?? '', userId ?? '']
   );
 
   // Map, filter soft-deleted, and derive otherUserId + unreadCount
@@ -61,7 +58,7 @@ export function useMessages() {
     if (!userId || !rows) return [];
 
     return (rows as ConversationRow[])
-      .filter((conv) => {
+      .filter(conv => {
         const isP1 = conv.participant1_id === userId;
         const deletedAt = isP1 ? conv.deleted_at_p1 : conv.deleted_at_p2;
 
@@ -71,7 +68,7 @@ export function useMessages() {
         // Show conversation only if a new message arrived after soft-delete
         return conv.last_message_at > deletedAt;
       })
-      .map((conv) => {
+      .map(conv => {
         const isP1 = conv.participant1_id === userId;
         return {
           ...conv,
@@ -108,7 +105,7 @@ export function useMessages() {
         throw error;
       }
     },
-    [userId],
+    [userId]
   );
 
   return {
