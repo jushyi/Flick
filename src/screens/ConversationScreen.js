@@ -160,7 +160,7 @@ const ConversationScreen = () => {
   const { user, userProfile } = useAuth();
   const navigation = useNavigation();
   const route = useRoute();
-  const { conversationId, friendProfile, deletedAt } = route.params;
+  const { conversationId, friendProfile } = route.params;
 
   // Derive friendId from conversationId when not passed (e.g., deep link navigation).
   // Conversation IDs are formatted as [lowerUserId]_[higherUserId].
@@ -230,8 +230,8 @@ const ConversationScreen = () => {
     sendReply: hookSendReply,
     unsendMessage: hookUnsendMessage,
     deleteMessage: hookDeleteMessage,
-    getSnapUrl,
-    sendTaggedPhoto,
+    getSnapUrl: _getSnapUrl, // Available for SnapViewer URL resolution
+    sendTaggedPhoto: _sendTaggedPhoto, // Available for tagged photo message sending
   } = useConversation(conversationId);
 
   // --- Build reactionMap from raw messages (includes reaction-type messages) ---
@@ -475,11 +475,10 @@ const ConversationScreen = () => {
     [messages, user.uid]
   );
   // Read receipts: use Supabase conversation metadata (fetched via separate query if needed)
-  const senderEnabled = userProfile?.readReceiptsEnabled !== false;
-  const recipientEnabled = liveFriendProfile?.readReceiptsEnabled !== false;
-  const showReadStatus = senderEnabled && recipientEnabled;
-  // For now, read indicator is based on whether we can show it; detailed read state
-  // comes from the Realtime subscription on the conversations table
+  // Privacy: both users must have readReceiptsEnabled !== false for "Read" to show.
+  // For now, detailed read state comes from the Realtime subscription on the conversations table.
+  const _senderEnabled = userProfile?.readReceiptsEnabled !== false;
+  const _recipientEnabled = liveFriendProfile?.readReceiptsEnabled !== false;
   const isRead = false; // Will be enhanced when conversations metadata is wired
   const showIndicator = !!lastSentMessage;
 
