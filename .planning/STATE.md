@@ -5,7 +5,7 @@ milestone_name: Speed & Scale
 status: planning
 stopped_at: Phase 18 context gathered
 last_updated: "2026-03-24T14:17:26.781Z"
-last_activity: 2026-03-24 -- Completed Plan 14-02 (Provider Integration & Tests)
+last_activity: 2026-03-24 - Completed quick task 260324-edt: Update README and CONTRIBUTING docs for solo dev project
 progress:
   total_phases: 9
   completed_phases: 3
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 Phase: 14 of 20 (Data Layer & Caching Foundation) -- COMPLETE
 Plan: 2 of 2 in current phase (completed)
 Status: Phase 14 complete -- ready for Phase 15
-Last activity: 2026-03-24 -- Completed Plan 14-02 (Provider Integration & Tests)
+Last activity: 2026-03-24 - Completed quick task 260324-edt: Update README and CONTRIBUTING docs for solo dev project
 
 Progress: [█████████-] 86%
 
@@ -114,6 +114,12 @@ Progress: [█████████-] 86%
 **Known tech debt carried from v1.1:**
 - Phase 6/8/9/10 gaps deferred (will be resolved by full rewrite in v1.2)
 - React Native Firebase deprecated API warnings (eliminated by removal in Phase 20)
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260324-edt | Update README and CONTRIBUTING docs for solo dev project | 2026-03-24 | 1f5d292f | [260324-edt-update-readme-and-contributing-docs-for-](./quick/260324-edt-update-readme-and-contributing-docs-for-/) |
 
 ## Session Continuity
 
