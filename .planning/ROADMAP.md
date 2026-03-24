@@ -105,7 +105,12 @@ Plans:
   2. The feed loads via a single SQL JOIN query and renders all friends' revealed photos without the previous 30-ID chunking limitation
   3. User profile CRUD (display name, username, profile photo, song, selects) works against Supabase with no behavior change
   4. Photo triage (journal/archive), batch triage, and soft delete all function identically to current behavior
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 15-01-PLAN.md -- photoService.ts + darkroomService.ts (PowerSync local writes, reveal logic)
+- [ ] 15-02-PLAN.md -- get_feed RPC migration + feedService.ts + profileService.ts
+- [ ] 15-03-PLAN.md -- useDarkroom.ts + useFeedPhotos.ts hook rewrites
 
 ### Phase 16: Core Services -- Social & Albums
 **Goal**: All social features work through Supabase -- friendships, comments, albums, blocking, reporting, and contact sync function identically with real-time updates
@@ -179,7 +184,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 12. Schema & Infrastructure Foundation | 3/3 | Complete    | 2026-03-23 | - |
 | 13. Auth & Storage Migration | 4/4 | Complete   | 2026-03-24 | - |
 | 14. Data Layer & Caching Foundation | 2/2 | Complete    | 2026-03-24 | - |
-| 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
+| 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/3 | Not started | - |
 | 16. Core Services -- Social & Albums | v1.2 | 0/TBD | Not started | - |
 | 17. Messaging & Social | v1.2 | 0/TBD | Not started | - |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
