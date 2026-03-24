@@ -38,7 +38,7 @@
 - [x] **Phase 12: Schema & Infrastructure Foundation** - PostgreSQL schema, Supabase project, PowerSync config, TypeScript foundation (completed 2026-03-23)
 - [x] **Phase 13: Auth & Storage Migration** - Phone auth via Supabase/Twilio, photo storage migration, upload queue (completed 2026-03-24)
 - [x] **Phase 14: Data Layer & Caching Foundation** - TanStack Query integration, PowerSync local SQLite, offline query persistence (completed 2026-03-24)
-- [ ] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles
+- [x] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles (completed 2026-03-24)
 - [ ] **Phase 16: Core Services -- Social & Albums** - Friendships, comments, albums, blocks/reports, contacts, real-time subscriptions
 - [ ] **Phase 17: Messaging & Social** - Conversations, messages, snaps, streaks, reactions, replies, tagged photos
 - [ ] **Phase 18: Background Jobs & Notifications** - pg_cron jobs, Edge Functions, push notifications, triggers, Live Activity fix
@@ -105,13 +105,13 @@ Plans:
   2. The feed loads via a single SQL JOIN query and renders all friends' revealed photos without the previous 30-ID chunking limitation
   3. User profile CRUD (display name, username, profile photo, song, selects) works against Supabase with no behavior change
   4. Photo triage (journal/archive), batch triage, and soft delete all function identically to current behavior
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 15-01-PLAN.md -- photoService.ts + darkroomService.ts + uploadQueue wiring (PowerSync local writes, reveal logic)
-- [ ] 15-02-PLAN.md -- get_feed RPC migration + feedService.ts + profileService.ts
-- [ ] 15-03-PLAN.md -- useDarkroom.ts + useFeedPhotos.ts hook rewrites
-- [ ] 15-04-PLAN.md -- Screen wiring (DarkroomScreen, FeedScreen, useCameraBase, App.js strangler fig switch)
+- [x] 15-01-PLAN.md -- photoService.ts + darkroomService.ts + uploadQueue wiring (PowerSync local writes, reveal logic)
+- [x] 15-02-PLAN.md -- get_feed RPC migration + feedService.ts + profileService.ts
+- [x] 15-03-PLAN.md -- useDarkroom.ts + useFeedPhotos.ts hook rewrites
+- [x] 15-04-PLAN.md -- Screen wiring (DarkroomScreen, FeedScreen, useCameraBase, App.js strangler fig switch)
 
 ### Phase 16: Core Services -- Social & Albums
 **Goal**: All social features work through Supabase -- friendships, comments, albums, blocking, reporting, and contact sync function identically with real-time updates
@@ -123,10 +123,10 @@ Plans:
   3. User-created albums and auto-generated monthly albums display correctly with all CRUD operations
   4. Block and report flows work -- blocked users disappear from feed and friend suggestions
   5. Contact sync finds friends by phone number against the new user lookup
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
-- [ ] 16-01-PLAN.md -- Query keys, DB triggers/RPCs, friendship service (PowerSync local writes)
+- [x] 16-01-PLAN.md -- Query keys, DB triggers/RPCs, friendship service (PowerSync local writes)
 - [ ] 16-02-PLAN.md -- Comment service, useComments with Supabase Realtime, @mention autocomplete
 - [ ] 16-03-PLAN.md -- Album service (junction table), monthly albums RPC, hooks with optimistic updates
 - [ ] 16-04-PLAN.md -- Block/report services, contact sync via Supabase RPC
@@ -174,7 +174,14 @@ Plans:
   4. Photos and videos load via CDN-backed permanent URLs or pre-refreshed signed URLs with no expired URL flash or re-fetch delay
   5. Feed images are served at 400px for cards and full-res only in PhotoDetail, reducing bandwidth and load time
   6. All list views have consistent empty state screens (no blank white/dark screens)
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 19-01-PLAN.md -- SkeletonBase primitive + 9 skeleton screen components + Toast config + react-native-toast-message install
+- [ ] 19-02-PLAN.md -- imageUrl.ts utility (CDN transforms, signed URL expiry) + EmptyState component
+- [ ] 19-03-PLAN.md -- useOptimisticMutation helper hook + stale-while-revalidate verification
+- [ ] 19-04-PLAN.md -- Screen integration (wire skeletons, empty states, image transforms, prefetching into all 9 screens) + human verification
+- [ ] 19-05-PLAN.md -- Wire optimistic updates into mutation hooks + proactive snap URL refresh integration
 
 ### Phase 20: TypeScript Sweep & Firebase Removal
 **Goal**: The codebase is fully TypeScript with zero Firebase dependencies -- all remaining JS files are converted, Firebase packages are removed in a single EAS build, and dead code is cleaned up
@@ -198,9 +205,19 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 12. Schema & Infrastructure Foundation | 3/3 | Complete    | 2026-03-23 | - |
 | 13. Auth & Storage Migration | 4/4 | Complete   | 2026-03-24 | - |
 | 14. Data Layer & Caching Foundation | 2/2 | Complete    | 2026-03-24 | - |
-| 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/4 | Not started | - |
-| 16. Core Services -- Social & Albums | v1.2 | 0/4 | Not started | - |
+| 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 4/4 | Complete    | 2026-03-24 |
+| 16. Core Services -- Social & Albums | v1.2 | 1/4 | In Progress|  |
 | 17. Messaging & Social | v1.2 | 0/5 | Not started | - |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
-| 19. Performance Polish | v1.2 | 0/TBD | Not started | - |
+| 19. Performance Polish | v1.2 | 0/5 | Not started | - |
 | 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/TBD | Not started | - |
+
+### Phase 21: Full verification of phases 13-20 - guided UAT of Supabase migration
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 20
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 21 to break down)

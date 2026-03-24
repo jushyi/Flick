@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Phase 20 context gathered
-last_updated: "2026-03-24T14:59:31.627Z"
+stopped_at: Completed 16-01-PLAN.md
+last_updated: "2026-03-24T18:49:13.441Z"
 progress:
-  total_phases: 9
-  completed_phases: 3
-  total_plans: 22
-  completed_plans: 9
+  total_phases: 10
+  completed_phases: 4
+  total_plans: 32
+  completed_plans: 14
 ---
 
 # Project State: Flick
@@ -22,11 +22,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Same app, same features -- rebuilt on a faster, more scalable backend with TypeScript
-**Current focus:** Phase 15 — core-services-photos-feed-darkroom
+**Current focus:** Phase 16 — core-services-social-albums
 
 ## Current Position
 
-Phase: 15 (core-services-photos-feed-darkroom) — EXECUTING
+Phase: 16 (core-services-social-albums) — EXECUTING
 Plan: 2 of 4
 
 ## Milestone History
@@ -106,6 +106,21 @@ Plan: 2 of 4
 - useProfile pattern: useQuery + queryKeys factory + meta.persist for cacheable hooks
 - useUpdateProfile pattern: useMutation + invalidateQueries (not setQueryData)
 
+**Phase 15-01 decisions:**
+
+- Reactions use Supabase client directly (not PowerSync) since photo_reactions not in SQLite schema
+- reaction_count on photos table NOT updated by client -- Phase 18 will add a DB trigger
+- Batch reveal coordination: new photos join existing developing batch timestamp
+- Snaps excluded from updatePhotoAfterUpload (use signed URLs, not permanent CDN)
+- Throw-on-error pattern for all Supabase services (not { success, error } returns)
+
+**Phase 15-02 decisions:**
+
+- SQL RPC for feed query replaces Firestore chunked in() queries with single JOIN
+- SECURITY DEFINER on both RPCs for RLS bypass in server-side functions
+- (supabase as any) casts for tables not yet in Database types (placeholder until schema deployed)
+- getPhotoByIdWithUser uses inner JOIN via Supabase query builder (not RPC) for single photo lookups
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -120,6 +135,10 @@ Plan: 2 of 4
 - Phase 6/8/9/10 gaps deferred (will be resolved by full rewrite in v1.2)
 - React Native Firebase deprecated API warnings (eliminated by removal in Phase 20)
 
+### Roadmap Evolution
+
+- Phase 21 added: Full verification of phases 13-20 - guided UAT of Supabase migration
+
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Directory |
@@ -128,6 +147,6 @@ Plan: 2 of 4
 
 ## Session Continuity
 
-Last session: 2026-03-24T14:59:31.624Z
-Stopped at: Phase 20 context gathered
-Resume file: .planning/phases/20-typescript-sweep-firebase-removal/20-CONTEXT.md
+Last session: 2026-03-24T18:49:13.438Z
+Stopped at: Completed 16-01-PLAN.md
+Resume file: None
