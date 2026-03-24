@@ -41,16 +41,16 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Messaging & Social
 
 - [x] **MSG-01**: Conversation service rewritten — list, create, soft delete, unread counts all functional via Supabase
-- [ ] **MSG-02**: Message service rewritten — send, paginate, real-time subscription all functional
-- [ ] **MSG-03**: All 5 message types (text, reaction, reply, snap, tagged_photo) work identically to current behavior
+- [x] **MSG-02**: Message service rewritten — send, paginate, real-time subscription all functional
+- [x] **MSG-03**: All 5 message types (text, reaction, reply, snap, tagged_photo) work identically to current behavior
 - [x] **MSG-04**: Snap lifecycle rewritten — upload, send, view-once, auto-cleanup via Supabase Storage + Edge Functions
 - [x] **MSG-05**: Streak engine rewritten — 3-day activation, tiered expiry, warning notifications all server-authoritative
 - [x] **MSG-06**: Read receipts with privacy toggle work via Supabase (conversation-level, mutual model)
-- [ ] **MSG-07**: Message reactions (double-tap heart + 6-emoji picker) work with new backend
-- [ ] **MSG-08**: Swipe-to-reply with quoted context works with new backend
+- [x] **MSG-07**: Message reactions (double-tap heart + 6-emoji picker) work with new backend
+- [x] **MSG-08**: Swipe-to-reply with quoted context works with new backend
 - [x] **MSG-09**: Message deletion (unsend) and delete-for-me work via Edge Functions
 - [ ] **MSG-10**: Screenshot detection and notification work with new backend
-- [ ] **MSG-11**: Tagged photo DM pipeline works — auto-send tagged photos, add-to-feed resharing with attribution
+- [x] **MSG-11**: Tagged photo DM pipeline works — auto-send tagged photos, add-to-feed resharing with attribution
 
 ### Background Jobs
 
@@ -161,16 +161,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-09 | Phase 16 | Complete |
 | CORE-10 | Phase 16 | Complete |
 | MSG-01 | Phase 17 | Complete |
-| MSG-02 | Phase 17 | Pending |
-| MSG-03 | Phase 17 | Pending |
+| MSG-02 | Phase 17 | Complete |
+| MSG-03 | Phase 17 | Complete |
 | MSG-04 | Phase 17 | Complete |
 | MSG-05 | Phase 17 | Complete |
 | MSG-06 | Phase 17 | Complete |
-| MSG-07 | Phase 17 | Pending |
-| MSG-08 | Phase 17 | Pending |
+| MSG-07 | Phase 17 | Complete |
+| MSG-08 | Phase 17 | Complete |
 | MSG-09 | Phase 17 | Complete |
 | MSG-10 | Phase 17 | Pending |
-| MSG-11 | Phase 17 | Pending |
+| MSG-11 | Phase 17 | Complete |
 | JOBS-01 | Phase 18 | Pending |
 | JOBS-02 | Phase 18 | Pending |
 | JOBS-03 | Phase 18 | Pending |

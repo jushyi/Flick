@@ -142,12 +142,12 @@ Plans:
   3. Snap lifecycle works end-to-end: upload, send, view-once Polaroid viewer, auto-cleanup from storage
   4. Streak engine maintains 3-day activation, tiered expiry windows, and warning notifications (all server-authoritative)
   5. Read receipts with privacy toggle, emoji reactions, swipe-to-reply, message unsend, and delete-for-me all work
-**Plans:** 1/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 - [x] 17-01-PLAN.md -- Schema additions (message_deletions, read receipt columns, emoji, reply_preview) + PostgreSQL triggers + snap-cleanup Edge Function + queryKeys extension
-- [ ] 17-02-PLAN.md -- messageService.ts (conversation CRUD, all 5 message types, unsend, delete-for-me, pagination) + unit tests
-- [ ] 17-03-PLAN.md -- snapService.ts (WebP upload, send, view-once, signed URLs) + streakService.ts (pure functions for state derivation) + unit tests
+- [x] 17-02-PLAN.md -- messageService.ts (conversation CRUD, all 5 message types, unsend, delete-for-me, pagination) + unit tests
+- [x] 17-03-PLAN.md -- snapService.ts (WebP upload, send, view-once, signed URLs) + streakService.ts (pure functions for state derivation) + unit tests
 - [ ] 17-04-PLAN.md -- useMessages.ts (PowerSync conversation list) + useConversation.ts (TanStack + Realtime) + useStreaks.ts (PowerSync streak reads)
 - [ ] 17-05-PLAN.md -- Screen integration (MessagesListScreen, ConversationScreen wired to new hooks) + human verification
 
@@ -216,7 +216,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 14. Data Layer & Caching Foundation | 2/2 | Complete    | 2026-03-24 | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 4/4 | Complete    | 2026-03-24 |
 | 16. Core Services -- Social & Albums | v1.2 | 5/5 | Complete    | 2026-03-24 |
-| 17. Messaging & Social | v1.2 | 1/5 | In Progress|  |
+| 17. Messaging & Social | v1.2 | 3/5 | In Progress|  |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
 | 19. Performance Polish | v1.2 | 0/5 | Not started | - |
 | 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/6 | Not started | - |
