@@ -1,65 +1,61 @@
 # Flick
 
-A friends-only social media app inspired by disposable cameras.
+A friends-only social media app that recreates the disposable camera experience.
 
 ## What It Is
 
-Flick recreates the nostalgic experience of disposable film cameras. Photos are captured instantly but revealed later in batches through a "darkroom" system, encouraging authentic moments over polished content. Share only with friends, react with emoji, and experience the anticipation of waiting for your photos to develop.
+Flick is a personal project building a nostalgic, disposable-camera-inspired social app. Photos are captured instantly but revealed later in batches through a "darkroom" system -- encouraging authentic moments over polished content. Sharing is limited to friends only, with emoji reactions, direct messaging, and a retro 16-bit pixel art aesthetic throughout.
+
+## Key Features
+
+- Photo capture with delayed darkroom reveal (0-5 minute random developing time)
+- Friends-only feed with emoji reactions and comments with @mentions
+- Direct messaging with GIF support
+- User-created and auto-generated monthly albums
+- Push notifications for reveals, reactions, friend requests, and messages
+- Retro pixel art UI with CRT-inspired dark theme
+- iOS and Android support
 
 ## Tech Stack
 
-- **React Native + Expo** - Cross-platform mobile framework
-- **Firebase Authentication** - Phone number authentication with OTP
-- **Cloud Firestore** - Real-time NoSQL database for users, photos, friendships
-- **Firebase Cloud Storage** - Photo storage with signed URLs
-- **Firebase Cloud Functions** - Push notifications, reaction debouncing
-- **Expo Push Notifications** - Real-time alerts for reveals, reactions, friend requests
+**Current production:**
+
+- React Native + Expo (SDK 54)
+- Firebase Auth (phone OTP), Firestore, Storage, Cloud Functions
+- React Navigation 7
+- react-native-reanimated
+
+**v1.2 migration (in progress):**
+
+- Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime)
+- PowerSync (offline-first SQLite)
+- TanStack Query (caching and persistence)
+- Sentry (monitoring)
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+ and npm
-- Expo CLI (`npm install -g expo-cli`)
-- A Firebase project with Auth, Firestore, Storage, and Functions enabled
-- iOS Simulator (macOS) or physical iOS device with Expo Go
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/your-username/lapse-clone.git
-   cd lapse-clone
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Configure Firebase:
-   - Create a Firebase project at console.firebase.google.com
-   - Enable Phone Authentication
-   - Create a Firestore database
-   - Set up Cloud Storage
-   - Download `GoogleService-Info.plist` and configure via EAS environment variables (see `eas.json`)
-
-4. Deploy Cloud Functions:
-   ```bash
-   cd functions
-   npm install
-   firebase deploy --only functions
-   ```
-
-### Running the App
+**Prerequisites:** Node.js 18+, Expo CLI, Firebase project (or Supabase for v1.2 branch)
 
 ```bash
+npm install
 npx expo start
 ```
 
-Press `i` to open in iOS Simulator or scan the QR code with Expo Go on your device.
+Both iOS and Android are supported. Press `i` for iOS Simulator, `a` for Android emulator, or scan the QR code with Expo Go on a physical device.
+
+See [CLAUDE.md](CLAUDE.md) for detailed architecture, Firebase setup, and development conventions.
+
+## Development Commands
+
+| Command                 | Description                    |
+| ----------------------- | ------------------------------ |
+| `npx expo start`        | Start development server       |
+| `npm run lint`          | Check for linting errors       |
+| `npm run lint:fix`      | Auto-fix linting errors        |
+| `npm run format`        | Format with Prettier           |
+| `npm test`              | Run all tests                  |
+| `npm run test:watch`    | Run tests in watch mode        |
+| `npm run test:coverage` | Run tests with coverage report |
 
 ## Project Structure
 
@@ -67,13 +63,15 @@ Press `i` to open in iOS Simulator or scan the QR code with Expo Go on your devi
 src/
   components/     Reusable UI components (cards, modals, buttons)
   constants/      Design tokens and configuration values
-  context/        React Context providers (Auth, PhoneAuth)
-  hooks/          Custom hooks for camera, darkroom, feed logic
+  context/        React Context providers (Auth, PhoneAuth, PhotoDetail, Theme)
+  hooks/          Custom hooks (camera, darkroom, feed, comments, messages)
   navigation/     React Navigation configuration
-  screens/        Full-screen views (Camera, Feed, Profile, etc.)
-  services/       Firebase service layer (auth, photos, friendships)
+  screens/        Full-screen views (Camera, Feed, Profile, Darkroom, Messages)
+  services/       Service layer (Firebase services, Supabase services, IAP, audio)
   styles/         Shared component styles
   utils/          Helpers (logger, haptics, time formatting)
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for code conventions and development guidelines.
+---
+
+See [CLAUDE.md](CLAUDE.md) for detailed architecture, conventions, and development guide.
