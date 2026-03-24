@@ -22,7 +22,7 @@ module.exports = {
   ],
 
   // Only match test files in __tests__ directory
-  testMatch: ['**/__tests__/**/*.test.{js,ts}'],
+  testMatch: ['**/__tests__/**/*.test.{js,ts,tsx}'],
 
   // Auto-clear mocks between tests for clean test isolation
   clearMocks: true,
@@ -33,11 +33,13 @@ module.exports = {
     '^expo-screen-capture$': '<rootDir>/__tests__/__mocks__/expo-screen-capture.js',
     '^react-native-url-polyfill/dist/polyfill$':
       '<rootDir>/__tests__/__mocks__/react-native-url-polyfill.js',
+    '^@powersync/react-native$': '<rootDir>/__tests__/__mocks__/@powersync/react-native.js',
+    '^@powersync/react$': '<rootDir>/__tests__/__mocks__/@powersync/react.js',
   },
 
   // Transform ignore patterns - jest-expo handles most, but add any custom ones here
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@react-native-firebase/.*|@supabase/supabase-js)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@react-native-firebase/.*|@supabase/supabase-js|@tanstack/.*|@powersync/.*|@journeyapps/.*)',
   ],
 
   // Collect coverage from src directory
