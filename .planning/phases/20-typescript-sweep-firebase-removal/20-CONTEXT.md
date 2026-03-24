@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Convert the entire codebase from JavaScript to TypeScript with full strict typing, remove all Firebase dependencies (7 packages, Cloud Functions, config files) in a single clean break, integrate Sentry for crash/performance monitoring, perform aggressive dead code + comment cleanup, and run a full end-to-end migration test against dev Firebase data to validate the complete Firebase-to-Supabase migration. Every file in src/ will be touched.
+Convert all **remaining** JS files to TypeScript with full strict typing (Phases 15-19 will have already converted many files as they rewrite services/hooks/screens for Supabase — Phase 20 sweeps up what's left), remove all Firebase dependencies (7 packages, Cloud Functions, config files) in a single clean break, integrate Sentry for crash/performance monitoring, perform aggressive dead code + comment cleanup, and run a full end-to-end migration test against dev Firebase data to validate the complete Firebase-to-Supabase migration.
 
 </domain>
 
@@ -17,6 +17,7 @@ Convert the entire codebase from JavaScript to TypeScript with full strict typin
 - **D-01:** Enable `strict: true` in tsconfig after converting all files. This is the final milestone — no more `allowJs` coexistence.
 - **D-02:** Full typing standard — proper interfaces/types for props, state, return values, function params. Zero `any` types in converted code.
 - **D-03:** Create `src/types/` directory for shared types organized by domain (navigation params, component props, hook returns, API responses). Extends existing `src/types/database.ts`.
+- **D-17:** Phases 15-19 already convert files to TypeScript as they rewrite services, hooks, and screens for Supabase. Phase 20's TS sweep only covers **remaining untouched files** — components, utilities, screens, and helpers that no prior phase had reason to modify. The planner must audit what's already `.ts/.tsx` at execution time and only target what's still `.js`.
 
 ### Firebase Removal
 - **D-04:** Remove all 7 `@react-native-firebase/*` packages in a single commit. Clean break, single EAS native build.
@@ -80,10 +81,10 @@ Convert the entire codebase from JavaScript to TypeScript with full strict typin
 <code_context>
 ## Existing Code Insights
 
-### Current State
-- 224 JS files in `src/` need conversion to TypeScript
+### Current State (as of Phase 14 — will change significantly by Phase 20)
+- 224 JS files in `src/` as of now, but Phases 15-19 will convert many of these to TS as they rewrite services, hooks, and screens for Supabase. Phase 20 handles whatever JS files remain untouched.
 - 13 TS files already exist (from Phases 12-14)
-- 42 files still import `@react-native-firebase/*`
+- 42 files still import `@react-native-firebase/*` — most will be rewritten by Phases 15-18, Phase 20 catches any stragglers
 - 7 Firebase packages in package.json
 - Sentry not yet installed
 
