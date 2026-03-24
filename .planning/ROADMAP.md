@@ -207,7 +207,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 13. Auth & Storage Migration | 4/4 | Complete   | 2026-03-24 | - |
 | 14. Data Layer & Caching Foundation | 2/2 | Complete    | 2026-03-24 | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 4/4 | Complete    | 2026-03-24 |
-| 16. Core Services -- Social & Albums | v1.2 | 5/5 | Complete   | 2026-03-24 |
+| 16. Core Services -- Social & Albums | v1.2 | 5/5 | Complete    | 2026-03-24 |
 | 17. Messaging & Social | v1.2 | 0/5 | Not started | - |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
 | 19. Performance Polish | v1.2 | 0/5 | Not started | - |
