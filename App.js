@@ -12,6 +12,10 @@ import { colors } from './src/constants/colors';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { PowerSyncContext } from '@powersync/react';
+import { onlineManager } from '@tanstack/react-query';
+import NetInfo from '@react-native-community/netinfo';
 import { AuthProvider, ThemeProvider } from './src/context';
 import { VideoMuteProvider } from './src/context/VideoMuteContext';
 import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
@@ -49,6 +53,10 @@ import {
 } from './src/services/liveActivityService';
 import { WHATS_NEW } from './src/config/whatsNew';
 import { GIPHY_API_KEY } from '@env';
+import { queryClient, persistOptions } from './src/lib/queryClient';
+import { powerSyncDb } from './src/lib/powersync/database';
+import { SupabaseConnector } from './src/lib/powersync/connector';
+import { supabase } from './src/lib/supabase';
 
 const WHATS_NEW_STORAGE_KEY = '@whats_new_last_seen_id';
 
@@ -63,6 +71,15 @@ initializeGiphy(GIPHY_API_KEY);
 // Initialize Firebase Performance Monitoring
 // Disables collection in __DEV__ to prevent polluting production metrics
 initPerformanceMonitoring();
+
+// TanStack Query online status tracking
+if (Platform.OS !== 'web') {
+  onlineManager.setEventListener(setOnline => {
+    return NetInfo.addEventListener(state => {
+      setOnline(!!state.isConnected);
+    });
+  });
+}
 
 export default function App() {
   const notificationListener = useRef();
@@ -86,6 +103,37 @@ export default function App() {
   const [animationDone, setAnimationDone] = useState(false);
   const [bannerData, setBannerData] = useState(null);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
+
+  // PowerSync auth-gated connection
+  const wasAuthenticatedRef = useRef(false);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        // User signed in or session refreshed -- connect PowerSync
+        wasAuthenticatedRef.current = true;
+        try {
+          await powerSyncDb.init();
+          const connector = new SupabaseConnector();
+          await powerSyncDb.connect(connector);
+        } catch (error) {
+          logger.error('PowerSync initialization failed', { error: error.message });
+        }
+      } else if (wasAuthenticatedRef.current) {
+        // User signed out (was previously authenticated) -- disconnect
+        wasAuthenticatedRef.current = false;
+        powerSyncDb.disconnectAndClear().catch(error => {
+          logger.error('PowerSync disconnect failed', { error: error.message });
+        });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Load retro pixel fonts - gate splash screen on this
   const [fontsLoaded] = useFonts({
@@ -614,41 +662,51 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
-        <SafeAreaProvider>
-          <ErrorBoundary>
-            <ThemeProvider>
-              <VideoMuteProvider>
-                <AuthProvider>
-                  <AppNavigator />
-                  <StatusBar style="auto" />
-                  {showAnimatedSplash && (
-                    <AnimatedSplash
-                      onAnimationComplete={handleSplashComplete}
-                      fontsLoaded={fontsLoaded}
-                    />
-                  )}
-                </AuthProvider>
-              </VideoMuteProvider>
-            </ThemeProvider>
-          </ErrorBoundary>
-          <WhatsNewModal
-            visible={showWhatsNew}
-            title={WHATS_NEW.title}
-            items={WHATS_NEW.items}
-            onDismiss={handleDismissWhatsNew}
-          />
-          <InAppNotificationBanner
-            visible={!!bannerData}
-            title={bannerData?.title || ''}
-            body={bannerData?.body || ''}
-            avatarUrl={bannerData?.avatarUrl}
-            onPress={handleBannerPress}
-            onDismiss={() => setBannerData(null)}
-          />
-        </SafeAreaProvider>
-      </View>
-    </GestureHandlerRootView>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+      onSuccess={() => {
+        queryClient.resumePausedMutations();
+      }}
+    >
+      <PowerSyncContext.Provider value={powerSyncDb}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
+            <SafeAreaProvider>
+              <ErrorBoundary>
+                <ThemeProvider>
+                  <VideoMuteProvider>
+                    <AuthProvider>
+                      <AppNavigator />
+                      <StatusBar style="auto" />
+                      {showAnimatedSplash && (
+                        <AnimatedSplash
+                          onAnimationComplete={handleSplashComplete}
+                          fontsLoaded={fontsLoaded}
+                        />
+                      )}
+                    </AuthProvider>
+                  </VideoMuteProvider>
+                </ThemeProvider>
+              </ErrorBoundary>
+              <WhatsNewModal
+                visible={showWhatsNew}
+                title={WHATS_NEW.title}
+                items={WHATS_NEW.items}
+                onDismiss={handleDismissWhatsNew}
+              />
+              <InAppNotificationBanner
+                visible={!!bannerData}
+                title={bannerData?.title || ''}
+                body={bannerData?.body || ''}
+                avatarUrl={bannerData?.avatarUrl}
+                onPress={handleBannerPress}
+                onDismiss={() => setBannerData(null)}
+              />
+            </SafeAreaProvider>
+          </View>
+        </GestureHandlerRootView>
+      </PowerSyncContext.Provider>
+    </PersistQueryClientProvider>
   );
 }
