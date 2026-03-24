@@ -40,12 +40,15 @@ created: 2026-03-24
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | 19-01-01 | 01 | 1 | PERF-03 | unit | `npm test -- __tests__/components/skeletons/ --bail` | W0 | pending |
 | 19-01-02 | 01 | 1 | PERF-03 | unit | `npm test -- __tests__/components/skeletons/ --bail` | W0 | pending |
-| 19-02-01 | 02 | 1 | PERF-07 | unit | `npm test -- __tests__/components/EmptyState.test.tsx --bail` | W0 | pending |
-| 19-03-01 | 03 | 1 | PERF-05, PERF-06 | unit | `npm test -- __tests__/utils/imageUrl.test.ts --bail` | W0 | pending |
-| 19-03-02 | 03 | 1 | PERF-11 | unit | `npm test -- __tests__/hooks/useFeedPhotos.test.ts --bail` | Exists | pending |
-| 19-04-01 | 04 | 2 | PERF-04 | unit | `npm test -- __tests__/hooks/ --bail` | W0 | pending |
-| 19-04-02 | 04 | 2 | PERF-02 | unit | `npm test -- __tests__/hooks/useFeedPhotos.test.ts --bail` | Exists | pending |
-| 19-05-01 | 05 | 2 | PERF-10, PERF-11 | unit | `npm test -- __tests__/hooks/ --bail` | Exists | pending |
+| 19-02-01 | 02 | 1 | PERF-05, PERF-06 | unit | `npm test -- __tests__/utils/imageUrl.test.ts --bail` | W0 | pending |
+| 19-02-02 | 02 | 1 | PERF-07 | unit | `npm test -- __tests__/components/EmptyState.test.tsx --bail` | W0 | pending |
+| 19-03-01 | 03 | 2 | PERF-04 | unit | `npm test -- __tests__/hooks/useOptimisticMutation.test.ts --bail` | W0 | pending |
+| 19-03-02 | 03 | 2 | PERF-02 | unit | `npm test -- __tests__/hooks/useFeedPhotos.test.ts --bail` | Exists | pending |
+| 19-04-01 | 04 | 3 | PERF-03, PERF-07 | unit | `npm test -- --bail` | Exists | pending |
+| 19-04-02 | 04 | 3 | PERF-10, PERF-11 | unit | `npm test -- __tests__/hooks/useFeedPhotos.test.ts --bail` | Exists | pending |
+| 19-04-03 | 04 | 3 | PERF-03 | manual | checkpoint:human-verify | N/A | pending |
+| 19-05-01 | 05 | 3 | PERF-04 | unit | `npm test -- --bail` | Exists | pending |
+| 19-05-02 | 05 | 3 | PERF-05 | unit | `npm test -- --bail` | Exists | pending |
 
 *Status: pending / green / red / flaky*
 
