@@ -19,6 +19,7 @@ module.exports = {
     '<rootDir>/__tests__/__mocks__/',
     '<rootDir>/functions/__tests__/',
     '<rootDir>/functions/',
+    '<rootDir>/.claude/',
   ],
 
   // Only match test files in __tests__ directory

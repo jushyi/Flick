@@ -59,6 +59,7 @@ const loadServiceWithPlatform = platform => {
     startActivity: (...args) => mockStartActivity(...args),
     endActivity: (...args) => mockEndActivity(...args),
     endAllActivities: (...args) => mockEndAllActivities(...args),
+    removeFromStack: (...args) => mockRemoveFromStack(...args),
   }));
 
   return require('../../src/services/liveActivityService');

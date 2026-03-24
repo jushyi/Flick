@@ -17,6 +17,7 @@ import useCameraBase from '../../src/hooks/useCameraBase';
 // Mock expo-camera
 jest.mock('expo-camera', () => ({
   useCameraPermissions: jest.fn(() => [{ granted: true }, jest.fn()]),
+  useMicrophonePermissions: jest.fn(() => [{ granted: true }, jest.fn()]),
   CameraView: 'CameraView',
 }));
 
@@ -50,11 +51,14 @@ jest.mock('../../src/context/AuthContext', () => ({
   }),
 }));
 
-// Mock photoService
-jest.mock('../../src/services/firebase/photoService', () => ({
-  getDarkroomCounts: jest.fn(() =>
-    Promise.resolve({ totalCount: 0, developingCount: 0, revealedCount: 0 })
-  ),
+// Mock photoService (Supabase)
+jest.mock('../../src/services/supabase/photoService', () => ({
+  createPhotoRecord: jest.fn(() => Promise.resolve({ id: 'photo-id' })),
+}));
+
+// Mock darkroomService (Supabase)
+jest.mock('../../src/services/supabase/darkroomService', () => ({
+  calculateBatchRevealAt: jest.fn(() => Promise.resolve(new Date().toISOString())),
 }));
 
 // Mock uploadQueueService
@@ -110,10 +114,10 @@ describe('useCameraBase - video recording', () => {
     expect(result.current.isRecording).toBe(false);
   });
 
-  test('cameraMode defaults to "picture"', () => {
+  test('cameraMode defaults to "video"', () => {
     const { result } = renderHook(() => useCameraBase());
 
-    expect(result.current.cameraMode).toBe('picture');
+    expect(result.current.cameraMode).toBe('video');
   });
 
   test('HOLD_THRESHOLD_MS is exported as 500', () => {

@@ -47,7 +47,7 @@ describe('SupabaseConnector', () => {
 
       const creds = await connector.fetchCredentials();
       expect(creds).toEqual({
-        endpoint: '',
+        endpoint: process.env.EXPO_PUBLIC_POWERSYNC_URL ?? '',
         token: 'test-token',
         expiresAt: new Date(1700000000 * 1000),
       });

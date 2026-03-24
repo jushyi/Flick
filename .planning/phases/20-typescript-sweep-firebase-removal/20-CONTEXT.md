@@ -124,8 +124,7 @@ Convert all **remaining** JS files to TypeScript with full strict typing (Phases
 
 ### Reviewed Todos (not folded)
 - **Fix push-to-start Live Activities for background and killed state** — belongs in Phase 18 (Background Jobs & Notifications), not Phase 20. User confirmed this.
-
-None — discussion stayed within phase scope.
+- **Set up Twilio SMS provider for Supabase Phone Auth** — currently using test phone numbers with fixed OTP codes. Before prod, switch to Twilio for real SMS delivery. Requires: Twilio account, phone number with SMS, configure Account SID + Auth Token + Message Service SID in Supabase Phone provider settings.
 
 </deferred>
 

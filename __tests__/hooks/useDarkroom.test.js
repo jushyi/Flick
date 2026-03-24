@@ -28,27 +28,30 @@ jest.mock('../../src/utils/logger', () => ({
   },
 }));
 
-// Mock photoService
-const mockGetDevelopingPhotos = jest.fn();
-const mockRevealPhotos = jest.fn();
+// Mock photoService (Supabase)
+const mockTriagePhoto = jest.fn();
+const mockSoftDeletePhoto = jest.fn();
 const mockBatchTriagePhotos = jest.fn();
+const mockUpdatePhotoCaption = jest.fn();
 
-jest.mock('../../src/services/firebase/photoService', () => ({
-  getDevelopingPhotos: (...args) => mockGetDevelopingPhotos(...args),
-  revealPhotos: (...args) => mockRevealPhotos(...args),
+jest.mock('../../src/services/supabase/photoService', () => ({
+  triagePhoto: (...args) => mockTriagePhoto(...args),
+  softDeletePhoto: (...args) => mockSoftDeletePhoto(...args),
   batchTriagePhotos: (...args) => mockBatchTriagePhotos(...args),
+  updatePhotoCaption: (...args) => mockUpdatePhotoCaption(...args),
 }));
 
-// Mock darkroomService
-const mockIsDarkroomReadyToReveal = jest.fn();
-const mockScheduleNextReveal = jest.fn();
-const mockRecordTriageCompletion = jest.fn();
+// Mock darkroomService (Supabase)
+const mockCheckAndRevealPhotos = jest.fn();
+const mockGetDevelopingPhotos = jest.fn();
+const mockGetRevealedPhotos = jest.fn();
+const mockCalculateBatchRevealAt = jest.fn();
 
-jest.mock('../../src/services/firebase/darkroomService', () => ({
-  isDarkroomReadyToReveal: (...args) => mockIsDarkroomReadyToReveal(...args),
-  scheduleNextReveal: (...args) => mockScheduleNextReveal(...args),
-  recordTriageCompletion: (...args) => mockRecordTriageCompletion(...args),
-  clearRevealCache: jest.fn(),
+jest.mock('../../src/services/supabase/darkroomService', () => ({
+  checkAndRevealPhotos: (...args) => mockCheckAndRevealPhotos(...args),
+  getDevelopingPhotos: (...args) => mockGetDevelopingPhotos(...args),
+  getRevealedPhotos: (...args) => mockGetRevealedPhotos(...args),
+  calculateBatchRevealAt: (...args) => mockCalculateBatchRevealAt(...args),
 }));
 
 // Mock haptics
@@ -146,19 +149,14 @@ describe('useDarkroom', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
 
-    // Default mock responses
-    mockIsDarkroomReadyToReveal.mockResolvedValue(true);
-    mockRevealPhotos.mockResolvedValue({ success: true, count: 3 });
-    mockScheduleNextReveal.mockResolvedValue({ success: true });
-    mockGetDevelopingPhotos.mockResolvedValue({
-      success: true,
-      photos: mockRevealedPhotos,
-    });
-    mockBatchTriagePhotos.mockResolvedValue({
-      success: true,
-      journaledCount: 0,
-    });
-    mockRecordTriageCompletion.mockResolvedValue({ success: true });
+    // Default mock responses (Supabase service pattern: return data directly)
+    mockCheckAndRevealPhotos.mockResolvedValue(0);
+    mockGetDevelopingPhotos.mockResolvedValue([]);
+    mockGetRevealedPhotos.mockResolvedValue(mockRevealedPhotos);
+    mockTriagePhoto.mockResolvedValue();
+    mockSoftDeletePhoto.mockResolvedValue();
+    mockBatchTriagePhotos.mockResolvedValue();
+    mockUpdatePhotoCaption.mockResolvedValue();
   });
 
   afterEach(() => {
@@ -176,8 +174,8 @@ describe('useDarkroom', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(mockIsDarkroomReadyToReveal).toHaveBeenCalledWith('test-user-123');
-    expect(mockGetDevelopingPhotos).toHaveBeenCalledWith('test-user-123');
+    expect(mockCheckAndRevealPhotos).toHaveBeenCalledWith('test-user-123');
+    expect(mockGetRevealedPhotos).toHaveBeenCalledWith('test-user-123');
     // Should have revealed photos
     expect(result.current.photos).toHaveLength(3);
     expect(result.current.visiblePhotos).toHaveLength(3);
@@ -203,8 +201,8 @@ describe('useDarkroom', () => {
   // Handles reveal ready state
   // =========================================================================
 
-  test('reveals photos and schedules next reveal when darkroom is ready', async () => {
-    mockIsDarkroomReadyToReveal.mockResolvedValue(true);
+  test('calls checkAndRevealPhotos on mount', async () => {
+    mockCheckAndRevealPhotos.mockResolvedValue(3);
 
     const { result } = await renderHook(() => useDarkroom());
 
@@ -212,13 +210,12 @@ describe('useDarkroom', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Should have revealed and scheduled
-    expect(mockRevealPhotos).toHaveBeenCalledWith('test-user-123');
-    expect(mockScheduleNextReveal).toHaveBeenCalledWith('test-user-123');
+    // Should have called checkAndRevealPhotos (combines old reveal + schedule logic)
+    expect(mockCheckAndRevealPhotos).toHaveBeenCalledWith('test-user-123');
   });
 
-  test('does not reveal when darkroom is not ready', async () => {
-    mockIsDarkroomReadyToReveal.mockResolvedValue(false);
+  test('loads photos even when no reveals needed', async () => {
+    mockCheckAndRevealPhotos.mockResolvedValue(0);
 
     const { result } = await renderHook(() => useDarkroom());
 
@@ -226,11 +223,9 @@ describe('useDarkroom', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Should NOT have revealed
-    expect(mockRevealPhotos).not.toHaveBeenCalled();
-    expect(mockScheduleNextReveal).not.toHaveBeenCalled();
     // Should still load photos
     expect(mockGetDevelopingPhotos).toHaveBeenCalledWith('test-user-123');
+    expect(mockGetRevealedPhotos).toHaveBeenCalledWith('test-user-123');
   });
 
   // =========================================================================
@@ -238,10 +233,8 @@ describe('useDarkroom', () => {
   // =========================================================================
 
   test('handles no developing or revealed photos', async () => {
-    mockGetDevelopingPhotos.mockResolvedValue({
-      success: true,
-      photos: [],
-    });
+    mockGetDevelopingPhotos.mockResolvedValue([]);
+    mockGetRevealedPhotos.mockResolvedValue([]);
 
     const { result } = await renderHook(() => useDarkroom());
 
@@ -255,10 +248,7 @@ describe('useDarkroom', () => {
   });
 
   test('handles getDevelopingPhotos failure gracefully', async () => {
-    mockGetDevelopingPhotos.mockResolvedValue({
-      success: false,
-      error: 'Network error',
-    });
+    mockGetDevelopingPhotos.mockRejectedValue(new Error('Network error'));
 
     const { result } = await renderHook(() => useDarkroom());
 
@@ -274,13 +264,9 @@ describe('useDarkroom', () => {
   // =========================================================================
 
   test('filters photos to only show revealed status', async () => {
-    // Mix of developing and revealed photos
-    const mixedPhotos = [...mockRevealedPhotos, ...mockDevelopingPhotos];
-
-    mockGetDevelopingPhotos.mockResolvedValue({
-      success: true,
-      photos: mixedPhotos,
-    });
+    // getRevealedPhotos returns only revealed, getDevelopingPhotos returns developing
+    mockGetRevealedPhotos.mockResolvedValue(mockRevealedPhotos);
+    mockGetDevelopingPhotos.mockResolvedValue(mockDevelopingPhotos);
 
     const { result } = await renderHook(() => useDarkroom());
 
@@ -326,10 +312,7 @@ describe('useDarkroom', () => {
 
   test('handleTriage sets triageComplete when last photo is triaged', async () => {
     // Only one revealed photo
-    mockGetDevelopingPhotos.mockResolvedValue({
-      success: true,
-      photos: [mockRevealedPhotos[0]],
-    });
+    mockGetRevealedPhotos.mockResolvedValue([mockRevealedPhotos[0]]);
 
     const { result } = await renderHook(() => useDarkroom());
 
@@ -431,16 +414,10 @@ describe('useDarkroom', () => {
       await result.current.handleDone();
     });
 
-    // Should have called batchTriagePhotos with decisions
-    expect(mockBatchTriagePhotos).toHaveBeenCalledWith(
-      [
-        { photoId: 'photo-1', action: 'journal' },
-        { photoId: 'photo-2', action: 'archive' },
-        { photoId: 'photo-3', action: 'delete' },
-      ],
-      {}, // photoTags
-      {} // photoCaptions
-    );
+    // Should have called individual triage functions for each decision
+    expect(mockTriagePhoto).toHaveBeenCalledWith('photo-1', 'journal');
+    expect(mockTriagePhoto).toHaveBeenCalledWith('photo-2', 'archive');
+    expect(mockSoftDeletePhoto).toHaveBeenCalledWith('photo-3');
 
     // Should navigate back
     expect(mockGoBack).toHaveBeenCalled();
@@ -458,26 +435,25 @@ describe('useDarkroom', () => {
       await result.current.handleDone();
     });
 
-    // Should navigate back without calling batchTriagePhotos
-    expect(mockBatchTriagePhotos).not.toHaveBeenCalled();
+    // Should navigate back without calling triage functions
+    expect(mockTriagePhoto).not.toHaveBeenCalled();
+    expect(mockSoftDeletePhoto).not.toHaveBeenCalled();
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  test('handleDone records triage completion when photos are journaled', async () => {
-    mockBatchTriagePhotos.mockResolvedValue({
-      success: true,
-      journaledCount: 2,
-    });
-
+  test('handleDone calls triagePhoto for journaled photos', async () => {
     const { result } = await renderHook(() => useDarkroom());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Triage some photos
+    // Triage some photos as journal
     await act(async () => {
       await result.current.handleTriage('photo-1', 'journal');
+    });
+    await act(async () => {
+      await result.current.handleTriage('photo-2', 'journal');
     });
 
     // Press Done
@@ -485,8 +461,10 @@ describe('useDarkroom', () => {
       await result.current.handleDone();
     });
 
-    // Should record triage completion because journaledCount > 0
-    expect(mockRecordTriageCompletion).toHaveBeenCalledWith('test-user-123', 2);
+    // Should have called triagePhoto for each journaled photo
+    expect(mockTriagePhoto).toHaveBeenCalledWith('photo-1', 'journal');
+    expect(mockTriagePhoto).toHaveBeenCalledWith('photo-2', 'journal');
+    expect(mockTriagePhoto).toHaveBeenCalledTimes(2);
   });
 
   // =========================================================================
@@ -513,10 +491,10 @@ describe('useDarkroom', () => {
   // =========================================================================
 
   test('loading is true during initial load', async () => {
-    let resolvePhotos;
-    mockGetDevelopingPhotos.mockReturnValue(
+    let resolveReveal;
+    mockCheckAndRevealPhotos.mockReturnValue(
       new Promise(resolve => {
-        resolvePhotos = resolve;
+        resolveReveal = resolve;
       })
     );
 
@@ -525,7 +503,7 @@ describe('useDarkroom', () => {
     expect(result.current.loading).toBe(true);
 
     await act(async () => {
-      resolvePhotos({ success: true, photos: mockRevealedPhotos });
+      resolveReveal(0);
     });
 
     await waitFor(() => {
