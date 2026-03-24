@@ -36,7 +36,7 @@
 **Milestone Goal:** Same app, same features -- rebuilt on Supabase + PowerSync with TypeScript. Every interaction feels Instagram/TikTok-level instant.
 
 - [x] **Phase 12: Schema & Infrastructure Foundation** - PostgreSQL schema, Supabase project, PowerSync config, TypeScript foundation (completed 2026-03-23)
-- [ ] **Phase 13: Auth & Storage Migration** - Phone auth via Supabase/Twilio, photo storage migration, upload queue
+- [x] **Phase 13: Auth & Storage Migration** - Phone auth via Supabase/Twilio, photo storage migration, upload queue (completed 2026-03-24)
 - [ ] **Phase 14: Data Layer & Caching Foundation** - TanStack Query integration, PowerSync local SQLite, offline query persistence
 - [ ] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles
 - [ ] **Phase 16: Core Services -- Social & Albums** - Friendships, comments, albums, blocks/reports, contacts, real-time subscriptions
@@ -74,7 +74,7 @@ Plans:
   4. Photos and videos upload to Supabase Storage and are accessible via CDN-backed URLs
   5. Snap photos upload with 5-minute signed URLs matching current ephemeral behavior
   6. The upload queue service retries failed uploads and persists queue across app restarts against the new storage backend
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 13-01-PLAN.md -- Jest TS config, Supabase mocks, phone auth service, signed URL service
@@ -177,7 +177,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. Schema & Infrastructure Foundation | 3/3 | Complete    | 2026-03-23 | - |
-| 13. Auth & Storage Migration | 3/4 | In Progress|  | - |
+| 13. Auth & Storage Migration | 4/4 | Complete   | 2026-03-24 | - |
 | 14. Data Layer & Caching Foundation | v1.2 | 0/2 | Not started | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
 | 16. Core Services -- Social & Albums | v1.2 | 0/TBD | Not started | - |

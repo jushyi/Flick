@@ -3,21 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Completed 13-03-PLAN.md
-last_updated: "2026-03-23T18:52:14Z"
-last_activity: 2026-03-23 -- Completed Plan 13-03
+stopped_at: Completed 13-04-PLAN.md (Phase 13 complete)
+last_updated: "2026-03-24T13:43:00Z"
+last_activity: 2026-03-24 -- Completed Plan 13-04 (Phase 13 complete)
 progress:
   total_phases: 9
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 6
-  percent: 55
+  completed_plans: 8
+  percent: 78
 ---
 
 # Project State: Flick
 
-**Status:** Executing Phase 13
-**Last Updated:** 2026-03-23
+**Status:** Phase 13 Complete
+**Last Updated:** 2026-03-24
 
 ## Project Reference
 
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 
 ## Current Position
 
-Phase: 13 of 20 (Auth & Storage Migration)
-Plan: 3 of 4 in current phase (completed)
-Status: Plan 13-03 Complete
-Last activity: 2026-03-23 -- Completed Plan 13-03
+Phase: 13 of 20 (Auth & Storage Migration) -- COMPLETE
+Plan: 4 of 4 in current phase (completed)
+Status: Phase 13 Complete -- ready for Phase 14
+Last activity: 2026-03-24 -- Completed Plan 13-04 (Phase 13 complete)
 
-Progress: [█████-----] 55%
+Progress: [████████--] 78%
 
 ## Milestone History
 
@@ -85,6 +85,12 @@ Progress: [█████-----] 55%
 - Resend handler calls sendVerificationCode directly (Supabase OTP is stateless)
 - Silent migration: Firebase token -> Edge Function -> setSession({ access_token, refresh_token })
 
+**Phase 13-04 decisions:**
+- Batch size of 50 parallel downloads/uploads for migration throughput vs memory balance
+- upsert: true on Supabase uploads for safe re-runs without duplication
+- SQL function migrate_firebase_url() for reusable URL conversion logic
+- YOUR_PROJECT placeholder in SQL -- replaced at cutover time, not baked in
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -99,6 +105,6 @@ Progress: [█████-----] 55%
 
 ## Session Continuity
 
-Last session: 2026-03-23T18:52:14Z
-Stopped at: Completed 13-03-PLAN.md
-Resume file: .planning/phases/13-auth-storage-migration/13-03-SUMMARY.md
+Last session: 2026-03-24T13:43:00Z
+Stopped at: Completed 13-04-PLAN.md (Phase 13 complete)
+Resume file: .planning/phases/13-auth-storage-migration/13-04-SUMMARY.md

@@ -23,7 +23,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **STOR-01**: Photos and videos upload to Supabase Storage (S3-compatible) with CDN-backed URLs
 - [x] **STOR-02**: Snap photos upload to Supabase Storage with short-lived signed URLs (5-minute expiry)
 - [x] **STOR-03**: Upload queue service works against new storage backend with same retry/persistence behavior
-- [ ] **STOR-04**: Data migration script transfers all existing photos, videos, and profile images from Firebase Storage to Supabase Storage
+- [x] **STOR-04**: Data migration script transfers all existing photos, videos, and profile images from Firebase Storage to Supabase Storage
 
 ### Core Services
 
@@ -146,7 +146,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STOR-01 | Phase 13 | Complete |
 | STOR-02 | Phase 13 | Complete |
 | STOR-03 | Phase 13 | Complete |
-| STOR-04 | Phase 13 | Pending |
+| STOR-04 | Phase 13 | Complete |
 | PERF-01 | Phase 14 | Pending |
 | PERF-08 | Phase 14 | Pending |
 | PERF-09 | Phase 14 | Pending |
