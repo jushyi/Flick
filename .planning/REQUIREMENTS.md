@@ -31,8 +31,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **CORE-02**: Feed loads via single SQL JOIN query replacing chunked Firestore `in` queries (30-ID limit eliminated)
 - [x] **CORE-03**: Darkroom service rewritten — developing/revealed state, reveal scheduling, countdown timer all functional
 - [x] **CORE-04**: Friendship service rewritten — send/accept/decline requests, friend list, mutual friends all functional
-- [ ] **CORE-05**: Comment service rewritten — CRUD, real-time subscriptions, @mention parsing all functional
-- [ ] **CORE-06**: Album and monthly album services rewritten for Supabase
+- [x] **CORE-05**: Comment service rewritten — CRUD, real-time subscriptions, @mention parsing all functional
+- [x] **CORE-06**: Album and monthly album services rewritten for Supabase
 - [x] **CORE-07**: User profile service rewritten — CRUD, search, friend count all functional
 - [ ] **CORE-08**: Block and report services rewritten for Supabase
 - [ ] **CORE-09**: Contact sync service works against new user lookup endpoints
@@ -155,8 +155,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-03 | Phase 15 | Complete |
 | CORE-07 | Phase 15 | Complete |
 | CORE-04 | Phase 16 | Complete |
-| CORE-05 | Phase 16 | Pending |
-| CORE-06 | Phase 16 | Pending |
+| CORE-05 | Phase 16 | Complete |
+| CORE-06 | Phase 16 | Complete |
 | CORE-08 | Phase 16 | Pending |
 | CORE-09 | Phase 16 | Pending |
 | CORE-10 | Phase 16 | Complete |
