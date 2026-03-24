@@ -26,6 +26,7 @@ export const queryKeys = {
   comments: {
     all: ['comments'] as const,
     list: (photoId: string) => ['comments', 'list', photoId] as const,
+    likes: (photoId: string) => ['comments', 'likes', photoId] as const,
   },
   notifications: {
     all: ['notifications'] as const,
@@ -35,5 +36,22 @@ export const queryKeys = {
     all: ['albums'] as const,
     list: (userId: string) => ['albums', 'list', userId] as const,
     detail: (albumId: string) => ['albums', 'detail', albumId] as const,
+    monthly: (userId: string) => ['albums', 'monthly', userId] as const,
+  },
+  friendships: {
+    all: ['friendships'] as const,
+    list: (userId: string) => ['friendships', 'list', userId] as const,
+    pending: (userId: string) => ['friendships', 'pending', userId] as const,
+    sent: (userId: string) => ['friendships', 'sent', userId] as const,
+    status: (userId1: string, userId2: string) =>
+      ['friendships', 'status', userId1, userId2] as const,
+  },
+  blocks: {
+    all: ['blocks'] as const,
+    list: (userId: string) => ['blocks', 'list', userId] as const,
+  },
+  contacts: {
+    all: ['contacts'] as const,
+    suggestions: (userId: string) => ['contacts', 'suggestions', userId] as const,
   },
 } as const;
