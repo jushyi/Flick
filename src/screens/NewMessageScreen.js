@@ -14,7 +14,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-import { getOrCreateConversation } from '../services/firebase/messageService';
+import { getOrCreateConversation } from '../services/supabase/messageService';
 import { getFriendships, batchGetUsers } from '../services/firebase/friendshipService';
 
 import PixelIcon from '../components/PixelIcon';
@@ -110,24 +110,18 @@ const NewMessageScreen = () => {
       if (selectedFriendId) return; // prevent double-tap
       setSelectedFriendId(friend.uid);
       try {
-        const result = await getOrCreateConversation(user.uid, friend.uid);
-        if (result.success) {
-          navigation.replace('Conversation', {
-            conversationId: result.conversationId,
-            friendId: friend.uid,
-            friendProfile: {
-              uid: friend.uid,
-              displayName: friend.displayName,
-              username: friend.username,
-              photoURL: friend.photoURL,
-            },
-          });
-        } else {
-          logger.error('NewMessageScreen: Failed to get/create conversation', {
-            error: result.error,
-          });
-          Alert.alert('Error', 'Could not start conversation. Please try again.');
-        }
+        // Supabase getOrCreateConversation throws on error, returns ConversationRow directly
+        const conversation = await getOrCreateConversation(user.uid, friend.uid);
+        navigation.replace('Conversation', {
+          conversationId: conversation.id,
+          friendId: friend.uid,
+          friendProfile: {
+            uid: friend.uid,
+            displayName: friend.displayName,
+            username: friend.username,
+            photoURL: friend.photoURL,
+          },
+        });
       } catch (err) {
         logger.error('NewMessageScreen: Error selecting friend', { error: err.message });
         Alert.alert('Error', 'Could not start conversation. Please try again.');

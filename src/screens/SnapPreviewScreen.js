@@ -39,7 +39,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { uploadAndSendSnap } from '../services/firebase/snapService';
+import { uploadAndSendSnap } from '../services/supabase/snapService';
 
 import PixelIcon from '../components/PixelIcon';
 import PinToggle from '../components/PinToggle';
@@ -160,44 +160,34 @@ const SnapPreviewScreen = () => {
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      const result = await uploadAndSendSnap(conversationId, user.uid, photoUri, caption || null, {
-        pinToScreen: pinEnabled && isOneOnOne,
-      });
+      // Supabase snapService throws on error; returns { messageId } on success
+      const result = await uploadAndSendSnap(conversationId, user.uid, photoUri, caption || null);
 
-      if (result.success) {
-        logger.info('SnapPreviewScreen: Snap sent successfully', {
-          messageId: result.messageId,
-        });
-        // Pop all snap screens off the root stack, then navigate into the Conversation.
-        // popToTop removes SnapPreview + SnapCamera, revealing MainTabs.
-        // The navigate call ensures the Messages tab's Conversation screen is focused
-        // (Material Top Tabs may reset nested stack state on tab blur, so we explicitly
-        // navigate rather than relying on preserved state).
-        navigation.popToTop();
-        setTimeout(() => {
-          navigation.navigate('MainTabs', {
-            screen: 'Messages',
+      logger.info('SnapPreviewScreen: Snap sent successfully', {
+        messageId: result.messageId,
+      });
+      // Pop all snap screens off the root stack, then navigate into the Conversation.
+      // popToTop removes SnapPreview + SnapCamera, revealing MainTabs.
+      // The navigate call ensures the Messages tab's Conversation screen is focused
+      // (Material Top Tabs may reset nested stack state on tab blur, so we explicitly
+      // navigate rather than relying on preserved state).
+      navigation.popToTop();
+      setTimeout(() => {
+        navigation.navigate('MainTabs', {
+          screen: 'Messages',
+          params: {
+            screen: 'Conversation',
             params: {
-              screen: 'Conversation',
-              params: {
-                conversationId,
-                friendId,
-                friendProfile: {
-                  uid: friendId,
-                  displayName: friendDisplayName || 'Friend',
-                },
+              conversationId,
+              friendId,
+              friendProfile: {
+                uid: friendId,
+                displayName: friendDisplayName || 'Friend',
               },
             },
-          });
-        }, 100);
-      } else if (result.retriesExhausted) {
-        Alert.alert('Failed to send snap', 'Please check your connection and try again.', [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Retry', onPress: () => handleSend() },
-        ]);
-      } else {
-        Alert.alert('Error', result.error || 'Failed to send snap');
-      }
+          },
+        });
+      }, 100);
     } catch (error) {
       logger.error('SnapPreviewScreen: Unexpected error sending snap', {
         error: error.message,
