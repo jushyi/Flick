@@ -1,15 +1,20 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, Platform, StyleSheet } from 'react-native';
 
+import { useQueries } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+
+import { supabase } from '@/lib/supabase';
+import { queryKeys } from '@/lib/queryKeys';
 
 import ConversationRow from '../components/ConversationRow';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 
 import { useAuth } from '../context/AuthContext';
-import useMessages from '../hooks/useMessages';
+import { useMessages } from '../hooks/useMessages';
+import { useStreakMap } from '../hooks/useStreaks';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 
 import { colors } from '../constants/colors';
@@ -22,7 +27,96 @@ const MessagesScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { conversations, loading, handleDeleteConversation } = useMessages(user?.uid);
+  const { conversations, loading, deleteConversation } = useMessages();
+
+  // Derive friendIds from conversations for streak map and profile fetching
+  const friendIds = useMemo(
+    () => conversations.map(c => c.otherUserId).filter(Boolean),
+    [conversations]
+  );
+
+  // Batch streak data for all conversations
+  const { streakMap } = useStreakMap(friendIds);
+
+  // Batch fetch friend profiles via TanStack useQueries (Supabase)
+  const profileQueries = useQueries({
+    queries: friendIds.map(friendId => ({
+      queryKey: queryKeys.profile.detail(friendId),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, username, display_name, profile_photo_path')
+          .eq('id', friendId)
+          .single();
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!friendId,
+      staleTime: 5 * 60 * 1000, // 5 minutes (matches old CACHE_TTL_MS)
+      meta: { persist: true },
+    })),
+  });
+
+  // Build a profile map from query results
+  const profileMap = useMemo(() => {
+    const map = new Map();
+    friendIds.forEach((fId, idx) => {
+      const query = profileQueries[idx];
+      if (query?.data) {
+        map.set(fId, query.data);
+      }
+    });
+    return map;
+  }, [friendIds, profileQueries]);
+
+  // Enrich conversations with friend profiles, streaks, and adapted shape
+  // for ConversationRow compatibility
+  const enrichedConversations = useMemo(() => {
+    return conversations.map(conv => {
+      const fId = conv.otherUserId;
+      const profile = profileMap.get(fId);
+      const streakInfo = streakMap.get(fId);
+
+      return {
+        id: conv.id,
+        lastMessage:
+          conv.last_message_text != null
+            ? {
+                text: conv.last_message_text,
+                type: conv.last_message_type || 'text',
+                senderId: conv.last_message_sender_id,
+                timestamp: conv.last_message_at ? new Date(conv.last_message_at) : null,
+              }
+            : null,
+        updatedAt: conv.last_message_at ? new Date(conv.last_message_at) : null,
+        unreadCount: conv.unreadCount || 0,
+        readReceipts: {}, // Read receipts not in PowerSync conversations schema
+        participants: [conv.participant1_id, conv.participant2_id],
+        friendProfile: profile
+          ? {
+              uid: fId,
+              username: profile.username || 'unknown',
+              displayName: profile.display_name || 'Unknown User',
+              profilePhotoURL: profile.profile_photo_path || null,
+              photoURL: profile.profile_photo_path || null,
+              nameColor: null,
+              readReceiptsEnabled: true, // Default; full check happens in ConversationScreen
+            }
+          : {
+              uid: fId,
+              username: 'unknown',
+              displayName: 'Unknown User',
+              profilePhotoURL: null,
+              photoURL: null,
+              nameColor: null,
+              readReceiptsEnabled: true,
+            },
+        streakState: streakInfo?.state || 'default',
+        streakDayCount: streakInfo?.dayCount || 0,
+        streakColor: streakInfo?.color || null,
+      };
+    });
+  }, [conversations, profileMap, streakMap]);
 
   // Screen load trace - measures time from mount to data-ready
   const { markLoaded } = useScreenTrace('MessagesScreen');
@@ -32,9 +126,9 @@ const MessagesScreen = () => {
   React.useEffect(() => {
     if (!loading && !screenTraceMarkedRef.current) {
       screenTraceMarkedRef.current = true;
-      markLoaded({ conversation_count: conversations.length });
+      markLoaded({ conversation_count: enrichedConversations.length });
     }
-  }, [loading, conversations.length, markLoaded]);
+  }, [loading, enrichedConversations.length, markLoaded]);
 
   const tabBarHeight = Platform.OS === 'ios' ? TAB_BAR_HEIGHT : TAB_BAR_HEIGHT + insets.bottom;
 
@@ -44,10 +138,10 @@ const MessagesScreen = () => {
         conversationId: conversation.id,
         friendId: conversation.friendProfile.uid,
         friendProfile: conversation.friendProfile,
-        deletedAt: conversation.deletedAt?.[user?.uid] || null,
+        deletedAt: null, // Soft-delete filtering handled by useMessages hook
       });
     },
-    [navigation, user?.uid]
+    [navigation]
   );
 
   const handleDeletePress = useCallback(
@@ -60,12 +154,12 @@ const MessagesScreen = () => {
           {
             text: 'Delete',
             style: 'destructive',
-            onPress: () => handleDeleteConversation(conversation.id),
+            onPress: () => deleteConversation(conversation.id),
           },
         ]
       );
     },
-    [handleDeleteConversation]
+    [deleteConversation]
   );
 
   const handleNewMessage = useCallback(() => {
@@ -147,11 +241,13 @@ const MessagesScreen = () => {
       </View>
 
       <FlatList
-        data={conversations}
+        data={enrichedConversations}
         keyExtractor={item => item.id}
         renderItem={renderConversation}
         contentContainerStyle={
-          conversations.length === 0 ? styles.emptyContainer : { paddingBottom: tabBarHeight }
+          enrichedConversations.length === 0
+            ? styles.emptyContainer
+            : { paddingBottom: tabBarHeight }
         }
         ListEmptyComponent={renderEmptyState}
         removeClippedSubviews={true}
