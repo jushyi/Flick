@@ -9,24 +9,24 @@
 const mockExecute = jest.fn();
 const mockGetAll = jest.fn();
 
+// Mock both possible resolution paths for the database module
 jest.mock('../../src/lib/powersync/database', () => ({
   powerSyncDb: {
     execute: mockExecute,
     getAll: mockGetAll,
   },
+  getPowerSyncDb: () => ({
+    execute: mockExecute,
+    getAll: mockGetAll,
+  }),
 }));
 
-import {
-  sendFriendRequest,
-  acceptFriendRequest,
-  declineFriendRequest,
-  unfriend,
-  getFriends,
-  getPendingRequests,
-  getSentRequests,
-  getFriendshipStatus,
-  getFriendIds,
-} from '../../src/services/supabase/friendshipService';
+// Dynamic import after mocks are in place
+let friendshipService: typeof import('../../src/services/supabase/friendshipService');
+
+beforeAll(() => {
+  friendshipService = require('../../src/services/supabase/friendshipService');
+});
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -36,7 +36,7 @@ beforeEach(() => {
 
 describe('sendFriendRequest', () => {
   it('sorts user IDs so user1_id < user2_id and inserts with pending status', async () => {
-    const result = await sendFriendRequest('zzz-user', 'aaa-user');
+    const result = await friendshipService.sendFriendRequest('zzz-user', 'aaa-user');
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
     const [sql, params] = mockExecute.mock.calls[0];
@@ -58,7 +58,7 @@ describe('sendFriendRequest', () => {
   });
 
   it('handles already-sorted IDs correctly', async () => {
-    const result = await sendFriendRequest('aaa-user', 'zzz-user');
+    const result = await friendshipService.sendFriendRequest('aaa-user', 'zzz-user');
 
     const [, params] = mockExecute.mock.calls[0];
     expect(params[1]).toBe('aaa-user');
@@ -70,7 +70,7 @@ describe('sendFriendRequest', () => {
 
 describe('acceptFriendRequest', () => {
   it('updates friendship status to accepted', async () => {
-    await acceptFriendRequest('friendship-123');
+    await friendshipService.acceptFriendRequest('friendship-123');
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
     const [sql, params] = mockExecute.mock.calls[0];
@@ -82,7 +82,7 @@ describe('acceptFriendRequest', () => {
 
 describe('declineFriendRequest', () => {
   it('deletes the friendship record', async () => {
-    await declineFriendRequest('friendship-456');
+    await friendshipService.declineFriendRequest('friendship-456');
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
     const [sql, params] = mockExecute.mock.calls[0];
@@ -93,7 +93,7 @@ describe('declineFriendRequest', () => {
 
 describe('unfriend', () => {
   it('deletes the friendship record', async () => {
-    await unfriend('friendship-789');
+    await friendshipService.unfriend('friendship-789');
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
     const [sql, params] = mockExecute.mock.calls[0];
@@ -109,7 +109,7 @@ describe('getFriends', () => {
       { id: 'f2', user1_id: 'friend-b', user2_id: 'me', created_at: '2026-01-02' },
     ]);
 
-    const result = await getFriends('me');
+    const result = await friendshipService.getFriends('me');
 
     expect(mockGetAll).toHaveBeenCalledTimes(1);
     const [sql, params] = mockGetAll.mock.calls[0];
@@ -137,7 +137,7 @@ describe('getPendingRequests', () => {
       },
     ]);
 
-    const result = await getPendingRequests('me');
+    const result = await friendshipService.getPendingRequests('me');
 
     expect(mockGetAll).toHaveBeenCalledTimes(1);
     const [sql, params] = mockGetAll.mock.calls[0];
@@ -165,7 +165,7 @@ describe('getSentRequests', () => {
       },
     ]);
 
-    const result = await getSentRequests('me');
+    const result = await friendshipService.getSentRequests('me');
 
     expect(mockGetAll).toHaveBeenCalledTimes(1);
     const [sql, params] = mockGetAll.mock.calls[0];
@@ -185,7 +185,7 @@ describe('getFriendshipStatus', () => {
   it('sorts IDs before querying and returns status', async () => {
     mockGetAll.mockResolvedValue([{ status: 'accepted' }]);
 
-    const result = await getFriendshipStatus('zzz-user', 'aaa-user');
+    const result = await friendshipService.getFriendshipStatus('zzz-user', 'aaa-user');
 
     expect(mockGetAll).toHaveBeenCalledTimes(1);
     const [sql, params] = mockGetAll.mock.calls[0];
@@ -200,7 +200,7 @@ describe('getFriendshipStatus', () => {
   it('returns null when no friendship exists', async () => {
     mockGetAll.mockResolvedValue([]);
 
-    const result = await getFriendshipStatus('user-a', 'user-b');
+    const result = await friendshipService.getFriendshipStatus('user-a', 'user-b');
 
     expect(result).toBeNull();
   });
@@ -213,7 +213,7 @@ describe('getFriendIds', () => {
       { user1_id: 'friend-b', user2_id: 'me' },
     ]);
 
-    const result = await getFriendIds('me');
+    const result = await friendshipService.getFriendIds('me');
 
     expect(mockGetAll).toHaveBeenCalledTimes(1);
     const [sql, params] = mockGetAll.mock.calls[0];
@@ -226,7 +226,7 @@ describe('getFriendIds', () => {
   it('returns empty array when user has no friends', async () => {
     mockGetAll.mockResolvedValue([]);
 
-    const result = await getFriendIds('lonely-user');
+    const result = await friendshipService.getFriendIds('lonely-user');
 
     expect(result).toEqual([]);
   });
