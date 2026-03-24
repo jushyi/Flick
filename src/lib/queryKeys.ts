@@ -54,4 +54,9 @@ export const queryKeys = {
     all: ['contacts'] as const,
     suggestions: (userId: string) => ['contacts', 'suggestions', userId] as const,
   },
+  streaks: {
+    all: ['streaks'] as const,
+    detail: (streakId: string) => ['streaks', 'detail', streakId] as const,
+    forUser: (userId: string) => ['streaks', 'forUser', userId] as const,
+  },
 } as const;
