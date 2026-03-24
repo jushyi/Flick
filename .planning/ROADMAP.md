@@ -90,7 +90,7 @@ Plans:
   1. All data fetching uses useQuery/useMutation hooks with automatic cache management (no manual state tracking for server data)
   2. Opening the app after a cold start renders cached feed, conversations, and profile data from AsyncStorage before any network request completes
   3. PowerSync local SQLite provides instant reads (0ms network latency) for photos, darkroom state, conversations, and friendships -- data appears immediately on screen navigation
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 14-01-PLAN.md -- Package installation, Metro/Jest config, core data layer modules (QueryClient, queryKeys, PowerSync database, SupabaseConnector)
@@ -178,7 +178,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 |-------|-----------|----------------|--------|-----------|
 | 12. Schema & Infrastructure Foundation | 3/3 | Complete    | 2026-03-23 | - |
 | 13. Auth & Storage Migration | 4/4 | Complete   | 2026-03-24 | - |
-| 14. Data Layer & Caching Foundation | v1.2 | 0/2 | Not started | - |
+| 14. Data Layer & Caching Foundation | 1/2 | In Progress|  | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 0/TBD | Not started | - |
 | 16. Core Services -- Social & Albums | v1.2 | 0/TBD | Not started | - |
 | 17. Messaging & Social | v1.2 | 0/TBD | Not started | - |

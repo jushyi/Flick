@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: executing
-stopped_at: Completed 13-04-PLAN.md (Phase 13 complete)
-last_updated: "2026-03-24T13:43:00Z"
-last_activity: 2026-03-24 -- Completed Plan 13-04 (Phase 13 complete)
+stopped_at: Completed 14-01-PLAN.md
+last_updated: "2026-03-24T13:52:41Z"
+last_activity: 2026-03-24 -- Completed Plan 14-01 (Data Layer Foundation)
 progress:
   total_phases: 9
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 8
-  percent: 78
+  total_plans: 10
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State: Flick
 
-**Status:** Phase 13 Complete
+**Status:** Executing Phase 14
 **Last Updated:** 2026-03-24
 
 ## Project Reference
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Same app, same features -- rebuilt on a faster, more scalable backend with TypeScript
-**Current focus:** Phase 13 -- Auth & Storage Migration
+**Current focus:** Phase 14 -- Data Layer & Caching Foundation
 
 ## Current Position
 
-Phase: 13 of 20 (Auth & Storage Migration) -- COMPLETE
-Plan: 4 of 4 in current phase (completed)
-Status: Phase 13 Complete -- ready for Phase 14
-Last activity: 2026-03-24 -- Completed Plan 13-04 (Phase 13 complete)
+Phase: 14 of 20 (Data Layer & Caching Foundation)
+Plan: 1 of 2 in current phase (completed)
+Status: Plan 14-01 complete -- ready for Plan 14-02
+Last activity: 2026-03-24 -- Completed Plan 14-01 (Data Layer Foundation)
 
-Progress: [████████--] 78%
+Progress: [████████▒-] 82%
 
 ## Milestone History
 
@@ -91,6 +91,11 @@ Progress: [████████--] 78%
 - SQL function migrate_firebase_url() for reusable URL conversion logic
 - YOUR_PROJECT placeholder in SQL -- replaced at cutover time, not baked in
 
+**Phase 14-01 decisions:**
+- Selective persistence via meta.persist=true flag on individual queries
+- 24-hour maxAge for persisted cache with 1-second throttle on AsyncStorage writes
+- Fatal PostgreSQL error codes (22xxx, 23xxx, 42501) discard transactions to avoid infinite retry
+
 **v1.2 stack:** Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) + PowerSync (offline SQLite) + TanStack Query (caching) + Sentry (monitoring). Replaces all 7 @react-native-firebase/* packages.
 
 **Research flags:**
@@ -105,6 +110,6 @@ Progress: [████████--] 78%
 
 ## Session Continuity
 
-Last session: 2026-03-24T13:43:00Z
-Stopped at: Completed 13-04-PLAN.md (Phase 13 complete)
-Resume file: .planning/phases/13-auth-storage-migration/13-04-SUMMARY.md
+Last session: 2026-03-24T13:52:41Z
+Stopped at: Completed 14-01-PLAN.md
+Resume file: .planning/phases/14-data-layer-caching-foundation/14-01-SUMMARY.md

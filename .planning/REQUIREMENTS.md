@@ -67,15 +67,15 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Performance
 
-- [ ] **PERF-01**: TanStack Query integrated — all data fetching uses useQuery/useMutation with automatic caching
+- [x] **PERF-01**: TanStack Query integrated — all data fetching uses useQuery/useMutation with automatic caching
 - [ ] **PERF-02**: Stale-while-revalidate pattern on feed, conversations, and profile screens (cached data renders in <100ms)
 - [ ] **PERF-03**: Skeleton screens on all list views (feed, conversations, friends, comments, notifications, albums)
 - [ ] **PERF-04**: Optimistic updates for message sending, reactions, friend requests, photo triage, and read receipts
 - [ ] **PERF-05**: Photo/video loading uses CDN-backed permanent URLs or pre-refreshed signed URLs (no expired URL flash)
 - [ ] **PERF-06**: Feed images served at appropriate sizes (400px for cards, full-res only in PhotoDetail)
 - [ ] **PERF-07**: Consistent empty state screens across all list views
-- [ ] **PERF-08**: Offline query persistence via TanStack Query + AsyncStorage (app opens instantly with cached data)
-- [ ] **PERF-09**: PowerSync local SQLite provides instant reads for photos, darkroom, conversations, friendships (0ms network latency)
+- [x] **PERF-08**: Offline query persistence via TanStack Query + AsyncStorage (app opens instantly with cached data)
+- [x] **PERF-09**: PowerSync local SQLite provides instant reads for photos, darkroom, conversations, friendships (0ms network latency)
 - [ ] **PERF-10**: New story photos from friends load within 1-2 seconds — CDN edge caching, aggressive prefetching of next friend's photos, and optimized image sizing for feed/story views
 - [ ] **PERF-11**: Feed and story image prefetching loads next N images while viewing current (existing v1.1 prefetching enhanced with CDN + size optimization)
 
@@ -147,9 +147,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STOR-02 | Phase 13 | Complete |
 | STOR-03 | Phase 13 | Complete |
 | STOR-04 | Phase 13 | Complete |
-| PERF-01 | Phase 14 | Pending |
-| PERF-08 | Phase 14 | Pending |
-| PERF-09 | Phase 14 | Pending |
+| PERF-01 | Phase 14 | Complete |
+| PERF-08 | Phase 14 | Complete |
+| PERF-09 | Phase 14 | Complete |
 | CORE-01 | Phase 15 | Pending |
 | CORE-02 | Phase 15 | Pending |
 | CORE-03 | Phase 15 | Pending |
