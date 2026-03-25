@@ -42,8 +42,53 @@ import useMessageActions from '../hooks/useMessageActions';
 import useScreenshotDetection from '../hooks/useScreenshotDetection';
 import { useStreak } from '../hooks/useStreaks';
 
+import { isUrlNearExpiry } from '../utils/imageUrl';
+import { refreshSignedUrlIfExpiring } from '../services/supabase/signedUrlService';
+
 import { colors } from '../constants/colors';
 import logger from '../utils/logger';
+
+// ============================================================================
+// useSnapUrl -- proactive signed URL refresh for snap images
+// ============================================================================
+
+/**
+ * Local hook that checks a snap signed URL for near-expiry and triggers
+ * a background refresh if needed. Returns the best available URL.
+ *
+ * expo-image with cachePolicy="memory-disk" serves the cached image while
+ * the URL refreshes, preventing any visible flash to the user.
+ *
+ * @param {string|null} originalUrl - The current signed URL (or null)
+ * @param {string|null} storagePath - The snap storage path for regeneration
+ * @returns {string|null} The resolved URL (original or refreshed)
+ */
+function useSnapUrl(originalUrl, storagePath) {
+  const [resolvedUrl, setResolvedUrl] = useState(originalUrl);
+
+  useEffect(() => {
+    if (!originalUrl || !storagePath) {
+      setResolvedUrl(originalUrl);
+      return;
+    }
+
+    if (isUrlNearExpiry(originalUrl)) {
+      refreshSignedUrlIfExpiring(originalUrl, storagePath, 'snaps')
+        .then(newUrl => {
+          if (newUrl !== originalUrl) {
+            setResolvedUrl(newUrl);
+          }
+        })
+        .catch(() => {
+          // Graceful degradation: keep original URL (expo-image serves from cache)
+        });
+    } else {
+      setResolvedUrl(originalUrl);
+    }
+  }, [originalUrl, storagePath]);
+
+  return resolvedUrl;
+}
 
 // ============================================================================
 // Helpers: Adapt Supabase snake_case messages to camelCase for components
