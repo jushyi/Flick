@@ -34,21 +34,21 @@ const NotificationPermissionScreen = ({ navigation }) => {
     const checkExisting = async () => {
       if (hasAutoAdvanced.current) return;
       const result = await checkNotificationPermissions();
-      if (result.success && result.data.granted) {
+      if (result.success && (result.data as any)?.granted) {
         hasAutoAdvanced.current = true;
 
         // Ensure token is stored even when auto-advancing
         const tokenResult = await getNotificationToken();
         if (tokenResult.success && tokenResult.data) {
-          await storeNotificationToken(user.uid, tokenResult.data);
+          await storeNotificationToken();
         }
 
-        await markNotificationPermissionCompleted(user.uid, true);
+        await markNotificationPermissionCompleted();
         await refreshUserProfile();
       }
     };
     checkExisting();
-  }, [user?.uid]);
+  }, [user?.id]);
 
   const handleEnable = async () => {
     mediumImpact();
@@ -60,26 +60,26 @@ const NotificationPermissionScreen = ({ navigation }) => {
       if (permissionResult.success) {
         const tokenResult = await getNotificationToken();
         if (tokenResult.success && tokenResult.data) {
-          await storeNotificationToken(user.uid, tokenResult.data);
+          await storeNotificationToken();
           logger.info('NotificationPermissionScreen: Permission granted and token stored');
         } else {
           logger.warn('NotificationPermissionScreen: Could not get token', {
-            error: tokenResult.error,
+            error: (tokenResult as any).error,
           });
         }
       } else {
         logger.info('NotificationPermissionScreen: Permission denied', {
-          error: permissionResult.error,
+          error: (permissionResult as any).error,
         });
       }
 
       // Mark step complete regardless of permission result
-      await markNotificationPermissionCompleted(user.uid, true);
+      await markNotificationPermissionCompleted();
       await refreshUserProfile();
     } catch (error) {
-      logger.error('NotificationPermissionScreen: Error enabling notifications', error);
+      logger.error('NotificationPermissionScreen: Error enabling notifications', error as Record<string, unknown>);
       // Still mark complete so user isn't stuck
-      await markNotificationPermissionCompleted(user.uid, true);
+      await markNotificationPermissionCompleted();
       await refreshUserProfile();
     } finally {
       setEnabling(false);
@@ -88,7 +88,7 @@ const NotificationPermissionScreen = ({ navigation }) => {
 
   const handleSkip = async () => {
     mediumImpact();
-    await markNotificationPermissionCompleted(user.uid, true);
+    await markNotificationPermissionCompleted();
     await refreshUserProfile();
   };
 

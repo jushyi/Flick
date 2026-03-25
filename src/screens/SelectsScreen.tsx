@@ -374,9 +374,10 @@ const TutorialHint = ({ isVisible, onDismiss }) => {
 };
 
 const SelectsScreen = ({ navigation }) => {
-  const { user, userProfile, updateUserProfile, updateUserDocumentNative } = useAuth();
+  const { user, userProfile, updateUserProfile, updateUserDocument } = useAuth();
 
-  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  type SelectPhoto = { uri: string; assetId: string };
+  const [selectedPhotos, setSelectedPhotos] = useState<SelectPhoto[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -399,7 +400,7 @@ const SelectsScreen = ({ navigation }) => {
           return () => clearTimeout(timer);
         }
       } catch (error) {
-        logger.error('SelectsScreen: Failed to check hint state', { error: error.message });
+        logger.error('SelectsScreen: Failed to check hint state', { error: (error as Error).message });
       }
     };
     checkHintDismissed();
@@ -411,14 +412,14 @@ const SelectsScreen = ({ navigation }) => {
     try {
       await AsyncStorage.setItem(DRAG_HINT_STORAGE_KEY, 'true');
     } catch (error) {
-      logger.error('SelectsScreen: Failed to save hint state', { error: error.message });
+      logger.error('SelectsScreen: Failed to save hint state', { error: (error as Error).message });
     }
   }, []);
 
   // Load existing selects when returning to edit
   useEffect(() => {
-    if (userProfile?.selects?.length > 0) {
-      const existingPhotos = userProfile.selects.map((uri, index) => ({
+    if (userProfile?.selects && userProfile.selects.length > 0) {
+      const existingPhotos = userProfile!.selects!.map((uri, index) => ({
         uri,
         assetId: `existing_${index}`,
       }));
@@ -647,13 +648,13 @@ const SelectsScreen = ({ navigation }) => {
       // Upload local images to Firebase Storage, get remote URLs
       let remoteUrls = selectsData;
       if (selectsData.length > 0) {
-        const uploadResult = await uploadSelectsPhotos(user.uid, selectsData);
+        const uploadResult = await uploadSelectsPhotos(user!.id, selectsData);
         if (!uploadResult.success) {
           Alert.alert('Upload Failed', 'Could not upload your highlights. Please try again.');
           setUploading(false);
           return;
         }
-        remoteUrls = uploadResult.urls;
+        remoteUrls = uploadResult.photoURLs || selectsData;
       }
 
       const updateData = {
@@ -661,14 +662,14 @@ const SelectsScreen = ({ navigation }) => {
         selectsCompleted: true,
       };
 
-      const result = await updateUserDocumentNative(user.uid, updateData);
+      const result = await updateUserDocument(user!.id, updateData as any);
 
       if (result.success) {
         // Update local profile state
         updateUserProfile({
-          ...userProfile,
+          ...userProfile!,
           ...updateData,
-        });
+        } as any);
         logger.info('SelectsScreen: Profile updated with selects');
 
         // Navigate to ContactsSync screen (next step in onboarding)
@@ -681,8 +682,8 @@ const SelectsScreen = ({ navigation }) => {
         Alert.alert('Error', 'Could not save your selects. Please try again.');
       }
     } catch (error) {
-      logger.error('SelectsScreen: Failed to save', { error: error.message });
-      Alert.alert('Error', error.message || 'An error occurred');
+      logger.error('SelectsScreen: Failed to save', { error: (error as Error).message });
+      Alert.alert('Error', (error as Error).message || 'An error occurred');
     } finally {
       setUploading(false);
     }

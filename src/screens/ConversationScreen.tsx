@@ -94,14 +94,37 @@ function useSnapUrl(originalUrl, storagePath) {
 // Helpers: Adapt Supabase snake_case messages to camelCase for components
 // ============================================================================
 
+type MessageLike = {
+  id: string;
+  senderId: string;
+  type: string;
+  text: string | null;
+  gifUrl: string | null;
+  imageUrl: string | null;
+  createdAt: Date | null;
+  emoji: string | null;
+  viewedAt: Date | null;
+  snapStoragePath: string | null;
+  screenshottedAt: null;
+  pinned: boolean;
+  photoId: string | null;
+  photoURL: string | null;
+  photoOwnerId: string | null;
+  addedToFeedBy: Record<string, any>;
+  replyTo: { messageId: string; senderId: string; text: string; type: string; deleted: boolean } | null;
+  _isUnsent: boolean;
+  _isDeletedForMe: boolean;
+  [key: string]: any;
+};
+
 /**
  * Map a Supabase MessageRow (snake_case) to the camelCase shape expected
  * by MessageBubble, SnapBubble, TaggedPhotoBubble, and ConversationScreen.
  */
-function adaptMessage(msg) {
+function adaptMessage(msg: any): MessageLike | null {
   if (!msg) return null;
 
-  const adapted = {
+  const adapted: MessageLike = {
     id: msg.id,
     senderId: msg.sender_id,
     type: msg.type,
@@ -375,7 +398,7 @@ const ConversationScreen = () => {
     currentUserId: user!.id,
     onSendReaction: handleSendReaction,
     onRemoveReaction: handleRemoveReaction,
-    onSendReply: handleSendReply,
+    onSendReply: handleSendReply as any,
     onDeleteForMe: handleDeleteForMe,
   });
 
@@ -497,13 +520,13 @@ const ConversationScreen = () => {
           if (error) throw error;
 
           if (data && autoOpenSnapHandled.current !== autoOpenSnapId) {
-            if (data.type === 'snap') {
+            if ((data as any).type === 'snap') {
               autoOpenSnapHandled.current = autoOpenSnapId;
-              setSnapViewerMessage(adaptMessage(data));
+              setSnapViewerMessage(adaptMessage(data as any));
             } else {
               logger.warn('ConversationScreen: autoOpenSnapId message is not a snap', {
                 autoOpenSnapId,
-                type: data.type,
+                type: (data as any).type,
               });
             }
           }
@@ -613,8 +636,8 @@ const ConversationScreen = () => {
    */
   const messagesWithDividers = useMemo(() => {
     if (!messages.length) return [];
-    const result = [];
-    let lastDate = null;
+    const result: any[] = [];
+    let lastDate: string | null = null;
     const seenDates = new Set();
 
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -677,7 +700,7 @@ const ConversationScreen = () => {
    * Handle snap camera button press from DMInput.
    */
   const handleOpenSnapCamera = useCallback(() => {
-    navigation.navigate('SnapCamera', {
+    (navigation as any).navigate('SnapCamera', {
       mode: 'snap',
       conversationId,
       friendId,
@@ -715,7 +738,7 @@ const ConversationScreen = () => {
         type: 'screenshot',
         from_user_id: user!.id,
         data: { conversation_id: conversationId },
-      });
+      } as any);
       logger.info('ConversationScreen: Screenshot notification inserted', {
         conversationId,
         friendId,
@@ -764,20 +787,20 @@ const ConversationScreen = () => {
                 imageURL: msg.photoURL,
                 photoURL: msg.photoURL,
                 userId: msg.photoOwnerId,
-              },
+              } as any,
               photos: [
                 {
                   id: msg.photoId,
                   imageURL: msg.photoURL,
                   photoURL: msg.photoURL,
                   userId: msg.photoOwnerId,
-                },
+                } as any,
               ],
               initialIndex: 0,
               mode: 'feed',
               currentUserId: user!.id,
             });
-            navigation.navigate('PhotoDetail', {
+            (navigation as any).navigate('PhotoDetail', {
               taggedPhotoContext: {
                 messageId: msg.id,
                 conversationId: conversationId,
@@ -796,11 +819,11 @@ const ConversationScreen = () => {
             message={item}
             isCurrentUser={isCurrentUser}
             showTimestamp={visibleTimestamps.has(item.id)}
-            onPress={pressHandler}
+            onPress={pressHandler as any}
             reactions={messageReactions}
             onDoubleTap={msg => handleDoubleTapHeart(msg.id, reactionMap)}
-            onLongPress={(message, layout) => openActionMenu(message, layout)}
-            onSwipeReply={msg => startReply(msg)}
+            onLongPress={(message: any, layout: any) => openActionMenu(message, layout)}
+            onSwipeReply={(() => startReply(item)) as any}
             onReactionPress={emoji => handleReaction(emoji, reactionMap)}
             onScrollToMessage={scrollToMessage}
             replyTo={item.replyTo}
@@ -859,9 +882,9 @@ const ConversationScreen = () => {
     const msgTime =
       actionMenuMessage.createdAt instanceof Date
         ? actionMenuMessage.createdAt
-        : new Date(actionMenuMessage.createdAt);
+        : new Date(actionMenuMessage.createdAt as any);
     return Date.now() - msgTime.getTime() < 15 * 60 * 1000;
-  }, [actionMenuMessage, user!.id]);
+  }, [actionMenuMessage, user?.id]);
 
   /**
    * Handle scrollToIndex failures gracefully.
@@ -893,13 +916,13 @@ const ConversationScreen = () => {
           friendProfile={liveFriendProfile}
           onBackPress={() => navigation.goBack()}
           onProfilePress={() =>
-            navigation.navigate('OtherUserProfile', {
+            (navigation as any).navigate('OtherUserProfile', {
               userId: friendId,
               username: liveFriendProfile?.username,
             })
           }
           onReportPress={() =>
-            navigation.navigate('ReportUser', {
+            (navigation as any).navigate('ReportUser', {
               userId: friendId,
               username: liveFriendProfile?.username,
             })
@@ -916,12 +939,10 @@ const ConversationScreen = () => {
             <PixelSpinner size="large" />
           </View>
           <DMInput
-            onSendMessage={handleSendMessage}
+            onSendMessage={handleSendMessage as any}
             onOpenSnapCamera={handleOpenSnapCamera}
             disabled={isReadOnly}
             placeholder="Message..."
-            streakState={streakState}
-            streakDayCount={streakDayCount}
           />
         </KeyboardAvoidingView>
       </View>
@@ -976,7 +997,7 @@ const ConversationScreen = () => {
           />
         )}
         <DMInput
-          onSendMessage={handleSend}
+          onSendMessage={handleSend as any}
           onSend={scrollToBottom}
           onOpenSnapCamera={handleOpenSnapCamera}
           disabled={isReadOnly}
@@ -998,14 +1019,14 @@ const ConversationScreen = () => {
           handleReaction(emoji, reactionMap);
         }}
         onReply={() => {
-          startReply(actionMenuMessage);
+          startReply(actionMenuMessage!);
           closeActionMenu();
         }}
         onUnsend={() => {
-          handleUnsend(actionMenuMessage.id);
+          handleUnsend(actionMenuMessage!.id);
         }}
         onDeleteForMe={() => {
-          setPendingDeleteMessageId(actionMenuMessage.id);
+          setPendingDeleteMessageId(actionMenuMessage!.id);
           closeActionMenu();
           setDeleteConfirmVisible(true);
         }}
@@ -1037,7 +1058,7 @@ const ConversationScreen = () => {
         snapMessage={snapViewerMessage}
         conversationId={conversationId}
         senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
-        viewerDisplayName={userProfile?.displayName || userProfile?.username || 'Someone'}
+        viewerDisplayName={userProfile?.display_name || userProfile?.username || 'Someone'}
         onClose={() => {
           setSnapViewerMessage(null);
           setSnapSourceRect(null);

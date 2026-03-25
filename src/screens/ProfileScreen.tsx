@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -331,7 +331,7 @@ const ProfileScreen = () => {
     const tabNavigator = navigation.getParent();
     if (!tabNavigator) return;
 
-    const unsubscribe = tabNavigator.addListener('tabPress', e => {
+    const unsubscribe = (tabNavigator as any).addListener('tabPress', (e: any) => {
       // Only scroll to top if we're already focused on the profile tab
       if (isFocused) {
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -462,7 +462,7 @@ const ProfileScreen = () => {
   const handleBlockUserFromProfile = () => {
     Alert.alert(
       'Block User',
-      `Block ${profileData?.displayName || profileData?.username}? They won't be able to see your profile or contact you.`,
+      `Block ${profileData?.display_name || profileData?.username}? They won't be able to see your profile or contact you.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -470,7 +470,7 @@ const ProfileScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const result = await blockUser(user.id, userId);
+              const result = await blockUser(user!.id, userId) as any;
               if (result.success) {
                 logger.info('ProfileScreen: User blocked, navigating back', { userId });
                 navigation.goBack();
@@ -488,13 +488,13 @@ const ProfileScreen = () => {
   };
 
   const handleUnblockUser = () => {
-    Alert.alert('Unblock User', `Unblock ${otherUserProfile?.displayName || routeUsername}?`, [
+    Alert.alert('Unblock User', `Unblock ${otherUserProfile?.display_name || routeUsername}?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Unblock',
         onPress: async () => {
           try {
-            const result = await unblockUser(user.id, userId);
+            const result = await unblockUser(user!.id, userId) as any;
             if (result.success) {
               setIsBlockedByMe(false);
               // Re-fetch friendship status (may have been friends before block)
@@ -513,16 +513,16 @@ const ProfileScreen = () => {
   };
 
   const handleReportUserFromProfile = () => {
-    navigation.navigate('ReportUser', {
+    (navigation as any).navigate('ReportUser', {
       userId,
       username: profileData?.username,
-      displayName: profileData?.displayName,
-      profilePhotoURL: profileData?.photoURL,
+      displayName: profileData?.display_name,
+      profilePhotoURL: profileData?.photo_url,
     });
   };
 
   const getProfileMenuOptions = () => {
-    const options = [];
+    const options: { label: string; icon: string; onPress: () => void; destructive?: boolean }[] = [];
 
     // Show Unblock option if I've blocked this user
     if (isBlockedByMe) {
@@ -569,7 +569,7 @@ const ProfileScreen = () => {
       setShowEditOverlay(true);
     } else {
       // Other profile: open fullscreen viewer (only if they have selects)
-      if (profileData?.selects?.length > 0) {
+      if (profileData?.selects && profileData.selects.length > 0) {
         setShowFullscreen(true);
       }
     }
@@ -582,21 +582,21 @@ const ProfileScreen = () => {
       // Upload local images to Firebase Storage first
       let remoteUrls = newSelects;
       if (newSelects.length > 0) {
-        const uploadResult = await uploadSelectsPhotos(user.id, newSelects);
+        const uploadResult = await uploadSelectsPhotos(user!.id, newSelects);
         if (!uploadResult.success) {
           Alert.alert('Upload Failed', 'Could not upload your highlights. Please try again.');
           return;
         }
-        remoteUrls = uploadResult.urls;
+        remoteUrls = uploadResult.photoURLs || newSelects;
       }
 
-      const result = await updateUserDocumentNative(user.id, { selects: remoteUrls });
+      const result = await updateUserDocumentNative(user!.id, { selects: remoteUrls } as any);
       if (result.success) {
         // Update local profile state
         updateUserProfile({
-          ...userProfile,
+          ...userProfile!,
           selects: remoteUrls,
-        });
+        } as any);
         logger.info('ProfileScreen: Selects saved successfully');
         setShowEditOverlay(false);
       } else {
@@ -610,9 +610,9 @@ const ProfileScreen = () => {
 
   // Handle song card press (add song when empty)
   const handleSongPress = () => {
-    if (!profileData?.profileSong) {
+    if (!(profileData as any)?.profileSong) {
       logger.info('ProfileScreen: Add song pressed');
-      navigation.navigate('SongSearch', {
+      (navigation as any).navigate('SongSearch', {
         source: 'ProfileMain',
         onSongSelect: handleSongSelect,
       });
@@ -622,17 +622,17 @@ const ProfileScreen = () => {
 
   // Handle song card long press (edit menu)
   const handleSongLongPress = () => {
-    if (!profileData?.profileSong) return;
+    if (!(profileData as any)?.profileSong) return;
 
     logger.info('ProfileScreen: Song long press, showing menu');
-    Alert.alert(profileData.profileSong.title, profileData.profileSong.artist, [
+    Alert.alert((profileData as any).profileSong.title, (profileData as any).profileSong.artist, [
       {
         text: 'Edit Song',
         onPress: () => {
           // Opens clip selection first, cancel goes to search for different song
-          navigation.navigate('SongSearch', {
+          (navigation as any).navigate('SongSearch', {
             source: 'ProfileMain',
-            editSong: profileData.profileSong,
+            editSong: (profileData as any).profileSong,
             onSongSelect: handleSongSelect,
           });
         },
@@ -653,9 +653,9 @@ const ProfileScreen = () => {
   const handleRemoveSong = async () => {
     logger.info('ProfileScreen: Removing profile song');
     try {
-      const result = await updateUserDocumentNative(user.id, { profileSong: null });
+      const result = await updateUserDocumentNative(user!.id, { profileSong: null } as any);
       if (result.success) {
-        updateUserProfile({ ...userProfile, profileSong: null });
+        updateUserProfile({ ...userProfile!, profileSong: null } as any);
         logger.info('ProfileScreen: Profile song removed');
       } else {
         Alert.alert('Error', 'Could not remove song. Please try again.');
@@ -669,9 +669,9 @@ const ProfileScreen = () => {
   // Save song to Firestore and update local state
   const handleSaveSong = async songData => {
     try {
-      const result = await updateUserDocumentNative(user.id, { profileSong: songData });
+      const result = await updateUserDocumentNative(user!.id, { profileSong: songData } as any);
       if (result.success) {
-        updateUserProfile({ ...userProfile, profileSong: songData });
+        updateUserProfile({ ...userProfile!, profileSong: songData } as any);
         logger.info('ProfileScreen: Profile song saved');
       } else {
         Alert.alert('Error', 'Could not save song. Please try again.');
@@ -685,9 +685,9 @@ const ProfileScreen = () => {
   // Album handlers
   const handleAlbumPress = album => {
     logger.info('ProfileScreen: Album pressed', { albumId: album.id, name: album.name });
-    navigation.navigate('AlbumGrid', {
+    (navigation as any).navigate('AlbumGrid', {
       albumId: album.id,
-      isOwnProfile: isOwnProfile,
+      title: album.name || album.title || '',
     });
   };
 
@@ -731,9 +731,9 @@ const ProfileScreen = () => {
           label: 'Edit Album',
           icon: 'pencil-outline',
           onPress: () =>
-            navigation.navigate('AlbumGrid', {
+            (navigation as any).navigate('AlbumGrid', {
               albumId: selectedAlbum.id,
-              isOwnProfile: true,
+              title: selectedAlbum.name || selectedAlbum.title || '',
             }),
         },
         {
@@ -753,9 +753,9 @@ const ProfileScreen = () => {
   // Handle monthly album month press
   const handleMonthPress = month => {
     logger.info('ProfileScreen: Monthly album pressed', { month });
-    navigation.navigate('MonthlyAlbumGrid', {
+    (navigation as any).navigate('MonthlyAlbumGrid', {
       month,
-      userId: isOwnProfile ? user?.id : userId,
+      year: parseInt(month?.split('-')?.[0] || '2026'),
     });
   };
 
@@ -977,16 +977,16 @@ const ProfileScreen = () => {
         ) : (
           <>
             {/* Albums Bar */}
-            <AlbumBar
-              ref={albumBarRef}
-              albums={albums}
-              photoUrls={coverPhotoUrls}
-              isOwnProfile={isOwnProfile}
-              onAlbumPress={handleAlbumPress}
-              highlightedAlbumId={highlightedAlbumId}
-              onAlbumLongPress={isOwnProfile ? handleAlbumLongPress : undefined}
-              onAddPress={handleAddAlbumPress}
-            />
+            {React.createElement(AlbumBar as any, {
+              ref: albumBarRef,
+              albums,
+              photoUrls: coverPhotoUrls,
+              isOwnProfile,
+              onAlbumPress: handleAlbumPress,
+              highlightedAlbumId,
+              onAlbumLongPress: isOwnProfile ? handleAlbumLongPress : undefined,
+              onAddPress: handleAddAlbumPress,
+            })}
 
             {/* 6. Monthly Albums - Visible for own profile and friends */}
             <MonthlyAlbumsSection
@@ -1006,12 +1006,12 @@ const ProfileScreen = () => {
       />
 
       {/* Edit overlay for own profile selects */}
-      <SelectsEditOverlay
-        visible={showEditOverlay}
-        selects={userProfile?.selects || []}
-        onSave={handleSaveSelects}
-        onClose={() => setShowEditOverlay(false)}
-      />
+      {React.createElement(SelectsEditOverlay as any, {
+        visible: showEditOverlay,
+        selects: userProfile?.selects || [],
+        onSave: handleSaveSelects,
+        onClose: () => setShowEditOverlay(false),
+      })}
 
       {/* Album long-press dropdown menu */}
       <DropdownMenu

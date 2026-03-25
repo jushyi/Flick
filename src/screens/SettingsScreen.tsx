@@ -44,16 +44,16 @@ const SettingsScreen = () => {
     logger.info('SettingsScreen: Sign out pressed');
     const signOutAction = {
       text: 'Sign Out',
-      style: 'destructive',
+      style: 'destructive' as const,
       onPress: async () => {
         try {
           await signOut();
         } catch (error) {
-          logger.error('SettingsScreen: Sign out failed', { error: error.message });
+          logger.error('SettingsScreen: Sign out failed', { error: (error as Error).message });
         }
       },
     };
-    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    const cancelAction = { text: 'Cancel', style: 'cancel' as const };
     // Android reverses button visual order — swap so Cancel stays left, Sign Out right
     Alert.alert(
       'Sign Out',
@@ -64,17 +64,17 @@ const SettingsScreen = () => {
 
   const handleNavigate = screenName => {
     logger.debug('SettingsScreen: Navigating to screen', { screenName });
-    navigation.navigate(screenName);
+    (navigation as any).navigate(screenName);
   };
 
   const handleDeleteAccount = () => {
     logger.debug('SettingsScreen: Delete Account pressed');
-    navigation.navigate('DeleteAccount');
+    (navigation as any).navigate('DeleteAccount');
   };
 
   const handleHelpSupport = () => {
     logger.debug('SettingsScreen: Help & Support pressed');
-    navigation.navigate('HelpSupport');
+    (navigation as any).navigate('HelpSupport');
   };
 
   const handleNSEDiagnostics = async () => {
@@ -90,14 +90,14 @@ const SettingsScreen = () => {
 
       if (diags && diags.length > 0) {
         // Find NSE entries (last non-module invocation)
-        const nseInvocations = diags.filter(d => d.timestamp !== 'module-logs');
+        const nseInvocations = diags.filter((d: any) => d.timestamp !== 'module-logs');
         if (nseInvocations.length > 0) {
-          const last = nseInvocations[nseInvocations.length - 1];
-          nseSummary = last.entries?.map(e => e.step).join(' → ') || 'No entries';
+          const last = nseInvocations[nseInvocations.length - 1] as any;
+          nseSummary = last.entries?.map((e: any) => e.step).join(' → ') || 'No entries';
         }
 
         // Find module entries
-        const moduleInvocation = diags.find(d => d.timestamp === 'module-logs');
+        const moduleInvocation = diags.find((d: any) => d.timestamp === 'module-logs') as any;
         if (moduleInvocation?.entries?.length > 0) {
           // Show last 10 module log entries with detail values
           const recent = moduleInvocation.entries.slice(-10);
@@ -121,13 +121,13 @@ const SettingsScreen = () => {
             text: 'Re-register Token',
             onPress: async () => {
               try {
-                await registerPushToStartToken(user.uid);
+                await registerPushToStartToken(user!.id);
                 Alert.alert(
                   'Token Registration',
                   'Push-to-start token observation started. Check Firestore for pushToStartToken field.'
                 );
               } catch (err) {
-                Alert.alert('Token Error', err.message);
+                Alert.alert('Token Error', (err as Error).message);
               }
             },
           },
@@ -140,11 +140,12 @@ const SettingsScreen = () => {
         ]
       );
     } catch (error) {
-      Alert.alert('Diagnostics Error', error.message);
+      Alert.alert('Diagnostics Error', (error as Error).message);
     }
   };
 
-  const sections = [
+  type MenuItem = { id: string; label: string; icon: string; onPress: () => void; isToggle?: boolean; subtitle?: string; value?: boolean; onToggle?: (v: boolean) => void; danger?: boolean };
+  const sections: { title: string; items: MenuItem[] }[] = [
     {
       title: 'Account',
       items: [
@@ -238,7 +239,7 @@ const SettingsScreen = () => {
     },
   ];
 
-  const actionItems = [
+  const actionItems: MenuItem[] = [
     {
       id: 'signout',
       label: 'Sign Out',
@@ -295,7 +296,7 @@ const SettingsScreen = () => {
                         )}
                       </View>
                     </View>
-                    <PixelToggle value={item.value} onValueChange={item.onToggle} />
+                    <PixelToggle value={item.value!} onValueChange={item.onToggle!} />
                   </View>
                 ) : (
                   <TouchableOpacity

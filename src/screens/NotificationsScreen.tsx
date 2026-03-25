@@ -33,10 +33,25 @@ const storeNotificationToken = async () => ({ success: true });
  * NotificationsScreen - Displays list of reaction notifications
  * Instagram-style vertical list with profile photo, message, and timestamp
  */
+type NotificationItem = {
+  id: string;
+  recipientId: string;
+  senderId: string;
+  senderName: string;
+  senderProfilePhotoURL: string | null;
+  createdAt: Date | null;
+  type: string;
+  photoId: string | null;
+  message: string | null;
+  reactions: Record<string, number> | null;
+  read: boolean;
+  [key: string]: any;
+};
+
 const NotificationsScreen = () => {
   const navigation = useNavigation();
   const { user, userProfile, refreshUserProfile } = useAuth();
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [enablingPush, setEnablingPush] = useState(false);
@@ -46,14 +61,14 @@ const NotificationsScreen = () => {
   const screenTraceMarkedRef = useRef(false);
 
   // Check if push notifications are enabled (fcmToken exists)
-  const hasPushToken = !!userProfile?.fcmToken;
+  const hasPushToken = !!userProfile?.fcm_token;
 
   /**
    * Handle enabling push notifications
    * Requests permission, gets token, and stores it
    */
   const handleEnablePushNotifications = async () => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
 
     setEnablingPush(true);
     try {
@@ -71,12 +86,12 @@ const NotificationsScreen = () => {
       // Step 2: Get push token
       const tokenResult = await getNotificationToken();
       if (!tokenResult.success) {
-        Alert.alert('Error', tokenResult.error || 'Failed to get push token');
+        Alert.alert('Error', (tokenResult as any).error || 'Failed to get push token');
         return;
       }
 
       // Step 3: Store token in Firestore
-      const storeResult = await storeNotificationToken(user.uid, tokenResult.data);
+      const storeResult = await storeNotificationToken();
       if (!storeResult.success) {
         Alert.alert('Error', 'Failed to save push token');
         return;
@@ -88,7 +103,7 @@ const NotificationsScreen = () => {
       logger.info('NotificationsScreen: Push notifications enabled successfully');
     } catch (error) {
       logger.error('NotificationsScreen: Failed to enable push notifications', {
-        error: error.message,
+        error: (error as Error).message,
       });
       Alert.alert('Error', 'Failed to enable push notifications');
     } finally {
@@ -97,24 +112,24 @@ const NotificationsScreen = () => {
   };
 
   const fetchNotifications = useCallback(async () => {
-    if (!user?.uid) {
+    if (!user?.id) {
       setLoading(false);
       return;
     }
 
-    logger.debug('NotificationsScreen: Fetching notifications', { userId: user.uid });
+    logger.debug('NotificationsScreen: Fetching notifications', { userId: user.id });
 
     try {
       const { data: rows, error: fetchError } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', user.uid)
+        .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (fetchError) throw fetchError;
 
-      const notificationsList = (rows || []).map(row => ({
+      const notificationsList = ((rows || []) as any[]).map(row => ({
         id: row.id,
         ...row,
         recipientId: row.recipient_id,
@@ -138,11 +153,11 @@ const NotificationsScreen = () => {
         markLoaded({ notif_count: notificationsList.length });
       }
     } catch (error) {
-      logger.error('NotificationsScreen: Failed to fetch notifications', { error: error.message });
+      logger.error('NotificationsScreen: Failed to fetch notifications', { error: (error as Error).message });
     } finally {
       setLoading(false);
     }
-  }, [user?.uid]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchNotifications();
@@ -160,7 +175,7 @@ const NotificationsScreen = () => {
       if (!reactions || typeof reactions !== 'object') return '';
 
       const parts = Object.entries(reactions)
-        .filter(([_, count]) => count > 0)
+        .filter(([_, count]) => (count as number) > 0)
         .map(([emoji, count]) => `${emoji}×${count}`);
 
       return parts.length > 0 ? parts.join(' ') : '';

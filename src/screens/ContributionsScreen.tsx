@@ -71,9 +71,10 @@ const CONTRIBUTION_TIERS = [
 
 const ContributionsScreen = () => {
   const navigation = useNavigation();
-  const { user, userProfile, updateUserDocumentNative, refreshUserProfile } = useAuth();
+  const { user, userProfile, updateUserDocument, refreshUserProfile } = useAuth();
 
-  const [products, setProducts] = useState([]);
+  type IAPProduct = { productId: string; localizedPrice: string; [key: string]: any };
+  const [products, setProducts] = useState<IAPProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [purchasingProductId, setPurchasingProductId] = useState(null);
@@ -84,7 +85,7 @@ const ContributionsScreen = () => {
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
+      (scrollViewRef.current as any)?.scrollToEnd({ animated: true });
     }, 100);
   }, []);
 
@@ -96,8 +97,8 @@ const ContributionsScreen = () => {
   // Sync contributor status from userProfile
   useEffect(() => {
     if (userProfile) {
-      setIsContributor(userProfile.isContributor === true);
-      setSelectedColor(userProfile.nameColor || null);
+      setIsContributor((userProfile as any).isContributor === true);
+      setSelectedColor((userProfile as any).nameColor || null);
     }
   }, [userProfile]);
 
@@ -120,9 +121,9 @@ const ContributionsScreen = () => {
       const productsResult = await getProducts();
       if (productsResult.success) {
         logger.info('ContributionsScreen: Products loaded', {
-          count: productsResult.products.length,
+          count: productsResult.products?.length ?? 0,
         });
-        setProducts(productsResult.products);
+        setProducts((productsResult.products || []) as unknown as IAPProduct[]);
       } else {
         logger.warn('ContributionsScreen: Failed to fetch products', {
           error: productsResult.error,
@@ -131,7 +132,7 @@ const ContributionsScreen = () => {
 
       setLoading(false);
     } catch (error) {
-      logger.error('ContributionsScreen: Error loading data', { error: error.message });
+      logger.error('ContributionsScreen: Error loading data', { error: (error as Error).message });
       setLoading(false);
     }
   };
@@ -174,7 +175,7 @@ const ContributionsScreen = () => {
 
       // Save contribution to Firestore
       const saveResult = await saveContribution(
-        user.uid,
+        user!.id,
         productId,
         purchase.transactionId,
         amount
@@ -207,7 +208,7 @@ const ContributionsScreen = () => {
       setPurchasing(false);
       setPurchasingProductId(null);
     } catch (error) {
-      logger.error('ContributionsScreen: Error during purchase', { error: error.message });
+      logger.error('ContributionsScreen: Error during purchase', { error: (error as Error).message });
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       setPurchasing(false);
       setPurchasingProductId(null);
@@ -219,7 +220,7 @@ const ContributionsScreen = () => {
       setSavingColor(true);
       logger.debug('ContributionsScreen: Saving name color', { color });
 
-      const result = await updateUserDocumentNative(user.uid, { nameColor: color });
+      const result = await updateUserDocument(user!.id, { nameColor: color } as any);
 
       if (result.success) {
         setSelectedColor(color);
@@ -232,7 +233,7 @@ const ContributionsScreen = () => {
 
       setSavingColor(false);
     } catch (error) {
-      logger.error('ContributionsScreen: Error saving color', { error: error.message });
+      logger.error('ContributionsScreen: Error saving color', { error: (error as Error).message });
       setSavingColor(false);
     }
   };
@@ -443,7 +444,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.size.xl,
-    fontFamily: typography.fontFamily.displayBold,
+    fontFamily: typography.fontFamily.display,
     color: colors.text.primary,
     marginBottom: spacing.md,
   },

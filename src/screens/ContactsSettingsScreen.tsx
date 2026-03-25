@@ -32,10 +32,10 @@ const ContactsSettingsScreen = () => {
   const [permissionStatus, setPermissionStatus] = useState('granted');
   const [canAskAgain, setCanAskAgain] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState(null); // { count: number } after sync
+  const [syncResult, setSyncResult] = useState<{ count: number } | null>(null);
 
   const checkOsPermission = async () => {
-    const result = await getContactsPermissionStatus();
+    const result = await getContactsPermissionStatus() as any;
     if (result.success) {
       setPermissionStatus(result.data.status);
       setCanAskAgain(result.data.canAskAgain);
@@ -56,7 +56,7 @@ const ContactsSettingsScreen = () => {
   }, []);
 
   const handleRequestPermission = async () => {
-    const result = await requestContactsPermission();
+    const result = await requestContactsPermission() as any;
     if (result.granted) {
       await checkOsPermission();
     }
@@ -67,7 +67,7 @@ const ContactsSettingsScreen = () => {
       setSyncing(true);
       setSyncResult(null);
 
-      const result = await syncContactsAndFindSuggestions(user.uid, userProfile?.phoneNumber);
+      const result = await syncContactsAndFindSuggestions(user!.id) as any;
 
       if (!result.success) {
         if (
@@ -81,14 +81,14 @@ const ContactsSettingsScreen = () => {
         return;
       }
 
-      await markContactsSyncCompleted(user.uid, true);
+      await markContactsSyncCompleted();
       await refreshUserProfile();
       setSyncResult({ count: result.suggestions?.length ?? 0 });
       logger.info('ContactsSettingsScreen: Sync completed', {
         suggestions: result.suggestions?.length,
       });
     } catch (error) {
-      logger.error('ContactsSettingsScreen: Sync failed', { error: error.message });
+      logger.error('ContactsSettingsScreen: Sync failed', { error: (error as Error).message });
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
       setSyncing(false);
@@ -96,7 +96,7 @@ const ContactsSettingsScreen = () => {
   };
 
   const formatLastSynced = () => {
-    const syncedAt = userProfile?.contactsSyncedAt;
+    const syncedAt = (userProfile as any)?.contactsSyncedAt;
     if (!syncedAt) return 'Never synced';
     const date = typeof syncedAt.toDate === 'function' ? syncedAt.toDate() : new Date(syncedAt);
     return `Last synced ${date.toLocaleDateString()}`;

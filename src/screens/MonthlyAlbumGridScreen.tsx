@@ -48,16 +48,17 @@ const MonthlyAlbumGridScreen = () => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
 
-  const { month, userId } = route.params || {};
+  const { month, userId } = (route.params || {}) as { month?: string; userId?: string };
 
   // Determine if viewing own profile
-  const isOwnProfile = user?.uid === userId;
+  const isOwnProfile = user?.id === userId;
 
-  const [photos, setPhotos] = useState([]);
+  type AlbumPhoto = { id: string; imageUrl: string; createdAt: string; photoState: string; imageURL?: string; capturedAt?: string };
+  const [photos, setPhotos] = useState<AlbumPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
-  const [viewerSourceRect, setViewerSourceRect] = useState(null);
+  const [viewerSourceRect, setViewerSourceRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   // Refs for measuring photo cell positions (expand/collapse animation)
   const cellRefs = useRef({});
@@ -79,23 +80,21 @@ const MonthlyAlbumGridScreen = () => {
     }
 
     try {
-      const result = await getMonthPhotos(userId, month);
-      if (result.success) {
-        setPhotos(result.photos);
-        // Clamp viewerInitialIndex to new bounds to prevent out-of-bounds scroll
-        // if the viewer reopens (or is still open) with a stale index after deletion.
-        if (result.photos.length > 0) {
-          setViewerInitialIndex(prev => Math.min(prev, result.photos.length - 1));
-        }
-        logger.info('MonthlyAlbumGridScreen: Fetched photos', {
-          month,
-          count: result.photos.length,
-        });
-      } else {
-        logger.error('MonthlyAlbumGridScreen: Failed to fetch photos', { error: result.error });
+      const groups = await getMonthPhotos(userId);
+      // Find the group matching the requested month
+      const matchingGroup = groups.find(g => g.monthKey === month);
+      const fetchedPhotos = (matchingGroup?.photos || []) as AlbumPhoto[];
+      setPhotos(fetchedPhotos);
+      // Clamp viewerInitialIndex to new bounds to prevent out-of-bounds scroll
+      if (fetchedPhotos.length > 0) {
+        setViewerInitialIndex(prev => Math.min(prev, fetchedPhotos.length - 1));
       }
+      logger.info('MonthlyAlbumGridScreen: Fetched photos', {
+        month,
+        count: fetchedPhotos.length,
+      });
     } catch (error) {
-      logger.error('MonthlyAlbumGridScreen: Error fetching photos', { error: error.message });
+      logger.error('MonthlyAlbumGridScreen: Error fetching photos', { error: (error as Error).message });
     } finally {
       setLoading(false);
     }
@@ -144,15 +143,16 @@ const MonthlyAlbumGridScreen = () => {
     }
   };
 
+  type GridItem = { type: string; key: string; title?: string; photo?: AlbumPhoto; photoIndex?: number; photos?: GridItem[] };
   // Build flat list data with day headers interspersed
-  const gridData = useMemo(() => {
+  const gridData = useMemo((): GridItem[] => {
     if (photos.length === 0) return [];
 
-    const result = [];
-    let currentDayKey = null;
+    const result: GridItem[] = [];
+    let currentDayKey: string | null = null;
 
     photos.forEach((photo, index) => {
-      const dayKey = getDayKey(photo.capturedAt);
+      const dayKey = getDayKey(photo.createdAt);
 
       // Add day header when day changes
       if (dayKey !== currentDayKey) {
@@ -160,7 +160,7 @@ const MonthlyAlbumGridScreen = () => {
         result.push({
           type: 'dayHeader',
           key: `header-${dayKey}`,
-          title: formatDayHeader(photo.capturedAt),
+          title: formatDayHeader(photo.createdAt),
         });
       }
 
@@ -184,7 +184,7 @@ const MonthlyAlbumGridScreen = () => {
     logger.info('MonthlyAlbumGridScreen: Photo pressed', { photoIndex });
     const cellRef = cellRefs.current[photoIndex];
     if (cellRef) {
-      cellRef.measureInWindow((x, y, width, height) => {
+      (cellRef as any).measureInWindow((x: number, y: number, width: number, height: number) => {
         setViewerSourceRect({ x, y, width, height });
         setViewerInitialIndex(photoIndex);
         setViewerVisible(true);
@@ -256,9 +256,9 @@ const MonthlyAlbumGridScreen = () => {
   };
 
   // Group photos into rows of 3 with headers preserved
-  const rowData = useMemo(() => {
-    const result = [];
-    let currentRow = [];
+  const rowData = useMemo((): GridItem[] => {
+    const result: GridItem[] = [];
+    let currentRow: GridItem[] = [];
 
     gridData.forEach(item => {
       if (item.type === 'dayHeader') {
@@ -393,12 +393,12 @@ const MonthlyAlbumGridScreen = () => {
       {/* Photo Viewer Modal */}
       <AlbumPhotoViewer
         visible={viewerVisible}
-        photos={photos}
+        photos={photos as any}
         initialIndex={viewerInitialIndex}
         albumId=""
         albumName={formattedMonthTitle}
         isOwnProfile={isOwnProfile}
-        currentUserId={user?.uid}
+        currentUserId={user?.id}
         sourceRect={viewerSourceRect}
         onClose={() => {
           setViewerVisible(false);

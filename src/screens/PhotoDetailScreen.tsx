@@ -596,13 +596,13 @@ const PhotoDetailScreen = () => {
     photo: contextPhoto,
     photos: contextPhotos,
     initialIndex: contextInitialIndex,
-    onPhotoChange: handlePhotoChange,
+    onPhotoChange: handlePhotoChange as any,
     visible: true, // Always visible since it's a screen
     onClose: handleClose,
     onReactionToggle: handleReactionToggle,
-    currentUserId: contextUserId,
-    onFriendTransition: contextMode === 'stories' ? handleFriendTransition : null,
-    onPreviousFriendTransition: contextMode === 'stories' ? handlePreviousFriendTransition : null,
+    currentUserId: contextUserId ?? undefined,
+    onFriendTransition: contextMode === 'stories' ? handleFriendTransition : undefined,
+    onPreviousFriendTransition: contextMode === 'stories' ? handlePreviousFriendTransition : undefined,
     onSwipeUp: handleSwipeUpToOpenComments,
     sourceRect: contextSourceRect,
     // Interactive swipe support
@@ -730,7 +730,7 @@ const PhotoDetailScreen = () => {
 
   // Check if current photo is a video
   const isVideo = currentPhoto?.mediaType === 'video';
-  const videoURL = currentPhoto?.videoURL;
+  const videoURL = currentPhoto?.videoURL as string | undefined;
 
   // Hold-to-pause state for videos
   const [videoPaused, setVideoPaused] = useState(false);
@@ -753,7 +753,7 @@ const PhotoDetailScreen = () => {
   const handleAvatarPress = useCallback(() => {
     if (isOwnPhoto) return;
     if (contextAvatarPress && currentPhoto) {
-      contextAvatarPress(currentPhoto.userId, displayName);
+      contextAvatarPress(currentPhoto.userId as string, displayName as string);
     }
   }, [contextAvatarPress, currentPhoto, displayName, isOwnPhoto]);
 
@@ -774,7 +774,7 @@ const PhotoDetailScreen = () => {
   // Tagged photo "Add to feed" state
   const [isAddingToFeed, setIsAddingToFeed] = useState(false);
   const [hasAddedToFeed, setHasAddedToFeed] = useState(
-    () => !!taggedPhotoContext?.addedToFeedBy?.[contextUserId]
+    () => !!taggedPhotoContext?.addedToFeedBy?.[contextUserId!]
   );
 
   // Determine if Add to feed button should be shown
@@ -836,13 +836,13 @@ const PhotoDetailScreen = () => {
       };
 
       // Update context state (for this screen and modal)
-      updateCurrentPhoto(updatedPhoto);
+      updateCurrentPhoto(updatedPhoto as any);
 
       // If in feed mode, also update feed state via callback
       if (contextMode === 'feed') {
         const callbacks = getCallbacks();
         if (callbacks.onCommentCountChange) {
-          callbacks.onCommentCountChange(photoId, delta);
+          (callbacks.onCommentCountChange as any)(photoId, delta);
         }
       }
 
@@ -872,19 +872,20 @@ const PhotoDetailScreen = () => {
     // Optimistic update — show new caption immediately
     lastSavedCaptionRef.current = trimmed || '';
     if (contextMode === 'stories') {
-      updatePhotoAtIndex(currentIndex, updatedPhoto);
+      updatePhotoAtIndex(currentIndex, updatedPhoto as any);
     }
-    updateCurrentPhoto(updatedPhoto);
+    updateCurrentPhoto(updatedPhoto as any);
 
-    const result = await updateCaption(currentPhoto?.id, trimmed);
-    if (!result.success) {
+    try {
+      await updateCaption(currentPhoto?.id!, trimmed);
+    } catch (err) {
       // Rollback on failure
-      logger.warn('Failed to save caption', { error: result.error });
+      logger.warn('Failed to save caption', { error: (err as Error).message });
       lastSavedCaptionRef.current = savedCaption;
       if (contextMode === 'stories') {
-        updatePhotoAtIndex(currentIndex, rollbackPhoto);
+        updatePhotoAtIndex(currentIndex, rollbackPhoto as any);
       }
-      updateCurrentPhoto(rollbackPhoto);
+      updateCurrentPhoto(rollbackPhoto as any);
     }
   }, [
     isEditingCaption,
@@ -900,7 +901,7 @@ const PhotoDetailScreen = () => {
    * Trigger inline caption editing from menu
    */
   const handleEditCaption = useCallback(() => {
-    setCaptionText(currentPhoto?.caption || '');
+    setCaptionText((currentPhoto?.caption as string) || '');
     setIsEditingCaption(true);
     // Auto-focus the input after state update
     setTimeout(() => {
@@ -976,13 +977,13 @@ const PhotoDetailScreen = () => {
 
   const handleRestore = useCallback(async () => {
     setShowPhotoMenu(false);
-    const result = await restorePhoto(currentPhoto!.id);
-    if (result.success) {
+    try {
+      await restorePhoto(currentPhoto!.id!);
       handlePhotoStateChanged?.(); // Refresh feed/stories
       // Show success message - photo will now appear in feed/stories again
       Alert.alert('Restored', 'Photo has been restored to your journal.');
-    } else {
-      Alert.alert('Error', result.error || 'Failed to restore photo');
+    } catch (err) {
+      Alert.alert('Error', (err as Error).message || 'Failed to restore photo');
     }
   }, [currentPhoto?.id, contextUserId, handlePhotoStateChanged]);
 
@@ -999,7 +1000,7 @@ const PhotoDetailScreen = () => {
               style: 'destructive',
               onPress: async () => {
                 try {
-                  await softDeletePhoto(currentPhoto!.id);
+                  await softDeletePhoto(currentPhoto!.id!);
                   handlePhotoStateChanged?.();
                   handleClose();
                 } catch (err) {
@@ -1016,7 +1017,7 @@ const PhotoDetailScreen = () => {
               style: 'destructive',
               onPress: async () => {
                 try {
-                  await softDeletePhoto(currentPhoto!.id);
+                  await softDeletePhoto(currentPhoto!.id!);
                   handlePhotoStateChanged?.();
                   handleClose();
                 } catch (err) {
@@ -1030,11 +1031,11 @@ const PhotoDetailScreen = () => {
 
   const handleReport = useCallback(() => {
     setShowPhotoMenu(false);
-    navigation.navigate('ReportUser', {
-      userId: currentPhoto?.userId,
-      username: displayName,
-      displayName: displayName,
-      profilePhotoURL: profilePhotoURL,
+    (navigation as any).navigate('ReportUser', {
+      userId: currentPhoto?.userId as string,
+      username: displayName as string,
+      displayName: displayName as string,
+      profilePhotoURL: profilePhotoURL as string,
     });
   }, [navigation, currentPhoto?.userId, displayName, profilePhotoURL]);
 
@@ -1050,7 +1051,7 @@ const PhotoDetailScreen = () => {
       ];
     }
 
-    const options = [];
+    const options: { label: string; icon: string; onPress: () => void; destructive?: boolean }[] = [];
 
     if (currentPhoto?.photoState === 'journal') {
       options.push({
@@ -1189,7 +1190,7 @@ const PhotoDetailScreen = () => {
               )}
               {isVideo && videoURL ? (
                 <VideoPlayer
-                  source={videoURL}
+                  source={videoURL as string}
                   isMuted={isMuted}
                   onToggleMute={toggleMute}
                   loop={contextMode !== 'stories'}
@@ -1204,10 +1205,10 @@ const PhotoDetailScreen = () => {
                 />
               ) : (
                 <Image
-                  source={{ uri: imageURL, cacheKey: `photo-${currentPhoto?.id}` }}
+                  source={{ uri: imageURL as string, cacheKey: `photo-${currentPhoto?.id}` }}
                   placeholder={
                     currentPhoto?.thumbnailDataURL
-                      ? { uri: currentPhoto.thumbnailDataURL }
+                      ? { uri: currentPhoto.thumbnailDataURL as string }
                       : undefined
                   }
                   placeholderContentFit="cover"
@@ -1249,8 +1250,8 @@ const PhotoDetailScreen = () => {
               {profilePhotoURL ? (
                 <Image
                   source={{
-                    uri: profilePhotoURL,
-                    cacheKey: profileCacheKey(`profile-${currentPhoto?.userId}`, profilePhotoURL),
+                    uri: profilePhotoURL as string,
+                    cacheKey: profileCacheKey(`profile-${currentPhoto?.userId}`, profilePhotoURL as string),
                   }}
                   style={styles.profilePic}
                   contentFit="cover"
@@ -1282,27 +1283,25 @@ const PhotoDetailScreen = () => {
               <View style={styles.userInfoRow}>
                 <StrokedNameText
                   style={styles.displayName}
-                  nameColor={currentPhoto?.user?.nameColor}
+                  nameColor={currentPhoto?.user?.nameColor as string}
                   numberOfLines={1}
                 >
                   {displayName || 'Unknown User'}
                 </StrokedNameText>
-                <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
+                <Text style={styles.timestamp}>{getTimeAgo(capturedAt as string)}</Text>
               </View>
-              {currentPhoto?.attribution && (
+              {!!(currentPhoto?.attribution) && (
                 <TouchableOpacity
-                  onPress={() =>
-                    handlePhotographerPress(
-                      currentPhoto.attribution.photographerId,
-                      currentPhoto.attribution.photographerDisplayName
-                    )
-                  }
+                  onPress={() => {
+                    const attr = currentPhoto.attribution as any;
+                    handlePhotographerPress(attr.photographerId, attr.photographerDisplayName);
+                  }}
                   activeOpacity={0.7}
                   style={localStyles.attributionRow}
                 >
                   <PixelIcon name="camera" size={14} color={colors.text.tertiary} />
                   <Text style={localStyles.attributionText}>
-                    Photo by @{currentPhoto.attribution.photographerUsername}
+                    Photo by @{(currentPhoto.attribution as any).photographerUsername}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -1335,15 +1334,15 @@ const PhotoDetailScreen = () => {
                     <PixelIcon name="checkmark" size={18} color={colors.text.primary} />
                   </TouchableOpacity>
                 </View>
-              ) : currentPhoto?.caption ? (
+              ) : (currentPhoto?.caption as string) ? (
                 <Text style={styles.captionText} numberOfLines={3}>
-                  {currentPhoto.caption}
+                  {currentPhoto!.caption as string}
                 </Text>
               ) : null}
             </View>
 
             {/* Tag button - visible for owner always, non-owner only when tags exist */}
-            {(isOwnPhoto || currentPhoto?.taggedUserIds?.length > 0) && (
+            {(isOwnPhoto || ((currentPhoto?.taggedUserIds as any[])?.length ?? 0) > 0) && (
               <TouchableOpacity
                 style={[
                   styles.tagButton,
@@ -1435,10 +1434,10 @@ const PhotoDetailScreen = () => {
                   const isCurrentSegment = index === currentIndex;
                   const isPast = index < currentIndex;
                   // Use contextPhotos directly — check both mediaType and videoURL presence
-                  const photoAtIndex = contextPhotos[index];
+                  const photoAtIndex = contextPhotos[index] as any;
                   const isCurrentVideoSegment =
                     isCurrentSegment &&
-                    (photoAtIndex?.mediaType === 'video' || !!photoAtIndex?.videoURL);
+                    (photoAtIndex?.mediaType === 'video' || !!(photoAtIndex as any)?.video_url);
 
                   return (
                     <View
@@ -1494,8 +1493,8 @@ const PhotoDetailScreen = () => {
               >
                 <PixelIcon name="chatbubble-outline" size={16} color={colors.text.secondary} />
                 <Text style={styles.commentInputTriggerText} numberOfLines={1}>
-                  {currentPhoto?.commentCount > 0
-                    ? `${currentPhoto.commentCount} comment${currentPhoto.commentCount === 1 ? '' : 's'}`
+                  {(currentPhoto?.commentCount as number) > 0
+                    ? `${currentPhoto!.commentCount} comment${(currentPhoto!.commentCount as number) === 1 ? '' : 's'}`
                     : 'Add a comment...'}
                 </Text>
               </TouchableOpacity>
@@ -1730,6 +1729,7 @@ const PhotoDetailScreen = () => {
         photoId={currentPhoto?.id}
         photoOwnerId={currentPhoto?.userId}
         currentUserId={contextUserId}
+        onCommentAdded={() => handleCommentCountChange(1)}
         onAvatarPress={handleCommentAvatarPress}
         onCommentCountChange={handleCommentCountChange}
         initialScrollToCommentId={targetCommentId}
@@ -1778,7 +1778,7 @@ const PhotoDetailScreen = () => {
       <TagFriendsModal
         visible={tagModalVisible}
         onClose={() => setTagModalVisible(false)}
-        initialSelectedIds={currentPhoto?.taggedUserIds || []}
+        initialSelectedIds={(currentPhoto?.taggedUserIds || []) as string[]}
         onConfirm={async selectedIds => {
           await updatePhotoTags(currentPhoto.id, selectedIds);
           setTagModalVisible(false);
@@ -1789,7 +1789,7 @@ const PhotoDetailScreen = () => {
       <TaggedPeopleModal
         visible={taggedPeopleModalVisible}
         onClose={() => setTaggedPeopleModalVisible(false)}
-        taggedUserIds={currentPhoto?.taggedUserIds || []}
+        taggedUserIds={(currentPhoto?.taggedUserIds || []) as string[]}
         onPersonPress={(userId, userName) => {
           setTaggedPeopleModalVisible(false);
           contextAvatarPress?.(userId, userName);
