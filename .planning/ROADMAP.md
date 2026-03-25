@@ -222,7 +222,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 17. Messaging & Social | v1.2 | 6/6 | Complete    | 2026-03-25 |
 | 18. Background Jobs & Notifications | v1.2 | 5/5 | Complete    | 2026-03-25 |
 | 19. Performance Polish | v1.2 | 5/5 | Complete    | 2026-03-25 |
-| 20. TypeScript Sweep & Firebase Removal | v1.2 | 8/8 | Complete   | 2026-03-25 |
+| 20. TypeScript Sweep & Firebase Removal | v1.2 | 8/8 | Complete    | 2026-03-25 |
 
 ### Phase 20.1: Firestore data migration script (INSERTED)
 
