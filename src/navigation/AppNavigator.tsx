@@ -5,9 +5,19 @@ import {
   NavigationContainer,
   DarkTheme,
   getFocusedRouteNameFromRoute,
+  createNavigationContainerRef,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+
+import type {
+  RootStackParamList,
+  MainTabsParamList,
+  ProfileStackParamList,
+  MessagesStackParamList,
+  OnboardingStackParamList,
+  ProfileFromPhotoDetailParamList,
+} from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
 import { PhoneAuthProvider } from '../context/PhoneAuthContext';
 import { PhotoDetailProvider } from '../context/PhotoDetailContext';
@@ -69,13 +79,12 @@ import ConversationScreen from '../screens/ConversationScreen';
 import NewMessageScreen from '../screens/NewMessageScreen';
 import SnapPreviewScreen from '../screens/SnapPreviewScreen';
 
-// Create navigation reference for programmatic navigation
-export const navigationRef = createRef();
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
-const Stack = createNativeStackNavigator();
-const Tab = createMaterialTopTabNavigator();
-const ProfileModalStack = createNativeStackNavigator();
-const MessagesStack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createMaterialTopTabNavigator<MainTabsParamList>();
+const ProfileModalStack = createNativeStackNavigator<ProfileFromPhotoDetailParamList>();
+const MessagesStack = createNativeStackNavigator<MessagesStackParamList>();
 
 /**
  * ProfileFromPhotoDetail Navigator
@@ -83,7 +92,7 @@ const MessagesStack = createNativeStackNavigator();
  * Uses fullScreenModal presentation to render above PhotoDetail's transparentModal.
  * Contains ProfileMain, AlbumGrid, and MonthlyAlbumGrid for child navigation.
  */
-function ProfileFromPhotoDetailNavigator({ route }) {
+function ProfileFromPhotoDetailNavigator({ route }: { route: { params: { userId: string; username?: string } } }) {
   const { userId, username } = route.params;
   return (
     <ProfileModalStack.Navigator
