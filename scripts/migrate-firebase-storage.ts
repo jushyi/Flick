@@ -25,6 +25,16 @@ import * as admin from 'firebase-admin';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+const envLocalPath = path.join(__dirname, '..', '.env.local');
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath });
+} else if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -119,7 +129,7 @@ function initFirebase(): void {
 }
 
 function initSupabase(): SupabaseClient {
-  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl) {

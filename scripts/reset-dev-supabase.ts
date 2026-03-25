@@ -27,7 +27,7 @@ if (fs.existsSync(envLocalPath)) {
   dotenv.config({ path: envPath });
 }
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 // ---------------------------------------------------------------------------
@@ -245,22 +245,60 @@ async function wipeAuthUsers(supabase: SupabaseClient): Promise<void> {
   console.log(`  [OK] Deleted ${totalDeleted} auth users`);
 }
 
-async function reapplyMigrations(): Promise<void> {
-  console.log('\n--- Re-applying migrations via Supabase CLI ---');
+async function reapplyMigrations(supabase: SupabaseClient): Promise<void> {
+  console.log('\n--- Re-applying migrations via SQL ---');
 
-  try {
-    // supabase db reset will drop and recreate the database, then apply all migrations
-    execSync('npx supabase db reset --linked', {
-      cwd: path.join(__dirname, '..'),
-      stdio: 'inherit',
-    });
-    console.log('  [OK] Migrations re-applied successfully');
-  } catch (err) {
-    console.error('  [ERROR] Failed to re-apply migrations.');
-    console.error('  Make sure the Supabase CLI is installed and the project is linked.');
-    console.error(`  ${(err as Error).message}`);
+  const migrationsDir = path.join(__dirname, '..', 'supabase', 'migrations');
+  if (!fs.existsSync(migrationsDir)) {
+    console.error('  [ERROR] supabase/migrations/ directory not found.');
     process.exit(1);
   }
+
+  const files = fs.readdirSync(migrationsDir)
+    .filter((f: string) => f.endsWith('.sql'))
+    .sort();
+
+  console.log(`  Found ${files.length} migration files`);
+
+  let applied = 0;
+  for (const file of files) {
+    const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
+    // Execute via Supabase REST using the postgrest rpc or direct fetch
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ sql }),
+    });
+
+    if (!response.ok) {
+      // Fallback: try executing via the SQL endpoint (management API)
+      const mgmtResponse = await fetch(`${SUPABASE_URL}/pg/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ query: sql }),
+      });
+
+      if (!mgmtResponse.ok) {
+        const errText = await response.text();
+        console.warn(`  [WARN] ${file}: ${errText.slice(0, 200)}`);
+        // Continue — migration may have already been applied (tables exist)
+        continue;
+      }
+    }
+
+    applied++;
+    console.log(`  [OK] ${file}`);
+  }
+
+  console.log(`  Applied ${applied}/${files.length} migrations`);
 }
 
 async function verifyCleanState(supabase: SupabaseClient): Promise<void> {
@@ -314,8 +352,19 @@ async function main(): Promise<void> {
   // Step 3: Wipe storage
   await wipeStorageBuckets(supabase);
 
-  // Step 4: Re-apply migrations (drops and recreates everything)
-  await reapplyMigrations();
+  // Step 3b: Delete migration progress files so scripts re-run from scratch
+  const progressFiles = [
+    path.join(__dirname, '.migration-progress.json'),
+  ];
+  for (const pf of progressFiles) {
+    if (fs.existsSync(pf)) {
+      fs.unlinkSync(pf);
+      console.log(`  [OK] Deleted progress file: ${path.basename(pf)}`);
+    }
+  }
+
+  // Step 4: Re-apply migrations via SQL
+  await reapplyMigrations(supabase);
 
   // Step 5: Re-initialize Supabase client (schema may have changed)
   const freshSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {

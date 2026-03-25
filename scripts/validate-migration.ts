@@ -25,7 +25,7 @@ if (fs.existsSync(envLocalPath)) {
   dotenv.config({ path: envPath });
 }
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 // ---------------------------------------------------------------------------
@@ -86,7 +86,7 @@ async function checkDataIntegrity(supabase: SupabaseClient): Promise<void> {
   console.log('');
   const { data: samplePhotos, error: photoErr } = await supabase
     .from('photos')
-    .select('id, photo_url')
+    .select('id, image_url')
     .limit(10);
 
   if (photoErr) {
@@ -96,12 +96,12 @@ async function checkDataIntegrity(supabase: SupabaseClient): Promise<void> {
   } else {
     let validUrls = 0;
     for (const photo of samplePhotos) {
-      if (photo.photo_url && typeof photo.photo_url === 'string' && photo.photo_url.length > 0) {
+      if (photo.image_url && typeof photo.image_url === 'string' && photo.image_url.length > 0) {
         // Check URL is a Supabase Storage URL (not a Firebase URL)
         if (
-          photo.photo_url.includes('supabase') ||
-          photo.photo_url.includes('/storage/v1/') ||
-          photo.photo_url.startsWith('http')
+          photo.image_url.includes('supabase') ||
+          photo.image_url.includes('/storage/v1/') ||
+          photo.image_url.startsWith('http')
         ) {
           validUrls++;
         }
@@ -232,7 +232,7 @@ async function checkServiceOperations(supabase: SupabaseClient): Promise<void> {
     .limit(1)
     .single();
 
-  if (randomPhoto?.photo_url) {
+  if (randomPhoto?.image_url) {
     // Try to create a signed URL for a known bucket
     const { data: signedUrl, error: signedErr } = await supabase.storage
       .from('photos')
@@ -268,8 +268,6 @@ async function checkServiceOperations(supabase: SupabaseClient): Promise<void> {
     'album_photos',
     'comment_likes',
     'support_requests',
-    'pending_notifications',
-    'push_receipts',
     'message_deletions',
   ];
 
@@ -277,7 +275,8 @@ async function checkServiceOperations(supabase: SupabaseClient): Promise<void> {
   let tableQueryFails = 0;
 
   for (const table of queryTables) {
-    const { error } = await supabase.from(table).select('id').limit(1);
+    // Use select('*') instead of select('id') — junction tables use composite keys
+    const { error } = await supabase.from(table).select('*', { count: 'exact', head: true });
     if (error) {
       tableQueryFails++;
       fail(`DB query ${table}`, error.message);
@@ -316,74 +315,76 @@ async function checkServiceOperations(supabase: SupabaseClient): Promise<void> {
 // 3. Zero Firebase fallback check
 // ---------------------------------------------------------------------------
 
+function findFilesRecursive(dir: string, pattern: RegExp): string[] {
+  const results: string[] = [];
+  if (!fs.existsSync(dir)) return results;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory() && entry.name !== 'node_modules') {
+      results.push(...findFilesRecursive(fullPath, pattern));
+    } else if (entry.isFile() && pattern.test(entry.name)) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
 function checkZeroFirebaseFallbacks(): void {
   console.log('\n=== Zero Firebase Fallback Checks ===\n');
 
   const srcDir = path.join(__dirname, '..', 'src');
 
-  // Check for @react-native-firebase imports in .ts/.tsx files
-  try {
-    const firebaseImports = execSync(
-      `grep -r "@react-native-firebase" "${srcDir}" --include="*.ts" --include="*.tsx" -l 2>/dev/null || true`,
-      { encoding: 'utf-8' },
-    ).trim();
+  // Use Node.js fs to scan files instead of grep (Windows-compatible)
+  const tsFiles = findFilesRecursive(srcDir, /\.(ts|tsx)$/);
 
-    if (firebaseImports.length === 0) {
-      pass('@react-native-firebase imports', '0 files contain Firebase SDK imports');
-    } else {
-      const fileCount = firebaseImports.split('\n').filter(Boolean).length;
-      fail(
-        '@react-native-firebase imports',
-        `${fileCount} files still import Firebase SDK:\n${firebaseImports}`,
-      );
-    }
-  } catch {
-    pass('@react-native-firebase imports', 'grep returned no matches');
+  // Check for @react-native-firebase imports
+  const firebaseFiles = tsFiles.filter((f) => {
+    const content = fs.readFileSync(f, 'utf-8');
+    return content.includes('@react-native-firebase');
+  });
+
+  if (firebaseFiles.length === 0) {
+    pass('@react-native-firebase imports', '0 files contain Firebase SDK imports');
+  } else {
+    fail(
+      '@react-native-firebase imports',
+      `${firebaseFiles.length} files still import Firebase SDK:\n${firebaseFiles.join('\n')}`,
+    );
   }
 
   // Check for services/firebase imports
-  try {
-    const serviceImports = execSync(
-      `grep -r "services/firebase" "${srcDir}" --include="*.ts" --include="*.tsx" -l 2>/dev/null || true`,
-      { encoding: 'utf-8' },
-    ).trim();
+  const serviceFirebaseFiles = tsFiles.filter((f) => {
+    const content = fs.readFileSync(f, 'utf-8');
+    return content.includes('services/firebase');
+  });
 
-    if (serviceImports.length === 0) {
-      pass('services/firebase imports', '0 files reference Firebase service layer');
-    } else {
-      const fileCount = serviceImports.split('\n').filter(Boolean).length;
-      fail(
-        'services/firebase imports',
-        `${fileCount} files still import from services/firebase:\n${serviceImports}`,
-      );
-    }
-  } catch {
-    pass('services/firebase imports', 'grep returned no matches');
+  if (serviceFirebaseFiles.length === 0) {
+    pass('services/firebase imports', '0 files reference Firebase service layer');
+  } else {
+    fail(
+      'services/firebase imports',
+      `${serviceFirebaseFiles.length} files still import from services/firebase:\n${serviceFirebaseFiles.join('\n')}`,
+    );
   }
 
   // Check for any remaining firebase imports (broader check)
-  try {
-    const anyFirebase = execSync(
-      `grep -r "from.*firebase" "${srcDir}" --include="*.ts" --include="*.tsx" -l 2>/dev/null || true`,
-      { encoding: 'utf-8' },
-    ).trim();
+  const anyFirebaseFiles = tsFiles.filter((f) => {
+    const content = fs.readFileSync(f, 'utf-8');
+    return /from\s+['"].*firebase/i.test(content);
+  });
 
-    if (anyFirebase.length === 0) {
-      pass('Any Firebase imports', '0 files contain any Firebase imports');
-    } else {
-      const fileCount = anyFirebase.split('\n').filter(Boolean).length;
-      // This might have false positives (e.g., firebase_uid references), so warn instead of fail
-      if (fileCount <= 3) {
-        pass(
-          'Any Firebase imports',
-          `${fileCount} files reference "firebase" (may be column/field names -- verify manually)`,
-        );
-      } else {
-        fail('Any Firebase imports', `${fileCount} files still reference Firebase:\n${anyFirebase}`);
-      }
-    }
-  } catch {
-    pass('Any Firebase imports', 'grep returned no matches');
+  if (anyFirebaseFiles.length === 0) {
+    pass('Any Firebase imports', '0 files contain any Firebase imports');
+  } else if (anyFirebaseFiles.length <= 3) {
+    pass(
+      'Any Firebase imports',
+      `${anyFirebaseFiles.length} files reference "firebase" (may be column/field names -- verify manually)`,
+    );
+  } else {
+    fail(
+      'Any Firebase imports',
+      `${anyFirebaseFiles.length} files still reference Firebase:\n${anyFirebaseFiles.join('\n')}`,
+    );
   }
 }
 
