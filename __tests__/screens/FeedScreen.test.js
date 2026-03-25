@@ -131,7 +131,7 @@ const mockGetFriendStoriesData = jest.fn(() =>
 const mockGetUserStoriesData = jest.fn(() => Promise.resolve({ success: true, photos: [] }));
 const mockGetRandomFriendPhotos = jest.fn(() => Promise.resolve({ success: true, photos: [] }));
 
-jest.mock('../../src/services/firebase/feedService', () => ({
+jest.mock('../../src/services/supabase/feedService', () => ({
   toggleReaction: jest.fn(),
   getFriendStoriesData: (...args) => mockGetFriendStoriesData(...args),
   getUserStoriesData: (...args) => mockGetUserStoriesData(...args),
@@ -139,7 +139,7 @@ jest.mock('../../src/services/firebase/feedService', () => ({
 }));
 
 // ─── Mock friendshipService ─────────────────────────────────────────────
-jest.mock('../../src/services/firebase/friendshipService', () => ({
+jest.mock('../../src/services/supabase/friendshipService', () => ({
   getFriendUserIds: jest.fn(() =>
     Promise.resolve({ success: true, friendUserIds: ['friend-1', 'friend-2'] })
   ),

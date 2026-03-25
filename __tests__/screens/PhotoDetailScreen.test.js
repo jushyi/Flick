@@ -76,7 +76,7 @@ MockEmojiPicker.displayName = 'MockEmojiPicker';
 jest.mock('rn-emoji-keyboard', () => MockEmojiPicker);
 
 // ─── Mock photo services ────────────────────────────────────────────────
-jest.mock('../../src/services/firebase/photoService', () => ({
+jest.mock('../../src/services/supabase/photoService', () => ({
   softDeletePhoto: jest.fn(),
   archivePhoto: jest.fn(),
   restorePhoto: jest.fn(),
@@ -89,7 +89,6 @@ jest.mock('../../src/services/firebase/photoService', () => ({
 const mockAddTaggedPhotoToFeed = jest.fn(() =>
   Promise.resolve({ success: true, newPhotoId: 'new-photo-id' })
 );
-jest.mock('../../src/services/firebase/photoTagService', () => ({
   addTaggedPhotoToFeed: (...args) => mockAddTaggedPhotoToFeed(...args),
 }));
 

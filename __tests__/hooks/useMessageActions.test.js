@@ -43,7 +43,6 @@ const mockCallable = jest.fn(() => Promise.resolve({ data: { success: true } }))
 const mockHttpsCallable = jest.fn(() => mockCallable);
 const mockGetFunctions = jest.fn(() => ({}));
 
-jest.mock('@react-native-firebase/functions', () => ({
   getFunctions: (...args) => mockGetFunctions(...args),
   httpsCallable: (...args) => mockHttpsCallable(...args),
 }));

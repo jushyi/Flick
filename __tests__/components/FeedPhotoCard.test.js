@@ -52,7 +52,7 @@ MockCommentPreview.displayName = 'MockCommentPreview';
 jest.mock('../../src/components/comments/CommentPreview', () => MockCommentPreview);
 
 // Mock getPreviewComments
-jest.mock('../../src/services/firebase/commentService', () => ({
+jest.mock('../../src/services/supabase/commentService', () => ({
   getPreviewComments: jest.fn(() => Promise.resolve({ success: true, previewComments: [] })),
 }));
 

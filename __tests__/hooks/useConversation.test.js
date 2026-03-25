@@ -40,7 +40,7 @@ const mockRemoveReaction = jest.fn();
 const mockSendReply = jest.fn();
 const mockDeleteMessageForMe = jest.fn();
 
-jest.mock('../../src/services/firebase/messageService', () => ({
+jest.mock('../../src/services/supabase/messageService', () => ({
   subscribeToMessages: (...args) => mockSubscribeToMessages(...args),
   loadMoreMessages: (...args) => mockLoadMoreMessages(...args),
   sendMessage: (...args) => mockSendMessage(...args),
@@ -62,7 +62,6 @@ const mockOnSnapshot = jest.fn((ref, successCb) => {
 const mockDoc = jest.fn(() => ({ _mockDocRef: true }));
 const mockGetFirestore = jest.fn(() => ({}));
 
-jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: (...args) => mockGetFirestore(...args),
   doc: (...args) => mockDoc(...args),
   onSnapshot: (...args) => mockOnSnapshot(...args),

@@ -45,7 +45,6 @@ const mockOrderBy = jest.fn();
 const mockOnSnapshot = jest.fn();
 const mockOr = jest.fn();
 
-jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: () => ({}),
   collection: (...args) => mockCollection(...args),
   doc: (...args) => mockDoc(...args),
@@ -78,13 +77,12 @@ jest.mock('@react-native-firebase/firestore', () => ({
 }));
 
 // Mock blockService - feedService imports getBlockedByUserIds
-jest.mock('../../src/services/firebase/blockService', () => ({
+jest.mock('../../src/services/supabase/blockService', () => ({
   getBlockedByUserIds: jest.fn(() => Promise.resolve({ success: true, blockedByUserIds: [] })),
   getBlockedUserIds: jest.fn(() => Promise.resolve({ success: true, blockedUserIds: [] })),
 }));
 
 // Mock performanceService - feedService uses withTrace
-jest.mock('../../src/services/firebase/performanceService', () => ({
   withTrace: jest.fn((name, fn, attrs) => fn({ putMetric: jest.fn() })),
 }));
 
@@ -97,9 +95,9 @@ const {
   getFriendships,
   getSentRequests,
   checkFriendshipStatus,
-} = require('../../src/services/firebase/friendshipService');
+} = require('../../src/services/supabase/friendshipService');
 
-const { getFeedPhotos } = require('../../src/services/firebase/feedService');
+const { getFeedPhotos } = require('../../src/services/supabase/feedService');
 
 describe('Friendship Flow Integration Tests', () => {
   beforeEach(() => {

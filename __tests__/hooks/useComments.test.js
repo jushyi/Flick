@@ -37,7 +37,7 @@ const mockToggleCommentLike = jest.fn();
 const mockGetUserLikesForComments = jest.fn();
 const mockGenerateCommentId = jest.fn();
 
-jest.mock('../../src/services/firebase/commentService', () => ({
+jest.mock('../../src/services/supabase/commentService', () => ({
   subscribeToComments: (...args) => mockSubscribeToComments(...args),
   addComment: (...args) => mockAddComment(...args),
   deleteComment: (...args) => mockDeleteComment(...args),

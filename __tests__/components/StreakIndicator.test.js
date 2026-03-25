@@ -49,12 +49,11 @@ const mockGetStreakColor = jest.fn((state, dayCount) => {
   return '#7B7B9E';
 });
 
-jest.mock('../../src/services/firebase/streakService', () => ({
+jest.mock('../../src/services/supabase/streakService', () => ({
   getStreakColor: (...args) => mockGetStreakColor(...args),
 }));
 
 // Mock Firestore (required by transitive dependency)
-jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: jest.fn(() => ({})),
   doc: jest.fn(),
   collection: jest.fn(),

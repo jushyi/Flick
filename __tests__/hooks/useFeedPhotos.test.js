@@ -32,7 +32,7 @@ jest.mock('../../src/utils/logger', () => ({
 const mockGetFeedPhotos = jest.fn();
 const mockSubscribeFeedPhotos = jest.fn();
 
-jest.mock('../../src/services/firebase/feedService', () => ({
+jest.mock('../../src/services/supabase/feedService', () => ({
   getFeedPhotos: (...args) => mockGetFeedPhotos(...args),
   subscribeFeedPhotos: (...args) => mockSubscribeFeedPhotos(...args),
 }));
@@ -40,7 +40,7 @@ jest.mock('../../src/services/firebase/feedService', () => ({
 // Mock friendshipService at module level
 const mockGetFriendUserIds = jest.fn();
 
-jest.mock('../../src/services/firebase/friendshipService', () => ({
+jest.mock('../../src/services/supabase/friendshipService', () => ({
   getFriendUserIds: (...args) => mockGetFriendUserIds(...args),
 }));
 

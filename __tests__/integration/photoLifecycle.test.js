@@ -32,25 +32,24 @@ jest.mock('../../src/utils/logger', () => ({
 // Storage service mocks
 const mockUploadPhoto = jest.fn();
 const mockDeletePhoto = jest.fn();
-jest.mock('../../src/services/firebase/storageService', () => ({
+jest.mock('../../src/services/supabase/storageService', () => ({
   uploadPhoto: (...args) => mockUploadPhoto(...args),
   deletePhoto: (...args) => mockDeletePhoto(...args),
 }));
 
 // Album service mock - photoService imports getUserAlbums, removePhotoFromAlbum, deleteAlbum
-jest.mock('../../src/services/firebase/albumService', () => ({
+jest.mock('../../src/services/supabase/albumService', () => ({
   getUserAlbums: jest.fn(() => Promise.resolve({ success: true, albums: [] })),
   removePhotoFromAlbum: jest.fn(() => Promise.resolve({ success: true })),
   deleteAlbum: jest.fn(() => Promise.resolve({ success: true })),
 }));
 
 // Mock performanceService - photoService and feedService use withTrace
-jest.mock('../../src/services/firebase/performanceService', () => ({
   withTrace: jest.fn((name, fn) => fn()),
 }));
 
 // Mock blockService - feedService imports getBlockedByUserIds
-jest.mock('../../src/services/firebase/blockService', () => ({
+jest.mock('../../src/services/supabase/blockService', () => ({
   getBlockedByUserIds: jest.fn(() => Promise.resolve({ success: true, blockedByUserIds: [] })),
 }));
 
@@ -69,7 +68,6 @@ const mockOrderBy = jest.fn();
 const mockOnSnapshot = jest.fn();
 const mockOr = jest.fn();
 
-jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: () => ({}),
   collection: (...args) => mockCollection(...args),
   doc: (...args) => mockDoc(...args),
@@ -119,7 +117,7 @@ const {
   revealPhotos,
   triagePhoto,
   batchTriagePhotos,
-} = require('../../src/services/firebase/photoService');
+} = require('../../src/services/supabase/photoService');
 
 const {
   getDarkroom,
@@ -127,9 +125,9 @@ const {
   scheduleNextReveal,
   ensureDarkroomInitialized,
   clearRevealCache,
-} = require('../../src/services/firebase/darkroomService');
+} = require('../../src/services/supabase/darkroomService');
 
-const { getFeedPhotos } = require('../../src/services/firebase/feedService');
+const { getFeedPhotos } = require('../../src/services/supabase/feedService');
 
 describe('Photo Lifecycle Integration Tests', () => {
   beforeEach(() => {

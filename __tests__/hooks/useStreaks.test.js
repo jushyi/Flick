@@ -31,7 +31,7 @@ const mockSubscribeToUserStreaks = jest.fn();
 const mockDeriveStreakState = jest.fn();
 const mockGetStreakColor = jest.fn();
 
-jest.mock('../../src/services/firebase/streakService', () => ({
+jest.mock('../../src/services/supabase/streakService', () => ({
   subscribeToStreak: (...args) => mockSubscribeToStreak(...args),
   subscribeToUserStreaks: (...args) => mockSubscribeToUserStreaks(...args),
   deriveStreakState: (...args) => mockDeriveStreakState(...args),

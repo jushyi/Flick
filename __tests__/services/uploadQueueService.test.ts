@@ -61,7 +61,7 @@ const mockFirebaseUploadVideo = jest.fn(() =>
   Promise.resolve({ success: true, url: 'https://firebase.com/video.mp4' })
 );
 
-jest.mock('../../src/services/firebase/storageService', () => ({
+jest.mock('../../src/services/supabase/storageService', () => ({
   uploadPhoto: (...args: any[]) => mockFirebaseUploadPhoto(...args),
   uploadVideo: (...args: any[]) => mockFirebaseUploadVideo(...args),
 }));

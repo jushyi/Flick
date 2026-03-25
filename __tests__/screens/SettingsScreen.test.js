@@ -70,7 +70,6 @@ const mockUpdateDoc = jest.fn(() => Promise.resolve());
 const mockDocRef = jest.fn(() => ({ _mockDocRef: true }));
 const mockGetFirestore = jest.fn(() => ({}));
 
-jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: (...args) => mockGetFirestore(...args),
   doc: (...args) => mockDocRef(...args),
   updateDoc: (...args) => mockUpdateDoc(...args),

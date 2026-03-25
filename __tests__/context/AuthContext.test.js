@@ -25,7 +25,6 @@ jest.mock('../../src/utils/logger', () => ({
 }));
 
 // Mock notification service
-jest.mock('../../src/services/firebase/notificationService', () => ({
   clearLocalNotificationToken: jest.fn(() => Promise.resolve()),
 }));
 
@@ -58,7 +57,6 @@ const mockFirebaseCurrentUser = {
 };
 
 // By default, return a user with a token (simulating existing Firebase user)
-jest.mock('@react-native-firebase/auth', () => {
   const getAuth = jest.fn(() => ({
     currentUser: mockFirebaseCurrentUser,
     signOut: mockFirebaseSignOut,

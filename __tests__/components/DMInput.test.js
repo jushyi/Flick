@@ -57,7 +57,7 @@ jest.mock('expo-image-picker', () => ({
 }));
 
 // Mock storageService
-jest.mock('../../src/services/firebase/storageService', () => ({
+jest.mock('../../src/services/supabase/storageService', () => ({
   uploadCommentImage: jest.fn(() => Promise.resolve('https://mock-url.com/image.jpg')),
 }));
 
