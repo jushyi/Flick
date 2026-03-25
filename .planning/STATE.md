@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
-status: planning
-stopped_at: Completed 17-06-PLAN.md
-last_updated: "2026-03-25T14:00:52.801Z"
+status: executing
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-03-25T14:09:44.698Z"
 progress:
   total_phases: 10
   completed_phases: 6
   total_plans: 42
-  completed_plans: 24
+  completed_plans: 25
 ---
 
 # Project State: Flick
 
-**Status:** Ready to plan
+**Status:** Ready to execute
 **Last Updated:** 2026-03-24
 
 ## Project Reference
@@ -22,12 +22,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Same app, same features -- rebuilt on a faster, more scalable backend with TypeScript
-**Current focus:** Phase 17 — messaging-social
+**Current focus:** Phase 18 — background-jobs-notifications
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
+Phase: 18 (background-jobs-notifications) — EXECUTING
+Plan: 2 of 5
 
 ## Milestone History
 
@@ -128,7 +128,14 @@ Plan: Not started
 - Phase 13: Auth migration strategy needs design (keep Firebase Auth during transition vs. re-verification)
 - Phase 14: PowerSync sync rules need validation against all access patterns
 - Phase 17: Supabase Realtime reconnection reliability needs testing
-- Phase 18: Edge Functions Deno compatibility for Expo Server SDK needs verification
+- Phase 18: Edge Functions Deno compatibility for Expo Server SDK needs verification (RESOLVED: direct fetch used instead)
+
+**Phase 18-01 decisions:**
+
+- Direct fetch to Expo Push API instead of expo-server-sdk (Deno-compatible, no dependency)
+- All 14 notification types in single Edge Function matching Cloud Functions architecture
+- npm: prefix imports for Supabase client in Deno Edge Functions (modern pattern per research)
+- Edge Function shared utilities in supabase/functions/_shared/*.ts pattern
 
 **Known tech debt carried from v1.1:**
 
@@ -147,6 +154,6 @@ Plan: Not started
 
 ## Session Continuity
 
-Last session: 2026-03-25T13:51:14.992Z
-Stopped at: Completed 17-06-PLAN.md
+Last session: 2026-03-25T14:09:44.695Z
+Stopped at: Completed 18-01-PLAN.md
 Resume file: None

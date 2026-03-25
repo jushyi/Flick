@@ -59,8 +59,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **JOBS-03**: Snap cleanup deletes expired snap photos from storage (replaces cleanupExpiredSnaps)
 - [ ] **JOBS-04**: Notification TTL cleanup deletes notifications older than 30 days
 - [ ] **JOBS-05**: Account deletion cascade executes scheduled deletions with full data cleanup
-- [ ] **JOBS-06**: Push notifications sent via Edge Functions using Expo Server SDK (all notification types ported)
-- [ ] **JOBS-07**: Notification debouncing/batching for reactions and tags (replaces Cloud Tasks 30s windows)
+- [x] **JOBS-06**: Push notifications sent via Edge Functions using Expo Server SDK (all notification types ported)
+- [x] **JOBS-07**: Notification debouncing/batching for reactions and tags (replaces Cloud Tasks 30s windows)
 - [ ] **JOBS-08**: Friend count maintenance via PostgreSQL triggers (replaces increment/decrement Cloud Functions)
 - [ ] **JOBS-09**: Photo soft-delete cascade (album removal, etc.) via PostgreSQL triggers
 - [ ] **JOBS-10**: Pinned snap notification expiry processing (48h auto-dismiss)
@@ -176,8 +176,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | JOBS-03 | Phase 18 | Pending |
 | JOBS-04 | Phase 18 | Pending |
 | JOBS-05 | Phase 18 | Pending |
-| JOBS-06 | Phase 18 | Pending |
-| JOBS-07 | Phase 18 | Pending |
+| JOBS-06 | Phase 18 | Complete |
+| JOBS-07 | Phase 18 | Complete |
 | JOBS-08 | Phase 18 | Pending |
 | JOBS-09 | Phase 18 | Pending |
 | JOBS-10 | Phase 18 | Pending |
