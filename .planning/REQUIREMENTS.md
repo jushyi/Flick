@@ -76,8 +76,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **PERF-07**: Consistent empty state screens across all list views
 - [x] **PERF-08**: Offline query persistence via TanStack Query + AsyncStorage (app opens instantly with cached data)
 - [x] **PERF-09**: PowerSync local SQLite provides instant reads for photos, darkroom, conversations, friendships (0ms network latency)
-- [ ] **PERF-10**: New story photos from friends load within 1-2 seconds — CDN edge caching, aggressive prefetching of next friend's photos, and optimized image sizing for feed/story views
-- [ ] **PERF-11**: Feed and story image prefetching loads next N images while viewing current (existing v1.1 prefetching enhanced with CDN + size optimization)
+- [x] **PERF-10**: New story photos from friends load within 1-2 seconds — CDN edge caching, aggressive prefetching of next friend's photos, and optimized image sizing for feed/story views
+- [x] **PERF-11**: Feed and story image prefetching loads next N images while viewing current (existing v1.1 prefetching enhanced with CDN + size optimization)
 
 ### Live Activity Fixes
 
@@ -188,8 +188,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-05 | Phase 19 | Complete |
 | PERF-06 | Phase 19 | Complete |
 | PERF-07 | Phase 19 | Complete |
-| PERF-10 | Phase 19 | Pending |
-| PERF-11 | Phase 19 | Pending |
+| PERF-10 | Phase 19 | Complete |
+| PERF-11 | Phase 19 | Complete |
 | TS-01 | Phase 20 | Pending |
 | TS-02 | Phase 20 | Pending |
 | TS-03 | Phase 20 | Pending |
