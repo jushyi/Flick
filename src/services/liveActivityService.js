@@ -12,9 +12,9 @@
 import { Platform } from 'react-native';
 
 import { NativeModulesProxy, EventEmitter } from 'expo-modules-core';
-import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 
+import { supabase } from '../lib/supabase';
 import logger from '../utils/logger';
 
 // Lazy-load the native module to avoid crash on Android
@@ -233,14 +233,20 @@ export const registerPushToStartToken = async userId => {
   }
 
   try {
-    // Get and store FCM registration token
+    // Get and store FCM registration token in Supabase
     const fcmToken = await getFCMRegistrationToken();
     if (fcmToken) {
-      const db = getFirestore();
-      await updateDoc(doc(db, 'users', userId), {
-        fcmRegistrationToken: fcmToken,
-      });
-      logger.info('liveActivityService: Stored FCM registration token', { userId });
+      const { error: fcmError } = await supabase
+        .from('users')
+        .update({ fcm_registration_token: fcmToken })
+        .eq('id', userId);
+      if (fcmError) {
+        logger.error('liveActivityService: Failed to store FCM registration token', {
+          error: fcmError.message,
+        });
+      } else {
+        logger.info('liveActivityService: Stored FCM registration token', { userId });
+      }
     }
 
     // Start observing push-to-start token (native side stores it)
@@ -256,11 +262,17 @@ export const registerPushToStartToken = async userId => {
         tokenLength: event.token?.length,
       });
       try {
-        const db = getFirestore();
-        await updateDoc(doc(db, 'users', userId), {
-          pushToStartToken: event.token,
-        });
-        logger.info('liveActivityService: Stored push-to-start token via event');
+        const { error: tokenError } = await supabase
+          .from('users')
+          .update({ push_to_start_token: event.token })
+          .eq('id', userId);
+        if (tokenError) {
+          logger.error('liveActivityService: Failed to store push-to-start token', {
+            error: tokenError.message,
+          });
+        } else {
+          logger.info('liveActivityService: Stored push-to-start token via event');
+        }
       } catch (error) {
         logger.error('liveActivityService: Failed to store push-to-start token', {
           error: error.message,
@@ -289,11 +301,17 @@ const _pollAndStorePushToStartToken = async userId => {
         attempt: i + 1,
         tokenLength: token.length,
       });
-      const db = getFirestore();
-      await updateDoc(doc(db, 'users', userId), {
-        pushToStartToken: token,
-      });
-      logger.info('liveActivityService: Stored push-to-start token in Firestore');
+      const { error: pollError } = await supabase
+        .from('users')
+        .update({ push_to_start_token: token })
+        .eq('id', userId);
+      if (pollError) {
+        logger.error('liveActivityService: Failed to store push-to-start token via poll', {
+          error: pollError.message,
+        });
+      } else {
+        logger.info('liveActivityService: Stored push-to-start token in Supabase');
+      }
       return;
     }
     // Wait 2 seconds between polls

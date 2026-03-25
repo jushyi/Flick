@@ -32,6 +32,7 @@ import {
 import logger from '../../utils/logger';
 import { secureStorage, STORAGE_KEYS } from '../secureStorageService';
 import { withTrace } from './performanceService';
+import { supabase } from '../../lib/supabase';
 
 const db = getFirestore();
 
@@ -180,14 +181,21 @@ export const storeNotificationToken = async (userId, token) => {
         });
       }
 
-      // Use React Native Firebase Firestore directly (shares auth state with RN Firebase Auth)
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        fcmToken: token,
-        updatedAt: serverTimestamp(),
-      });
+      // Store Expo push token in Supabase users table
+      const { error: supaError } = await supabase
+        .from('users')
+        .update({ push_token: token })
+        .eq('id', userId);
 
-      logger.info('Notification token stored in Firestore', {
+      if (supaError) {
+        logger.error('Failed to store push_token in Supabase', {
+          userId,
+          error: supaError.message,
+        });
+        return { success: false, error: supaError.message };
+      }
+
+      logger.info('Notification token stored in Supabase', {
         userId,
         tokenPrefix: token.substring(0, 25) + '...',
         wasRefreshed: tokenChanged,
