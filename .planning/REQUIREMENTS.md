@@ -56,13 +56,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **JOBS-01**: Darkroom reveal processing runs every 2 minutes via pg_cron (replaces processDarkroomReveals Cloud Function)
 - [x] **JOBS-02**: Streak expiry processing checks all active streaks, expires stale ones, sends 4h warning notifications
-- [ ] **JOBS-03**: Snap cleanup deletes expired snap photos from storage (replaces cleanupExpiredSnaps)
+- [x] **JOBS-03**: Snap cleanup deletes expired snap photos from storage (replaces cleanupExpiredSnaps)
 - [x] **JOBS-04**: Notification TTL cleanup deletes notifications older than 30 days
-- [ ] **JOBS-05**: Account deletion cascade executes scheduled deletions with full data cleanup
+- [x] **JOBS-05**: Account deletion cascade executes scheduled deletions with full data cleanup
 - [x] **JOBS-06**: Push notifications sent via Edge Functions using Expo Server SDK (all notification types ported)
 - [x] **JOBS-07**: Notification debouncing/batching for reactions and tags (replaces Cloud Tasks 30s windows)
-- [ ] **JOBS-08**: Friend count maintenance via PostgreSQL triggers (replaces increment/decrement Cloud Functions)
-- [ ] **JOBS-09**: Photo soft-delete cascade (album removal, etc.) via PostgreSQL triggers
+- [x] **JOBS-08**: Friend count maintenance via PostgreSQL triggers (replaces increment/decrement Cloud Functions)
+- [x] **JOBS-09**: Photo soft-delete cascade (album removal, etc.) via PostgreSQL triggers
 - [x] **JOBS-10**: Pinned snap notification expiry processing (48h auto-dismiss)
 
 ### Performance
@@ -173,13 +173,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MSG-11 | Phase 17 | Complete |
 | JOBS-01 | Phase 18 | Complete |
 | JOBS-02 | Phase 18 | Complete |
-| JOBS-03 | Phase 18 | Pending |
+| JOBS-03 | Phase 18 | Complete |
 | JOBS-04 | Phase 18 | Complete |
-| JOBS-05 | Phase 18 | Pending |
+| JOBS-05 | Phase 18 | Complete |
 | JOBS-06 | Phase 18 | Complete |
 | JOBS-07 | Phase 18 | Complete |
-| JOBS-08 | Phase 18 | Pending |
-| JOBS-09 | Phase 18 | Pending |
+| JOBS-08 | Phase 18 | Complete |
+| JOBS-09 | Phase 18 | Complete |
 | JOBS-10 | Phase 18 | Complete |
 | LIVE-01 | Phase 18 | Pending |
 | PERF-02 | Phase 19 | Pending |
