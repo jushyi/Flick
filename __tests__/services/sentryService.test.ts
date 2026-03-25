@@ -1,18 +1,15 @@
 /**
  * sentryService tests
  *
- * Test scaffold for src/services/sentryService.ts (created by Plan 02).
- * Tests are skipped until the source module exists.
- *
- * TODO: Remove .skip after Plan 02 creates sentryService.ts
+ * Tests for src/services/sentryService.ts.
+ * Validates Sentry initialization, user context, and trace wrapping.
  */
 
 import * as Sentry from '@sentry/react-native';
 
 // Sentry is mocked in jest.setup.ts
 
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('sentryService', () => {
+describe('sentryService', () => {
   // These imports will resolve once Plan 02 creates the source module
   let initSentry: () => void;
   let withTrace: <T>(name: string, fn: () => Promise<T>) => Promise<T>;

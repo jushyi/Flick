@@ -39,7 +39,7 @@ import {
 import { checkAndRevealPhotos } from './src/services/supabase/darkroomService';
 // getPhotoById available from './src/services/supabase/photoService' if needed for notification handlers
 import { initializeGiphy } from './src/components/comments/GifPicker';
-import { initPerformanceMonitoring } from './src/services/firebase/performanceService';
+import { initSentry, navigationIntegration, setSentryUser } from './src/services/sentryService';
 import { usePhotoDetailActions } from './src/context/PhotoDetailContext';
 import logger from './src/utils/logger';
 import {
@@ -61,13 +61,16 @@ const WHATS_NEW_STORAGE_KEY = '@whats_new_last_seen_id';
 // This keeps it visible while our animated splash runs
 SplashScreen.preventAutoHideAsync();
 
+// Register navigation container with Sentry for screen tracking
+navigationIntegration.registerNavigationContainer(navigationRef);
+
 // Initialize Giphy SDK for GIF picker functionality
 // Get your free API key at https://developers.giphy.com/
 initializeGiphy(GIPHY_API_KEY);
 
-// Initialize Firebase Performance Monitoring
-// Disables collection in __DEV__ to prevent polluting production metrics
-initPerformanceMonitoring();
+// Initialize Sentry for crash reporting and performance monitoring
+// Disabled in __DEV__ via enabled flag; traces sampled at 20% in production
+initSentry();
 
 // TanStack Query online status tracking
 if (Platform.OS !== 'web') {

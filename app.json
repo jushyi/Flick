@@ -105,6 +105,10 @@
       "expo-audio",
       "expo-asset",
       "expo-screen-capture",
+      ["@sentry/react-native/expo", {
+        "organization": "___ORG___",
+        "project": "___PROJECT___"
+      }],
       "expo-updates",
       "./plugins/withNSELiveActivities",
       "@bacons/apple-targets"
