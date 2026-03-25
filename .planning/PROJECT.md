@@ -112,4 +112,4 @@ The messaging system now supports 5 message types (text, reaction, reply, snap, 
 
 ---
 
-_Last updated: 2026-03-24 after Phase 16 (Core Services -- Social & Albums) completed_
+_Last updated: 2026-03-25 after Phase 17 (Messaging & Social) completed — all 3 verification gaps closed_
