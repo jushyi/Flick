@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
-status: planning
-stopped_at: Phase 20.1 context gathered
-last_updated: "2026-03-25T21:05:19.085Z"
+status: executing
+stopped_at: Completed 20.1-01-PLAN.md
+last_updated: "2026-03-25T22:48:57.148Z"
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 9
-  total_plans: 42
-  completed_plans: 42
+  total_plans: 45
+  completed_plans: 43
 ---
 
 # Project State: Flick
 
-**Status:** Ready to plan
+**Status:** Ready to execute
 **Last Updated:** 2026-03-24
 
 ## Project Reference
@@ -22,12 +22,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Same app, same features -- rebuilt on a faster, more scalable backend with TypeScript
-**Current focus:** Phase 20 — typescript-sweep-firebase-removal
+**Current focus:** Phase 20.1 — firestore-data-migration-script
 
 ## Current Position
 
-Phase: 20.1
-Plan: Not started
+Phase: 20.1 (firestore-data-migration-script) — EXECUTING
+Plan: 2 of 3
 
 ## Milestone History
 
@@ -146,6 +146,7 @@ Plan: Not started
 
 - Phase 21 added: Full verification of phases 13-20 - guided UAT of Supabase migration
 - Phase 20.1 inserted after Phase 20: Firestore data migration script (URGENT) — migrates all Firestore collection data (users, photos, friendships, conversations, comments, albums, notifications, blocks, reports, streaks, reactions) to Supabase PostgreSQL. Must be repeatable and work with reset-dev-supabase.ts cycle.
+- Phase 21.1 inserted after Phase 21: Production deployment and final Firebase cleanup — run prod data migration, cutover, verify all flows, then delete .firebaserc, firebase.json, firestore.indexes.json, google-services-prod.json, and service account keys
 
 ### Quick Tasks Completed
 
@@ -155,6 +156,6 @@ Plan: Not started
 
 ## Session Continuity
 
-Last session: 2026-03-25T21:05:19.075Z
-Stopped at: Phase 20.1 context gathered
-Resume file: .planning/phases/20.1-firestore-data-migration-script/20.1-CONTEXT.md
+Last session: 2026-03-25T22:48:57.143Z
+Stopped at: Completed 20.1-01-PLAN.md
+Resume file: None
