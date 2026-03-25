@@ -42,8 +42,8 @@
 - [x] **Phase 16: Core Services -- Social & Albums** - Friendships, comments, albums, blocks/reports, contacts, real-time subscriptions (completed 2026-03-24)
 - [x] **Phase 17: Messaging & Social** - Conversations, messages, snaps, streaks, reactions, replies, tagged photos (completed 2026-03-24)
 - [x] **Phase 18: Background Jobs & Notifications** - pg_cron jobs, Edge Functions, push notifications, triggers, Live Activity fix (completed 2026-03-25)
-- [x] **Phase 19: Performance Polish** - Skeleton screens, optimistic updates, CDN URLs, image sizing, empty states, prefetching (completed 2026-03-25)
-- [x] **Phase 20: TypeScript Sweep & Firebase Removal** - Convert remaining JS files, remove all Firebase packages, dead code cleanup (completed 2026-03-25)
+- [x] **Phase 19: Performance Polish** - Skeleton screens, optimistic updates, CDN URLs, image sizing, empty states, prefetching (completed 2026-03-25)
+- [x] **Phase 20: TypeScript Sweep & Firebase Removal** - Convert remaining JS files, remove all Firebase packages, dead code cleanup (completed 2026-03-25)
 
 ## Phase Details
 
@@ -226,13 +226,15 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 
 ### Phase 20.1: Firestore data migration script (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Repeatable Firestore-to-Supabase data migration with cross-database verification, per-user deep checks, and full orchestration cycle (reset -> auth -> data -> storage -> verify)
+**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14, D-15, D-16, D-17, D-18, D-19, D-20, D-21, D-22, D-23
 **Depends on:** Phase 20
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 20.1 to break down)
+- [ ] 20.1-01-PLAN.md -- Migration script infrastructure + 9 simple collection migrators (users through support_requests)
+- [ ] 20.1-02-PLAN.md -- 8 complex collection migrators (conversations, messages, comments, streaks, albums + junction tables)
+- [ ] 20.1-03-PLAN.md -- Cross-DB verification script + orchestrator + env templates + Firebase MCP setup
 
 ### Phase 21: Full verification of phases 13-20 - guided UAT of Supabase migration
 
