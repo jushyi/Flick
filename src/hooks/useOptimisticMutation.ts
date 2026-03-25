@@ -42,7 +42,7 @@ interface SingleKeyOptions<TData, TVariables, TQueryData = unknown> {
 /** Individual entry in the multi-key updaters array */
 interface MultiKeyUpdater<TVariables> {
   queryKey: QueryKey | ((variables: TVariables) => QueryKey);
-  updater: (old: any, variables: TVariables) => any;
+  updater: (old: unknown, variables: TVariables) => unknown;
 }
 
 /** Multi-key updater (for operations like reactions that update multiple caches) */
@@ -113,7 +113,7 @@ export function useOptimisticMutation<
           queryKey: (options as SingleKeyOptions<TData, TVariables, TQueryData>)
             .queryKey,
           updater: (options as SingleKeyOptions<TData, TVariables, TQueryData>)
-            .updater as (old: any, variables: TVariables) => any,
+            .updater as (old: unknown, variables: TVariables) => unknown,
         },
       ];
 
@@ -131,7 +131,7 @@ export function useOptimisticMutation<
         await queryClient.cancelQueries({ queryKey: key });
         const snapshot = queryClient.getQueryData(key);
         previous.set(serializeKey(key), snapshot);
-        queryClient.setQueryData(key, (old: any) =>
+        queryClient.setQueryData(key, (old: unknown) =>
           entry.updater(old, variables),
         );
       }

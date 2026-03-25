@@ -15,6 +15,10 @@ import { useOptimisticMutation } from '@/hooks/useOptimisticMutation';
 
 import logger from '@/utils/logger';
 
+type CachedAlbumDetail = Record<string, unknown> & {
+  photos?: string[];
+};
+
 /**
  * Fetch all custom albums for a user.
  */
@@ -77,8 +81,8 @@ export function useUpdateAlbum() {
       albumId: string;
       updates: { title?: string; coverPhotoId?: string };
     }) => albumService.updateAlbum(albumId, updates),
-    queryKey: (vars: { albumId: string }) => queryKeys.albums.detail(vars.albumId),
-    updater: (old: any, vars: { updates: { title?: string; coverPhotoId?: string } }) => {
+    queryKey: (vars) => queryKeys.albums.detail(vars.albumId),
+    updater: (old: CachedAlbumDetail | undefined, vars) => {
       if (!old) return old;
       return { ...old, ...vars.updates };
     },
@@ -121,8 +125,8 @@ export function useAddPhotosToAlbum() {
       albumId: string;
       photoIds: string[];
     }) => albumService.addPhotosToAlbum(albumId, photoIds),
-    queryKey: (vars: { albumId: string }) => queryKeys.albums.detail(vars.albumId),
-    updater: (old: any, vars: { photoIds: string[] }) => {
+    queryKey: (vars) => queryKeys.albums.detail(vars.albumId),
+    updater: (old: CachedAlbumDetail | undefined, vars) => {
       if (!old) return old;
       return { ...old, photos: [...(old.photos || []), ...vars.photoIds] };
     },
@@ -143,8 +147,8 @@ export function useRemovePhotoFromAlbum() {
       albumId: string;
       photoId: string;
     }) => albumService.removePhotoFromAlbum(albumId, photoId),
-    queryKey: (vars: { albumId: string }) => queryKeys.albums.detail(vars.albumId),
-    updater: (old: any, vars: { photoId: string }) => {
+    queryKey: (vars) => queryKeys.albums.detail(vars.albumId),
+    updater: (old: CachedAlbumDetail | undefined, vars) => {
       if (!old) return old;
       return {
         ...old,

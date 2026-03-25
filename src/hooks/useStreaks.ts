@@ -58,7 +58,7 @@ export interface StreakMapEntry {
  * @returns Streak data with derived state and color
  */
 export function useStreak(friendId: string): StreakInfo {
-  const { userProfile } = useAuth() as { userProfile: { uid: string } | null };
+  const { userProfile } = useAuth() as unknown as { userProfile: { uid: string } | null };
   const userId = userProfile?.uid;
 
   const streakId = userId && friendId ? generateStreakId(userId, friendId) : '';
@@ -107,7 +107,7 @@ export function useStreakMap(friendIds?: string[]): {
   streakMap: Map<string, StreakMapEntry>;
   loading: boolean;
 } {
-  const { userProfile } = useAuth() as { userProfile: { uid: string } | null };
+  const { userProfile } = useAuth() as unknown as { userProfile: { uid: string } | null };
   const userId = userProfile?.uid;
 
   const { data: rows, isLoading } = usePowerSyncQuery(

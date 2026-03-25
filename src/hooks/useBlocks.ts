@@ -32,8 +32,8 @@ export function useBlockUser() {
       blockerId: string;
       blockedId: string;
     }) => blockService.blockUser(blockerId, blockedId),
-    queryKey: (vars: { blockerId: string }) => queryKeys.blocks.list(vars.blockerId),
-    updater: (old: any[] | undefined, vars: { blockedId: string }) => [
+    queryKey: (vars) => queryKeys.blocks.list(vars.blockerId),
+    updater: (old: { blockedId: string; createdAt: string }[] | undefined, vars) => [
       ...(old || []),
       { blockedId: vars.blockedId, createdAt: new Date().toISOString() },
     ],
@@ -51,9 +51,9 @@ export function useUnblockUser() {
       blockerId: string;
       blockedId: string;
     }) => blockService.unblockUser(blockerId, blockedId),
-    queryKey: (vars: { blockerId: string }) => queryKeys.blocks.list(vars.blockerId),
-    updater: (old: any[] | undefined, vars: { blockedId: string }) =>
-      (old || []).filter((b: any) => b.blockedId !== vars.blockedId),
+    queryKey: (vars) => queryKeys.blocks.list(vars.blockerId),
+    updater: (old: { blockedId: string }[] | undefined, vars) =>
+      (old || []).filter((b) => b.blockedId !== vars.blockedId),
     errorMessage: 'Failed to unblock user',
   });
 }

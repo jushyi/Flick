@@ -105,7 +105,7 @@ export interface UseConversationResult {
  * @returns Message list state and actions
  */
 export function useConversation(conversationId: string): UseConversationResult {
-  const { userProfile } = useAuth() as {
+  const { userProfile } = useAuth() as unknown as {
     userProfile: { uid: string; settings?: { readReceipts?: boolean } } | null;
   };
   const userId = userProfile?.uid ?? '';
@@ -391,7 +391,7 @@ export function useMarkAsRead() {
       markConversationRead(conversationId, userId),
     queryKey: (vars: { conversationId: string }) =>
       queryKeys.conversations.detail(vars.conversationId),
-    updater: (old: any) => {
+    updater: (old: Record<string, unknown> | undefined, _vars) => {
       if (!old) return old;
       return { ...old, unreadCount: 0 };
     },

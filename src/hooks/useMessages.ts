@@ -41,7 +41,7 @@ export interface ConversationListItem extends ConversationRow {
  * @returns Conversation list state and actions
  */
 export function useMessages() {
-  const { userProfile } = useAuth() as { userProfile: { uid: string } | null };
+  const { userProfile } = useAuth() as unknown as { userProfile: { uid: string } | null };
   const userId = userProfile?.uid;
 
   // Query conversations where user is either participant, ordered by last message
@@ -97,10 +97,11 @@ export function useMessages() {
       try {
         await softDeleteConversation(conversationId, userId);
         logger.info('useMessages.deleteConversation: Success', { conversationId });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         logger.error('useMessages.deleteConversation: Failed', {
           conversationId,
-          error: error.message,
+          error: message,
         });
         throw error;
       }

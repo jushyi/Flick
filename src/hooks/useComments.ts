@@ -17,7 +17,24 @@ import type { AddCommentParams } from '@/services/supabase/commentService';
 
 import { useOptimisticMutation } from '@/hooks/useOptimisticMutation';
 
+type AddCommentMutationParams = AddCommentParams & {
+  username?: string;
+  displayName?: string;
+};
+
 import logger from '@/utils/logger';
+
+type CachedComment = {
+  id: string;
+  photoId?: string;
+  userId?: string;
+  text?: string;
+  mentions?: string[];
+  createdAt?: string;
+  likeCount?: number;
+  username?: string;
+  displayName?: string;
+};
 
 /**
  * Fetch and subscribe to comments for a photo.
@@ -67,9 +84,9 @@ export function useComments(photoId: string) {
  */
 export function useAddComment() {
   return useOptimisticMutation({
-    mutationFn: (params: AddCommentParams) => commentService.addComment(params),
-    queryKey: (vars: AddCommentParams) => queryKeys.comments.list(vars.photoId),
-    updater: (old: any[] | undefined, vars: AddCommentParams) => [
+    mutationFn: (params: AddCommentMutationParams) => commentService.addComment(params),
+    queryKey: (vars) => queryKeys.comments.list(vars.photoId),
+    updater: (old: CachedComment[] | undefined, vars) => [
       ...(old || []),
       {
         id: `temp-${Date.now()}`,
@@ -95,10 +112,9 @@ export function useDeleteComment() {
   return useOptimisticMutation({
     mutationFn: ({ commentId }: { commentId: string; photoId: string }) =>
       commentService.deleteComment(commentId),
-    queryKey: (vars: { commentId: string; photoId: string }) =>
-      queryKeys.comments.list(vars.photoId),
-    updater: (old: any[] | undefined, vars: { commentId: string }) =>
-      (old || []).filter((c: any) => c.id !== vars.commentId),
+    queryKey: (vars) => queryKeys.comments.list(vars.photoId),
+    updater: (old: CachedComment[] | undefined, vars) =>
+      (old || []).filter((c: CachedComment) => c.id !== vars.commentId),
     errorMessage: 'Failed to delete comment',
   });
 }
@@ -111,9 +127,9 @@ export function useLikeComment() {
   return useOptimisticMutation({
     mutationFn: ({ commentId, userId }: { commentId: string; userId: string; photoId: string }) =>
       commentService.likeComment(commentId, userId),
-    queryKey: (vars: { photoId: string }) => queryKeys.comments.list(vars.photoId),
-    updater: (old: any[] | undefined, vars: { commentId: string }) =>
-      (old || []).map((c: any) =>
+    queryKey: (vars) => queryKeys.comments.list(vars.photoId),
+    updater: (old: CachedComment[] | undefined, vars) =>
+      (old || []).map((c: CachedComment) =>
         c.id === vars.commentId ? { ...c, likeCount: (c.likeCount ?? 0) + 1 } : c
       ),
     errorMessage: 'Failed to like comment',
@@ -128,9 +144,9 @@ export function useUnlikeComment() {
   return useOptimisticMutation({
     mutationFn: ({ commentId, userId }: { commentId: string; userId: string; photoId: string }) =>
       commentService.unlikeComment(commentId, userId),
-    queryKey: (vars: { photoId: string }) => queryKeys.comments.list(vars.photoId),
-    updater: (old: any[] | undefined, vars: { commentId: string }) =>
-      (old || []).map((c: any) =>
+    queryKey: (vars) => queryKeys.comments.list(vars.photoId),
+    updater: (old: CachedComment[] | undefined, vars) =>
+      (old || []).map((c: CachedComment) =>
         c.id === vars.commentId
           ? { ...c, likeCount: Math.max(0, (c.likeCount ?? 0) - 1) }
           : c
