@@ -221,7 +221,7 @@ export const registerPushToStartToken = async (
     await LiveActivityManager.observePushToStartToken();
     await _pollAndStorePushToStartToken(userId);
 
-    const emitter = new EventEmitter(NativeModulesProxy.LiveActivityManager);
+    const emitter: any = new EventEmitter(NativeModulesProxy.LiveActivityManager as any);
     const subscription = emitter.addListener(
       'onPushToStartToken',
       async (event: { token?: string }) => {

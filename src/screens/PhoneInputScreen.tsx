@@ -101,11 +101,11 @@ const PhoneInputScreen = ({ navigation }) => {
         });
       } else {
         logger.warn('PhoneInputScreen: Send code failed', { error: result.error });
-        setError(result.error);
+        setError(result.error || '');
         triggerShake();
       }
     } catch (err) {
-      logger.error('PhoneInputScreen: Unexpected error', { error: err.message });
+      logger.error('PhoneInputScreen: Unexpected error', { error: (err as Error).message });
       setError('An unexpected error occurred. Please try again.');
       triggerShake();
     } finally {
@@ -141,7 +141,7 @@ const PhoneInputScreen = ({ navigation }) => {
     if (isDeleting) {
       setFormattedPhone(digits);
     } else {
-      const formatted = formatAsUserTypes(digits, selectedCountry.country);
+      const formatted = formatAsUserTypes(digits, selectedCountry.country as any);
       setFormattedPhone(formatted);
     }
 
@@ -201,6 +201,7 @@ const PhoneInputScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.phoneInputWrapper}>
                   <Input
+                    label=""
                     placeholder="(555) 555-5555"
                     value={formattedPhone}
                     onChangeText={handlePhoneChange}
@@ -208,6 +209,7 @@ const PhoneInputScreen = ({ navigation }) => {
                     autoCapitalize="none"
                     autoCorrect={false}
                     error={error}
+                    maxLength={20}
                     style={styles.phoneInput}
                     testID="phone-input"
                   />

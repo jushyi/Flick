@@ -22,7 +22,7 @@ const MAX_NAME_LENGTH = 24;
 const CreateAlbumScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const inputRef = useRef(null);
+  const inputRef = useRef<TextInput>(null);
 
   const [albumName, setAlbumName] = useState('');
 
@@ -51,7 +51,7 @@ const CreateAlbumScreen = () => {
     if (trimmedName.length === 0) return;
 
     logger.info('CreateAlbumScreen: Next pressed', { albumName: trimmedName });
-    navigation.navigate('AlbumPhotoPicker', { albumName: trimmedName });
+    (navigation as any).navigate('AlbumPhotoPicker', { albumName: trimmedName });
   };
 
   const isNextDisabled = albumName.trim().length === 0;

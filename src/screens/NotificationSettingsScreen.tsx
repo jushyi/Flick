@@ -7,10 +7,10 @@ import PixelToggle from '../components/PixelToggle';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 // TODO(20-01): notificationService - needs migration to standalone service
-const checkNotificationPermissions = async () => ({ success: true, data: 'granted' });
+const checkNotificationPermissions = async () => ({ success: true, data: { status: 'granted' } });
 const requestNotificationPermission = async () => ({ success: true });
-const getNotificationToken = async () => ({ success: true, data: null });
-const storeNotificationToken = async () => ({ success: true });
+const getNotificationToken = async () => ({ success: true as const, data: null as string | null });
+const storeNotificationToken = async (..._args: any[]) => ({ success: true });
 import { colors } from '../constants/colors';
 import { styles } from '../styles/NotificationSettingsScreen.styles';
 import logger from '../utils/logger';
@@ -27,6 +27,7 @@ const DEFAULT_PREFERENCES = {
   friendRequests: true,
   mentions: true,
   tags: true,
+  streakWarnings: true,
 };
 
 /**
@@ -116,7 +117,7 @@ const NotificationSettingsScreen = () => {
   }, [userProfile?.notificationPreferences]);
 
   const savePreferences = async newPreferences => {
-    const userId = user?.id || user?.uid;
+    const userId = user?.id || user?.id;
     if (!userId) return;
 
     try {
@@ -128,7 +129,7 @@ const NotificationSettingsScreen = () => {
       logger.debug('NotificationSettingsScreen: Preferences saved', { newPreferences });
     } catch (error) {
       logger.error('NotificationSettingsScreen: Failed to save preferences', {
-        error: error.message,
+        error: (error as Error).message,
       });
     }
   };
@@ -195,7 +196,7 @@ const NotificationSettingsScreen = () => {
                   if (permResult.success) {
                     const tokenResult = await getNotificationToken();
                     if (tokenResult.success && tokenResult.data) {
-                      await storeNotificationToken(user.uid, tokenResult.data);
+                      await storeNotificationToken(user?.id, tokenResult.data);
                     }
                   }
                   const result = await checkNotificationPermissions();

@@ -270,7 +270,7 @@ const ActivityScreen = () => {
       // Open PhotoDetail modal
       openPhotoDetail({
         mode: 'feed',
-        photo,
+        photo: photo as any,
         currentUserId: user?.id,
         initialShowComments: !!commentId,
         targetCommentId: commentId || null,
@@ -504,7 +504,7 @@ const ActivityScreen = () => {
         }
         openPhotoDetail({
           mode: 'feed',
-          photo,
+          photo: photo as any,
           currentUserId: user?.id,
           initialShowComments: type === 'comment' || type === 'mention' || type === 'reply',
           targetCommentId: item.commentId || null,
@@ -537,7 +537,7 @@ const ActivityScreen = () => {
         }
         openPhotoDetail({
           mode: 'feed',
-          photo: taggedPhoto,
+          photo: taggedPhoto as any,
           currentUserId: user?.id,
           initialShowComments: false,
           sourceRect: sourceRect || null,

@@ -31,7 +31,7 @@ type Props = {
   coverPhotoUrl?: string | null;
   stackPhotoUrls?: string[];
   onPress: () => void;
-  onLongPress?: () => void;
+  onLongPress?: (event?: any) => void;
   isHighlighted?: boolean;
 };
 
@@ -42,7 +42,7 @@ const AlbumCard = ({
   onPress,
   onLongPress,
   isHighlighted = false,
-}) => {
+}: Props) => {
   // Show stack cards based on how many stack photos we have
   const stackCount = stackPhotoUrls.length;
 
@@ -78,12 +78,12 @@ const AlbumCard = ({
         {stackCount >= 2 && (
           <View style={[styles.stackCard, styles.stackCardBack]}>
             <Image
-              source={{ uri: stackPhotoUrls[1], cacheKey: `album-stack-${album.id}-1` }}
+              source={{ uri: stackPhotoUrls[1], cacheKey: `album-stack-${album.id as string}-1` }}
               style={styles.stackImage}
               contentFit="cover"
               cachePolicy="memory-disk"
               priority="normal"
-              recyclingKey={album.id}
+              recyclingKey={album.id as string}
             />
           </View>
         )}
@@ -92,12 +92,12 @@ const AlbumCard = ({
         {stackCount >= 1 && (
           <View style={[styles.stackCard, styles.stackCardMiddle]}>
             <Image
-              source={{ uri: stackPhotoUrls[0], cacheKey: `album-stack-${album.id}-0` }}
+              source={{ uri: stackPhotoUrls[0], cacheKey: `album-stack-${album.id as string}-0` }}
               style={styles.stackImage}
               contentFit="cover"
               cachePolicy="memory-disk"
               priority="normal"
-              recyclingKey={album.id}
+              recyclingKey={album.id as string}
             />
           </View>
         )}
@@ -108,13 +108,13 @@ const AlbumCard = ({
             <Image
               source={{
                 uri: coverPhotoUrl,
-                cacheKey: `album-cover-${album.id}-${album.coverPhotoId}`,
+                cacheKey: `album-cover-${album.id as string}-${album.coverPhotoId as string}`,
               }}
               style={styles.coverImage}
               contentFit="cover"
               cachePolicy="memory-disk"
               priority="normal"
-              recyclingKey={`${album.id}-${album.coverPhotoId}`}
+              recyclingKey={`${album.id as string}-${album.coverPhotoId as string}`}
             />
           ) : (
             <View style={styles.placeholder}>
@@ -124,7 +124,7 @@ const AlbumCard = ({
         </View>
       </Animated.View>
       <Text style={styles.title} numberOfLines={2}>
-        {album.name}
+        {album.name as string}
       </Text>
     </TouchableOpacity>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, Dimensions, StyleSheet, ViewStyle } from 'react-native';
+import { View, Animated, Dimensions, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
 
 import { colors } from '../../constants/colors';
 
@@ -29,7 +29,7 @@ export function useShimmer(): Animated.Value {
 }
 
 interface SkeletonShapeProps {
-  width: number | string;
+  width: DimensionValue;
   height: number;
   borderRadius?: number;
   shimmerPosition: Animated.Value;

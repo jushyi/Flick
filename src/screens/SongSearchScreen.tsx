@@ -44,17 +44,17 @@ const SongSearchScreen = () => {
 
   // Search state
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [playingId, setPlayingId] = useState(null);
 
   // Clip selection state
   const [selectedSongForClip, setSelectedSongForClip] = useState(null);
 
-  const debounceRef = useRef(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get source screen name, editSong, and optional callback from route params
-  const { source, editSong, onSongSelect } = route.params || {};
+  const { source, editSong, onSongSelect } = (route.params || {}) as any;
 
   // Handle editSong param - immediately open clip selection
   useEffect(() => {

@@ -18,12 +18,20 @@ import { layout } from '../constants/layout';
  * @param {function} onAddPress - Callback when add button pressed
  * @param {string} highlightedAlbumId - Album ID to highlight with animation
  */
+type AlbumItem = {
+  id: string;
+  isAddCard?: boolean;
+  coverPhotoId?: string;
+  photoIds?: string[];
+  [key: string]: unknown;
+};
+
 type Props = {
-  albums?: Record<string, unknown>[];
+  albums?: AlbumItem[];
   photoUrls?: Record<string, string>;
   isOwnProfile?: boolean;
-  onAlbumPress?: (albumId: string, title: string) => void;
-  onAlbumLongPress?: (albumId: string) => void;
+  onAlbumPress?: (album: AlbumItem) => void;
+  onAlbumLongPress?: (album: AlbumItem, event: any) => void;
   onAddPress?: () => void;
   highlightedAlbumId?: string | null;
 };
@@ -38,10 +46,10 @@ const AlbumBar = forwardRef(
       onAlbumLongPress,
       onAddPress,
       highlightedAlbumId = null,
-    },
+    }: Props,
     ref
   ) => {
-    const flatListRef = useRef(null);
+    const flatListRef = useRef<FlatList>(null);
 
     // Expose scrollToAlbum method via ref
     useImperativeHandle(ref, () => ({
@@ -81,7 +89,7 @@ const AlbumBar = forwardRef(
     }
 
     // Prepare data for FlatList - albums plus add card for own profile
-    const renderItem = ({ item, index }) => {
+    const renderItem = ({ item, index }: { item: AlbumItem; index: number }) => {
       // Add card at the end for own profile
       if (item.isAddCard) {
         return <AddAlbumCard onPress={onAddPress} />;
@@ -91,7 +99,7 @@ const AlbumBar = forwardRef(
       const coverUrl = item.coverPhotoId ? photoUrls[item.coverPhotoId] : null;
 
       // Get stack photo URLs (most recent photos excluding cover, up to 2)
-      const stackPhotoUrls = [];
+      const stackPhotoUrls: string[] = [];
       if (item.photoIds && item.photoIds.length > 0) {
         // Get photos from end of array (most recent), excluding cover
         const nonCoverPhotos = item.photoIds.filter(id => id !== item.coverPhotoId);
@@ -110,7 +118,7 @@ const AlbumBar = forwardRef(
           coverPhotoUrl={coverUrl}
           stackPhotoUrls={stackPhotoUrls}
           onPress={() => onAlbumPress?.(item)}
-          onLongPress={event => onAlbumLongPress?.(item, event)}
+          onLongPress={onAlbumLongPress ? (event) => onAlbumLongPress(item, event) : undefined}
           isHighlighted={item.id === highlightedAlbumId}
         />
       );

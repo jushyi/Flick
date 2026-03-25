@@ -119,13 +119,13 @@ const VerificationScreen = ({ navigation, route }) => {
         // If existing user, they'll be directed to main app
       } else {
         logger.warn('VerificationScreen: Verification failed', { error: result.error });
-        setError(result.error);
+        setError(result.error || '');
         setCode(''); // Clear code on error
         triggerShake();
         setRetryDelay(3); // 3 second delay before allowing retry
       }
     } catch (err) {
-      logger.error('VerificationScreen: Unexpected error', { error: err.message });
+      logger.error('VerificationScreen: Unexpected error', { error: (err as Error).message });
       setError('An unexpected error occurred. Please try again.');
       setCode('');
       triggerShake();
@@ -151,7 +151,7 @@ const VerificationScreen = ({ navigation, route }) => {
         setError(result.error || 'Failed to resend code');
       }
     } catch (err) {
-      logger.error('VerificationScreen: Resend failed', { error: err.message });
+      logger.error('VerificationScreen: Resend failed', { error: (err as Error).message });
       setError('Failed to resend code. Please try again.');
     }
   };

@@ -18,7 +18,7 @@ import PixelSpinner from '../components/PixelSpinner';
 import { useNavigation } from '@react-navigation/native';
 // TODO(20-01): submitSupportRequest, SUPPORT_CATEGORIES - no supabase equivalent yet, create in subsequent plans
 const SUPPORT_CATEGORIES = ['Bug Report', 'Feature Request', 'Account Issue', 'Other'];
-const submitSupportRequest = async () => ({ success: false, error: 'Support service not yet migrated' });
+const submitSupportRequest = async (..._args: any[]): Promise<{ success: boolean; error?: string }> => ({ success: false, error: 'Support service not yet migrated' });
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/HelpSupportScreen.styles';
@@ -45,7 +45,7 @@ const HelpSupportScreen = () => {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [descriptionFocused, setDescriptionFocused] = useState(false);
-  const scrollViewRef = useRef(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleDescriptionFocus = () => {
     setDescriptionFocused(true);
@@ -67,7 +67,7 @@ const HelpSupportScreen = () => {
     Keyboard.dismiss();
     setSubmitting(true);
     try {
-      const result = await submitSupportRequest(user.uid, selectedCategory, description.trim());
+      const result = await submitSupportRequest(user?.id, selectedCategory, description.trim());
 
       if (result.success) {
         Alert.alert('Request Submitted', "Thank you! We'll get back to you soon.", [
@@ -77,7 +77,7 @@ const HelpSupportScreen = () => {
         Alert.alert('Error', result.error || 'Could not submit request');
       }
     } catch (error) {
-      logger.error('HelpSupportScreen: Error submitting request', { error: error.message });
+      logger.error('HelpSupportScreen: Error submitting request', { error: (error as Error).message });
       Alert.alert('Error', 'Could not submit request');
     } finally {
       setSubmitting(false);

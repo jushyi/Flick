@@ -108,12 +108,12 @@ export const ThemeProvider = ({ children }: ThemeProviderProps): React.JSX.Eleme
     ...colors,
     brand: {
       ...colors.brand,
-      purple: palette.accent,
-      pink: palette.accentSecondary,
+      purple: palette.accent as typeof colors.brand.purple,
+      pink: palette.accentSecondary as typeof colors.brand.pink,
       gradient: {
         ...colors.brand.gradient,
-        developing: [palette.accent, palette.accentSecondary],
-        revealed: [palette.accent, palette.accentSecondary],
+        developing: [palette.accent, palette.accentSecondary] as unknown as typeof colors.brand.gradient.developing,
+        revealed: [palette.accent, palette.accentSecondary] as unknown as typeof colors.brand.gradient.revealed,
       },
     },
   };

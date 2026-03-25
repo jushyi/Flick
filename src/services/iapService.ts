@@ -1,5 +1,6 @@
 import * as RNIap from 'react-native-iap';
-import type { ProductPurchase, Product } from 'react-native-iap';
+import type { Purchase, Product } from 'react-native-iap';
+type ProductPurchase = Purchase;
 import { supabase } from '../lib/supabase';
 import logger from '../utils/logger';
 
@@ -88,9 +89,10 @@ export const getProducts = async (): Promise<ProductsResult> => {
     }
 
     logger.debug('IAPService.getProducts: Fetching products', { productIds: PRODUCT_IDS });
-    const products = await RNIap.getProducts({ skus: PRODUCT_IDS });
-    logger.info('IAPService.getProducts: Fetched successfully', { count: products.length });
-    return { success: true, products };
+    const products = await RNIap.fetchProducts({ skus: PRODUCT_IDS });
+    const productList = (products ?? []) as Product[];
+    logger.info('IAPService.getProducts: Fetched successfully', { count: productList.length });
+    return { success: true, products: productList };
   } catch (err) {
     const error = err as Error;
     logger.error('IAPService.getProducts: Failed', { error: error.message });
@@ -106,7 +108,7 @@ export const purchaseProduct = async (productId: string): Promise<PurchaseResult
     }
 
     logger.debug('IAPService.purchaseProduct: Starting purchase', { productId });
-    const purchase = await RNIap.requestPurchase({ sku: productId });
+    const purchase = await RNIap.requestPurchase({ request: { sku: productId } as any, type: 'in-app' });
     logger.info('IAPService.purchaseProduct: Purchase completed', {
       productId,
       transactionId: (purchase as ProductPurchase).transactionId,

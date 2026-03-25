@@ -81,7 +81,7 @@ const ConfettiPiece = ({ index, color }) => {
 const SuccessScreen = () => {
   const navigation = useNavigation();
   const confettiGenerated = useRef(false);
-  const confettiPieces = useRef([]);
+  const confettiPieces = useRef<{ id: number; color: string }[]>([]);
   const buttonScale = useRef(new Animated.Value(1)).current;
 
   // Generate confetti pieces once
@@ -101,7 +101,7 @@ const SuccessScreen = () => {
       successNotification();
       logger.info('SuccessScreen: Success haptic triggered');
     } catch (error) {
-      logger.warn('SuccessScreen: Haptic failed', error);
+      logger.warn('SuccessScreen: Haptic failed', error as Record<string, unknown>);
     }
 
     // Log animation start
@@ -143,7 +143,7 @@ const SuccessScreen = () => {
       await successNotification();
       logger.debug('SuccessScreen: Button press haptic triggered');
     } catch (error) {
-      logger.warn('SuccessScreen: Haptic failed on button press', error);
+      logger.warn('SuccessScreen: Haptic failed on button press', error as Record<string, unknown>);
     }
 
     // Navigate back to Camera tab

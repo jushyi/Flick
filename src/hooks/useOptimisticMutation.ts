@@ -106,8 +106,8 @@ export function useOptimisticMutation<
   const queryClient = useQueryClient();
 
   // Build the list of { queryKey resolver, updater } pairs
-  const entries: MultiKeyUpdater<TVariables>[] = isMultiKey(options)
-    ? options.updaters
+  const entries: MultiKeyUpdater<TVariables>[] = isMultiKey(options as OptimisticMutationOptions<TData, TVariables>)
+    ? (options as MultiKeyOptions<TData, TVariables>).updaters
     : [
         {
           queryKey: (options as SingleKeyOptions<TData, TVariables, TQueryData>)

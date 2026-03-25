@@ -21,6 +21,7 @@ import { DarkroomSkeleton } from '../components/skeletons/DarkroomSkeleton';
 import { EmptyState } from '../components/EmptyState';
 // Explicit .js extension to avoid Metro resolving useDarkroom.ts (lean data hook)
 // The .js hook contains full UI logic (undo stack, triage, animations) with Supabase services
+// @ts-ignore - explicit .js extension for Metro resolution (strangler fig pattern)
 import useDarkroom from '../hooks/useDarkroom.js';
 import { SwipeablePhotoCard, TagFriendsModal } from '../components';
 import { useScreenTrace } from '../hooks/useScreenTrace';

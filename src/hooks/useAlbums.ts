@@ -83,7 +83,7 @@ export function useUpdateAlbum() {
     }) => albumService.updateAlbum(albumId, updates),
     queryKey: (vars) => queryKeys.albums.detail(vars.albumId),
     updater: (old: CachedAlbumDetail | undefined, vars) => {
-      if (!old) return old;
+      if (!old) return {} as CachedAlbumDetail;
       return { ...old, ...vars.updates };
     },
     errorMessage: 'Failed to update album',
@@ -127,7 +127,7 @@ export function useAddPhotosToAlbum() {
     }) => albumService.addPhotosToAlbum(albumId, photoIds),
     queryKey: (vars) => queryKeys.albums.detail(vars.albumId),
     updater: (old: CachedAlbumDetail | undefined, vars) => {
-      if (!old) return old;
+      if (!old) return {} as CachedAlbumDetail;
       return { ...old, photos: [...(old.photos || []), ...vars.photoIds] };
     },
     errorMessage: 'Failed to update album',
@@ -149,7 +149,7 @@ export function useRemovePhotoFromAlbum() {
     }) => albumService.removePhotoFromAlbum(albumId, photoId),
     queryKey: (vars) => queryKeys.albums.detail(vars.albumId),
     updater: (old: CachedAlbumDetail | undefined, vars) => {
-      if (!old) return old;
+      if (!old) return {} as CachedAlbumDetail;
       return {
         ...old,
         photos: (old.photos || []).filter((id: string) => id !== vars.photoId),

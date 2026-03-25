@@ -64,7 +64,7 @@ const SnapPreviewScreen = () => {
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  const { photoUri, conversationId, friendId, friendDisplayName } = route.params;
+  const { photoUri, conversationId, friendId, friendDisplayName } = (route.params || {}) as any;
 
   const [caption, setCaption] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -161,7 +161,7 @@ const SnapPreviewScreen = () => {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       // Supabase snapService throws on error; returns { messageId } on success
-      const result = await uploadAndSendSnap(conversationId, user.uid, photoUri, caption || null);
+      const result = await uploadAndSendSnap(conversationId, user!.id, photoUri, caption || null);
 
       logger.info('SnapPreviewScreen: Snap sent successfully', {
         messageId: result.messageId,
@@ -171,9 +171,9 @@ const SnapPreviewScreen = () => {
       // The navigate call ensures the Messages tab's Conversation screen is focused
       // (Material Top Tabs may reset nested stack state on tab blur, so we explicitly
       // navigate rather than relying on preserved state).
-      navigation.popToTop();
+      (navigation as any).popToTop();
       setTimeout(() => {
-        navigation.navigate('MainTabs', {
+        (navigation as any).navigate('MainTabs', {
           screen: 'Messages',
           params: {
             screen: 'Conversation',
@@ -190,7 +190,7 @@ const SnapPreviewScreen = () => {
       }, 100);
     } catch (error) {
       logger.error('SnapPreviewScreen: Unexpected error sending snap', {
-        error: error.message,
+        error: (error as Error).message,
       });
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
@@ -201,7 +201,7 @@ const SnapPreviewScreen = () => {
     conversationId,
     friendId,
     friendDisplayName,
-    user.uid,
+    user?.id,
     photoUri,
     caption,
     pinEnabled,

@@ -46,13 +46,13 @@ const ReportUserScreen = () => {
   const { user } = useAuth();
 
   const insets = useSafeAreaInsets();
-  const { userId, username, displayName, profilePhotoURL } = route.params || {};
+  const { userId, username, displayName, profilePhotoURL } = (route.params || {}) as any;
 
   const [selectedReason, setSelectedReason] = useState(null);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [detailsFocused, setDetailsFocused] = useState(false);
-  const scrollViewRef = useRef(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleDetailsFocus = () => {
     setDetailsFocused(true);
@@ -79,23 +79,18 @@ const ReportUserScreen = () => {
         profilePhotoURL: profilePhotoURL || null,
       };
 
-      const result = await submitReport(
-        user.uid,
+      await submitReport(
+        user!.id,
         userId,
         selectedReason,
-        details.trim() || null,
-        profileSnapshot
+        details.trim() || undefined
       );
 
-      if (result.success) {
-        Alert.alert('Report Submitted', 'Thank you for helping keep the community safe', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
-      } else {
-        Alert.alert('Error', result.error || 'Could not submit report');
-      }
+      Alert.alert('Report Submitted', 'Thank you for helping keep the community safe', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
     } catch (error) {
-      logger.error('ReportUserScreen: Error submitting report', { error: error.message });
+      logger.error('ReportUserScreen: Error submitting report', { error: (error as Error).message });
       Alert.alert('Error', 'Could not submit report');
     } finally {
       setSubmitting(false);

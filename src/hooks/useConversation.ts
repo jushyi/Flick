@@ -392,7 +392,7 @@ export function useMarkAsRead() {
     queryKey: (vars: { conversationId: string }) =>
       queryKeys.conversations.detail(vars.conversationId),
     updater: (old: Record<string, unknown> | undefined, _vars) => {
-      if (!old) return old;
+      if (!old) return { unreadCount: 0 } as Record<string, unknown>;
       return { ...old, unreadCount: 0 };
     },
     errorMessage: 'Failed to mark as read',

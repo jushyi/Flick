@@ -37,8 +37,8 @@ const DEFAULT_PREFERENCES = {
 const SoundSettingsScreen = () => {
   const navigation = useNavigation();
   const { user, userProfile, updateUserProfile } = useAuth();
-  const [preferences, setPreferences] = useState(
-    userProfile?.soundPreferences || DEFAULT_PREFERENCES
+  const [preferences, setPreferences] = useState<{ effectsEnabled: boolean }>(
+    (userProfile?.soundPreferences as any) || DEFAULT_PREFERENCES
   );
 
   // Load preferences from userProfile only on initial mount
@@ -55,7 +55,7 @@ const SoundSettingsScreen = () => {
   }, []); // Empty array - only run once on mount
 
   const savePreferences = async newPreferences => {
-    const userId = user?.id || user?.uid;
+    const userId = user?.id || user?.id;
     if (!userId) return;
 
     try {
@@ -77,7 +77,7 @@ const SoundSettingsScreen = () => {
       }
     } catch (error) {
       logger.error('SoundSettingsScreen: Failed to save preferences', {
-        error: error.message,
+        error: (error as Error).message,
       });
     }
   };

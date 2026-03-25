@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, StyleSheet, Platform } from 'react-native';
 import { CameraView } from 'expo-camera';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -106,7 +106,7 @@ const DarkroomCardButton = ({ count, onPress, scaleAnim, fanSpreadAnim, hasRevea
 
   // Render stack of cards with animated transforms
   const renderCards = () => {
-    const cards = [];
+    const cards: React.ReactElement[] = [];
 
     // Calculate center compensation - shifts entire stack left so it stays visually centered
     // The more cards, the more we need to shift left to compensate for right-fanning
@@ -219,7 +219,7 @@ const CameraScreen = () => {
   const insets = useSafeAreaInsets();
 
   // Read snap mode params from route (default to normal camera mode)
-  const { mode = 'normal', conversationId, friendId, friendDisplayName } = route.params || {};
+  const { mode = 'normal', conversationId, friendId, friendDisplayName } = (route.params || {}) as any;
   const isSnapMode = mode === 'snap';
 
   // Snap mode capture callback: navigates to SnapPreviewScreen with photo/video URI
@@ -230,7 +230,7 @@ const CameraScreen = () => {
         friendId,
         mediaType,
       });
-      navigation.navigate('SnapPreviewScreen', {
+      (navigation as any).navigate('SnapPreviewScreen', {
         photoUri: uri,
         mediaType,
         conversationId,

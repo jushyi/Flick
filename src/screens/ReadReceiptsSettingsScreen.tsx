@@ -14,6 +14,7 @@ import PixelIcon from '../components/PixelIcon';
 import PixelToggle from '../components/PixelToggle';
 
 import { useAuth } from '../context/AuthContext';
+import type { UserProfile } from '@/types/common';
 
 import { supabase } from '../lib/supabase';
 
@@ -57,17 +58,17 @@ const ReadReceiptsSettingsScreen = () => {
             style: 'destructive',
             onPress: async () => {
               try {
-                const userId = user?.id || user?.uid;
+                const userId = user?.id || user?.id;
                 const { error } = await supabase
                   .from('users')
                   .update({ read_receipts_enabled: false })
                   .eq('id', userId);
                 if (error) throw error;
-                updateUserProfile({ ...userProfile, readReceiptsEnabled: false });
+                updateUserProfile({ ...userProfile, readReceiptsEnabled: false } as UserProfile);
                 logger.info('ReadReceiptsSettingsScreen: Read receipts disabled');
               } catch (error) {
                 logger.error('ReadReceiptsSettingsScreen: Failed to update read receipts', {
-                  error: error.message,
+                  error: (error as Error).message,
                 });
               }
             },
@@ -76,7 +77,7 @@ const ReadReceiptsSettingsScreen = () => {
       );
     } else {
       // Toggling ON — write directly, no confirmation
-      const userId = user?.id || user?.uid;
+      const userId = user?.id || user?.id;
       supabase
         .from('users')
         .update({ read_receipts_enabled: true })
@@ -88,7 +89,7 @@ const ReadReceiptsSettingsScreen = () => {
             });
           }
         });
-      updateUserProfile({ ...userProfile, readReceiptsEnabled: true });
+      updateUserProfile({ ...userProfile, readReceiptsEnabled: true } as UserProfile);
       logger.info('ReadReceiptsSettingsScreen: Read receipts enabled');
     }
   };

@@ -163,7 +163,7 @@ const ContributionsScreen = () => {
         return;
       }
 
-      const purchase = purchaseResult.purchase;
+      const purchase = purchaseResult.purchase!;
       logger.info('ContributionsScreen: Purchase completed', {
         productId,
         transactionId: purchase.transactionId,
@@ -177,7 +177,7 @@ const ContributionsScreen = () => {
       const saveResult = await saveContribution(
         user!.id,
         productId,
-        purchase.transactionId,
+        purchase.transactionId!,
         amount
       );
 
@@ -188,7 +188,7 @@ const ContributionsScreen = () => {
       }
 
       // Finish transaction (MUST be called to prevent re-delivery)
-      const finishResult = await finishTransaction(purchase);
+      const finishResult = await finishTransaction(purchase!);
       if (!finishResult.success) {
         logger.warn('ContributionsScreen: Failed to finish transaction', {
           error: finishResult.error,

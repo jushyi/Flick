@@ -69,7 +69,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
   const [cropping, setCropping] = useState(false);
   // workingUri has EXIF rotation baked in so Image.getSize() and the crop
   // operation share the same coordinate system.
-  const [workingUri, setWorkingUri] = useState(null);
+  const [workingUri, setWorkingUri] = useState<string | null>(null);
   // displayScale < 1 when the image is larger than MAX_DISPLAY_DP.
   // Stored as a ref (not state) because it only needs to be read in handleConfirm.
   const displayScaleRef = useRef(1);
@@ -110,7 +110,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
       // manipulateAsync returns { uri, width, height } where width/height are the
       // actual pixel dimensions of the output file — unlike Image.getSize() which
       // uses Fresco and silently downsamples images larger than ~2048px.
-      let normalized = null;
+      let normalized: { uri: string; width: number; height: number } | null = null;
       try {
         normalized = await ImageManipulator.manipulateAsync(imageUri, [], {
           compress: 1,
@@ -118,7 +118,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
         });
       } catch (err) {
         logger.warn('ProfilePhotoCropScreen (Android): EXIF normalization failed, using original', {
-          error: err.message,
+          error: (err as Error).message,
         });
       }
 
@@ -133,16 +133,16 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
       if (!width || !height) {
         // Fallback: Image.getSize via Fresco (may downsample >2048px images on
         // Android but is better than nothing if manipulateAsync failed).
-        await new Promise(resolve => {
+        await new Promise<void>(resolve => {
           const ImageRN = require('react-native').Image;
           ImageRN.getSize(
             uri,
-            (w, h) => {
+            (w: number, h: number) => {
               width = w;
               height = h;
               resolve();
             },
-            err => {
+            (err: any) => {
               logger.error('ProfilePhotoCropScreen (Android): Failed to get image size', {
                 error: err,
               });
@@ -351,7 +351,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
 
       navigation.goBack();
     } catch (error) {
-      logger.error('ProfilePhotoCropScreen (Android): Crop failed', { error: error.message });
+      logger.error('ProfilePhotoCropScreen (Android): Crop failed', { error: (error as Error).message });
       setCropping(false);
     }
   }, [workingUri, imageSize, scale, translateX, translateY, onCropComplete, navigation]);
@@ -425,7 +425,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
             <GestureDetector gesture={composedGesture}>
               <Animated.View style={[styles.imageContainer, animatedImageStyle]}>
                 <Image
-                  source={{ uri: workingUri }}
+                  source={{ uri: workingUri ?? undefined }}
                   style={{
                     width: Math.round(imageSize.width * displayScaleRef.current),
                     height: Math.round(imageSize.height * displayScaleRef.current),

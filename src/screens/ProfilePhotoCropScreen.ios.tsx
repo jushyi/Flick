@@ -249,7 +249,7 @@ const ProfilePhotoCropScreen = ({ navigation, route }) => {
 
       navigation.goBack();
     } catch (error) {
-      logger.error('ProfilePhotoCropScreen: Crop failed', { error: error.message });
+      logger.error('ProfilePhotoCropScreen: Crop failed', { error: (error as Error).message });
       setCropping(false);
     }
   }, [imageUri, imageSize, scale, translateX, translateY, onCropComplete, navigation]);

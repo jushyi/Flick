@@ -136,7 +136,7 @@ const MessagesScreen = () => {
 
   const handleOpenConversation = useCallback(
     conversation => {
-      navigation.navigate('Conversation', {
+      (navigation as any).navigate('Conversation', {
         conversationId: conversation.id,
         friendId: conversation.friendProfile.uid,
         friendProfile: conversation.friendProfile,
@@ -165,12 +165,12 @@ const MessagesScreen = () => {
   );
 
   const handleNewMessage = useCallback(() => {
-    navigation.navigate('NewMessage');
+    (navigation as any).navigate('NewMessage');
   }, [navigation]);
 
   const handleSnapCamera = useCallback(
     (convId, fId, fDisplayName) => {
-      navigation.navigate('SnapCamera', {
+      (navigation as any).navigate('SnapCamera', {
         mode: 'snap',
         conversationId: convId,
         friendId: fId,
@@ -185,13 +185,13 @@ const MessagesScreen = () => {
       <ConversationRow
         conversation={item}
         friendProfile={item.friendProfile}
-        currentUserId={user?.uid}
+        currentUserId={user?.id ?? ''}
         onPress={() => handleOpenConversation(item)}
         onLongPress={() => handleDeletePress(item)}
         onSnapCamera={handleSnapCamera}
       />
     ),
-    [user?.uid, handleOpenConversation, handleDeletePress, handleSnapCamera]
+    [user?.id, handleOpenConversation, handleDeletePress, handleSnapCamera]
   );
 
   const renderEmptyState = useCallback(() => {
@@ -201,7 +201,7 @@ const MessagesScreen = () => {
         icon="chatbubble-outline"
         message="No conversations yet"
         ctaLabel="Start a chat"
-        onCtaPress={() => navigation.navigate('NewMessage')}
+        onCtaPress={() => (navigation as any).navigate('NewMessage')}
       />
     );
   }, [loading, navigation]);
