@@ -4,12 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useNavigation } from '@react-navigation/native';
 
-import {
-  getContactsPermissionStatus,
-  requestContactsPermission,
-  syncContactsAndFindSuggestions,
-  markContactsSyncCompleted,
-} from '../services/firebase/contactSyncService';
+import { syncContacts as syncContactsAndFindSuggestions } from '../services/supabase/contactSyncService';
+// TODO(20-01): getContactsPermissionStatus, requestContactsPermission, markContactsSyncCompleted - need supabase equivalents
+const getContactsPermissionStatus = async () => 'undetermined';
+const requestContactsPermission = async () => 'granted';
+const markContactsSyncCompleted = async () => {};
 
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';

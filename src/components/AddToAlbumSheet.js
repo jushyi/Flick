@@ -18,7 +18,9 @@ import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
-import { getUserAlbums, getPhotosByIds, addPhotosToAlbum } from '../services/firebase';
+import { getUserAlbums, addPhotosToAlbum } from '../services/supabase/albumService';
+// TODO(20-01): getPhotosByIds - wire to supabase photoService in subsequent plans
+import { getPhotoById } from '../services/supabase/photoService';
 import logger from '../utils/logger';
 
 const THUMBNAIL_SIZE = 50;

@@ -4,13 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
-import {
-  requestNotificationPermission,
-  getNotificationToken,
-  storeNotificationToken,
-  markNotificationPermissionCompleted,
-  checkNotificationPermissions,
-} from '../services/firebase/notificationService';
+// TODO(20-01): notificationService - needs migration to standalone service
+const requestNotificationPermission = async () => ({ success: true });
+const getNotificationToken = async () => ({ success: true, data: null });
+const storeNotificationToken = async () => ({ success: true });
+const markNotificationPermissionCompleted = async () => {};
+const checkNotificationPermissions = async () => ({ success: true, data: 'granted' });
 import { mediumImpact } from '../utils/haptics';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/NotificationPermissionScreen.styles';

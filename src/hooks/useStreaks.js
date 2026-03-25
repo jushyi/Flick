@@ -15,7 +15,8 @@ import {
   subscribeToUserStreaks,
   deriveStreakState,
   getStreakColor,
-} from '../services/firebase/streakService';
+} from '../services/supabase/streakService';
+// TODO(20-01): subscribeToStreak, subscribeToUserStreaks - no supabase real-time equivalent yet
 
 import logger from '../utils/logger';
 

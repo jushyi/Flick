@@ -36,7 +36,7 @@ import { openGifPicker, useGifSelection, isGiphyReady } from './comments/GifPick
 import PixelIcon from './PixelIcon';
 import ReplyPreview from './ReplyPreview';
 
-import { uploadCommentImage } from '../services/firebase/storageService';
+import { uploadCommentImage } from '../services/supabase/storageService';
 
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';

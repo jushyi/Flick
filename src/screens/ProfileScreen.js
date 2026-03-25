@@ -33,19 +33,17 @@ import {
   getUserAlbums,
   getPhotosByIds,
   deleteAlbum,
-  getUserProfile,
-  checkFriendshipStatus,
   sendFriendRequest,
   acceptFriendRequest,
   declineFriendRequest,
-  generateFriendshipId,
-  getFriendships,
-  removeFriend,
-  blockUser,
-  unblockUser,
-  isBlocked,
-} from '../services/firebase';
-import { uploadSelectsPhotos } from '../services/firebase/storageService';
+  getFriends as getFriendships,
+  getFriendshipStatus as checkFriendshipStatus,
+  unfriend as removeFriend,
+} from '../services/supabase/friendshipService';
+import { getUserProfile } from '../services/supabase/profileService';
+import { blockUser, unblockUser, isBlocked } from '../services/supabase/blockService';
+import { uploadSelectsPhotos } from '../services/supabase/storageService';
+// TODO(20-01): generateFriendshipId - not needed with Supabase UUID PKs
 import { typography } from '../constants/typography';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import logger from '../utils/logger';

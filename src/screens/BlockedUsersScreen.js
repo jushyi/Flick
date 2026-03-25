@@ -5,7 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
-import { getBlockedUsersWithProfiles, unblockUser } from '../services/firebase';
+import { getBlockedUsers, unblockUser } from '../services/supabase/blockService';
+// TODO(20-01): getBlockedUsersWithProfiles was a combined query - getBlockedUsers returns BlockedUser[] with profile data
 import FriendCard from '../components/FriendCard';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/BlockedUsersScreen.styles';

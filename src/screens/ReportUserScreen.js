@@ -16,7 +16,9 @@ import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { submitReport, REPORT_REASONS } from '../services/firebase';
+import { reportUser as submitReport } from '../services/supabase/reportService';
+// TODO(20-01): REPORT_REASONS constant - define locally or add to supabase reportService
+const REPORT_REASONS = ['Spam', 'Harassment', 'Inappropriate Content', 'Impersonation', 'Other'];
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/ReportUserScreen.styles';

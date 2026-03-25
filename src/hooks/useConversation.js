@@ -27,7 +27,7 @@ import {
   sendReply,
   deleteMessageForMe,
   markConversationRead,
-} from '../services/firebase/messageService';
+} from '../services/supabase/messageService';
 
 import logger from '../utils/logger';
 

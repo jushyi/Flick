@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  loadViewedPhotos,
-  markPhotosAsViewedInFirestore,
-} from '../services/firebase/viewedStoriesService';
+// TODO(20-01): viewedStoriesService - no supabase equivalent yet, needs migration
+const loadViewedPhotos = async () => ({ success: true, data: new Set() });
+const markPhotosAsViewedInFirestore = async () => ({ success: true });
 import { useAuth } from '../context/AuthContext';
 import logger from '../utils/logger';
 

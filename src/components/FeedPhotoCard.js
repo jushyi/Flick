@@ -11,7 +11,7 @@ import CommentPreview from './comments/CommentPreview';
 import { useVideoMute } from '../context/VideoMuteContext';
 
 import { getTimeAgo } from '../utils/timeUtils';
-import { getPreviewComments } from '../services/firebase/commentService';
+import { getComments as getPreviewComments } from '../services/supabase/commentService';
 
 import { styles } from '../styles/FeedPhotoCard.styles';
 import { colors } from '../constants/colors';

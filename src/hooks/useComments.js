@@ -16,7 +16,8 @@ import {
   toggleCommentLike,
   getUserLikesForComments,
   generateCommentId,
-} from '../services/firebase/commentService';
+} from '../services/supabase/commentService';
+// TODO(20-01): toggleCommentLike, getUserLikesForComments, generateCommentId may need mapping to supabase equivalents
 import logger from '../utils/logger';
 
 /**

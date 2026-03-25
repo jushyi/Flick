@@ -17,14 +17,16 @@ import PixelIcon from '../components/PixelIcon';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, Input, StepIndicator, ProfileSongCard } from '../components';
 import { useAuth } from '../context/AuthContext';
-import { uploadProfilePhoto } from '../services/firebase/storageService';
+import { uploadProfilePhoto } from '../services/supabase/storageService';
 import {
   validateLength,
   validateUsername,
   sanitizeDisplayName,
   sanitizeBio,
 } from '../utils/validation';
-import { checkUsernameAvailability, cancelProfileSetup } from '../services/firebase/userService';
+import { checkUsernameAvailability } from '../services/supabase/profileService';
+// TODO(20-01): cancelProfileSetup - add to supabase profileService
+const cancelProfileSetup = async () => ({ success: true });
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';

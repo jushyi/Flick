@@ -29,7 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
 import StrokedNameText from './StrokedNameText';
-import { getUserProfile } from '../services/firebase/userService';
+import { getUserProfile } from '../services/supabase/profileService';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/TaggedPeopleModal.styles';
 import logger from '../utils/logger';

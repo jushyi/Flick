@@ -31,26 +31,30 @@ import {
   sendFriendRequest,
   acceptFriendRequest,
   declineFriendRequest,
-  removeFriend,
-  checkFriendshipStatus,
-  getMutualFriendSuggestions,
-  batchGetUsers,
-} from '../services/firebase/friendshipService';
+  unfriend as removeFriend,
+  getFriendshipStatus as checkFriendshipStatus,
+} from '../services/supabase/friendshipService';
+// TODO(20-01): getMutualFriendSuggestions, batchGetUsers - no supabase equivalent yet
+const getMutualFriendSuggestions = async () => [];
+const batchGetUsers = async () => [];
 import {
-  hasUserSyncedContacts,
-  syncContactsAndFindSuggestions,
-  checkContactsPermission,
-  getDismissedSuggestionIds,
-  filterDismissedSuggestions,
-  dismissSuggestion,
-  markContactsSyncCompleted,
-} from '../services/firebase/contactSyncService';
+  syncContacts as syncContactsAndFindSuggestions,
+} from '../services/supabase/contactSyncService';
+// TODO(20-01): hasUserSyncedContacts, checkContactsPermission, getDismissedSuggestionIds, etc. - need supabase equivalents
+const hasUserSyncedContacts = async () => false;
+const checkContactsPermission = async () => 'undetermined';
+const getDismissedSuggestionIds = async () => [];
+const filterDismissedSuggestions = (suggestions) => suggestions;
+const dismissSuggestion = async () => {};
+const markContactsSyncCompleted = async () => {};
 import {
   blockUser,
   unblockUser,
-  getBlockedByUserIds,
-  getBlockedUserIds,
-} from '../services/firebase/blockService';
+  getBlockedUsers,
+} from '../services/supabase/blockService';
+// TODO(20-01): getBlockedByUserIds, getBlockedUserIds - map to supabase blockService
+const getBlockedByUserIds = async () => [];
+const getBlockedUserIds = async () => [];
 import { mediumImpact } from '../utils/haptics';
 import { FriendsSkeleton } from '../components/skeletons/FriendsSkeleton';
 import { EmptyState } from '../components/EmptyState';

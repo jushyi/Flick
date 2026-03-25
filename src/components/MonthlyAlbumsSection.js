@@ -3,7 +3,8 @@ import { View, StyleSheet } from 'react-native';
 import PixelSpinner from './PixelSpinner';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
-import { getUserPhotosByMonth } from '../services/firebase/monthlyAlbumService';
+import { getMonthlyPhotos as getUserPhotosByMonth } from '../services/supabase/albumService';
+// TODO(20-01): getUserPhotosByMonth may need param mapping from monthlyAlbumService to albumService.getMonthlyPhotos
 import YearSection from './YearSection';
 
 /**

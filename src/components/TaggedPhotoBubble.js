@@ -25,7 +25,8 @@ import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
 import ReactionBadges from './ReactionBadges';
 
-import { addTaggedPhotoToFeed } from '../services/firebase/photoTagService';
+// TODO(20-01): photoTagService - no supabase equivalent yet
+const addTaggedPhotoToFeed = async () => ({ success: true });
 
 import { styles } from '../styles/TaggedPhotoBubble.styles';
 

@@ -23,12 +23,13 @@ import { layout } from '../constants/layout';
 import { useAuth } from '../context/AuthContext';
 import {
   getAlbum,
-  getPhotosByIds,
   removePhotoFromAlbum,
   setCoverPhoto,
   updateAlbum,
   deleteAlbum,
-} from '../services/firebase';
+} from '../services/supabase/albumService';
+// TODO(20-01): getPhotosByIds - wire to supabase photoService in subsequent plans
+import { getPhotoById } from '../services/supabase/photoService';
 import { AlbumPhotoViewer, DropdownMenu, RenameAlbumModal } from '../components';
 import logger from '../utils/logger';
 

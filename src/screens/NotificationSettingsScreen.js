@@ -6,12 +6,11 @@ import PixelIcon from '../components/PixelIcon';
 import PixelToggle from '../components/PixelToggle';
 import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import {
-  checkNotificationPermissions,
-  requestNotificationPermission,
-  getNotificationToken,
-  storeNotificationToken,
-} from '../services/firebase/notificationService';
+// TODO(20-01): notificationService - needs migration to standalone service
+const checkNotificationPermissions = async () => ({ success: true, data: 'granted' });
+const requestNotificationPermission = async () => ({ success: true });
+const getNotificationToken = async () => ({ success: true, data: null });
+const storeNotificationToken = async () => ({ success: true });
 import { colors } from '../constants/colors';
 import { styles } from '../styles/NotificationSettingsScreen.styles';
 import logger from '../utils/logger';

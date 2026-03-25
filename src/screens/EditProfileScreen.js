@@ -17,7 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Input } from '../components';
 import ColorPickerGrid from '../components/ColorPickerGrid';
 import { useAuth } from '../context/AuthContext';
-import { uploadProfilePhoto, deleteProfilePhoto } from '../services/firebase/storageService';
+import { uploadProfilePhoto, deleteProfilePhoto } from '../services/supabase/storageService';
 import {
   validateLength,
   validateUsername,
@@ -27,8 +27,9 @@ import {
 import {
   checkUsernameAvailability,
   updateUserProfile as updateUserProfileService,
-  canChangeUsername,
-} from '../services/firebase/userService';
+} from '../services/supabase/profileService';
+// TODO(20-01): canChangeUsername - add to supabase profileService
+const canChangeUsername = async () => ({ canChange: true });
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';

@@ -16,7 +16,9 @@ import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 
 import { useNavigation } from '@react-navigation/native';
-import { submitSupportRequest, SUPPORT_CATEGORIES } from '../services/firebase';
+// TODO(20-01): submitSupportRequest, SUPPORT_CATEGORIES - no supabase equivalent yet, create in subsequent plans
+const SUPPORT_CATEGORIES = ['Bug Report', 'Feature Request', 'Account Issue', 'Other'];
+const submitSupportRequest = async () => ({ success: false, error: 'Support service not yet migrated' });
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/HelpSupportScreen.styles';

@@ -45,8 +45,9 @@ import * as Haptics from 'expo-haptics';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getSignedSnapUrl, markSnapViewed } from '../services/firebase/snapService';
-import { recordScreenshot } from '../services/firebase/screenshotService';
+import { getSignedSnapUrl, markSnapViewed } from '../services/supabase/snapService';
+// TODO(20-01): screenshotService - no supabase equivalent, uses screenshotQueueService instead
+const recordScreenshot = async () => ({ success: true });
 import { queueScreenshotEvent, processScreenshotQueue } from '../services/screenshotQueueService';
 import { removePinnedSnap } from '../services/liveActivityService';
 

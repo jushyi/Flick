@@ -12,7 +12,8 @@
  * - Manages overlay visibility state
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getMutualFriendsForTagging } from '../services/firebase/mentionService';
+// TODO(20-01): mentionService - no supabase equivalent yet
+const getMutualFriendsForTagging = async () => [];
 import logger from '../utils/logger';
 
 /**

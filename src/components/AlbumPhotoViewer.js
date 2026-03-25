@@ -22,8 +22,11 @@ import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
-import { deleteAlbum } from '../services/firebase';
-import { softDeletePhoto, archivePhoto, restorePhoto } from '../services/firebase/photoService';
+import { deleteAlbum } from '../services/supabase/albumService';
+import { softDeletePhoto } from '../services/supabase/photoService';
+// TODO(20-01): archivePhoto, restorePhoto - verify supabase equivalents in subsequent plans
+import { triagePhoto as archivePhoto } from '../services/supabase/photoService';
+// restorePhoto handled via triagePhoto with null state
 import DropdownMenu from './DropdownMenu';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');

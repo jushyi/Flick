@@ -22,7 +22,7 @@ import { View, Text, StyleSheet } from 'react-native';
 
 import PixelIcon from './PixelIcon';
 
-import { getStreakColor } from '../services/firebase/streakService';
+import { getStreakColor } from '../services/supabase/streakService';
 
 import { typography } from '../constants/typography';
 

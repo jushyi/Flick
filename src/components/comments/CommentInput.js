@@ -25,7 +25,7 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
-import { uploadCommentImage } from '../../services/firebase/storageService';
+import { uploadCommentImage } from '../../services/supabase/storageService';
 // Giphy SDK requires dev client build, not Expo Go
 import { openGifPicker, useGifSelection, isGiphyReady } from './GifPicker';
 import { styles } from '../../styles/CommentInput.styles';

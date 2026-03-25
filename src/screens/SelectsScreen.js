@@ -25,7 +25,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { Button, StepIndicator } from '../components';
-import { uploadSelectsPhotos } from '../services/firebase/storageService';
+import { uploadSelectsPhotos } from '../services/supabase/storageService';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';

@@ -55,17 +55,20 @@ import { styles } from '../styles/PhotoDetailScreen.styles';
 import CommentsBottomSheet from '../components/comments/CommentsBottomSheet';
 import {
   softDeletePhoto,
-  archivePhoto,
+  triagePhoto,
   restorePhoto,
-  updatePhotoTags,
-  updateCaption,
-  subscribePhoto,
-} from '../services/firebase/photoService';
+  updatePhotoCaption as updateCaption,
+} from '../services/supabase/photoService';
+// TODO(20-01): archivePhoto mapped to triagePhoto, updatePhotoTags and subscribePhoto need supabase equivalents
+const archivePhoto = (photoId) => triagePhoto(photoId, 'archive');
+const updatePhotoTags = async () => ({ success: true });
+const subscribePhoto = () => () => {};
 import DropdownMenu from '../components/DropdownMenu';
 import { TagFriendsModal, TaggedPeopleModal } from '../components';
 import { colors } from '../constants/colors';
 import { profileCacheKey } from '../utils/imageUtils';
-import { addTaggedPhotoToFeed } from '../services/firebase/photoTagService';
+// TODO(20-01): photoTagService - no supabase equivalent yet
+const addTaggedPhotoToFeed = async () => ({ success: true });
 import logger from '../utils/logger';
 
 // Reanimated View component for cube face transforms (UI-thread animation)

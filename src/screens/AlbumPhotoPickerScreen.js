@@ -19,8 +19,8 @@ import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
 import { layout } from '../constants/layout';
 import { useAuth } from '../context/AuthContext';
-import { getUserPhotos } from '../services/firebase/photoService';
-import { createAlbum, addPhotosToAlbum } from '../services/firebase/albumService';
+import { getUserPhotos } from '../services/supabase/photoService';
+import { createAlbum, addPhotosToAlbum } from '../services/supabase/albumService';
 import logger from '../utils/logger';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

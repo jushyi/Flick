@@ -7,7 +7,8 @@ import { Image } from 'expo-image';
 import { supabase } from '../lib/supabase';
 
 import logger from '../utils/logger';
-import { clearLocalNotificationToken } from '../services/firebase/notificationService';
+// TODO(20-01): clearLocalNotificationToken - notification service needs migration to supabase
+const clearLocalNotificationToken = async () => { /* no-op until notification service migrated */ };
 import { secureStorage } from '../services/secureStorageService';
 
 const AuthContext = createContext({});

@@ -17,8 +17,9 @@ import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth } from '@react-native-firebase/auth';
-import { sendVerificationCode, verifyCode } from '../services/firebase/phoneAuthService';
-import { scheduleAccountDeletion } from '../services/firebase/accountService';
+import { sendVerificationCode, verifyCode } from '../services/supabase/phoneAuthService';
+// TODO(20-01): accountService - no supabase equivalent yet
+const scheduleAccountDeletion = async () => ({ success: false, error: 'Account deletion not yet migrated' });
 import {
   downloadAllPhotos,
   requestMediaLibraryPermission,

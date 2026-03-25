@@ -16,13 +16,14 @@ import * as Contacts from 'expo-contacts';
 import { colors } from '../constants/colors';
 import CustomBottomTabBar from '../components/CustomBottomTabBar';
 import DeletionRecoveryModal from '../components/DeletionRecoveryModal';
-import {
-  checkNotificationPermissions,
-  requestNotificationPermission,
-  getNotificationToken,
-  storeNotificationToken,
-} from '../services/firebase/notificationService';
-import { getContactsPermissionStatus } from '../services/firebase/contactSyncService';
+// TODO(20-01): notificationService - needs migration to standalone service (uses expo-notifications, not Firebase)
+const checkNotificationPermissions = async () => ({ success: true, data: 'granted' });
+const requestNotificationPermission = async () => ({ success: true });
+const getNotificationToken = async () => ({ success: true, data: null });
+const storeNotificationToken = async () => ({ success: true });
+// TODO(20-01): contactSyncService getContactsPermissionStatus
+import { syncContacts } from '../services/supabase/contactSyncService';
+const getContactsPermissionStatus = async () => 'undetermined';
 import logger from '../utils/logger';
 
 // Import auth screens (phone-only authentication)

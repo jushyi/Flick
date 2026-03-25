@@ -14,8 +14,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getFeedPhotos, subscribeFeedPhotos } from '../services/firebase/feedService';
-import { getFriendUserIds } from '../services/firebase/friendshipService';
+import { getFeed as getFeedPhotos } from '../services/supabase/feedService';
+// TODO(20-01): subscribeFeedPhotos - no supabase real-time subscription equivalent yet
+const subscribeFeedPhotos = () => () => {};
+import { getFriendIds as getFriendUserIds } from '../services/supabase/friendshipService';
 import { useAuth } from '../context/AuthContext';
 import logger from '../utils/logger';
 

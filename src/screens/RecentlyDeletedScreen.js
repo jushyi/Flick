@@ -25,11 +25,11 @@ import PixelIcon from '../components/PixelIcon';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
-import {
-  getDeletedPhotos,
-  restoreDeletedPhoto,
-  permanentlyDeletePhoto,
-} from '../services/firebase/photoService';
+// TODO(20-01): getDeletedPhotos, restoreDeletedPhoto, permanentlyDeletePhoto - need supabase equivalents
+import { getUserPhotos } from '../services/supabase/photoService';
+const getDeletedPhotos = async () => [];
+const restoreDeletedPhoto = async () => ({ success: true });
+const permanentlyDeletePhoto = async () => ({ success: true });
 import logger from '../utils/logger';
 import {
   styles,

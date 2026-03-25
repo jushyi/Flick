@@ -17,7 +17,7 @@ import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
 import { useAuth } from '../context/AuthContext';
-import { getMonthPhotos } from '../services/firebase/monthlyAlbumService';
+import { getMonthlyPhotos as getMonthPhotos } from '../services/supabase/albumService';
 import { AlbumPhotoViewer } from '../components';
 import logger from '../utils/logger';
 

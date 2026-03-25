@@ -32,11 +32,10 @@ import { useAuth } from '../context/AuthContext';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { getTimeAgo } from '../utils/timeUtils';
 import logger from '../utils/logger';
-import {
-  requestNotificationPermission,
-  getNotificationToken,
-  storeNotificationToken,
-} from '../services/firebase/notificationService';
+// TODO(20-01): notificationService - needs migration to standalone service
+const requestNotificationPermission = async () => ({ success: true });
+const getNotificationToken = async () => ({ success: true, data: null });
+const storeNotificationToken = async () => ({ success: true });
 
 const db = getFirestore();
 

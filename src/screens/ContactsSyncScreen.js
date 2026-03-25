@@ -5,11 +5,10 @@ import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
 import FriendCard from '../components/FriendCard';
-import {
-  syncContactsAndFindSuggestions,
-  markContactsSyncCompleted,
-} from '../services/firebase/contactSyncService';
-import { sendFriendRequest } from '../services/firebase/friendshipService';
+import { syncContacts as syncContactsAndFindSuggestions } from '../services/supabase/contactSyncService';
+// TODO(20-01): markContactsSyncCompleted - needs supabase equivalent
+const markContactsSyncCompleted = async () => {};
+import { sendFriendRequest } from '../services/supabase/friendshipService';
 import { mediumImpact } from '../utils/haptics';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/ContactsSyncScreen.styles';

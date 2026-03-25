@@ -36,17 +36,18 @@ import {
   getPendingRequests,
   acceptFriendRequest,
   declineFriendRequest,
-} from '../services/firebase/friendshipService';
+} from '../services/supabase/friendshipService';
 import { getTimeAgo } from '../utils/timeUtils';
 import { profileCacheKey } from '../utils/imageUtils';
 import { mediumImpact } from '../utils/haptics';
-import {
-  markSingleNotificationAsRead,
-  markNotificationReadFromPushData,
-  markNotificationsAsRead,
-} from '../services/firebase/notificationService';
-import { getPhotoById, getUserStoriesData } from '../services/firebase/feedService';
-import { isBlocked } from '../services/firebase/blockService';
+// TODO(20-01): notificationService mark functions - needs migration
+const markSingleNotificationAsRead = async () => {};
+const markNotificationReadFromPushData = async () => {};
+const markNotificationsAsRead = async () => {};
+import { getPhotoByIdWithUser as getPhotoById } from '../services/supabase/feedService';
+// TODO(20-01): getUserStoriesData - no supabase equivalent yet
+const getUserStoriesData = async () => [];
+import { isBlocked } from '../services/supabase/blockService';
 import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import StrokedNameText from '../components/StrokedNameText';
 

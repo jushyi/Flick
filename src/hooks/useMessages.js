@@ -15,8 +15,8 @@ import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
 import {
   subscribeToConversations,
   softDeleteConversation,
-} from '../services/firebase/messageService';
-import { generateStreakId } from '../services/firebase/streakService';
+} from '../services/supabase/messageService';
+import { generateStreakId } from '../services/supabase/streakService';
 
 import { useStreakMap } from './useStreaks';
 

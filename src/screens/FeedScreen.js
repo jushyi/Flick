@@ -36,12 +36,14 @@ import { MeStoryCard } from '../components/MeStoryCard';
 import AddFriendsPromptCard from '../components/AddFriendsPromptCard';
 import TakeFirstPhotoCard from '../components/TakeFirstPhotoCard';
 import {
-  toggleReaction,
-  getFriendStoriesData,
-  getUserStoriesData,
-  getRandomFriendPhotos,
-} from '../services/firebase/feedService';
-import { getFriendUserIds } from '../services/firebase/friendshipService';
+  getFeed,
+} from '../services/supabase/feedService';
+import { getFriendIds as getFriendUserIds } from '../services/supabase/friendshipService';
+// TODO(20-01): toggleReaction, getFriendStoriesData, getUserStoriesData, getRandomFriendPhotos - map to supabase equivalents
+const toggleReaction = async () => ({});
+const getFriendStoriesData = async () => [];
+const getUserStoriesData = async () => [];
+const getRandomFriendPhotos = async () => [];
 import { useAuth } from '../context/AuthContext';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
