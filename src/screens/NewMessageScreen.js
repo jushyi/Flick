@@ -15,7 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
 import { getOrCreateConversation } from '../services/supabase/messageService';
-import { getFriendships, batchGetUsers } from '../services/firebase/friendshipService';
+import { getFriends } from '../services/supabase/friendshipService';
+import { getUserProfile } from '../services/supabase/profileService';
+import { supabase } from '@/lib/supabase';
 
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
@@ -45,36 +47,36 @@ const NewMessageScreen = () => {
 
   const fetchFriends = useCallback(async () => {
     try {
-      const result = await getFriendships(user.uid);
-      if (!result.success) {
-        logger.error('NewMessageScreen: Error fetching friendships', { error: result.error });
-        return;
-      }
+      // getFriends returns Array<{ id, friendUserId, createdAt }> -- throws on error
+      const friendships = await getFriends(user.uid);
 
-      // Collect all friend userIds for batch fetch
-      const friendUserIds = result.friendships.map(friendship =>
-        friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id
+      // Fetch each friend's profile in parallel
+      const friendProfiles = await Promise.all(
+        friendships.map(async f => {
+          try {
+            const profile = await getUserProfile(f.friendUserId);
+            // Convert storage path to public URL for avatar display
+            const photoURL = profile.profilePhotoPath
+              ? supabase.storage.from('profile-photos').getPublicUrl(profile.profilePhotoPath).data
+                  .publicUrl
+              : null;
+            return {
+              uid: f.friendUserId,
+              displayName: profile.displayName,
+              username: profile.username,
+              photoURL,
+            };
+          } catch (err) {
+            logger.warn('NewMessageScreen: Failed to fetch friend profile', {
+              friendUserId: f.friendUserId,
+              error: err.message,
+            });
+            return null;
+          }
+        })
       );
 
-      // Batch fetch all user data at once
-      const userMap = await batchGetUsers(friendUserIds);
-
-      // Map friendship docs to friend objects
-      const friendsWithUserData = result.friendships
-        .map(friendship => {
-          const otherUserId =
-            friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id;
-          const userData = userMap.get(otherUserId);
-          if (userData) {
-            return {
-              uid: otherUserId,
-              displayName: userData.displayName,
-              username: userData.username,
-              photoURL: userData.profilePhotoURL || userData.photoURL,
-            };
-          }
-          return null;
-        })
+      const validFriends = friendProfiles
         .filter(f => f !== null)
         .sort((a, b) => {
           const nameA = (a.displayName || a.username || '').toLowerCase();
@@ -82,7 +84,7 @@ const NewMessageScreen = () => {
           return nameA.localeCompare(nameB);
         });
 
-      setFriends(friendsWithUserData);
+      setFriends(validFriends);
     } catch (err) {
       logger.error('NewMessageScreen: Error in fetchFriends', { error: err.message });
     } finally {
