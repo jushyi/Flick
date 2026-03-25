@@ -38,6 +38,7 @@ module.exports = {
       '<rootDir>/__tests__/__mocks__/react-native-url-polyfill.js',
     '^@powersync/react-native$': '<rootDir>/__tests__/__mocks__/@powersync/react-native.js',
     '^@powersync/react$': '<rootDir>/__tests__/__mocks__/@powersync/react.js',
+    '^react-native-toast-message$': '<rootDir>/__tests__/__mocks__/react-native-toast-message.js',
   },
 
   // Transform ignore patterns - jest-expo handles most, but add any custom ones here
