@@ -176,13 +176,13 @@ Plans:
   4. Photos and videos load via CDN-backed permanent URLs or pre-refreshed signed URLs with no expired URL flash or re-fetch delay
   5. Feed images are served at 400px for cards and full-res only in PhotoDetail, reducing bandwidth and load time
   6. All list views have consistent empty state screens (no blank white/dark screens)
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [x] 19-01-PLAN.md -- SkeletonBase primitive + 9 skeleton screen components + Toast config + react-native-toast-message install
 - [x] 19-02-PLAN.md -- imageUrl.ts utility (CDN transforms, signed URL expiry) + EmptyState component
 - [x] 19-03-PLAN.md -- useOptimisticMutation helper hook + stale-while-revalidate verification
-- [ ] 19-04-PLAN.md -- Screen integration (wire skeletons, empty states, image transforms, prefetching into all 9 screens) + human verification
+- [x] 19-04-PLAN.md -- Screen integration (wire skeletons, empty states, image transforms, prefetching into all 9 screens) + human verification
 - [ ] 19-05-PLAN.md -- Wire optimistic updates into mutation hooks + proactive snap URL refresh integration
 
 ### Phase 20: TypeScript Sweep & Firebase Removal
@@ -221,7 +221,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 16. Core Services -- Social & Albums | v1.2 | 5/5 | Complete    | 2026-03-24 |
 | 17. Messaging & Social | v1.2 | 6/6 | Complete    | 2026-03-25 |
 | 18. Background Jobs & Notifications | v1.2 | 5/5 | Complete    | 2026-03-25 |
-| 19. Performance Polish | v1.2 | 3/5 | In Progress|  |
+| 19. Performance Polish | v1.2 | 4/5 | In Progress|  |
 | 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/8 | Not started | - |
 
 ### Phase 21: Full verification of phases 13-20 - guided UAT of Supabase migration
