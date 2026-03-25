@@ -9,6 +9,7 @@ import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 import { profileCacheKey } from '../utils/imageUtils';
+import { appendTransformParams, FEED_CARD_WIDTH } from '../utils/imageUrl';
 
 /**
  * FriendStoryCard component - Rectangular story card with profile photo
@@ -38,7 +39,11 @@ const FriendStoryCard = ({
   const { userId, displayName, profilePhotoURL, topPhotos, thumbnailURL, hasPhotos } = friend;
 
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array
-  const thumbnailUrl = thumbnailURL || topPhotos?.[0]?.imageURL || null;
+  const rawThumbnailUrl = thumbnailURL || topPhotos?.[0]?.imageURL || null;
+  // Serve thumbnail at 400px (blurred anyway, full-res unnecessary)
+  const thumbnailUrl = rawThumbnailUrl
+    ? appendTransformParams(rawThumbnailUrl, { width: FEED_CARD_WIDTH })
+    : null;
 
   // Ref for measuring card position (expand/collapse animation)
   const cardRef = useRef(null);

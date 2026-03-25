@@ -228,12 +228,11 @@ export const usePhotoDetailModal = ({
 
     const urlsToPrefetch = [];
 
-    // Prefetch next 2 photos for rapid tapping
-    if (currentIndex < photos.length - 1 && photos[currentIndex + 1]?.imageURL) {
-      urlsToPrefetch.push(photos[currentIndex + 1].imageURL);
-    }
-    if (currentIndex < photos.length - 2 && photos[currentIndex + 2]?.imageURL) {
-      urlsToPrefetch.push(photos[currentIndex + 2].imageURL);
+    // Prefetch next 3 photos at full-res for rapid tapping
+    for (let i = 1; i <= 3; i++) {
+      if (currentIndex + i < photos.length && photos[currentIndex + i]?.imageURL) {
+        urlsToPrefetch.push(photos[currentIndex + i].imageURL);
+      }
     }
 
     if (urlsToPrefetch.length > 0) {

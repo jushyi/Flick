@@ -8,6 +8,20 @@ jest.mock('../../src/services/supabase/feedService', () => ({
   getFeed: (...args: any[]) => mockGetFeed(...args),
 }));
 
+// Mock expo-image
+jest.mock('expo-image', () => ({
+  Image: {
+    prefetch: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+// Mock imageUrl utils
+jest.mock('../../src/utils/imageUrl', () => ({
+  appendTransformParams: (url: string, opts?: { width?: number }) =>
+    opts?.width ? `${url}?width=${opts.width}&format=webp` : url,
+  FEED_CARD_WIDTH: 400,
+}));
+
 // Mock logger
 jest.mock('../../src/utils/logger', () => ({
   __esModule: true,

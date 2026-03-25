@@ -8,18 +8,23 @@
  * is preserved for strangler fig -- screens will be switched later.
  */
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect, useRef } from 'react';
 
+import { Image } from 'expo-image';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getFeed, FeedPhoto } from '@/services/supabase/feedService';
 import { queryKeys } from '@/lib/queryKeys';
 
+import { appendTransformParams, FEED_CARD_WIDTH } from '@/utils/imageUrl';
 import logger from '@/utils/logger';
 
 // =============================================================================
 // Types
 // =============================================================================
+
+/** FeedPhoto extended with a 400px card image URL for feed rendering */
+export type FeedPhotoWithCard = FeedPhoto & { cardImageUrl: string };
 
 export interface FeedGroup {
   userId: string;
@@ -27,7 +32,7 @@ export interface FeedGroup {
   displayName: string | null;
   profilePhotoPath: string | null;
   nameColor: string | null;
-  photos: FeedPhoto[];
+  photos: FeedPhotoWithCard[];
 }
 
 // =============================================================================
@@ -41,7 +46,7 @@ export interface FeedGroup {
 export const curateTopPhotosPerFriend = (
   photos: FeedPhoto[],
   limit = 5,
-): FeedPhoto[] => {
+): FeedPhotoWithCard[] => {
   if (!photos || photos.length === 0) return [];
 
   const photosByUser: Record<string, FeedPhoto[]> = {};
@@ -73,13 +78,17 @@ export const curateTopPhotosPerFriend = (
     limit,
   });
 
-  return curated;
+  // Append 400px card image URLs for feed rendering (original imageUrl kept for full-res)
+  return curated.map((photo) => ({
+    ...photo,
+    cardImageUrl: appendTransformParams(photo.imageUrl, { width: FEED_CARD_WIDTH }),
+  }));
 };
 
 /**
  * Group photos by userId for stories-style display.
  */
-export const groupByUser = (photos: FeedPhoto[]): FeedGroup[] => {
+export const groupByUser = (photos: FeedPhotoWithCard[]): FeedGroup[] => {
   const groups: Record<string, FeedGroup> = {};
   photos.forEach((photo) => {
     if (!groups[photo.userId]) {
@@ -134,6 +143,34 @@ export function useFeedPhotos(userId: string | undefined) {
     [allPhotos],
   );
   const feedGroups = useMemo(() => groupByUser(curatedPhotos), [curatedPhotos]);
+
+  // -------------------------------------------------------------------------
+  // Prefetch: load first image per friend at 400px on initial data load
+  // -------------------------------------------------------------------------
+  const hasPrefetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasPrefetchedRef.current || feedGroups.length === 0) return;
+    hasPrefetchedRef.current = true;
+
+    const urls = feedGroups
+      .map((group) => group.photos[0]?.imageUrl)
+      .filter(Boolean)
+      .map((url) => appendTransformParams(url, { width: FEED_CARD_WIDTH }));
+
+    if (urls.length > 0) {
+      Image.prefetch(urls, 'memory-disk').catch((err) => {
+        logger.warn('useFeedPhotos: Prefetch failed', { error: String(err) });
+      });
+      logger.debug('useFeedPhotos: Prefetched first photo per friend', {
+        count: urls.length,
+      });
+    }
+
+    return () => {
+      hasPrefetchedRef.current = false;
+    };
+  }, [feedGroups]);
 
   const refresh = useCallback(async () => {
     await queryClient.invalidateQueries({
