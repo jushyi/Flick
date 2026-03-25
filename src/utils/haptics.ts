@@ -1,70 +1,33 @@
 import * as Haptics from 'expo-haptics';
 
-/**
- * Haptic Feedback Utilities
- * Provides consistent haptic feedback across the app
- */
-
-/**
- * Light impact feedback - For subtle interactions
- * Use for: UI element taps, list item selections
- */
-export const lightImpact = () => {
+export const lightImpact = (): void => {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-/**
- * Medium impact feedback - For standard interactions
- * Use for: Button presses, toggles, card taps
- */
-export const mediumImpact = () => {
+export const mediumImpact = (): void => {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 };
 
-/**
- * Heavy impact feedback - For significant actions
- * Use for: Photo capture, important confirmations
- */
-export const heavyImpact = () => {
+export const heavyImpact = (): void => {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 };
 
-/**
- * Success notification - For successful actions
- * Use for: Photo uploaded, friend request accepted, reaction added
- */
-export const successNotification = () => {
+export const successNotification = (): void => {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 };
 
-/**
- * Warning notification - For warnings or cautions
- * Use for: Form validation errors, network issues
- */
-export const warningNotification = () => {
+export const warningNotification = (): void => {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 };
 
-/**
- * Error notification - For errors
- * Use for: Failed operations, deletions
- */
-export const errorNotification = () => {
+export const errorNotification = (): void => {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 };
 
-/**
- * Selection changed - For picker/selector changes
- * Use for: Reaction picker selection, tab switches
- */
-export const selectionChanged = () => {
+export const selectionChanged = (): void => {
   Haptics.selectionAsync();
 };
 
-/**
- * Reaction haptic - Custom for emoji reactions
- * Combines selection change with light impact for satisfying feel
- */
-export const reactionHaptic = () => {
+export const reactionHaptic = (): void => {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };

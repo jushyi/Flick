@@ -1,15 +1,10 @@
-/**
- * 16-bit Pixel Icon Grid Data
- *
- * Each icon is defined as a set of filled pixel coordinates on a grid.
- * Format: { width, height, pixels: [[x, y], ...] }
- * - width/height: grid dimensions (12x12 standard, 16x16 for complex icons)
- * - pixels: array of [x, y] coordinates for filled cells (0-indexed from top-left)
- *
- * The PixelIcon component renders each coordinate as a filled Rect in SVG.
- */
+interface IconGrid {
+  width: number;
+  height: number;
+  pixels: number[][];
+}
 
-const ICON_GRIDS = {
+const ICON_GRIDS: Record<string, IconGrid> = {
   // ─── NAVIGATION ─────────────────────────────────────────
 
   'chevron-back': {
@@ -3430,10 +3425,7 @@ const ICON_GRIDS = {
   },
 };
 
-// ─── ALIASES ────────────────────────────────────────────
-// Map outline/variant names to shared grids where the visual difference
-// is negligible at 12x12 pixel scale
-const ICON_ALIASES = {
+const ICON_ALIASES: Record<string, string> = {
   'close-circle-outline': 'close-circle',
   'checkmark-circle-outline': 'checkmark-circle',
   'person-outline': 'person',
@@ -3441,12 +3433,7 @@ const ICON_ALIASES = {
   'ellipsis-horizontal-outline': 'ellipsis-horizontal',
 };
 
-/**
- * Resolve an icon name, checking aliases first, then the main grid map.
- * @param {string} name - Icon name (e.g., 'chevron-back', 'trash-outline')
- * @returns {{ width: number, height: number, pixels: number[][] } | null}
- */
-export const getIconData = name => {
+export const getIconData = (name: string): IconGrid | null => {
   const resolvedName = ICON_ALIASES[name] || name;
   return ICON_GRIDS[resolvedName] || null;
 };

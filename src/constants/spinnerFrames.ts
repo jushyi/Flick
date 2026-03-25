@@ -1,26 +1,6 @@
-/**
- * Spinner frame data for PixelSpinner — 16-Bit Retro Edition
- *
- * Defines a 12x12 pixel grid square-ring spinner with 8 animation frames.
- * A bright highlight segment cycles clockwise around the ring.
- *
- * Grid layout (12x12, ring occupies rows/cols 1-10):
- *
- *     1 2 3 4 5 6 7 8 9 10
- *  1  # # # # # # # # # #
- *  2  # # # # # # # # # #
- *  3  # #             # #
- *  4  # #             # #
- *  5  # #             # #
- *  6  # #             # #
- *  7  # #             # #
- *  8  # #             # #
- *  9  # # # # # # # # # #
- * 10  # # # # # # # # # #
- */
+type Pixel = [number, number];
 
-// Full square ring outline (all pixels rendered at dim opacity)
-const BASE_PIXELS = [
+const BASE_PIXELS: Pixel[] = [
   // Top edge (rows 1-2)
   [1, 1],
   [2, 1],
@@ -91,8 +71,7 @@ const BASE_PIXELS = [
   [2, 8],
 ];
 
-// 8 highlight frames — each is a segment of the ring that glows bright
-const HIGHLIGHT_FRAMES = [
+const HIGHLIGHT_FRAMES: Pixel[][] = [
   // Frame 0: Top-left
   [
     [1, 1],
@@ -183,8 +162,9 @@ const HIGHLIGHT_FRAMES = [
   ],
 ];
 
-// Pre-computed Sets for O(1) highlight lookup per frame
-const HIGHLIGHT_SETS = HIGHLIGHT_FRAMES.map(frame => new Set(frame.map(([x, y]) => (x << 4) | y)));
+const HIGHLIGHT_SETS: Set<number>[] = HIGHLIGHT_FRAMES.map(
+  frame => new Set(frame.map(([x, y]) => (x << 4) | y))
+);
 
 export const GRID_SIZE = 12;
 export const FRAME_COUNT = HIGHLIGHT_FRAMES.length;

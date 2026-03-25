@@ -1,11 +1,4 @@
-/**
- * Legal Content Constants
- *
- * Privacy Policy and Terms of Service content for App Store compliance.
- * These screens are accessible from Settings and are required for Apple App Store approval.
- */
-
-export const PRIVACY_POLICY_CONTENT = `Last Updated: February 2026
+export const PRIVACY_POLICY_CONTENT: string = `Last Updated: February 2026
 
 1. INTRODUCTION
 

@@ -1,10 +1,4 @@
-/**
- * Curated emoji pools for feed reactions.
- * Each category contains 10 reaction-appropriate emojis.
- * Using Unicode v13 or earlier for broad compatibility.
- */
-
-export const EMOJI_POOLS = {
+export const EMOJI_POOLS: Record<string, string[]> = {
   faces: ['😂', '🥹', '😍', '🤩', '😭', '🥰', '😊', '🤣', '😆', '🙃'],
   love: ['❤️', '💕', '💖', '💗', '💜', '💙', '🖤', '🤍', '💛', '💚'],
   fire: ['🔥', '✨', '💯', '⚡', '💥', '🌟', '⭐', '🎉', '🎊', '💫'],

@@ -1,9 +1,3 @@
-/**
- * FeedPhotoCard styles - Instagram-Style Design
- *
- * Edge-to-edge photos with user info row below.
- * Retro 16-bit aesthetic matching dark theme.
- */
 import { StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';

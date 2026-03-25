@@ -1,49 +1,18 @@
-/**
- * Centralized Logging Utility
- *
- * Environment-aware logging system that:
- * - Filters logs based on environment (production vs development)
- * - Supports log levels (DEBUG, INFO, WARN, ERROR)
- * - Automatically sanitizes sensitive data
- * - Provides consistent formatting across the app
- * - Can be extended with external error tracking services
- *
- * Usage:
- * import logger from '../utils/logger';
- * logger.debug('Debug message', { data });
- * logger.info('Info message', { data });
- * logger.warn('Warning message', { data });
- * logger.error('Error message', { error });
- */
-
 import { Platform } from 'react-native';
 
-// =============================================================================
-// CONFIGURATION
-// =============================================================================
+type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
 
-/**
- * Log levels in order of severity
- */
-const LOG_LEVELS = {
+const LOG_LEVELS: Record<LogLevel, number> = {
   DEBUG: 0,
   INFO: 1,
   WARN: 2,
   ERROR: 3,
-  NONE: 4, // Disable all logging
+  NONE: 4,
 };
 
-/**
- * Current log level based on environment
- * - Development: Show all logs (DEBUG and above)
- * - Production: Show only WARN and ERROR
- */
-const CURRENT_LOG_LEVEL = __DEV__ ? LOG_LEVELS.DEBUG : LOG_LEVELS.WARN;
+const CURRENT_LOG_LEVEL: number = __DEV__ ? LOG_LEVELS.DEBUG : LOG_LEVELS.WARN;
 
-/**
- * Sensitive data patterns to remove from logs
- */
-const SENSITIVE_PATTERNS = [
+const SENSITIVE_PATTERNS: RegExp[] = [
   /firebase[_-]?(api[_-]?key|secret|token|credential|private[_-]?key)/gi,
   /(auth|access|refresh|bearer|fcm|push)[_-]?token/gi,
   /password/gi,
@@ -54,10 +23,7 @@ const SENSITIVE_PATTERNS = [
   /credential/gi,
 ];
 
-/**
- * Sensitive field names to redact in objects
- */
-const SENSITIVE_FIELDS = [
+const SENSITIVE_FIELDS: string[] = [
   'password',
   'token',
   'apiKey',
@@ -72,55 +38,34 @@ const SENSITIVE_FIELDS = [
   'privateKey',
 ];
 
-// =============================================================================
-// UTILITY FUNCTIONS
-// =============================================================================
-
-/**
- * Check if a string contains sensitive data
- * @param {string} str - String to check
- * @returns {boolean} True if string contains sensitive data
- */
-const containsSensitiveData = str => {
+const containsSensitiveData = (str: unknown): boolean => {
   if (typeof str !== 'string') {
     return false;
   }
   return SENSITIVE_PATTERNS.some(pattern => pattern.test(str));
 };
 
-/**
- * Sanitize sensitive data from objects
- * @param {any} data - Data to sanitize
- * @returns {any} Sanitized data
- */
-const sanitizeData = data => {
-  // Handle null/undefined
+const sanitizeData = (data: unknown): unknown => {
   if (data === null || data === undefined) {
     return data;
   }
 
-  // Handle primitives
   if (typeof data !== 'object') {
-    // Redact sensitive strings
     if (typeof data === 'string' && containsSensitiveData(data)) {
       return '[REDACTED]';
     }
     return data;
   }
 
-  // Handle arrays
   if (Array.isArray(data)) {
     return data.map(item => sanitizeData(item));
   }
 
-  // Handle objects
-  const sanitized = {};
-  for (const [key, value] of Object.entries(data)) {
-    // Check if field name is sensitive
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
     if (SENSITIVE_FIELDS.includes(key)) {
       sanitized[key] = '[REDACTED]';
     } else if (typeof value === 'object') {
-      // Recursively sanitize nested objects
       sanitized[key] = sanitizeData(value);
     } else if (typeof value === 'string' && containsSensitiveData(value)) {
       sanitized[key] = '[REDACTED]';
@@ -131,14 +76,15 @@ const sanitizeData = data => {
   return sanitized;
 };
 
-/**
- * Format log message with metadata
- * @param {string} level - Log level
- * @param {string} message - Log message
- * @param {any} data - Additional data to log
- * @returns {object} Formatted log object
- */
-const formatLog = (level, message, data) => {
+interface FormattedLog {
+  timestamp: string;
+  level: string;
+  platform: string;
+  message: string;
+  data: unknown;
+}
+
+const formatLog = (level: string, message: string, data?: Record<string, unknown>): FormattedLog => {
   const timestamp = new Date().toISOString();
   const platform = Platform.OS;
 
@@ -151,26 +97,11 @@ const formatLog = (level, message, data) => {
   };
 };
 
-/**
- * Check if log should be output based on current log level
- * @param {number} level - Log level to check
- * @returns {boolean} True if log should be output
- */
-const shouldLog = level => {
+const shouldLog = (level: number): boolean => {
   return level >= CURRENT_LOG_LEVEL;
 };
 
-// =============================================================================
-// LOGGING FUNCTIONS
-// =============================================================================
-
-/**
- * Log debug message (development only)
- * Use for detailed debugging information
- * @param {string} message - Log message
- * @param {any} data - Additional data to log
- */
-const debug = (message, data) => {
+const debug = (message: string, data?: Record<string, unknown>): void => {
   if (!shouldLog(LOG_LEVELS.DEBUG)) {
     return;
   }
@@ -178,17 +109,11 @@ const debug = (message, data) => {
   const log = formatLog('DEBUG', message, data);
 
   if (__DEV__) {
-    console.log('🔍 [DEBUG]', message, data ? log.data : '');
+    console.log('[DEBUG]', message, data ? log.data : '');
   }
 };
 
-/**
- * Log info message
- * Use for general informational messages
- * @param {string} message - Log message
- * @param {any} data - Additional data to log
- */
-const info = (message, data) => {
+const info = (message: string, data?: Record<string, unknown>): void => {
   if (!shouldLog(LOG_LEVELS.INFO)) {
     return;
   }
@@ -196,52 +121,44 @@ const info = (message, data) => {
   const log = formatLog('INFO', message, data);
 
   if (__DEV__) {
-    console.log('ℹ️ [INFO]', message, data ? log.data : '');
+    console.log('[INFO]', message, data ? log.data : '');
   }
 };
 
-/**
- * Log warning message
- * Use for warning messages that don't prevent app functionality
- * @param {string} message - Log message
- * @param {any} data - Additional data to log
- */
-const warn = (message, data) => {
+const warn = (message: string, data?: Record<string, unknown>): void => {
   if (!shouldLog(LOG_LEVELS.WARN)) {
     return;
   }
 
   const log = formatLog('WARN', message, data);
 
-  console.warn('⚠️ [WARN]', message, data ? log.data : '');
+  console.warn('[WARN]', message, data ? log.data : '');
 };
 
-/**
- * Log error message
- * Use for errors that affect app functionality
- * @param {string} message - Error message
- * @param {Error|any} error - Error object or additional data
- */
-const error = (message, errorObj) => {
+const error = (message: string, errorObj?: Record<string, unknown>): void => {
   if (!shouldLog(LOG_LEVELS.ERROR)) {
     return;
   }
 
   const log = formatLog('ERROR', message, errorObj);
 
-  console.error('❌ [ERROR]', message, errorObj ? log.data : '');
+  console.error('[ERROR]', message, errorObj ? log.data : '');
 };
 
-// =============================================================================
-// EXPORT LOGGER
-// =============================================================================
+interface Logger {
+  debug: (message: string, data?: Record<string, unknown>) => void;
+  info: (message: string, data?: Record<string, unknown>) => void;
+  warn: (message: string, data?: Record<string, unknown>) => void;
+  error: (message: string, data?: Record<string, unknown>) => void;
+  levels: Record<LogLevel, number>;
+  currentLevel: number;
+}
 
-const logger = {
+const logger: Logger = {
   debug,
   info,
   warn,
   error,
-  // Expose log levels for external configuration
   levels: LOG_LEVELS,
   currentLevel: CURRENT_LOG_LEVEL,
 };
