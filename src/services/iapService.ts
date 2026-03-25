@@ -1,20 +1,7 @@
 import * as RNIap from 'react-native-iap';
 import type { ProductPurchase, Product } from 'react-native-iap';
-import {
-  getFirestore,
-  collection,
-  doc,
-  addDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  query,
-  where,
-  serverTimestamp,
-} from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
 import logger from '../utils/logger';
-
-const db = getFirestore();
 
 export const PRODUCT_IDS: string[] = [
   'flick_contribution_099',
@@ -174,16 +161,17 @@ export const restorePurchases = async (): Promise<RestoreResult> => {
 export const checkContributorStatus = async (userId: string): Promise<ContributorResult> => {
   try {
     logger.debug('IAPService.checkContributorStatus: Checking', { userId });
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
+    const { data, error } = await supabase
+      .from('users')
+      .select('is_contributor')
+      .eq('id', userId)
+      .single();
 
-    if (!userDoc.exists()) {
-      return { success: false, error: 'User not found' };
+    if (error) {
+      return { success: false, error: error.message };
     }
 
-    const userData = userDoc.data() as Record<string, unknown>;
-    const isContributor = userData.isContributor === true;
-
+    const isContributor = data?.is_contributor === true;
     logger.debug('IAPService.checkContributorStatus: Checked', { userId, isContributor });
     return { success: true, isContributor };
   } catch (err) {
@@ -202,33 +190,28 @@ export const saveContribution = async (
   try {
     logger.debug('IAPService.saveContribution: Saving', { userId, productId, transactionId });
 
-    const contributionsCollection = collection(db, 'contributions');
-    await addDoc(contributionsCollection, {
-      userId,
-      productId,
-      transactionId,
+    const { error: insertError } = await supabase.from('contributions').insert({
+      user_id: userId,
+      product_id: productId,
+      transaction_id: transactionId,
       amount,
-      createdAt: serverTimestamp(),
     });
 
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
+    if (insertError) throw insertError;
 
-    if (userDoc.exists()) {
-      const userData = userDoc.data() as Record<string, unknown>;
-      const updates: Record<string, unknown> = {};
+    // Mark user as contributor if not already
+    const { data: userData } = await supabase
+      .from('users')
+      .select('is_contributor, name_color')
+      .eq('id', userId)
+      .single();
 
-      if (!userData.isContributor) {
-        updates.isContributor = true;
-      }
-      if (!userData.nameColor) {
-        updates.nameColor = null;
-      }
-
-      if (Object.keys(updates).length > 0) {
-        await updateDoc(userRef, updates);
-        logger.info('IAPService.saveContribution: User marked as contributor', { userId });
-      }
+    if (userData && !userData.is_contributor) {
+      await supabase
+        .from('users')
+        .update({ is_contributor: true })
+        .eq('id', userId);
+      logger.info('IAPService.saveContribution: User marked as contributor', { userId });
     }
 
     logger.info('IAPService.saveContribution: Contribution saved', { userId, productId, transactionId });
@@ -243,13 +226,16 @@ export const saveContribution = async (
 export const getUserContributions = async (userId: string): Promise<ContributionsResult> => {
   try {
     logger.debug('IAPService.getUserContributions: Fetching', { userId });
-    const contributionsCollection = collection(db, 'contributions');
-    const q = query(contributionsCollection, where('userId', '==', userId));
-    const snapshot = await getDocs(q);
+    const { data, error } = await supabase
+      .from('contributions')
+      .select('*')
+      .eq('user_id', userId);
 
-    const contributions: ContributionRecord[] = snapshot.docs.map(d => ({
+    if (error) throw error;
+
+    const contributions: ContributionRecord[] = (data || []).map(d => ({
       id: d.id,
-      ...(d.data() as Record<string, unknown>),
+      ...(d as Record<string, unknown>),
     }));
 
     logger.info('IAPService.getUserContributions: Fetched', { userId, count: contributions.length });

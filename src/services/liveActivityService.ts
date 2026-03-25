@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 import { NativeModulesProxy, EventEmitter } from 'expo-modules-core';
-import messaging from '@react-native-firebase/messaging';
+import * as Notifications from 'expo-notifications';
 
 import { supabase } from '../lib/supabase';
 import logger from '../utils/logger';
@@ -180,17 +180,17 @@ export const getActiveActivityIds = async (): Promise<string[]> => {
 export const getFCMRegistrationToken = async (): Promise<string | null> => {
   if (Platform.OS !== 'ios') return null;
   try {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-    if (!enabled) return null;
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      if (newStatus !== 'granted') return null;
+    }
 
-    const fcmToken = await messaging().getToken();
-    return fcmToken;
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    return tokenData?.data || null;
   } catch (err) {
     const error = err as Error;
-    logger.warn('liveActivityService: Failed to get FCM token', { error: error.message });
+    logger.warn('liveActivityService: Failed to get push token', { error: error.message });
     return null;
   }
 };

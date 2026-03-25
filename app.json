@@ -43,14 +43,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
         "NSSupportsLiveActivities": true,
-        "NSSupportsLiveActivitiesFrequentUpdates": true,
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.904439256658-sgk4730ollcloeto8ek9hrjfgd0pin85"
-            ]
-          }
-        ]
+        "NSSupportsLiveActivitiesFrequentUpdates": true
       }
     },
     "notification": {
@@ -98,9 +91,6 @@
           }
         }
       ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
-      "@react-native-firebase/perf",
       "@giphy/react-native-sdk",
       "expo-audio",
       "expo-asset",

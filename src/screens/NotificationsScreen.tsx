@@ -13,15 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelSpinner from '../components/PixelSpinner';
 import { NotificationsSkeleton } from '../components/skeletons/NotificationsSkeleton';
 import { EmptyState } from '../components/EmptyState';
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-} from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
 import PixelIcon from '../components/PixelIcon';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../constants/colors';
@@ -36,8 +28,6 @@ import logger from '../utils/logger';
 const requestNotificationPermission = async () => ({ success: true });
 const getNotificationToken = async () => ({ success: true, data: null });
 const storeNotificationToken = async () => ({ success: true });
-
-const db = getFirestore();
 
 /**
  * NotificationsScreen - Displays list of reaction notifications
@@ -115,18 +105,28 @@ const NotificationsScreen = () => {
     logger.debug('NotificationsScreen: Fetching notifications', { userId: user.uid });
 
     try {
-      const notificationsRef = collection(db, 'notifications');
-      const q = query(
-        notificationsRef,
-        where('recipientId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(50)
-      );
+      const { data: rows, error: fetchError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', user.uid)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-      const snapshot = await getDocs(q);
-      const notificationsList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
+      if (fetchError) throw fetchError;
+
+      const notificationsList = (rows || []).map(row => ({
+        id: row.id,
+        ...row,
+        recipientId: row.recipient_id,
+        senderId: row.sender_id,
+        senderName: row.sender_name,
+        senderProfilePhotoURL: row.sender_profile_photo_url,
+        createdAt: row.created_at ? new Date(row.created_at) : null,
+        type: row.type,
+        photoId: row.photo_id,
+        message: row.message,
+        reactions: row.reactions,
+        read: row.read,
       }));
 
       logger.info('NotificationsScreen: Loaded notifications', { count: notificationsList.length });

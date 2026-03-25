@@ -1,8 +1,9 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": false,
-    "allowJs": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "allowJs": false,
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
@@ -12,6 +13,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "supabase/**/*.ts", "app.config.js"],
-  "exclude": ["node_modules", "functions", "__tests__"]
+  "include": ["src/**/*", "App.tsx", "app.config.js"],
+  "exclude": ["node_modules", "__tests__", "supabase"]
 }

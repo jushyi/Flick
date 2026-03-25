@@ -12,14 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelSpinner from '../components/PixelSpinner';
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  limit,
-  getDocs,
-} from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
 import PixelIcon from '../components/PixelIcon';
 import { useAuth } from '../context/AuthContext';
 import FriendCard from '../components/FriendCard';
@@ -62,8 +55,6 @@ import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/FriendsScreen.styles';
 import logger from '../utils/logger';
-
-const db = getFirestore();
 
 /**
  * FriendsScreen - Unified friends management with tabbed interface
@@ -544,30 +535,29 @@ const FriendsScreen = ({ navigation }) => {
       setSearchLoading(true);
       const normalizedTerm = term.toLowerCase().trim();
 
-      const usersQuery = query(
-        collection(db, 'users'),
-        where('username', '>=', normalizedTerm),
-        where('username', '<=', normalizedTerm + '\uf8ff'),
-        limit(20)
-      );
-      const querySnapshot = await getDocs(usersQuery);
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('*')
+        .ilike('username', `${normalizedTerm}%`)
+        .limit(20);
+
+      if (usersError) throw usersError;
 
       // Get users who have blocked the current user
       const blockedByResult = await getBlockedByUserIds(user.uid);
       const blockedByUserIds = blockedByResult.success ? blockedByResult.blockedByUserIds : [];
 
       const results = [];
-      querySnapshot.forEach(docSnap => {
+      for (const userData of (usersData || [])) {
         // Exclude self and users who have blocked current user
-        if (docSnap.id !== user.uid && !blockedByUserIds.includes(docSnap.id)) {
-          const data = docSnap.data();
+        if (userData.id !== user.uid && !blockedByUserIds.includes(userData.id)) {
           results.push({
-            userId: docSnap.id,
-            ...data,
-            profilePhotoURL: data.profilePhotoURL || data.photoURL,
+            userId: userData.id,
+            ...userData,
+            profilePhotoURL: userData.profile_photo_url || userData.photo_url,
           });
         }
-      });
+      }
 
       setSearchResults(results);
 

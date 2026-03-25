@@ -195,7 +195,7 @@ Plans:
   3. All 7 @react-native-firebase/* packages are removed from package.json and the app builds successfully via EAS
   4. The functions/ directory (Firebase Cloud Functions) is removed with all jobs confirmed running on Supabase
   5. Sentry is integrated for error tracking and performance traces, replacing Firebase Performance Monitoring
-**Plans:** 6/8 plans executed
+**Plans:** 7/8 plans executed
 
 Plans:
 - [x] 20-07-PLAN.md -- Wave 0: jest.setup rewrite (Supabase/Sentry mocks) + sentryService test scaffold
@@ -204,7 +204,7 @@ Plans:
 - [x] 20-03-PLAN.md -- TS sweep: constants, utils, styles, config, non-Firebase services, context providers
 - [x] 20-04-PLAN.md -- TS sweep: all hooks (camera, messaging, social, interaction)
 - [x] 20-05-PLAN.md -- TS sweep: all components, screens, navigation, App.tsx (3 tasks)
-- [ ] 20-08-PLAN.md -- Migration validation: reset script + validation script + D-16 human checkpoint gate
+- [x] 20-08-PLAN.md -- Migration validation: reset script + validation script + D-16 human checkpoint gate
 - [ ] 20-06-PLAN.md -- Firebase package removal + functions/ deletion + strict:true + CLAUDE.md rewrite + EAS build verification
 
 ## Progress
@@ -222,7 +222,17 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 17. Messaging & Social | v1.2 | 6/6 | Complete    | 2026-03-25 |
 | 18. Background Jobs & Notifications | v1.2 | 5/5 | Complete    | 2026-03-25 |
 | 19. Performance Polish | v1.2 | 5/5 | Complete    | 2026-03-25 |
-| 20. TypeScript Sweep & Firebase Removal | v1.2 | 6/8 | In Progress|  |
+| 20. TypeScript Sweep & Firebase Removal | v1.2 | 7/8 | In Progress|  |
+
+### Phase 20.1: Firestore data migration script (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 20
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 20.1 to break down)
 
 ### Phase 21: Full verification of phases 13-20 - guided UAT of Supabase migration
 

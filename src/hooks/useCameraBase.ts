@@ -111,7 +111,7 @@ export type UseCameraBaseReturn = {
 
 const useCameraBase = ({ mode = 'normal', onSnapCapture = null }: CameraBaseOptions = {}): UseCameraBaseReturn => {
   const isSnapMode = mode === 'snap';
-  const { user } = useAuth() as { user: { uid: string } | null };
+  const { user } = useAuth() as unknown as { user: { uid: string } | null };
   const navigation = useNavigation();
   const route = useRoute();
 

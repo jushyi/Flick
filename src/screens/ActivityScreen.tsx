@@ -17,17 +17,7 @@ import PixelSpinner from '../components/PixelSpinner';
 import { ActivitySkeleton } from '../components/skeletons/ActivitySkeleton';
 import { EmptyState } from '../components/EmptyState';
 import FriendCard from '../components/FriendCard';
-import {
-  getFirestore,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-} from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { layout } from '../constants/layout';
@@ -53,8 +43,6 @@ import StrokedNameText from '../components/StrokedNameText';
 
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
-
-const db = getFirestore();
 
 /**
  * Group notifications into time-based sections: Today, This Week, Earlier.
@@ -230,11 +218,15 @@ const ActivityScreen = () => {
           result.requests.map(async request => {
             const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
             try {
-              const userDoc = await getDoc(doc(db, 'users', otherUserId));
-              if (userDoc.exists()) {
+              const { data: userData, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', otherUserId)
+                .single();
+              if (!error && userData) {
                 return {
                   ...request,
-                  otherUser: { id: userDoc.id, ...userDoc.data() },
+                  otherUser: { id: userData.id, ...userData },
                 };
               }
             } catch {
@@ -306,40 +298,50 @@ const ActivityScreen = () => {
     if (!user?.uid) return [];
 
     try {
-      const notificationsRef = collection(db, 'notifications');
-      const q = query(
-        notificationsRef,
-        where('recipientId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(50)
-      );
+      const { data: notifs, error: notifsError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', user.uid)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-      const snapshot = await getDocs(q);
-      const notifs = snapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        ...docSnap.data(),
+      if (notifsError) throw notifsError;
+
+      const normalizedNotifs = (notifs || []).map(n => ({
+        ...n,
+        // Map snake_case to camelCase for compatibility with existing UI code
+        id: n.id,
+        recipientId: n.recipient_id,
+        senderId: n.sender_id,
+        senderName: n.sender_name,
+        senderProfilePhotoURL: n.sender_profile_photo_url,
+        createdAt: n.created_at ? new Date(n.created_at) : null,
+        type: n.type,
+        photoId: n.photo_id,
+        commentId: n.comment_id,
+        message: n.message,
+        reactions: n.reactions,
+        read: n.read,
       }));
 
       // Batch-fetch unique sender user docs to get nameColor + current photoURL fallback
-      const uniqueSenderIds = [...new Set(notifs.map(n => n.senderId).filter(Boolean))];
+      const uniqueSenderIds = [...new Set(normalizedNotifs.map(n => n.senderId).filter(Boolean))];
       const colorMap = {};
       const photoMap = {};
-      await Promise.all(
-        uniqueSenderIds.map(async senderId => {
-          try {
-            const userDoc = await getDoc(doc(db, 'users', senderId));
-            if (userDoc.exists()) {
-              const data = userDoc.data();
-              colorMap[senderId] = data.nameColor || null;
-              photoMap[senderId] = data.photoURL || data.profilePhotoURL || null;
-            }
-          } catch {
-            // Ignore — will fall back to defaults
+      if (uniqueSenderIds.length > 0) {
+        const { data: senderUsers } = await supabase
+          .from('users')
+          .select('id, name_color, photo_url, profile_photo_url')
+          .in('id', uniqueSenderIds);
+        if (senderUsers) {
+          for (const u of senderUsers) {
+            colorMap[u.id] = u.name_color || null;
+            photoMap[u.id] = u.photo_url || u.profile_photo_url || null;
           }
-        })
-      );
+        }
+      }
 
-      return notifs.map(n => ({
+      return normalizedNotifs.map(n => ({
         ...n,
         senderNameColor: n.senderId ? colorMap[n.senderId] || null : null,
         senderProfilePhotoURL:

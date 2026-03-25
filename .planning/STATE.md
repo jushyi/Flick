@@ -145,6 +145,7 @@ Plan: 7 of 8
 ### Roadmap Evolution
 
 - Phase 21 added: Full verification of phases 13-20 - guided UAT of Supabase migration
+- Phase 20.1 inserted after Phase 20: Firestore data migration script (URGENT) — migrates all Firestore collection data (users, photos, friendships, conversations, comments, albums, notifications, blocks, reports, streaks, reactions) to Supabase PostgreSQL. Must be repeatable and work with reset-dev-supabase.ts cycle.
 
 ### Quick Tasks Completed
 

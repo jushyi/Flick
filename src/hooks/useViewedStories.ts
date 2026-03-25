@@ -22,7 +22,7 @@ type UseViewedStoriesReturn = {
 };
 
 export const useViewedStories = (): UseViewedStoriesReturn => {
-  const { user } = useAuth() as { user: { uid: string } | null };
+  const { user } = useAuth() as unknown as { user: { uid: string } | null };
   const userId = user?.uid;
 
   const [viewedFriends, setViewedFriends] = useState<Set<string>>(new Set());

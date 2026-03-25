@@ -17,7 +17,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { uploadPhoto, uploadVideo, uploadSnapPhoto, generateThumbnail } from './supabase/storageService';
-import { uploadPhoto as firebaseUploadPhoto, uploadVideo as firebaseUploadVideo } from './firebase/storageService';
 import { updatePhotoAfterUpload } from './supabase/photoService';
 import { getPowerSyncDb } from '../lib/powersync/PowerSyncProvider';
 import { supabase } from '../lib/supabase';
@@ -69,49 +68,21 @@ export const initializeQueue = async (): Promise<void> => {
   logger.info('UploadQueueService.initializeQueue: Starting');
 
   try {
-    // Step 1: Drain old Firebase queue items from AsyncStorage
-    let drainedCount = 0;
+    // Step 1: Clear any old Firebase queue items from AsyncStorage (no longer drained via Firebase)
     try {
       const stored = await AsyncStorage.getItem(QUEUE_STORAGE_KEY);
       if (stored) {
-        const oldItems = JSON.parse(stored);
-        if (Array.isArray(oldItems) && oldItems.length > 0) {
-          logger.info('UploadQueueService.initializeQueue: Draining old Firebase queue', {
-            count: oldItems.length,
-          });
-
-          for (const item of oldItems) {
-            try {
-              const mediaUri = item.mediaUri || item.photoUri;
-              const userId = item.userId;
-              const mediaType = item.mediaType || 'photo';
-
-              if (mediaType === 'video') {
-                await firebaseUploadVideo(userId, generateUUID(), mediaUri);
-              } else {
-                await firebaseUploadPhoto(userId, generateUUID(), mediaUri);
-              }
-              drainedCount++;
-            } catch (error: any) {
-              logger.warn('UploadQueueService.initializeQueue: Failed to drain item', {
-                id: item.id,
-                error: error.message,
-              });
-            }
-          }
-
-          // Clear old queue from AsyncStorage
-          await AsyncStorage.removeItem(QUEUE_STORAGE_KEY);
-        }
+        logger.info('UploadQueueService.initializeQueue: Clearing legacy AsyncStorage queue');
+        await AsyncStorage.removeItem(QUEUE_STORAGE_KEY);
       }
     } catch (drainError: any) {
-      logger.warn('UploadQueueService.initializeQueue: Drain failed', {
+      logger.warn('UploadQueueService.initializeQueue: Legacy queue clear failed', {
         error: drainError.message,
       });
     }
 
     isInitialized = true;
-    logger.info('Upload queue initialized', { drainedCount });
+    logger.info('Upload queue initialized');
 
     // Step 2: Check PowerSync for pending items and process
     const db = getPowerSyncDb();
@@ -216,25 +187,15 @@ export const processQueue = async (): Promise<void> => {
           ['processing', item.id]
         );
 
-        // Upload based on backend and media type
+        // Upload based on media type (all uploads go through Supabase)
         let uploadResult: any;
 
-        if (item.backend === 'firebase') {
-          // Drain old Firebase items
-          if (item.media_type === 'video') {
-            uploadResult = await firebaseUploadVideo(item.user_id, item.photo_id, item.media_uri);
-          } else {
-            uploadResult = await firebaseUploadPhoto(item.user_id, item.photo_id, item.media_uri);
-          }
+        if (item.media_type === 'video') {
+          uploadResult = await uploadVideo(item.user_id, item.photo_id, item.media_uri);
+        } else if (item.media_type === 'snap') {
+          uploadResult = await uploadSnapPhoto(item.user_id, item.photo_id, item.media_uri);
         } else {
-          // Supabase upload
-          if (item.media_type === 'video') {
-            uploadResult = await uploadVideo(item.user_id, item.photo_id, item.media_uri);
-          } else if (item.media_type === 'snap') {
-            uploadResult = await uploadSnapPhoto(item.user_id, item.photo_id, item.media_uri);
-          } else {
-            uploadResult = await uploadPhoto(item.user_id, item.photo_id, item.media_uri);
-          }
+          uploadResult = await uploadPhoto(item.user_id, item.photo_id, item.media_uri);
         }
 
         if (!uploadResult.success) {

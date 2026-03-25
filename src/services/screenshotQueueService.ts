@@ -1,6 +1,34 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { recordScreenshot } from './firebase/screenshotService';
+import { supabase } from '../lib/supabase';
+
+// TODO(20-08): Implement full screenshotService in supabase layer
+const recordScreenshot = async (params: {
+  conversationId: string;
+  snapMessageId: string;
+  screenshotterId: string;
+  screenshotterName: string;
+}): Promise<{ success: boolean; alreadyScreenshotted?: boolean; error?: string }> => {
+  try {
+    const { error } = await supabase.from('screenshot_events').insert({
+      conversation_id: params.conversationId,
+      snap_message_id: params.snapMessageId,
+      screenshotter_id: params.screenshotterId,
+      screenshotter_name: params.screenshotterName,
+    });
+    if (error) {
+      // If duplicate, treat as already screenshotted
+      if (error.code === '23505') {
+        return { success: true, alreadyScreenshotted: true };
+      }
+      return { success: false, error: error.message };
+    }
+    return { success: true, alreadyScreenshotted: false };
+  } catch (err) {
+    const e = err as Error;
+    return { success: false, error: e.message };
+  }
+};
 
 import logger from '../utils/logger';
 

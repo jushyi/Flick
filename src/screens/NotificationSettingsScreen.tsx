@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import PixelToggle from '../components/PixelToggle';
-import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 // TODO(20-01): notificationService - needs migration to standalone service
 const checkNotificationPermissions = async () => ({ success: true, data: 'granted' });
 const requestNotificationPermission = async () => ({ success: true });
@@ -14,8 +14,6 @@ const storeNotificationToken = async () => ({ success: true });
 import { colors } from '../constants/colors';
 import { styles } from '../styles/NotificationSettingsScreen.styles';
 import logger from '../utils/logger';
-
-const db = getFirestore();
 
 /**
  * Default notification preferences
@@ -118,13 +116,15 @@ const NotificationSettingsScreen = () => {
   }, [userProfile?.notificationPreferences]);
 
   const savePreferences = async newPreferences => {
-    if (!user?.uid) return;
+    const userId = user?.id || user?.uid;
+    if (!userId) return;
 
     try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        notificationPreferences: newPreferences,
-      });
+      const { error } = await supabase
+        .from('users')
+        .update({ notification_preferences: newPreferences })
+        .eq('id', userId);
+      if (error) throw error;
       logger.debug('NotificationSettingsScreen: Preferences saved', { newPreferences });
     } catch (error) {
       logger.error('NotificationSettingsScreen: Failed to save preferences', {

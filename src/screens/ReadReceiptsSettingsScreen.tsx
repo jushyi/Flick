@@ -10,19 +10,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
-
 import PixelIcon from '../components/PixelIcon';
 import PixelToggle from '../components/PixelToggle';
 
 import { useAuth } from '../context/AuthContext';
 
+import { supabase } from '../lib/supabase';
+
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
-
-const db = getFirestore();
 
 /**
  * ReadReceiptsSettingsScreen
@@ -59,7 +57,12 @@ const ReadReceiptsSettingsScreen = () => {
             style: 'destructive',
             onPress: async () => {
               try {
-                await updateDoc(doc(db, 'users', user.uid), { readReceiptsEnabled: false });
+                const userId = user?.id || user?.uid;
+                const { error } = await supabase
+                  .from('users')
+                  .update({ read_receipts_enabled: false })
+                  .eq('id', userId);
+                if (error) throw error;
                 updateUserProfile({ ...userProfile, readReceiptsEnabled: false });
                 logger.info('ReadReceiptsSettingsScreen: Read receipts disabled');
               } catch (error) {
@@ -73,11 +76,18 @@ const ReadReceiptsSettingsScreen = () => {
       );
     } else {
       // Toggling ON — write directly, no confirmation
-      updateDoc(doc(db, 'users', user.uid), { readReceiptsEnabled: true }).catch(error => {
-        logger.error('ReadReceiptsSettingsScreen: Failed to update read receipts', {
-          error: error.message,
+      const userId = user?.id || user?.uid;
+      supabase
+        .from('users')
+        .update({ read_receipts_enabled: true })
+        .eq('id', userId)
+        .then(({ error }) => {
+          if (error) {
+            logger.error('ReadReceiptsSettingsScreen: Failed to update read receipts', {
+              error: error.message,
+            });
+          }
         });
-      });
       updateUserProfile({ ...userProfile, readReceiptsEnabled: true });
       logger.info('ReadReceiptsSettingsScreen: Read receipts enabled');
     }

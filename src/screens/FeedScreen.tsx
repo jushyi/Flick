@@ -14,14 +14,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import PixelSpinner from '../components/PixelSpinner';
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  limit,
-  onSnapshot,
-} from '@react-native-firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { Image } from 'expo-image';
 import PixelIcon from '../components/PixelIcon';
 import useFeedPhotos from '../hooks/useFeedPhotos';
@@ -54,8 +47,6 @@ import logger from '../utils/logger';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SHIMMER_WIDTH = 80;
-
-const db = getFirestore();
 
 // Layout constants
 const HEADER_HEIGHT = 68; // paddingVertical: 16 × 2 + title height
@@ -354,26 +345,46 @@ const FeedScreen = () => {
 
     logger.debug('FeedScreen: Subscribing to unread notifications');
 
-    const q = query(
-      collection(db, 'notifications'),
-      where('recipientId', '==', user.uid),
-      where('read', '==', false),
-      limit(1)
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      snapshot => {
-        const hasUnread = !snapshot.empty;
-        logger.debug('FeedScreen: Unread notifications check', { hasUnread });
-        setHasNewNotifications(hasUnread);
-      },
-      error => {
-        logger.error('FeedScreen: Failed to subscribe to notifications', { error: error.message });
+    // Check for unread notifications via Supabase
+    const checkUnread = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('recipient_id', user.uid)
+          .eq('read', false);
+        if (!error) {
+          const hasUnread = (count || 0) > 0;
+          logger.debug('FeedScreen: Unread notifications check', { hasUnread });
+          setHasNewNotifications(hasUnread);
+        }
+      } catch (error) {
+        logger.error('FeedScreen: Failed to check notifications', { error: error.message });
       }
-    );
+    };
 
-    return () => unsubscribe();
+    checkUnread();
+
+    // Subscribe to realtime changes on notifications table
+    const channel = supabase
+      .channel('feed-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${user.uid}`,
+        },
+        () => {
+          checkUnread();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.uid]);
 
   /**

@@ -3,19 +3,17 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Platform } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
-
 import PixelIcon from '../components/PixelIcon';
 import PixelToggle from '../components/PixelToggle';
 
 import { useAuth } from '../context/AuthContext';
 
+import { supabase } from '../lib/supabase';
+
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import logger from '../utils/logger';
-
-const db = getFirestore();
 
 /**
  * Default sound preferences
@@ -57,14 +55,16 @@ const SoundSettingsScreen = () => {
   }, []); // Empty array - only run once on mount
 
   const savePreferences = async newPreferences => {
-    if (!user?.uid) return;
+    const userId = user?.id || user?.uid;
+    if (!userId) return;
 
     try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        soundPreferences: newPreferences,
-      });
-      logger.info('SoundSettingsScreen: Preferences saved to Firestore', { newPreferences });
+      const { error } = await supabase
+        .from('users')
+        .update({ sound_preferences: newPreferences })
+        .eq('id', userId);
+      if (error) throw error;
+      logger.info('SoundSettingsScreen: Preferences saved to Supabase', { newPreferences });
 
       // Optimistically update AuthContext's local state if update function exists
       // This ensures the value persists when navigating back to this screen

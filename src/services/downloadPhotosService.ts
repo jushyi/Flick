@@ -1,6 +1,6 @@
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system/legacy';
-import { getUserPhotos } from './firebase/photoService';
+import { getUserPhotos } from './supabase/photoService';
 import logger from '../utils/logger';
 
 interface DownloadProgress {
@@ -33,15 +33,16 @@ export const downloadAllPhotos = async (
     return { success: false, downloaded: 0, failed: 0, error: 'Media library permission denied' };
   }
 
-  const photosResult = await getUserPhotos(userId);
-  if (!photosResult.success) {
+  let photos: any[] = [];
+  try {
+    photos = await getUserPhotos(userId);
+  } catch (err) {
+    const e = err as Error;
     logger.error('downloadPhotosService.downloadAllPhotos: Failed to get photos', {
-      error: photosResult.error,
+      error: e.message,
     });
-    return { success: false, downloaded: 0, failed: 0, error: photosResult.error };
+    return { success: false, downloaded: 0, failed: 0, error: e.message };
   }
-
-  const photos = photosResult.photos || [];
   const total = photos.length;
 
   if (total === 0) {
@@ -59,7 +60,7 @@ export const downloadAllPhotos = async (
   for (let i = 0; i < photos.length; i++) {
     const photo = photos[i];
     const photoId = photo.id;
-    const imageURL = photo.imageURL;
+    const imageURL = photo.imageUrl || photo.imageURL || photo.image_url;
 
     if (!imageURL) {
       logger.warn('downloadPhotosService.downloadAllPhotos: Photo has no imageURL', { photoId });

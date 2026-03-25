@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, type ReactNode } from 'react';
 
-import { getAuth } from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 
@@ -169,45 +168,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.JSX.Element
     };
   }, []);
 
-  // Silent migration bridge: detect Firebase token on mount
-  useEffect(() => {
-    const attemptMigration = async (): Promise<void> => {
-      try {
-        const firebaseAuth = getAuth();
-        const firebaseUser = firebaseAuth.currentUser;
-        if (firebaseUser) {
-          logger.info('AuthContext: Firebase user detected, attempting migration', {
-            uid: firebaseUser.uid,
-          });
-
-          const firebaseToken = await firebaseUser.getIdToken();
-          const { data, error } = await supabase.functions.invoke('migrate-firebase-auth', {
-            body: { firebaseToken },
-          });
-
-          if (error) {
-            logger.warn('AuthContext: Migration failed, user will re-verify', {
-              error: error.message,
-            });
-          } else if (data?.access_token && data?.refresh_token) {
-            await supabase.auth.setSession({
-              access_token: data.access_token,
-              refresh_token: data.refresh_token,
-            });
-            logger.info('AuthContext: Silent migration completed', { migrated: data.migrated });
-          }
-
-          await firebaseAuth.signOut();
-          logger.info('AuthContext: Firebase sign out after migration');
-        }
-      } catch (err) {
-        const e = err as Error;
-        logger.warn('AuthContext: Migration attempt failed', { error: e.message });
-      }
-    };
-
-    attemptMigration();
-  }, []);
+  // NOTE: Firebase migration bridge removed — all users now authenticate via Supabase directly.
 
   const signOut = async (): Promise<{ success: boolean; error?: string }> => {
     logger.info('AuthContext: Sign out requested - starting comprehensive cleanup');

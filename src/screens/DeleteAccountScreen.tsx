@@ -16,8 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth } from '@react-native-firebase/auth';
 import { sendVerificationCode, verifyCode } from '../services/supabase/phoneAuthService';
+import { supabase } from '../lib/supabase';
 // TODO(20-01): accountService - no supabase equivalent yet
 const scheduleAccountDeletion = async () => ({ success: false, error: 'Account deletion not yet migrated' });
 import {
@@ -66,10 +66,13 @@ const DeleteAccountScreen = () => {
   const inputRef = useRef(null);
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
-  // Get current user's phone number
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
-  const phoneNumber = currentUser?.phoneNumber;
+  // Get current user's phone number from Supabase auth
+  const [phoneNumber, setPhoneNumber] = useState(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setPhoneNumber(data?.user?.phone || null);
+    });
+  }, []);
 
   // Log screen mount
   useEffect(() => {
