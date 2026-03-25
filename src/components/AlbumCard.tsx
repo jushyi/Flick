@@ -1,0 +1,223 @@
+import { useEffect, memo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
+import PixelIcon from './PixelIcon';
+import { colors } from '../constants/colors';
+import { spacing } from '../constants/spacing';
+import { typography } from '../constants/typography';
+import { layout } from '../constants/layout';
+
+const CARD_SIZE = 150;
+
+/**
+ * AlbumCard - Displays a single album in the album bar
+ *
+ * @param {object} album - Album object with { id, name, coverPhotoId, photoIds }
+ * @param {string} coverPhotoUrl - URL for the cover photo (resolved by parent)
+ * @param {array} stackPhotoUrls - URLs for stack photos (up to 2, most recent non-cover photos)
+ * @param {function} onPress - Callback when card tapped
+ * @param {function} onLongPress - Optional callback for long press (edit menu)
+ * @param {boolean} isHighlighted - Whether to show scale bounce animation
+ */
+type Props = {
+  album: Record<string, unknown>;
+  coverPhotoUrl?: string | null;
+  stackPhotoUrls?: string[];
+  onPress: () => void;
+  onLongPress?: () => void;
+  isHighlighted?: boolean;
+};
+
+const AlbumCard = ({
+  album,
+  coverPhotoUrl,
+  stackPhotoUrls = [],
+  onPress,
+  onLongPress,
+  isHighlighted = false,
+}) => {
+  // Show stack cards based on how many stack photos we have
+  const stackCount = stackPhotoUrls.length;
+
+  // Animation for highlight effect
+  const scale = useSharedValue(1);
+
+  // Trigger scale bounce when isHighlighted becomes true
+  useEffect(() => {
+    if (isHighlighted) {
+      // Quick bounce - 100ms up, 100ms hold, 100ms down
+      scale.value = withSequence(
+        withTiming(1.15, { duration: 100 }),
+        withTiming(1.15, { duration: 100 }),
+        withTiming(1, { duration: 100 })
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHighlighted]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      onLongPress={event => onLongPress?.(event)}
+      activeOpacity={0.8}
+    >
+      <Animated.View style={[styles.stackContainer, animatedStyle]}>
+        {/* Back card (2nd back) - only show if we have 2+ stack photos */}
+        {stackCount >= 2 && (
+          <View style={[styles.stackCard, styles.stackCardBack]}>
+            <Image
+              source={{ uri: stackPhotoUrls[1], cacheKey: `album-stack-${album.id}-1` }}
+              style={styles.stackImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              priority="normal"
+              recyclingKey={album.id}
+            />
+          </View>
+        )}
+
+        {/* Middle card (1st back) - only show if we have 1+ stack photos */}
+        {stackCount >= 1 && (
+          <View style={[styles.stackCard, styles.stackCardMiddle]}>
+            <Image
+              source={{ uri: stackPhotoUrls[0], cacheKey: `album-stack-${album.id}-0` }}
+              style={styles.stackImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              priority="normal"
+              recyclingKey={album.id}
+            />
+          </View>
+        )}
+
+        {/* Front card (cover) */}
+        <View style={styles.imageContainer}>
+          {coverPhotoUrl ? (
+            <Image
+              source={{
+                uri: coverPhotoUrl,
+                cacheKey: `album-cover-${album.id}-${album.coverPhotoId}`,
+              }}
+              style={styles.coverImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              priority="normal"
+              recyclingKey={`${album.id}-${album.coverPhotoId}`}
+            />
+          ) : (
+            <View style={styles.placeholder}>
+              <PixelIcon name="images-outline" size={40} color={colors.text.secondary} />
+            </View>
+          )}
+        </View>
+      </Animated.View>
+      <Text style={styles.title} numberOfLines={2}>
+        {album.name}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+/**
+ * AddAlbumCard - Dashed border card for adding new album
+ *
+ * @param {function} onPress - Callback when card tapped
+ */
+export const AddAlbumCard = ({ onPress }) => {
+  return (
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.addContainer}>
+        <PixelIcon name="add" size={40} color={colors.text.secondary} />
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    width: CARD_SIZE,
+    alignItems: 'center',
+  },
+  stackContainer: {
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    paddingTop: spacing.sm,
+    overflow: 'visible',
+  },
+  stackCard: {
+    position: 'absolute',
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    backgroundColor: colors.background.tertiary,
+    borderRadius: layout.borderRadius.md,
+    overflow: 'hidden',
+  },
+  stackImage: {
+    width: '100%',
+    height: '100%',
+  },
+  stackCardBack: {
+    transform: [{ scale: 0.94 }, { translateY: 0 }],
+    opacity: 0.35,
+    zIndex: 1,
+  },
+  stackCardMiddle: {
+    transform: [{ scale: 0.97 }, { translateY: 6 }],
+    opacity: 0.45,
+    zIndex: 2,
+  },
+  imageContainer: {
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    borderRadius: layout.borderRadius.md,
+    overflow: 'hidden',
+    backgroundColor: colors.background.tertiary,
+    zIndex: 3,
+    borderWidth: 0.5,
+    borderColor: colors.retro.segmentBorder,
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    marginTop: 14,
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.body,
+    color: colors.text.primary,
+    textAlign: 'center',
+  },
+  addContainer: {
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    marginTop: 6,
+    borderRadius: layout.borderRadius.md,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.border.subtle,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+});
+
+const MemoizedAlbumCard = memo(AlbumCard);
+export { MemoizedAlbumCard as AlbumCard };
+export default MemoizedAlbumCard;
