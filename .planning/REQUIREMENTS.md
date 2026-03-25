@@ -88,7 +88,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **TS-01**: All rewritten service files are TypeScript (.ts) with Supabase-generated database types
 - [ ] **TS-02**: All rewritten hooks are TypeScript (.ts/.tsx) with proper type annotations
 - [ ] **TS-03**: Remaining untouched JS files converted to TypeScript after main migration
-- [ ] **TS-04**: Zero `any` types in rewritten code (strict typing for new code, allowJs for legacy)
+- [x] **TS-04**: Zero `any` types in rewritten code (strict typing for new code, allowJs for legacy)
 
 ### Cleanup
 
@@ -96,7 +96,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **CLEAN-02**: Firebase Cloud Functions directory (functions/) removed after all jobs ported
 - [ ] **CLEAN-03**: Dead code identified and removed during per-screen audit
 - [ ] **CLEAN-04**: Firebase-specific config files (GoogleService-Info.plist, google-services.json) removed
-- [ ] **CLEAN-05**: Sentry replaces Firebase Performance Monitoring for error tracking and traces
+- [x] **CLEAN-05**: Sentry replaces Firebase Performance Monitoring for error tracking and traces
 
 ## v2 Requirements
 
@@ -193,12 +193,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TS-01 | Phase 20 | Pending |
 | TS-02 | Phase 20 | Pending |
 | TS-03 | Phase 20 | Pending |
-| TS-04 | Phase 20 | Pending |
+| TS-04 | Phase 20 | Complete |
 | CLEAN-01 | Phase 20 | Pending |
 | CLEAN-02 | Phase 20 | Pending |
 | CLEAN-03 | Phase 20 | Pending |
 | CLEAN-04 | Phase 20 | Pending |
-| CLEAN-05 | Phase 20 | Pending |
+| CLEAN-05 | Phase 20 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 64 total
