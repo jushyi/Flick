@@ -2,7 +2,7 @@
  * Jest Configuration for Lapse Clone App
  *
  * Uses jest-expo preset for Expo/React Native compatibility.
- * Firebase modules are mocked in __tests__/setup/jest.setup.js
+ * Supabase and Sentry modules are mocked in __tests__/setup/jest.setup.ts
  */
 
 module.exports = {
@@ -10,7 +10,7 @@ module.exports = {
   preset: 'jest-expo',
 
   // Setup file runs before each test file
-  setupFilesAfterEnv: ['<rootDir>/__tests__/setup/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup/jest.setup.ts'],
 
   // Ignore setup files and node_modules when looking for tests
   testPathIgnorePatterns: [
@@ -38,6 +38,21 @@ module.exports = {
       '<rootDir>/__tests__/__mocks__/react-native-url-polyfill.js',
     '^@powersync/react-native$': '<rootDir>/__tests__/__mocks__/@powersync/react-native.js',
     '^@powersync/react$': '<rootDir>/__tests__/__mocks__/@powersync/react.js',
+    '^@sentry/react-native$': '<rootDir>/__tests__/__mocks__/@sentry/react-native.js',
+    '^@react-native-firebase/app$': '<rootDir>/__tests__/__mocks__/@react-native-firebase/app.js',
+    '^@react-native-firebase/auth$': '<rootDir>/__tests__/__mocks__/@react-native-firebase/auth.js',
+    '^@react-native-firebase/firestore$':
+      '<rootDir>/__tests__/__mocks__/@react-native-firebase/firestore.js',
+    '^@react-native-firebase/storage$':
+      '<rootDir>/__tests__/__mocks__/@react-native-firebase/storage.js',
+    '^@react-native-firebase/messaging$':
+      '<rootDir>/__tests__/__mocks__/@react-native-firebase/messaging.js',
+    '^@react-native-firebase/functions$':
+      '<rootDir>/__tests__/__mocks__/@react-native-firebase/functions.js',
+    '^@react-native-firebase/perf$':
+      '<rootDir>/__tests__/__mocks__/@react-native-firebase/perf.js',
+    '.*services/firebase/performanceService$':
+      '<rootDir>/__tests__/__mocks__/performanceService.js',
     '^react-native-toast-message$': '<rootDir>/__tests__/__mocks__/react-native-toast-message.js',
   },
 

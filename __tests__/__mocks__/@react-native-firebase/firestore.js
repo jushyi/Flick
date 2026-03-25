@@ -150,10 +150,49 @@ firestore.Filter = {
   and: jest.fn((...queries) => ({ _and: queries })),
 };
 
+const mockGetFirestore = jest.fn(() => ({ collection: mockCollection, doc: mockDoc }));
+const mockGetCountFromServer = jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) }));
+const mockDocumentId = jest.fn(() => '__documentId__');
+const mockWriteBatch = jest.fn(() => ({
+  set: jest.fn().mockReturnThis(),
+  update: jest.fn().mockReturnThis(),
+  delete: jest.fn().mockReturnThis(),
+  commit: jest.fn(() => Promise.resolve()),
+}));
+const mockIncrement = jest.fn(n => ({ _increment: n }));
+const mockArrayUnion = jest.fn((...items) => ({ _arrayUnion: items }));
+const mockAnd = jest.fn((...queries) => ({}));
+
 // Export factory function as default
 module.exports = firestore;
 
-// Export mock functions for test assertions
+// Modular API exports (used by source code: import { getDoc, doc, ... } from '@react-native-firebase/firestore')
+module.exports.getFirestore = mockGetFirestore;
+module.exports.collection = mockCollection;
+module.exports.doc = mockDoc;
+module.exports.getDoc = mockGetDoc;
+module.exports.getDocs = mockGetDocs;
+module.exports.setDoc = mockSetDoc;
+module.exports.updateDoc = mockUpdateDoc;
+module.exports.deleteDoc = mockDeleteDoc;
+module.exports.addDoc = mockAddDoc;
+module.exports.query = mockQuery;
+module.exports.where = mockWhere;
+module.exports.orderBy = mockOrderBy;
+module.exports.limit = mockLimit;
+module.exports.startAfter = mockStartAfter;
+module.exports.onSnapshot = mockOnSnapshot;
+module.exports.serverTimestamp = mockServerTimestamp;
+module.exports.Timestamp = mockTimestamp;
+module.exports.increment = mockIncrement;
+module.exports.arrayUnion = mockArrayUnion;
+module.exports.writeBatch = mockWriteBatch;
+module.exports.getCountFromServer = mockGetCountFromServer;
+module.exports.documentId = mockDocumentId;
+module.exports.or = mockOr;
+module.exports.and = mockAnd;
+
+// Export mock functions for test assertions (prefixed with 'mock')
 module.exports.mockGetDoc = mockGetDoc;
 module.exports.mockGetDocs = mockGetDocs;
 module.exports.mockSetDoc = mockSetDoc;
@@ -173,3 +212,10 @@ module.exports.mockServerTimestamp = mockServerTimestamp;
 module.exports.mockTimestamp = mockTimestamp;
 module.exports.mockDocRef = mockDocRef;
 module.exports.mockCollectionRef = mockCollectionRef;
+module.exports.mockGetFirestore = mockGetFirestore;
+module.exports.mockGetCountFromServer = mockGetCountFromServer;
+module.exports.mockDocumentId = mockDocumentId;
+module.exports.mockWriteBatch = mockWriteBatch;
+module.exports.mockIncrement = mockIncrement;
+module.exports.mockArrayUnion = mockArrayUnion;
+module.exports.mockAnd = mockAnd;
