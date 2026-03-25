@@ -49,7 +49,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **MSG-07**: Message reactions (double-tap heart + 6-emoji picker) work with new backend
 - [x] **MSG-08**: Swipe-to-reply with quoted context works with new backend
 - [x] **MSG-09**: Message deletion (unsend) and delete-for-me work via Edge Functions
-- [ ] **MSG-10**: Screenshot detection and notification work with new backend
+- [x] **MSG-10**: Screenshot detection and notification work with new backend
 - [x] **MSG-11**: Tagged photo DM pipeline works — auto-send tagged photos, add-to-feed resharing with attribution
 
 ### Background Jobs
@@ -169,7 +169,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MSG-07 | Phase 17 | Complete |
 | MSG-08 | Phase 17 | Complete |
 | MSG-09 | Phase 17 | Complete |
-| MSG-10 | Phase 17 | Pending |
+| MSG-10 | Phase 17 | Complete |
 | MSG-11 | Phase 17 | Complete |
 | JOBS-01 | Phase 18 | Pending |
 | JOBS-02 | Phase 18 | Pending |
