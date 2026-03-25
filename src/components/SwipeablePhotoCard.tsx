@@ -29,15 +29,23 @@ import Animated from 'react-native-reanimated';
 import PixelIcon from './PixelIcon';
 import VideoPlayer from './VideoPlayer';
 import logger from '../utils/logger';
-import useSwipeableCard from '../hooks/useSwipeableCard';
+import useSwipeableCard, { SwipeableCardHandle } from '../hooks/useSwipeableCard';
 import { styles } from '../styles/SwipeablePhotoCard.styles';
 import { colors } from '../constants/colors';
 
+type PhotoLike = {
+  id?: string;
+  imageURL?: string;
+  videoURL?: string;
+  mediaType?: string;
+  [key: string]: unknown;
+};
+
 type Props = {
-  photo: Record<string, unknown>;
-  onSwipeLeft?: () => void;
-  onSwipeRight?: () => void;
-  onSwipeDown?: () => void;
+  photo: PhotoLike;
+  onSwipeLeft?: () => void | Promise<void>;
+  onSwipeRight?: () => void | Promise<void>;
+  onSwipeDown?: () => void | Promise<void>;
   onDeleteComplete?: () => void;
   onExitClearance?: () => void;
   onTagPress?: () => void;
@@ -46,10 +54,12 @@ type Props = {
   onCaptionChange?: (text: string) => void;
   keyboardVisible?: boolean;
   stackIndex?: number;
-  [key: string]: unknown;
+  isActive?: boolean;
+  enterFrom?: 'up' | 'down' | 'delete' | null;
+  isNewlyVisible?: boolean;
 };
 
-const SwipeablePhotoCard = forwardRef(
+const SwipeablePhotoCard = forwardRef<SwipeableCardHandle, Props>(
   (
     {
       photo,
@@ -73,16 +83,16 @@ const SwipeablePhotoCard = forwardRef(
     const { cardStyle, archiveOverlayStyle, journalOverlayStyle, deleteOverlayStyle, panGesture } =
       useSwipeableCard({
         photo,
-        onSwipeLeft,
-        onSwipeRight,
-        onSwipeDown,
+        onSwipeLeft: onSwipeLeft as (() => Promise<void>) | undefined,
+        onSwipeRight: onSwipeRight as (() => Promise<void>) | undefined,
+        onSwipeDown: onSwipeDown as (() => Promise<void>) | undefined,
         onDeleteComplete,
         onExitClearance,
         stackIndex,
         isActive,
         enterFrom,
         isNewlyVisible,
-        keyboardVisible,
+        keyboardVisible: keyboardVisible as any,
         ref,
       });
 
@@ -109,7 +119,7 @@ const SwipeablePhotoCard = forwardRef(
         {/* Media content: VideoPlayer for active video cards, Image for photos/stack */}
         {isVideo && isActive ? (
           <VideoPlayer
-            source={photo.videoURL}
+            source={photo.videoURL as string}
             style={styles.photoImage}
             isMuted={false}
             autoPlay
@@ -167,7 +177,6 @@ const SwipeablePhotoCard = forwardRef(
               blurOnSubmit={true}
               cursorColor={colors.interactive.primary}
               selectionColor={colors.interactive.primary}
-              includeFontPadding={false}
             />
             {(caption || '').length >= 80 && (
               <Text style={styles.captionCounter}>{(caption || '').length}/100</Text>

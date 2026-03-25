@@ -29,7 +29,7 @@ import PixelSpinner from './PixelSpinner';
 import StrokedNameText from './StrokedNameText';
 import { useAuth } from '../context/AuthContext';
 import { getFriends as getFriendships } from '../services/supabase/friendshipService';
-import { getUserProfile } from '../services/supabase/profileService';
+import { getUserProfile, UserProfile } from '../services/supabase/profileService';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/TagFriendsModal.styles';
 import logger from '../utils/logger';
@@ -45,7 +45,7 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
 
-  const [friends, setFriends] = useState([]);
+  const [friends, setFriends] = useState<UserProfile[]>([]);
   const [selectedIds, setSelectedIds] = useState(new Set(initialSelectedIds));
   const [loading, setLoading] = useState(false);
   const slideAnim = useRef(new Animated.Value(400)).current;
@@ -74,21 +74,17 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
   const loadFriends = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getFriendships(user.uid);
-      if (!result.success || !result.friendships) {
-        logger.warn('TagFriendsModal: Failed to load friendships', { error: result.error });
-        setFriends([]);
-        setLoading(false);
-        return;
-      }
+      const friendships = await getFriendships(user!.id);
 
       // Extract friend user IDs and hydrate with profiles
-      const friendProfiles = [];
-      for (const friendship of result.friendships) {
-        const friendId = friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id;
-        const profileResult = await getUserProfile(friendId);
-        if (profileResult.success && profileResult.profile) {
-          friendProfiles.push(profileResult.profile);
+      const friendProfiles: UserProfile[] = [];
+      for (const friendship of friendships) {
+        const friendId = friendship.friendUserId;
+        try {
+          const profile = await getUserProfile(friendId);
+          friendProfiles.push(profile);
+        } catch {
+          // Skip friends whose profiles can't be loaded
         }
       }
 
@@ -102,7 +98,7 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
       setFriends(friendProfiles);
       logger.info('TagFriendsModal: Loaded friends', { count: friendProfiles.length });
     } catch (error) {
-      logger.error('TagFriendsModal: Error loading friends', { error: error.message });
+      logger.error('TagFriendsModal: Error loading friends', { error: (error as Error).message });
       setFriends([]);
     } finally {
       setLoading(false);
@@ -134,12 +130,12 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
 
   const renderFriendItem = useCallback(
     ({ item }) => {
-      const isSelected = selectedIds.has(item.userId);
+      const isSelected = selectedIds.has(item.id);
 
       return (
         <TouchableOpacity
           style={styles.friendRow}
-          onPress={() => toggleFriend(item.userId)}
+          onPress={() => toggleFriend(item.id)}
           activeOpacity={0.7}
         >
           {/* Avatar */}
@@ -182,7 +178,7 @@ const TagFriendsModal = ({ visible, onClose, onConfirm, initialSelectedIds = [] 
     [selectedIds, toggleFriend]
   );
 
-  const keyExtractor = useCallback(item => item.userId, []);
+  const keyExtractor = useCallback((item: UserProfile) => item.id, []);
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>

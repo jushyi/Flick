@@ -19,7 +19,7 @@ import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
 import { layout } from '../constants/layout';
 import { useAuth } from '../context/AuthContext';
-import { getUserPhotos } from '../services/supabase/photoService';
+import { getUserPhotos, Photo } from '../services/supabase/photoService';
 import { createAlbum, addPhotosToAlbum } from '../services/supabase/albumService';
 import logger from '../utils/logger';
 
@@ -36,10 +36,14 @@ const AlbumPhotoPickerScreen = () => {
   const { user } = useAuth();
 
   // Route params
-  const { albumName, existingAlbumId, existingPhotoIds = [] } = route.params || {};
+  const { albumName, existingAlbumId, existingPhotoIds = [] } = (route.params || {}) as {
+    albumName?: string;
+    existingAlbumId?: string;
+    existingPhotoIds?: string[];
+  };
 
-  const [photos, setPhotos] = useState([]);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -48,18 +52,17 @@ const AlbumPhotoPickerScreen = () => {
   // Fetch user's triaged photos
   useEffect(() => {
     const fetchPhotos = async () => {
-      if (!user?.uid) return;
+      if (!user?.id) return;
 
       setLoading(true);
-      const result = await getUserPhotos(user.uid);
-
-      if (result.success) {
+      try {
+        const result = await getUserPhotos(user.id);
         // Filter for triaged photos only (both journal and archive)
-        const triagedPhotos = result.photos.filter(photo => photo.status === 'triaged');
+        const triagedPhotos = result.filter(photo => photo.photoState !== null);
         setPhotos(triagedPhotos);
         logger.info('AlbumPhotoPickerScreen: Fetched photos', { count: triagedPhotos.length });
-      } else {
-        logger.error('AlbumPhotoPickerScreen: Failed to fetch photos', { error: result.error });
+      } catch (err) {
+        logger.error('AlbumPhotoPickerScreen: Failed to fetch photos', { error: (err as Error).message });
         Alert.alert('Error', 'Could not load your photos');
       }
 
@@ -67,14 +70,14 @@ const AlbumPhotoPickerScreen = () => {
     };
 
     fetchPhotos();
-  }, [user?.uid]);
+  }, [user?.id]);
 
   const handleBackPress = () => {
     logger.info('AlbumPhotoPickerScreen: Back pressed');
     navigation.goBack();
   };
 
-  const handlePhotoPress = photoId => {
+  const handlePhotoPress = (photoId: string) => {
     // Check if already in album (for existing album mode)
     if (existingPhotoIds.includes(photoId)) {
       return; // Not tappable
@@ -101,35 +104,27 @@ const AlbumPhotoPickerScreen = () => {
     });
 
     try {
-      let result;
-
       if (isAddingToExisting) {
         // Add photos to existing album
-        result = await addPhotosToAlbum(existingAlbumId, selectedIds);
-      } else {
-        // Create new album
-        result = await createAlbum(user.uid, albumName, selectedIds);
-      }
-
-      if (result.success) {
+        await addPhotosToAlbum(existingAlbumId!, selectedIds);
         logger.info('AlbumPhotoPickerScreen: Success', {
           isAddingToExisting,
-          albumId: result.album?.id || existingAlbumId,
+          albumId: existingAlbumId,
         });
-
-        if (isAddingToExisting) {
-          // Return to album grid
-          navigation.goBack();
-        } else {
-          // Pop both CreateAlbum and AlbumPhotoPicker screens, passing newAlbumId for animation
-          navigation.popTo('ProfileMain', { newAlbumId: result.album.id });
-        }
+        navigation.goBack();
       } else {
-        Alert.alert('Error', result.error || 'Could not save album');
+        // Create new album
+        const album = await createAlbum(user!.id, albumName!, selectedIds);
+        logger.info('AlbumPhotoPickerScreen: Success', {
+          isAddingToExisting,
+          albumId: album.id,
+        });
+        // Pop both CreateAlbum and AlbumPhotoPicker screens, passing newAlbumId for animation
+        (navigation as any).popTo('ProfileMain', { newAlbumId: album.id });
       }
     } catch (error) {
-      logger.error('AlbumPhotoPickerScreen: Error', { error: error.message });
-      Alert.alert('Error', error.message || 'An unexpected error occurred');
+      logger.error('AlbumPhotoPickerScreen: Error', { error: (error as Error).message });
+      Alert.alert('Error', (error as Error).message || 'An unexpected error occurred');
     }
 
     setSaving(false);
@@ -161,7 +156,7 @@ const AlbumPhotoPickerScreen = () => {
           activeOpacity={0.7}
         >
           <Image
-            source={{ uri: item.imageURL, cacheKey: `photo-${item.id}` }}
+            source={{ uri: item.imageUrl ?? undefined, cacheKey: `photo-${item.id}` }}
             style={styles.photoImage}
             contentFit="cover"
             cachePolicy="memory-disk"

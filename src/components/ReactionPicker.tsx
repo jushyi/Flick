@@ -104,7 +104,7 @@ const ReactionPicker = ({
   }));
 
   // Build action items
-  const actions = [];
+  const actions: Array<{ label: string; onPress: (() => void) | undefined }> = [];
   actions.push({ label: 'Reply', onPress: onReply });
   if (isCurrentUser && canUnsend) {
     actions.push({ label: 'Unsend', onPress: onUnsend });

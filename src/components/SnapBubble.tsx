@@ -71,7 +71,7 @@ const SnapBubble = ({
   onReactionPress,
   currentUserId,
 }: Props) => {
-  const bubbleRef = useRef<TouchableOpacity | null>(null);
+  const bubbleRef = useRef<any>(null);
 
   const isScreenshotted = message.screenshottedAt !== null && message.screenshottedAt !== undefined;
   const isOpened = !isScreenshotted && message.viewedAt !== null && message.viewedAt !== undefined;
@@ -79,26 +79,26 @@ const SnapBubble = ({
   const isError = hasError;
   const isUnopened = !isOpened && !isScreenshotted && !isPending && !hasError;
 
+  const parseDate = (ts: { toDate?: () => Date } | string | null | undefined): Date | null => {
+    if (!ts) return null;
+    if (typeof ts === 'string') return new Date(ts);
+    if (typeof ts === 'object' && ts.toDate) return ts.toDate();
+    return null;
+  };
+
   const formatTimestamp = () => {
-    if (!message.createdAt) return '';
-    const date = message.createdAt.toDate
-      ? message.createdAt.toDate()
-      : new Date(message.createdAt);
-    return format(date, 'h:mm a');
+    const date = parseDate(message.createdAt);
+    return date ? format(date, 'h:mm a') : '';
   };
 
   const formatViewedTimestamp = () => {
-    if (!message.viewedAt) return '';
-    const date = message.viewedAt.toDate ? message.viewedAt.toDate() : new Date(message.viewedAt);
-    return format(date, 'h:mm a');
+    const date = parseDate(message.viewedAt);
+    return date ? format(date, 'h:mm a') : '';
   };
 
   const formatScreenshottedTimestamp = () => {
-    if (!message.screenshottedAt) return '';
-    const date = message.screenshottedAt.toDate
-      ? message.screenshottedAt.toDate()
-      : new Date(message.screenshottedAt);
-    return format(date, 'h:mm a');
+    const date = parseDate(message.screenshottedAt);
+    return date ? format(date, 'h:mm a') : '';
   };
 
   const handlePress = () => {

@@ -40,7 +40,8 @@ const NewMessageScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  const [friends, setFriends] = useState([]);
+  type FriendItem = { uid: string; displayName: string | null; username: string | null; photoURL: string | null };
+  const [friends, setFriends] = useState<FriendItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [selectedFriendId, setSelectedFriendId] = useState(null);
@@ -48,7 +49,7 @@ const NewMessageScreen = () => {
   const fetchFriends = useCallback(async () => {
     try {
       // getFriends returns Array<{ id, friendUserId, createdAt }> -- throws on error
-      const friendships = await getFriends(user.uid);
+      const friendships = await getFriends(user!.id);
 
       // Fetch each friend's profile in parallel
       const friendProfiles = await Promise.all(
@@ -69,7 +70,7 @@ const NewMessageScreen = () => {
           } catch (err) {
             logger.warn('NewMessageScreen: Failed to fetch friend profile', {
               friendUserId: f.friendUserId,
-              error: err.message,
+              error: (err as Error).message,
             });
             return null;
           }
@@ -86,11 +87,11 @@ const NewMessageScreen = () => {
 
       setFriends(validFriends);
     } catch (err) {
-      logger.error('NewMessageScreen: Error in fetchFriends', { error: err.message });
+      logger.error('NewMessageScreen: Error in fetchFriends', { error: (err as Error).message });
     } finally {
       setLoading(false);
     }
-  }, [user.uid]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchFriends();
@@ -113,8 +114,8 @@ const NewMessageScreen = () => {
       setSelectedFriendId(friend.uid);
       try {
         // Supabase getOrCreateConversation throws on error, returns ConversationRow directly
-        const conversation = await getOrCreateConversation(user.uid, friend.uid);
-        navigation.replace('Conversation', {
+        const conversation = await getOrCreateConversation(user!.id, friend.uid);
+        (navigation as any).replace('Conversation', {
           conversationId: conversation.id,
           friendId: friend.uid,
           friendProfile: {
@@ -125,13 +126,13 @@ const NewMessageScreen = () => {
           },
         });
       } catch (err) {
-        logger.error('NewMessageScreen: Error selecting friend', { error: err.message });
+        logger.error('NewMessageScreen: Error selecting friend', { error: (err as Error).message });
         Alert.alert('Error', 'Could not start conversation. Please try again.');
       } finally {
         setSelectedFriendId(null);
       }
     },
-    [selectedFriendId, user.uid, navigation]
+    [selectedFriendId, user?.id, navigation]
   );
 
   const renderFriendRow = useCallback(

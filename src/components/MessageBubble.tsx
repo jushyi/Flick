@@ -102,7 +102,7 @@ const MessageBubble = ({
 
   const translateX = useSharedValue(0);
   const hasTriggeredHaptic = useSharedValue(false);
-  const bubbleRef = useRef(null);
+  const bubbleRef = useRef<any>(null);
 
   // Highlight flash animation when scroll-to-message targets this bubble
   // Two-phase: flash in (150ms) -> hold (300ms) -> fade out (1200ms)
@@ -128,9 +128,8 @@ const MessageBubble = ({
 
   const formatTimestamp = () => {
     if (!message.createdAt) return '';
-    const date = message.createdAt.toDate
-      ? message.createdAt.toDate()
-      : new Date(message.createdAt);
+    const ts = message.createdAt;
+    const date = typeof ts === 'string' ? new Date(ts) : ts.toDate ? ts.toDate() : new Date();
     return format(date, 'h:mm a');
   };
 
@@ -231,13 +230,13 @@ const MessageBubble = ({
   if (isSnap) {
     return (
       <SnapBubble
-        message={message}
+        message={message as any}
         isCurrentUser={isCurrentUser}
         showTimestamp={showTimestamp}
-        onPress={onPress}
-        isPending={message._isPending}
-        hasError={message._hasError}
-        onRetry={message._onRetry}
+        onPress={onPress as any}
+        isPending={message._isPending as boolean}
+        hasError={message._hasError as boolean}
+        onRetry={message._onRetry as (() => void) | undefined}
         reactions={reactions}
         onReactionPress={onReactionPress}
         currentUserId={currentUserId}
@@ -349,7 +348,7 @@ const MessageBubble = ({
     return (
       <GHTouchableOpacity
         activeOpacity={0.5}
-        onPress={() => onScrollToMessage?.(message.replyTo.messageId)}
+        onPress={() => onScrollToMessage?.(message.replyTo!.messageId)}
         style={[
           styles.originalMessageBlock,
           isCurrentUser ? styles.originalMessageBlockRight : styles.originalMessageBlockLeft,

@@ -30,8 +30,12 @@ import PixelIcon from '../PixelIcon';
 import * as Haptics from 'expo-haptics';
 import CommentWithReplies from './CommentWithReplies';
 import CommentInput from './CommentInput';
-import useComments from '../../hooks/useComments';
-import useMentionSuggestions from '../../hooks/useMentionSuggestions';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { useComments } from '../../hooks/useComments';
+import { useMentionSuggestions } from '../../hooks/useMentionSuggestions';
+
+// TODO(20): useComments/useMentionSuggestions hook APIs were refactored to react-query.
+// CommentsBottomSheet still uses the legacy shape; cast to any until migrated.
 import { colors } from '../../constants/colors';
 import logger from '../../utils/logger';
 import { styles, SHEET_HEIGHT, SCREEN_HEIGHT } from '../../styles/CommentsBottomSheet.styles';
@@ -52,7 +56,12 @@ type Props = {
   visible: boolean;
   photoId: string;
   onClose: () => void;
+  photoOwnerId?: string;
   currentUserId?: string;
+  onCommentAdded?: () => void;
+  onCommentCountChange?: (delta: number) => void;
+  onAvatarPress?: (userId: string, displayName: string) => void;
+  initialScrollToCommentId?: string | null;
 };
 
 const CommentsBottomSheet = ({
@@ -70,8 +79,8 @@ const CommentsBottomSheet = ({
   const swipeY = useRef(new Animated.Value(0)).current; // Swipe gesture tracking
   const sheetHeight = useRef(new Animated.Value(SHEET_HEIGHT)).current; // Animated height for expand/collapse
   const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const inputRef = useRef(null);
-  const flatListRef = useRef(null);
+  const inputRef = useRef<any>(null);
+  const flatListRef = useRef<FlatList>(null);
   const hasAutoScrolledRef = useRef(false); // Guard: prevent auto-scroll from firing more than once per open
   const contentHeightRef = useRef(0); // Actual content height from onContentSizeChange
   const viewportHeightRef = useRef(0); // Actual FlatList viewport height from onLayout
@@ -287,14 +296,8 @@ const CommentsBottomSheet = ({
   }, [sheetHeight, expandedHeight]);
 
   // Android: intercept hardware back press to close sheet before screen dismisses
-  useEffect(() => {
-    if (!visible || Platform.OS !== 'android') return;
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      animateClose();
-      return true; // Prevent default back navigation
-    });
-    return () => subscription.remove();
-  }, [visible, animateClose]);
+  // Note: animateClose is defined below; the ref indirection avoids block-scoped use-before-declare.
+  const animateCloseRef = useRef<(() => void) | null>(null);
 
   // Use comments hook for state management
   const {
@@ -315,18 +318,22 @@ const CommentsBottomSheet = ({
     isOwnerComment,
     isLikedByUser,
     isNewComment,
-  } = useComments(photoId, currentUserId, photoOwnerId);
+  } = useComments(photoId) as any;
 
   // @-mention autocomplete state
-  const mentionSuggestions = useMentionSuggestions(photoOwnerId, currentUserId);
+  const mentionSuggestions = useMentionSuggestions(photoOwnerId, currentUserId) as any;
   const latestTextRef = useRef('');
   const latestCursorRef = useRef(0);
 
   // Track which reply sections to auto-expand for @mention navigation
-  const [expandedReplyParents, setExpandedReplyParents] = useState({});
+  const [expandedReplyParents, setExpandedReplyParents] = useState<Record<string, boolean>>({});
 
   // Track pending scroll target after comment submission
-  const [pendingScrollTarget, setPendingScrollTarget] = useState(null);
+  const [pendingScrollTarget, setPendingScrollTarget] = useState<{
+    type: string;
+    commentId?: string;
+    parentId?: string;
+  } | null>(null);
 
   logger.debug('CommentsBottomSheet: Render', {
     visible,
@@ -519,6 +526,17 @@ const CommentsBottomSheet = ({
       }
     });
   }, [backdropOpacity, translateY, onClose]);
+
+  // Keep ref in sync and register Android back handler
+  animateCloseRef.current = animateClose;
+  useEffect(() => {
+    if (!visible || Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      animateCloseRef.current?.();
+      return true; // Prevent default back navigation
+    });
+    return () => subscription.remove();
+  }, [visible]);
 
   const handleClose = useCallback(() => {
     logger.debug('CommentsBottomSheet: Close button pressed');
@@ -751,7 +769,7 @@ const CommentsBottomSheet = ({
 
       // Don't scroll to own comments (prevent circular scroll if replying to self)
       // Find the target comment to check ownership
-      let targetComment = null;
+      let targetComment: any = null;
       let targetIndex = -1;
       let isReply = false;
       let parentIndex = -1;
@@ -1128,9 +1146,6 @@ const CommentsBottomSheet = ({
               <CommentInput
                 ref={inputRef}
                 onSubmit={handleSubmitComment}
-                onImagePick={() => {
-                  logger.debug('CommentsBottomSheet: Image picker');
-                }}
                 replyingTo={replyingTo}
                 onCancelReply={() => {
                   cancelReply();

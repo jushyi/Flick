@@ -47,7 +47,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getSignedSnapUrl, markSnapViewed } from '../services/supabase/snapService';
 // TODO(20-01): screenshotService - no supabase equivalent, uses screenshotQueueService instead
-const recordScreenshot = async () => ({ success: true });
+const recordScreenshot = async (_params?: Record<string, unknown>): Promise<{ success: boolean; error?: string }> => ({ success: true });
 import { queueScreenshotEvent, processScreenshotQueue } from '../services/screenshotQueueService';
 import { removePinnedSnap } from '../services/liveActivityService';
 
@@ -115,10 +115,10 @@ const SnapViewer = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  const [imageUrl, setImageUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [selectedReaction, setSelectedReaction] = useState(null);
+  const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
 
   // Gesture shared values
   const translateY = useSharedValue(0);
@@ -175,17 +175,18 @@ const SnapViewer = ({
       setLoading(true);
       setImageError(false);
 
-      const result = await getSignedSnapUrl(snapMessage.snapStoragePath);
+      try {
+        const url = await getSignedSnapUrl(snapMessage.snapStoragePath!);
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (result.success && result.url) {
-        setImageUrl(result.url);
+        setImageUrl(url);
         setLoading(false);
-      } else {
+      } catch (err) {
+        if (cancelled) return;
         logger.error('SnapViewer: Failed to load signed URL', {
           snapStoragePath: snapMessage.snapStoragePath,
-          error: result.error,
+          error: (err as Error).message,
         });
         setImageError(true);
         setLoading(false);
@@ -236,12 +237,13 @@ const SnapViewer = ({
     }
 
     // Mark snap as viewed
-    const result = await markSnapViewed(conversationId, snapMessage.id);
-    if (!result.success) {
+    try {
+      await markSnapViewed(snapMessage.id);
+    } catch (err) {
       logger.warn('SnapViewer: Failed to mark snap as viewed', {
         conversationId,
         messageId: snapMessage.id,
-        error: result.error,
+        error: (err as Error).message,
       });
     }
 
@@ -263,7 +265,7 @@ const SnapViewer = ({
         });
       } catch (err) {
         logger.warn('SnapViewer: Failed to end Live Activity', {
-          error: err.message,
+          error: (err as Error).message,
         });
       }
     }
@@ -432,7 +434,7 @@ const SnapViewer = ({
     }
   }, [conversationId, snapMessage?.id, currentUserId, viewerDisplayName]);
 
-  useScreenshotDetection({ active: detectionActive, onScreenshot: handleScreenshot });
+  useScreenshotDetection({ active: !!detectionActive, onScreenshot: handleScreenshot });
 
   // Process any queued offline screenshot events when SnapViewer opens
   useEffect(() => {
@@ -493,7 +495,7 @@ const SnapViewer = ({
                     </View>
                   ) : (
                     <Image
-                      source={{ uri: imageUrl }}
+                      source={{ uri: imageUrl! }}
                       style={styles.snapImage}
                       contentFit="cover"
                       cachePolicy="none"

@@ -90,7 +90,7 @@ const PhotoDetailModal = ({
   initialShowComments = false,
   isOwnStory = false,
   onAvatarPress,
-}) => {
+}: Props) => {
   // Cube transition animation for friend-to-friend
   const cubeRotation = useRef(new Animated.Value(0)).current;
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -99,10 +99,10 @@ const PhotoDetailModal = ({
   const [showComments, setShowComments] = useState(false);
 
   // Progress bar scroll ref for auto-scrolling
-  const progressScrollRef = useRef(null);
+  const progressScrollRef = useRef<ScrollView>(null);
 
   // Emoji scroll ref for auto-scrolling when new emoji added
-  const emojiScrollRef = useRef(null);
+  const emojiScrollRef = useRef<ScrollView>(null);
 
   // Highlight fade animation for newly added emoji (1 second fade)
   const highlightOpacity = useRef(new Animated.Value(1)).current;
@@ -196,12 +196,12 @@ const PhotoDetailModal = ({
     photo,
     photos,
     initialIndex,
-    onPhotoChange,
+    onPhotoChange: onPhotoChange as any,
     visible,
     onClose,
-    onReactionToggle,
+    onReactionToggle: onReactionToggle as any,
     currentUserId,
-    onFriendTransition: hasNextFriend ? handleFriendTransition : null,
+    onFriendTransition: hasNextFriend ? handleFriendTransition : undefined,
   });
 
   // Check if viewing own photo (disable avatar tap)
@@ -216,7 +216,7 @@ const PhotoDetailModal = ({
   const handleAvatarPress = useCallback(() => {
     if (isOwnPhoto) return;
     if (onAvatarPress && currentPhoto) {
-      onAvatarPress(currentPhoto.userId, displayName);
+      onAvatarPress(currentPhoto.userId as string);
     }
   }, [onAvatarPress, currentPhoto, displayName, isOwnPhoto]);
 
@@ -225,9 +225,9 @@ const PhotoDetailModal = ({
    * Profile opens as modal overlay - this modal stays mounted underneath
    */
   const handleCommentAvatarPress = useCallback(
-    (userId, userName) => {
+    (userId: string, _userName: string) => {
       if (onAvatarPress) {
-        onAvatarPress(userId, userName);
+        onAvatarPress(userId);
       }
     },
     [onAvatarPress]
@@ -432,8 +432,8 @@ const PhotoDetailModal = ({
             >
               <PixelIcon name="chatbubble-outline" size={16} color={colors.text.secondary} />
               <Text style={styles.commentInputTriggerText} numberOfLines={1}>
-                {currentPhoto?.commentCount > 0
-                  ? `${currentPhoto.commentCount} comment${currentPhoto.commentCount === 1 ? '' : 's'}`
+                {(currentPhoto?.commentCount as number) > 0
+                  ? `${currentPhoto!.commentCount} comment${(currentPhoto!.commentCount as number) === 1 ? '' : 's'}`
                   : 'Add a comment...'}
               </Text>
             </TouchableOpacity>
@@ -505,10 +505,13 @@ const PhotoDetailModal = ({
       <CommentsBottomSheet
         visible={showComments}
         onClose={() => setShowComments(false)}
-        photoId={currentPhoto?.id}
-        photoOwnerId={currentPhoto?.userId}
+        photoId={currentPhoto?.id as string ?? ''}
+        photoOwnerId={currentPhoto?.userId as string}
         currentUserId={currentUserId}
+        onCommentAdded={() => {}}
+        onCommentCountChange={() => {}}
         onAvatarPress={handleCommentAvatarPress}
+        initialScrollToCommentId={null}
       />
 
       {/* Custom Emoji Picker */}

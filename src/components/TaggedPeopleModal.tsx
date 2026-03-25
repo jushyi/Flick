@@ -29,7 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from './PixelIcon';
 import PixelSpinner from './PixelSpinner';
 import StrokedNameText from './StrokedNameText';
-import { getUserProfile } from '../services/supabase/profileService';
+import { getUserProfile, UserProfile } from '../services/supabase/profileService';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/TaggedPeopleModal.styles';
 import logger from '../utils/logger';
@@ -44,7 +44,7 @@ type Props = {
 const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress }: Props) => {
   const insets = useSafeAreaInsets();
 
-  const [people, setPeople] = useState([]);
+  const [people, setPeople] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const slideAnim = useRef(new Animated.Value(400)).current;
 
@@ -70,11 +70,13 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
 
     setLoading(true);
     try {
-      const profiles = [];
+      const profiles: UserProfile[] = [];
       for (const userId of taggedUserIds) {
-        const result = await getUserProfile(userId);
-        if (result.success && result.profile) {
-          profiles.push(result.profile);
+        try {
+          const profile = await getUserProfile(userId);
+          profiles.push(profile);
+        } catch {
+          // Skip users whose profiles can't be loaded
         }
       }
 
@@ -88,7 +90,7 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
       setPeople(profiles);
       logger.info('TaggedPeopleModal: Loaded tagged people', { count: profiles.length });
     } catch (error) {
-      logger.error('TaggedPeopleModal: Error loading tagged people', { error: error.message });
+      logger.error('TaggedPeopleModal: Error loading tagged people', { error: (error as Error).message });
       setPeople([]);
     } finally {
       setLoading(false);
@@ -116,7 +118,7 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
       return (
         <TouchableOpacity
           style={styles.personRow}
-          onPress={() => handlePersonPress(item.userId, item.displayName)}
+          onPress={() => handlePersonPress(item.id, item.displayName || 'Unknown')}
           activeOpacity={0.7}
         >
           {/* Avatar */}
@@ -151,7 +153,7 @@ const TaggedPeopleModal = ({ visible, onClose, taggedUserIds = [], onPersonPress
     [handlePersonPress]
   );
 
-  const keyExtractor = useCallback(item => item.userId, []);
+  const keyExtractor = useCallback((item: UserProfile) => item.id, []);
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>

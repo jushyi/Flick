@@ -5,8 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
 import { useAuth } from '../context/AuthContext';
-import { getBlockedUsers, unblockUser } from '../services/supabase/blockService';
-// TODO(20-01): getBlockedUsersWithProfiles was a combined query - getBlockedUsers returns BlockedUser[] with profile data
+import { getBlockedUsers, unblockUser, BlockedUser } from '../services/supabase/blockService';
 import FriendCard from '../components/FriendCard';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/BlockedUsersScreen.styles';
@@ -23,32 +22,24 @@ const BlockedUsersScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
 
-  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null); // Track which user is being unblocked
+  const [actionLoading, setActionLoading] = useState<string | null>(null); // Track which user is being unblocked
 
   const loadBlockedUsers = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
 
     try {
       setLoading(true);
-      const result = await getBlockedUsersWithProfiles(user.uid);
-
-      if (result.success) {
-        setBlockedUsers(result.blockedUsers || []);
-      } else {
-        logger.error('BlockedUsersScreen: Failed to load blocked users', {
-          error: result.error,
-        });
-        Alert.alert('Error', 'Failed to load blocked users');
-      }
+      const result = await getBlockedUsers(user.id);
+      setBlockedUsers(result);
     } catch (error) {
-      logger.error('BlockedUsersScreen: Error loading blocked users', { error: error.message });
+      logger.error('BlockedUsersScreen: Error loading blocked users', { error: (error as Error).message });
       Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
-  }, [user?.uid]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadBlockedUsers();
@@ -58,11 +49,11 @@ const BlockedUsersScreen = () => {
    * Handle unblock user action
    * Shows confirmation, then calls unblockUser service
    */
-  const handleUnblock = async blockedUserId => {
-    const blockedUser = blockedUsers.find(u => u.userId === blockedUserId);
-    const displayName = blockedUser?.displayName || blockedUser?.username || 'this user';
+  const handleUnblock = async (blockedUserId: string) => {
+    const blockedUser = blockedUsers.find(u => u.blockedId === blockedUserId);
+    const displayName = blockedUser?.user?.displayName || blockedUser?.user?.username || 'this user';
 
-    const cancelAction = { text: 'Cancel', style: 'cancel' };
+    const cancelAction = { text: 'Cancel', style: 'cancel' as const };
     const unblockAction = {
       text: 'Unblock',
       onPress: async () => {
@@ -70,21 +61,16 @@ const BlockedUsersScreen = () => {
           setActionLoading(blockedUserId);
 
           // Optimistic update - remove from list immediately
-          setBlockedUsers(prev => prev.filter(u => u.userId !== blockedUserId));
+          setBlockedUsers(prev => prev.filter(u => u.blockedId !== blockedUserId));
 
-          const result = await unblockUser(user.uid, blockedUserId);
-
-          if (!result.success) {
-            // Revert optimistic update on failure
-            setBlockedUsers(prev => [...prev, blockedUser]);
-            Alert.alert('Error', result.error || 'Failed to unblock user');
-          } else {
-            logger.info('BlockedUsersScreen: User unblocked', { blockedUserId });
-          }
+          await unblockUser(user!.id, blockedUserId);
+          logger.info('BlockedUsersScreen: User unblocked', { blockedUserId });
         } catch (error) {
           // Revert optimistic update on error
-          setBlockedUsers(prev => [...prev, blockedUser]);
-          logger.error('BlockedUsersScreen: Error unblocking user', { error: error.message });
+          if (blockedUser) {
+            setBlockedUsers(prev => [...prev, blockedUser]);
+          }
+          logger.error('BlockedUsersScreen: Error unblocking user', { error: (error as Error).message });
           Alert.alert('Error', 'An unexpected error occurred');
         } finally {
           setActionLoading(null);
@@ -99,27 +85,25 @@ const BlockedUsersScreen = () => {
     );
   };
 
-  const handleViewProfile = blockedUser => {
-    navigation.navigate('OtherUserProfile', {
-      userId: blockedUser.userId,
-      displayName: blockedUser.displayName,
-      username: blockedUser.username,
+  const handleViewProfile = (blockedUser: BlockedUser) => {
+    (navigation as any).navigate('OtherUserProfile', {
+      userId: blockedUser.blockedId,
+      displayName: blockedUser.user?.displayName,
+      username: blockedUser.user?.username,
     });
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: BlockedUser }) => (
     <FriendCard
       user={{
-        userId: item.userId,
-        displayName: item.displayName,
-        username: item.username,
-        profilePhotoURL: item.profilePhotoURL || item.photoURL,
+        userId: item.blockedId,
+        username: item.user?.username,
       }}
       relationshipStatus="none" // No Add button, just display
       onPress={() => handleViewProfile(item)}
       onUnblock={handleUnblock}
       isBlocked={true} // Shows "Unblock User" in menu
-      loading={actionLoading === item.userId}
+      loading={actionLoading === item.blockedId}
     />
   );
 
@@ -171,7 +155,7 @@ const BlockedUsersScreen = () => {
       {/* Blocked Users List */}
       <FlatList
         data={blockedUsers}
-        keyExtractor={item => item.userId}
+        keyExtractor={item => item.blockedId}
         renderItem={renderItem}
         contentContainerStyle={blockedUsers.length === 0 ? { flex: 1 } : { paddingBottom: 100 }}
         ListEmptyComponent={renderEmptyState}

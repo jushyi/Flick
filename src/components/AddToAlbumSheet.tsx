@@ -18,10 +18,16 @@ import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
 import { layout } from '../constants/layout';
-import { getUserAlbums, addPhotosToAlbum } from '../services/supabase/albumService';
+import { getUserAlbums, addPhotosToAlbum, Album } from '../services/supabase/albumService';
 // TODO(20-01): getPhotosByIds - wire to supabase photoService in subsequent plans
 import { getPhotoById } from '../services/supabase/photoService';
 import logger from '../utils/logger';
+
+// Temporary helper until getPhotosByIds is wired
+const getPhotosByIds = async (ids: string[]) => {
+  const photos = await Promise.all(ids.map(id => getPhotoById(id)));
+  return photos.filter(Boolean) as unknown as Array<{ id: string; imageUrl: string | null; [key: string]: unknown }>;
+};
 
 const THUMBNAIL_SIZE = 50;
 
@@ -45,15 +51,15 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }: Props) =
   const navigation = useNavigation();
   const { user } = useAuth();
 
-  const [albums, setAlbums] = useState([]);
-  const [coverUrls, setCoverUrls] = useState({});
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [coverUrls, setCoverUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [addingToAlbum, setAddingToAlbum] = useState(null);
+  const [addingToAlbum, setAddingToAlbum] = useState<string | null>(null);
 
   // Fetch albums when sheet becomes visible
   useEffect(() => {
     const fetchAlbums = async () => {
-      if (!visible || !user?.uid) {
+      if (!visible || !user?.id) {
         return;
       }
 
@@ -61,31 +67,26 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }: Props) =
       logger.info('AddToAlbumSheet: Fetching albums');
 
       try {
-        const result = await getUserAlbums(user.uid);
-        if (result.success) {
-          setAlbums(result.albums);
+        const result = await getUserAlbums(user!.id);
+        setAlbums(result);
 
-          // Fetch cover photo URLs
-          const coverPhotoIds = result.albums.map(album => album.coverPhotoId).filter(id => id);
+        // Fetch cover photo URLs
+        const coverPhotoIds = result.map(album => album.coverPhotoId).filter((id): id is string => !!id);
 
-          if (coverPhotoIds.length > 0) {
-            const photosResult = await getPhotosByIds(coverPhotoIds);
-            if (photosResult.success) {
-              const urlMap = {};
-              photosResult.photos.forEach(photo => {
-                urlMap[photo.id] = photo.imageURL;
-              });
-              setCoverUrls(urlMap);
+        if (coverPhotoIds.length > 0) {
+          const photos = await getPhotosByIds(coverPhotoIds);
+          const urlMap: Record<string, string> = {};
+          photos.forEach(photo => {
+            if (photo.imageUrl) {
+              urlMap[photo.id] = photo.imageUrl;
             }
-          }
-
-          logger.info('AddToAlbumSheet: Fetched albums', { count: result.albums.length });
-        } else {
-          logger.error('AddToAlbumSheet: Failed to fetch albums', { error: result.error });
-          setAlbums([]);
+          });
+          setCoverUrls(urlMap);
         }
+
+        logger.info('AddToAlbumSheet: Fetched albums', { count: result.length });
       } catch (error) {
-        logger.error('AddToAlbumSheet: Error fetching albums', { error: error.message });
+        logger.error('AddToAlbumSheet: Error fetching albums', { error: (error as Error).message });
         setAlbums([]);
       } finally {
         setLoading(false);
@@ -93,7 +94,7 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }: Props) =
     };
 
     fetchAlbums();
-  }, [visible, user?.uid]);
+  }, [visible, user?.id]);
 
   const handleClose = () => {
     logger.info('AddToAlbumSheet: Closing');
@@ -104,47 +105,36 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }: Props) =
     logger.info('AddToAlbumSheet: Create new album pressed', { photoId });
     handleClose();
     // Navigate to CreateAlbum with the photo pre-selected
-    navigation.navigate('CreateAlbum', { preselectedPhotoId: photoId });
+    (navigation as any).navigate('CreateAlbum', { preselectedPhotoId: photoId });
   };
 
-  const handleSelectAlbum = async album => {
-    // Check if photo is already in album
-    if (album.photoIds?.includes(photoId)) {
-      logger.info('AddToAlbumSheet: Photo already in album', { albumId: album.id, photoId });
-      return;
-    }
-
+  const handleSelectAlbum = async (album: Album) => {
     setAddingToAlbum(album.id);
     logger.info('AddToAlbumSheet: Adding photo to album', { albumId: album.id, photoId });
 
     try {
-      const result = await addPhotosToAlbum(album.id, [photoId]);
-      if (result.success) {
-        logger.info('AddToAlbumSheet: Photo added successfully');
-        Alert.alert('Success', `Added to "${album.name}"`);
-        onAlbumCreated?.();
-        handleClose();
-      } else {
-        Alert.alert('Error', result.error || 'Could not add photo to album');
-      }
+      await addPhotosToAlbum(album.id, [photoId]);
+      logger.info('AddToAlbumSheet: Photo added successfully');
+      Alert.alert('Success', `Added to "${album.title}"`);
+      onAlbumCreated?.();
+      handleClose();
     } catch (error) {
-      logger.error('AddToAlbumSheet: Failed to add photo', { error: error.message });
-      Alert.alert('Error', 'An error occurred');
+      logger.error('AddToAlbumSheet: Failed to add photo', { error: (error as Error).message });
+      Alert.alert('Error', (error as Error).message || 'An error occurred');
     } finally {
       setAddingToAlbum(null);
     }
   };
 
-  const renderAlbumItem = ({ item }) => {
-    const isPhotoInAlbum = item.photoIds?.includes(photoId);
+  const renderAlbumItem = ({ item }: { item: Album }) => {
     const isAdding = addingToAlbum === item.id;
-    const coverUrl = coverUrls[item.coverPhotoId];
+    const coverUrl = item.coverPhotoId ? coverUrls[item.coverPhotoId] : undefined;
 
     return (
       <TouchableOpacity
-        style={[styles.albumRow, isPhotoInAlbum && styles.albumRowDisabled]}
+        style={styles.albumRow}
         onPress={() => handleSelectAlbum(item)}
-        disabled={isPhotoInAlbum || isAdding}
+        disabled={isAdding}
         activeOpacity={0.7}
       >
         {/* Album Cover Thumbnail */}
@@ -160,20 +150,18 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }: Props) =
 
         {/* Album Info */}
         <View style={styles.albumInfo}>
-          <Text style={[styles.albumName, isPhotoInAlbum && styles.textDisabled]} numberOfLines={1}>
-            {item.name}
+          <Text style={styles.albumName} numberOfLines={1}>
+            {item.title}
           </Text>
-          <Text style={[styles.photoCount, isPhotoInAlbum && styles.textDisabled]}>
-            {item.photoIds?.length || 0} {item.photoIds?.length === 1 ? 'photo' : 'photos'}
+          <Text style={styles.photoCount}>
+            {item.photoCount || 0} {item.photoCount === 1 ? 'photo' : 'photos'}
           </Text>
         </View>
 
         {/* Status indicator */}
         <View style={styles.statusContainer}>
           {isAdding ? (
-            <PixelSpinner size="small" color={colors.brand.primary} />
-          ) : isPhotoInAlbum ? (
-            <PixelIcon name="checkmark-circle" size={24} color={colors.brand.primary} />
+            <PixelSpinner size="small" color={colors.brand.purple} />
           ) : (
             <PixelIcon name="chevron-forward" size={20} color={colors.text.secondary} />
           )}
@@ -205,7 +193,7 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }: Props) =
             activeOpacity={0.7}
           >
             <View style={styles.createIcon}>
-              <PixelIcon name="add" size={24} color={colors.brand.primary} />
+              <PixelIcon name="add" size={24} color={colors.brand.purple} />
             </View>
             <Text style={styles.createText}>Create New Album</Text>
           </TouchableOpacity>
@@ -216,7 +204,7 @@ const AddToAlbumSheet = ({ visible, photoId, onClose, onAlbumCreated }: Props) =
           {/* Albums List */}
           {loading ? (
             <View style={styles.loadingContainer}>
-              <PixelSpinner size="large" color={colors.brand.primary} />
+              <PixelSpinner size="large" color={colors.brand.purple} />
               <Text style={styles.loadingText}>Loading albums...</Text>
             </View>
           ) : albums.length === 0 ? (
@@ -286,7 +274,7 @@ const styles = StyleSheet.create({
     height: THUMBNAIL_SIZE,
     borderRadius: layout.borderRadius.sm,
     borderWidth: 2,
-    borderColor: colors.brand.primary,
+    borderColor: colors.brand.purple,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
@@ -294,7 +282,7 @@ const styles = StyleSheet.create({
   createText: {
     fontSize: typography.size.lg,
     fontFamily: typography.fontFamily.bodyBold,
-    color: colors.brand.primary,
+    color: colors.brand.purple,
     marginLeft: spacing.sm,
   },
   divider: {

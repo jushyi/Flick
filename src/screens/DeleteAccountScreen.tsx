@@ -19,7 +19,8 @@ import { useNavigation } from '@react-navigation/native';
 import { sendVerificationCode, verifyCode } from '../services/supabase/phoneAuthService';
 import { supabase } from '../lib/supabase';
 // TODO(20-01): accountService - no supabase equivalent yet
-const scheduleAccountDeletion = async () => ({ success: false, error: 'Account deletion not yet migrated' });
+const scheduleAccountDeletion = async (): Promise<{ success: boolean; error?: string; scheduledDate?: Date }> =>
+  ({ success: false, error: 'Account deletion not yet migrated' });
 import {
   downloadAllPhotos,
   requestMediaLibraryPermission,
@@ -49,7 +50,7 @@ import logger from '../utils/logger';
  */
 const DeleteAccountScreen = () => {
   const navigation = useNavigation();
-  const { confirmationRef } = usePhoneAuth();
+  const { e164Phone, setE164Phone } = usePhoneAuth();
   const { signOut, user } = useAuth();
 
   // Step state: 'warning' | 'verify' | 'code' | 'scheduling'
@@ -63,11 +64,11 @@ const DeleteAccountScreen = () => {
   const [downloadStatus, setDownloadStatus] = useState('idle'); // 'idle' | 'downloading' | 'complete' | 'error'
   const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0 });
 
-  const inputRef = useRef(null);
+  const inputRef = useRef<any>(null);
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   // Get current user's phone number from Supabase auth
-  const [phoneNumber, setPhoneNumber] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setPhoneNumber(data?.user?.phone || null);
@@ -162,18 +163,17 @@ const DeleteAccountScreen = () => {
       // Extract country code and number from E.164 format
       // Phone number is stored as E.164 (e.g., +14155551234)
       // We pass the full E.164 to sendVerificationCode with a fallback country
-      const result = await sendVerificationCode(phoneNumber, 'US');
+      const result = await sendVerificationCode(phoneNumber!, 'US');
 
       if (result.success) {
         logger.info('DeleteAccountScreen: Code sent successfully');
-        confirmationRef.current = result.confirmation;
         setStep('code');
       } else {
         logger.warn('DeleteAccountScreen: Failed to send code', { error: result.error });
         setError(result.error || 'Failed to send verification code');
       }
     } catch (err) {
-      logger.error('DeleteAccountScreen: Error sending code', { error: err.message });
+      logger.error('DeleteAccountScreen: Error sending code', { error: (err as Error).message });
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -201,8 +201,7 @@ const DeleteAccountScreen = () => {
     setError('');
 
     try {
-      const confirmation = confirmationRef.current;
-      const result = await verifyCode(confirmation, code);
+      const result = await verifyCode(phoneNumber!, code);
 
       if (result.success) {
         logger.info('DeleteAccountScreen: Verification successful, proceeding to scheduling');
@@ -210,14 +209,14 @@ const DeleteAccountScreen = () => {
         await handleScheduleDeletion();
       } else {
         logger.warn('DeleteAccountScreen: Verification failed', { error: result.error });
-        setError(result.error);
+        setError(result.error || 'Verification failed');
         setCode('');
         triggerShake();
         setRetryDelay(3);
         setTimeout(() => inputRef.current?.focus(), 100);
       }
     } catch (err) {
-      logger.error('DeleteAccountScreen: Error verifying code', { error: err.message });
+      logger.error('DeleteAccountScreen: Error verifying code', { error: (err as Error).message });
       setError('An unexpected error occurred. Please try again.');
       setCode('');
       triggerShake();
@@ -240,7 +239,7 @@ const DeleteAccountScreen = () => {
         });
 
         // Format the scheduled date for display
-        const formattedDate = result.scheduledDate.toLocaleDateString('en-US', {
+        const formattedDate = result.scheduledDate!.toLocaleDateString('en-US', {
           month: 'long',
           day: 'numeric',
           year: 'numeric',
@@ -267,7 +266,7 @@ const DeleteAccountScreen = () => {
       }
     } catch (err) {
       logger.error('DeleteAccountScreen: Unexpected error during scheduling', {
-        error: err.message,
+        error: (err as Error).message,
       });
       Alert.alert('Error', 'An unexpected error occurred. Please try again.', [
         { text: 'OK', onPress: () => setStep('warning') },
@@ -294,7 +293,7 @@ const DeleteAccountScreen = () => {
     setDownloadProgress({ current: 0, total: 0 });
 
     try {
-      const result = await downloadAllPhotos(user?.uid, progress => {
+      const result = await downloadAllPhotos(user!.id, progress => {
         setDownloadProgress(progress);
       });
 
@@ -309,7 +308,7 @@ const DeleteAccountScreen = () => {
         logger.warn('DeleteAccountScreen: Download failed', { error: result.error });
       }
     } catch (err) {
-      logger.error('DeleteAccountScreen: Download error', { error: err.message });
+      logger.error('DeleteAccountScreen: Download error', { error: (err as Error).message });
       setDownloadStatus('error');
     }
   };

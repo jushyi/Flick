@@ -31,7 +31,7 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
   const getGroupedReactions = () => {
     if (!reactions || Object.keys(reactions).length === 0) return [];
 
-    const grouped = {};
+    const grouped: Record<string, { emoji: string; count: number; userIds: string[] }> = {};
 
     Object.entries(reactions).forEach(([userId, emoji]) => {
       if (!grouped[emoji]) {
@@ -64,7 +64,7 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
     return (
       <View style={styles.compactContainer}>
         {groupedReactions.map((reaction, index) => {
-          const userReacted = reaction.userIds.includes(currentUserId);
+          const userReacted = currentUserId ? reaction.userIds.includes(currentUserId) : false;
           return (
             <View
               key={index}
@@ -93,7 +93,7 @@ const ReactionDisplay = ({ reactions = {}, reactionCount = 0, currentUserId, com
         contentContainerStyle={styles.reactionList}
       >
         {groupedReactions.map((reaction, index) => {
-          const userReacted = reaction.userIds.includes(currentUserId);
+          const userReacted = currentUserId ? reaction.userIds.includes(currentUserId) : false;
           return (
             <TouchableOpacity
               key={index}
