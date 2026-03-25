@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, type ReactNode } from 'react';
 
 import { getAuth } from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,13 +7,34 @@ import { Image } from 'expo-image';
 import { supabase } from '../lib/supabase';
 
 import logger from '../utils/logger';
-// TODO(20-01): clearLocalNotificationToken - notification service needs migration to supabase
-const clearLocalNotificationToken = async () => { /* no-op until notification service migrated */ };
 import { secureStorage } from '../services/secureStorageService';
 
-const AuthContext = createContext({});
+import type { UserProfile } from '@/types/common';
 
-export const useAuth = () => {
+// TODO(20-01): clearLocalNotificationToken - notification service needs migration to supabase
+const clearLocalNotificationToken = async (): Promise<void> => { /* no-op until notification service migrated */ };
+
+interface PendingDeletion {
+  isScheduled: boolean;
+  scheduledDate: Date;
+}
+
+interface AuthContextValue {
+  user: { id: string; phone?: string } | null;
+  userProfile: UserProfile | null;
+  loading: boolean;
+  initializing: boolean;
+  pendingDeletion: PendingDeletion | null;
+  signOut: () => Promise<{ success: boolean; error?: string }>;
+  cancelDeletion: () => Promise<{ success: boolean; error?: string }>;
+  updateUserProfile: (updatedProfile: UserProfile) => void;
+  refreshUserProfile: () => Promise<{ success: boolean; data?: UserProfile; error?: string }>;
+  updateUserDocument: (userId: string, updateData: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -21,10 +42,7 @@ export const useAuth = () => {
   return context;
 };
 
-/**
- * Fetch user profile from Supabase users table
- */
-const getUserProfile = async userId => {
+const getUserProfile = async (userId: string): Promise<{ success: boolean; data?: UserProfile; error?: string }> => {
   try {
     logger.debug('AuthContext.getUserProfile: Fetching', { userId });
     const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
@@ -34,17 +52,18 @@ const getUserProfile = async userId => {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
-  } catch (error) {
-    logger.error('AuthContext.getUserProfile: Exception', { error: error.message });
-    return { success: false, error: error.message };
+    return { success: true, data: data as UserProfile };
+  } catch (err) {
+    const e = err as Error;
+    logger.error('AuthContext.getUserProfile: Exception', { error: e.message });
+    return { success: false, error: e.message };
   }
 };
 
-/**
- * Update user document in Supabase users table
- */
-const updateUserDocument = async (userId, updateData) => {
+const updateUserDocument = async (
+  userId: string,
+  updateData: Partial<UserProfile>
+): Promise<{ success: boolean; error?: string }> => {
   try {
     logger.debug('AuthContext.updateUserDocument: Updating', {
       userId,
@@ -63,20 +82,24 @@ const updateUserDocument = async (userId, updateData) => {
 
     logger.info('AuthContext.updateUserDocument: Success', { userId });
     return { success: true };
-  } catch (error) {
-    logger.error('AuthContext.updateUserDocument: Exception', { error: error.message });
-    return { success: false, error: error.message };
+  } catch (err) {
+    const e = err as Error;
+    logger.error('AuthContext.updateUserDocument: Exception', { error: e.message });
+    return { success: false, error: e.message };
   }
 };
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps): React.JSX.Element => {
+  const [user, setUser] = useState<{ id: string; phone?: string } | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const [pendingDeletion, setPendingDeletion] = useState(null);
+  const [pendingDeletion, setPendingDeletion] = useState<PendingDeletion | null>(null);
 
-  // Listen to Supabase auth state changes
   useEffect(() => {
     logger.debug('AuthContext: Setting up Supabase auth state listener');
 
@@ -91,24 +114,21 @@ export const AuthProvider = ({ children }) => {
 
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
-          setUser(session.user);
+          setUser(session.user as { id: string; phone?: string });
 
-          // Fetch user profile from Supabase
           const profileResult = await getUserProfile(session.user.id);
 
-          if (profileResult.success) {
+          if (profileResult.success && profileResult.data) {
             logger.info('AuthContext: User profile loaded', {
-              profileSetupCompleted: profileResult.data?.profile_setup_completed,
+              profileSetupCompleted: profileResult.data?.profileSetupCompleted,
             });
             setUserProfile(profileResult.data);
 
-            // Check for pending deletion
-            if (profileResult.data?.scheduled_for_deletion_at) {
-              const scheduledDate = new Date(profileResult.data.scheduled_for_deletion_at);
-              setPendingDeletion({
-                isScheduled: true,
-                scheduledDate,
-              });
+            if ((profileResult.data as Record<string, unknown>).scheduled_for_deletion_at) {
+              const scheduledDate = new Date(
+                (profileResult.data as Record<string, unknown>).scheduled_for_deletion_at as string
+              );
+              setPendingDeletion({ isScheduled: true, scheduledDate });
               logger.info('AuthContext: User has pending deletion', {
                 scheduledDate: scheduledDate.toISOString(),
               });
@@ -116,18 +136,17 @@ export const AuthProvider = ({ children }) => {
               setPendingDeletion(null);
             }
           } else if (event === 'SIGNED_IN') {
-            // New user - create minimal profile
             logger.debug('AuthContext: No profile found, creating for new user');
             const newProfile = {
               id: session.user.id,
-              phone_number: session.user.phone || '',
+              phone_number: (session.user as { phone?: string }).phone || '',
               username: `user_${Date.now()}`,
               display_name: 'New User',
               photo_url: null,
               bio: '',
               profile_setup_completed: false,
               selects_completed: false,
-            };
+            } as unknown as UserProfile;
             setUserProfile(newProfile);
           }
         }
@@ -150,9 +169,9 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Silent migration bridge: detect Firebase token on mount, call Edge Function, call setSession
+  // Silent migration bridge: detect Firebase token on mount
   useEffect(() => {
-    const attemptMigration = async () => {
+    const attemptMigration = async (): Promise<void> => {
       try {
         const firebaseAuth = getAuth();
         const firebaseUser = firebaseAuth.currentUser;
@@ -171,34 +190,31 @@ export const AuthProvider = ({ children }) => {
               error: error.message,
             });
           } else if (data?.access_token && data?.refresh_token) {
-            // CRITICAL: Set the Supabase session with real tokens from Edge Function
             await supabase.auth.setSession({
               access_token: data.access_token,
               refresh_token: data.refresh_token,
             });
-            // onAuthStateChange will fire SIGNED_IN -> AuthContext picks up session
             logger.info('AuthContext: Silent migration completed', { migrated: data.migrated });
           }
 
-          // Sign out of Firebase after migration attempt (success or failure)
           await firebaseAuth.signOut();
           logger.info('AuthContext: Firebase sign out after migration');
         }
-      } catch (error) {
-        logger.warn('AuthContext: Migration attempt failed', { error: error.message });
+      } catch (err) {
+        const e = err as Error;
+        logger.warn('AuthContext: Migration attempt failed', { error: e.message });
       }
     };
 
     attemptMigration();
   }, []);
 
-  const signOut = async () => {
+  const signOut = async (): Promise<{ success: boolean; error?: string }> => {
     logger.info('AuthContext: Sign out requested - starting comprehensive cleanup');
     try {
       setLoading(true);
       const userId = user?.id;
 
-      // Step 1: Clear FCM token from Supabase (while still authenticated)
       if (userId) {
         try {
           logger.debug('AuthContext: Clearing FCM token from Supabase', { userId });
@@ -208,61 +224,52 @@ export const AuthProvider = ({ children }) => {
             .eq('id', userId);
           logger.info('AuthContext: FCM token cleared');
         } catch (fcmError) {
-          logger.warn('AuthContext: Failed to clear FCM token', {
-            error: fcmError.message,
-          });
+          const e = fcmError as Error;
+          logger.warn('AuthContext: Failed to clear FCM token', { error: e.message });
         }
       }
 
-      // Step 2: Clear SecureStore items
       try {
         await secureStorage.clearAll();
         logger.info('AuthContext: SecureStore cleared');
       } catch (secureStoreError) {
-        logger.warn('AuthContext: Failed to clear SecureStore', {
-          error: secureStoreError.message,
-        });
+        const e = secureStoreError as Error;
+        logger.warn('AuthContext: Failed to clear SecureStore', { error: e.message });
       }
 
-      // Step 3: Clear local notification token reference
       try {
         await clearLocalNotificationToken();
         logger.info('AuthContext: Local notification token cleared');
       } catch (tokenError) {
-        logger.warn('AuthContext: Failed to clear local notification token', {
-          error: tokenError.message,
-        });
+        const e = tokenError as Error;
+        logger.warn('AuthContext: Failed to clear local notification token', { error: e.message });
       }
 
-      // Step 4: Clear AsyncStorage
       try {
         await AsyncStorage.clear();
         logger.info('AuthContext: AsyncStorage cleared');
       } catch (asyncStorageError) {
-        logger.warn('AuthContext: Failed to clear AsyncStorage', {
-          error: asyncStorageError.message,
-        });
+        const e = asyncStorageError as Error;
+        logger.warn('AuthContext: Failed to clear AsyncStorage', { error: e.message });
       }
 
-      // Step 5: Clear expo-image cache
       try {
         await Image.clearMemoryCache();
         await Image.clearDiskCache();
         logger.info('AuthContext: expo-image cache cleared');
       } catch (imageCacheError) {
-        logger.warn('AuthContext: Failed to clear expo-image cache', {
-          error: imageCacheError.message,
-        });
+        const e = imageCacheError as Error;
+        logger.warn('AuthContext: Failed to clear expo-image cache', { error: e.message });
       }
 
-      // Step 6: Sign out from Supabase Auth (LAST - after all cleanup)
       await supabase.auth.signOut();
 
       setUser(null);
       setUserProfile(null);
       logger.info('AuthContext: Sign out successful - all cleanup complete');
       return { success: true };
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       logger.error('AuthContext: Sign out failed', { error: error.message });
       return { success: false, error: error.message };
     } finally {
@@ -270,12 +277,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const cancelDeletion = async () => {
+  const cancelDeletion = async (): Promise<{ success: boolean; error?: string }> => {
     try {
       const { error } = await supabase
         .from('users')
         .update({ scheduled_for_deletion_at: null, deletion_reason: null })
-        .eq('id', user.id);
+        .eq('id', user!.id);
 
       if (error) {
         logger.error('AuthContext: Failed to cancel deletion', { error: error.message });
@@ -283,24 +290,24 @@ export const AuthProvider = ({ children }) => {
       }
 
       setPendingDeletion(null);
-      // Refresh user profile
-      const refreshedProfile = await getUserProfile(user.id);
-      if (refreshedProfile.success) {
+      const refreshedProfile = await getUserProfile(user!.id);
+      if (refreshedProfile.success && refreshedProfile.data) {
         setUserProfile(refreshedProfile.data);
       }
       logger.info('AuthContext: Deletion canceled');
       return { success: true };
-    } catch (error) {
-      logger.error('AuthContext: Failed to cancel deletion', { error: error.message });
-      return { success: false, error: error.message };
+    } catch (err) {
+      const e = err as Error;
+      logger.error('AuthContext: Failed to cancel deletion', { error: e.message });
+      return { success: false, error: e.message };
     }
   };
 
-  const updateUserProfile = updatedProfile => {
+  const updateUserProfile = (updatedProfile: UserProfile): void => {
     setUserProfile(updatedProfile);
   };
 
-  const refreshUserProfile = async () => {
+  const refreshUserProfile = async (): Promise<{ success: boolean; data?: UserProfile; error?: string }> => {
     if (!user?.id) {
       logger.warn('refreshUserProfile: No user to refresh');
       return { success: false, error: 'No user' };
@@ -308,20 +315,21 @@ export const AuthProvider = ({ children }) => {
     try {
       logger.debug('refreshUserProfile: Fetching latest user profile', { userId: user.id });
       const profileResult = await getUserProfile(user.id);
-      if (profileResult.success) {
+      if (profileResult.success && profileResult.data) {
         logger.info('refreshUserProfile: Profile refreshed');
         setUserProfile(profileResult.data);
         return { success: true, data: profileResult.data };
       }
       logger.error('refreshUserProfile: Failed to fetch', { error: profileResult.error });
       return profileResult;
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       logger.error('refreshUserProfile: Error', { error: error.message });
       return { success: false, error: error.message };
     }
   };
 
-  const value = {
+  const value: AuthContextValue = {
     user,
     userProfile,
     loading,

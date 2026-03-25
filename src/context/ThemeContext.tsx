@@ -1,60 +1,67 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors } from '../constants/colors';
+import { colors, type Colors } from '../constants/colors';
 import logger from '../utils/logger';
 
 const THEME_STORAGE_KEY = '@flick_theme_palette';
 
-/**
- * Preset color palettes for user personalization
- * Each palette provides accent and accentSecondary colors
- * that override the brand colors in the theme
- */
-export const PALETTES = {
+interface Palette {
+  accent: string;
+  accentSecondary: string;
+}
+
+export const PALETTES: Record<string, Palette> = {
   cyan: {
-    accent: '#00D4FF', // Electric cyan (default retro accent)
-    accentSecondary: '#FF2D78', // Hot magenta
+    accent: '#00D4FF',
+    accentSecondary: '#FF2D78',
   },
   magenta: {
-    accent: '#FF2D78', // Hot magenta
-    accentSecondary: '#B24BF3', // Electric purple
+    accent: '#FF2D78',
+    accentSecondary: '#B24BF3',
   },
   neonGreen: {
-    accent: '#39FF14', // Neon green (terminal/Matrix)
-    accentSecondary: '#00D4FF', // Electric cyan
+    accent: '#39FF14',
+    accentSecondary: '#00D4FF',
   },
   gold: {
-    accent: '#FFD700', // Coin gold
-    accentSecondary: '#FF8C00', // Retro amber
+    accent: '#FFD700',
+    accentSecondary: '#FF8C00',
   },
 };
 
-const ThemeContext = createContext({});
+type Theme = Colors & {
+  accent: string;
+  accentSecondary: string;
+};
 
-/**
- * Hook to access theme context
- * Must be used within a ThemeProvider
- */
-export const useTheme = () => {
+interface ThemeContextValue {
+  theme: Theme;
+  currentPalette: string;
+  setPalette: (paletteName: string) => Promise<void>;
+  palettes: string[];
+  initializing: boolean;
+}
+
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+
+export const useTheme = (): ThemeContextValue => {
   const context = useContext(ThemeContext);
-  if (!context || Object.keys(context).length === 0) {
+  if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
 };
 
-/**
- * ThemeProvider component
- * Provides theme colors to the entire app via context
- * Supports switching between preset palettes
- */
-export const ThemeProvider = ({ children }) => {
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
+export const ThemeProvider = ({ children }: ThemeProviderProps): React.JSX.Element => {
   const [currentPalette, setCurrentPalette] = useState('cyan');
   const [initializing, setInitializing] = useState(true);
 
-  // Load saved palette from AsyncStorage on mount
   useEffect(() => {
-    const loadSavedPalette = async () => {
+    const loadSavedPalette = async (): Promise<void> => {
       try {
         logger.debug('ThemeContext: Loading saved palette from storage');
         const savedPalette = await AsyncStorage.getItem(THEME_STORAGE_KEY);
@@ -64,7 +71,8 @@ export const ThemeProvider = ({ children }) => {
         } else {
           logger.debug('ThemeContext: No saved palette, using default cyan');
         }
-      } catch (error) {
+      } catch (err) {
+        const error = err as Error;
         logger.warn('ThemeContext: Failed to load saved palette, using default', {
           error: error.message,
         });
@@ -76,53 +84,41 @@ export const ThemeProvider = ({ children }) => {
     loadSavedPalette();
   }, []);
 
-  /**
-   * Update the current palette and persist to storage
-   * @param {string} paletteName - Name of palette from PALETTES
-   */
-  const setPalette = async paletteName => {
+  const setPalette = async (paletteName: string): Promise<void> => {
     if (!PALETTES[paletteName]) {
       logger.warn('ThemeContext: Invalid palette name', { paletteName });
       return;
     }
-    logger.info('ThemeContext: Palette changed', {
-      from: currentPalette,
-      to: paletteName,
-    });
+    logger.info('ThemeContext: Palette changed', { from: currentPalette, to: paletteName });
     setCurrentPalette(paletteName);
 
-    // Persist to AsyncStorage
     try {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, paletteName);
       logger.debug('ThemeContext: Palette persisted to storage', { palette: paletteName });
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       logger.warn('ThemeContext: Failed to persist palette', { error: error.message });
     }
   };
 
-  // Derive theme object from current palette merged with static colors
   const palette = PALETTES[currentPalette];
-  const theme = {
-    // Accent colors from selected palette
+  const theme: Theme = {
     accent: palette.accent,
     accentSecondary: palette.accentSecondary,
-    // Spread all static colors from constants
     ...colors,
-    // Override brand colors with palette (for components using brand.purple directly)
     brand: {
       ...colors.brand,
       purple: palette.accent,
       pink: palette.accentSecondary,
       gradient: {
         ...colors.brand.gradient,
-        // Update gradients to use palette colors
         developing: [palette.accent, palette.accentSecondary],
         revealed: [palette.accent, palette.accentSecondary],
       },
     },
   };
 
-  const value = {
+  const value: ThemeContextValue = {
     theme,
     currentPalette,
     setPalette,
