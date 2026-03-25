@@ -69,11 +69,11 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **PERF-01**: TanStack Query integrated — all data fetching uses useQuery/useMutation with automatic caching
 - [ ] **PERF-02**: Stale-while-revalidate pattern on feed, conversations, and profile screens (cached data renders in <100ms)
-- [ ] **PERF-03**: Skeleton screens on all list views (feed, conversations, friends, comments, notifications, albums)
+- [x] **PERF-03**: Skeleton screens on all list views (feed, conversations, friends, comments, notifications, albums)
 - [ ] **PERF-04**: Optimistic updates for message sending, reactions, friend requests, photo triage, and read receipts
-- [ ] **PERF-05**: Photo/video loading uses CDN-backed permanent URLs or pre-refreshed signed URLs (no expired URL flash)
-- [ ] **PERF-06**: Feed images served at appropriate sizes (400px for cards, full-res only in PhotoDetail)
-- [ ] **PERF-07**: Consistent empty state screens across all list views
+- [x] **PERF-05**: Photo/video loading uses CDN-backed permanent URLs or pre-refreshed signed URLs (no expired URL flash)
+- [x] **PERF-06**: Feed images served at appropriate sizes (400px for cards, full-res only in PhotoDetail)
+- [x] **PERF-07**: Consistent empty state screens across all list views
 - [x] **PERF-08**: Offline query persistence via TanStack Query + AsyncStorage (app opens instantly with cached data)
 - [x] **PERF-09**: PowerSync local SQLite provides instant reads for photos, darkroom, conversations, friendships (0ms network latency)
 - [ ] **PERF-10**: New story photos from friends load within 1-2 seconds — CDN edge caching, aggressive prefetching of next friend's photos, and optimized image sizing for feed/story views
@@ -183,11 +183,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | JOBS-10 | Phase 18 | Complete |
 | LIVE-01 | Phase 18 | Complete |
 | PERF-02 | Phase 19 | Pending |
-| PERF-03 | Phase 19 | Pending |
+| PERF-03 | Phase 19 | Complete |
 | PERF-04 | Phase 19 | Pending |
-| PERF-05 | Phase 19 | Pending |
-| PERF-06 | Phase 19 | Pending |
-| PERF-07 | Phase 19 | Pending |
+| PERF-05 | Phase 19 | Complete |
+| PERF-06 | Phase 19 | Complete |
+| PERF-07 | Phase 19 | Complete |
 | PERF-10 | Phase 19 | Pending |
 | PERF-11 | Phase 19 | Pending |
 | TS-01 | Phase 20 | Pending |
