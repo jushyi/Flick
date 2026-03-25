@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelSpinner from '../components/PixelSpinner';
+import { NotificationsSkeleton } from '../components/skeletons/NotificationsSkeleton';
+import { EmptyState } from '../components/EmptyState';
 import {
   getFirestore,
   collection,
@@ -230,17 +232,14 @@ const NotificationsScreen = () => {
     if (loading) return null;
 
     return (
-      <View style={styles.emptyContainer}>
-        <PixelIcon name="heart-outline" size={64} color={colors.text.tertiary} />
-        <Text style={styles.emptyTitle}>No notifications yet</Text>
-        <Text style={styles.emptyText}>
-          When friends react to your photos, you&apos;ll see it here
-        </Text>
-      </View>
+      <EmptyState
+        icon="notifications-outline"
+        message="No notifications yet"
+      />
     );
   };
 
-  if (loading) {
+  if (loading && notifications.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
@@ -253,9 +252,7 @@ const NotificationsScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Notifications</Text>
         </View>
-        <View style={styles.loadingContainer}>
-          <PixelSpinner size="large" color={colors.text.primary} />
-        </View>
+        <NotificationsSkeleton />
       </SafeAreaView>
     );
   }

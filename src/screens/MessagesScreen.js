@@ -11,6 +11,8 @@ import { queryKeys } from '@/lib/queryKeys';
 import ConversationRow from '../components/ConversationRow';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
+import { ConversationsSkeleton } from '../components/skeletons/ConversationsSkeleton';
+import { EmptyState } from '../components/EmptyState';
 
 import { useAuth } from '../context/AuthContext';
 import { useMessages } from '../hooks/useMessages';
@@ -195,15 +197,16 @@ const MessagesScreen = () => {
   const renderEmptyState = useCallback(() => {
     if (loading) return null;
     return (
-      <View style={styles.emptyContent}>
-        <PixelIcon name="tab-messages" size={48} color={colors.text.secondary} />
-        <Text style={styles.emptyText}>No messages yet</Text>
-        <Text style={styles.emptySubtext}>Tap the button above to start a conversation</Text>
-      </View>
+      <EmptyState
+        icon="chatbubble-outline"
+        message="No conversations yet"
+        ctaLabel="Start a chat"
+        onCtaPress={() => navigation.navigate('NewMessage')}
+      />
     );
-  }, [loading]);
+  }, [loading, navigation]);
 
-  if (loading) {
+  if (loading && conversations.length === 0) {
     return (
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
@@ -218,9 +221,7 @@ const MessagesScreen = () => {
             <PixelIcon name="add" size={24} color={colors.text.primary} />
           </TouchableOpacity>
         </View>
-        <View style={styles.loadingContainer}>
-          <PixelSpinner />
-        </View>
+        <ConversationsSkeleton />
       </View>
     );
   }

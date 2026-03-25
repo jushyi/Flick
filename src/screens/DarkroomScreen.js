@@ -17,6 +17,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedAnimated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
+import { DarkroomSkeleton } from '../components/skeletons/DarkroomSkeleton';
+import { EmptyState } from '../components/EmptyState';
 // Explicit .js extension to avoid Metro resolving useDarkroom.ts (lean data hook)
 // The .js hook contains full UI logic (undo stack, triage, animations) with Supabase services
 import useDarkroom from '../hooks/useDarkroom.js';
@@ -103,10 +105,7 @@ const DarkroomScreen = () => {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
         <SafeAreaView style={styles.container}>
-          <View style={styles.loadingContainer}>
-            <PixelSpinner size="large" color={colors.icon.primary} />
-            <Text style={styles.loadingText}>Loading darkroom...</Text>
-          </View>
+          <DarkroomSkeleton />
         </SafeAreaView>
       </GestureHandlerRootView>
     );
@@ -186,11 +185,16 @@ const DarkroomScreen = () => {
     );
   }
 
-  // Empty state - blank to avoid flash before success screen
+  // Empty state - no photos developing
   if (visiblePhotos.length === 0 && !pendingSuccess) {
     return (
       <GestureHandlerRootView style={styles.gestureRootView}>
-        <View style={styles.container} />
+        <SafeAreaView style={styles.container}>
+          <EmptyState
+            icon="tab-darkroom"
+            message="Nothing developing"
+          />
+        </SafeAreaView>
       </GestureHandlerRootView>
     );
   }

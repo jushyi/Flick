@@ -52,6 +52,8 @@ import {
   getBlockedUserIds,
 } from '../services/firebase/blockService';
 import { mediumImpact } from '../utils/haptics';
+import { FriendsSkeleton } from '../components/skeletons/FriendsSkeleton';
+import { EmptyState } from '../components/EmptyState';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
 import { styles } from '../styles/FriendsScreen.styles';
@@ -1003,13 +1005,8 @@ const FriendsScreen = ({ navigation }) => {
   );
 
   const renderFriendsTab = () => {
-    if (loading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <PixelSpinner size="large" color={colors.text.primary} />
-          <Text style={styles.loadingText}>Loading friends...</Text>
-        </View>
-      );
+    if (loading && friends.length === 0) {
+      return <FriendsSkeleton />;
     }
 
     return (
@@ -1070,11 +1067,12 @@ const FriendsScreen = ({ navigation }) => {
                   'No friends found',
                   'Try a different search term'
                 )
-              : renderEmptyState(
-                  'people-outline',
-                  'No friends yet',
-                  'Search for friends in the Requests tab'
-                )
+              : <EmptyState
+                  icon="people-outline"
+                  message="No friends yet"
+                  ctaLabel="Find friends"
+                  onCtaPress={() => navigation.navigate('ContactsSync')}
+                />
           }
         />
       </>
@@ -1082,13 +1080,8 @@ const FriendsScreen = ({ navigation }) => {
   };
 
   const renderRequestsTab = () => {
-    if (loading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <PixelSpinner size="large" color={colors.text.primary} />
-          <Text style={styles.loadingText}>Loading requests...</Text>
-        </View>
-      );
+    if (loading && incomingRequests.length === 0 && sentRequests.length === 0) {
+      return <FriendsSkeleton />;
     }
 
     // If searching, show search results

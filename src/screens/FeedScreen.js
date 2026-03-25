@@ -29,6 +29,8 @@ import { useViewedStories } from '../hooks/useViewedStories';
 import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import FeedPhotoCard from '../components/FeedPhotoCard';
 import FeedLoadingSkeleton from '../components/FeedLoadingSkeleton';
+import { FeedSkeleton } from '../components/skeletons/FeedSkeleton';
+import { EmptyState } from '../components/EmptyState';
 import { FriendStoryCard } from '../components';
 import { MeStoryCard } from '../components/MeStoryCard';
 import AddFriendsPromptCard from '../components/AddFriendsPromptCard';
@@ -1195,11 +1197,12 @@ const FeedScreen = () => {
 
     // Established user state: has friends but no posts in feed
     return (
-      <View style={styles.emptyContainer}>
-        <PixelIcon name="sad-outline" size={64} color={colors.text.secondary} />
-        <Text style={styles.emptyTitle}>Nothing yet</Text>
-        <Text style={styles.emptyText}>Tell your friends to post!</Text>
-      </View>
+      <EmptyState
+        icon="camera-outline"
+        message="No photos yet"
+        ctaLabel="Add friends"
+        onCtaPress={() => navigation.navigate('FriendsList')}
+      />
     );
   };
 
@@ -1423,7 +1426,9 @@ const FeedScreen = () => {
       </Animated.View>
 
       {/* Content */}
-      {loading || refreshing ? (
+      {loading && photos.length === 0 ? (
+        <FeedSkeleton />
+      ) : loading || refreshing ? (
         <>
           {renderStoriesRow()}
           <FeedLoadingSkeleton count={3} />
