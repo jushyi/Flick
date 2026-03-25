@@ -85,7 +85,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### TypeScript Migration
 
-- [ ] **TS-01**: All rewritten service files are TypeScript (.ts) with Supabase-generated database types
+- [x] **TS-01**: All rewritten service files are TypeScript (.ts) with Supabase-generated database types
 - [ ] **TS-02**: All rewritten hooks are TypeScript (.ts/.tsx) with proper type annotations
 - [ ] **TS-03**: Remaining untouched JS files converted to TypeScript after main migration
 - [x] **TS-04**: Zero `any` types in rewritten code (strict typing for new code, allowJs for legacy)
@@ -94,8 +94,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **CLEAN-01**: All 7 @react-native-firebase/* packages removed (single EAS native build)
 - [ ] **CLEAN-02**: Firebase Cloud Functions directory (functions/) removed after all jobs ported
-- [ ] **CLEAN-03**: Dead code identified and removed during per-screen audit
-- [ ] **CLEAN-04**: Firebase-specific config files (GoogleService-Info.plist, google-services.json) removed
+- [x] **CLEAN-03**: Dead code identified and removed during per-screen audit
+- [x] **CLEAN-04**: Firebase-specific config files (GoogleService-Info.plist, google-services.json) removed
 - [x] **CLEAN-05**: Sentry replaces Firebase Performance Monitoring for error tracking and traces
 
 ## v2 Requirements
@@ -190,14 +190,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-07 | Phase 19 | Complete |
 | PERF-10 | Phase 19 | Complete |
 | PERF-11 | Phase 19 | Complete |
-| TS-01 | Phase 20 | Pending |
+| TS-01 | Phase 20 | Complete |
 | TS-02 | Phase 20 | Pending |
 | TS-03 | Phase 20 | Pending |
 | TS-04 | Phase 20 | Complete |
 | CLEAN-01 | Phase 20 | Pending |
 | CLEAN-02 | Phase 20 | Pending |
-| CLEAN-03 | Phase 20 | Pending |
-| CLEAN-04 | Phase 20 | Pending |
+| CLEAN-03 | Phase 20 | Complete |
+| CLEAN-04 | Phase 20 | Complete |
 | CLEAN-05 | Phase 20 | Complete |
 
 **Coverage:**
