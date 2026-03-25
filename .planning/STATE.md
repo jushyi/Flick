@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Speed & Scale
 status: planning
-stopped_at: Completed 20-05-PLAN.md
-last_updated: "2026-03-25T20:37:58.711Z"
+stopped_at: Phase 20.1 context gathered
+last_updated: "2026-03-25T21:05:19.085Z"
 progress:
   total_phases: 11
   completed_phases: 9
@@ -155,6 +155,6 @@ Plan: Not started
 
 ## Session Continuity
 
-Last session: 2026-03-25T19:04:59.869Z
-Stopped at: Completed 20-05-PLAN.md
-Resume file: None
+Last session: 2026-03-25T21:05:19.075Z
+Stopped at: Phase 20.1 context gathered
+Resume file: .planning/phases/20.1-firestore-data-migration-script/20.1-CONTEXT.md
