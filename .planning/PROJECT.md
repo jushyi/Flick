@@ -45,8 +45,8 @@ Snaps and streaks make messaging a daily habit — ephemeral photo messages that
 
 - Backend/database migration off Firebase to optimal performant/scalable solution
 - TypeScript migration (organic as files are touched + outlier sweep)
-- Performance overhaul across every screen (feed, darkroom, conversations, snaps, transitions)
-- Consistent loading and empty states everywhere
+- Performance overhaul across every screen (feed, darkroom, conversations, snaps, transitions) — Phase 19 complete: skeleton screens, optimistic mutations, image transforms, prefetching
+- Consistent loading and empty states everywhere — Phase 19 complete: 9 skeleton screens + EmptyState on all list views + Toast notifications
 - Dead code cleanup and per-screen audit
 - Fix Live Activities (push-to-start APNS, deep links, stacked layout) — resolve v1.1 gaps while touching those screens
 
