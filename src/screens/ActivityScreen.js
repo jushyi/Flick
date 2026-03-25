@@ -14,6 +14,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useRoute } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import PixelSpinner from '../components/PixelSpinner';
+import { ActivitySkeleton } from '../components/skeletons/ActivitySkeleton';
+import { EmptyState } from '../components/EmptyState';
 import FriendCard from '../components/FriendCard';
 import {
   getFirestore,
@@ -580,17 +582,16 @@ const ActivityScreen = () => {
 
     if (friendRequests.length === 0 && clumpedNotifications.length === 0) {
       return (
-        <View style={styles.emptyContainer}>
-          <PixelIcon name="heart-outline" size={64} color={colors.text.tertiary} />
-          <Text style={styles.emptyTitle}>No activity yet</Text>
-          <Text style={styles.emptyText}>Likes, comments, and other activity will appear here</Text>
-        </View>
+        <EmptyState
+          icon="notifications-outline"
+          message="No activity yet"
+        />
       );
     }
     return null;
   };
 
-  if (loading) {
+  if (loading && notifications.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
@@ -600,9 +601,7 @@ const ActivityScreen = () => {
           <Text style={styles.headerTitle}>Notifications</Text>
           <View style={styles.headerSpacer} />
         </View>
-        <View style={styles.loadingContainer}>
-          <PixelSpinner size="large" color={colors.text.primary} />
-        </View>
+        <ActivitySkeleton />
       </SafeAreaView>
     );
   }

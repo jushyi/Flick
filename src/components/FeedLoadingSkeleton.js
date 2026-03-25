@@ -1,3 +1,5 @@
+// @deprecated Use FeedSkeleton from components/skeletons/ instead.
+// Kept only for SWR (stale-while-revalidate) shimmer in FeedScreen during refresh.
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Dimensions, Animated, ScrollView } from 'react-native';
 import { colors } from '../constants/colors';

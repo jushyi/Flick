@@ -14,6 +14,8 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
+import { AlbumsSkeleton } from '../components/skeletons/AlbumsSkeleton';
+import { EmptyState } from '../components/EmptyState';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { typography } from '../constants/typography';
@@ -350,12 +352,10 @@ const AlbumGridScreen = () => {
     [handlePhotoPress, handlePhotoLongPress, handleAddPhotosPress]
   );
 
-  if (loading) {
+  if (loading && photos.length === 0) {
     return (
       <View style={styles.container}>
-        <View style={[styles.loadingContainer, { paddingTop: insets.top + HEADER_HEIGHT }]}>
-          <Text style={styles.loadingText}>Loading album...</Text>
-        </View>
+        <AlbumsSkeleton />
       </View>
     );
   }
@@ -421,6 +421,9 @@ const AlbumGridScreen = () => {
         initialNumToRender={9}
         maxToRenderPerBatch={6}
         windowSize={5}
+        ListEmptyComponent={
+          <EmptyState icon="images-outline" message="No photos in this album" />
+        }
       />
 
       {/* Photo Viewer Modal */}

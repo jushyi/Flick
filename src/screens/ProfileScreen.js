@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import PixelIcon from '../components/PixelIcon';
 import StrokedNameText from '../components/StrokedNameText';
+import { ProfilePhotoGridSkeleton } from '../components/skeletons/ProfilePhotoGridSkeleton';
+import { EmptyState } from '../components/EmptyState';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
@@ -782,9 +784,7 @@ const ProfileScreen = () => {
   if (isOwnProfile && !userProfile) {
     return (
       <View style={styles.container}>
-        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </View>
+        <ProfilePhotoGridSkeleton />
       </View>
     );
   }
@@ -793,9 +793,7 @@ const ProfileScreen = () => {
   if (!isOwnProfile && otherUserLoading) {
     return (
       <View style={styles.container}>
-        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </View>
+        <ProfilePhotoGridSkeleton />
       </View>
     );
   }

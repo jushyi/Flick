@@ -23,6 +23,8 @@ import {
 } from 'react-native';
 import Reanimated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import PixelSpinner from '../PixelSpinner';
+import { CommentsSkeleton } from '../skeletons/CommentsSkeleton';
+import { EmptyState } from '../EmptyState';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PixelIcon from '../PixelIcon';
 import * as Haptics from 'expo-haptics';
@@ -940,18 +942,17 @@ const CommentsBottomSheet = ({
     if (loading) return null;
 
     return (
-      <View style={styles.emptyContainer}>
-        <PixelIcon name="chatbubble-outline" size={48} color={colors.text.tertiary} />
-        <Text style={styles.emptyText}>No comments yet</Text>
-        <Text style={styles.emptySubtext}>Be the first to comment</Text>
-      </View>
+      <EmptyState
+        icon="chatbubble-outline"
+        message="No comments yet"
+        ctaLabel="Be the first"
+        onCtaPress={() => inputRef.current?.focus()}
+      />
     );
   }, [loading]);
 
   const renderLoading = () => (
-    <View style={styles.loadingContainer}>
-      <PixelSpinner size="large" color={colors.brand.purple} />
-    </View>
+    <CommentsSkeleton />
   );
 
   const renderError = () => (

@@ -48,6 +48,7 @@ import {
   registerPushToStartToken,
 } from './src/services/liveActivityService';
 import { WHATS_NEW } from './src/config/whatsNew';
+import AppToast from './src/components/Toast';
 import { GIPHY_API_KEY } from '@env';
 import { queryClient, persistOptions } from './src/lib/queryClient';
 import { powerSyncDb } from './src/lib/powersync/database';
@@ -696,6 +697,7 @@ export default function App() {
                 onPress={handleBannerPress}
                 onDismiss={() => setBannerData(null)}
               />
+              <AppToast />
             </SafeAreaProvider>
           </View>
         </GestureHandlerRootView>
