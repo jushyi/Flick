@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Lapse Clone (branded as "Flick") is a friends-only social media app built with React Native and Expo. It recreates the disposable camera experience: photos are captured instantly but revealed later in batches through a "darkroom" system. The app uses Firebase for authentication (phone-only), Firestore, Storage, and Cloud Functions. The UI uses a retro 16-bit pixel art aesthetic with CRT-inspired dark theme.
+Lapse Clone (branded as "Flick") is a friends-only social media app built with React Native and Expo. It recreates the disposable camera experience: photos are captured instantly but revealed later in batches through a "darkroom" system. The app uses Supabase for authentication (phone-only), PostgreSQL with Row Level Security, Supabase Storage, and Edge Functions. The UI uses a retro 16-bit pixel art aesthetic with CRT-inspired dark theme.
 
 ## Production Build & Deployment
 
@@ -34,14 +34,14 @@ Changes that require a full native build (NOT just `eas update`):
 
 The app supports both iOS and Android. Android was added after the initial iOS-only build. Keep the following in mind when working on Android.
 
-### Firebase Config (Android)
+### Supabase Config (Android)
 
-Two Firebase projects exist — dev and prod. Android Firebase config is handled via `google-services.json` files (never committed to git) stored as EAS secrets:
+Two Supabase projects exist — dev and prod. Config is handled via environment variables stored as EAS secrets:
 
-- `GOOGLE_SERVICES_JSON_DEV` — dev Firebase project (`re-lapse-fa89b`), used for development/preview builds
-- `GOOGLE_SERVICES_JSON_PROD` — prod Firebase project (`flick-prod-49615`), used for production builds
+- `SUPABASE_URL_DEV` / `SUPABASE_ANON_KEY_DEV` — dev Supabase project, used for development/preview builds
+- `SUPABASE_URL_PROD` / `SUPABASE_ANON_KEY_PROD` — prod Supabase project, used for production builds
 
-`app.config.js` selects between them based on `APP_ENV === 'production'`. Local development falls back to `./google-services.json` at the project root.
+`app.config.js` selects between them based on `APP_ENV === 'production'`.
 
 ### EAS Build Profiles (Android)
 
@@ -49,10 +49,10 @@ Two Firebase projects exist — dev and prod. Android Firebase config is handled
 # Dev client build — connects to expo start, for active development
 eas build --platform android --profile development
 
-# Preview build — standalone APK, no dev server needed, uses dev Firebase
+# Preview build — standalone APK, no dev server needed, uses dev Supabase
 eas build --platform android --profile preview
 
-# Production build — Play Store AAB, uses prod Firebase (set up later)
+# Production build — Play Store AAB, uses prod Supabase
 eas build --platform android --profile production
 ```
 
@@ -61,7 +61,7 @@ eas build --platform android --profile production
 **Never use Android-only logic without a platform guard** — it will crash or misbehave on iOS. Always isolate it with one of these patterns:
 
 **Option 1 — Inline guard (for small differences):**
-```javascript
+```typescript
 import { Platform } from 'react-native';
 
 // Logic
@@ -80,9 +80,9 @@ const behavior = Platform.select({ ios: 'padding', android: 'height' });
 
 **Option 2 — Platform file extensions (for large component differences):**
 ```
-MyComponent.android.js   ← loaded only on Android
-MyComponent.ios.js       ← loaded only on iOS
-MyComponent.js           ← fallback for both
+MyComponent.android.tsx   <- loaded only on Android
+MyComponent.ios.tsx       <- loaded only on iOS
+MyComponent.tsx           <- fallback for both
 ```
 Import as normal — Metro automatically resolves the right file. No changes to import statements needed.
 
@@ -105,7 +105,7 @@ Import as normal — Metro automatically resolves the right file. No changes to 
 Android has hundreds of screen sizes and densities. Follow these rules to ensure the app works across all of them.
 
 **Never hardcode pixel dimensions for layout:**
-```javascript
+```typescript
 // Bad — assumes a specific screen size
 <View style={{ width: 390, height: 844 }} />
 
@@ -114,7 +114,7 @@ Android has hundreds of screen sizes and densities. Follow these rules to ensure
 ```
 
 **Use `useWindowDimensions()` for anything size-dependent** (better than `Dimensions.get()` which is a static snapshot and doesn't update on orientation change):
-```javascript
+```typescript
 import { useWindowDimensions } from 'react-native';
 const { width, height } = useWindowDimensions();
 ```
@@ -130,10 +130,6 @@ const { width, height } = useWindowDimensions();
 **Pixel art assets** — Android has more density buckets than iOS (mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi). Use `PixelRatio.get()` if pixel art elements need precise scaling per density.
 
 **Testing target** — If the layout looks correct at 360dp wide (small/budget phone) and 430dp wide (large flagship), it will work for ~95% of Android users. Use Android Studio emulator presets to test both.
-
-### `withFirebaseFix.js` Plugin
-
-This custom plugin is **iOS-only** — it modifies the Podfile to fix a React Native Firebase + Expo 54 compile issue. Android does not need it; the `@react-native-firebase/app` Gradle plugin handles Android automatically.
 
 ### Android-Specific `app.json` Fields
 
@@ -168,18 +164,19 @@ npm run format       # Format with Prettier
 npm test                       # Run all tests once
 npm run test:watch             # Run tests in watch mode
 npm run test:coverage          # Run tests with coverage report
-npm test -- path/to/test.test.js  # Run a single test file
+npm test -- path/to/test.test.ts  # Run a single test file
 ```
 
-Tests use Jest with `jest-expo` preset. Firebase modules are mocked in `__tests__/setup/jest.setup.js`. Mock functions are defined outside `jest.mock()` blocks and referenced inside mock returns. Coverage is collected from `src/` only.
+Tests use Jest with `jest-expo` preset. Supabase modules are mocked via `global.__supabaseMocks` in `__tests__/setup/jest.setup.ts`. Mock functions are defined outside `jest.mock()` blocks and referenced inside mock returns. Coverage is collected from `src/` only.
 
-### Firebase Functions
+### Edge Functions
 ```bash
-cd functions && npm install
-firebase deploy --only functions
+supabase functions serve       # Local development
+supabase functions deploy      # Deploy all functions
+supabase functions deploy <name>  # Deploy a single function
 ```
 
-Functions use Node 20, Firebase Admin SDK, Expo Server SDK, and Zod for request validation.
+Edge Functions use Deno, Supabase Admin SDK, Expo Server SDK, and Zod for request validation.
 
 ### Pre-commit Hooks
 The project uses husky + lint-staged. Commits automatically run linting and formatting on staged files. `patch-package` runs on `npm install` via postinstall script.
@@ -188,135 +185,182 @@ The project uses husky + lint-staged. Commits automatically run linting and form
 
 ### Core Stack
 - **React Native + Expo (SDK 54)** - Cross-platform mobile framework
-- **React Native Firebase SDK** (`@react-native-firebase/*`) - Auth, Firestore, Storage (NOT the web SDK)
+- **Supabase JS SDK** (`@supabase/supabase-js`) - Auth, PostgreSQL, Storage, Realtime
+- **PowerSync** - Offline-first sync with local SQLite, bidirectional sync with Supabase PostgreSQL
+- **TanStack Query** (`@tanstack/react-query`) - Server state caching, background refetching, optimistic updates
 - **React Navigation 7** - Nested navigators (Native Stack + Bottom Tabs)
 - **Context API** - Global state management (Auth, PhoneAuth, PhotoDetail, Theme)
 - **Custom Hooks** - Business logic abstraction (camera, darkroom, feed, comments)
 - **react-native-reanimated** - Gesture animations (swipe, card stacks)
 
+### Type System
+
+All code is TypeScript (`.ts`/`.tsx`). Shared types live in `src/types/`:
+
+- `src/types/database.ts` - Generated Supabase database types (tables, views, enums)
+- `src/types/models.ts` - Domain model interfaces (User, Photo, Friendship, etc.)
+- `src/types/navigation.ts` - React Navigation param lists
+- `src/types/api.ts` - Edge Function request/response types
+
+Regenerate database types after schema changes:
+```bash
+supabase gen types typescript --project-id <project-id> > src/types/database.ts
+```
+
 ### Service Layer Pattern
 
-All Firebase operations are abstracted into service modules in `src/services/firebase/`. Each service exports functions that return `{ success, error }` objects:
+All Supabase operations are abstracted into service modules in `src/services/supabase/`. Each service exports functions that return `{ success, error }` objects:
 
-```javascript
-export const uploadPhoto = async (userId, photoUri) => {
+```typescript
+export const uploadPhoto = async (userId: string, photoUri: string) => {
   try {
     // ... upload logic
     return { success: true, photoId: result.id };
   } catch (error) {
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 };
 ```
 
 Key services:
-- `photoService.js` - Photo upload, deletion, reveal, triage (journal/archive)
-- `darkroomService.js` - Darkroom state, reveal scheduling
-- `feedService.js` - Real-time feed subscriptions
-- `friendshipService.js` - Friend requests, relationships
-- `phoneAuthService.js` - Phone number authentication
-- `notificationService.js` - Push notifications via Expo
-- `storageService.js` - Firebase Storage operations
-- `commentService.js` - Photo comments with @mentions
-- `albumService.js` / `monthlyAlbumService.js` - User-created and auto-generated albums
-- `signedUrlService.js` - Firebase Storage signed URL generation/refresh (7-day expiry)
-- `accountService.js` - Account deletion scheduling and recovery
-- `uploadQueueService.js` - Photo upload queue with retry, persists across restarts
-- `blockService.js` / `reportService.js` - User blocking and reporting
-- `messageService.js` - Direct messaging: conversation CRUD, message sending, subscriptions, pagination, soft deletion
+- `photoService.ts` - Photo upload, deletion, reveal, triage (journal/archive)
+- `darkroomService.ts` - Darkroom state, reveal scheduling
+- `feedService.ts` - Real-time feed subscriptions via Supabase Realtime
+- `friendshipService.ts` - Friend requests, relationships
+- `phoneAuthService.ts` - Phone number authentication via Supabase Auth
+- `notificationService.ts` - Push notifications via Expo
+- `storageService.ts` - Supabase Storage operations (public/signed URLs)
+- `commentService.ts` - Photo comments with @mentions
+- `albumService.ts` / `monthlyAlbumService.ts` - User-created and auto-generated albums
+- `accountService.ts` - Account deletion scheduling and recovery
+- `uploadQueueService.ts` - Photo upload queue with retry, persists across restarts
+- `blockService.ts` / `reportService.ts` - User blocking and reporting
+- `messageService.ts` - Direct messaging: conversation CRUD, message sending, subscriptions, pagination, soft deletion
 
-Additional non-Firebase services exist at `src/services/` root level: `iapService.js` (in-app purchases), `iTunesService.js` / `searchService.js` (music search), `audioPlayer.js`, `secureStorageService.js`.
+Additional non-Supabase services exist at `src/services/` root level: `iapService.ts` (in-app purchases), `iTunesService.ts` / `searchService.ts` (music search), `audioPlayer.ts`, `secureStorageService.ts`.
 
 ### Authentication Flow
 
-Phone-only authentication using React Native Firebase Auth:
+Phone-only authentication using Supabase Auth OTP:
 
-1. **PhoneInputScreen** - User enters phone number, receives OTP
-2. **VerificationScreen** - User enters 6-digit code
+1. **PhoneInputScreen** - User enters phone number, Supabase sends OTP via `supabase.auth.signInWithOtp()`
+2. **VerificationScreen** - User enters 6-digit code, verified via `supabase.auth.verifyOtp()`
 3. **ProfileSetupScreen** - New users set username, display name, profile photo
 4. **SelectsScreen** - New users pick 3 content preferences
 5. **ContactsSyncScreen** - Optional contact sync for friend suggestions
 6. **NotificationPermissionScreen** - Optional push notification permission
 7. **MainTabs** - Main app (Feed, Messages, Camera, Profile)
 
-AuthContext manages user state and profile. PhoneAuthContext shares the non-serializable `ConfirmationResult` via ref between auth screens.
+AuthContext manages user state and profile via `supabase.auth.onAuthStateChange()`. PhoneAuthContext is no longer needed since Supabase OTP is stateless (no non-serializable confirmation object).
 
 ### Navigation Structure
 
 ```
 NavigationContainer (DarkTheme + custom colors)
-└── Stack.Navigator (root)
-    ├── PhoneInput / Verification (unauthenticated)
-    ├── Onboarding Stack (authenticated, profile incomplete)
-    │   ├── ProfileSetup, Selects, ContactsSync, NotificationPermission
-    │   ├── SongSearch (card modal)
-    │   └── ProfilePhotoCrop (fullScreenModal)
-    └── Main App (authenticated, profile complete)
-        ├── MainTabs (BottomTabNavigator)
-        │   ├── Feed
-        │   ├── Messages (MessagesStackNavigator)
-        │   │   ├── MessagesList, Conversation, NewMessage
-        │   ├── Camera
-        │   └── Profile (ProfileStackNavigator)
-        │       ├── ProfileMain, Settings, EditProfile, CreateAlbum
-        │       ├── AlbumPhotoPicker, AlbumGrid, MonthlyAlbumGrid
-        │       ├── NotificationSettings, SoundSettings, Contributions
-        │       ├── PrivacyPolicy, TermsOfService, DeleteAccount
-        │       ├── RecentlyDeleted, BlockedUsers, ProfilePhotoCrop
-        │       └── SongSearch
-        ├── PhotoDetail (transparentModal, swipe-dismissible)
-        ├── ProfileFromPhotoDetail (fullScreenModal, nested navigation)
-        ├── Darkroom (slide_from_bottom)
-        ├── Success, Activity, FriendsList, OtherUserProfile (slide_from_right)
-        ├── AlbumGrid, MonthlyAlbumGrid (top-level card)
-        └── ReportUser, HelpSupport (modal)
++-- Stack.Navigator (root)
+    +-- PhoneInput / Verification (unauthenticated)
+    +-- Onboarding Stack (authenticated, profile incomplete)
+    |   +-- ProfileSetup, Selects, ContactsSync, NotificationPermission
+    |   +-- SongSearch (card modal)
+    |   +-- ProfilePhotoCrop (fullScreenModal)
+    +-- Main App (authenticated, profile complete)
+        +-- MainTabs (BottomTabNavigator)
+        |   +-- Feed
+        |   +-- Messages (MessagesStackNavigator)
+        |   |   +-- MessagesList, Conversation, NewMessage
+        |   +-- Camera
+        |   +-- Profile (ProfileStackNavigator)
+        |       +-- ProfileMain, Settings, EditProfile, CreateAlbum
+        |       +-- AlbumPhotoPicker, AlbumGrid, MonthlyAlbumGrid
+        |       +-- NotificationSettings, SoundSettings, Contributions
+        |       +-- PrivacyPolicy, TermsOfService, DeleteAccount
+        |       +-- RecentlyDeleted, BlockedUsers, ProfilePhotoCrop
+        |       +-- SongSearch
+        +-- PhotoDetail (transparentModal, swipe-dismissible)
+        +-- ProfileFromPhotoDetail (fullScreenModal, nested navigation)
+        +-- Darkroom (slide_from_bottom)
+        +-- Success, Activity, FriendsList, OtherUserProfile (slide_from_right)
+        +-- AlbumGrid, MonthlyAlbumGrid (top-level card)
+        +-- ReportUser, HelpSupport (modal)
 ```
 
 Deep linking: `lapse://` and `com.lapseclone.app://` prefixes with routes for feed, messages, camera, profile, darkroom, notifications, friends, and auth flows.
 
-Use `navigationRef` (exported from AppNavigator) for programmatic navigation outside components (e.g., notification handlers in App.js).
+Use `navigationRef` (exported from AppNavigator) for programmatic navigation outside components (e.g., notification handlers in App.tsx).
 
 ### Photo Lifecycle
 
 1. **Capture** - CameraScreen captures photo, queued via `uploadQueueService`
-2. **Developing** - Photo in Firestore with `status: 'developing'`, visible in DarkroomScreen
+2. **Developing** - Photo row in PostgreSQL with `status: 'developing'`, visible in DarkroomScreen
 3. **Reveal** - After a random 0-5 minute developing period, `revealPhotos()` changes `status: 'revealed'`, triggers push notifications
 4. **Feed** - Revealed photos appear in FeedScreen for user and friends
-5. **Triage** - User can set `photoState: 'journal'` (keep), `'archive'` (hide), or delete permanently
+5. **Triage** - User can set `photo_state: 'journal'` (keep), `'archive'` (hide), or delete permanently
 
 The darkroom uses a rolling random reveal system:
 - `calculateNextRevealTime()` - Returns a timestamp 0-5 random minutes from now
-- `scheduleNextReveal(userId)` - Sets `nextRevealAt` in the darkroom document
-- `isDarkroomReadyToReveal(userId)` - Checks if current time >= `nextRevealAt`
+- `scheduleNextReveal(userId)` - Sets `next_reveal_at` in the users table
+- `isDarkroomReadyToReveal(userId)` - Checks if current time >= `next_reveal_at`
 - `revealPhotos(userId)` - Updates all developing photos to revealed status
-- Three reveal triggers: App.js on foreground, DarkroomScreen on focus, `processDarkroomReveals` cloud function every 2 minutes
+- Three reveal triggers: App.tsx on foreground, DarkroomScreen on focus, `process-darkroom-reveals` Edge Function via pg_cron every 2 minutes
 
 ### Custom Hooks
 
 - `useCamera()` - Camera permissions, capture, flash, facing, zoom levels, upload queue. Exports layout constants: `TAB_BAR_HEIGHT`, `FOOTER_HEIGHT`, `CAMERA_HEIGHT`
 - `useDarkroom()` - Developing/revealed photos subscription, countdown timer, reveal logic
-- `useFeedPhotos()` - Real-time feed subscription, photo grouping by user
+- `useFeedPhotos()` - Real-time feed subscription via Supabase Realtime, photo grouping by user
 - `useComments()` - Comment CRUD, real-time subscriptions, mention parsing
 - `useMentionSuggestions()` - Autocomplete for @mentions in comments
 - `usePhotoDetailModal()` - Modal state, swipe navigation, photo context
 - `useSwipeableCard()` - Gesture handling for tinder-style swiping
 - `useViewedStories()` - Track which users' photos have been viewed
-- `useScreenTrace()` - Firebase Performance Monitoring screen traces
+- `useScreenTrace()` - Sentry performance transaction traces
 - `useMessages()` - Conversation list subscription, friend data joining, unread count aggregation, optimistic delete
 - `useConversation()` - Individual conversation messages subscription, cursor pagination, send, read tracking
 
 ### Context Providers
 
-- **AuthContext** - Firebase user, userProfile (Firestore document), `signOut()`, `updateProfile()`, `cancelDeletion()`
-- **PhoneAuthContext** - Shares phone auth `confirmationRef` between PhoneInput/Verification screens and DeleteAccount re-auth
+- **AuthContext** - Supabase user session, userProfile (from `users` table), `signOut()`, `updateProfile()`, `cancelDeletion()`
 - **PhotoDetailContext** - Two hooks: `usePhotoDetail()` for full state + actions, `usePhotoDetailActions()` for actions only (avoids re-renders). Supports two modes: `'feed'` and `'stories'` (with friend-to-friend navigation)
 - **ThemeProvider** - Dark mode toggle (currently unused, app is dark-only)
+
+### Offline Support (PowerSync)
+
+PowerSync provides offline-first capabilities with local SQLite:
+
+- Reads go through the local PowerSync database (instant, works offline)
+- Writes are queued locally and synced to Supabase PostgreSQL when online
+- Sync rules define which rows each user receives (replaces Firestore security rules)
+- PowerSync schema mirrors the PostgreSQL schema for type safety
+
+### Caching (TanStack Query)
+
+TanStack Query manages server state caching:
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// Cached query with background refetch
+const { data: photos } = useQuery({
+  queryKey: ['photos', userId],
+  queryFn: () => photoService.getPhotos(userId),
+  staleTime: 5 * 60 * 1000, // 5 minutes
+});
+
+// Mutation with optimistic update
+const mutation = useMutation({
+  mutationFn: photoService.deletePhoto,
+  onMutate: async (photoId) => {
+    await queryClient.cancelQueries({ queryKey: ['photos'] });
+    // optimistic remove...
+  },
+});
+```
 
 ### Logging
 
 **Never use `console.log()` directly.** Always use the logger utility:
 
-```javascript
+```typescript
 import logger from '../utils/logger';
 
 logger.debug('Detailed info', { userId, count }); // Dev only
@@ -331,87 +375,124 @@ Logger redacts sensitive data (tokens, passwords, keys). `console.log` is stripp
 
 Organize imports in this exact order with blank lines between groups:
 
-```javascript
+```typescript
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 
-import { collection, query } from '@react-native-firebase/firestore';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 
-import { feedService } from '../services/firebase/feedService';
+import { feedService } from '../services/supabase/feedService';
 
 import { FeedPhotoCard } from '../components';
 
 import { useAuth } from '../context/AuthContext';
 
 import { logger } from '../utils/logger';
+
+import type { Photo } from '../types/models';
 ```
 
 1. React and React Native core
-2. Third-party packages (Firebase, navigation, etc.)
+2. Third-party packages (Supabase, TanStack Query, navigation, etc.)
 3. Internal services
 4. Components
 5. Context and hooks
 6. Utilities
+7. Type imports
 
-## Firebase Specifics
+## Supabase Specifics
 
-### React Native Firebase vs Web SDK
+### Supabase Client Setup
 
-This project uses **React Native Firebase SDK** (`@react-native-firebase/*`), NOT the web SDK:
+This project uses the **Supabase JS SDK** (`@supabase/supabase-js`) with `@react-native-async-storage/async-storage` for session persistence:
 
-```javascript
-// CORRECT - React Native Firebase (modular)
-import { getFirestore, doc, getDoc } from '@react-native-firebase/firestore';
-const db = getFirestore();
-const userDoc = await getDoc(doc(db, 'users', userId));
+```typescript
+// CORRECT - Supabase JS SDK
+import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Database } from '../types/database';
 
-// WRONG - Web SDK (don't use this)
-import { getFirestore } from 'firebase/firestore';
+export const supabase = createClient<Database>(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
+);
+
+// Query example
+const { data, error } = await supabase
+  .from('users')
+  .select('*')
+  .eq('id', userId)
+  .single();
 ```
 
-### Firestore Collections
+### PostgreSQL Tables (with RLS)
 
-- `users/` - User profiles (uid, username, displayName, photoURL, friends, fcmToken, nextRevealAt, etc.)
-- `photos/` - All photos (userId, photoURL, status: `'developing'`|`'revealed'`, photoState: `'journal'`|`'archive'`|null, createdAt)
-- `friendships/` - Friend relationships (user1Id, user2Id, status: `'pending'`|`'accepted'`)
-- `comments/` - Photo comments (photoId, userId, text, mentions, createdAt)
-- `albums/` - User-created albums (userId, title, photoIds, coverPhotoId)
-- `notifications/` - In-app notifications (userId, type, read, createdAt). Auto-deleted after 30 days.
-- `blocks/` - User blocking relationships (blockerId, blockedId)
-- `reports/` - User reports (reporterId, reportedId, reason)
-- `reactionBatches/` - Batched reaction notifications (photoId, reactorId, reactions, status, sentAt). Auto-deleted 7 days after sending.
-- `conversations/` - Direct messaging conversations (participants, lastMessage, deletedAt, unreadCount). Document ID: `[lowerUserId]_[higherUserId]`
-- `conversations/{id}/messages/` - Individual messages (senderId, text, gifUrl, type, createdAt). Messages are permanent (never deleted, retained for moderation).
+- `users` - User profiles (id, username, display_name, photo_url, friends, fcm_token, next_reveal_at, etc.)
+- `photos` - All photos (user_id, photo_url, status: `'developing'`|`'revealed'`, photo_state: `'journal'`|`'archive'`|null, created_at)
+- `friendships` - Friend relationships (user1_id, user2_id, status: `'pending'`|`'accepted'`)
+- `comments` - Photo comments (photo_id, user_id, text, mentions, created_at)
+- `albums` - User-created albums (user_id, title, photo_ids, cover_photo_id)
+- `notifications` - In-app notifications (user_id, type, read, created_at). Auto-deleted after 30 days via pg_cron.
+- `blocks` - User blocking relationships (blocker_id, blocked_id)
+- `reports` - User reports (reporter_id, reported_id, reason)
+- `reaction_batches` - Batched reaction notifications (photo_id, reactor_id, reactions, status, sent_at). Auto-deleted 7 days after sending via pg_cron.
+- `conversations` - Direct messaging conversations (participants, last_message, deleted_at, unread_count). Primary key: composite of sorted user IDs.
+- `messages` - Individual messages (conversation_id, sender_id, text, gif_url, type, created_at). Messages are permanent (never deleted, retained for moderation).
 
-### Cloud Functions Structure
+All tables use Row Level Security (RLS) policies. Users can only read/write data they are authorized to access. RLS replaces the need for most server-side authorization checks.
+
+### Edge Functions Structure
+
+Edge Functions live in `supabase/functions/` and run on Deno:
 
 ```
-functions/
-├── index.js            # Main functions (~2700 lines): notifications, cleanup, signed URLs, account deletion, DM metadata
-├── validation.js       # Zod schemas for request validation
-├── logger.js           # Logging utility
-├── notifications/      # Modular notification logic
-│   ├── batching.js     # Reaction debouncing/batching
-│   ├── receipts.js     # Reaction receipts
-│   └── sender.js       # Push notification sending
-└── tasks/
-    └── sendBatchedNotification.js
+supabase/functions/
++-- process-darkroom-reveals/   # Scheduled via pg_cron every 2 minutes
++-- send-notification/          # Push notification sending
++-- batch-reactions/            # Reaction debouncing/batching
++-- cleanup-expired/            # Delete old notifications, reaction batches
++-- process-account-deletion/   # Account deletion after recovery period
++-- dm-metadata/                # DM metadata updates
++-- _shared/                    # Shared utilities
+    +-- supabaseAdmin.ts        # Admin client (bypasses RLS)
+    +-- validation.ts           # Zod schemas for request validation
+    +-- notifications/
+        +-- batching.ts         # Reaction debouncing/batching
+        +-- receipts.ts         # Reaction receipts
+        +-- sender.ts           # Push notification sending
 ```
 
 Notification templates are randomized for a non-robotic feel (e.g., "X tagged you in a photo", "You're in X's latest snap").
 
 ### Environment Variables
 
-Firebase config is provided via native files (`GoogleService-Info.plist`, `google-services.json`), NOT environment variables. Optional env vars via `react-native-dotenv` (imported from `@env`): `GIPHY_API_KEY`, `FUNCTIONS_EMULATOR`.
+Supabase config is provided via environment variables, NOT native config files. Required env vars via `react-native-dotenv` (imported from `@env`):
+
+- `SUPABASE_URL` - Supabase project URL
+- `SUPABASE_ANON_KEY` - Supabase anonymous/public key
+- `GIPHY_API_KEY` - Giphy API key (optional)
+
+Edge Functions access secrets via `Deno.env.get()`:
+- `SUPABASE_SERVICE_ROLE_KEY` - Admin access (bypasses RLS)
+- `EXPO_ACCESS_TOKEN` - For sending push notifications
 
 ## Code Conventions
 
 ### File Naming
-- Components: PascalCase (`FeedPhotoCard.js`)
-- Services/Utilities: camelCase (`feedService.js`, `timeUtils.js`)
-- Screens: PascalCase with `Screen` suffix (`FeedScreen.js`)
-- Hooks: camelCase with `use` prefix (`useCamera.js`)
+- Components: PascalCase (`FeedPhotoCard.tsx`)
+- Services/Utilities: camelCase (`feedService.ts`, `timeUtils.ts`)
+- Screens: PascalCase with `Screen` suffix (`FeedScreen.tsx`)
+- Hooks: camelCase with `use` prefix (`useCamera.ts`)
+- Types: PascalCase in `src/types/` (`database.ts`, `models.ts`, `navigation.ts`)
 
 ### Function Naming
 - All functions: camelCase (`uploadPhoto`, `sendFriendRequest`)
@@ -428,14 +509,14 @@ After completing each plan or phase of work, commit the changes before moving on
 
 ## Common Gotchas
 
-1. **Phone Auth Confirmation Ref** - `PhoneAuthConfirmResult` from `signInWithPhoneNumber()` cannot be serialized. Share it via `PhoneAuthContext`, not navigation params.
+1. **Supabase Auth Session** - Use `supabase.auth.onAuthStateChange()` to listen for auth events. The session is automatically persisted in AsyncStorage. Always check `session?.user` before accessing user data.
 
-2. **Firestore Timestamps** - Use `serverTimestamp()` for createdAt/updatedAt. When reading, check if timestamp has `.toDate()` method (Firestore Timestamp) vs ISO string.
+2. **PostgreSQL Timestamps** - Use `now()` in SQL or omit `created_at`/`updated_at` columns (use database defaults). When reading, timestamps come as ISO 8601 strings — no `.toDate()` conversion needed.
 
-3. **Darkroom Reveal Timing** - After each reveal, `calculateNextRevealTime()` schedules the next reveal 0-5 random minutes in the future. Reveals are triggered three ways: App.js checks on foreground, DarkroomScreen checks on focus, and `processDarkroomReveals` cloud function runs every 2 minutes as a background catch-all.
+3. **Darkroom Reveal Timing** - After each reveal, `calculateNextRevealTime()` schedules the next reveal 0-5 random minutes in the future. Reveals are triggered three ways: App.tsx checks on foreground, DarkroomScreen checks on focus, and `process-darkroom-reveals` Edge Function runs every 2 minutes via pg_cron as a background catch-all.
 
 4. **Navigation Params in Nested Navigators** - When navigating to a tab screen with params, use a two-step approach:
-   ```javascript
+   ```typescript
    navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
    setTimeout(() => {
      navigationRef.current.navigate('MainTabs', {
@@ -447,20 +528,26 @@ After completing each plan or phase of work, commit the changes before moving on
 
 5. **Image Caching** - Use `expo-image` (not `react-native` Image) for automatic caching. Set `cachePolicy="memory-disk"` for profile photos.
 
-6. **Push Notifications** - The app uses `expo-notifications`, NOT `@react-native-firebase/messaging`. FCM tokens are stored in user documents and sent to cloud functions for delivery.
+6. **Push Notifications** - The app uses `expo-notifications`. Push tokens are stored in user rows and sent to Edge Functions for delivery via Expo's push service.
 
-7. **Signed URLs** - Photos use Firebase Storage signed URLs with 7-day expiry. `signedUrlService` handles URL generation and refresh.
+7. **Storage URLs** - Photos use Supabase Storage. Public buckets use permanent public URLs. Private buckets use signed URLs with configurable expiry. `storageService` handles URL generation.
 
 8. **Account Deletion** - Soft delete with recovery period via `accountService`. `DeletionRecoveryModal` shows countdown. `cancelDeletion()` in AuthContext to recover.
 
 9. **PhotoDetail Modes** - PhotoDetailContext supports `'feed'` mode (single user's photos) and `'stories'` mode (swipe between friends). Use `usePhotoDetailActions()` when you only need to trigger actions without subscribing to state changes.
 
-10. **Performance Monitoring** - Firebase Performance is integrated via `useScreenTrace()` hook and `withTrace()` wrapper in `performanceService`. Disabled in `__DEV__` to avoid polluting production metrics.
+10. **Performance Monitoring** - Sentry is integrated via `useScreenTrace()` hook and transaction-based tracing in `performanceService`. Disabled in `__DEV__` to avoid polluting production metrics.
 
-11. **Android Platform Guards** - Always wrap Android-only code in `Platform.OS === 'android'` checks or use `.android.js` file extensions. Never apply Android-specific styles (e.g. `elevation`) unconditionally — they are ignored on iOS but can cause unexpected layout on Android if misused.
+11. **Android Platform Guards** - Always wrap Android-only code in `Platform.OS === 'android'` checks or use `.android.tsx` file extensions. Never apply Android-specific styles (e.g. `elevation`) unconditionally — they are ignored on iOS but can cause unexpected layout on Android if misused.
 
 12. **Android Shadows** - iOS uses `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`. Android uses `elevation`. Use `Platform.select` when shadows are needed on both platforms.
 
 13. **Android Back Button** - Android has a hardware/gesture back button. For screens that are modals or overlays, add a `BackHandler` listener (or `useFocusEffect` + `BackHandler`) to prevent unexpected back navigation. React Navigation handles this for standard stack screens automatically.
 
 14. **Edge-to-Edge on Android** - `edgeToEdgeEnabled: true` in `app.json` means the app draws behind the system gesture navigation bar. Use `useSafeAreaInsets()` bottom inset to add padding where needed (tab bar, bottom sheets, fixed footers).
+
+15. **RLS Policies** - All database access goes through RLS. When debugging "no rows returned" issues, check RLS policies first. Use the Supabase dashboard SQL editor with `set role authenticated; set request.jwt.claims = '...'` to test policies.
+
+16. **PowerSync Sync Rules** - When adding new tables or columns, update both the PowerSync sync rules (which rows sync to which users) and the PowerSync client schema. Mismatched schemas cause silent sync failures.
+
+17. **TanStack Query Keys** - Use consistent, hierarchical query keys (e.g., `['photos', userId]`, `['photos', photoId, 'comments']`). Invalidate parent keys to refresh all child queries. Always invalidate after mutations.
