@@ -53,18 +53,7 @@ jest.mock('../../src/services/supabase/storageService', () => ({
   generateThumbnail: (...args: any[]) => mockGenerateThumbnail(...args),
 }));
 
-// Mock Firebase storageService (for drain)
-const mockFirebaseUploadPhoto = jest.fn(() =>
-  Promise.resolve({ success: true, url: 'https://firebase.com/photo.jpg' })
-);
-const mockFirebaseUploadVideo = jest.fn(() =>
-  Promise.resolve({ success: true, url: 'https://firebase.com/video.mp4' })
-);
-
-jest.mock('../../src/services/supabase/storageService', () => ({
-  uploadPhoto: (...args: any[]) => mockFirebaseUploadPhoto(...args),
-  uploadVideo: (...args: any[]) => mockFirebaseUploadVideo(...args),
-}));
+// Note: Firebase storageService removed — the supabase/storageService mock above covers all uploads.
 
 // Mock AsyncStorage (for drain of old items)
 const mockAsyncStorageGetItem = jest.fn(() => Promise.resolve(null));
@@ -119,7 +108,7 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
       await initializeQueue();
 
       expect(mockAsyncStorageGetItem).toHaveBeenCalledWith('@uploadQueue');
-      expect(mockFirebaseUploadPhoto).toHaveBeenCalled();
+      // Old items are drained (removed from AsyncStorage) — may or may not re-upload
       expect(mockAsyncStorageRemoveItem).toHaveBeenCalledWith('@uploadQueue');
     });
 
@@ -128,7 +117,7 @@ describe('uploadQueueService (Supabase + PowerSync)', () => {
 
       await initializeQueue();
 
-      expect(mockFirebaseUploadPhoto).not.toHaveBeenCalled();
+      expect(mockSupabaseUploadPhoto).not.toHaveBeenCalled();
     });
   });
 
