@@ -39,8 +39,8 @@ type FriendData = {
 
 type Props = {
   friend: FriendData;
-  onPress: () => void;
-  onAvatarPress?: () => void;
+  onPress: (...args: any[]) => void;
+  onAvatarPress?: (...args: any[]) => void;
   isFirst?: boolean;
   isViewed?: boolean;
   firstUnviewedIndex?: number;
@@ -53,7 +53,7 @@ const FriendStoryCard = ({
   isFirst = false,
   isViewed = false,
   firstUnviewedIndex = 0,
-}) => {
+}: Props) => {
   const { userId, displayName, profilePhotoURL, topPhotos, thumbnailURL, hasPhotos } = friend;
 
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array

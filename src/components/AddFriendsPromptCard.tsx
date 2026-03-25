@@ -17,6 +17,7 @@ import { layout } from '../constants/layout';
 type Props = {
   onPress: () => void;
   isFirst?: boolean;
+  count?: number;
 };
 
 const AddFriendsPromptCard = ({ onPress, isFirst = false }: Props) => {

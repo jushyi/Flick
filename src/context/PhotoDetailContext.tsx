@@ -31,6 +31,7 @@ interface PhotoDetailCallbacks {
   onAvatarPress?: (userId: string, displayName: string) => void;
   onPhotoStateChanged?: () => void;
   onCommentCountChange?: (count: number) => void;
+  getNextFriendFirstPhotoURL?: () => string | null;
 }
 
 interface OpenPhotoDetailParams {

@@ -207,22 +207,22 @@ const ConversationScreen = () => {
   const { user, userProfile } = useAuth();
   const navigation = useNavigation();
   const route = useRoute();
-  const { conversationId, friendProfile } = route.params;
+  const { conversationId, friendProfile } = (route.params || {}) as any;
 
   // Derive friendId from conversationId when not passed (e.g., deep link navigation).
   // Conversation IDs are formatted as [lowerUserId]_[higherUserId].
-  const paramFriendId = route.params?.friendId;
+  const paramFriendId = (route.params as any)?.friendId;
   const derivedFriendId = React.useMemo(() => {
     if (paramFriendId) return paramFriendId;
-    if (!conversationId || !user?.uid) return null;
+    if (!conversationId || !user?.id) return null;
     const parts = conversationId.split('_');
     if (parts.length !== 2) return null;
-    return parts[0] === user.uid ? parts[1] : parts[0];
-  }, [paramFriendId, conversationId, user?.uid]);
+    return parts[0] === user!.id ? parts[1] : parts[0];
+  }, [paramFriendId, conversationId, user?.id]);
   const friendId = derivedFriendId;
 
   // Friend profile: use passed nav param and fetch fresh from Supabase
-  const [liveFriendProfile, setLiveFriendProfile] = useState(friendProfile);
+  const [liveFriendProfile, setLiveFriendProfile] = useState<any>(friendProfile);
 
   useEffect(() => {
     if (!friendId) return;
@@ -235,20 +235,20 @@ const ConversationScreen = () => {
           .eq('id', friendId)
           .single();
         if (error) throw error;
-        if (data && !cancelled) {
+        if ((data as any) && !cancelled) {
           setLiveFriendProfile({
             uid: friendId,
-            username: data.username || friendProfile?.username || 'unknown',
-            displayName: data.display_name || friendProfile?.displayName || 'Unknown User',
-            profilePhotoURL: data.profile_photo_path || null,
+            username: (data as any).username || friendProfile?.username || 'unknown',
+            displayName: (data as any).display_name || friendProfile?.displayName || 'Unknown User',
+            profilePhotoURL: (data as any).profile_photo_path || null,
             nameColor: null,
-            readReceiptsEnabled: data.read_receipts_enabled !== false,
+            readReceiptsEnabled: (data as any).read_receipts_enabled !== false,
           });
         }
       } catch (err) {
         logger.warn('ConversationScreen: Failed to fetch fresh friend profile', {
           friendId,
-          error: err.message,
+          error: (err as Error).message,
         });
       }
     };
@@ -262,7 +262,7 @@ const ConversationScreen = () => {
   const { openPhotoDetail } = usePhotoDetailActions();
 
   // --- Screenshot detection via ref (handler defined later via useCallback) ---
-  const screenshotHandlerRef = useRef(null);
+  const screenshotHandlerRef = useRef<any>(null);
   useScreenshotDetection({ active: true, onScreenshot: () => screenshotHandlerRef.current?.() });
 
   // --- Conversation metadata from PowerSync (for read receipts) ---
@@ -299,7 +299,7 @@ const ConversationScreen = () => {
     return rawMessages
       .filter(msg => msg.type !== 'reaction')
       .map(adaptMessage)
-      .filter(Boolean);
+      .filter(Boolean) as any[];
   }, [rawMessages]);
 
   // --- Adapter functions: bridge old callback signatures to new hook ---
@@ -343,16 +343,16 @@ const ConversationScreen = () => {
     [hookDeleteMessage]
   );
 
-  const flatListRef = useRef(null);
+  const flatListRef = useRef<any>(null);
   const isNearBottomRef = useRef(true);
   const prevMessageCountRef = useRef(0);
-  const messagesWithDividersRef = useRef([]);
+  const messagesWithDividersRef = useRef<any[]>([]);
   const [visibleTimestamps, setVisibleTimestamps] = useState(new Set());
-  const isReadOnly = route.params?.readOnly || false;
+  const isReadOnly = (route.params as any)?.readOnly || false;
 
   // --- SnapViewer state ---
-  const [snapViewerMessage, setSnapViewerMessage] = useState(null);
-  const [snapSourceRect, setSnapSourceRect] = useState(null);
+  const [snapViewerMessage, setSnapViewerMessage] = useState<any>(null);
+  const [snapSourceRect, setSnapSourceRect] = useState<any>(null);
   const autoOpenSnapHandled = useRef(false);
 
   // --- Message actions hook ---
@@ -372,7 +372,7 @@ const ConversationScreen = () => {
     handleDeleteForMe: triggerDeleteForMe,
   } = useMessageActions({
     conversationId,
-    currentUserId: user.uid,
+    currentUserId: user!.id,
     onSendReaction: handleSendReaction,
     onRemoveReaction: handleRemoveReaction,
     onSendReply: handleSendReply,
@@ -393,7 +393,7 @@ const ConversationScreen = () => {
         logger.error('ConversationScreen: Unsend failed', {
           conversationId,
           messageId,
-          error: error.message,
+          error: (error as Error).message,
         });
       }
     },
@@ -402,10 +402,10 @@ const ConversationScreen = () => {
 
   // --- Delete confirmation dialog state ---
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
-  const [pendingDeleteMessageId, setPendingDeleteMessageId] = useState(null);
+  const [pendingDeleteMessageId, setPendingDeleteMessageId] = useState<any>(null);
 
   // --- Scroll-to-message highlight state ---
-  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<any>(null);
 
   /**
    * Scroll the inverted FlatList to offset 0 (newest messages).
@@ -445,7 +445,7 @@ const ConversationScreen = () => {
    * messages list and auto-open the SnapViewer once found.
    */
   useEffect(() => {
-    const autoOpenSnapId = route.params?.autoOpenSnapId;
+    const autoOpenSnapId = (route.params as any)?.autoOpenSnapId;
     if (!autoOpenSnapId || autoOpenSnapHandled.current === autoOpenSnapId) return;
 
     const tryOpen = () => {
@@ -510,14 +510,14 @@ const ConversationScreen = () => {
         } catch (err) {
           logger.error('ConversationScreen: Failed to fetch snap message directly', {
             autoOpenSnapId,
-            error: err.message,
+            error: (err as Error).message,
           });
         }
       }
     }, POLL_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [messages, route.params?.autoOpenSnapId, conversationId]);
+  }, [messages, (route.params as any)?.autoOpenSnapId, conversationId]);
 
   /**
    * Derive read receipt state for the sender's last message.
@@ -528,25 +528,25 @@ const ConversationScreen = () => {
    * metadata is queried from Supabase.
    */
   const lastSentMessage = useMemo(
-    () => messages.find(m => m.senderId === user.uid && m.type !== 'system_screenshot'),
-    [messages, user.uid]
+    () => messages.find(m => m.senderId === user!.id && m.type !== 'system_screenshot'),
+    [messages, user!.id]
   );
   // Read receipts: derive actual read state from PowerSync conversation metadata.
   // Privacy: both users must have readReceiptsEnabled !== false for "Read" to show.
-  const _senderEnabled = userProfile?.readReceiptsEnabled !== false;
+  const _senderEnabled = (userProfile as any)?.readReceiptsEnabled !== false;
   const _recipientEnabled = liveFriendProfile?.readReceiptsEnabled !== false;
   const isRead = useMemo(() => {
     if (!lastSentMessage || !conversation) return false;
     if (!_senderEnabled || !_recipientEnabled) return false;
 
     // Current user is p1 if their uid matches participant1_id
-    const isP1 = user.uid === conversation.participant1_id;
+    const isP1 = user!.id === conversation.participant1_id;
     // The OTHER user's last_read_at tells us if they read our message
     const recipientLastRead = isP1 ? conversation.last_read_at_p2 : conversation.last_read_at_p1;
 
     if (!recipientLastRead || !lastSentMessage.createdAt) return false;
     return new Date(recipientLastRead) >= new Date(lastSentMessage.createdAt);
-  }, [lastSentMessage, conversation, _senderEnabled, _recipientEnabled, user.uid]);
+  }, [lastSentMessage, conversation, _senderEnabled, _recipientEnabled, user!.id]);
   const showIndicator = !!lastSentMessage;
 
   /**
@@ -661,9 +661,9 @@ const ConversationScreen = () => {
    */
   const replyToSenderName = useMemo(() => {
     if (!replyToMessage) return '';
-    if (replyToMessage.senderId === user.uid) return 'You';
+    if (replyToMessage.senderId === user!.id) return 'You';
     return liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend';
-  }, [replyToMessage, user.uid, liveFriendProfile]);
+  }, [replyToMessage, user!.id, liveFriendProfile]);
 
   /**
    * Look up a message by ID from the loaded messages array.
@@ -690,7 +690,7 @@ const ConversationScreen = () => {
    */
   const handleSnapPress = useCallback(
     (message, sourceRect) => {
-      const isCurrentUser = message.senderId === user.uid;
+      const isCurrentUser = message.senderId === user!.id;
       const isViewed = message.viewedAt !== null && message.viewedAt !== undefined;
 
       if (!isCurrentUser && !isViewed) {
@@ -698,7 +698,7 @@ const ConversationScreen = () => {
         setSnapViewerMessage(message);
       }
     },
-    [user.uid]
+    [user!.id]
   );
 
   /**
@@ -708,12 +708,12 @@ const ConversationScreen = () => {
   // Note: Screenshot detection via expo-screen-capture is handled elsewhere;
   // when detected, it calls this function to record in Supabase.
   const handleScreenshotDetected = useCallback(async () => {
-    if (!friendId || !user?.uid) return;
+    if (!friendId || !user?.id) return;
     try {
       await supabase.from('notifications').insert({
         user_id: friendId,
         type: 'screenshot',
-        from_user_id: user.uid,
+        from_user_id: user!.id,
         data: { conversation_id: conversationId },
       });
       logger.info('ConversationScreen: Screenshot notification inserted', {
@@ -722,10 +722,10 @@ const ConversationScreen = () => {
       });
     } catch (err) {
       logger.error('ConversationScreen: Failed to insert screenshot notification', {
-        error: err.message,
+        error: (err as Error).message,
       });
     }
-  }, [friendId, user?.uid, conversationId]);
+  }, [friendId, user?.id, conversationId]);
 
   // Wire screenshot handler ref to the useCallback above
   screenshotHandlerRef.current = handleScreenshotDetected;
@@ -747,7 +747,7 @@ const ConversationScreen = () => {
         );
       }
 
-      const isCurrentUser = item.senderId === user.uid;
+      const isCurrentUser = item.senderId === user!.id;
       const isLastSent = showIndicator && lastSentMessage && item.id === lastSentMessage.id;
       const messageReactions = reactionMap.get(item.id) || null;
 
@@ -775,7 +775,7 @@ const ConversationScreen = () => {
               ],
               initialIndex: 0,
               mode: 'feed',
-              currentUserId: user.uid,
+              currentUserId: user!.id,
             });
             navigation.navigate('PhotoDetail', {
               taggedPhotoContext: {
@@ -804,7 +804,7 @@ const ConversationScreen = () => {
             onReactionPress={emoji => handleReaction(emoji, reactionMap)}
             onScrollToMessage={scrollToMessage}
             replyTo={item.replyTo}
-            currentUserId={user.uid}
+            currentUserId={user!.id}
             senderName={liveFriendProfile?.displayName || liveFriendProfile?.username || 'Friend'}
             highlighted={highlightedMessageId === item.id}
             findMessageById={findMessageById}
@@ -817,7 +817,7 @@ const ConversationScreen = () => {
       );
     },
     [
-      user.uid,
+      user!.id,
       visibleTimestamps,
       toggleTimestamp,
       showIndicator,
@@ -854,14 +854,14 @@ const ConversationScreen = () => {
    * Compute canUnsend for the currently-focused action menu message.
    */
   const actionMenuCanUnsend = useMemo(() => {
-    if (!actionMenuMessage || actionMenuMessage.senderId !== user.uid) return false;
+    if (!actionMenuMessage || actionMenuMessage.senderId !== user!.id) return false;
     if (!actionMenuMessage.createdAt) return false;
     const msgTime =
       actionMenuMessage.createdAt instanceof Date
         ? actionMenuMessage.createdAt
         : new Date(actionMenuMessage.createdAt);
     return Date.now() - msgTime.getTime() < 15 * 60 * 1000;
-  }, [actionMenuMessage, user.uid]);
+  }, [actionMenuMessage, user!.id]);
 
   /**
    * Handle scrollToIndex failures gracefully.
@@ -992,7 +992,7 @@ const ConversationScreen = () => {
         visible={actionMenuVisible}
         message={actionMenuMessage}
         position={actionMenuPosition}
-        isCurrentUser={actionMenuMessage?.senderId === user.uid}
+        isCurrentUser={actionMenuMessage?.senderId === user!.id}
         canUnsend={actionMenuCanUnsend}
         onReaction={emoji => {
           handleReaction(emoji, reactionMap);
@@ -1042,7 +1042,7 @@ const ConversationScreen = () => {
           setSnapViewerMessage(null);
           setSnapSourceRect(null);
         }}
-        currentUserId={user.uid}
+        currentUserId={user!.id}
         sourceRect={snapSourceRect}
         onReaction={async emojiKey => {
           try {
@@ -1052,7 +1052,7 @@ const ConversationScreen = () => {
               conversationId,
               messageId: snapViewerMessage.id,
               emojiKey,
-              error: err.message,
+              error: (err as Error).message,
             });
           }
         }}

@@ -30,7 +30,8 @@ import { profileCacheKey } from '../utils/imageUtils';
  */
 type Props = {
   friend: Record<string, unknown>;
-  onPress: () => void;
+  onPress: (...args: any[]) => void;
+  onAvatarPress?: (...args: any[]) => void;
   isFirst?: boolean;
   isViewed?: boolean;
   firstUnviewedIndex?: number;
@@ -39,10 +40,11 @@ type Props = {
 const MeStoryCardInner = ({
   friend,
   onPress,
+  onAvatarPress: _onAvatarPress,
   isFirst = false,
   isViewed = false,
   firstUnviewedIndex = 0,
-}) => {
+}: Props) => {
   const { userId, profilePhotoURL, topPhotos, thumbnailURL, hasPhotos } = friend || {};
 
   // Use thumbnailURL (most recent photo) if available, fallback to first photo in array

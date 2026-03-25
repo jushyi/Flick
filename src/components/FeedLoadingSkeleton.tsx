@@ -46,7 +46,7 @@ const ShimmerHighlight = ({ shimmerPosition, width = '100%', height = '100%' }) 
  * - Full-width feed cards below
  * Uses Instagram-style shimmer animation (left-to-right sweep)
  */
-const FeedLoadingSkeleton = () => {
+const FeedLoadingSkeleton = ({ count }: { count?: number } = {}) => {
   const shimmerPosition = useRef(new Animated.Value(-SHIMMER_WIDTH)).current;
 
   // Shimmer animation - sweeps left to right (fast 800ms)

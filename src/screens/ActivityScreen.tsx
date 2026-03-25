@@ -31,12 +31,12 @@ import { getTimeAgo } from '../utils/timeUtils';
 import { profileCacheKey } from '../utils/imageUtils';
 import { mediumImpact } from '../utils/haptics';
 // TODO(20-01): notificationService mark functions - needs migration
-const markSingleNotificationAsRead = async () => {};
-const markNotificationReadFromPushData = async () => {};
-const markNotificationsAsRead = async () => {};
+const markSingleNotificationAsRead = async (..._args: any[]): Promise<any> => ({ success: true });
+const markNotificationReadFromPushData = async (..._args: any[]): Promise<any> => ({ success: true });
+const markNotificationsAsRead = async (..._args: any[]): Promise<any> => ({ success: true });
 import { getPhotoByIdWithUser as getPhotoById } from '../services/supabase/feedService';
 // TODO(20-01): getUserStoriesData - no supabase equivalent yet
-const getUserStoriesData = async () => [];
+const getUserStoriesData = async (..._args: any[]): Promise<any> => ({ success: false, userStory: null });
 import { isBlocked } from '../services/supabase/blockService';
 import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import StrokedNameText from '../components/StrokedNameText';
@@ -49,14 +49,14 @@ import logger from '../utils/logger';
  * Handles Firestore Timestamps (with .seconds or .toDate()) and plain Dates.
  * Empty sections are omitted. Order within sections is preserved (already desc by createdAt).
  */
-const groupNotificationsByTime = notifs => {
+const groupNotificationsByTime = (notifs: any[]) => {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const weekAgo = todayStart - 6 * 24 * 60 * 60 * 1000; // 7 days including today
 
-  const today = [];
-  const thisWeek = [];
-  const earlier = [];
+  const today: any[] = [];
+  const thisWeek: any[] = [];
+  const earlier: any[] = [];
 
   for (const notif of notifs) {
     let ts;
@@ -79,7 +79,7 @@ const groupNotificationsByTime = notifs => {
     }
   }
 
-  const sections = [];
+  const sections: any[] = [];
   if (today.length > 0) sections.push({ title: 'Today', data: today });
   if (thisWeek.length > 0) sections.push({ title: 'This Week', data: thisWeek });
   if (earlier.length > 0) sections.push({ title: 'Earlier', data: earlier });
@@ -87,7 +87,7 @@ const groupNotificationsByTime = notifs => {
   return sections;
 };
 
-const NotificationAvatar = ({ url, senderId, style }) => {
+const NotificationAvatar = ({ url, senderId, style }: { url: any; senderId: any; style: any }) => {
   const [failed, setFailed] = useState(false);
   if (!url || failed) {
     return (
@@ -107,10 +107,10 @@ const NotificationAvatar = ({ url, senderId, style }) => {
   );
 };
 
-const formatReactionsText = reactions => {
+const formatReactionsText = (reactions: any) => {
   if (!reactions || typeof reactions !== 'object') return '';
   const parts = Object.entries(reactions)
-    .filter(([, count]) => count > 0)
+    .filter(([, count]) => (count as number) > 0)
     .map(([emoji, count]) => `${emoji}×${count}`);
   return parts.length > 0 ? parts.join(' ') : '';
 };
@@ -142,8 +142,8 @@ const getActionText = item => {
  * Measures its own screen position on press so the caller can pass sourceRect
  * to openPhotoDetail() for the expand/suck-back animation.
  */
-const NotificationItem = ({ item, onPress, onAvatarPress }) => {
-  const rowRef = useRef(null);
+const NotificationItem = ({ item, onPress, onAvatarPress }: { item: any; onPress: any; onAvatarPress: any }) => {
+  const rowRef = useRef<any>(null);
   const actionText = getActionText(item);
   const isUnread = item.read !== true;
 
@@ -201,22 +201,22 @@ const ActivityScreen = () => {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const { openPhotoDetail } = usePhotoDetailActions();
-  const [friendRequests, setFriendRequests] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const [friendRequests, setFriendRequests] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [actionLoading, setActionLoading] = useState({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
   const fetchFriendRequests = useCallback(async () => {
-    if (!user?.uid) return [];
+    if (!user?.id) return [];
 
     try {
-      const result = await getPendingRequests(user.uid);
-      if (result.success) {
+      const requests = await getPendingRequests(user.id);
+      {
         // Fetch user data for each request
         const requestsWithUserData = await Promise.all(
-          result.requests.map(async request => {
-            const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
+          requests.map(async (request: any) => {
+            const otherUserId = request.user1Id === user.id ? request.user2Id : request.user1Id;
             try {
               const { data: userData, error } = await supabase
                 .from('users')
@@ -224,9 +224,10 @@ const ActivityScreen = () => {
                 .eq('id', otherUserId)
                 .single();
               if (!error && userData) {
+                const ud = userData as any;
                 return {
                   ...request,
-                  otherUser: { id: userData.id, ...userData },
+                  otherUser: { id: ud.id, ...ud },
                 };
               }
             } catch {
@@ -238,10 +239,10 @@ const ActivityScreen = () => {
         return requestsWithUserData.filter(r => r.otherUser);
       }
     } catch (error) {
-      logger.error('Error fetching friend requests', { error: error.message });
+      logger.error('Error fetching friend requests', { error: (error as Error).message });
     }
     return [];
-  }, [user?.uid]);
+  }, [user?.id]);
 
   /**
    * Handle deep link navigation from notifications
@@ -249,7 +250,7 @@ const ActivityScreen = () => {
    */
   useEffect(() => {
     const handleDeepLinkParams = async () => {
-      const params = route.params || {};
+      const params = (route.params || {}) as any;
       const { photoId, commentId, shouldOpenPhoto, notifType } = params;
 
       if (!shouldOpenPhoto || !photoId) {
@@ -259,27 +260,27 @@ const ActivityScreen = () => {
       logger.info('ActivityScreen: Opening photo from notification', { photoId, commentId });
 
       // Fetch photo
-      const result = await getPhotoById(photoId);
-      if (!result.success) {
-        logger.error('ActivityScreen: Failed to fetch photo', { photoId, error: result.error });
-        navigation.setParams({ shouldOpenPhoto: undefined });
+      const photo = await getPhotoById(photoId);
+      if (!photo) {
+        logger.error('ActivityScreen: Failed to fetch photo', { photoId });
+        navigation.setParams({ shouldOpenPhoto: undefined } as any);
         return;
       }
 
       // Open PhotoDetail modal
       openPhotoDetail({
         mode: 'feed',
-        photo: result.photo,
-        currentUserId: user?.uid,
+        photo,
+        currentUserId: user?.id,
         initialShowComments: !!commentId,
         targetCommentId: commentId || null,
       });
 
-      navigation.navigate('PhotoDetail');
+      navigation.navigate('PhotoDetail' as any);
 
       // Mark as read — safety net for cold-start where App.js ran before auth was ready
-      if (user?.uid) {
-        markNotificationReadFromPushData(user.uid, { type: notifType, photoId });
+      if (user?.id) {
+        markNotificationReadFromPushData(user.id, { type: notifType, photoId });
       }
 
       // Clear params to prevent re-opening on back navigation
@@ -288,26 +289,26 @@ const ActivityScreen = () => {
         photoId: undefined,
         commentId: undefined,
         notifType: undefined,
-      });
+      } as any);
     };
 
     handleDeepLinkParams();
-  }, [route.params, navigation, openPhotoDetail, user?.uid]);
+  }, [route.params, navigation, openPhotoDetail, user?.id]);
 
   const fetchNotifications = useCallback(async () => {
-    if (!user?.uid) return [];
+    if (!user?.id) return [];
 
     try {
       const { data: notifs, error: notifsError } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', user.uid)
+        .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (notifsError) throw notifsError;
 
-      const normalizedNotifs = (notifs || []).map(n => ({
+      const normalizedNotifs = ((notifs || []) as any[]).map(n => ({
         ...n,
         // Map snake_case to camelCase for compatibility with existing UI code
         id: n.id,
@@ -326,15 +327,15 @@ const ActivityScreen = () => {
 
       // Batch-fetch unique sender user docs to get nameColor + current photoURL fallback
       const uniqueSenderIds = [...new Set(normalizedNotifs.map(n => n.senderId).filter(Boolean))];
-      const colorMap = {};
-      const photoMap = {};
+      const colorMap: Record<string, any> = {};
+      const photoMap: Record<string, any> = {};
       if (uniqueSenderIds.length > 0) {
         const { data: senderUsers } = await supabase
           .from('users')
           .select('id, name_color, photo_url, profile_photo_url')
           .in('id', uniqueSenderIds);
         if (senderUsers) {
-          for (const u of senderUsers) {
+          for (const u of senderUsers as any[]) {
             colorMap[u.id] = u.name_color || null;
             photoMap[u.id] = u.photo_url || u.profile_photo_url || null;
           }
@@ -348,10 +349,10 @@ const ActivityScreen = () => {
           (n.senderId ? photoMap[n.senderId] || null : null) || n.senderProfilePhotoURL || null,
       }));
     } catch (error) {
-      logger.error('Error fetching notifications', { error: error.message });
+      logger.error('Error fetching notifications', { error: (error as Error).message });
     }
     return [];
-  }, [user?.uid]);
+  }, [user?.id]);
 
   const loadData = useCallback(async () => {
     const [requests, notifs] = await Promise.all([fetchFriendRequests(), fetchNotifications()]);
@@ -369,14 +370,14 @@ const ActivityScreen = () => {
   // This clears the FeedScreen red dot badge (driven by onSnapshot for read==false)
   // without changing local state — individual unread dots remain until tapped.
   useEffect(() => {
-    if (loading || !user?.uid || notifications.length === 0) return;
+    if (loading || !user?.id || notifications.length === 0) return;
 
     const hasUnread = notifications.some(n => n.read !== true);
     if (!hasUnread) return;
 
     logger.debug('ActivityScreen: Auto-marking notifications as read for badge clearance');
-    markNotificationsAsRead(user.uid);
-  }, [loading, user?.uid, notifications]);
+    markNotificationsAsRead(user.id);
+  }, [loading, user?.id, notifications]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -385,8 +386,8 @@ const ActivityScreen = () => {
 
   // Deduplicate reaction notifications: keep only the latest per (senderId, photoId)
   const clumpedNotifications = useMemo(() => {
-    const reactionKeys = new Map(); // key -> notification
-    const result = [];
+    const reactionKeys = new Map<string, any>(); // key -> notification
+    const result: any[] = [];
 
     for (const notif of notifications) {
       if (notif.type === 'reaction' && notif.senderId && notif.photoId) {
@@ -423,37 +424,37 @@ const ActivityScreen = () => {
   );
 
   const handleReadAll = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
     mediumImpact();
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    const result = await markNotificationsAsRead(user.uid);
+    const result = await markNotificationsAsRead(user.id);
     if (!result.success) {
       logger.error('Failed to mark all notifications as read', { error: result.error });
     }
-  }, [user?.uid]);
+  }, [user?.id]);
 
-  const handleAccept = async requestId => {
+  const handleAccept = async (requestId: string) => {
     mediumImpact();
     setActionLoading(prev => ({ ...prev, [requestId]: true }));
-    const result = await acceptFriendRequest(requestId, user.uid);
-    setActionLoading(prev => ({ ...prev, [requestId]: false }));
-    if (result.success) {
+    try {
+      await acceptFriendRequest(requestId);
       setFriendRequests(prev => prev.filter(r => r.id !== requestId));
-    } else {
-      Alert.alert('Error', result.error || 'Failed to accept request');
+    } catch (err) {
+      Alert.alert('Error', (err as Error).message || 'Failed to accept request');
     }
+    setActionLoading(prev => ({ ...prev, [requestId]: false }));
   };
 
-  const handleDecline = async requestId => {
+  const handleDecline = async (requestId: string) => {
     mediumImpact();
     setActionLoading(prev => ({ ...prev, [requestId]: true }));
-    const result = await declineFriendRequest(requestId, user.uid);
-    setActionLoading(prev => ({ ...prev, [requestId]: false }));
-    if (result.success) {
+    try {
+      await declineFriendRequest(requestId);
       setFriendRequests(prev => prev.filter(r => r.id !== requestId));
-    } else {
-      Alert.alert('Error', result.error || 'Failed to decline request');
+    } catch (err) {
+      Alert.alert('Error', (err as Error).message || 'Failed to decline request');
     }
+    setActionLoading(prev => ({ ...prev, [requestId]: false }));
   };
 
   // Uses OtherUserProfile in root stack (not tab navigator) for viewing other users
@@ -479,14 +480,12 @@ const ActivityScreen = () => {
     const { type, photoId } = item;
 
     // Check block status before showing content from sender
-    if (item.senderId && user?.uid) {
+    if (item.senderId && user?.id) {
       const [blockedBySender, blockedSender] = await Promise.all([
-        isBlocked(item.senderId, user.uid),
-        isBlocked(user.uid, item.senderId),
+        isBlocked(item.senderId, user.id),
+        isBlocked(user.id, item.senderId),
       ]);
-      const eitherBlocked =
-        (blockedBySender.success && blockedBySender.isBlocked) ||
-        (blockedSender.success && blockedSender.isBlocked);
+      const eitherBlocked = blockedBySender || blockedSender;
       if (eitherBlocked) {
         return; // Silently ignore — content from blocked users not shown
       }
@@ -497,21 +496,21 @@ const ActivityScreen = () => {
       photoId
     ) {
       // Fetch the photo and open PhotoDetail directly
-      const result = await getPhotoById(photoId);
-      if (result.success) {
-        if (result.photo.photoState === 'deleted') {
+      const photo = await getPhotoById(photoId);
+      if (photo) {
+        if ((photo as any).photoState === 'deleted') {
           Alert.alert('Photo Deleted', 'This photo has been deleted.');
           return;
         }
         openPhotoDetail({
           mode: 'feed',
-          photo: result.photo,
-          currentUserId: user?.uid,
+          photo,
+          currentUserId: user?.id,
           initialShowComments: type === 'comment' || type === 'mention' || type === 'reply',
           targetCommentId: item.commentId || null,
           sourceRect: sourceRect || null,
         });
-        navigation.navigate('PhotoDetail');
+        navigation.navigate('PhotoDetail' as any);
       }
     } else if (type === 'story' && item.senderId) {
       // Fetch the poster's story photos and open in stories mode
@@ -521,34 +520,34 @@ const ActivityScreen = () => {
           mode: 'stories',
           photos: result.userStory.topPhotos,
           initialIndex: 0,
-          currentUserId: user?.uid,
+          currentUserId: user?.id,
           isOwnStory: false,
           hasNextFriend: false,
           sourceRect: sourceRect || null,
         });
-        navigation.navigate('PhotoDetail');
+        navigation.navigate('PhotoDetail' as any);
       }
     } else if (type === 'tagged' && photoId) {
       // Fetch the tagged photo and open PhotoDetail directly
-      const result = await getPhotoById(photoId);
-      if (result.success) {
-        if (result.photo.photoState === 'deleted') {
+      const taggedPhoto = await getPhotoById(photoId);
+      if (taggedPhoto) {
+        if ((taggedPhoto as any).photoState === 'deleted') {
           Alert.alert('Photo Deleted', 'This photo has been deleted.');
           return;
         }
         openPhotoDetail({
           mode: 'feed',
-          photo: result.photo,
-          currentUserId: user?.uid,
+          photo: taggedPhoto,
+          currentUserId: user?.id,
           initialShowComments: false,
           sourceRect: sourceRect || null,
         });
-        navigation.navigate('PhotoDetail');
+        navigation.navigate('PhotoDetail' as any);
       }
     } else if (type === 'friend_accepted' && item.senderId) {
       handleAvatarPress(item.senderId, item.senderName);
     } else if (type === 'friend_request') {
-      navigation.navigate('FriendsList');
+      navigation.navigate('FriendsList' as any);
     } else if (item.senderId) {
       // Default: navigate to sender's profile
       handleAvatarPress(item.senderId, item.senderName);

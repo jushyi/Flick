@@ -31,17 +31,20 @@ type Props = {
   user: Record<string, unknown>;
   relationshipStatus?: string;
   friendshipId?: string;
-  onAction?: () => void;
-  onAccept?: () => void;
-  onDeny?: () => void;
+  onAction?: (...args: any[]) => void;
+  onAccept?: (...args: any[]) => void;
+  onDeny?: (...args: any[]) => void;
   onPress?: () => void;
   showFriendsSince?: boolean;
   friendsSince?: string | null;
   loading?: boolean;
-  onRemove?: () => void;
-  onBlock?: () => void;
-  onUnblock?: () => void;
-  onReport?: () => void;
+  onRemove?: (...args: any[]) => void;
+  onBlock?: (...args: any[]) => void;
+  onUnblock?: (...args: any[]) => void;
+  onReport?: (...args: any[]) => void;
+  onDismiss?: (...args: any[]) => void;
+  isBlocked?: boolean;
+  subtitle?: string | null;
 };
 
 const FriendCard = ({
@@ -62,19 +65,19 @@ const FriendCard = ({
   onDismiss, // Optional: renders X button next to Add for suggestions
   isBlocked = false, // Whether current user has blocked this user
   subtitle, // Optional: subtitle text below username (e.g., "3 mutual friends")
-}) => {
-  const { userId, displayName, username, profilePhotoURL } = user || {};
+}: Props) => {
+  const { userId, displayName, username, profilePhotoURL } = (user || {}) as Record<string, any>;
 
   // Menu state
   const [menuVisible, setMenuVisible] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState(null);
-  const menuButtonRef = useRef(null);
+  const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const menuButtonRef = useRef<any>(null);
 
   const formatFriendsSince = () => {
     if (!friendsSince) return '';
 
     // Handle Firestore Timestamp
-    const date = friendsSince.toDate ? friendsSince.toDate() : new Date(friendsSince);
+    const date = (friendsSince as any)?.toDate ? (friendsSince as any).toDate() : new Date(friendsSince);
 
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -86,7 +89,7 @@ const FriendCard = ({
    * Handle pending button press - show cancel confirmation
    */
   const handlePendingPress = () => {
-    const buttons = [
+    const buttons: import('react-native').AlertButton[] = [
       { text: 'Keep', style: 'cancel' },
       {
         text: 'Cancel Request',
@@ -115,7 +118,7 @@ const FriendCard = ({
    * Handle remove friend action with confirmation
    */
   const handleRemoveFriend = () => {
-    const buttons = [
+    const buttons: import('react-native').AlertButton[] = [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
@@ -134,7 +137,7 @@ const FriendCard = ({
    * Handle block user action with confirmation
    */
   const handleBlockUser = () => {
-    const buttons = [
+    const buttons: import('react-native').AlertButton[] = [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Block',
@@ -285,8 +288,8 @@ const FriendCard = ({
         {profilePhotoURL ? (
           <Image
             source={{
-              uri: profilePhotoURL,
-              cacheKey: profileCacheKey(`profile-${userId}`, profilePhotoURL),
+              uri: profilePhotoURL as string,
+              cacheKey: profileCacheKey(`profile-${userId}`, profilePhotoURL as string),
             }}
             style={styles.avatar}
             cachePolicy="memory-disk"
@@ -303,8 +306,8 @@ const FriendCard = ({
 
       {/* User info */}
       <View style={styles.userInfo}>
-        <StrokedNameText style={styles.displayName} nameColor={user?.nameColor} numberOfLines={1}>
-          {displayName || 'Unknown User'}
+        <StrokedNameText style={styles.displayName} nameColor={user?.nameColor as string | undefined} numberOfLines={1}>
+          {(displayName || 'Unknown User') as string}
         </StrokedNameText>
         <Text style={styles.username} numberOfLines={1}>
           @{username || 'unknown'}

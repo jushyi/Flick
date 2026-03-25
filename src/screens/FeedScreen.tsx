@@ -33,10 +33,10 @@ import {
 } from '../services/supabase/feedService';
 import { getFriendIds as getFriendUserIds } from '../services/supabase/friendshipService';
 // TODO(20-01): toggleReaction, getFriendStoriesData, getUserStoriesData, getRandomFriendPhotos - map to supabase equivalents
-const toggleReaction = async () => ({});
-const getFriendStoriesData = async () => [];
-const getUserStoriesData = async () => [];
-const getRandomFriendPhotos = async () => [];
+const toggleReaction = async (..._args: any[]): Promise<any> => ({});
+const getFriendStoriesData = async (..._args: any[]): Promise<any> => ({ success: false, friendStories: [], totalFriendCount: 0 });
+const getUserStoriesData = async (..._args: any[]): Promise<any> => ({ success: false, userStory: null });
+const getRandomFriendPhotos = async (..._args: any[]): Promise<any> => ({ success: false, photos: [] });
 import { useAuth } from '../context/AuthContext';
 import { useScreenTrace } from '../hooks/useScreenTrace';
 import { colors } from '../constants/colors';
@@ -65,14 +65,14 @@ const FeedScreen = () => {
     usePhotoDetailActions();
 
   // Track current feed photo for reaction updates (ref to avoid re-renders)
-  const currentFeedPhotoRef = useRef(null);
+  const currentFeedPhotoRef = useRef<any>(null);
 
   // Ref for scrolling FlatList to top
-  const flatListRef = useRef(null);
+  const flatListRef = useRef<any>(null);
   const scrollOffsetRef = useRef(0);
 
   // Timestamp when app was last backgrounded (for auto-reload after inactivity)
-  const backgroundedAtRef = useRef(null);
+  const backgroundedAtRef = useRef<number | null>(null);
 
   // Animated scroll value for header hide/show
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -83,17 +83,17 @@ const FeedScreen = () => {
 
   // Shimmer animation for skeleton
   const shimmerPosition = useRef(new Animated.Value(-SHIMMER_WIDTH)).current;
-  const shimmerAnimation = useRef(null);
+  const shimmerAnimation = useRef<Animated.CompositeAnimation | null>(null);
 
   // Video autoplay viewport detection
-  const [visibleItemIds, setVisibleItemIds] = useState(new Set());
+  const [visibleItemIds, setVisibleItemIds] = useState<Set<string>>(new Set());
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 50,
   }).current;
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    const ids = new Set(viewableItems.map(item => item.key || item.item?.id));
+    const ids = new Set<string>(viewableItems.map((item: any) => String(item.key || item.item?.id)));
     setVisibleItemIds(ids);
   }).current;
 
@@ -111,7 +111,7 @@ const FeedScreen = () => {
     hasNextPage: hasMore,
     fetchNextPage: loadMorePhotos,
     refresh: refreshFeed,
-  } = useFeedPhotos(user?.uid);
+  } = useFeedPhotos(user?.id);
 
   // Error is an Error object in new hook; convert to string for backwards compat
   const error = feedError?.message ?? null;
@@ -137,23 +137,23 @@ const FeedScreen = () => {
   }, [refreshing]);
 
   // Stories state
-  const [friendStories, setFriendStories] = useState([]);
+  const [friendStories, setFriendStories] = useState<any[]>([]);
   const [totalFriendCount, setTotalFriendCount] = useState(0);
   const [storiesLoading, setStoriesLoading] = useState(true);
-  const selectedFriendRef = useRef(null);
+  const selectedFriendRef = useRef<any>(null);
   const selectedFriendIndexRef = useRef(0);
-  const storySequenceRef = useRef([]); // Story sequence locked at session start (stable ordering)
+  const storySequenceRef = useRef<any[]>([]); // Story sequence locked at session start (stable ordering)
   const startedOnViewedRef = useRef(false); // Whether story session started on a viewed friend
 
   // Story pagination state
   const [visibleStoryCount, setVisibleStoryCount] = useState(STORY_BATCH_SIZE);
 
   // Own stories state
-  const [myStories, setMyStories] = useState(null);
+  const [myStories, setMyStories] = useState<any>(null);
   const [myStoriesLoading, setMyStoriesLoading] = useState(true);
 
   // Archive photos fallback state (when recent feed is empty)
-  const [archivePhotos, setArchivePhotos] = useState([]);
+  const [archivePhotos, setArchivePhotos] = useState<any[]>([]);
   const [archivePhotosLoading, setArchivePhotosLoading] = useState(false);
 
   // Track whether currently in stories mode (for callbacks)
@@ -179,6 +179,7 @@ const FeedScreen = () => {
   const storiesCurrentIndexRef = useRef(0);
 
   // Refs to hold latest handlers (avoids stale closures in setCallbacks effect)
+  const handleCommentCountChangeRef = useRef<any>(null);
   const handleCloseMyStoriesRef = useRef(() => {});
   const handleCloseStoriesRef = useRef(() => {});
   const handleRequestNextFriendRef = useRef(() => {});
@@ -186,14 +187,14 @@ const FeedScreen = () => {
   const handleCancelFriendTransitionRef = useRef(() => {});
 
   // Save pre-transition state for cancel (interactive swipe cancel restores without side effects)
-  const preTransitionRef = useRef(null);
+  const preTransitionRef = useRef<any>(null);
 
   const loadFriendStories = async () => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
 
     logger.debug('FeedScreen: Loading friend stories data');
     setStoriesLoading(true);
-    const result = await getFriendStoriesData(user.uid);
+    const result = await getFriendStoriesData(user.id);
     if (result.success) {
       logger.info('FeedScreen: Friend stories loaded', {
         count: result.friendStories.length,
@@ -209,11 +210,11 @@ const FeedScreen = () => {
   };
 
   const loadMyStories = async () => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
 
     logger.debug('FeedScreen: Loading own stories data');
     setMyStoriesLoading(true);
-    const result = await getUserStoriesData(user.uid, userProfile);
+    const result = await getUserStoriesData(user.id, userProfile);
     if (result.success) {
       logger.info('FeedScreen: Own stories loaded', {
         photoCount: result.userStory?.totalPhotoCount || 0,
@@ -227,22 +228,22 @@ const FeedScreen = () => {
   };
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
       loadFriendStories();
       loadMyStories();
     }
-  }, [user?.uid]);
+  }, [user?.id]);
 
   // Reload own stories when profile photo changes (e.g. after EditProfileScreen save)
-  const prevPhotoURLRef = useRef(userProfile?.photoURL);
+  const prevPhotoURLRef = useRef(userProfile?.photo_url);
   useEffect(() => {
-    if (userProfile?.photoURL !== prevPhotoURLRef.current) {
-      prevPhotoURLRef.current = userProfile?.photoURL;
-      if (user?.uid) {
+    if (userProfile?.photo_url !== prevPhotoURLRef.current) {
+      prevPhotoURLRef.current = userProfile?.photo_url;
+      if (user?.id) {
         loadMyStories();
       }
     }
-  }, [userProfile?.photoURL]);
+  }, [userProfile?.photo_url]);
 
   // Mark screen trace as loaded after initial feed data loads (once only)
   useEffect(() => {
@@ -309,7 +310,7 @@ const FeedScreen = () => {
   useEffect(() => {
     const loadArchivePhotosFallback = async () => {
       // Only load if: not loading, no recent photos, user has friends
-      if (loading || photos.length > 0 || totalFriendCount === 0 || !user?.uid) {
+      if (loading || photos.length > 0 || totalFriendCount === 0 || !user?.id) {
         // Clear archive photos if we now have recent photos
         if (photos.length > 0 && archivePhotos.length > 0) {
           setArchivePhotos([]);
@@ -321,14 +322,14 @@ const FeedScreen = () => {
       setArchivePhotosLoading(true);
 
       // Get friend user IDs
-      const friendsResult = await getFriendUserIds(user.uid);
-      if (!friendsResult.success || friendsResult.friendUserIds.length === 0) {
+      const friendUserIds = await getFriendUserIds(user.id);
+      if (!friendUserIds || friendUserIds.length === 0) {
         setArchivePhotosLoading(false);
         return;
       }
 
       // Load random historical photos from friends (excluding blocked users)
-      const result = await getRandomFriendPhotos(friendsResult.friendUserIds, 10, user.uid);
+      const result = await getRandomFriendPhotos(friendUserIds, 10, user.id);
       if (result.success) {
         logger.info('FeedScreen: Archive photos loaded', { count: result.photos.length });
         setArchivePhotos(result.photos);
@@ -337,11 +338,11 @@ const FeedScreen = () => {
     };
 
     loadArchivePhotosFallback();
-  }, [loading, photos.length, totalFriendCount, user?.uid]);
+  }, [loading, photos.length, totalFriendCount, user?.id]);
 
   // Subscribe to unread notifications for red dot indicator
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
 
     logger.debug('FeedScreen: Subscribing to unread notifications');
 
@@ -351,7 +352,7 @@ const FeedScreen = () => {
         const { count, error } = await supabase
           .from('notifications')
           .select('id', { count: 'exact', head: true })
-          .eq('recipient_id', user.uid)
+          .eq('recipient_id', user.id)
           .eq('read', false);
         if (!error) {
           const hasUnread = (count || 0) > 0;
@@ -359,7 +360,7 @@ const FeedScreen = () => {
           setHasNewNotifications(hasUnread);
         }
       } catch (error) {
-        logger.error('FeedScreen: Failed to check notifications', { error: error.message });
+        logger.error('FeedScreen: Failed to check notifications', { error: (error as Error).message });
       }
     };
 
@@ -374,7 +375,7 @@ const FeedScreen = () => {
           event: '*',
           schema: 'public',
           table: 'notifications',
-          filter: `recipient_id=eq.${user.uid}`,
+          filter: `recipient_id=eq.${user.id}`,
         },
         () => {
           checkUnread();
@@ -385,7 +386,7 @@ const FeedScreen = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.uid]);
+  }, [user?.id]);
 
   /**
    * Set up default callbacks for PhotoDetailContext
@@ -424,8 +425,8 @@ const FeedScreen = () => {
       },
       onAvatarPress: (userId, username) => {
         // For own stories: header avatar goes to Profile tab
-        if (isOwnStoriesRef.current && userId === user?.uid) {
-          navigation.navigate('Profile');
+        if (isOwnStoriesRef.current && userId === user?.id) {
+          navigation.navigate('Profile' as any);
         } else {
           navigation.navigate('ProfileFromPhotoDetail', { userId, username });
         }
@@ -436,7 +437,7 @@ const FeedScreen = () => {
         loadFriendStories();
         loadMyStories();
       },
-      onCommentCountChange: handleCommentCountChange,
+      onCommentCountChange: (...args: any[]) => handleCommentCountChangeRef.current?.(...args),
       getNextFriendFirstPhotoURL: () => {
         const sequence = storySequenceRef.current;
         const currentIdx = selectedFriendIndexRef.current;
@@ -448,7 +449,7 @@ const FeedScreen = () => {
         return nextPhoto?.imageURL || null;
       },
     });
-  }, [setCallbacks, user?.uid, handleCommentCountChange]);
+  }, [setCallbacks, user?.id]);
 
   const handleRefresh = async () => {
     logger.debug('FeedScreen: Pull-to-refresh triggered');
@@ -489,7 +490,7 @@ const FeedScreen = () => {
 
   // Tap Feed tab: scroll to top if scrolled down, refresh if already at top
   useEffect(() => {
-    const unsubscribe = navigation.addListener('tabPress', e => {
+    const unsubscribe = (navigation as any).addListener('tabPress', (e: any) => {
       if (navigation.isFocused()) {
         if (scrollOffsetRef.current > 5) {
           flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -508,7 +509,7 @@ const FeedScreen = () => {
 
   const handleOwnAvatarPress = () => {
     logger.debug('FeedScreen: Own avatar pressed');
-    navigation.navigate('Profile');
+    navigation.navigate('Profile' as any);
   };
 
   /**
@@ -559,7 +560,7 @@ const FeedScreen = () => {
 
     // Prefetch current friend's opening photo + next photo for instant display
     const currentPhotos = friend.topPhotos || [];
-    const prefetchUrls = [];
+    const prefetchUrls: string[] = [];
     if (currentPhotos[startIndex]?.imageURL) {
       prefetchUrls.push(currentPhotos[startIndex].imageURL);
     }
@@ -586,13 +587,13 @@ const FeedScreen = () => {
       mode: 'stories',
       photos: friend.topPhotos || [],
       initialIndex: startIndex,
-      currentUserId: user?.uid,
+      currentUserId: user?.id,
       hasNextFriend: hasNextAtOpen,
       hasPreviousFriend: friendIdx > 0,
       isOwnStory: false,
       sourceRect: sourceRect || null,
     });
-    navigation.navigate('PhotoDetail');
+    navigation.navigate('PhotoDetail' as any);
   };
 
   /**
@@ -620,7 +621,7 @@ const FeedScreen = () => {
 
     // Prefetch opening photo + next for instant display
     const ownPhotos = myStories.topPhotos || [];
-    const ownPrefetchUrls = [];
+    const ownPrefetchUrls: string[] = [];
     if (ownPhotos[startIndex]?.imageURL) {
       ownPrefetchUrls.push(ownPhotos[startIndex].imageURL);
     }
@@ -636,12 +637,12 @@ const FeedScreen = () => {
       mode: 'stories',
       photos: myStories.topPhotos || [],
       initialIndex: startIndex,
-      currentUserId: user?.uid,
+      currentUserId: user?.id,
       hasNextFriend: false,
       isOwnStory: true,
       sourceRect: sourceRect || null,
     });
-    navigation.navigate('PhotoDetail');
+    navigation.navigate('PhotoDetail' as any);
   };
 
   /**
@@ -793,7 +794,7 @@ const FeedScreen = () => {
       mode: 'stories',
       photos: nextFriend.topPhotos || [],
       initialIndex: nextStartIndex,
-      currentUserId: user?.uid,
+      currentUserId: user?.id,
       hasNextFriend: hasNextUnviewed,
       hasPreviousFriend: nextFriendIdx > 0,
       isOwnStory: false,
@@ -868,7 +869,7 @@ const FeedScreen = () => {
       mode: 'stories',
       photos: prevFriend.topPhotos || [],
       initialIndex: prevStartIndex,
-      currentUserId: user?.uid,
+      currentUserId: user?.id,
       hasNextFriend: hasNextUnviewedFromPrev,
       hasPreviousFriend: prevFriendIdx > 0,
       isOwnStory: false,
@@ -948,7 +949,7 @@ const FeedScreen = () => {
       mode: 'stories',
       photos: saved.friend.topPhotos || [],
       initialIndex: saved.currentIndex,
-      currentUserId: user?.uid,
+      currentUserId: user?.id,
       hasNextFriend: hasNextUnviewedAfterSaved,
       hasPreviousFriend: saved.friendIndex > 0,
       isOwnStory: false,
@@ -969,11 +970,11 @@ const FeedScreen = () => {
     openPhotoDetail({
       mode: 'feed',
       photo,
-      currentUserId: user?.uid,
+      currentUserId: user?.id,
       initialShowComments: false,
       sourceRect: sourceRect || null,
     });
-    navigation.navigate('PhotoDetail');
+    navigation.navigate('PhotoDetail' as any);
   };
 
   // Navigate to photo detail with comments panel visible
@@ -982,11 +983,11 @@ const FeedScreen = () => {
     openPhotoDetail({
       mode: 'feed',
       photo,
-      currentUserId: user?.uid,
+      currentUserId: user?.id,
       initialShowComments: true,
       sourceRect: sourceRect || null,
     });
-    navigation.navigate('PhotoDetail');
+    navigation.navigate('PhotoDetail' as any);
   };
 
   /**
@@ -999,7 +1000,7 @@ const FeedScreen = () => {
     if (!user || !photo) return;
 
     const photoId = photo.id;
-    const userId = user.uid;
+    const userId = user.id;
 
     // Optimistic update - increment count immediately
     const updatedReactions = { ...photo.reactions };
@@ -1012,7 +1013,7 @@ const FeedScreen = () => {
     let newTotalCount = 0;
     Object.values(updatedReactions).forEach(userReactions => {
       if (typeof userReactions === 'object') {
-        Object.values(userReactions).forEach(count => {
+        Object.values(userReactions as Record<string, number>).forEach(count => {
           newTotalCount += count;
         });
       }
@@ -1040,7 +1041,7 @@ const FeedScreen = () => {
         updateCurrentPhoto(photo);
       }
     } catch (error) {
-      logger.error('Error toggling reaction', error);
+      logger.error('Error toggling reaction', error as Record<string, unknown>);
       // Revert optimistic update on error
       currentFeedPhotoRef.current = photo;
       updatePhotoInState(photoId, photo);
@@ -1085,6 +1086,7 @@ const FeedScreen = () => {
     },
     [updatePhotoInState, updateCurrentPhoto]
   );
+  handleCommentCountChangeRef.current = handleCommentCountChange;
 
   /**
    * Handle reaction toggle for stories photos
@@ -1094,7 +1096,7 @@ const FeedScreen = () => {
     const selectedFriend = selectedFriendRef.current;
     if (!user || !selectedFriend) return;
 
-    const userId = user.uid;
+    const userId = user.id;
     const topPhotos = selectedFriend.topPhotos || [];
     const currentPhoto = topPhotos[storiesCurrentIndexRef.current];
 
@@ -1117,7 +1119,7 @@ const FeedScreen = () => {
     let newTotalCount = 0;
     Object.values(updatedReactions).forEach(userReactions => {
       if (typeof userReactions === 'object') {
-        Object.values(userReactions).forEach(count => {
+        Object.values(userReactions as Record<string, number>).forEach(count => {
           newTotalCount += count;
         });
       }
@@ -1159,7 +1161,7 @@ const FeedScreen = () => {
         selectedFriendRef.current = selectedFriend;
       }
     } catch (error) {
-      logger.error('Error toggling stories reaction', error);
+      logger.error('Error toggling stories reaction', error as Record<string, unknown>);
       // Revert optimistic update on error
       selectedFriendRef.current = selectedFriend;
     }
@@ -1173,10 +1175,10 @@ const FeedScreen = () => {
         onPress={sourceRect => handlePhotoPress(item, sourceRect)}
         onCommentPress={sourceRect => handleCommentPress(item, sourceRect)}
         onAvatarPress={handleAvatarPress}
-        currentUserId={user?.uid}
+        currentUserId={user?.id}
       />
     ),
-    [handlePhotoPress, handleCommentPress, handleAvatarPress, user?.uid, visibleItemIds, isFocused]
+    [handlePhotoPress, handleCommentPress, handleAvatarPress, user?.id, visibleItemIds, isFocused]
   );
 
   const renderFooter = () => {
@@ -1203,7 +1205,7 @@ const FeedScreen = () => {
     if (totalFriendCount === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <TakeFirstPhotoCard onPress={() => navigation.navigate('Camera')} />
+          <TakeFirstPhotoCard onPress={() => navigation.navigate('Camera' as any)} />
         </View>
       );
     }
@@ -1214,7 +1216,7 @@ const FeedScreen = () => {
         icon="camera-outline"
         message="No photos yet"
         ctaLabel="Add friends"
-        onCtaPress={() => navigation.navigate('FriendsList')}
+        onCtaPress={() => navigation.navigate('FriendsList' as any)}
       />
     );
   };
@@ -1301,7 +1303,7 @@ const FeedScreen = () => {
               />
             )}
             <AddFriendsPromptCard
-              onPress={() => navigation.navigate('FriendsList')}
+              onPress={() => navigation.navigate('FriendsList' as any)}
               isFirst={!myStories}
             />
           </ScrollView>
@@ -1421,7 +1423,7 @@ const FeedScreen = () => {
         {/* Left-aligned friends button */}
         <TouchableOpacity
           testID="friends-button"
-          onPress={() => navigation.navigate('FriendsList')}
+          onPress={() => navigation.navigate('FriendsList' as any)}
           style={styles.friendsButton}
         >
           <PixelIcon name="people-outline" size={24} color={colors.text.primary} />
@@ -1430,7 +1432,7 @@ const FeedScreen = () => {
         <Text style={styles.headerTitle}>Flick</Text>
         {/* Right-aligned notification button */}
         <TouchableOpacity
-          onPress={() => navigation.navigate('Activity')}
+          onPress={() => navigation.navigate('Activity' as any)}
           style={styles.notificationButton}
         >
           <PixelIcon name="heart-outline" size={24} color={colors.text.primary} />
@@ -1477,7 +1479,7 @@ const FeedScreen = () => {
             windowSize={5}
             removeClippedSubviews={true}
             updateCellsBatchingPeriod={50}
-            onEndReached={mergedPhotos.length > 0 ? loadMorePhotos : null}
+            onEndReached={mergedPhotos.length > 0 ? () => { loadMorePhotos(); } : null}
             onEndReachedThreshold={0.5}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}

@@ -17,10 +17,9 @@ import PixelIcon from '../components/PixelIcon';
 import { useAuth } from '../context/AuthContext';
 import FriendCard from '../components/FriendCard';
 import {
-  getFriendships,
+  getFriends,
   getPendingRequests,
   getSentRequests,
-  subscribeFriendships,
   sendFriendRequest,
   acceptFriendRequest,
   declineFriendRequest,
@@ -28,26 +27,26 @@ import {
   getFriendshipStatus as checkFriendshipStatus,
 } from '../services/supabase/friendshipService';
 // TODO(20-01): getMutualFriendSuggestions, batchGetUsers - no supabase equivalent yet
-const getMutualFriendSuggestions = async () => [];
-const batchGetUsers = async () => [];
+const getMutualFriendSuggestions = async (_userId?: string): Promise<any> => ({ success: false, suggestions: [] });
+const batchGetUsers = async (_userIds?: string[]): Promise<Map<string, any>> => new Map();
 import {
   syncContacts as syncContactsAndFindSuggestions,
 } from '../services/supabase/contactSyncService';
 // TODO(20-01): hasUserSyncedContacts, checkContactsPermission, getDismissedSuggestionIds, etc. - need supabase equivalents
-const hasUserSyncedContacts = async () => false;
-const checkContactsPermission = async () => 'undetermined';
-const getDismissedSuggestionIds = async () => [];
-const filterDismissedSuggestions = (suggestions) => suggestions;
-const dismissSuggestion = async () => {};
-const markContactsSyncCompleted = async () => {};
+const hasUserSyncedContacts = async (_userId?: string): Promise<boolean> => false;
+const checkContactsPermission = async (): Promise<string> => 'undetermined';
+const getDismissedSuggestionIds = async (_userId?: string): Promise<string[]> => [];
+const filterDismissedSuggestions = (suggestions: any[], _dismissedIds?: string[]): any[] => suggestions;
+const dismissSuggestion = async (_userId?: string, _targetId?: string): Promise<void> => {};
+const markContactsSyncCompleted = async (_userId?: string, _completed?: boolean): Promise<void> => {};
 import {
   blockUser,
   unblockUser,
   getBlockedUsers,
 } from '../services/supabase/blockService';
 // TODO(20-01): getBlockedByUserIds, getBlockedUserIds - map to supabase blockService
-const getBlockedByUserIds = async () => [];
-const getBlockedUserIds = async () => [];
+const getBlockedByUserIds = async (_userId?: string): Promise<any> => ({ success: false, blockedByUserIds: [] });
+const getBlockedUserIds = async (_userId?: string): Promise<any> => ({ success: true, blockedUserIds: [] });
 import { mediumImpact } from '../utils/haptics';
 import { FriendsSkeleton } from '../components/skeletons/FriendsSkeleton';
 import { EmptyState } from '../components/EmptyState';
@@ -77,64 +76,57 @@ const FriendsScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('requests');
 
   // Friends tab state
-  const [friends, setFriends] = useState([]);
-  const [filteredFriends, setFilteredFriends] = useState([]);
+  const [friends, setFriends] = useState<any[]>([]);
+  const [filteredFriends, setFilteredFriends] = useState<any[]>([]);
   const [friendsSearchQuery, setFriendsSearchQuery] = useState('');
 
   // Requests tab state
-  const [incomingRequests, setIncomingRequests] = useState([]);
-  const [sentRequests, setSentRequests] = useState([]);
+  const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
+  const [sentRequests, setSentRequests] = useState<any[]>([]);
   const [requestsSearchQuery, setRequestsSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [friendshipStatuses, setFriendshipStatuses] = useState({});
+  const [friendshipStatuses, setFriendshipStatuses] = useState<Record<string, any>>({});
 
   // General state
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const [actionLoading, setActionLoading] = useState({});
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
   // Suggestions state
-  const [suggestions, setSuggestions] = useState([]);
-  const [mutualSuggestions, setMutualSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [mutualSuggestions, setMutualSuggestions] = useState<any[]>([]);
   const [hasSyncedContacts, setHasSyncedContacts] = useState(false);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
   // Block tracking state
-  const [blockedUserIds, setBlockedUserIds] = useState([]);
+  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
 
   const fetchFriends = async () => {
     try {
-      const result = await getFriendships(user.uid);
-      if (!result.success) {
-        logger.error('Error fetching friendships', { error: result.error });
-        return;
-      }
+      const result = await getFriends(user!.id);
 
       // Collect all friend userIds for batch fetch
-      const friendUserIds = result.friendships.map(friendship =>
-        friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id
-      );
+      const friendUserIds = result.map(friendship => friendship.friendUserId);
 
       // Batch fetch all user data at once (ceil(N/30) queries instead of N)
       const userMap = await batchGetUsers(friendUserIds);
 
       // Map friendship docs to friend objects using the batch-fetched Map
-      const friendsWithUserData = result.friendships
+      const friendsWithUserData = result
         .map(friendship => {
-          const otherUserId =
-            friendship.user1Id === user.uid ? friendship.user2Id : friendship.user1Id;
+          const otherUserId = friendship.friendUserId;
           const userData = userMap.get(otherUserId);
           if (userData) {
             return {
               friendshipId: friendship.id,
               userId: otherUserId,
-              acceptedAt: friendship.acceptedAt,
-              displayName: userData.displayName,
+              acceptedAt: friendship.createdAt,
+              displayName: userData.displayName || userData.display_name,
               username: userData.username,
-              profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
-              nameColor: userData.nameColor,
+              profilePhotoURL: userData.profilePhotoURL || userData.photo_url,
+              nameColor: userData.nameColor || userData.name_color,
             };
           }
           return null;
@@ -149,50 +141,46 @@ const FriendsScreen = ({ navigation }) => {
       setFriends(friendsWithUserData);
       setFilteredFriends(friendsWithUserData);
     } catch (err) {
-      logger.error('Error in fetchFriends', err);
+      logger.error('Error in fetchFriends', err as Record<string, unknown>);
     }
   };
 
   const fetchRequests = async () => {
     try {
       const [incomingResult, sentResult] = await Promise.all([
-        getPendingRequests(user.uid),
-        getSentRequests(user.uid),
+        getPendingRequests(user!.id),
+        getSentRequests(user!.id),
       ]);
 
       // Collect all userIds from both incoming and sent requests for a single batch fetch
-      const allRequestUserIds = [];
+      const allRequestUserIds: string[] = [];
 
-      if (incomingResult.success) {
-        incomingResult.requests.forEach(request => {
-          const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
-          allRequestUserIds.push(otherUserId);
-        });
-      }
+      incomingResult.forEach(request => {
+        const otherUserId = request.user1Id === user!.id ? request.user2Id : request.user1Id;
+        allRequestUserIds.push(otherUserId);
+      });
 
-      if (sentResult.success) {
-        sentResult.requests.forEach(request => {
-          const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
-          allRequestUserIds.push(otherUserId);
-        });
-      }
+      sentResult.forEach(request => {
+        const otherUserId = request.user1Id === user!.id ? request.user2Id : request.user1Id;
+        allRequestUserIds.push(otherUserId);
+      });
 
       // Batch fetch all user data at once
       const userMap = await batchGetUsers(allRequestUserIds);
 
-      if (incomingResult.success) {
-        const incomingWithUserData = incomingResult.requests
+      {
+        const incomingWithUserData = incomingResult
           .map(request => {
-            const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
+            const otherUserId = request.user1Id === user!.id ? request.user2Id : request.user1Id;
             const userData = userMap.get(otherUserId);
             if (userData) {
               return {
                 ...request,
                 userId: otherUserId,
-                displayName: userData.displayName,
+                displayName: userData.displayName || userData.display_name,
                 username: userData.username,
-                profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
-                nameColor: userData.nameColor,
+                profilePhotoURL: userData.profilePhotoURL || userData.photo_url,
+                nameColor: userData.nameColor || userData.name_color,
               };
             }
             return null;
@@ -201,19 +189,19 @@ const FriendsScreen = ({ navigation }) => {
         setIncomingRequests(incomingWithUserData);
       }
 
-      if (sentResult.success) {
-        const sentWithUserData = sentResult.requests
+      {
+        const sentWithUserData = sentResult
           .map(request => {
-            const otherUserId = request.user1Id === user.uid ? request.user2Id : request.user1Id;
+            const otherUserId = request.user1Id === user!.id ? request.user2Id : request.user1Id;
             const userData = userMap.get(otherUserId);
             if (userData) {
               return {
                 ...request,
                 userId: otherUserId,
-                displayName: userData.displayName,
+                displayName: userData.displayName || userData.display_name,
                 username: userData.username,
-                profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
-                nameColor: userData.nameColor,
+                profilePhotoURL: userData.profilePhotoURL || userData.photo_url,
+                nameColor: userData.nameColor || userData.name_color,
               };
             }
             return null;
@@ -222,14 +210,14 @@ const FriendsScreen = ({ navigation }) => {
         setSentRequests(sentWithUserData);
       }
     } catch (err) {
-      logger.error('Error in fetchRequests', err);
+      logger.error('Error in fetchRequests', err as Record<string, unknown>);
     }
   };
 
   const fetchSuggestions = async () => {
     try {
       // Check if user has synced contacts
-      const synced = await hasUserSyncedContacts(user.uid);
+      const synced = await hasUserSyncedContacts(user!.id);
       setHasSyncedContacts(synced);
 
       if (!synced) {
@@ -246,29 +234,29 @@ const FriendsScreen = ({ navigation }) => {
       }
 
       // Get suggestions from contacts
-      const result = await syncContactsAndFindSuggestions(user.uid, userProfile?.phoneNumber);
+      const contactSuggestions = await syncContactsAndFindSuggestions(user!.id);
 
-      if (result.success && result.suggestions) {
+      if (contactSuggestions && contactSuggestions.length > 0) {
         // Filter out dismissed suggestions
-        const dismissedIds = await getDismissedSuggestionIds(user.uid);
-        const filteredSuggestions = filterDismissedSuggestions(result.suggestions, dismissedIds);
+        const dismissedIds = await getDismissedSuggestionIds(user!.id);
+        const filteredSuggestions = filterDismissedSuggestions(contactSuggestions, dismissedIds);
         setSuggestions(filteredSuggestions);
       } else {
         setSuggestions([]);
       }
     } catch (err) {
-      logger.error('Error fetching suggestions', err);
+      logger.error('Error fetching suggestions', err as Record<string, unknown>);
       setSuggestions([]);
     }
   };
 
   const fetchMutualSuggestions = async () => {
     try {
-      const result = await getMutualFriendSuggestions(user.uid);
+      const result = await getMutualFriendSuggestions(user!.id);
 
       if (result.success && result.suggestions) {
         // Filter out dismissed suggestions
-        const dismissedIds = await getDismissedSuggestionIds(user.uid);
+        const dismissedIds = await getDismissedSuggestionIds(user!.id);
         const dismissedSet = new Set(dismissedIds);
         // Note: mutual suggestions use userId (not id), so we filter manually
         // instead of using filterDismissedSuggestions which checks s.id
@@ -281,19 +269,19 @@ const FriendsScreen = ({ navigation }) => {
         setMutualSuggestions([]);
       }
     } catch (err) {
-      logger.error('Error fetching mutual suggestions', err);
+      logger.error('Error fetching mutual suggestions', err as Record<string, unknown>);
       setMutualSuggestions([]);
     }
   };
 
   const fetchBlockedUsers = async () => {
     try {
-      const result = await getBlockedUserIds(user.uid);
+      const result = await getBlockedUserIds(user!.id);
       if (result.success) {
         setBlockedUserIds(result.blockedUserIds);
       }
     } catch (err) {
-      logger.error('Error fetching blocked users', err);
+      logger.error('Error fetching blocked users', err as Record<string, unknown>);
     }
   };
 
@@ -303,7 +291,7 @@ const FriendsScreen = ({ navigation }) => {
     try {
       await Promise.all([fetchFriends(), fetchRequests()]);
     } catch (err) {
-      logger.error('Error loading critical data', err);
+      logger.error('Error loading critical data', err as Record<string, unknown>);
       setError('Failed to load data');
     } finally {
       setLoading(false);
@@ -315,11 +303,11 @@ const FriendsScreen = ({ navigation }) => {
   const loadDeferredData = useCallback(() => {
     const task = InteractionManager.runAfterInteractions(() => {
       Promise.all([fetchSuggestions(), fetchBlockedUsers(), fetchMutualSuggestions()]).catch(err =>
-        logger.error('Error loading deferred data', err)
+        logger.error('Error loading deferred data', err as Record<string, unknown>)
       );
     });
     return task;
-  }, [user.uid]);
+  }, [user!.id]);
 
   // Full reload for pull-to-refresh
   const loadAllData = async () => {
@@ -333,7 +321,7 @@ const FriendsScreen = ({ navigation }) => {
         fetchMutualSuggestions(),
       ]);
     } catch (err) {
-      logger.error('Error loading data', err);
+      logger.error('Error loading data', err as Record<string, unknown>);
       setError('Failed to load data');
     } finally {
       setLoading(false);
@@ -356,11 +344,11 @@ const FriendsScreen = ({ navigation }) => {
       }
 
       // Collect userIds that need user data for added/modified docs
-      const userIdsToFetch = [];
+      const userIdsToFetch: string[] = [];
       changes.forEach(change => {
         if (change.type === 'added' || change.type === 'modified') {
           const otherUserId =
-            change.data.user1Id === user.uid ? change.data.user2Id : change.data.user1Id;
+            change.data.user1Id === user!.id ? change.data.user2Id : change.data.user1Id;
           userIdsToFetch.push(otherUserId);
         }
       });
@@ -375,7 +363,7 @@ const FriendsScreen = ({ navigation }) => {
         changes.forEach(change => {
           const friendshipId = change.id;
           const otherUserId =
-            change.data.user1Id === user.uid ? change.data.user2Id : change.data.user1Id;
+            change.data.user1Id === user!.id ? change.data.user2Id : change.data.user1Id;
 
           if (change.type === 'removed') {
             updated = updated.filter(f => f.friendshipId !== friendshipId);
@@ -420,7 +408,7 @@ const FriendsScreen = ({ navigation }) => {
       changes.forEach(change => {
         const friendshipId = change.id;
         const otherUserId =
-          change.data.user1Id === user.uid ? change.data.user2Id : change.data.user1Id;
+          change.data.user1Id === user!.id ? change.data.user2Id : change.data.user1Id;
 
         if (change.type === 'removed') {
           setIncomingRequests(prev => prev.filter(r => r.id !== friendshipId));
@@ -438,7 +426,7 @@ const FriendsScreen = ({ navigation }) => {
             profilePhotoURL: userData.profilePhotoURL || userData.photoURL,
           };
 
-          if (change.data.requestedBy === user.uid) {
+          if (change.data.requestedBy === user!.id) {
             // Sent request
             setSentRequests(prev => {
               const exists = prev.some(r => r.id === friendshipId);
@@ -471,7 +459,7 @@ const FriendsScreen = ({ navigation }) => {
         }
       });
     },
-    [user.uid]
+    [user!.id]
   );
 
   useEffect(() => {
@@ -483,14 +471,14 @@ const FriendsScreen = ({ navigation }) => {
     // Lazy-load non-critical data after interactions settle
     const deferredTask = loadDeferredData();
 
-    // Subscribe to real-time changes with incremental updates
-    const unsubscribe = subscribeFriendships(user.uid, handleSubscriptionChanges);
+    // TODO(20-01): subscribeFriendships - no supabase equivalent yet, using polling via refresh
+    const unsubscribe = () => {};
 
     return () => {
       unsubscribe();
       deferredTask.cancel();
     };
-  }, [user.uid]);
+  }, [user?.id]);
 
   // Mark screen trace as loaded after initial data load (once only)
   useEffect(() => {
@@ -544,13 +532,13 @@ const FriendsScreen = ({ navigation }) => {
       if (usersError) throw usersError;
 
       // Get users who have blocked the current user
-      const blockedByResult = await getBlockedByUserIds(user.uid);
+      const blockedByResult = await getBlockedByUserIds(user!.id);
       const blockedByUserIds = blockedByResult.success ? blockedByResult.blockedByUserIds : [];
 
-      const results = [];
-      for (const userData of (usersData || [])) {
+      const results: any[] = [];
+      for (const userData of ((usersData || []) as any[])) {
         // Exclude self and users who have blocked current user
-        if (userData.id !== user.uid && !blockedByUserIds.includes(userData.id)) {
+        if (userData.id !== user!.id && !blockedByUserIds.includes(userData.id)) {
           results.push({
             userId: userData.id,
             ...userData,
@@ -563,14 +551,14 @@ const FriendsScreen = ({ navigation }) => {
 
       // Fetch friendship status for each result
       if (results.length > 0) {
-        const statuses = {};
+        const statuses: Record<string, any> = {};
         await Promise.all(
           results.map(async searchUser => {
-            const result = await checkFriendshipStatus(user.uid, searchUser.userId);
-            if (result.success) {
+            const status = await checkFriendshipStatus(user!.id, searchUser.userId);
+            if (status) {
               statuses[searchUser.userId] = {
-                status: result.status,
-                friendshipId: result.friendshipId,
+                status,
+                friendshipId: null, // getFriendshipStatus returns status string only
               };
             }
           })
@@ -578,7 +566,7 @@ const FriendsScreen = ({ navigation }) => {
         setFriendshipStatuses(statuses);
       }
     } catch (err) {
-      logger.error('Error searching users', err);
+      logger.error('Error searching users', err as Record<string, unknown>);
     } finally {
       setSearchLoading(false);
     }
@@ -598,57 +586,53 @@ const FriendsScreen = ({ navigation }) => {
       const suggestion = suggestions.find(s => s.id === userId);
       const mutualSuggestion = mutualSuggestions.find(s => s.userId === userId);
 
-      const result = await sendFriendRequest(user.uid, userId);
-      if (!result.success) {
-        Alert.alert('Error', result.error || 'Failed to send friend request');
-      } else {
-        // Remove from suggestions if present
-        setSuggestions(prev => prev.filter(s => s.id !== userId));
-        setMutualSuggestions(prev => prev.filter(s => s.userId !== userId));
+      const result = await sendFriendRequest(user!.id, userId);
+      // Remove from suggestions if present
+      setSuggestions(prev => prev.filter(s => s.id !== userId));
+      setMutualSuggestions(prev => prev.filter(s => s.userId !== userId));
 
-        // Add to sent requests if we had the user data from suggestions
-        if (suggestion) {
-          setSentRequests(prev => {
-            if (prev.some(r => r.id === result.friendshipId || r.userId === suggestion.id))
-              return prev;
-            return [
-              ...prev,
-              {
-                id: result.friendshipId, // Use 'id' to match server data shape
-                userId: suggestion.id,
-                displayName: suggestion.displayName,
-                username: suggestion.username,
-                profilePhotoURL: suggestion.profilePhotoURL || suggestion.photoURL,
-              },
-            ];
-          });
-        } else if (mutualSuggestion) {
-          setSentRequests(prev => {
-            if (
-              prev.some(r => r.id === result.friendshipId || r.userId === mutualSuggestion.userId)
-            )
-              return prev;
-            return [
-              ...prev,
-              {
-                id: result.friendshipId,
-                userId: mutualSuggestion.userId,
-                displayName: mutualSuggestion.displayName,
-                username: mutualSuggestion.username,
-                profilePhotoURL: mutualSuggestion.profilePhotoURL,
-              },
-            ];
-          });
-        }
-
-        // Update local state for search results
-        setFriendshipStatuses(prev => ({
-          ...prev,
-          [userId]: { status: 'pending_sent', friendshipId: result.friendshipId },
-        }));
+      // Add to sent requests if we had the user data from suggestions
+      if (suggestion) {
+        setSentRequests(prev => {
+          if (prev.some(r => r.id === result.id || r.userId === suggestion.id))
+            return prev;
+          return [
+            ...prev,
+            {
+              id: result.id, // Use 'id' to match server data shape
+              userId: suggestion.id,
+              displayName: suggestion.displayName,
+              username: suggestion.username,
+              profilePhotoURL: suggestion.profilePhotoURL || suggestion.photoURL,
+            },
+          ];
+        });
+      } else if (mutualSuggestion) {
+        setSentRequests(prev => {
+          if (
+            prev.some(r => r.id === result.id || r.userId === mutualSuggestion.userId)
+          )
+            return prev;
+          return [
+            ...prev,
+            {
+              id: result.id,
+              userId: mutualSuggestion.userId,
+              displayName: mutualSuggestion.displayName,
+              username: mutualSuggestion.username,
+              profilePhotoURL: mutualSuggestion.profilePhotoURL,
+            },
+          ];
+        });
       }
+
+      // Update local state for search results
+      setFriendshipStatuses(prev => ({
+        ...prev,
+        [userId]: { status: 'pending_sent', friendshipId: result.id },
+      }));
     } catch (err) {
-      logger.error('Error sending friend request', err);
+      logger.error('Error sending friend request', err as Record<string, unknown>);
       Alert.alert('Error', 'Failed to send friend request');
     } finally {
       setActionLoading(prev => ({ ...prev, [userId]: false }));
@@ -663,9 +647,9 @@ const FriendsScreen = ({ navigation }) => {
       setSuggestions(prev => prev.filter(s => s.id !== userId));
 
       // Persist dismissal
-      await dismissSuggestion(user.uid, userId);
+      await dismissSuggestion(user!.id, userId);
     } catch (err) {
-      logger.error('Error dismissing suggestion', err);
+      logger.error('Error dismissing suggestion', err as Record<string, unknown>);
       // Refresh suggestions on error
       fetchSuggestions();
     }
@@ -677,9 +661,9 @@ const FriendsScreen = ({ navigation }) => {
       // Optimistic update
       setMutualSuggestions(prev => prev.filter(s => s.userId !== userId));
       // Persist dismissal (reuses same dismissedSuggestions array)
-      await dismissSuggestion(user.uid, userId);
+      await dismissSuggestion(user!.id, userId);
     } catch (err) {
-      logger.error('Error dismissing mutual suggestion', err);
+      logger.error('Error dismissing mutual suggestion', err as Record<string, unknown>);
       fetchMutualSuggestions();
     }
   };
@@ -689,30 +673,16 @@ const FriendsScreen = ({ navigation }) => {
       setSuggestionsLoading(true);
       mediumImpact();
 
-      const result = await syncContactsAndFindSuggestions(user.uid, userProfile?.phoneNumber);
-
-      if (!result.success) {
-        if (
-          result.error === 'permission_denied' ||
-          result.error === 'permission_denied_permanent'
-        ) {
-          // Permission handling is done in the service
-          setSuggestionsLoading(false);
-          return;
-        }
-        Alert.alert('Error', 'Failed to sync contacts. Please try again.');
-        setSuggestionsLoading(false);
-        return;
-      }
+      const contactSuggestions = await syncContactsAndFindSuggestions(user!.id);
 
       // Mark sync as completed
-      await markContactsSyncCompleted(user.uid, true);
+      await markContactsSyncCompleted(user!.id, true);
       setHasSyncedContacts(true);
 
       // Update suggestions
-      const dismissedIds = await getDismissedSuggestionIds(user.uid);
+      const dismissedIds = await getDismissedSuggestionIds(user!.id);
       const filteredSuggestions = filterDismissedSuggestions(
-        result.suggestions || [],
+        contactSuggestions || [],
         dismissedIds
       );
       setSuggestions(filteredSuggestions);
@@ -724,7 +694,7 @@ const FriendsScreen = ({ navigation }) => {
         );
       }
     } catch (err) {
-      logger.error('Error syncing contacts', err);
+      logger.error('Error syncing contacts', err as Record<string, unknown>);
       Alert.alert('Error', 'Failed to sync contacts');
     } finally {
       setSuggestionsLoading(false);
@@ -736,13 +706,10 @@ const FriendsScreen = ({ navigation }) => {
       setActionLoading(prev => ({ ...prev, [friendshipId]: true }));
       mediumImpact();
 
-      const result = await acceptFriendRequest(friendshipId, user.uid);
-      if (!result.success) {
-        Alert.alert('Error', result.error || 'Failed to accept friend request');
-      }
+      await acceptFriendRequest(friendshipId);
       // Real-time listener will update the UI
     } catch (err) {
-      logger.error('Error accepting friend request', err);
+      logger.error('Error accepting friend request', err as Record<string, unknown>);
       Alert.alert('Error', 'Failed to accept friend request');
     } finally {
       setActionLoading(prev => ({ ...prev, [friendshipId]: false }));
@@ -754,13 +721,10 @@ const FriendsScreen = ({ navigation }) => {
       setActionLoading(prev => ({ ...prev, [friendshipId]: true }));
       mediumImpact();
 
-      const result = await declineFriendRequest(friendshipId, user.uid);
-      if (!result.success) {
-        Alert.alert('Error', result.error || 'Failed to decline friend request');
-      }
+      await declineFriendRequest(friendshipId);
       // Real-time listener will update the UI
     } catch (err) {
-      logger.error('Error declining friend request', err);
+      logger.error('Error declining friend request', err as Record<string, unknown>);
       Alert.alert('Error', 'Failed to decline friend request');
     } finally {
       setActionLoading(prev => ({ ...prev, [friendshipId]: false }));
@@ -775,36 +739,32 @@ const FriendsScreen = ({ navigation }) => {
         // Find the sent request data before removing (to add back to suggestions if applicable)
         const sentRequest = sentRequests.find(r => r.id === friendshipId);
 
-        const result = await declineFriendRequest(friendshipId, user.uid);
-        if (!result.success) {
-          Alert.alert('Error', result.error || 'Failed to cancel friend request');
-        } else {
-          // Remove from sent requests state
-          setSentRequests(prev => prev.filter(r => r.id !== friendshipId));
+        await declineFriendRequest(friendshipId);
+        // Remove from sent requests state
+        setSentRequests(prev => prev.filter(r => r.id !== friendshipId));
 
-          // If this was someone from contacts sync, add back to suggestions
-          // (The subscription will also refresh, but this gives immediate feedback)
-          if (sentRequest && hasSyncedContacts) {
-            setSuggestions(prev => [
-              ...prev,
-              {
-                id: sentRequest.userId,
-                displayName: sentRequest.displayName,
-                username: sentRequest.username,
-                profilePhotoURL: sentRequest.profilePhotoURL,
-              },
-            ]);
-          }
+        // If this was someone from contacts sync, add back to suggestions
+        // (The subscription will also refresh, but this gives immediate feedback)
+        if (sentRequest && hasSyncedContacts) {
+          setSuggestions(prev => [
+            ...prev,
+            {
+              id: sentRequest.userId,
+              displayName: sentRequest.displayName,
+              username: sentRequest.username,
+              profilePhotoURL: sentRequest.profilePhotoURL,
+            },
+          ]);
         }
       } catch (err) {
-        logger.error('Error canceling friend request', err);
+        logger.error('Error canceling friend request', err as Record<string, unknown>);
         Alert.alert('Error', 'Failed to cancel friend request');
       }
     }
   };
 
   const handleRemoveFriend = friend => {
-    const buttons = [
+    const buttons: import('react-native').AlertButton[] = [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
@@ -812,13 +772,10 @@ const FriendsScreen = ({ navigation }) => {
         onPress: async () => {
           try {
             mediumImpact();
-            const result = await removeFriend(user.uid, friend.userId);
-            if (!result.success) {
-              Alert.alert('Error', result.error || 'Failed to remove friend');
-            }
+            await removeFriend(friend.friendshipId);
             // Real-time listener will update the UI
           } catch (err) {
-            logger.error('Error removing friend', err);
+            logger.error('Error removing friend', err as Record<string, unknown>);
             Alert.alert('Error', 'Failed to remove friend');
           }
         },
@@ -834,17 +791,15 @@ const FriendsScreen = ({ navigation }) => {
   const handleRemoveFriendFromMenu = async userId => {
     try {
       mediumImpact();
-      const result = await removeFriend(user.uid, userId);
-      if (result.success) {
-        // Optimistic update - remove from list
-        setFriends(prev => prev.filter(f => f.userId !== userId));
-        setFilteredFriends(prev => prev.filter(f => f.userId !== userId));
-        logger.info('FriendsScreen: Friend removed via menu', { userId });
-      } else {
-        Alert.alert('Error', result.error || 'Could not remove friend');
-      }
+      const friend = friends.find(f => f.userId === userId);
+      if (!friend) return;
+      await removeFriend(friend.friendshipId);
+      // Optimistic update - remove from list
+      setFriends(prev => prev.filter(f => f.userId !== userId));
+      setFilteredFriends(prev => prev.filter(f => f.userId !== userId));
+      logger.info('FriendsScreen: Friend removed via menu', { userId });
     } catch (err) {
-      logger.error('FriendsScreen: Error removing friend via menu', { error: err.message });
+      logger.error('FriendsScreen: Error removing friend via menu', { error: (err as Error).message });
       Alert.alert('Error', 'Could not remove friend');
     }
   };
@@ -852,20 +807,16 @@ const FriendsScreen = ({ navigation }) => {
   const handleBlockUser = async userId => {
     try {
       mediumImpact();
-      const result = await blockUser(user.uid, userId);
-      if (result.success) {
-        // Remove from all lists and track as blocked
-        setFriends(prev => prev.filter(f => f.userId !== userId));
-        setFilteredFriends(prev => prev.filter(f => f.userId !== userId));
-        setSuggestions(prev => prev.filter(s => s.id !== userId));
-        setMutualSuggestions(prev => prev.filter(s => s.userId !== userId));
-        setBlockedUserIds(prev => [...prev, userId]);
-        logger.info('FriendsScreen: User blocked via menu', { userId });
-      } else {
-        Alert.alert('Error', result.error || 'Could not block user');
-      }
+      await blockUser(user!.id, userId);
+      // Remove from all lists and track as blocked
+      setFriends(prev => prev.filter(f => f.userId !== userId));
+      setFilteredFriends(prev => prev.filter(f => f.userId !== userId));
+      setSuggestions(prev => prev.filter(s => s.id !== userId));
+      setMutualSuggestions(prev => prev.filter(s => s.userId !== userId));
+      setBlockedUserIds(prev => [...prev, userId]);
+      logger.info('FriendsScreen: User blocked via menu', { userId });
     } catch (err) {
-      logger.error('FriendsScreen: Error blocking user via menu', { error: err.message });
+      logger.error('FriendsScreen: Error blocking user via menu', { error: (err as Error).message });
       Alert.alert('Error', 'Could not block user');
     }
   };
@@ -873,16 +824,12 @@ const FriendsScreen = ({ navigation }) => {
   const handleUnblockUser = async userId => {
     try {
       mediumImpact();
-      const result = await unblockUser(user.uid, userId);
-      if (result.success) {
-        // Remove from blocked list
-        setBlockedUserIds(prev => prev.filter(id => id !== userId));
-        logger.info('FriendsScreen: User unblocked via menu', { userId });
-      } else {
-        Alert.alert('Error', result.error || 'Could not unblock user');
-      }
+      await unblockUser(user!.id, userId);
+      // Remove from blocked list
+      setBlockedUserIds(prev => prev.filter(id => id !== userId));
+      logger.info('FriendsScreen: User unblocked via menu', { userId });
     } catch (err) {
-      logger.error('FriendsScreen: Error unblocking user via menu', { error: err.message });
+      logger.error('FriendsScreen: Error unblocking user via menu', { error: (err as Error).message });
       Alert.alert('Error', 'Could not unblock user');
     }
   };
@@ -914,7 +861,7 @@ const FriendsScreen = ({ navigation }) => {
     }
   };
 
-  const renderSearchBar = (value, setValue, placeholder, testID) => (
+  const renderSearchBar = (value: string, setValue: (v: string) => void, placeholder: string, testID?: string) => (
     <View style={styles.searchContainer}>
       <TextInput
         testID={testID}
@@ -1143,7 +1090,7 @@ const FriendsScreen = ({ navigation }) => {
     const hasSuggestions = suggestions.length > 0;
 
     // Build sections data
-    const sections = [];
+    const sections: any[] = [];
 
     // Add incoming requests section
     if (hasIncoming) {

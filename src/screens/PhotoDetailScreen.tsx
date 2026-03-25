@@ -61,14 +61,14 @@ import {
 } from '../services/supabase/photoService';
 // TODO(20-01): archivePhoto mapped to triagePhoto, updatePhotoTags and subscribePhoto need supabase equivalents
 const archivePhoto = (photoId) => triagePhoto(photoId, 'archive');
-const updatePhotoTags = async () => ({ success: true });
-const subscribePhoto = () => () => {};
+const updatePhotoTags = async (..._args: any[]): Promise<any> => ({ success: true });
+const subscribePhoto = (..._args: any[]) => () => {};
 import DropdownMenu from '../components/DropdownMenu';
 import { TagFriendsModal, TaggedPeopleModal } from '../components';
 import { colors } from '../constants/colors';
 import { profileCacheKey } from '../utils/imageUtils';
 // TODO(20-01): photoTagService - no supabase equivalent yet
-const addTaggedPhotoToFeed = async () => ({ success: true });
+const addTaggedPhotoToFeed = async (..._args: any[]): Promise<any> => ({ success: true });
 import logger from '../utils/logger';
 
 // Reanimated View component for cube face transforms (UI-thread animation)
@@ -94,7 +94,7 @@ const PhotoDetailScreen = () => {
   const insets = useSafeAreaInsets();
 
   // Read taggedPhotoContext from route params (passed by ConversationScreen for tagged photo messages)
-  const { taggedPhotoContext } = route.params || {};
+  const { taggedPhotoContext } = (route.params || {}) as any;
 
   // Get state and callbacks from context
   const {
@@ -132,20 +132,20 @@ const PhotoDetailScreen = () => {
   const isTransitioningRef = useRef(false);
   const [transitionDirection, setTransitionDirection] = useState('forward'); // 'forward' | 'backward'
   const swipeDirectionRef = useRef('forward'); // Sync ref for cancel callback access
-  const snapshotRef = useRef({});
+  const snapshotRef = useRef<any>({});
 
   // Progress bar scroll ref for auto-scrolling
-  const progressScrollRef = useRef(null);
+  const progressScrollRef = useRef<any>(null);
 
   // Emoji scroll ref for auto-scrolling when new emoji added
-  const emojiScrollRef = useRef(null);
+  const emojiScrollRef = useRef<any>(null);
 
   // Highlight fade animation for newly added emoji (1 second fade)
   const highlightOpacity = useRef(new Animated.Value(1)).current;
 
   // Photo menu state (for owner actions: delete, archive, restore)
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [menuAnchor, setMenuAnchor] = useState<any>(null);
 
   // Tag modal state
   const [tagModalVisible, setTagModalVisible] = useState(false);
@@ -154,7 +154,7 @@ const PhotoDetailScreen = () => {
   // Caption inline edit state
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [captionText, setCaptionText] = useState('');
-  const captionInputRef = useRef(null);
+  const captionInputRef = useRef<any>(null);
   const lastSavedCaptionRef = useRef('');
 
   // Video mute state from global context
@@ -182,9 +182,9 @@ const PhotoDetailScreen = () => {
   // Image loading state - shows spinner when photo is loading from network
   // startLoadTimer/clearLoadTimer are set after usePhotoDetailModal call below
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
-  const overlayDelayRef = useRef(null);
-  const startLoadTimerRef = useRef(null);
-  const clearLoadTimerRef = useRef(null);
+  const overlayDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startLoadTimerRef = useRef<any>(null);
+  const clearLoadTimerRef = useRef<any>(null);
 
   // Delay showing the dark overlay by 150ms so cached images never flash
   const scheduleOverlay = useCallback(() => {
@@ -212,7 +212,7 @@ const PhotoDetailScreen = () => {
   }, [cancelOverlay]);
 
   // Reset loading state when photo changes (new photo starts loading)
-  const prevPhotoIdRef = useRef(null);
+  const prevPhotoIdRef = useRef<any>(null);
   if (contextPhoto?.id !== prevPhotoIdRef.current) {
     prevPhotoIdRef.current = contextPhoto?.id;
     if (contextPhoto?.id) {
@@ -243,7 +243,7 @@ const PhotoDetailScreen = () => {
 
   // Subscription pause/resume for Firestore photo updates
   // Paused during cube transitions to avoid flicker from real-time updates
-  const subscriptionRef = useRef(null);
+  const subscriptionRef = useRef<any>(null);
 
   const pauseSubscription = useCallback(() => {
     if (subscriptionRef.current) {
@@ -736,7 +736,7 @@ const PhotoDetailScreen = () => {
   const [videoPaused, setVideoPaused] = useState(false);
 
   // Video mute flash indicator (same as feed)
-  const [muteFlash, setMuteFlash] = useState(null);
+  const [muteFlash, setMuteFlash] = useState<any>(null);
   const prevMutedRef = useRef(isMuted);
 
   useEffect(() => {
@@ -798,7 +798,7 @@ const PhotoDetailScreen = () => {
         logger.warn('Failed to add tagged photo to feed', { error: result.error });
       }
     } catch (error) {
-      logger.error('Error adding tagged photo to feed', { error: error.message });
+      logger.error('Error adding tagged photo to feed', { error: (error as Error).message });
     } finally {
       setIsAddingToFeed(false);
     }
@@ -945,12 +945,12 @@ const PhotoDetailScreen = () => {
             {
               text: 'Remove',
               onPress: async () => {
-                const result = await archivePhoto(currentPhoto.id, contextUserId);
-                if (result.success) {
+                try {
+                  await archivePhoto(currentPhoto!.id);
                   handlePhotoStateChanged?.();
                   handleClose();
-                } else {
-                  Alert.alert('Error', result.error || 'Failed to archive photo');
+                } catch (err) {
+                  Alert.alert('Error', (err as Error).message || 'Failed to archive photo');
                 }
               },
             },
@@ -961,12 +961,12 @@ const PhotoDetailScreen = () => {
             {
               text: 'Remove',
               onPress: async () => {
-                const result = await archivePhoto(currentPhoto.id, contextUserId);
-                if (result.success) {
+                try {
+                  await archivePhoto(currentPhoto!.id);
                   handlePhotoStateChanged?.();
                   handleClose();
-                } else {
-                  Alert.alert('Error', result.error || 'Failed to archive photo');
+                } catch (err) {
+                  Alert.alert('Error', (err as Error).message || 'Failed to archive photo');
                 }
               },
             },
@@ -976,7 +976,7 @@ const PhotoDetailScreen = () => {
 
   const handleRestore = useCallback(async () => {
     setShowPhotoMenu(false);
-    const result = await restorePhoto(currentPhoto.id, contextUserId);
+    const result = await restorePhoto(currentPhoto!.id);
     if (result.success) {
       handlePhotoStateChanged?.(); // Refresh feed/stories
       // Show success message - photo will now appear in feed/stories again
@@ -998,12 +998,12 @@ const PhotoDetailScreen = () => {
               text: 'Delete',
               style: 'destructive',
               onPress: async () => {
-                const result = await softDeletePhoto(currentPhoto.id, contextUserId);
-                if (result.success) {
+                try {
+                  await softDeletePhoto(currentPhoto!.id);
                   handlePhotoStateChanged?.();
                   handleClose();
-                } else {
-                  Alert.alert('Error', result.error || 'Failed to delete photo');
+                } catch (err) {
+                  Alert.alert('Error', (err as Error).message || 'Failed to delete photo');
                 }
               },
             },
@@ -1015,12 +1015,12 @@ const PhotoDetailScreen = () => {
               text: 'Delete',
               style: 'destructive',
               onPress: async () => {
-                const result = await softDeletePhoto(currentPhoto.id, contextUserId);
-                if (result.success) {
+                try {
+                  await softDeletePhoto(currentPhoto!.id);
                   handlePhotoStateChanged?.();
                   handleClose();
-                } else {
-                  Alert.alert('Error', result.error || 'Failed to delete photo');
+                } catch (err) {
+                  Alert.alert('Error', (err as Error).message || 'Failed to delete photo');
                 }
               },
             },
