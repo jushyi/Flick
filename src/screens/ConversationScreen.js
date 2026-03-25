@@ -20,6 +20,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { View, Text, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useQuery as usePowerSyncQuery } from '@powersync/react';
 
 import { supabase } from '@/lib/supabase';
 
@@ -38,6 +39,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePhotoDetailActions } from '../context/PhotoDetailContext';
 import { useConversation } from '../hooks/useConversation';
 import useMessageActions from '../hooks/useMessageActions';
+import useScreenshotDetection from '../hooks/useScreenshotDetection';
 import { useStreak } from '../hooks/useStreaks';
 
 import { colors } from '../constants/colors';
@@ -213,6 +215,16 @@ const ConversationScreen = () => {
 
   // --- PhotoDetail actions for tagged photo navigation ---
   const { openPhotoDetail } = usePhotoDetailActions();
+
+  // --- Screenshot detection via ref (handler defined later via useCallback) ---
+  const screenshotHandlerRef = useRef(null);
+  useScreenshotDetection({ active: true, onScreenshot: () => screenshotHandlerRef.current?.() });
+
+  // --- Conversation metadata from PowerSync (for read receipts) ---
+  const { data: conversationRows } = usePowerSyncQuery('SELECT * FROM conversations WHERE id = ?', [
+    conversationId,
+  ]);
+  const conversation = conversationRows?.[0] ?? null;
 
   // --- Streak data for header and DMInput ---
   const { state: streakState, dayCount: streakDayCount } = useStreak(friendId);
@@ -474,12 +486,22 @@ const ConversationScreen = () => {
     () => messages.find(m => m.senderId === user.uid && m.type !== 'system_screenshot'),
     [messages, user.uid]
   );
-  // Read receipts: use Supabase conversation metadata (fetched via separate query if needed)
+  // Read receipts: derive actual read state from PowerSync conversation metadata.
   // Privacy: both users must have readReceiptsEnabled !== false for "Read" to show.
-  // For now, detailed read state comes from the Realtime subscription on the conversations table.
   const _senderEnabled = userProfile?.readReceiptsEnabled !== false;
   const _recipientEnabled = liveFriendProfile?.readReceiptsEnabled !== false;
-  const isRead = false; // Will be enhanced when conversations metadata is wired
+  const isRead = useMemo(() => {
+    if (!lastSentMessage || !conversation) return false;
+    if (!_senderEnabled || !_recipientEnabled) return false;
+
+    // Current user is p1 if their uid matches participant1_id
+    const isP1 = user.uid === conversation.participant1_id;
+    // The OTHER user's last_read_at tells us if they read our message
+    const recipientLastRead = isP1 ? conversation.last_read_at_p2 : conversation.last_read_at_p1;
+
+    if (!recipientLastRead || !lastSentMessage.createdAt) return false;
+    return new Date(recipientLastRead) >= new Date(lastSentMessage.createdAt);
+  }, [lastSentMessage, conversation, _senderEnabled, _recipientEnabled, user.uid]);
   const showIndicator = !!lastSentMessage;
 
   /**
@@ -659,6 +681,9 @@ const ConversationScreen = () => {
       });
     }
   }, [friendId, user?.uid, conversationId]);
+
+  // Wire screenshot handler ref to the useCallback above
+  screenshotHandlerRef.current = handleScreenshotDetected;
 
   /**
    * Render a single item -- either a TimeDivider or a MessageBubble.

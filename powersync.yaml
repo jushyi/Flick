@@ -26,6 +26,7 @@ bucket_definitions:
       - SELECT id, participant1_id, participant2_id,
                last_message_text, last_message_at, last_message_type,
                last_message_sender_id, unread_count_p1, unread_count_p2,
+               last_read_at_p1, last_read_at_p2,
                deleted_at_p1, deleted_at_p2, created_at
         FROM conversations
         WHERE participant1_id = bucket.user_id

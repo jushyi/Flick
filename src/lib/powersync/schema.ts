@@ -29,6 +29,8 @@ const conversations = new Table({
   last_message_sender_id: column.text,
   unread_count_p1: column.integer,
   unread_count_p2: column.integer,
+  last_read_at_p1: column.text,
+  last_read_at_p2: column.text,
   deleted_at_p1: column.text,
   deleted_at_p2: column.text,
   created_at: column.text,
