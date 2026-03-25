@@ -34,11 +34,40 @@ import { profileCacheKey } from '../utils/imageUtils';
  * @param {number} seconds - Duration in seconds
  * @returns {string} Formatted duration (e.g. "0:12", "1:05")
  */
+type PhotoUser = {
+  displayName?: string;
+  profilePhotoURL?: string;
+  nameColor?: string;
+  [key: string]: unknown;
+};
+
+type PhotoAttribution = {
+  photographerId: string;
+  photographerDisplayName: string;
+  photographerUsername: string;
+};
+
+type FeedPhoto = {
+  id: string;
+  imageURL: string;
+  capturedAt: unknown;
+  reactions?: Record<string, Record<string, number>>;
+  reactionCount?: number;
+  commentCount?: number;
+  userId: string;
+  user?: PhotoUser;
+  mediaType?: string;
+  videoURL?: string;
+  attribution?: PhotoAttribution;
+  caption?: string;
+  [key: string]: unknown;
+};
+
 type Props = {
-  photo: Record<string, unknown>;
-  onPress?: (photoId: string) => void;
-  onCommentPress?: (photoId: string) => void;
-  onAvatarPress?: (userId: string) => void;
+  photo: FeedPhoto;
+  onPress?: (rect: { x: number; y: number; width: number; height: number; borderRadius: number } | null) => void;
+  onCommentPress?: (rect: { x: number; y: number; width: number; height: number; borderRadius: number } | null) => void;
+  onAvatarPress?: (userId: string, displayName?: string) => void;
   currentUserId?: string;
   isVisible?: boolean;
 };
@@ -72,7 +101,7 @@ const FeedPhotoCard = ({
   const { isMuted, toggleMute } = useVideoMute();
 
   // Mute indicator flash — triggered by isMuted changes, not by tap handler
-  const [muteFlash, setMuteFlash] = useState(null);
+  const [muteFlash, setMuteFlash] = useState<string | null>(null);
   const prevMutedRef = useRef(isMuted);
 
   useEffect(() => {
@@ -85,15 +114,13 @@ const FeedPhotoCard = ({
     }
   }, [isMuted, isVideo]);
 
-  const [previewComments, setPreviewComments] = useState([]);
+  const [previewComments, setPreviewComments] = useState<Array<Record<string, unknown>>>([]);
 
   useEffect(() => {
     const fetchPreview = async () => {
       if (!id) return;
-      const result = await getPreviewComments(id, userId);
-      if (result.success) {
-        setPreviewComments(result.previewComments || []);
-      }
+      const comments = await getPreviewComments(id as string);
+      setPreviewComments(comments.slice(0, 3) as any);
     };
 
     fetchPreview();
@@ -107,8 +134,8 @@ const FeedPhotoCard = ({
     if (!reactions || Object.keys(reactions).length === 0) return [];
 
     // Aggregate emoji counts across all users
-    const emojiCounts = {};
-    Object.values(reactions).forEach(userReactions => {
+    const emojiCounts: Record<string, number> = {};
+    Object.values(reactions).forEach((userReactions: Record<string, number>) => {
       // userReactions is an object: { '😂': 2, '❤️': 1 }
       if (typeof userReactions === 'object') {
         Object.entries(userReactions).forEach(([emoji, count]) => {
@@ -122,7 +149,7 @@ const FeedPhotoCard = ({
 
     // Sort by count and take top 3
     return Object.entries(emojiCounts)
-      .sort(([, a], [, b]) => b - a)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
       .slice(0, 3)
       .map(([emoji, count]) => ({ emoji, count }));
   };
@@ -145,11 +172,11 @@ const FeedPhotoCard = ({
   const isOwnPhoto = userId === currentUserId;
 
   // Ref for measuring photo position (expand/collapse animation)
-  const photoContainerRef = useRef(null);
+  const photoContainerRef = useRef<View>(null);
 
-  const measurePhotoAndCall = callback => {
+  const measurePhotoAndCall = (callback: ((rect: { x: number; y: number; width: number; height: number; borderRadius: number } | null) => void) | undefined) => {
     if (photoContainerRef.current) {
-      photoContainerRef.current.measureInWindow((x, y, width, height) => {
+      (photoContainerRef.current as any).measureInWindow((x: number, y: number, width: number, height: number) => {
         if (callback) callback({ x, y, width, height, borderRadius: 0 });
       });
     } else if (callback) {
@@ -174,7 +201,7 @@ const FeedPhotoCard = ({
             {Platform.OS === 'android' ? (
               <GHTouchableOpacity activeOpacity={1} onPress={toggleMute} style={styles.photo}>
                 <VideoPlayer
-                  source={videoURL}
+                  source={videoURL as string}
                   isMuted={isMuted}
                   onToggleMute={toggleMute}
                   loop={true}
@@ -187,7 +214,7 @@ const FeedPhotoCard = ({
             ) : (
               <Pressable onPress={toggleMute} style={styles.photo}>
                 <VideoPlayer
-                  source={videoURL}
+                  source={videoURL as string}
                   isMuted={isMuted}
                   onToggleMute={toggleMute}
                   loop={true}
@@ -215,7 +242,7 @@ const FeedPhotoCard = ({
         ) : (
           <TouchableOpacity activeOpacity={0.95} onPress={handlePhotoPress}>
             <Image
-              source={{ uri: imageURL, cacheKey: `photo-${id}` }}
+              source={{ uri: imageURL as string, cacheKey: `photo-${id}` }}
               style={styles.photo}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -260,7 +287,7 @@ const FeedPhotoCard = ({
           <StrokedNameText style={styles.displayName} nameColor={user?.nameColor} numberOfLines={1}>
             {displayName || 'Unknown'}
           </StrokedNameText>
-          <Text style={styles.timestamp}>{getTimeAgo(capturedAt)}</Text>
+          <Text style={styles.timestamp}>{getTimeAgo(capturedAt as any)}</Text>
         </View>
       </TouchableOpacity>
 
@@ -268,9 +295,9 @@ const FeedPhotoCard = ({
       {photo.attribution && (
         <TouchableOpacity
           onPress={() =>
-            onAvatarPress(
-              photo.attribution.photographerId,
-              photo.attribution.photographerDisplayName
+            onAvatarPress?.(
+              photo.attribution!.photographerId,
+              photo.attribution!.photographerDisplayName
             )
           }
           activeOpacity={0.7}
@@ -291,7 +318,7 @@ const FeedPhotoCard = ({
       ) : null}
 
       {/* Reactions row (if present) */}
-      {reactionCount > 0 && (
+      {(reactionCount as number) > 0 && (
         <View style={styles.reactions}>
           {topReactions.map((reaction, index) => (
             <View key={index} style={styles.reactionItem}>
@@ -299,19 +326,19 @@ const FeedPhotoCard = ({
               <Text style={styles.reactionCount}>{reaction.count}</Text>
             </View>
           ))}
-          {reactionCount > 3 && <Text style={styles.moreReactions}>+{reactionCount - 3}</Text>}
+          {(reactionCount as number) > 3 && <Text style={styles.moreReactions}>+{(reactionCount as number) - 3}</Text>}
         </View>
       )}
 
       {/* Prompt if no reactions */}
-      {reactionCount === 0 && <Text style={styles.noReactions}>Tap to react</Text>}
+      {(reactionCount as number) === 0 && <Text style={styles.noReactions}>Tap to react</Text>}
 
       {/* Comment preview - tapping opens modal with comments sheet */}
       {previewComments.length > 0 && (
         <View testID="feed-comments-button" style={styles.commentPreview}>
           <CommentPreview
-            comments={previewComments}
-            totalCount={commentCount}
+            comments={previewComments as any}
+            totalCount={commentCount as number}
             onPress={handleCommentPreviewPress}
             compact
           />

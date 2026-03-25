@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
  * blanks each thumbnail during its update cycle. With memo, only the 2 thumbnails
  * that change their isActive state actually re-render.
  */
-const ThumbnailItem = React.memo(function ThumbnailItem({ item, index, isActive, onPress }) {
+const ThumbnailItem = React.memo(function ThumbnailItem({ item, index, isActive, onPress }: { item: AlbumPhoto; index: number; isActive: boolean; onPress: (index: number) => void }) {
   // Stable source reference — expo-image won't re-render unless the URI actually changes.
   // Without useMemo, every parent render creates a new object, causing expo-image to
   // briefly blank on Android even when the image is already in memory cache.
@@ -192,9 +192,17 @@ const ThumbnailItem = React.memo(function ThumbnailItem({ item, index, isActive,
  */
 type SourceRect = { x: number; y: number; width: number; height: number };
 
+type AlbumPhoto = {
+  id: string;
+  imageURL: string;
+  photoState?: string;
+  userId?: string;
+  [key: string]: unknown;
+};
+
 type Props = {
   visible: boolean;
-  photos?: Record<string, unknown>[];
+  photos?: AlbumPhoto[];
   initialIndex?: number;
   albumId?: string;
   albumName?: string;
@@ -204,7 +212,7 @@ type Props = {
   onClose: () => void;
   onRemovePhoto?: (photoId: string) => void;
   onSetCover?: (photoId: string) => void;
-  onPhotoStateChanged?: () => void;
+  onPhotoStateChanged?: (photoId?: string) => void;
 };
 
 const AlbumPhotoViewer = ({
@@ -220,16 +228,16 @@ const AlbumPhotoViewer = ({
   onRemovePhoto,
   onSetCover,
   onPhotoStateChanged,
-}) => {
+}: Props) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [toastVisible, setToastVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState(null);
-  const flatListRef = useRef(null);
-  const thumbnailListRef = useRef(null);
-  const menuButtonRef = useRef(null);
+  const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const flatListRef = useRef<FlatList>(null);
+  const thumbnailListRef = useRef<ScrollView>(null);
+  const menuButtonRef = useRef<View>(null);
   const isUserDragging = useRef(false);
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
@@ -450,8 +458,8 @@ const AlbumPhotoViewer = ({
   }, [springBack]);
 
   // Gesture axis lock - once determined vertical, stays locked
-  const gestureLockRef = useRef(null);
-  const verticalDirectionRef = useRef(null);
+  const gestureLockRef = useRef<string | null>(null);
+  const verticalDirectionRef = useRef<string | null>(null);
 
   /**
    * PanResponder for swipe-down-to-dismiss gesture
@@ -535,6 +543,25 @@ const AlbumPhotoViewer = ({
       },
     })
   ).current;
+
+  // Thumbnail dimensions (scroll helper needs these before effects)
+  const THUMB_ITEM_WIDTH = THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2; // 58px
+  const THUMB_CONTENT_PADDING = spacing.xs; // 8px (from contentContainerStyle paddingHorizontal)
+  const scrollThumbnailTo = useCallback(
+    (index: number, animated: boolean) => {
+      const totalItems = photosRef.current.length;
+      if (totalItems === 0 || !thumbnailListRef.current) return;
+      const itemStart = THUMB_CONTENT_PADDING + index * THUMB_ITEM_WIDTH;
+      const centeredOffset = itemStart - (SCREEN_WIDTH - THUMB_ITEM_WIDTH) / 2;
+      const maxOffset = Math.max(
+        0,
+        totalItems * THUMB_ITEM_WIDTH + THUMB_CONTENT_PADDING * 2 - SCREEN_WIDTH
+      );
+      const offset = Math.max(0, Math.min(centeredOffset, maxOffset));
+      thumbnailListRef.current.scrollTo({ x: offset, animated });
+    },
+    [THUMB_ITEM_WIDTH, THUMB_CONTENT_PADDING]
+  );
 
   // Reset to initial index when modal opens
   useEffect(() => {
@@ -676,7 +703,7 @@ const AlbumPhotoViewer = ({
             if (albumId) {
               await deleteAlbum(albumId);
               onClose?.();
-              navigation.navigate('ProfileMain');
+              (navigation as any).navigate('ProfileMain');
             }
           },
         },
@@ -708,7 +735,7 @@ const AlbumPhotoViewer = ({
   // Open menu with anchor position
   const handleOpenMenu = () => {
     if (menuButtonRef.current) {
-      menuButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
+      (menuButtonRef.current as any).measure((_x: number, _y: number, width: number, height: number, pageX: number, pageY: number) => {
         setMenuAnchor({ x: pageX, y: pageY, width, height });
         setMenuVisible(true);
       });
@@ -731,12 +758,12 @@ const AlbumPhotoViewer = ({
         {
           text: 'Remove',
           onPress: async () => {
-            const result = await archivePhoto(currentPhoto.id, currentUserId);
-            if (result.success) {
+            try {
+              await archivePhoto(currentPhoto.id, 'archive');
               onPhotoStateChanged?.();
               onClose?.();
-            } else {
-              Alert.alert('Error', result.error || 'Failed to archive photo');
+            } catch (err) {
+              Alert.alert('Error', (err as Error).message || 'Failed to archive photo');
             }
           },
         },
@@ -750,14 +777,14 @@ const AlbumPhotoViewer = ({
     if (!currentPhoto) return;
 
     setMenuVisible(false);
-    const result = await restorePhoto(currentPhoto.id, currentUserId);
-    if (result.success) {
+    try {
+      await archivePhoto(currentPhoto.id, 'journal');
       onPhotoStateChanged?.();
       Alert.alert('Restored', 'Photo has been restored to your journal.');
-    } else {
-      Alert.alert('Error', result.error || 'Failed to restore photo');
+    } catch (err) {
+      Alert.alert('Error', (err as Error).message || 'Failed to restore photo');
     }
-  }, [photos, currentIndex, currentUserId, onPhotoStateChanged]);
+  }, [photos, currentIndex, onPhotoStateChanged]);
 
   // Handle delete photo (soft delete with 30-day grace period)
   const handleDelete = useCallback(() => {
@@ -774,12 +801,12 @@ const AlbumPhotoViewer = ({
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const result = await softDeletePhoto(currentPhoto.id, currentUserId);
-            if (result.success) {
+            try {
+              await softDeletePhoto(currentPhoto.id);
               onPhotoStateChanged?.(currentPhoto.id);
               onClose?.();
-            } else {
-              Alert.alert('Error', result.error || 'Failed to delete photo');
+            } catch (err) {
+              Alert.alert('Error', (err as Error).message || 'Failed to delete photo');
             }
           },
         },
@@ -790,7 +817,7 @@ const AlbumPhotoViewer = ({
   // Build menu options based on context
   const menuOptions = React.useMemo(() => {
     const currentPhoto = photos[currentIndex];
-    const options = [];
+    const options: Array<{ label: string; icon: string; onPress: () => void; destructive?: boolean }> = [];
 
     // Album-specific options (only if albumId exists - not for monthly albums)
     if (albumId) {
@@ -870,25 +897,7 @@ const AlbumPhotoViewer = ({
     []
   );
 
-  // Scroll thumbnail strip to center a specific index.
-  // Uses ScrollView.scrollTo (more reliable on Android than FlatList.scrollToOffset in a Modal).
-  const THUMB_ITEM_WIDTH = THUMBNAIL_WIDTH + THUMBNAIL_MARGIN * 2; // 58px
-  const THUMB_CONTENT_PADDING = spacing.xs; // 8px (from contentContainerStyle paddingHorizontal)
-  const scrollThumbnailTo = useCallback(
-    (index, animated) => {
-      const totalItems = photosRef.current.length;
-      if (totalItems === 0 || !thumbnailListRef.current) return;
-      const itemStart = THUMB_CONTENT_PADDING + index * THUMB_ITEM_WIDTH;
-      const centeredOffset = itemStart - (SCREEN_WIDTH - THUMB_ITEM_WIDTH) / 2;
-      const maxOffset = Math.max(
-        0,
-        totalItems * THUMB_ITEM_WIDTH + THUMB_CONTENT_PADDING * 2 - SCREEN_WIDTH
-      );
-      const offset = Math.max(0, Math.min(centeredOffset, maxOffset));
-      thumbnailListRef.current.scrollTo({ x: offset, animated });
-    },
-    [THUMB_ITEM_WIDTH, THUMB_CONTENT_PADDING]
-  );
+  // scrollThumbnailTo is declared above the effects that depend on it
 
   if (!visible || photos.length === 0) {
     return null;
@@ -929,7 +938,7 @@ const AlbumPhotoViewer = ({
             ref={flatListRef}
             data={photos}
             renderItem={renderPhoto}
-            keyExtractor={item => item.id}
+            keyExtractor={(item: AlbumPhoto) => item.id}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}

@@ -27,9 +27,9 @@ import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 // TODO(20-01): getDeletedPhotos, restoreDeletedPhoto, permanentlyDeletePhoto - need supabase equivalents
 import { getUserPhotos } from '../services/supabase/photoService';
-const getDeletedPhotos = async () => [];
-const restoreDeletedPhoto = async () => ({ success: true });
-const permanentlyDeletePhoto = async () => ({ success: true });
+const getDeletedPhotos = async (..._args: unknown[]) => [] as Array<Record<string, unknown>>;
+const restoreDeletedPhoto = async (..._args: unknown[]) => ({ success: true });
+const permanentlyDeletePhoto = async (..._args: unknown[]) => ({ success: true });
 import logger from '../utils/logger';
 import {
   styles,
@@ -56,17 +56,17 @@ const RecentlyDeletedScreen = () => {
   const { user } = useAuth();
 
   // State
-  const [photos, setPhotos] = useState([]);
+  const [photos, setPhotos] = useState<Array<Record<string, unknown> & { id: string; imageURL?: string; scheduledForPermanentDeletionAt?: any }>>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Refs
-  const viewerFlatListRef = useRef(null);
+  const viewerFlatListRef = useRef<FlatList>(null);
 
   // Swipe-to-dismiss gesture for viewer modal
   const translateY = useSharedValue(0);
@@ -107,20 +107,16 @@ const RecentlyDeletedScreen = () => {
 
   // Fetch deleted photos
   const fetchPhotos = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.id) return;
 
-    const result = await getDeletedPhotos(user.uid);
-    if (result.success) {
-      setPhotos(result.photos);
-      logger.info('RecentlyDeletedScreen: Fetched deleted photos', {
-        count: result.photos.length,
-      });
-    } else {
-      logger.error('RecentlyDeletedScreen: Failed to fetch photos', { error: result.error });
-    }
+    const result = await getDeletedPhotos();
+    setPhotos(result as any);
+    logger.info('RecentlyDeletedScreen: Fetched deleted photos', {
+      count: result.length,
+    });
     setLoading(false);
     setRefreshing(false);
-  }, [user?.uid]);
+  }, [user?.id]);
 
   // Load photos on focus
   useFocusEffect(
@@ -199,7 +195,7 @@ const RecentlyDeletedScreen = () => {
 
         let successCount = 0;
         for (const photoId of selectedIds) {
-          const result = await restoreDeletedPhoto(photoId, user.uid);
+          const result = await restoreDeletedPhoto(photoId, user!.id);
           if (result.success) successCount++;
         }
 
@@ -223,7 +219,7 @@ const RecentlyDeletedScreen = () => {
     Alert.alert(
       'Restore Photos',
       `Restore ${count} ${count === 1 ? 'photo' : 'photos'} to your journal?`,
-      Platform.OS === 'android' ? [restoreAction, cancelAction] : [cancelAction, restoreAction]
+      (Platform.OS === 'android' ? [restoreAction, cancelAction] : [cancelAction, restoreAction]) as any
     );
   };
 
@@ -240,7 +236,7 @@ const RecentlyDeletedScreen = () => {
 
         let successCount = 0;
         for (const photoId of selectedIds) {
-          const result = await permanentlyDeletePhoto(photoId, user.uid);
+          const result = await permanentlyDeletePhoto(photoId, user!.id);
           if (result.success) successCount++;
         }
 
@@ -264,7 +260,7 @@ const RecentlyDeletedScreen = () => {
     Alert.alert(
       'Delete Permanently',
       `This will permanently delete ${count} ${count === 1 ? 'photo' : 'photos'}. This action cannot be undone.`,
-      Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]
+      (Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]) as any
     );
   };
 
@@ -278,7 +274,7 @@ const RecentlyDeletedScreen = () => {
     setActionLoading(true);
     logger.info('RecentlyDeletedScreen: Single restore', { photoId: currentViewerPhoto.id });
 
-    const result = await restoreDeletedPhoto(currentViewerPhoto.id, user.uid);
+    const result = await restoreDeletedPhoto(currentViewerPhoto.id, user!.id);
 
     setActionLoading(false);
 
@@ -303,7 +299,7 @@ const RecentlyDeletedScreen = () => {
         setActionLoading(true);
         logger.info('RecentlyDeletedScreen: Single delete', { photoId: currentViewerPhoto.id });
 
-        const result = await permanentlyDeletePhoto(currentViewerPhoto.id, user.uid);
+        const result = await permanentlyDeletePhoto(currentViewerPhoto.id, user!.id);
 
         setActionLoading(false);
 
@@ -320,7 +316,7 @@ const RecentlyDeletedScreen = () => {
     Alert.alert(
       'Delete Permanently',
       'This photo will be permanently deleted. This action cannot be undone.',
-      Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]
+      (Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]) as any
     );
   };
 

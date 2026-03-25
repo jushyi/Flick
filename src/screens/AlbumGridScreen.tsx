@@ -46,14 +46,14 @@ const AlbumGridScreen = () => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
 
-  const { albumId, isOwnProfile } = route.params || {};
+  const { albumId, isOwnProfile } = (route.params || {}) as { albumId?: string; isOwnProfile?: boolean };
 
-  const [album, setAlbum] = useState(null);
-  const [photos, setPhotos] = useState([]);
+  const [album, setAlbum] = useState<(Record<string, unknown> & { name?: string; photoIds?: string[] }) | null>(null);
+  const [photos, setPhotos] = useState<Array<Record<string, unknown> & { id: string; imageURL?: string; photoState?: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
-  const [viewerSourceRect, setViewerSourceRect] = useState(null);
+  const [viewerSourceRect, setViewerSourceRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
@@ -64,10 +64,10 @@ const AlbumGridScreen = () => {
   const [headerMenuVisible, setHeaderMenuVisible] = useState(false);
   const [photoMenuVisible, setPhotoMenuVisible] = useState(false);
   const [renameModalVisible, setRenameModalVisible] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [headerMenuAnchor, setHeaderMenuAnchor] = useState(null);
-  const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
-  const headerMenuButtonRef = useRef(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<Record<string, unknown> | null>(null);
+  const [headerMenuAnchor, setHeaderMenuAnchor] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [photoMenuAnchor, setPhotoMenuAnchor] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const headerMenuButtonRef = useRef<View>(null);
 
   // Fetch album and photos function
   const fetchAlbumData = async () => {
@@ -79,36 +79,26 @@ const AlbumGridScreen = () => {
 
     try {
       // Fetch album document
-      const albumResult = await getAlbum(albumId);
-      if (!albumResult.success) {
-        logger.error('AlbumGridScreen: Failed to fetch album', { error: albumResult.error });
-        setLoading(false);
-        return;
-      }
-
-      setAlbum(albumResult.album);
+      const albumData = await getAlbum(albumId);
+      setAlbum(albumData as any);
       logger.info('AlbumGridScreen: Fetched album', {
         albumId,
-        name: albumResult.album.name,
-        photoCount: albumResult.album.photoIds?.length,
+        name: albumData.title,
+        photoCount: albumData.photos?.length,
       });
 
       // Fetch photo documents for photoIds
-      if (albumResult.album.photoIds?.length > 0) {
-        const photosResult = await getPhotosByIds(albumResult.album.photoIds);
-        if (photosResult.success) {
-          // Maintain album's photoIds order (newest first)
-          const orderedPhotos = albumResult.album.photoIds
-            .map(id => photosResult.photos.find(p => p.id === id))
-            .filter(p => p !== undefined);
-          setPhotos(orderedPhotos);
-          logger.info('AlbumGridScreen: Fetched photos', { count: orderedPhotos.length });
-        }
+      if (albumData.photos?.length > 0) {
+        const photoPromises = albumData.photos.map((photoId: string) => getPhotoById(photoId));
+        const photoResults = await Promise.all(photoPromises);
+        const orderedPhotos = photoResults.filter(p => p !== null);
+        setPhotos(orderedPhotos as any);
+        logger.info('AlbumGridScreen: Fetched photos', { count: orderedPhotos.length });
       } else {
         setPhotos([]);
       }
     } catch (error) {
-      logger.error('AlbumGridScreen: Error fetching data', { error: error.message });
+      logger.error('AlbumGridScreen: Error fetching data', { error: (error as Error).message });
     } finally {
       setLoading(false);
     }
@@ -135,7 +125,7 @@ const AlbumGridScreen = () => {
   // Open header menu with anchor position
   const handleOpenHeaderMenu = useCallback(() => {
     if (headerMenuButtonRef.current) {
-      headerMenuButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
+      (headerMenuButtonRef.current as any).measure((_x: number, _y: number, width: number, height: number, pageX: number, pageY: number) => {
         setHeaderMenuAnchor({ x: pageX, y: pageY, width, height });
         setHeaderMenuVisible(true);
       });
@@ -147,11 +137,11 @@ const AlbumGridScreen = () => {
   // Rename album handler - save new name
   const handleRenameAlbum = async newName => {
     logger.info('AlbumGridScreen: Renaming album', { albumId, newName });
-    const result = await updateAlbum(albumId, { name: newName });
-    if (result.success) {
+    try {
+      await updateAlbum(albumId!, { title: newName });
       fetchAlbumData(); // Refresh to show new name
-    } else {
-      Alert.alert('Error', result.error || 'Could not rename album');
+    } catch (err) {
+      Alert.alert('Error', (err as Error).message || 'Could not rename album');
     }
   };
 
@@ -164,12 +154,12 @@ const AlbumGridScreen = () => {
       style: 'destructive',
       onPress: async () => {
         logger.info('AlbumGridScreen: Confirming album deletion', { albumId });
-        const result = await deleteAlbum(albumId);
-        if (result.success) {
+        try {
+          await deleteAlbum(albumId!);
           logger.info('AlbumGridScreen: Album deleted successfully');
           navigation.goBack();
-        } else {
-          Alert.alert('Error', result.error || 'Could not delete album');
+        } catch (err) {
+          Alert.alert('Error', (err as Error).message || 'Could not delete album');
         }
       },
     };
@@ -177,7 +167,7 @@ const AlbumGridScreen = () => {
     Alert.alert(
       'Delete Album?',
       'Photos will remain in your library.',
-      Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]
+      (Platform.OS === 'android' ? [deleteAction, cancelAction] : [cancelAction, deleteAction]) as any
     );
   };
 
@@ -196,11 +186,11 @@ const AlbumGridScreen = () => {
     },
   ];
 
-  const handlePhotoPress = (photo, index) => {
+  const handlePhotoPress = (photo: Record<string, unknown>, index: number) => {
     logger.info('AlbumGridScreen: Photo pressed', { photoId: photo.id, index });
     const cellRef = cellRefs.current[index];
     if (cellRef) {
-      cellRef.measureInWindow((x, y, width, height) => {
+      (cellRef as any).measureInWindow((x: number, y: number, width: number, height: number) => {
         setViewerSourceRect({ x, y, width, height });
         setViewerInitialIndex(index);
         setViewerVisible(true);
@@ -244,15 +234,11 @@ const AlbumGridScreen = () => {
   // Handle remove photo from album
   const handleRemovePhoto = async photoId => {
     logger.info('AlbumGridScreen: Removing photo from album', { albumId, photoId });
-    const result = await removePhotoFromAlbum(albumId, photoId);
-    if (result.success) {
-      // Refresh album data
+    try {
+      await removePhotoFromAlbum(albumId!, photoId);
       fetchAlbumData();
-    } else if (result.warning) {
-      // Last photo - album will be empty, need to delete album instead
-      Alert.alert('Cannot Remove', result.warning);
-    } else {
-      Alert.alert('Error', result.error || 'Could not remove photo');
+    } catch (err) {
+      Alert.alert('Error', (err as Error).message || 'Could not remove photo');
     }
   };
 
@@ -277,18 +263,18 @@ const AlbumGridScreen = () => {
   // Handle set cover photo
   const handleSetCover = async photoId => {
     logger.info('AlbumGridScreen: Setting cover photo', { albumId, photoId });
-    const result = await setCoverPhoto(albumId, photoId);
-    if (result.success) {
+    try {
+      await setCoverPhoto(albumId!, photoId);
       fetchAlbumData(); // Refresh to update cover
       showToast(); // Show confirmation toast
-    } else {
-      Alert.alert('Error', result.error || 'Could not set cover photo');
+    } catch (err) {
+      Alert.alert('Error', (err as Error).message || 'Could not set cover photo');
     }
   };
 
   const handleAddPhotosPress = () => {
     logger.info('AlbumGridScreen: Add photos pressed');
-    navigation.navigate('AlbumPhotoPicker', {
+    (navigation as any).navigate('AlbumPhotoPicker', {
       existingAlbumId: albumId,
       existingPhotoIds: album?.photoIds || [],
     });
@@ -296,7 +282,7 @@ const AlbumGridScreen = () => {
 
   // Prepare grid data (photos + add button if own profile)
   const gridData = useMemo(() => {
-    const data = photos.map(photo => ({ type: 'photo', photo }));
+    const data: Array<{ type: string; photo?: typeof photos[number] }> = photos.map(photo => ({ type: 'photo', photo }));
     if (isOwnProfile) {
       data.push({ type: 'addButton' });
     }
@@ -413,7 +399,7 @@ const AlbumGridScreen = () => {
       <FlatList
         data={gridData}
         renderItem={renderItem}
-        keyExtractor={(item, index) => (item.type === 'addButton' ? 'add-button' : item.photo.id)}
+        keyExtractor={(item, index) => (item.type === 'addButton' ? 'add-button' : item.photo?.id || String(index))}
         numColumns={NUM_COLUMNS}
         contentContainerStyle={[styles.gridContent, { paddingTop: insets.top + HEADER_HEIGHT }]}
         showsVerticalScrollIndicator={false}
@@ -430,12 +416,12 @@ const AlbumGridScreen = () => {
       {/* Photo Viewer Modal */}
       <AlbumPhotoViewer
         visible={viewerVisible}
-        photos={photos}
+        photos={photos as any}
         initialIndex={viewerInitialIndex}
         albumId={albumId}
         albumName={album?.name}
         isOwnProfile={isOwnProfile}
-        currentUserId={user?.uid}
+        currentUserId={user?.id}
         sourceRect={viewerSourceRect}
         onClose={() => {
           setViewerVisible(false);

@@ -21,7 +21,7 @@ import type {
 import { useAuth } from '../context/AuthContext';
 import { PhoneAuthProvider } from '../context/PhoneAuthContext';
 import { PhotoDetailProvider } from '../context/PhotoDetailContext';
-import useMessages from '../hooks/useMessages';
+import { useMessages } from '../hooks/useMessages';
 import * as Contacts from 'expo-contacts';
 import { colors } from '../constants/colors';
 import CustomBottomTabBar from '../components/CustomBottomTabBar';
@@ -68,6 +68,7 @@ import HelpSupportScreen from '../screens/HelpSupportScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import RecentlyDeletedScreen from '../screens/RecentlyDeletedScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
+// @ts-ignore -- uses platform file extensions (.ios.tsx / .android.tsx)
 import ProfilePhotoCropScreen from '../screens/ProfilePhotoCropScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import ContactsSettingsScreen from '../screens/ContactsSettingsScreen';
@@ -82,6 +83,8 @@ import SnapPreviewScreen from '../screens/SnapPreviewScreen';
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const OnboardingStack = createNativeStackNavigator<OnboardingStackParamList>();
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 const Tab = createMaterialTopTabNavigator<MainTabsParamList>();
 const ProfileModalStack = createNativeStackNavigator<ProfileFromPhotoDetailParamList>();
 const MessagesStack = createNativeStackNavigator<MessagesStackParamList>();
@@ -125,10 +128,10 @@ function ProfileFromPhotoDetailNavigator({ route }: { route: { params: { userId:
  * Onboarding Stack Navigator (ProfileSetup -> Selects -> ContactsSync)
  * All screens are in the same stack so back navigation works correctly
  */
-const OnboardingStackNavigator = ({ initialRouteName }) => {
+const OnboardingStackNavigator = ({ initialRouteName }: { initialRouteName: string }) => {
   return (
-    <Stack.Navigator
-      initialRouteName={initialRouteName}
+    <OnboardingStack.Navigator
+      initialRouteName={initialRouteName as keyof OnboardingStackParamList}
       screenOptions={{
         headerShown: false,
         gestureEnabled: true,
@@ -136,11 +139,11 @@ const OnboardingStackNavigator = ({ initialRouteName }) => {
         contentStyle: { backgroundColor: colors.background.primary },
       }}
     >
-      <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-      <Stack.Screen name="Selects" component={SelectsScreen} />
-      <Stack.Screen name="ContactsSync" component={ContactsSyncScreen} />
-      <Stack.Screen name="NotificationPermission" component={NotificationPermissionScreen} />
-      <Stack.Screen
+      <OnboardingStack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      <OnboardingStack.Screen name="Selects" component={SelectsScreen} />
+      <OnboardingStack.Screen name="ContactsSync" component={ContactsSyncScreen} />
+      <OnboardingStack.Screen name="NotificationPermission" component={NotificationPermissionScreen} />
+      <OnboardingStack.Screen
         name="SongSearch"
         component={SongSearchScreen}
         options={{
@@ -148,7 +151,7 @@ const OnboardingStackNavigator = ({ initialRouteName }) => {
           animation: 'slide_from_bottom',
         }}
       />
-      <Stack.Screen
+      <OnboardingStack.Screen
         name="ProfilePhotoCrop"
         component={ProfilePhotoCropScreen}
         options={{
@@ -157,7 +160,7 @@ const OnboardingStackNavigator = ({ initialRouteName }) => {
           contentStyle: { backgroundColor: colors.background.primary },
         }}
       />
-    </Stack.Navigator>
+    </OnboardingStack.Navigator>
   );
 };
 
@@ -166,14 +169,14 @@ const OnboardingStackNavigator = ({ initialRouteName }) => {
  */
 const ProfileStackNavigator = () => {
   return (
-    <Stack.Navigator
+    <ProfileStack.Navigator
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: colors.background.primary },
       }}
     >
-      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
-      <Stack.Screen
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen
         name="SongSearch"
         component={SongSearchScreen}
         options={{
@@ -181,39 +184,39 @@ const ProfileStackNavigator = () => {
           animation: 'slide_from_bottom',
         }}
       />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen
+      <ProfileStack.Screen name="Settings" component={SettingsScreen} />
+      <ProfileStack.Screen
         name="NotificationSettings"
         component={NotificationSettingsScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      <ProfileStack.Screen
         name="ContactsSettings"
         component={ContactsSettingsScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      <ProfileStack.Screen
         name="SoundSettings"
         component={SoundSettingsScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      <ProfileStack.Screen
         name="ReadReceiptsSettings"
         component={ReadReceiptsSettingsScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-      <Stack.Screen name="Contributions" component={ContributionsScreen} />
-      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-      <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
-      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
-      <Stack.Screen name="RecentlyDeleted" component={RecentlyDeletedScreen} />
-      <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
-      <Stack.Screen name="CreateAlbum" component={CreateAlbumScreen} />
-      <Stack.Screen name="AlbumPhotoPicker" component={AlbumPhotoPickerScreen} />
-      <Stack.Screen name="AlbumGrid" component={AlbumGridScreen} />
-      <Stack.Screen name="MonthlyAlbumGrid" component={MonthlyAlbumGridScreen} />
-      <Stack.Screen
+      <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <ProfileStack.Screen name="Contributions" component={ContributionsScreen} />
+      <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <ProfileStack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+      <ProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+      <ProfileStack.Screen name="RecentlyDeleted" component={RecentlyDeletedScreen} />
+      <ProfileStack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
+      <ProfileStack.Screen name="CreateAlbum" component={CreateAlbumScreen} />
+      <ProfileStack.Screen name="AlbumPhotoPicker" component={AlbumPhotoPickerScreen} />
+      <ProfileStack.Screen name="AlbumGrid" component={AlbumGridScreen} />
+      <ProfileStack.Screen name="MonthlyAlbumGrid" component={MonthlyAlbumGridScreen} />
+      <ProfileStack.Screen
         name="ProfilePhotoCrop"
         component={ProfilePhotoCropScreen}
         options={{
@@ -222,7 +225,7 @@ const ProfileStackNavigator = () => {
           contentStyle: { backgroundColor: colors.background.primary },
         }}
       />
-    </Stack.Navigator>
+    </ProfileStack.Navigator>
   );
 };
 
@@ -257,13 +260,14 @@ const MessagesStackNavigator = () => {
  */
 const MainTabNavigator = () => {
   const { userProfile, user } = useAuth();
-  const { totalUnreadCount } = useMessages(user?.uid);
+  const { conversations } = useMessages();
+  const totalUnreadCount = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
   return (
     <Tab.Navigator
       initialRouteName="Camera"
       tabBarPosition="bottom"
-      tabBar={props => (
+      tabBar={(props: any) => (
         <CustomBottomTabBar
           {...props}
           userProfile={userProfile}
@@ -374,13 +378,13 @@ const AppNavigator = () => {
         // Notification permissions: re-request if previously completed but now undetermined
         if (userProfile.notificationPermissionCompleted) {
           const notifResult = await checkNotificationPermissions();
-          if (notifResult.success && notifResult.data.status === 'undetermined') {
+          if (notifResult.success && notifResult.data === 'undetermined') {
             logger.info('AppNavigator: Notification permission was reset, re-requesting');
             const permResult = await requestNotificationPermission();
             if (permResult.success) {
               const tokenResult = await getNotificationToken();
               if (tokenResult.success && tokenResult.data) {
-                await storeNotificationToken(user.uid, tokenResult.data);
+                await storeNotificationToken();
               }
             }
           }
@@ -390,14 +394,14 @@ const AppNavigator = () => {
         // Uses expo-contacts directly to avoid the Alert shown by the service wrapper
         if (userProfile.contactsSyncCompleted === true) {
           const contactsResult = await getContactsPermissionStatus();
-          if (contactsResult.success && contactsResult.data.status === 'undetermined') {
+          if (contactsResult === 'undetermined') {
             logger.info('AppNavigator: Contacts permission was reset, re-requesting');
             await Contacts.requestPermissionsAsync();
           }
         }
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('AppNavigator: Permission reconciliation failed', {
-          error: error.message,
+          error: (error as Error).message,
         });
       }
     };

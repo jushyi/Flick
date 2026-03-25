@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import FriendCard from '../components/FriendCard';
 import { syncContacts as syncContactsAndFindSuggestions } from '../services/supabase/contactSyncService';
 // TODO(20-01): markContactsSyncCompleted - needs supabase equivalent
-const markContactsSyncCompleted = async () => {};
+const markContactsSyncCompleted = async (..._args: unknown[]) => {};
 import { sendFriendRequest } from '../services/supabase/friendshipService';
 import { mediumImpact } from '../utils/haptics';
 import { colors } from '../constants/colors';
@@ -32,7 +32,7 @@ const ContactsSyncScreen = ({ navigation }) => {
       ? [styles.continueContainer, { paddingBottom: insets.bottom + 20 }]
       : styles.continueContainer;
   const [screenState, setScreenState] = useState('initial'); // initial, syncing, results, empty
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState<Array<Record<string, unknown> & { id: string; displayName?: string; username?: string; profilePhotoURL?: string; photoURL?: string }>>([]);
   const [addedUsers, setAddedUsers] = useState(new Set());
   const [actionLoading, setActionLoading] = useState({});
 
@@ -41,35 +41,19 @@ const ContactsSyncScreen = ({ navigation }) => {
       setScreenState('syncing');
       mediumImpact();
 
-      const result = await syncContactsAndFindSuggestions(user.uid, userProfile?.phoneNumber);
-
-      if (!result.success) {
-        if (result.error === 'permission_denied_permanent') {
-          // User permanently denied - they need to go to settings
-          setScreenState('initial');
-          return;
-        }
-        if (result.error === 'permission_denied') {
-          // User denied this time
-          setScreenState('initial');
-          return;
-        }
-        Alert.alert('Error', 'Failed to sync contacts. Please try again.');
-        setScreenState('initial');
-        return;
-      }
+      const suggestions = await syncContactsAndFindSuggestions(user!.id);
 
       // Mark sync as completed
-      await markContactsSyncCompleted(user.uid, true);
+      await markContactsSyncCompleted();
 
-      if (result.suggestions.length === 0) {
+      if (suggestions.length === 0) {
         setScreenState('empty');
       } else {
-        setSuggestions(result.suggestions);
+        setSuggestions(suggestions as any);
         setScreenState('results');
       }
-    } catch (error) {
-      logger.error('Error syncing contacts', error);
+    } catch (error: unknown) {
+      logger.error('Error syncing contacts', { error: (error as Error).message });
       Alert.alert('Error', 'Something went wrong. Please try again.');
       setScreenState('initial');
     }
@@ -80,15 +64,10 @@ const ContactsSyncScreen = ({ navigation }) => {
       setActionLoading(prev => ({ ...prev, [userId]: true }));
       mediumImpact();
 
-      const result = await sendFriendRequest(user.uid, userId);
-
-      if (result.success) {
-        setAddedUsers(prev => new Set([...prev, userId]));
-      } else {
-        Alert.alert('Error', result.error || 'Failed to send friend request');
-      }
-    } catch (error) {
-      logger.error('Error adding friend', error);
+      await sendFriendRequest(user!.id, userId);
+      setAddedUsers(prev => new Set([...prev, userId]));
+    } catch (error: unknown) {
+      logger.error('Error adding friend', { error: (error as Error).message });
       Alert.alert('Error', 'Failed to send friend request');
     } finally {
       setActionLoading(prev => ({ ...prev, [userId]: false }));
@@ -97,7 +76,7 @@ const ContactsSyncScreen = ({ navigation }) => {
 
   const handleSkip = async () => {
     mediumImpact();
-    await markContactsSyncCompleted(user.uid, false);
+    await markContactsSyncCompleted(user!.id, false);
     await refreshUserProfile();
     navigation.navigate('NotificationPermission');
   };
@@ -171,13 +150,19 @@ const ContactsSyncScreen = ({ navigation }) => {
               <FriendCard
                 user={{
                   userId: item.id,
-                  displayName: item.displayName,
-                  username: item.username,
-                  profilePhotoURL: item.profilePhotoURL || item.photoURL,
+                  displayName: item.displayName || '',
+                  username: item.username || '',
+                  profilePhotoURL: item.profilePhotoURL || item.photoURL || '',
                 }}
                 relationshipStatus={isAdded ? 'pending_sent' : 'none'}
-                onAction={userId => handleAddFriend(userId)}
+                onAction={(userId: string) => handleAddFriend(userId)}
                 loading={actionLoading[item.id]}
+                friendshipId={undefined}
+                onAccept={() => {}}
+                onDeny={() => {}}
+                onPress={() => {}}
+                friendsSince={undefined}
+                subtitle={undefined}
               />
             );
           }}

@@ -51,24 +51,24 @@ const EditProfileScreen = ({ navigation }) => {
   const { user, userProfile, updateUserProfile } = useAuth();
 
   // Initialize form state from userProfile
-  const [displayName, setDisplayName] = useState(userProfile?.displayName || '');
+  const [displayName, setDisplayName] = useState(userProfile?.display_name || '');
   const [username, setUsername] = useState(userProfile?.username || '');
   const [bio, setBio] = useState(userProfile?.bio || '');
-  const [photoUri, setPhotoUri] = useState(null); // New photo selected
+  const [photoUri, setPhotoUri] = useState<string | null>(null); // New photo selected
   const [photoRemoved, setPhotoRemoved] = useState(false); // Photo explicitly removed
-  const [nameColor, setNameColor] = useState(userProfile?.nameColor || null); // Name color for contributors
+  const [nameColor, setNameColor] = useState(userProfile?.profile_color || null); // Name color for contributors
   const [saving, setSaving] = useState(false);
   const [checkingUsername, setCheckingUsername] = useState(false);
-  const [pendingCropUri, setPendingCropUri] = useState(null);
+  const [pendingCropUri, setPendingCropUri] = useState<string | null>(null);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
 
   // Username restriction state
   const [canEditUsername, setCanEditUsername] = useState(true);
   const [daysUntilUsernameChange, setDaysUntilUsernameChange] = useState(0);
 
-  const usernameCheckTimeout = useRef(null);
-  const scrollViewRef = useRef(null);
+  const usernameCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -78,19 +78,21 @@ const EditProfileScreen = ({ navigation }) => {
 
   // Check username restriction on mount
   useEffect(() => {
-    const restriction = canChangeUsername(userProfile?.lastUsernameChange);
-    setCanEditUsername(restriction.canChange);
-    setDaysUntilUsernameChange(restriction.daysRemaining || 0);
-  }, [userProfile?.lastUsernameChange]);
+    const checkRestriction = async () => {
+      const restriction = await canChangeUsername();
+      setCanEditUsername(restriction.canChange);
+    };
+    checkRestriction();
+  }, []);
 
   // Track if any changes have been made
   const hasChanges = useCallback(() => {
-    const displayNameChanged = displayName.trim() !== (userProfile?.displayName || '');
+    const displayNameChanged = displayName.trim() !== (userProfile?.display_name || '');
     const usernameChanged =
       username.toLowerCase().trim() !== (userProfile?.username || '').toLowerCase();
     const bioChanged = bio.trim() !== (userProfile?.bio || '');
     const photoChanged = photoUri !== null || photoRemoved;
-    const nameColorChanged = nameColor !== (userProfile?.nameColor || null);
+    const nameColorChanged = nameColor !== (userProfile?.profile_color || null);
 
     return displayNameChanged || usernameChanged || bioChanged || photoChanged || nameColorChanged;
   }, [displayName, username, bio, photoUri, photoRemoved, nameColor, userProfile]);
@@ -132,23 +134,22 @@ const EditProfileScreen = ({ navigation }) => {
       }
 
       setCheckingUsername(true);
-      const result = await checkUsernameAvailability(normalizedUsername, user.uid);
-
-      if (result.success) {
-        setUsernameAvailable(result.available);
-        if (!result.available) {
+      try {
+        const available = await checkUsernameAvailability(normalizedUsername, user?.id);
+        setUsernameAvailable(available);
+        if (!available) {
           setErrors(prev => ({ ...prev, username: 'Username is already taken' }));
         } else {
           setErrors(prev => ({ ...prev, username: null }));
         }
-      } else {
+      } catch (err) {
         logger.error('EditProfileScreen: Username availability check failed', {
-          error: result.error,
+          error: (err as Error).message,
         });
       }
       setCheckingUsername(false);
     },
-    [user.uid, userProfile?.username]
+    [user?.id, userProfile?.username]
   );
 
   // Handle username change with debounce
@@ -251,13 +252,13 @@ const EditProfileScreen = ({ navigation }) => {
   };
 
   const showPhotoOptions = () => {
-    const options = [
+    const options: Array<{ text: string; onPress?: () => void; style?: string }> = [
       { text: 'Take New Picture', onPress: takePhoto },
       { text: 'Choose from Library', onPress: pickImage },
     ];
 
     // Only show remove option if user has a photo
-    if ((userProfile?.photoURL && !photoRemoved) || photoUri) {
+    if ((userProfile?.photo_url && !photoRemoved) || photoUri) {
       options.push({
         text: 'Remove Photo',
         onPress: removePhoto,
@@ -267,19 +268,19 @@ const EditProfileScreen = ({ navigation }) => {
 
     options.push({ text: 'Cancel', style: 'cancel' });
 
-    Alert.alert('Profile Photo', 'Choose an option', options);
+    Alert.alert('Profile Photo', 'Choose an option', options as any);
   };
 
   // Get current photo to display
   const getCurrentPhotoUri = () => {
     if (photoRemoved) return null;
     if (photoUri) return photoUri;
-    return userProfile?.photoURL || null;
+    return userProfile?.photo_url || null;
   };
 
   // Validate form
   const validate = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string | null> = {};
 
     // Display name validation - required
     const trimmedDisplayName = displayName.trim();
@@ -329,21 +330,21 @@ const EditProfileScreen = ({ navigation }) => {
     setSaving(true);
 
     try {
-      let photoURL = userProfile?.photoURL || null;
+      let photoURL: string | null = userProfile?.photo_url || null;
 
       // Handle photo changes
       if (photoRemoved) {
         // User removed their photo
         photoURL = null;
         // Optionally delete from storage
-        if (userProfile?.photoURL) {
-          await deleteProfilePhoto(user.uid);
+        if (userProfile?.photo_url) {
+          await deleteProfilePhoto(user!.id);
         }
       } else if (photoUri) {
         // User selected a new photo
-        const uploadResult = await uploadProfilePhoto(user.uid, photoUri);
+        const uploadResult = await uploadProfilePhoto(user!.id, photoUri);
         if (uploadResult.success) {
-          photoURL = uploadResult.url;
+          photoURL = uploadResult.url ?? null;
         } else {
           Alert.alert('Upload Failed', 'Could not upload profile photo');
           setSaving(false);
@@ -352,10 +353,10 @@ const EditProfileScreen = ({ navigation }) => {
       }
 
       // Prepare update data
-      const updates = {
+      const updates: Record<string, unknown> = {
         displayName: sanitizeDisplayName(displayName.trim()),
         bio: sanitizeBio(bio.trim()),
-        photoURL,
+        profilePhotoPath: photoURL,
       };
 
       // Only include username if changed and allowed
@@ -366,33 +367,22 @@ const EditProfileScreen = ({ navigation }) => {
         updates.username = username.toLowerCase().trim();
       }
 
-      // Include name color if user is a contributor and it changed
-      if (userProfile?.isContributor && nameColor !== (userProfile?.nameColor || null)) {
+      // Include name color if it changed
+      if (nameColor !== (userProfile?.profile_color || null)) {
         updates.nameColor = nameColor;
       }
 
-      // Update profile in Firestore
-      const updateResult = await updateUserProfileService(user.uid, updates, userProfile?.username);
+      // Update profile in Supabase
+      const updatedProfile = await updateUserProfileService(user!.id, updates as any);
 
-      if (updateResult.success) {
-        // Update local profile state
-        updateUserProfile({
-          ...userProfile,
-          ...updates,
-          // Update lastUsernameChange if username changed
-          ...(updates.username && updates.username !== userProfile?.username
-            ? { lastUsernameChange: new Date() }
-            : {}),
-        });
+      // Update local profile state
+      updateUserProfile(updatedProfile as any);
 
-        // Navigate back to profile (pop past Settings)
-        navigation.pop(2);
-      } else {
-        Alert.alert('Update Failed', updateResult.error || 'Could not save profile changes');
-      }
-    } catch (error) {
-      logger.error('EditProfileScreen: Save failed', { error: error.message });
-      Alert.alert('Error', error.message || 'An error occurred');
+      // Navigate back to profile (pop past Settings)
+      navigation.pop(2);
+    } catch (error: unknown) {
+      logger.error('EditProfileScreen: Save failed', { error: (error as Error).message });
+      Alert.alert('Error', (error as Error).message || 'An error occurred');
     } finally {
       setSaving(false);
     }
@@ -411,9 +401,9 @@ const EditProfileScreen = ({ navigation }) => {
       Alert.alert(
         'Discard Changes?',
         'You have unsaved changes. Are you sure you want to discard them?',
-        Platform.OS === 'android'
+        (Platform.OS === 'android'
           ? [discardAction, keepEditingAction]
-          : [keepEditingAction, discardAction]
+          : [keepEditingAction, discardAction]) as any
       );
     } else {
       navigation.goBack();
@@ -473,13 +463,14 @@ const EditProfileScreen = ({ navigation }) => {
               label="Display Name"
               placeholder="Your display name"
               value={displayName}
-              onChangeText={text => {
+              onChangeText={(text: string) => {
                 setDisplayName(text);
                 if (errors.displayName) setErrors(prev => ({ ...prev, displayName: null }));
               }}
               error={errors.displayName}
               maxLength={24}
               showCharacterCount={true}
+              style={undefined}
             />
 
             <View style={styles.usernameContainer}>
@@ -490,10 +481,10 @@ const EditProfileScreen = ({ navigation }) => {
                 onChangeText={canEditUsername ? handleUsernameChange : undefined}
                 autoCapitalize="none"
                 autoCorrect={false}
-                error={errors.username}
+                error={errors.username ?? undefined}
                 editable={canEditUsername}
                 rightIcon={
-                  canEditUsername
+                  (canEditUsername
                     ? checkingUsername
                       ? 'loading'
                       : usernameAvailable &&
@@ -502,7 +493,7 @@ const EditProfileScreen = ({ navigation }) => {
                           username.toLowerCase().trim() !== userProfile?.username?.toLowerCase()
                         ? 'check'
                         : null
-                    : null
+                    : null) as any
                 }
                 maxLength={24}
                 showCharacterCount={canEditUsername}
@@ -533,7 +524,7 @@ const EditProfileScreen = ({ navigation }) => {
             />
 
             {/* Name Color Section (Contributors Only) */}
-            {userProfile?.isContributor && (
+            {(userProfile as any)?.isContributor && (
               <View style={styles.nameColorSection}>
                 <View style={styles.nameColorHeader}>
                   <Text style={styles.nameColorLabel}>Name Color</Text>

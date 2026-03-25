@@ -34,27 +34,27 @@ import { layout } from '../constants/layout';
 import logger from '../utils/logger';
 
 const ProfileSetupScreen = ({ navigation, route }) => {
-  const { user, userProfile, updateUserProfile, updateUserDocumentNative, signOut } = useAuth();
+  const { user, userProfile, updateUserProfile, updateUserDocument, signOut } = useAuth();
 
   // Detect default placeholder values and use empty string instead
   // AuthContext sets 'New User' and 'user_{timestamp}' for new users
-  const isDefaultDisplayName = !userProfile?.displayName || userProfile.displayName === 'New User';
+  const isDefaultDisplayName = !userProfile?.display_name || userProfile.display_name === 'New User';
   const isDefaultUsername = !userProfile?.username || /^user_\d+$/.test(userProfile.username);
 
   const [displayName, setDisplayName] = useState(
-    isDefaultDisplayName ? '' : userProfile.displayName
+    isDefaultDisplayName ? '' : userProfile.display_name
   );
   const [username, setUsername] = useState(isDefaultUsername ? '' : userProfile.username);
   const [bio, setBio] = useState(userProfile?.bio || '');
-  const [photoUri, setPhotoUri] = useState(null);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [selectedSong, setSelectedSong] = useState(null);
+  const [selectedSong, setSelectedSong] = useState<Record<string, unknown> | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
-  const [pendingCropUri, setPendingCropUri] = useState(null);
+  const [pendingCropUri, setPendingCropUri] = useState<string | null>(null);
 
-  const [errors, setErrors] = useState({});
-  const usernameCheckTimeout = useRef(null);
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+  const usernameCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Callback for SongSearchScreen — receives selected song without re-navigating
   const handleSongSelect = useCallback(song => {
@@ -77,22 +77,20 @@ const ProfileSetupScreen = ({ navigation, route }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const result = await cancelProfileSetup(user.uid);
+              const result = await cancelProfileSetup();
               if (result.success) {
                 await signOut();
                 // Auth state listener will navigate to PhoneInput
-              } else {
-                Alert.alert('Error', result.error || 'Could not cancel profile setup');
               }
-            } catch (error) {
-              logger.error('ProfileSetupScreen.handleCancel: Error', error);
+            } catch (error: unknown) {
+              logger.error('ProfileSetupScreen.handleCancel: Error', { error: (error as Error).message });
               Alert.alert('Error', 'An unexpected error occurred');
             }
           },
         },
       ]
     );
-  }, [user.uid, signOut]);
+  }, [user!.id, signOut]);
 
   // Android hardware back — intercept and show the cancel confirmation instead of closing the app
   useFocusEffect(
@@ -126,21 +124,20 @@ const ProfileSetupScreen = ({ navigation, route }) => {
       }
 
       setCheckingUsername(true);
-      const result = await checkUsernameAvailability(normalizedUsername, user.uid);
-
-      if (result.success) {
-        setUsernameAvailable(result.available);
-        if (!result.available) {
+      try {
+        const available = await checkUsernameAvailability(normalizedUsername, user!.id);
+        setUsernameAvailable(available);
+        if (!available) {
           setErrors(prev => ({ ...prev, username: 'Username is already taken' }));
         } else {
           setErrors(prev => ({ ...prev, username: null }));
         }
-      } else {
-        logger.error('Username availability check failed', { error: result.error });
+      } catch (err) {
+        logger.error('Username availability check failed', { error: (err as Error).message });
       }
       setCheckingUsername(false);
     },
-    [user.uid, userProfile?.username]
+    [user!.id, userProfile?.username]
   );
 
   // Handle username change with debounce
@@ -262,7 +259,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string | null> = {};
 
     // Username validation
     const usernameError = validateUsername(username.trim());
@@ -310,14 +307,14 @@ const ProfileSetupScreen = ({ navigation, route }) => {
     setUploading(true);
 
     try {
-      let photoURL = userProfile?.photoURL || null;
+      let photoURL: string | null = userProfile?.photo_url || null;
 
       // Upload profile photo if selected
       if (photoUri) {
-        const uploadResult = await uploadProfilePhoto(user.uid, photoUri);
+        const uploadResult = await uploadProfilePhoto(user!.id, photoUri);
 
         if (uploadResult.success) {
-          photoURL = uploadResult.url;
+          photoURL = uploadResult.url ?? null;
         } else {
           Alert.alert('Upload Failed', 'Could not upload profile photo');
           setUploading(false);
@@ -335,22 +332,22 @@ const ProfileSetupScreen = ({ navigation, route }) => {
         profileSetupCompleted: true,
       };
 
-      const updateResult = await updateUserDocumentNative(user.uid, updateData);
+      const updateResult = await updateUserDocument(user!.id, updateData as any);
 
       if (updateResult.success) {
         // Update local profile state
         updateUserProfile({
-          ...userProfile,
+          ...userProfile!,
           ...updateData,
-        });
+        } as any);
 
         // Navigate to Selects screen (now in same Onboarding stack)
         navigation.navigate('Selects');
       } else {
         Alert.alert('Update Failed', 'Could not save profile information');
       }
-    } catch (error) {
-      Alert.alert('Error', error.message || 'An error occurred');
+    } catch (error: unknown) {
+      Alert.alert('Error', (error as Error).message || 'An error occurred');
     } finally {
       setUploading(false);
     }
@@ -377,9 +374,9 @@ const ProfileSetupScreen = ({ navigation, route }) => {
             <Text style={styles.subtitle}>Help your friends recognize you</Text>
 
             <TouchableOpacity style={styles.photoContainer} onPress={showImagePickerOptions}>
-              {photoUri || userProfile?.photoURL ? (
+              {photoUri || userProfile?.photo_url ? (
                 <Image
-                  source={{ uri: photoUri || userProfile?.photoURL }}
+                  source={{ uri: (photoUri || userProfile?.photo_url) as string }}
                   style={styles.profilePhoto}
                 />
               ) : (
@@ -395,13 +392,14 @@ const ProfileSetupScreen = ({ navigation, route }) => {
                 label="Display Name"
                 placeholder="How should friends see you?"
                 value={displayName}
-                onChangeText={text => {
+                onChangeText={(text: string) => {
                   setDisplayName(text);
                   if (errors.displayName) setErrors({ ...errors, displayName: null });
                 }}
                 error={errors.displayName}
                 maxLength={24}
                 showCharacterCount={true}
+                style={undefined}
                 testID="profile-display-name-input"
               />
 
@@ -412,13 +410,14 @@ const ProfileSetupScreen = ({ navigation, route }) => {
                 onChangeText={handleUsernameChange}
                 autoCapitalize="none"
                 autoCorrect={false}
-                error={errors.username}
+                error={errors.username ?? undefined}
+                style={undefined}
                 rightIcon={
-                  checkingUsername
+                  (checkingUsername
                     ? 'loading'
                     : usernameAvailable && username.length >= 3 && !errors.username
                       ? 'check'
-                      : null
+                      : null) as any
                 }
                 maxLength={24}
                 showCharacterCount={true}
@@ -435,6 +434,7 @@ const ProfileSetupScreen = ({ navigation, route }) => {
                 style={styles.bioInput}
                 maxLength={240}
                 showCharacterCount={true}
+                error={undefined}
               />
 
               <View style={styles.songSection}>

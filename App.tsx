@@ -11,6 +11,7 @@ import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/spac
 import { colors } from './src/constants/colors';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
+// @ts-ignore -- native module, types not available in tsc
 import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { PowerSyncContext } from '@powersync/react';
@@ -26,16 +27,9 @@ import {
   InAppNotificationBanner,
   WhatsNewModal,
 } from './src/components';
-import {
-  initializeNotifications,
-  handleNotificationReceived,
-  handleNotificationTapped,
-  checkNotificationPermissions,
-  getNotificationToken,
-  storeNotificationToken,
-  markNotificationReadFromPushData,
-  storePinnedNotifId,
-} from './src/services/firebase/notificationService';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore -- notification service module pending migration
+import { initializeNotifications, handleNotificationReceived, handleNotificationTapped, checkNotificationPermissions, getNotificationToken, storeNotificationToken, markNotificationReadFromPushData, storePinnedNotifId } from './src/services/firebase/notificationService';
 import { checkAndRevealPhotos } from './src/services/supabase/darkroomService';
 // getPhotoById available from './src/services/supabase/photoService' if needed for notification handlers
 import { initializeGiphy } from './src/components/comments/GifPicker';
@@ -49,6 +43,7 @@ import {
 } from './src/services/liveActivityService';
 import { WHATS_NEW } from './src/config/whatsNew';
 import AppToast from './src/components/Toast';
+// @ts-ignore -- env module provided by react-native-dotenv at runtime
 import { GIPHY_API_KEY } from '@env';
 import { queryClient, persistOptions } from './src/lib/queryClient';
 import { powerSyncDb } from './src/lib/powersync/database';
@@ -82,9 +77,9 @@ if (Platform.OS !== 'web') {
 }
 
 export default function App() {
-  const notificationListener = useRef();
-  const responseListener = useRef();
-  const tokenRefreshListener = useRef();
+  const notificationListener = useRef<{ remove: () => void } | null>(null);
+  const responseListener = useRef<{ remove: () => void } | null>(null);
+  const tokenRefreshListener = useRef<{ remove: () => void } | null>(null);
 
   // Actively check for OTA updates on launch and reload immediately if one is found.
   // This runs while the splash screen is still visible so the reload is seamless.
@@ -97,11 +92,16 @@ export default function App() {
           return Updates.fetchUpdateAsync().then(() => Updates.reloadAsync());
         }
       })
-      .catch(err => logger.warn('App: OTA update check failed', { error: err.message }));
+      .catch((err: unknown) => logger.warn('App: OTA update check failed', { error: (err as Error).message }));
   }, []);
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
   const [animationDone, setAnimationDone] = useState(false);
-  const [bannerData, setBannerData] = useState(null);
+  const [bannerData, setBannerData] = useState<{
+    title: string;
+    body: string;
+    avatarUrl?: string;
+    notificationData?: Record<string, unknown>;
+  } | null>(null);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   // PowerSync auth-gated connection
@@ -119,13 +119,13 @@ export default function App() {
           const connector = new SupabaseConnector();
           await powerSyncDb.connect(connector);
         } catch (error) {
-          logger.error('PowerSync initialization failed', { error: error.message });
+          logger.error('PowerSync initialization failed', { error: (error as Error).message });
         }
       } else if (wasAuthenticatedRef.current) {
         // User signed out (was previously authenticated) -- disconnect
         wasAuthenticatedRef.current = false;
-        powerSyncDb.disconnectAndClear().catch(error => {
-          logger.error('PowerSync disconnect failed', { error: error.message });
+        powerSyncDb.disconnectAndClear().catch((error: unknown) => {
+          logger.error('PowerSync disconnect failed', { error: (error as Error).message });
         });
       }
     });
@@ -194,7 +194,7 @@ export default function App() {
 
         setShowWhatsNew(true);
       } catch (err) {
-        logger.warn("App: Failed to check what's new", { error: err.message });
+        logger.warn("App: Failed to check what's new", { error: (err as Error).message });
       }
     };
 
@@ -209,7 +209,7 @@ export default function App() {
         await AsyncStorage.setItem(WHATS_NEW_STORAGE_KEY, updateId);
       }
     } catch (err) {
-      logger.warn("App: Failed to store what's new dismissal", { error: err.message });
+      logger.warn("App: Failed to store what's new dismissal", { error: (err as Error).message });
     }
   };
 
@@ -217,8 +217,8 @@ export default function App() {
    * Shared navigation helper for notification taps
    * Used by both the system notification tap listener and the in-app banner press
    */
-  const navigateToNotification = navData => {
-    if (!navData.success) return;
+  const navigateToNotification = (navData: { success: boolean; data?: { screen: string; params?: Record<string, unknown> } }) => {
+    if (!navData.success || !navData.data) return;
     const { screen, params } = navData.data;
     logger.info('App: Notification navigating', { screen, params });
 
@@ -241,56 +241,58 @@ export default function App() {
 
       // Extra delay on cold start to ensure MainTabs is mounted
       const executeNavigation = () => {
+        const nav = navigationRef.current;
+        if (!nav) return;
         logger.info('App: Executing navigation to', { screen, params });
 
         if (screen === 'Camera') {
           // Navigate to Camera tab with all params (openDarkroom, etc.)
           // First navigate to ensure we're on the right tab
-          navigationRef.current.navigate('MainTabs', { screen: 'Camera' });
+          nav.navigate('MainTabs', { screen: 'Camera' });
           // Then set params after a small delay to ensure the screen is focused
           // This works around React Navigation's nested navigator param propagation issue
           setTimeout(() => {
-            navigationRef.current.navigate('MainTabs', {
+            nav.navigate('MainTabs', {
               screen: 'Camera',
-              params: params,
+              params: params as Record<string, unknown>,
             });
           }, 100);
         } else if (screen === 'Feed') {
           // Navigate to Feed tab with params (e.g., highlightUserId for story notifications)
-          navigationRef.current.navigate('MainTabs', {
+          (nav as any).navigate('MainTabs', {
             screen: 'Feed',
             params: params,
           });
         } else if (screen === 'Profile') {
-          navigationRef.current.navigate('MainTabs', { screen });
+          (nav as any).navigate('MainTabs', { screen });
         } else if (screen === 'FriendsList') {
-          // Navigate to FriendsList screen (opens on requests tab by default)
-          navigationRef.current.navigate('FriendsList', params);
+          (nav as any).navigate('FriendsList', params);
         } else if (screen === 'OtherUserProfile') {
           // Navigate to another user's profile (e.g., friend accepted notification)
-          navigationRef.current.navigate('OtherUserProfile', params);
+          (nav as any).navigate('OtherUserProfile', params);
         } else if (screen === 'Activity') {
           // Navigate to Activity screen (notifications) for comment/mention/reaction
           // ActivityScreen handles opening PhotoDetail with proper context
-          navigationRef.current.navigate('Activity', params);
+          (nav as any).navigate('Activity', params);
         } else if (screen === 'Conversation') {
           // Check if we're already on this conversation
-          const currentRoute = navigationRef.current?.getCurrentRoute?.();
+          const currentRoute = nav.getCurrentRoute?.();
+          const routeParams = currentRoute?.params as Record<string, unknown> | undefined;
           const alreadyOnConvo =
             currentRoute?.name === 'Conversation' &&
-            currentRoute?.params?.conversationId === params.conversationId;
+            routeParams?.conversationId === params?.conversationId;
 
-          if (alreadyOnConvo && params.autoOpenSnapId) {
+          if (alreadyOnConvo && params?.autoOpenSnapId) {
             // Already viewing this conversation — inject autoOpenSnapId via setParams
             // so the existing ConversationScreen's effect picks it up
-            navigationRef.current.setParams({
+            nav.setParams({
               autoOpenSnapId: params.autoOpenSnapId,
-            });
+            } as Record<string, unknown>);
           } else if (alreadyOnConvo) {
             // Already on conversation, no snap to open — nothing to do
           } else {
             // Not on this conversation — navigate directly
-            navigationRef.current.navigate('MainTabs', {
+            (nav as any).navigate('MainTabs', {
               screen: 'Messages',
               params: {
                 screen: 'Conversation',
@@ -367,7 +369,7 @@ export default function App() {
             }
           }
         } catch (error) {
-          logger.error('App: Failed to setup notifications', { error: error.message });
+          logger.error('App: Failed to setup notifications', { error: (error as Error).message });
         }
 
         // Register push-to-start token for Live Activities (iOS 17.2+)
@@ -383,7 +385,7 @@ export default function App() {
     // addPushTokenListener fires with the raw APNs/FCM device token, NOT the
     // Expo push token. Storing it here overwrites the valid ExponentPushToken.
     // The correct Expo token is already registered in onAuthStateChanged above.
-    tokenRefreshListener.current = Notifications.addPushTokenListener(({ data }) => {
+    tokenRefreshListener.current = Notifications.addPushTokenListener(({ data }: { data: string }) => {
       logger.debug('App: Device push token changed (not storing)', {
         tokenPrefix: typeof data === 'string' ? data.substring(0, 20) + '...' : 'non-string',
       });
@@ -393,7 +395,7 @@ export default function App() {
     // Shows custom InAppNotificationBanner instead of system notification
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       // Suppress DM and snap notifications if user is currently viewing that conversation
-      const notifData = notification.request.content.data;
+      const notifData = notification.request.content.data as Record<string, any>;
       if (
         (notifData?.type === 'direct_message' || notifData?.type === 'snap') &&
         notifData?.conversationId
@@ -440,10 +442,10 @@ export default function App() {
                   status: downloadResult.status,
                   headers: downloadResult.headers ? Object.keys(downloadResult.headers) : [],
                 });
-              } catch (dlErr) {
+              } catch (dlErr: unknown) {
                 logger.warn('App: [PIN-STEP-2-FAIL] Thumbnail download failed', {
-                  error: dlErr.message,
-                  url: notifData.pinnedThumbnailUrl.substring(0, 80),
+                  error: (dlErr as Error).message,
+                  url: (notifData.pinnedThumbnailUrl as string).substring(0, 80),
                 });
               }
             } else {
@@ -457,10 +459,11 @@ export default function App() {
             });
 
             const laResult = await startPinnedSnapActivity({
-              activityId: notifData.pinnedActivityId,
-              senderName: notifData.senderName || 'Someone',
-              caption: notifData.caption || null,
-              conversationId: notifData.conversationId,
+              activityId: notifData.pinnedActivityId as string,
+              senderName: (notifData.senderName as string) || 'Someone',
+              caption: (notifData.caption as string) || null,
+              conversationId: notifData.conversationId as string,
+              friendId: (notifData.senderId as string) || '',
               thumbnailUri,
             });
             logger.info('App: [PIN-STEP-5] Live Activity result', {
@@ -477,10 +480,10 @@ export default function App() {
                 registerPushToStartToken(uid).catch(() => {});
               }
             }
-          } catch (err) {
+          } catch (err: unknown) {
             logger.error('App: [PIN-FAIL] Failed to start Live Activity', {
-              error: err.message,
-              stack: err.stack?.substring(0, 200),
+              error: (err as Error).message,
+              stack: (err as Error).stack?.substring(0, 200),
             });
           }
         })();
@@ -516,15 +519,9 @@ export default function App() {
 
     return () => {
       unsubscribeAuth();
-      if (notificationListener.current) {
-        notificationListener.current.remove();
-      }
-      if (responseListener.current) {
-        responseListener.current.remove();
-      }
-      if (tokenRefreshListener.current) {
-        tokenRefreshListener.current.remove();
-      }
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+      tokenRefreshListener.current?.remove();
     };
   }, []);
 
@@ -552,7 +549,7 @@ export default function App() {
           }
         } catch (error) {
           logger.error('App: Failed to check/reveal photos on foreground', {
-            error: error.message,
+            error: (error as Error).message,
           });
         }
       }
@@ -582,7 +579,7 @@ export default function App() {
 
           logger.info('App: [RESUME-CHECK] Found pinned snap notifications on foreground', {
             count: pinnedNotifs.length,
-            activityIds: pinnedNotifs.map(n => n.request.content.data.pinnedActivityId),
+            activityIds: pinnedNotifs.map(n => n.request.content.data?.pinnedActivityId),
           });
 
           // Get IDs of already-running Live Activities to avoid duplicates
@@ -596,10 +593,10 @@ export default function App() {
 
           // Start Live Activities for pinned notifications that don't have one yet
           for (const notif of pinnedNotifs) {
-            const notifData = notif.request.content.data;
+            const notifData = notif.request.content.data as Record<string, any>;
             const activityId = notifData.pinnedActivityId;
 
-            if (activeIdSet.has(activityId)) {
+            if (activeIdSet.has(activityId as string)) {
               logger.debug('App: [RESUME-SKIP] Activity already exists', { activityId });
               continue;
             }
@@ -619,20 +616,21 @@ export default function App() {
                   localPath
                 );
                 thumbnailUri = downloadResult.uri;
-              } catch (dlErr) {
+              } catch (dlErr: unknown) {
                 logger.warn('App: [RESUME-DL-FAIL] Thumbnail download failed', {
                   activityId,
-                  error: dlErr.message,
+                  error: (dlErr as Error).message,
                 });
               }
             }
 
             try {
               const result = await startPinnedSnapActivity({
-                activityId,
-                senderName: notifData.senderName || 'Someone',
-                caption: notifData.caption || null,
-                conversationId: notifData.conversationId,
+                activityId: activityId as string,
+                senderName: (notifData.senderName as string) || 'Someone',
+                caption: (notifData.caption as string) || null,
+                conversationId: notifData.conversationId as string,
+                friendId: (notifData.senderId as string) || '',
                 thumbnailUri,
               });
               logger.info('App: [RESUME-RESULT] Live Activity start result', {
@@ -640,16 +638,16 @@ export default function App() {
                 success: result.success,
                 error: result.error,
               });
-            } catch (err) {
+            } catch (err: unknown) {
               logger.error('App: [RESUME-FAIL] Failed to start Live Activity', {
                 activityId,
-                error: err.message,
+                error: (err as Error).message,
               });
             }
           }
-        } catch (err) {
+        } catch (err: unknown) {
           logger.warn('App: [RESUME-ERROR] Foreground resume check failed', {
-            error: err.message,
+            error: (err as Error).message,
           });
         }
       }
@@ -661,7 +659,7 @@ export default function App() {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={persistOptions}
+      persistOptions={persistOptions as any}
       onSuccess={() => {
         queryClient.resumePausedMutations();
       }}

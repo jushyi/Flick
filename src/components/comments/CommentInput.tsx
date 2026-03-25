@@ -47,12 +47,23 @@ import MentionSuggestionsOverlay from './MentionSuggestionsOverlay';
  * @param {function} onMentionSelect - Callback (user) when a mention suggestion is selected
  * @param {ref} ref - Ref forwarded to TextInput for external focus control
  */
+type SelectedMedia = {
+  uri: string;
+  type: 'image' | 'gif';
+};
+
 type Props = {
-  onSubmit: (text: string, mentions: string[], gifUrl?: string | null, imageUrl?: string | null) => void;
+  onSubmit: (text: string, mediaUrl?: string | null, mediaType?: string | null) => void;
   replyingTo?: Record<string, unknown> | null;
   onCancelReply?: () => void;
   initialMention?: string | null;
   placeholder?: string;
+  autoFocus?: boolean;
+  mentionSuggestions?: Array<Record<string, unknown>>;
+  showMentionSuggestions?: boolean;
+  mentionSuggestionsLoading?: boolean;
+  onTextChangeForMentions?: (text: string, cursorPosition: number) => void;
+  onMentionSelect?: (user: Record<string, unknown>) => void;
 };
 
 const CommentInput = forwardRef(
@@ -69,14 +80,14 @@ const CommentInput = forwardRef(
       mentionSuggestionsLoading = false,
       onTextChangeForMentions,
       onMentionSelect,
-    },
+    }: Props,
     ref
   ) => {
     const [text, setText] = useState('');
     const [isFocused, setIsFocused] = useState(false);
-    const [selectedMedia, setSelectedMedia] = useState(null); // { uri, type: 'image' | 'gif' }
+    const [selectedMedia, setSelectedMedia] = useState<SelectedMedia | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const inputRef = useRef(null);
+    const inputRef = useRef<TextInput>(null);
     const cursorPositionRef = useRef(0);
     const prevTextLengthRef = useRef(0);
 
@@ -181,8 +192,8 @@ const CommentInput = forwardRef(
           });
           setSelectedMedia({ uri: result.assets[0].uri, type: 'image' });
         }
-      } catch (error) {
-        logger.error('CommentInput: Image picker error', { error: error.message });
+      } catch (error: unknown) {
+        logger.error('CommentInput: Image picker error', { error: (error as Error).message });
         Alert.alert('Error', 'Failed to pick image. Please try again.');
       }
     }, []);
@@ -203,17 +214,18 @@ const CommentInput = forwardRef(
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      let mediaUrl = null;
-      let mediaType = null;
+      let mediaUrl: string | null = null;
+      let mediaType: string | null = null;
 
       if (selectedMedia) {
         try {
           setIsUploading(true);
 
           if (selectedMedia.type === 'image') {
-            // Upload image to Firebase Storage
+            // Upload image to storage
             logger.debug('CommentInput: Uploading image');
-            mediaUrl = await uploadCommentImage(selectedMedia.uri);
+            const uploadResult = await uploadCommentImage(selectedMedia.uri);
+            mediaUrl = uploadResult.url ?? null;
             mediaType = 'image';
             logger.info('CommentInput: Image uploaded', { mediaUrl: mediaUrl?.substring(0, 50) });
           } else if (selectedMedia.type === 'gif') {
@@ -221,8 +233,8 @@ const CommentInput = forwardRef(
             mediaUrl = selectedMedia.uri;
             mediaType = 'gif';
           }
-        } catch (error) {
-          logger.error('CommentInput: Media upload failed', { error: error.message });
+        } catch (error: unknown) {
+          logger.error('CommentInput: Media upload failed', { error: (error as Error).message });
           Alert.alert('Upload Failed', 'Failed to upload media. Please try again.');
           setIsUploading(false);
           return;
@@ -257,14 +269,15 @@ const CommentInput = forwardRef(
 
     const canSubmit = !!(text.trim() || selectedMedia);
     const isDisabled = !canSubmit || isUploading;
-    const replyUsername = replyingTo?.user?.username || replyingTo?.user?.displayName || 'user';
+    const replyUser = replyingTo?.user as Record<string, unknown> | undefined;
+    const replyUsername = String(replyUser?.username || replyUser?.displayName || 'user');
 
     return (
       <View style={styles.container}>
         {/* @-Mention Suggestions Overlay - positioned above the input */}
         <MentionSuggestionsOverlay
-          suggestions={mentionSuggestions}
-          onSelect={onMentionSelect}
+          suggestions={mentionSuggestions as any}
+          onSelect={onMentionSelect as any}
           visible={showMentionSuggestions}
           loading={mentionSuggestionsLoading}
         />
