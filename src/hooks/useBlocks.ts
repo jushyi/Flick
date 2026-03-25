@@ -5,11 +5,13 @@
  * with proper cache invalidation on mutations.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { queryKeys } from '@/lib/queryKeys';
 import * as blockService from '@/services/supabase/blockService';
 import * as reportService from '@/services/supabase/reportService';
+
+import { useOptimisticMutation } from '@/hooks/useOptimisticMutation';
 
 import logger from '@/utils/logger';
 
@@ -22,9 +24,7 @@ export function useBlockedUsers(userId: string) {
 }
 
 export function useBlockUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({
       blockerId,
       blockedId,
@@ -32,21 +32,18 @@ export function useBlockUser() {
       blockerId: string;
       blockedId: string;
     }) => blockService.blockUser(blockerId, blockedId),
-    onSuccess: (_, { blockerId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.blocks.list(blockerId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.friendships.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.photos.feed() });
-    },
-    onError: (error) => {
-      logger.error('useBlockUser: Failed', { error: (error as Error).message });
-    },
+    queryKey: (vars: { blockerId: string }) => queryKeys.blocks.list(vars.blockerId),
+    updater: (old: any[] | undefined, vars: { blockedId: string }) => [
+      ...(old || []),
+      { blockedId: vars.blockedId, createdAt: new Date().toISOString() },
+    ],
+    errorMessage: 'Failed to block user',
+    invalidateKeys: [queryKeys.friendships.all, queryKeys.photos.feed()],
   });
 }
 
 export function useUnblockUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({
       blockerId,
       blockedId,
@@ -54,14 +51,10 @@ export function useUnblockUser() {
       blockerId: string;
       blockedId: string;
     }) => blockService.unblockUser(blockerId, blockedId),
-    onSuccess: (_, { blockerId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.blocks.list(blockerId) });
-    },
-    onError: (error) => {
-      logger.error('useUnblockUser: Failed', {
-        error: (error as Error).message,
-      });
-    },
+    queryKey: (vars: { blockerId: string }) => queryKeys.blocks.list(vars.blockerId),
+    updater: (old: any[] | undefined, vars: { blockedId: string }) =>
+      (old || []).filter((b: any) => b.blockedId !== vars.blockedId),
+    errorMessage: 'Failed to unblock user',
   });
 }
 

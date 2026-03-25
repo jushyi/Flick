@@ -11,6 +11,8 @@ import { queryKeys } from '@/lib/queryKeys';
 import * as albumService from '@/services/supabase/albumService';
 import type { Album } from '@/services/supabase/albumService';
 
+import { useOptimisticMutation } from '@/hooks/useOptimisticMutation';
+
 import logger from '@/utils/logger';
 
 /**
@@ -63,12 +65,11 @@ export function useCreateAlbum() {
 }
 
 /**
- * Update album fields. Invalidates album detail on settle.
+ * Update album fields with optimistic update.
+ * Immediately updates title/coverPhotoId in cache.
  */
 export function useUpdateAlbum() {
-  const qc = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({
       albumId,
       updates,
@@ -76,11 +77,12 @@ export function useUpdateAlbum() {
       albumId: string;
       updates: { title?: string; coverPhotoId?: string };
     }) => albumService.updateAlbum(albumId, updates),
-    onSettled: (_data, _error, variables) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.albums.detail(variables.albumId),
-      });
+    queryKey: (vars: { albumId: string }) => queryKeys.albums.detail(vars.albumId),
+    updater: (old: any, vars: { updates: { title?: string; coverPhotoId?: string } }) => {
+      if (!old) return old;
+      return { ...old, ...vars.updates };
     },
+    errorMessage: 'Failed to update album',
   });
 }
 
@@ -111,9 +113,7 @@ export function useDeleteAlbum() {
  * Immediately appends photo IDs to cached album detail.
  */
 export function useAddPhotosToAlbum() {
-  const qc = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({
       albumId,
       photoIds,
@@ -121,46 +121,12 @@ export function useAddPhotosToAlbum() {
       albumId: string;
       photoIds: string[];
     }) => albumService.addPhotosToAlbum(albumId, photoIds),
-
-    onMutate: async ({ albumId, photoIds }) => {
-      // Cancel any outgoing refetches
-      await qc.cancelQueries({
-        queryKey: queryKeys.albums.detail(albumId),
-      });
-
-      // Snapshot previous value
-      const previous = qc.getQueryData(queryKeys.albums.detail(albumId));
-
-      // Optimistically add photos
-      qc.setQueryData(
-        queryKeys.albums.detail(albumId),
-        (old: any) => {
-          if (!old) return old;
-          return {
-            ...old,
-            photos: [...(old.photos || []), ...photoIds],
-          };
-        }
-      );
-
-      return { previous };
+    queryKey: (vars: { albumId: string }) => queryKeys.albums.detail(vars.albumId),
+    updater: (old: any, vars: { photoIds: string[] }) => {
+      if (!old) return old;
+      return { ...old, photos: [...(old.photos || []), ...vars.photoIds] };
     },
-
-    onError: (_error, variables, context) => {
-      // Rollback to previous value
-      if (context?.previous) {
-        qc.setQueryData(
-          queryKeys.albums.detail(variables.albumId),
-          context.previous
-        );
-      }
-    },
-
-    onSettled: (_data, _error, variables) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.albums.detail(variables.albumId),
-      });
-    },
+    errorMessage: 'Failed to update album',
   });
 }
 
@@ -169,9 +135,7 @@ export function useAddPhotosToAlbum() {
  * Immediately removes photo ID from cached album detail.
  */
 export function useRemovePhotoFromAlbum() {
-  const qc = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({
       albumId,
       photoId,
@@ -179,42 +143,15 @@ export function useRemovePhotoFromAlbum() {
       albumId: string;
       photoId: string;
     }) => albumService.removePhotoFromAlbum(albumId, photoId),
-
-    onMutate: async ({ albumId, photoId }) => {
-      await qc.cancelQueries({
-        queryKey: queryKeys.albums.detail(albumId),
-      });
-
-      const previous = qc.getQueryData(queryKeys.albums.detail(albumId));
-
-      qc.setQueryData(
-        queryKeys.albums.detail(albumId),
-        (old: any) => {
-          if (!old) return old;
-          return {
-            ...old,
-            photos: (old.photos || []).filter((id: string) => id !== photoId),
-          };
-        }
-      );
-
-      return { previous };
+    queryKey: (vars: { albumId: string }) => queryKeys.albums.detail(vars.albumId),
+    updater: (old: any, vars: { photoId: string }) => {
+      if (!old) return old;
+      return {
+        ...old,
+        photos: (old.photos || []).filter((id: string) => id !== vars.photoId),
+      };
     },
-
-    onError: (_error, variables, context) => {
-      if (context?.previous) {
-        qc.setQueryData(
-          queryKeys.albums.detail(variables.albumId),
-          context.previous
-        );
-      }
-    },
-
-    onSettled: (_data, _error, variables) => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.albums.detail(variables.albumId),
-      });
-    },
+    errorMessage: 'Failed to update album',
   });
 }
 

@@ -7,13 +7,15 @@
  * Also exports mutation hooks for add, delete, like, and unlike operations.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
 import * as commentService from '@/services/supabase/commentService';
 import type { AddCommentParams } from '@/services/supabase/commentService';
+
+import { useOptimisticMutation } from '@/hooks/useOptimisticMutation';
 
 import logger from '@/utils/logger';
 
@@ -61,42 +63,43 @@ export function useComments(photoId: string) {
 
 /**
  * Mutation hook for adding a comment.
- * Invalidates comments list on success.
+ * Optimistic update: appends temporary comment to cache, rolls back on error.
  */
 export function useAddComment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: (params: AddCommentParams) => commentService.addComment(params),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.comments.list(variables.photoId),
-      });
-    },
-    onError: (error) => {
-      logger.error('Failed to add comment', { error: (error as Error).message });
-    },
+    queryKey: (vars: AddCommentParams) => queryKeys.comments.list(vars.photoId),
+    updater: (old: any[] | undefined, vars: AddCommentParams) => [
+      ...(old || []),
+      {
+        id: `temp-${Date.now()}`,
+        photoId: vars.photoId,
+        userId: vars.userId,
+        text: vars.text,
+        mentions: vars.mentions || [],
+        createdAt: new Date().toISOString(),
+        likeCount: 0,
+        username: vars.username ?? '',
+        displayName: vars.displayName ?? '',
+      },
+    ],
+    errorMessage: 'Failed to post comment',
   });
 }
 
 /**
  * Mutation hook for deleting a comment.
- * Invalidates comments list on success.
+ * Optimistic update: removes comment from cache, rolls back on error.
  */
 export function useDeleteComment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({ commentId }: { commentId: string; photoId: string }) =>
       commentService.deleteComment(commentId),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.comments.list(variables.photoId),
-      });
-    },
-    onError: (error) => {
-      logger.error('Failed to delete comment', { error: (error as Error).message });
-    },
+    queryKey: (vars: { commentId: string; photoId: string }) =>
+      queryKeys.comments.list(vars.photoId),
+    updater: (old: any[] | undefined, vars: { commentId: string }) =>
+      (old || []).filter((c: any) => c.id !== vars.commentId),
+    errorMessage: 'Failed to delete comment',
   });
 }
 
@@ -105,34 +108,15 @@ export function useDeleteComment() {
  * Optimistic update: increments like_count in cached data.
  */
 export function useLikeComment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({ commentId, userId }: { commentId: string; userId: string; photoId: string }) =>
       commentService.likeComment(commentId, userId),
-    onMutate: async (variables) => {
-      const key = queryKeys.comments.list(variables.photoId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData(key);
-
-      queryClient.setQueryData(key, (old: any[] | undefined) =>
-        old?.map((c) =>
-          c.id === variables.commentId ? { ...c, likeCount: (c.likeCount ?? 0) + 1 } : c
-        )
-      );
-
-      return { previous };
-    },
-    onError: (_error, variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(queryKeys.comments.list(variables.photoId), context.previous);
-      }
-    },
-    onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.comments.list(variables.photoId),
-      });
-    },
+    queryKey: (vars: { photoId: string }) => queryKeys.comments.list(vars.photoId),
+    updater: (old: any[] | undefined, vars: { commentId: string }) =>
+      (old || []).map((c: any) =>
+        c.id === vars.commentId ? { ...c, likeCount: (c.likeCount ?? 0) + 1 } : c
+      ),
+    errorMessage: 'Failed to like comment',
   });
 }
 
@@ -141,35 +125,16 @@ export function useLikeComment() {
  * Optimistic update: decrements like_count in cached data.
  */
 export function useUnlikeComment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation({
     mutationFn: ({ commentId, userId }: { commentId: string; userId: string; photoId: string }) =>
       commentService.unlikeComment(commentId, userId),
-    onMutate: async (variables) => {
-      const key = queryKeys.comments.list(variables.photoId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData(key);
-
-      queryClient.setQueryData(key, (old: any[] | undefined) =>
-        old?.map((c) =>
-          c.id === variables.commentId
-            ? { ...c, likeCount: Math.max(0, (c.likeCount ?? 0) - 1) }
-            : c
-        )
-      );
-
-      return { previous };
-    },
-    onError: (_error, variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(queryKeys.comments.list(variables.photoId), context.previous);
-      }
-    },
-    onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.comments.list(variables.photoId),
-      });
-    },
+    queryKey: (vars: { photoId: string }) => queryKeys.comments.list(vars.photoId),
+    updater: (old: any[] | undefined, vars: { commentId: string }) =>
+      (old || []).map((c: any) =>
+        c.id === vars.commentId
+          ? { ...c, likeCount: Math.max(0, (c.likeCount ?? 0) - 1) }
+          : c
+      ),
+    errorMessage: 'Failed to unlike comment',
   });
 }

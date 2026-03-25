@@ -35,6 +35,11 @@ jest.mock('../../src/utils/logger', () => ({
   },
 }));
 
+jest.mock('react-native-toast-message', () => ({
+  __esModule: true,
+  default: { show: jest.fn(), hide: jest.fn() },
+}));
+
 // =============================================================================
 // Imports (after mocks)
 // =============================================================================
@@ -210,15 +215,15 @@ describe('useRemovePhotoFromAlbum', () => {
 // Structural: verify hooks source contains optimistic update patterns
 // =============================================================================
 describe('useAlbums optimistic update code', () => {
-  it('useAddPhotosToAlbum source contains onMutate for optimistic update', () => {
-    // Verify the hook function body includes optimistic update pattern
+  it('useAddPhotosToAlbum source uses useOptimisticMutation for optimistic update', () => {
+    // Verify the hook function body includes optimistic mutation pattern
     const source = useAddPhotosToAlbum.toString();
-    expect(source).toContain('onMutate');
+    expect(source).toContain('useOptimisticMutation');
   });
 
-  it('useRemovePhotoFromAlbum source contains onMutate for optimistic update', () => {
+  it('useRemovePhotoFromAlbum source uses useOptimisticMutation for optimistic update', () => {
     const source = useRemovePhotoFromAlbum.toString();
-    expect(source).toContain('onMutate');
+    expect(source).toContain('useOptimisticMutation');
   });
 });
 

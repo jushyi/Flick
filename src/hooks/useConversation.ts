@@ -18,6 +18,8 @@ import * as Notifications from 'expo-notifications';
 
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
+
+import { useOptimisticMutation } from '@/hooks/useOptimisticMutation';
 import {
   getMessages,
   sendMessage,
@@ -373,4 +375,27 @@ export function useConversation(conversationId: string): UseConversationResult {
     getSnapUrl: handleGetSnapUrl,
     sendTaggedPhoto: handleSendTaggedPhoto,
   };
+}
+
+// ============================================================================
+// Standalone mutation: mark conversation as read (optimistic)
+// ============================================================================
+
+/**
+ * Optimistic mutation for marking a conversation as read.
+ * Sets unread count to 0 instantly, invalidates conversation list badge.
+ */
+export function useMarkAsRead() {
+  return useOptimisticMutation({
+    mutationFn: ({ conversationId, userId }: { conversationId: string; userId: string }) =>
+      markConversationRead(conversationId, userId),
+    queryKey: (vars: { conversationId: string }) =>
+      queryKeys.conversations.detail(vars.conversationId),
+    updater: (old: any) => {
+      if (!old) return old;
+      return { ...old, unreadCount: 0 };
+    },
+    errorMessage: 'Failed to mark as read',
+    invalidateKeys: [queryKeys.conversations.list()],
+  });
 }
