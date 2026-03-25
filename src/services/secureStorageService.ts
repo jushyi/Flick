@@ -1,47 +1,13 @@
-/**
- * Secure Storage Service
- *
- * Provides encrypted storage using iOS Keychain via expo-secure-store.
- * Used for storing sensitive data like FCM tokens.
- *
- * Key features:
- * - Encrypted storage using iOS Keychain
- * - AFTER_FIRST_UNLOCK accessibility (available after device unlock)
- * - Consistent error handling with { success, error } pattern
- * - Matches existing service patterns in codebase
- */
-
 import * as SecureStore from 'expo-secure-store';
 import logger from '../utils/logger';
 
-// =============================================================================
-// CONFIGURATION
-// =============================================================================
-
-/**
- * Keychain service identifier - matches bundle ID for organization
- */
 const KEYCHAIN_SERVICE = 'com.spoodsjs.oly';
 
-/**
- * Storage keys for sensitive data
- * Add new keys here as needed
- */
 export const STORAGE_KEYS = {
   FCM_TOKEN: 'fcm_token',
-};
+} as const;
 
-// =============================================================================
-// SECURE STORAGE FUNCTIONS
-// =============================================================================
-
-/**
- * Store a value securely in iOS Keychain
- * @param {string} key - Storage key (use STORAGE_KEYS constants)
- * @param {string} value - Value to store (must be string, max 2KB)
- * @returns {Promise<boolean>} Success status
- */
-const setItem = async (key, value) => {
+const setItem = async (key: string, value: string): Promise<boolean> => {
   try {
     logger.debug('SecureStorage.setItem: Storing value', { key });
 
@@ -52,22 +18,14 @@ const setItem = async (key, value) => {
 
     logger.debug('SecureStorage.setItem: Value stored successfully', { key });
     return true;
-  } catch (error) {
-    // 2KB limit can cause failures for large values
-    logger.error('SecureStorage.setItem: Failed to store value', {
-      key,
-      error: error.message,
-    });
+  } catch (err) {
+    const error = err as Error;
+    logger.error('SecureStorage.setItem: Failed to store value', { key, error: error.message });
     return false;
   }
 };
 
-/**
- * Retrieve a value from iOS Keychain
- * @param {string} key - Storage key (use STORAGE_KEYS constants)
- * @returns {Promise<string|null>} Stored value or null if not found
- */
-const getItem = async key => {
+const getItem = async (key: string): Promise<string | null> => {
   try {
     logger.debug('SecureStorage.getItem: Retrieving value', { key });
 
@@ -82,21 +40,14 @@ const getItem = async key => {
     }
 
     return value;
-  } catch (error) {
-    logger.error('SecureStorage.getItem: Failed to retrieve value', {
-      key,
-      error: error.message,
-    });
+  } catch (err) {
+    const error = err as Error;
+    logger.error('SecureStorage.getItem: Failed to retrieve value', { key, error: error.message });
     return null;
   }
 };
 
-/**
- * Delete a value from iOS Keychain
- * @param {string} key - Storage key (use STORAGE_KEYS constants)
- * @returns {Promise<boolean>} Success status
- */
-const deleteItem = async key => {
+const deleteItem = async (key: string): Promise<boolean> => {
   try {
     logger.debug('SecureStorage.deleteItem: Deleting value', { key });
 
@@ -106,21 +57,14 @@ const deleteItem = async key => {
 
     logger.debug('SecureStorage.deleteItem: Value deleted', { key });
     return true;
-  } catch (error) {
-    logger.error('SecureStorage.deleteItem: Failed to delete value', {
-      key,
-      error: error.message,
-    });
+  } catch (err) {
+    const error = err as Error;
+    logger.error('SecureStorage.deleteItem: Failed to delete value', { key, error: error.message });
     return false;
   }
 };
 
-/**
- * Clear all known secure storage keys
- * Used during logout to ensure complete cleanup
- * @returns {Promise<boolean>} Success status (true if all keys cleared)
- */
-const clearAll = async () => {
+const clearAll = async (): Promise<boolean> => {
   try {
     logger.debug('SecureStorage.clearAll: Clearing all keys');
 
@@ -141,19 +85,21 @@ const clearAll = async () => {
     }
 
     return allCleared;
-  } catch (error) {
-    logger.error('SecureStorage.clearAll: Failed to clear all keys', {
-      error: error.message,
-    });
+  } catch (err) {
+    const error = err as Error;
+    logger.error('SecureStorage.clearAll: Failed to clear all keys', { error: error.message });
     return false;
   }
 };
 
-// =============================================================================
-// EXPORT
-// =============================================================================
+interface SecureStorageService {
+  setItem: (key: string, value: string) => Promise<boolean>;
+  getItem: (key: string) => Promise<string | null>;
+  deleteItem: (key: string) => Promise<boolean>;
+  clearAll: () => Promise<boolean>;
+}
 
-export const secureStorage = {
+export const secureStorage: SecureStorageService = {
   setItem,
   getItem,
   deleteItem,

@@ -1,20 +1,5 @@
-/**
- * In-App Purchase Service
- *
- * Manages IAP product fetching, purchase flow, and contributor status.
- * Uses react-native-iap for App Store integration.
- *
- * Key functions:
- * - initializeIAP: Initialize connection to App Store
- * - getProducts: Fetch product details from App Store
- * - purchaseProduct: Initiate purchase flow for a product
- * - finishTransaction: Acknowledge/finish a transaction
- * - restorePurchases: Check for previous purchases
- * - checkContributorStatus: Check if user has contributed
- * - saveContribution: Save purchase to Firestore
- */
-
 import * as RNIap from 'react-native-iap';
+import type { ProductPurchase, Product } from 'react-native-iap';
 import {
   getFirestore,
   collection,
@@ -31,28 +16,52 @@ import logger from '../utils/logger';
 
 const db = getFirestore();
 
-// IAP product IDs - must match App Store Connect configuration
-export const PRODUCT_IDS = [
-  'flick_contribution_099', // $0.99
-  'flick_contribution_299', // $2.99
-  'flick_contribution_499', // $4.99
-  'flick_contribution_999', // $9.99
+export const PRODUCT_IDS: string[] = [
+  'flick_contribution_099',
+  'flick_contribution_299',
+  'flick_contribution_499',
+  'flick_contribution_999',
 ];
 
-// Track if IAP is initialized
 let isIAPInitialized = false;
 
-/**
- * Initialize IAP connection to App Store
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export const initializeIAP = async () => {
+interface IAPResult {
+  success: boolean;
+  error?: string;
+}
+
+interface ProductsResult extends IAPResult {
+  products?: Product[];
+}
+
+interface PurchaseResult extends IAPResult {
+  purchase?: ProductPurchase;
+  userCancelled?: boolean;
+}
+
+interface ContributorResult extends IAPResult {
+  isContributor?: boolean;
+}
+
+interface ContributionRecord {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface ContributionsResult extends IAPResult {
+  contributions?: ContributionRecord[];
+}
+
+interface RestoreResult extends IAPResult {
+  purchases?: ProductPurchase[];
+}
+
+export const initializeIAP = async (): Promise<IAPResult> => {
   if (isIAPInitialized) {
     logger.debug('IAPService.initializeIAP: Already initialized');
     return { success: true };
   }
 
-  // Check if native module is available (not available in Expo Go or dev builds without native linking)
   if (!RNIap || typeof RNIap.initConnection !== 'function') {
     logger.warn('IAPService.initializeIAP: Native module not available in this build');
     return { success: false, error: 'IAP not available in this build' };
@@ -64,74 +73,60 @@ export const initializeIAP = async () => {
     isIAPInitialized = true;
     logger.info('IAPService.initializeIAP: Connection established');
     return { success: true };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('IAPService.initializeIAP: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
 };
 
-/**
- * End IAP connection (call on app unmount if needed)
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export const endIAPConnection = async () => {
+export const endIAPConnection = async (): Promise<IAPResult> => {
   try {
     await RNIap.endConnection();
     isIAPInitialized = false;
     logger.info('IAPService.endIAPConnection: Connection closed');
     return { success: true };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('IAPService.endIAPConnection: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
 };
 
-/**
- * Fetch product details from App Store
- * @returns {Promise<{success: boolean, products?: Array, error?: string}>}
- */
-export const getProducts = async () => {
+export const getProducts = async (): Promise<ProductsResult> => {
   try {
     if (!isIAPInitialized) {
       const initResult = await initializeIAP();
-      if (!initResult.success) {
-        return initResult;
-      }
+      if (!initResult.success) return initResult;
     }
 
     logger.debug('IAPService.getProducts: Fetching products', { productIds: PRODUCT_IDS });
     const products = await RNIap.getProducts({ skus: PRODUCT_IDS });
     logger.info('IAPService.getProducts: Fetched successfully', { count: products.length });
     return { success: true, products };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('IAPService.getProducts: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
 };
 
-/**
- * Purchase a product
- * @param {string} productId - Product ID to purchase
- * @returns {Promise<{success: boolean, purchase?: object, error?: string}>}
- */
-export const purchaseProduct = async productId => {
+export const purchaseProduct = async (productId: string): Promise<PurchaseResult> => {
   try {
     if (!isIAPInitialized) {
       const initResult = await initializeIAP();
-      if (!initResult.success) {
-        return initResult;
-      }
+      if (!initResult.success) return initResult;
     }
 
     logger.debug('IAPService.purchaseProduct: Starting purchase', { productId });
     const purchase = await RNIap.requestPurchase({ sku: productId });
     logger.info('IAPService.purchaseProduct: Purchase completed', {
       productId,
-      transactionId: purchase.transactionId,
+      transactionId: (purchase as ProductPurchase).transactionId,
     });
-    return { success: true, purchase };
-  } catch (error) {
-    // User cancelled is a normal flow, not an error
+    return { success: true, purchase: purchase as ProductPurchase };
+  } catch (err) {
+    const error = err as Error & { code?: string };
     if (error.code === 'E_USER_CANCELLED') {
       logger.debug('IAPService.purchaseProduct: User cancelled', { productId });
       return { success: false, error: 'cancelled', userCancelled: true };
@@ -141,13 +136,7 @@ export const purchaseProduct = async productId => {
   }
 };
 
-/**
- * Finish a transaction (acknowledge to App Store)
- * CRITICAL: Must be called after successful purchase to prevent re-delivery
- * @param {object} purchase - Purchase object from requestPurchase
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export const finishTransaction = async purchase => {
+export const finishTransaction = async (purchase: ProductPurchase): Promise<IAPResult> => {
   try {
     logger.debug('IAPService.finishTransaction: Finishing transaction', {
       transactionId: purchase.transactionId,
@@ -157,41 +146,32 @@ export const finishTransaction = async purchase => {
       transactionId: purchase.transactionId,
     });
     return { success: true };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('IAPService.finishTransaction: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
 };
 
-/**
- * Restore previous purchases
- * @returns {Promise<{success: boolean, purchases?: Array, error?: string}>}
- */
-export const restorePurchases = async () => {
+export const restorePurchases = async (): Promise<RestoreResult> => {
   try {
     if (!isIAPInitialized) {
       const initResult = await initializeIAP();
-      if (!initResult.success) {
-        return initResult;
-      }
+      if (!initResult.success) return initResult;
     }
 
     logger.debug('IAPService.restorePurchases: Starting restore');
     const purchases = await RNIap.getAvailablePurchases();
     logger.info('IAPService.restorePurchases: Restored', { count: purchases.length });
     return { success: true, purchases };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('IAPService.restorePurchases: Failed', { error: error.message });
     return { success: false, error: error.message };
   }
 };
 
-/**
- * Check if user is a contributor
- * @param {string} userId - User ID
- * @returns {Promise<{success: boolean, isContributor: boolean, error?: string}>}
- */
-export const checkContributorStatus = async userId => {
+export const checkContributorStatus = async (userId: string): Promise<ContributorResult> => {
   try {
     logger.debug('IAPService.checkContributorStatus: Checking', { userId });
     const userRef = doc(db, 'users', userId);
@@ -201,30 +181,27 @@ export const checkContributorStatus = async userId => {
       return { success: false, error: 'User not found' };
     }
 
-    const userData = userDoc.data();
+    const userData = userDoc.data() as Record<string, unknown>;
     const isContributor = userData.isContributor === true;
 
     logger.debug('IAPService.checkContributorStatus: Checked', { userId, isContributor });
     return { success: true, isContributor };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('IAPService.checkContributorStatus: Failed', { userId, error: error.message });
     return { success: false, error: error.message };
   }
 };
 
-/**
- * Save contribution to Firestore and mark user as contributor
- * @param {string} userId - User ID
- * @param {string} productId - Product ID purchased
- * @param {string} transactionId - Transaction ID from App Store
- * @param {string} amount - Product price (e.g., "$0.99")
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export const saveContribution = async (userId, productId, transactionId, amount) => {
+export const saveContribution = async (
+  userId: string,
+  productId: string,
+  transactionId: string,
+  amount: string
+): Promise<IAPResult> => {
   try {
     logger.debug('IAPService.saveContribution: Saving', { userId, productId, transactionId });
 
-    // Save contribution record
     const contributionsCollection = collection(db, 'contributions');
     await addDoc(contributionsCollection, {
       userId,
@@ -234,19 +211,18 @@ export const saveContribution = async (userId, productId, transactionId, amount)
       createdAt: serverTimestamp(),
     });
 
-    // Mark user as contributor (if not already)
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
 
     if (userDoc.exists()) {
-      const userData = userDoc.data();
-      const updates = {};
+      const userData = userDoc.data() as Record<string, unknown>;
+      const updates: Record<string, unknown> = {};
 
       if (!userData.isContributor) {
         updates.isContributor = true;
       }
       if (!userData.nameColor) {
-        updates.nameColor = null; // null means default (white)
+        updates.nameColor = null;
       }
 
       if (Object.keys(updates).length > 0) {
@@ -255,45 +231,31 @@ export const saveContribution = async (userId, productId, transactionId, amount)
       }
     }
 
-    logger.info('IAPService.saveContribution: Contribution saved', {
-      userId,
-      productId,
-      transactionId,
-    });
+    logger.info('IAPService.saveContribution: Contribution saved', { userId, productId, transactionId });
     return { success: true };
-  } catch (error) {
-    logger.error('IAPService.saveContribution: Failed', {
-      userId,
-      productId,
-      error: error.message,
-    });
+  } catch (err) {
+    const error = err as Error;
+    logger.error('IAPService.saveContribution: Failed', { userId, productId, error: error.message });
     return { success: false, error: error.message };
   }
 };
 
-/**
- * Get user's contribution history
- * @param {string} userId - User ID
- * @returns {Promise<{success: boolean, contributions?: Array, error?: string}>}
- */
-export const getUserContributions = async userId => {
+export const getUserContributions = async (userId: string): Promise<ContributionsResult> => {
   try {
     logger.debug('IAPService.getUserContributions: Fetching', { userId });
     const contributionsCollection = collection(db, 'contributions');
     const q = query(contributionsCollection, where('userId', '==', userId));
     const snapshot = await getDocs(q);
 
-    const contributions = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
+    const contributions: ContributionRecord[] = snapshot.docs.map(d => ({
+      id: d.id,
+      ...(d.data() as Record<string, unknown>),
     }));
 
-    logger.info('IAPService.getUserContributions: Fetched', {
-      userId,
-      count: contributions.length,
-    });
+    logger.info('IAPService.getUserContributions: Fetched', { userId, count: contributions.length });
     return { success: true, contributions };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('IAPService.getUserContributions: Failed', { userId, error: error.message });
     return { success: false, error: error.message };
   }

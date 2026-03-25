@@ -1,49 +1,39 @@
-/**
- * Screenshot Queue Service
- *
- * Handles offline persistence for screenshot detection events.
- * When the device is offline and a screenshot event cannot be written to
- * Firestore immediately, the event is queued in AsyncStorage and retried
- * when connectivity returns.
- *
- * Mirrors the uploadQueueService.js pattern:
- * - AsyncStorage persistence (survives app restarts)
- * - Sequential processing with retry
- * - MAX_RETRIES limit per event
- */
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { recordScreenshot } from './firebase/screenshotService';
 
 import logger from '../utils/logger';
 
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
 const QUEUE_STORAGE_KEY = '@screenshotQueue';
 const MAX_RETRIES = 3;
 
-// =============================================================================
-// QUEUE OPERATIONS
-// =============================================================================
+interface ScreenshotEvent {
+  conversationId: string;
+  snapMessageId: string;
+  screenshotterId: string;
+  screenshotterName: string;
+}
 
-/**
- * Queue a screenshot event for later processing.
- * Called when a screenshot is detected but Firestore write fails (offline).
- *
- * @param {Object} event - Screenshot event data
- * @param {string} event.conversationId - Conversation document ID
- * @param {string} event.snapMessageId - ID of the snap message that was screenshotted
- * @param {string} event.screenshotterId - User ID of the person who took the screenshot
- * @param {string} event.screenshotterName - Display name of the screenshotter
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export const queueScreenshotEvent = async event => {
+interface QueuedEvent extends ScreenshotEvent {
+  retryCount: number;
+  queuedAt: number;
+}
+
+interface QueueResult {
+  success: boolean;
+  error?: string;
+}
+
+interface ProcessResult {
+  success: boolean;
+  processed: number;
+  failed: number;
+}
+
+export const queueScreenshotEvent = async (event: ScreenshotEvent): Promise<QueueResult> => {
   try {
     const stored = await AsyncStorage.getItem(QUEUE_STORAGE_KEY);
-    const queue = stored ? JSON.parse(stored) : [];
+    const queue: QueuedEvent[] = stored ? JSON.parse(stored) : [];
 
     queue.push({
       ...event,
@@ -60,7 +50,8 @@ export const queueScreenshotEvent = async event => {
     });
 
     return { success: true };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('screenshotQueueService.queueScreenshotEvent: Failed to queue event', {
       error: error.message,
     });
@@ -68,18 +59,10 @@ export const queueScreenshotEvent = async event => {
   }
 };
 
-/**
- * Process all queued screenshot events.
- * Iterates through the queue, attempts to write each event to Firestore via
- * recordScreenshot. On success, removes the event. On failure, increments
- * retryCount. Events exceeding MAX_RETRIES are removed with a warning.
- *
- * @returns {Promise<{success: boolean, processed: number, failed: number}>}
- */
-export const processScreenshotQueue = async () => {
+export const processScreenshotQueue = async (): Promise<ProcessResult> => {
   try {
     const stored = await AsyncStorage.getItem(QUEUE_STORAGE_KEY);
-    const queue = stored ? JSON.parse(stored) : [];
+    const queue: QueuedEvent[] = stored ? JSON.parse(stored) : [];
 
     if (queue.length === 0) {
       logger.debug('screenshotQueueService.processScreenshotQueue: Queue empty');
@@ -90,7 +73,7 @@ export const processScreenshotQueue = async () => {
       queueLength: queue.length,
     });
 
-    const remaining = [];
+    const remaining: QueuedEvent[] = [];
     let processed = 0;
     let failed = 0;
 
@@ -113,7 +96,8 @@ export const processScreenshotQueue = async () => {
         } else {
           throw new Error(result.error || 'recordScreenshot returned failure');
         }
-      } catch (error) {
+      } catch (err) {
+        const error = err as Error;
         event.retryCount = (event.retryCount || 0) + 1;
 
         if (event.retryCount >= MAX_RETRIES) {
@@ -148,7 +132,8 @@ export const processScreenshotQueue = async () => {
     });
 
     return { success: true, processed, failed };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('screenshotQueueService.processScreenshotQueue: Failed', {
       error: error.message,
     });
@@ -156,17 +141,13 @@ export const processScreenshotQueue = async () => {
   }
 };
 
-/**
- * Get the current queue length (for debugging/logging).
- *
- * @returns {Promise<number>} Current number of events in the queue
- */
-export const getQueueLength = async () => {
+export const getQueueLength = async (): Promise<number> => {
   try {
     const stored = await AsyncStorage.getItem(QUEUE_STORAGE_KEY);
-    const queue = stored ? JSON.parse(stored) : [];
+    const queue: QueuedEvent[] = stored ? JSON.parse(stored) : [];
     return queue.length;
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('screenshotQueueService.getQueueLength: Failed to read queue', {
       error: error.message,
     });

@@ -1,40 +1,39 @@
-/**
- * iTunes Search API Service
- *
- * Provides song search functionality using the iTunes Search API.
- * Returns normalized song data for profile song feature.
- */
-
 import logger from '../utils/logger';
 
-/**
- * @typedef {Object} Song
- * @property {string} id - iTunes trackId as string
- * @property {string} title - Track name
- * @property {string} artist - Artist name
- * @property {string} album - Album/collection name
- * @property {string} albumArt - Artwork URL (300x300)
- * @property {string} previewUrl - 30-second preview URL
- * @property {number} duration - Track duration in ms
- */
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  album: string;
+  albumArt: string;
+  previewUrl: string;
+  duration: number;
+}
+
+interface ITunesSearchResponse {
+  resultCount: number;
+  results: ITunesTrack[];
+}
+
+interface ITunesTrack {
+  trackId: number;
+  trackName: string;
+  artistName: string;
+  collectionName?: string;
+  artworkUrl100?: string;
+  previewUrl?: string;
+  trackTimeMillis?: number;
+}
 
 const ITUNES_API_BASE = 'https://itunes.apple.com/search';
 
-/**
- * Search for songs using the iTunes Search API.
- *
- * @param {string} query - Search term
- * @param {number} limit - Maximum number of results (default 25)
- * @returns {Promise<Song[]>} Array of song results
- */
-export const searchSongs = async (query, limit = 25) => {
-  // Return early if query is empty or whitespace
-  if (!query || !query.trim()) {
+export const searchSongs = async (searchQuery: string, limit = 25): Promise<Song[]> => {
+  if (!searchQuery || !searchQuery.trim()) {
     logger.debug('iTunesService: Empty query, returning empty results');
     return [];
   }
 
-  const trimmedQuery = query.trim();
+  const trimmedQuery = searchQuery.trim();
   logger.debug('iTunesService: Searching for', { query: trimmedQuery, limit });
 
   try {
@@ -58,16 +57,14 @@ export const searchSongs = async (query, limit = 25) => {
       return [];
     }
 
-    const data = await response.json();
+    const data: ITunesSearchResponse = await response.json();
     logger.debug('iTunesService: Received results', { count: data.resultCount });
 
-    // Map results to Song type
-    const songs = data.results.map(track => ({
+    const songs: Song[] = data.results.map(track => ({
       id: String(track.trackId),
       title: track.trackName,
       artist: track.artistName,
       album: track.collectionName || '',
-      // Replace 100x100 with 300x300 for higher quality artwork
       albumArt: track.artworkUrl100 ? track.artworkUrl100.replace(/100x100/, '300x300') : '',
       previewUrl: track.previewUrl || '',
       duration: track.trackTimeMillis || 0,
@@ -79,22 +76,15 @@ export const searchSongs = async (query, limit = 25) => {
     });
 
     return songs;
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     logger.error('iTunesService: Search failed', { error: error?.message });
     return [];
   }
 };
 
-/**
- * Format duration in milliseconds to "M:SS" display format.
- *
- * @param {number} ms - Duration in milliseconds
- * @returns {string} Formatted duration (e.g., "4:03")
- */
-export const formatDuration = ms => {
-  if (!ms || ms <= 0) {
-    return '0:00';
-  }
+export const formatDuration = (ms: number | null | undefined): string => {
+  if (!ms || ms <= 0) return '0:00';
 
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
