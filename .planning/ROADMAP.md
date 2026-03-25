@@ -123,7 +123,7 @@ Plans:
   3. User-created albums and auto-generated monthly albums display correctly with all CRUD operations
   4. Block and report flows work -- blocked users disappear from feed and friend suggestions
   5. Contact sync finds friends by phone number against the new user lookup
-**Plans:** 5/5 plans complete
+**Plans:** 6 plans (5 complete + 1 gap closure)
 
 Plans:
 - [x] 16-01-PLAN.md -- Query keys, DB triggers/RPCs, friendship service (PowerSync local writes)
@@ -142,7 +142,7 @@ Plans:
   3. Snap lifecycle works end-to-end: upload, send, view-once Polaroid viewer, auto-cleanup from storage
   4. Streak engine maintains 3-day activation, tiered expiry windows, and warning notifications (all server-authoritative)
   5. Read receipts with privacy toggle, emoji reactions, swipe-to-reply, message unsend, and delete-for-me all work
-**Plans:** 5/5 plans complete
+**Plans:** 6 plans (5 complete + 1 gap closure)
 
 Plans:
 - [x] 17-01-PLAN.md -- Schema additions (message_deletions, read receipt columns, emoji, reply_preview) + PostgreSQL triggers + snap-cleanup Edge Function + queryKeys extension
@@ -150,6 +150,7 @@ Plans:
 - [x] 17-03-PLAN.md -- snapService.ts (WebP upload, send, view-once, signed URLs) + streakService.ts (pure functions for state derivation) + unit tests
 - [x] 17-04-PLAN.md -- useMessages.ts (PowerSync conversation list) + useConversation.ts (TanStack + Realtime) + useStreaks.ts (PowerSync streak reads)
 - [x] 17-05-PLAN.md -- Screen integration (MessagesListScreen, ConversationScreen wired to new hooks) + human verification
+- [ ] 17-06-PLAN.md -- Gap closure: wire screenshot detection, fix read receipt display, replace Firebase imports in NewMessageScreen
 
 ### Phase 18: Background Jobs & Notifications
 **Goal**: All server-side automation runs on Supabase infrastructure -- scheduled jobs via pg_cron, event-driven Edge Functions, PostgreSQL triggers, and push notifications all replace Cloud Functions with identical behavior
@@ -218,7 +219,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 14. Data Layer & Caching Foundation | 2/2 | Complete    | 2026-03-24 | - |
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 4/4 | Complete    | 2026-03-24 |
 | 16. Core Services -- Social & Albums | v1.2 | 5/5 | Complete    | 2026-03-24 |
-| 17. Messaging & Social | v1.2 | 5/5 | Complete   | 2026-03-24 |
+| 17. Messaging & Social | v1.2 | 5/6 | In progress   | 2026-03-24 |
 | 18. Background Jobs & Notifications | v1.2 | 0/TBD | Not started | - |
 | 19. Performance Polish | v1.2 | 0/5 | Not started | - |
 | 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/8 | Not started | - |
