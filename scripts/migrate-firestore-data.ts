@@ -121,9 +121,11 @@ ${bold('Options:')}
   --collection <name>  Migrate only one collection (e.g., photos)
   --help, -h           Show this help message
 
-${bold('Collections (Plan 01):')}
+${bold('Collections (17 total, in FK dependency order):')}
   users, photos, photo_reactions, photo_tags, viewed_photos,
-  friendships, blocks, reports, support_requests
+  friendships, blocks, reports, support_requests, conversations,
+  messages, message_deletions, streaks, comments, comment_likes,
+  albums, album_photos
 
 ${bold('Environment variables:')}
   FIREBASE_SERVICE_ACCOUNT_PATH  Path to Firebase service account JSON
@@ -276,6 +278,18 @@ const userIdMap = new Map<string, string>();
 
 /** Firestore photo doc ID -> generated Supabase UUID */
 const photoIdMap = new Map<string, string>();
+
+/** Firestore conversation doc ID -> generated Supabase UUID */
+const conversationIdMap = new Map<string, string>();
+
+/** Firestore message doc ID -> generated Supabase UUID */
+const messageIdMap = new Map<string, string>();
+
+/** Firestore comment doc ID -> generated Supabase UUID */
+const commentIdMap = new Map<string, string>();
+
+/** Firestore album doc ID -> generated Supabase UUID */
+const albumIdMap = new Map<string, string>();
 
 async function buildUserIdMap(supabase: SupabaseClient): Promise<void> {
   console.log(dim('Building user ID map (firebase_uid -> supabase UUID)...'));
@@ -500,6 +514,13 @@ interface QueuedTag {
   firebaseUid: string;
 }
 const queuedTags: QueuedTag[] = [];
+
+/** Queued album_photos junction rows from albums migration */
+interface QueuedAlbumPhoto {
+  firestoreAlbumId: string;
+  firestorePhotoId: string;
+}
+const queuedAlbumPhotos: QueuedAlbumPhoto[] = [];
 
 // ---------------------------------------------------------------------------
 // Collection migrators
@@ -1393,6 +1414,1033 @@ async function migrateSupportRequests(
   );
 }
 
+// ---- 10. Conversations ----
+
+async function migrateConversations(
+  firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'conversations');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('conversations: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+  const snapshot = await firestore.collection('conversations').get();
+
+  if (snapshot.empty) {
+    console.log(yellow('conversations: 0 docs found, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  console.log(cyan(`conversations: ${snapshot.size} docs found`));
+
+  const rows: any[] = [];
+  let skipped = 0;
+  let errors = 0;
+
+  for (const doc of snapshot.docs) {
+    try {
+      const data = doc.data();
+      const newId = generateUUID();
+      conversationIdMap.set(doc.id, newId);
+
+      // Determine participants from array or individual fields
+      let fbUid1: string | undefined;
+      let fbUid2: string | undefined;
+
+      if (Array.isArray(data.participants) && data.participants.length >= 2) {
+        fbUid1 = data.participants[0];
+        fbUid2 = data.participants[1];
+      } else {
+        fbUid1 = data.user1Id || data.userId1 || data.user1_id;
+        fbUid2 = data.user2Id || data.userId2 || data.user2_id;
+      }
+
+      if (!fbUid1 || !fbUid2) {
+        skipped++;
+        console.log(yellow(`  conversations: skipping ${doc.id} (missing participant IDs)`));
+        continue;
+      }
+
+      let uuid1 = mapUserId(fbUid1);
+      let uuid2 = mapUserId(fbUid2);
+
+      // Track original mapping before sort to assign per-participant fields correctly
+      const origFirst = uuid1;
+
+      // Enforce CHECK constraint: participant1_id < participant2_id
+      if (uuid1 > uuid2) {
+        const tmp = uuid1;
+        uuid1 = uuid2;
+        uuid2 = tmp;
+      }
+
+      const swapped = origFirst !== uuid1;
+
+      // Per-participant fields: unread counts and deletion timestamps
+      const unreadP1Raw = data.unreadCount?.[fbUid1] ?? data.unreadCountP1 ?? data.unread_count_p1 ?? 0;
+      const unreadP2Raw = data.unreadCount?.[fbUid2] ?? data.unreadCountP2 ?? data.unread_count_p2 ?? 0;
+      const deletedP1Raw = toISOString(data.deletedAt?.[fbUid1] ?? data.deletedAtP1 ?? data.deleted_at_p1);
+      const deletedP2Raw = toISOString(data.deletedAt?.[fbUid2] ?? data.deletedAtP2 ?? data.deleted_at_p2);
+      const lastReadP1Raw = toISOString(data.lastReadAt?.[fbUid1] ?? data.lastReadAtP1 ?? data.last_read_at_p1);
+      const lastReadP2Raw = toISOString(data.lastReadAt?.[fbUid2] ?? data.lastReadAtP2 ?? data.last_read_at_p2);
+
+      // Map last_message_sender_id
+      const lastMsgSender = data.lastMessageSenderId || data.last_message_sender_id;
+      const lastMsgSenderId = lastMsgSender ? userIdMap.get(lastMsgSender) || null : null;
+
+      rows.push({
+        id: newId,
+        participant1_id: uuid1,
+        participant2_id: uuid2,
+        last_message_text: data.lastMessage || data.lastMessageText || data.last_message_text || null,
+        last_message_at: toISOString(data.lastMessageAt || data.last_message_at),
+        last_message_type: data.lastMessageType || data.last_message_type || null,
+        last_message_sender_id: lastMsgSenderId,
+        unread_count_p1: swapped ? unreadP2Raw : unreadP1Raw,
+        unread_count_p2: swapped ? unreadP1Raw : unreadP2Raw,
+        deleted_at_p1: swapped ? deletedP2Raw : deletedP1Raw,
+        deleted_at_p2: swapped ? deletedP1Raw : deletedP2Raw,
+        last_read_at_p1: swapped ? lastReadP2Raw : lastReadP1Raw,
+        last_read_at_p2: swapped ? lastReadP1Raw : lastReadP2Raw,
+        created_at: toISOString(data.createdAt || data.created_at) || new Date().toISOString(),
+      });
+    } catch (err: unknown) {
+      errors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: doc.id, error: message });
+      console.error(red(`  conversations: error on ${doc.id}: ${message}`));
+    }
+  }
+
+  if (dryRun) {
+    console.log(
+      `conversations: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors} errors`)}`
+    );
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = errors;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'conversations', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = errors + result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `conversations: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors + result.errors.length} errors`)}`
+  );
+}
+
+// ---- 11. Messages (subcollection, sorted for reply_to_id self-refs) ----
+
+async function migrateMessages(
+  firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'messages');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('messages: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+
+  console.log(cyan('messages: reading subcollections conversations/{convId}/messages...'));
+
+  // Collect all messages from all conversations
+  interface RawMessage {
+    firestoreConvId: string;
+    firestoreDocId: string;
+    data: admin.firestore.DocumentData;
+    createdAt: Date;
+  }
+
+  const allMessages: RawMessage[] = [];
+  let readErrors = 0;
+
+  for (const [firestoreConvId] of conversationIdMap.entries()) {
+    try {
+      const subcollection = await firestore
+        .collection('conversations')
+        .doc(firestoreConvId)
+        .collection('messages')
+        .get();
+
+      if (subcollection.empty) continue;
+
+      for (const doc of subcollection.docs) {
+        const data = doc.data();
+        const ts = data.createdAt || data.created_at;
+        let createdAt: Date;
+        if (ts && typeof ts.toDate === 'function') {
+          createdAt = ts.toDate();
+        } else if (ts instanceof Date) {
+          createdAt = ts;
+        } else if (typeof ts === 'string') {
+          createdAt = new Date(ts);
+        } else if (ts && typeof ts._seconds === 'number') {
+          createdAt = new Date(ts._seconds * 1000);
+        } else {
+          createdAt = new Date();
+        }
+
+        allMessages.push({
+          firestoreConvId,
+          firestoreDocId: doc.id,
+          data,
+          createdAt,
+        });
+      }
+    } catch (err: unknown) {
+      readErrors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: `conv_${firestoreConvId}`, error: message });
+      console.error(red(`  messages: error reading subcollection for conv ${firestoreConvId}: ${message}`));
+    }
+  }
+
+  console.log(dim(`  messages: found ${allMessages.length} messages across ${conversationIdMap.size} conversations`));
+
+  if (allMessages.length === 0) {
+    console.log(yellow('messages: 0 docs found, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  // Sort ALL messages by created_at ascending so reply_to_id self-references resolve
+  allMessages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+  const rows: any[] = [];
+  let skipped = 0;
+  let errors = readErrors;
+
+  for (const msg of allMessages) {
+    try {
+      const { firestoreConvId, firestoreDocId, data } = msg;
+
+      const convId = conversationIdMap.get(firestoreConvId);
+      if (!convId) {
+        skipped++;
+        continue;
+      }
+
+      const senderId = data.senderId || data.sender_id;
+      if (!senderId) {
+        skipped++;
+        continue;
+      }
+
+      const newId = generateUUID();
+      messageIdMap.set(firestoreDocId, newId);
+
+      const supabaseSenderId = mapUserId(senderId);
+
+      // Map reply_to_id via messageIdMap (may be null if referenced message not yet inserted)
+      let replyToId: string | null = null;
+      const rawReplyTo = data.replyToId || data.reply_to_id;
+      if (rawReplyTo) {
+        replyToId = messageIdMap.get(rawReplyTo) || null;
+        if (!replyToId) {
+          console.log(dim(`  messages: reply_to_id ${rawReplyTo} not yet seen, setting null`));
+        }
+      }
+
+      // Map tagged_photo_id via photoIdMap
+      const rawTaggedPhoto = data.taggedPhotoId || data.tagged_photo_id;
+      const taggedPhotoId = rawTaggedPhoto ? (photoIdMap.get(rawTaggedPhoto) || null) : null;
+
+      // Rewrite snap storage path
+      let snapStoragePath = data.snapStoragePath || data.snap_storage_path || null;
+      if (snapStoragePath && senderId) {
+        const senderUuid = userIdMap.get(senderId);
+        if (senderUuid) {
+          snapStoragePath = rewriteStoragePath(snapStoragePath, senderId, senderUuid);
+        }
+      }
+
+      // Handle reply_preview JSONB — remap user IDs inside if present
+      let replyPreview = data.replyPreview || data.reply_preview || null;
+      if (replyPreview && typeof replyPreview === 'object') {
+        if (replyPreview.senderId) {
+          const mappedSender = userIdMap.get(replyPreview.senderId);
+          if (mappedSender) {
+            replyPreview = { ...replyPreview, senderId: mappedSender };
+          }
+        }
+      }
+
+      rows.push({
+        id: newId,
+        conversation_id: convId,
+        sender_id: supabaseSenderId,
+        type: data.type || 'text',
+        text: data.text || null,
+        gif_url: data.gifUrl || data.gif_url || null,
+        reply_to_id: replyToId,
+        snap_storage_path: snapStoragePath,
+        snap_viewed_at: toISOString(data.snapViewedAt || data.snap_viewed_at),
+        tagged_photo_id: taggedPhotoId,
+        emoji: data.emoji || null,
+        reply_preview: replyPreview,
+        unsent_at: toISOString(data.unsentAt || data.unsent_at),
+        created_at: msg.createdAt.toISOString(),
+      });
+    } catch (err: unknown) {
+      errors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: msg.firestoreDocId, error: message });
+      console.error(red(`  messages: error on ${msg.firestoreDocId}: ${message}`));
+    }
+  }
+
+  if (dryRun) {
+    console.log(
+      `messages: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors} errors`)}`
+    );
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = errors;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'messages', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = errors + result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `messages: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors + result.errors.length} errors`)}`
+  );
+}
+
+// ---- 12. Message Deletions ----
+
+async function migrateMessageDeletions(
+  firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'message_deletions');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('message_deletions: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+
+  // Try top-level collection first
+  let snapshot: admin.firestore.QuerySnapshot;
+  try {
+    snapshot = await firestore.collection('message_deletions').get();
+  } catch {
+    // Collection may not exist
+    snapshot = { empty: true, size: 0, docs: [] } as any;
+  }
+
+  if (snapshot.empty) {
+    // Also try camelCase variant
+    try {
+      snapshot = await firestore.collection('messageDeletions').get();
+    } catch {
+      snapshot = { empty: true, size: 0, docs: [] } as any;
+    }
+  }
+
+  if (snapshot.empty) {
+    console.log(yellow('message_deletions: 0 docs found, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  console.log(cyan(`message_deletions: ${snapshot.size} docs found`));
+
+  const rows: any[] = [];
+  let skipped = 0;
+  let errors = 0;
+
+  for (const doc of snapshot.docs) {
+    try {
+      const data = doc.data();
+
+      const rawMsgId = data.messageId || data.message_id;
+      const rawUserId = data.userId || data.user_id;
+
+      if (!rawMsgId || !rawUserId) {
+        skipped++;
+        continue;
+      }
+
+      const messageId = messageIdMap.get(rawMsgId);
+      if (!messageId) {
+        skipped++;
+        continue;
+      }
+
+      rows.push({
+        id: generateUUID(),
+        message_id: messageId,
+        user_id: mapUserId(rawUserId),
+        created_at: toISOString(data.createdAt || data.created_at) || new Date().toISOString(),
+      });
+    } catch (err: unknown) {
+      errors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: doc.id, error: message });
+    }
+  }
+
+  if (dryRun) {
+    console.log(
+      `message_deletions: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors} errors`)}`
+    );
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = errors;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'message_deletions', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = errors + result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `message_deletions: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors + result.errors.length} errors`)}`
+  );
+}
+
+// ---- 13. Streaks ----
+
+async function migrateStreaks(
+  firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'streaks');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('streaks: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+  const snapshot = await firestore.collection('streaks').get();
+
+  if (snapshot.empty) {
+    console.log(yellow('streaks: 0 docs found, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  console.log(cyan(`streaks: ${snapshot.size} docs found`));
+
+  const rows: any[] = [];
+  let skipped = 0;
+  let errors = 0;
+
+  for (const doc of snapshot.docs) {
+    try {
+      const data = doc.data();
+
+      const fbUid1 = data.user1Id || data.userId1 || data.user1_id;
+      const fbUid2 = data.user2Id || data.userId2 || data.user2_id;
+
+      if (!fbUid1 || !fbUid2) {
+        skipped++;
+        console.log(yellow(`  streaks: skipping ${doc.id} (missing user IDs)`));
+        continue;
+      }
+
+      let uuid1 = mapUserId(fbUid1);
+      let uuid2 = mapUserId(fbUid2);
+
+      // Track original order to assign per-user fields correctly
+      const origFirst = uuid1;
+
+      // Enforce CHECK constraint: user1_id < user2_id
+      if (uuid1 > uuid2) {
+        const tmp = uuid1;
+        uuid1 = uuid2;
+        uuid2 = tmp;
+      }
+
+      const swapped = origFirst !== uuid1;
+
+      // Per-user snap timestamps
+      const snapAt1Raw = toISOString(data.lastSnapAtUser1 || data.last_snap_at_user1 || data.lastSnapAt?.[fbUid1]);
+      const snapAt2Raw = toISOString(data.lastSnapAtUser2 || data.last_snap_at_user2 || data.lastSnapAt?.[fbUid2]);
+
+      rows.push({
+        id: generateUUID(),
+        user1_id: uuid1,
+        user2_id: uuid2,
+        day_count: data.dayCount ?? data.day_count ?? 0,
+        last_snap_at_user1: swapped ? snapAt2Raw : snapAt1Raw,
+        last_snap_at_user2: swapped ? snapAt1Raw : snapAt2Raw,
+        last_mutual_at: toISOString(data.lastMutualAt || data.last_mutual_at),
+        expires_at: toISOString(data.expiresAt || data.expires_at),
+        warning_sent: data.warningSent ?? data.warning_sent ?? false,
+        created_at: toISOString(data.createdAt || data.created_at) || new Date().toISOString(),
+      });
+    } catch (err: unknown) {
+      errors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: doc.id, error: message });
+      console.error(red(`  streaks: error on ${doc.id}: ${message}`));
+    }
+  }
+
+  if (dryRun) {
+    console.log(
+      `streaks: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors} errors`)}`
+    );
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = errors;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'streaks', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = errors + result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `streaks: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors + result.errors.length} errors`)}`
+  );
+}
+
+// ---- 14. Comments (subcollection, sorted for parent_id self-refs) ----
+
+async function migrateComments(
+  firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'comments');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('comments: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+
+  console.log(cyan('comments: reading subcollections photos/{photoId}/comments...'));
+
+  interface RawComment {
+    firestorePhotoId: string;
+    firestoreDocId: string;
+    data: admin.firestore.DocumentData;
+    createdAt: Date;
+  }
+
+  const allComments: RawComment[] = [];
+  let readErrors = 0;
+
+  for (const [firestorePhotoId] of photoIdMap.entries()) {
+    try {
+      const subcollection = await firestore
+        .collection('photos')
+        .doc(firestorePhotoId)
+        .collection('comments')
+        .get();
+
+      if (subcollection.empty) continue;
+
+      for (const doc of subcollection.docs) {
+        const data = doc.data();
+        const ts = data.createdAt || data.created_at;
+        let createdAt: Date;
+        if (ts && typeof ts.toDate === 'function') {
+          createdAt = ts.toDate();
+        } else if (ts instanceof Date) {
+          createdAt = ts;
+        } else if (typeof ts === 'string') {
+          createdAt = new Date(ts);
+        } else if (ts && typeof ts._seconds === 'number') {
+          createdAt = new Date(ts._seconds * 1000);
+        } else {
+          createdAt = new Date();
+        }
+
+        allComments.push({
+          firestorePhotoId,
+          firestoreDocId: doc.id,
+          data,
+          createdAt,
+        });
+      }
+    } catch (err: unknown) {
+      readErrors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: `photo_${firestorePhotoId}`, error: message });
+      console.error(red(`  comments: error reading subcollection for photo ${firestorePhotoId}: ${message}`));
+    }
+  }
+
+  console.log(dim(`  comments: found ${allComments.length} comments across ${photoIdMap.size} photos`));
+
+  if (allComments.length === 0) {
+    console.log(yellow('comments: 0 docs found, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  // Sort by created_at ascending so parent_id self-references resolve
+  allComments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+  // Also collect comment likes for later migration
+  interface QueuedCommentLike {
+    firestoreCommentId: string;
+    firestorePhotoId: string;
+  }
+  const commentLikeQueue: QueuedCommentLike[] = [];
+
+  const rows: any[] = [];
+  let skipped = 0;
+  let errors = readErrors;
+
+  for (const comment of allComments) {
+    try {
+      const { firestorePhotoId, firestoreDocId, data } = comment;
+
+      const photoId = photoIdMap.get(firestorePhotoId);
+      if (!photoId) {
+        skipped++;
+        continue;
+      }
+
+      const rawUserId = data.userId || data.user_id;
+      if (!rawUserId) {
+        skipped++;
+        continue;
+      }
+
+      const newId = generateUUID();
+      commentIdMap.set(firestoreDocId, newId);
+
+      // Queue for comment_likes subcollection reading
+      commentLikeQueue.push({ firestoreCommentId: firestoreDocId, firestorePhotoId });
+
+      // Map parent_id via commentIdMap (null if parent not yet seen)
+      let parentId: string | null = null;
+      const rawParent = data.parentId || data.parent_id;
+      if (rawParent) {
+        parentId = commentIdMap.get(rawParent) || null;
+      }
+
+      // Map mentions: convert Firebase UIDs array to Supabase UUIDs
+      let mentions: string[] = [];
+      const rawMentions = data.mentions;
+      if (Array.isArray(rawMentions)) {
+        for (const uid of rawMentions) {
+          const mapped = userIdMap.get(uid);
+          if (mapped) mentions.push(mapped);
+        }
+      }
+
+      rows.push({
+        id: newId,
+        photo_id: photoId,
+        user_id: mapUserId(rawUserId),
+        parent_id: parentId,
+        text: data.text || '',
+        mentions,
+        created_at: comment.createdAt.toISOString(),
+      });
+    } catch (err: unknown) {
+      errors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: comment.firestoreDocId, error: message });
+      console.error(red(`  comments: error on ${comment.firestoreDocId}: ${message}`));
+    }
+  }
+
+  // Store comment like queue on module scope for the comment_likes migrator
+  (global as any).__commentLikeQueue = commentLikeQueue;
+
+  if (dryRun) {
+    console.log(
+      `comments: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors} errors`)}`
+    );
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = errors;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'comments', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = errors + result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `comments: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors + result.errors.length} errors`)}`
+  );
+}
+
+// ---- 15. Comment Likes (nested subcollection) ----
+
+async function migrateCommentLikes(
+  firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'comment_likes');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('comment_likes: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+
+  // Get comment like queue from comments migration
+  const commentLikeQueue: Array<{ firestoreCommentId: string; firestorePhotoId: string }> =
+    (global as any).__commentLikeQueue || [];
+
+  if (commentLikeQueue.length === 0) {
+    console.log(yellow('comment_likes: no comments to check for likes, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  console.log(cyan(`comment_likes: checking ${commentLikeQueue.length} comments for likes subcollections...`));
+
+  const rows: any[] = [];
+  let skipped = 0;
+  let errors = 0;
+  let totalLikes = 0;
+
+  for (const { firestoreCommentId, firestorePhotoId } of commentLikeQueue) {
+    try {
+      const subcollection = await firestore
+        .collection('photos')
+        .doc(firestorePhotoId)
+        .collection('comments')
+        .doc(firestoreCommentId)
+        .collection('likes')
+        .get();
+
+      if (subcollection.empty) continue;
+
+      totalLikes += subcollection.size;
+
+      for (const doc of subcollection.docs) {
+        try {
+          const commentId = commentIdMap.get(firestoreCommentId);
+          if (!commentId) {
+            skipped++;
+            continue;
+          }
+
+          // Like doc ID is typically the userId, or userId is in the data
+          const data = doc.data();
+          const rawUserId = data.userId || data.user_id || doc.id;
+
+          const userId = userIdMap.get(rawUserId);
+          if (!userId) {
+            skipped++;
+            continue;
+          }
+
+          rows.push({
+            comment_id: commentId,
+            user_id: userId,
+            created_at: toISOString(data.createdAt || data.created_at) || new Date().toISOString(),
+          });
+        } catch (err: unknown) {
+          errors++;
+          const message = err instanceof Error ? err.message : String(err);
+          colProgress.errors.push({ docId: doc.id, error: message });
+        }
+      }
+    } catch (err: unknown) {
+      // Subcollection may not exist for this comment
+      errors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: `comment_${firestoreCommentId}`, error: message });
+    }
+  }
+
+  console.log(dim(`  comment_likes: found ${totalLikes} likes across ${commentLikeQueue.length} comments`));
+
+  if (rows.length === 0 && totalLikes === 0) {
+    console.log(yellow('comment_likes: 0 likes found, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  if (dryRun) {
+    console.log(
+      `comment_likes: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors} errors`)}`
+    );
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = errors;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'comment_likes', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = errors + result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `comment_likes: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors + result.errors.length} errors`)}`
+  );
+}
+
+// ---- 16. Albums ----
+
+async function migrateAlbums(
+  firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'albums');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('albums: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+  const snapshot = await firestore.collection('albums').get();
+
+  if (snapshot.empty) {
+    console.log(yellow('albums: 0 docs found, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  console.log(cyan(`albums: ${snapshot.size} docs found`));
+
+  const rows: any[] = [];
+  let skipped = 0;
+  let errors = 0;
+
+  for (const doc of snapshot.docs) {
+    try {
+      const data = doc.data();
+      const newId = generateUUID();
+      albumIdMap.set(doc.id, newId);
+
+      const rawUserId = data.userId || data.user_id;
+      if (!rawUserId) {
+        skipped++;
+        console.log(yellow(`  albums: skipping ${doc.id} (no userId)`));
+        continue;
+      }
+
+      // Map cover photo ID
+      const rawCoverPhotoId = data.coverPhotoId || data.cover_photo_id;
+      const coverPhotoId = rawCoverPhotoId ? (photoIdMap.get(rawCoverPhotoId) || null) : null;
+
+      // Queue album_photos for junction table
+      const photoIds = data.photoIds || data.photo_ids || [];
+      if (Array.isArray(photoIds)) {
+        for (const firestorePhotoId of photoIds) {
+          queuedAlbumPhotos.push({
+            firestoreAlbumId: doc.id,
+            firestorePhotoId,
+          });
+        }
+      }
+
+      rows.push({
+        id: newId,
+        user_id: mapUserId(rawUserId),
+        title: data.title || 'Untitled',
+        type: data.type || 'custom',
+        month_key: data.monthKey || data.month_key || null,
+        cover_photo_id: coverPhotoId,
+        created_at: toISOString(data.createdAt || data.created_at) || new Date().toISOString(),
+      });
+    } catch (err: unknown) {
+      errors++;
+      const message = err instanceof Error ? err.message : String(err);
+      colProgress.errors.push({ docId: doc.id, error: message });
+      console.error(red(`  albums: error on ${doc.id}: ${message}`));
+    }
+  }
+
+  if (dryRun) {
+    console.log(
+      `albums: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors} errors`)}`
+    );
+    console.log(dim(`  Queued ${queuedAlbumPhotos.length} album_photos entries`));
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = errors;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'albums', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = errors + result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `albums: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${errors + result.errors.length} errors`)}`
+  );
+  console.log(dim(`  Queued ${queuedAlbumPhotos.length} album_photos entries`));
+}
+
+// ---- 17. Album Photos (junction table from inline data) ----
+
+async function migrateAlbumPhotos(
+  _firestore: admin.firestore.Firestore,
+  supabase: SupabaseClient,
+  progress: MigrationProgress,
+  dryRun: boolean
+): Promise<void> {
+  const colProgress = getCollectionProgress(progress, 'album_photos');
+  if (colProgress.status === 'complete') {
+    console.log(yellow('album_photos: already complete, skipping'));
+    return;
+  }
+
+  colProgress.status = 'in_progress';
+
+  if (queuedAlbumPhotos.length === 0) {
+    console.log(yellow('album_photos: 0 queued entries, skipping'));
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  console.log(cyan(`album_photos: ${queuedAlbumPhotos.length} queued from albums migration`));
+
+  const rows: any[] = [];
+  let skipped = 0;
+
+  for (const entry of queuedAlbumPhotos) {
+    const albumId = albumIdMap.get(entry.firestoreAlbumId);
+    const photoId = photoIdMap.get(entry.firestorePhotoId);
+
+    if (!albumId || !photoId) {
+      skipped++;
+      continue;
+    }
+
+    rows.push({
+      album_id: albumId,
+      photo_id: photoId,
+    });
+  }
+
+  if (dryRun) {
+    console.log(
+      `album_photos: ${green(`${rows.length} would be inserted`)}, ${yellow(`${skipped} skipped`)}`
+    );
+    colProgress.migratedCount = rows.length;
+    colProgress.skippedCount = skipped;
+    colProgress.errorCount = 0;
+    colProgress.status = 'complete';
+    saveProgress(progress);
+    return;
+  }
+
+  const result = await batchInsert(supabase, 'album_photos', rows);
+
+  for (const err of result.errors) {
+    colProgress.errors.push({ docId: `row_${err.index}`, error: err.error });
+  }
+
+  colProgress.migratedCount = result.inserted;
+  colProgress.skippedCount = skipped;
+  colProgress.errorCount = result.errors.length;
+  colProgress.status = 'complete';
+  saveProgress(progress);
+
+  console.log(
+    `album_photos: ${green(`${result.inserted} inserted`)}, ${yellow(`${skipped} skipped`)}, ${red(`${result.errors.length} errors`)}`
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Collection registry (FK dependency order)
 // ---------------------------------------------------------------------------
@@ -1407,6 +2455,14 @@ const COLLECTIONS: Array<{ name: string; migrator: Migrator }> = [
   { name: 'blocks', migrator: migrateBlocks },
   { name: 'reports', migrator: migrateReports },
   { name: 'support_requests', migrator: migrateSupportRequests },
+  { name: 'conversations', migrator: migrateConversations },
+  { name: 'messages', migrator: migrateMessages },
+  { name: 'message_deletions', migrator: migrateMessageDeletions },
+  { name: 'streaks', migrator: migrateStreaks },
+  { name: 'comments', migrator: migrateComments },
+  { name: 'comment_likes', migrator: migrateCommentLikes },
+  { name: 'albums', migrator: migrateAlbums },
+  { name: 'album_photos', migrator: migrateAlbumPhotos },
 ];
 
 // ---------------------------------------------------------------------------
