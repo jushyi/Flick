@@ -1,19 +1,7 @@
-/**
- * useSwipeableCard hook
- *
- * Contains all stateful logic, animated values, gesture handling, and imperative methods.
- *
- * Features:
- * - Vertical swipe: Up swipe = Journal, Down swipe = Archive
- * - On-card overlays: Color overlays with icons fade in during swipe
- * - Three-stage haptic feedback: threshold, release, completion
- * - Spring-back animation when threshold not met
- * - Imperative methods for button-triggered animations
- */
-
 import { useState, useCallback, useEffect, useImperativeHandle } from 'react';
 import { Dimensions, Platform } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
+import type { GestureType } from 'react-native-gesture-handler';
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -23,72 +11,61 @@ import {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
+import type { ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import logger from '../utils/logger';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Thresholds for action triggers
 const VERTICAL_THRESHOLD = 200;
-// Velocity threshold for fast swipe trigger (px/s)
 const VELOCITY_THRESHOLD = 500;
-// Threshold for locking swipe direction (prevents accidental opposite-action)
 const DIRECTION_LOCK_THRESHOLD = 30;
-
-// Delay for front card transition gives exiting card time to clear
 const CASCADE_DELAY_MS = 120;
-
-// Fade-in duration for new cards entering the visible stack
 const STACK_ENTRY_FADE_DURATION = 300;
-
-// Duration for exit animations (swipe off screen)
 const EXIT_DURATION = 350;
+const CLEARANCE_DELAY: number = Platform.OS === 'android' ? 300 : 150;
 
-// Delay before triggering cascade clearance.
-// On Android, wait until the card is fully off-screen (~300ms into a 350ms easeIn animation)
-// to avoid a transparent flash when the Animated.View unmounts mid-animation.
-const CLEARANCE_DELAY = Platform.OS === 'android' ? 300 : 150;
+const getStackScale = (idx: number): number => (idx === 0 ? 1 : idx === 1 ? 0.96 : 0.92);
+const getStackOffset = (idx: number): number => (idx === 0 ? 0 : idx === 1 ? -20 : -40);
+const getStackOpacity = (idx: number): number => (idx === 0 ? 1 : idx === 1 ? 0.85 : 0.7);
 
-/**
- * Get scale factor for card at given stack position.
- * @param {number} idx - Stack index (0=front, 1=behind, 2=furthest back)
- * @returns {number} Scale factor (1, 0.96, or 0.92)
- */
-const getStackScale = idx => (idx === 0 ? 1 : idx === 1 ? 0.96 : 0.92);
+type PhotoLike = {
+  id?: string;
+  [key: string]: unknown;
+};
 
-/**
- * Get Y offset for card at given stack position.
- * Negative values mean cards peek from top (above front card).
- * @param {number} idx - Stack index (0=front, 1=behind, 2=furthest back)
- * @returns {number} Y offset in pixels (0, -20, or -40)
- */
-const getStackOffset = idx => (idx === 0 ? 0 : idx === 1 ? -20 : -40);
+type SwipeableCardParams = {
+  photo: PhotoLike;
+  onSwipeLeft?: () => Promise<void>;
+  onSwipeRight?: () => Promise<void>;
+  onSwipeDown?: () => Promise<void>;
+  onDeleteComplete?: () => void;
+  onExitClearance?: () => void;
+  stackIndex?: number;
+  isActive?: boolean;
+  enterFrom?: 'up' | 'down' | 'delete' | null;
+  isNewlyVisible?: boolean;
+  keyboardVisible?: SharedValue<boolean> | null;
+  ref?: React.Ref<SwipeableCardHandle>;
+};
 
-/**
- * Get opacity for card at given stack position.
- * @param {number} idx - Stack index (0=front, 1=behind, 2=furthest back)
- * @returns {number} Opacity value (1, 0.85, or 0.7)
- */
-const getStackOpacity = idx => (idx === 0 ? 1 : idx === 1 ? 0.85 : 0.7);
+export type SwipeableCardHandle = {
+  triggerArchive: () => void;
+  triggerJournal: () => void;
+  triggerDelete: () => void;
+};
 
-/**
- * Custom hook for swipeable photo card logic
- *
- * @param {object} params - Hook parameters
- * @param {object} params.photo - Photo object to display
- * @param {function} params.onSwipeLeft - Callback when Archive action triggered (down swipe or button)
- * @param {function} params.onSwipeRight - Callback when Journal action triggered (up swipe or button)
- * @param {function} params.onSwipeDown - Callback when Delete action triggered (button only)
- * @param {function} params.onDeleteComplete - Callback when delete animation completes
- * @param {function} params.onExitClearance - Callback when card has cleared enough for cascade
- * @param {number} params.stackIndex - Position in the stack (0=front, 1=behind, 2=furthest back)
- * @param {boolean} params.isActive - Whether this card is swipeable (only front card)
- * @param {string} params.enterFrom - Direction for entry animation ('up', 'down', 'delete', or null)
- * @param {boolean} params.isNewlyVisible - Whether card is newly entering visible stack
- * @param {React.Ref} params.ref - Ref for imperative methods
- *
- * @returns {object} - Animated styles, gesture handler, and state
- */
+type SwipeableCardReturn = {
+  cardStyle: ReturnType<typeof useAnimatedStyle>;
+  archiveOverlayStyle: ReturnType<typeof useAnimatedStyle>;
+  journalOverlayStyle: ReturnType<typeof useAnimatedStyle>;
+  deleteOverlayStyle: ReturnType<typeof useAnimatedStyle>;
+  panGesture: GestureType;
+  isActive: boolean;
+  stackIndex: number;
+};
+
 const useSwipeableCard = ({
   photo,
   onSwipeLeft,
@@ -102,29 +79,21 @@ const useSwipeableCard = ({
   isNewlyVisible = false,
   keyboardVisible = null,
   ref,
-}) => {
+}: SwipeableCardParams): SwipeableCardReturn => {
   const [thresholdTriggered, setThresholdTriggered] = useState(false);
 
-  // Animated values for gesture/front card
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
   const cardScale = useSharedValue(1);
 
-  // Direction lock for gesture (0=none, 1=up, -1=down)
   const lockedDirection = useSharedValue(0);
-
-  // Distinguishes delete from archive when both go downward
   const isDeleteAction = useSharedValue(0);
-
-  // Track if this card has completed its entry animation
   const hasAnimatedEntry = useSharedValue(false);
 
-  // Animated values for smooth stack cascade animation
   const initialOpacity =
     isNewlyVisible && !hasAnimatedEntry.value ? 0 : getStackOpacity(stackIndex);
   const stackScaleAnim = useSharedValue(getStackScale(stackIndex));
-  // For undo entries, start offscreen: journal from top, archive/delete from bottom
   const stackOffsetAnim = useSharedValue(
     enterFrom === 'up'
       ? -SCREEN_HEIGHT
@@ -134,22 +103,12 @@ const useSwipeableCard = ({
   );
   const stackOpacityAnim = useSharedValue(initialOpacity);
 
-  // Consolidated animation - stackIndex useEffect is the SINGLE source of truth
   const prevStackIndex = useSharedValue(stackIndex);
-
-  // Track whether card is transitioning to front position
   const isTransitioningToFront = useSharedValue(0);
-
-  // Track if action is in progress to prevent multiple triggers
   const actionInProgress = useSharedValue(false);
-
-  // Track if a gesture is actively in progress (set on UI thread in onStart worklet)
   const gestureActive = useSharedValue(0);
-
-  // Context for gesture start position
   const startY = useSharedValue(0);
 
-  // Stack index animation effect
   useEffect(() => {
     if (prevStackIndex.value === stackIndex) {
       return;
@@ -189,7 +148,6 @@ const useSwipeableCard = ({
     prevStackIndex.value = stackIndex;
   }, [stackIndex]);
 
-  // Fade-in animation for newly visible cards entering the stack
   useEffect(() => {
     if (isNewlyVisible && !hasAnimatedEntry.value && stackIndex === 2) {
       logger.debug('useSwipeableCard: New card entering visible stack, starting fade-in', {
@@ -207,7 +165,6 @@ const useSwipeableCard = ({
     }
   }, [isNewlyVisible, stackIndex]);
 
-  // Entry animation for undo — slide in from offscreen
   useEffect(() => {
     if (enterFrom && isActive) {
       stackOffsetAnim.value = withTiming(getStackOffset(0), {
@@ -221,7 +178,6 @@ const useSwipeableCard = ({
     }
   }, [enterFrom, isActive]);
 
-  // Haptic feedback helpers
   const triggerLightHaptic = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   }, []);
@@ -238,14 +194,12 @@ const useSwipeableCard = ({
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
   }, []);
 
-  // Reset threshold state
   const resetThreshold = useCallback(() => {
     setThresholdTriggered(false);
   }, []);
 
-  // Schedule clearance callback with delay (called via runOnJS from worklet)
   const scheduleClearanceCallback = useCallback(
-    delay => {
+    (delay: number) => {
       if (onExitClearance) {
         setTimeout(() => {
           onExitClearance();
@@ -255,7 +209,6 @@ const useSwipeableCard = ({
     [onExitClearance]
   );
 
-  // Mark threshold as triggered
   const markThresholdTriggered = useCallback(() => {
     if (!thresholdTriggered) {
       setThresholdTriggered(true);
@@ -264,7 +217,6 @@ const useSwipeableCard = ({
     }
   }, [thresholdTriggered, triggerLightHaptic, photo?.id]);
 
-  // Action handlers
   const handleArchive = useCallback(async () => {
     logger.info('useSwipeableCard: Archive action triggered', { photoId: photo?.id });
     triggerMediumHaptic();
@@ -292,7 +244,6 @@ const useSwipeableCard = ({
     triggerHeavyHaptic();
   }, [photo?.id, onSwipeDown, triggerWarningHaptic, triggerHeavyHaptic]);
 
-  // Clean archive animation — card slides down off screen
   const playArchiveAnimation = useCallback(() => {
     if (onExitClearance) {
       setTimeout(() => {
@@ -313,7 +264,6 @@ const useSwipeableCard = ({
     );
   }, [translateY, onExitClearance, handleArchive]);
 
-  // Clean journal animation — card slides up off screen
   const playJournalAnimation = useCallback(() => {
     if (onExitClearance) {
       setTimeout(() => {
@@ -334,7 +284,6 @@ const useSwipeableCard = ({
     );
   }, [translateY, onExitClearance, handleJournal]);
 
-  // Imperative methods for button-triggered animations
   useImperativeHandle(
     ref,
     () => ({
@@ -392,16 +341,11 @@ const useSwipeableCard = ({
     ]
   );
 
-  // Pan gesture — vertical: up = journal, down = archive
-  // .enabled() prevents gesture from firing on stack cards.
-  // Keyboard visibility is checked inside worklets to avoid the Android native cast error
-  // that occurs when passing a SharedValue/DerivedValue to .enabled().
   const panGesture = Gesture.Pan()
     .enabled(isActive)
     .activeOffsetY([-5, 5])
     .onStart(() => {
       'worklet';
-      // Block gesture when keyboard is open (prevents accidental swipes while typing captions)
       if (keyboardVisible?.value) return;
       gestureActive.value = 1;
       startY.value = translateY.value;
@@ -416,16 +360,14 @@ const useSwipeableCard = ({
       if (!gestureActive.value) return;
       const rawY = event.translationY;
 
-      // Lock direction on first significant movement
       if (lockedDirection.value === 0) {
         if (rawY < -DIRECTION_LOCK_THRESHOLD) {
-          lockedDirection.value = 1; // up
+          lockedDirection.value = 1;
         } else if (rawY > DIRECTION_LOCK_THRESHOLD) {
-          lockedDirection.value = -1; // down
+          lockedDirection.value = -1;
         }
       }
 
-      // Card follows finger
       translateY.value = startY.value + rawY;
 
       const absY = Math.abs(translateY.value);
@@ -449,7 +391,6 @@ const useSwipeableCard = ({
       const isDownSwipe = isDownAction || isDownVelocity;
 
       if (isUpSwipe) {
-        // Journal — fly up
         actionInProgress.value = true;
         translateY.value = withTiming(
           -SCREEN_HEIGHT * 1.5,
@@ -464,7 +405,6 @@ const useSwipeableCard = ({
         );
         runOnJS(scheduleClearanceCallback)(CLEARANCE_DELAY);
       } else if (isDownSwipe) {
-        // Archive — fall down
         actionInProgress.value = true;
         translateY.value = withTiming(
           SCREEN_HEIGHT * 1.5,
@@ -479,7 +419,6 @@ const useSwipeableCard = ({
         );
         runOnJS(scheduleClearanceCallback)(CLEARANCE_DELAY);
       } else {
-        // Clean snap back
         const snapConfig = { duration: 200, easing: Easing.out(Easing.cubic) };
         translateY.value = withTiming(0, snapConfig);
         translateX.value = withTiming(0, snapConfig);
@@ -494,32 +433,21 @@ const useSwipeableCard = ({
       }
     });
 
-  // Animated card style
-  const cardStyle = useAnimatedStyle(() => {
+  const cardStyle = useAnimatedStyle((): ViewStyle => {
+    'worklet';
     const useStackAnimation = !actionInProgress.value && !gestureActive.value;
 
-    if (useStackAnimation) {
-      return {
-        transform: [
-          { translateX: 0 },
-          { translateY: stackOffsetAnim.value },
-          { scale: stackScaleAnim.value },
-        ],
-        opacity: stackOpacityAnim.value,
-      };
-    } else {
-      return {
-        transform: [
-          { translateX: translateX.value },
-          { translateY: translateY.value },
-          { scale: cardScale.value },
-        ],
-        opacity: cardOpacity.value,
-      };
-    }
+    const tx = useStackAnimation ? 0 : translateX.value;
+    const ty = useStackAnimation ? stackOffsetAnim.value : translateY.value;
+    const sc = useStackAnimation ? stackScaleAnim.value : cardScale.value;
+    const op = useStackAnimation ? stackOpacityAnim.value : cardOpacity.value;
+
+    return {
+      transform: [{ translateX: tx }, { translateY: ty }, { scale: sc }],
+      opacity: op,
+    } as ViewStyle;
   });
 
-  // Archive overlay (down swipe) — amber with box icon
   const archiveOverlayStyle = useAnimatedStyle(() => {
     if (isDeleteAction.value) return { opacity: 0 };
 
@@ -531,7 +459,6 @@ const useSwipeableCard = ({
     return { opacity };
   });
 
-  // Journal overlay (up swipe) — cyan with checkmark icon
   const journalOverlayStyle = useAnimatedStyle(() => {
     const opacity =
       translateY.value < 0
@@ -541,7 +468,6 @@ const useSwipeableCard = ({
     return { opacity };
   });
 
-  // Delete overlay (button-triggered) — red with X icon
   const deleteOverlayStyle = useAnimatedStyle(() => {
     if (!isDeleteAction.value) return { opacity: 0 };
 
@@ -554,14 +480,11 @@ const useSwipeableCard = ({
   });
 
   return {
-    // Animated styles
     cardStyle,
     archiveOverlayStyle,
     journalOverlayStyle,
     deleteOverlayStyle,
-    // Gesture handler
     panGesture,
-    // State
     isActive,
     stackIndex,
   };

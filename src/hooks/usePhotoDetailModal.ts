@@ -1,25 +1,17 @@
-/**
- * usePhotoDetailModal Hook
- *
- * Encapsulates all PhotoDetailModal logic:
- * - Animation values for swipe-to-dismiss (RN Animated)
- * - PanResponder for vertical gestures (dismiss, comments)
- * - Gesture.Pan for horizontal swipe (friend-to-friend cube transitions)
- * - Reaction state management
- * - Emoji ordering with frozen state during rapid taps
- * - Stories mode: multi-photo navigation with progress bar
- */
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Animated, PanResponder, Dimensions, Easing } from 'react-native';
+import type { GestureResponderEvent, PanResponderInstance } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Gesture } from 'react-native-gesture-handler';
+import type { GestureType } from 'react-native-gesture-handler';
 import {
   withTiming,
   withSpring,
   Easing as ReanimatedEasing,
   runOnJS,
 } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 
 import { reactionHaptic } from '../utils/haptics';
 import logger from '../utils/logger';
@@ -27,22 +19,109 @@ import { getCuratedEmojis } from '../utils/emojiRotation';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-/**
- * Custom hook for PhotoDetailModal logic
- *
- * @param {object} params - Hook parameters
- * @param {string} params.mode - View mode: 'feed' (default) or 'stories'
- * @param {object} params.photo - Photo object (used in feed mode)
- * @param {array} params.photos - Array of photos (used in stories mode)
- * @param {number} params.initialIndex - Starting photo index for stories mode
- * @param {function} params.onPhotoChange - Callback when photo changes in stories mode
- * @param {boolean} params.visible - Modal visibility state
- * @param {function} params.onClose - Callback to close modal
- * @param {function} params.onReactionToggle - Callback when emoji is toggled
- * @param {string} params.currentUserId - Current user's ID
- * @param {function} params.onSwipeUp - Callback when user swipes up on photo
- * @returns {object} Modal state and handlers
- */
+type SourceRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  borderRadius?: number;
+};
+
+type SourceTransform = {
+  scale: number;
+  translateX: number;
+  translateY: number;
+  borderRadius: number;
+};
+
+type PhotoUser = {
+  username?: string;
+  displayName?: string;
+  profilePhotoURL?: string;
+  nameColor?: string;
+};
+
+type PhotoLike = {
+  id?: string;
+  imageURL?: string;
+  capturedAt?: string;
+  reactions?: Record<string, Record<string, number>>;
+  user?: PhotoUser;
+  mediaType?: 'photo' | 'video';
+  [key: string]: unknown;
+};
+
+type EmojiObject = {
+  emoji: string;
+};
+
+type UsePhotoDetailModalParams = {
+  mode?: 'feed' | 'stories';
+  photo?: PhotoLike | null;
+  photos?: PhotoLike[];
+  initialIndex?: number;
+  onPhotoChange?: (photo: PhotoLike, index: number) => void;
+  visible: boolean;
+  onClose: () => void;
+  onReactionToggle: (emoji: string, currentCount: number) => void;
+  currentUserId?: string;
+  onFriendTransition?: () => boolean;
+  onPreviousFriendTransition?: () => boolean;
+  onSwipeUp?: () => void;
+  sourceRect?: SourceRect | null;
+  cubeProgress?: SharedValue<number>;
+  onPrepareSwipeTransition?: (direction: 'forward' | 'backward') => boolean;
+  onCommitSwipeTransition?: () => void;
+  onCancelSwipeTransition?: () => void;
+  onGetNextFriendPhotoURL?: () => string | null;
+};
+
+type UsePhotoDetailModalReturn = {
+  mode: 'feed' | 'stories';
+  showProgressBar: boolean;
+  currentPhoto: PhotoLike | null;
+  imageURL: string | undefined;
+  capturedAt: string | undefined;
+  displayName: string | undefined;
+  username: string | undefined;
+  profilePhotoURL: string | undefined;
+  nameColor: string | undefined;
+  currentIndex: number;
+  totalPhotos: number;
+  handleTapNavigation: (event: GestureResponderEvent) => void;
+  goPrev: () => boolean;
+  goNext: () => boolean;
+  translateY: Animated.Value;
+  opacity: Animated.Value;
+  panResponder: PanResponderInstance;
+  openProgress: Animated.Value;
+  dismissScale: Animated.Value;
+  suckTranslateX: Animated.Value;
+  animatedBorderRadius: Animated.Value;
+  sourceTransform: SourceTransform | null;
+  groupedReactions: Record<string, number>;
+  orderedEmojis: string[];
+  curatedEmojis: string[];
+  getUserReactionCount: (emoji: string) => number;
+  handleEmojiPress: (emoji: string) => void;
+  customEmoji: string | null;
+  setCustomEmoji: React.Dispatch<React.SetStateAction<string | null>>;
+  showEmojiPicker: boolean;
+  setShowEmojiPicker: React.Dispatch<React.SetStateAction<boolean>>;
+  handleOpenEmojiPicker: () => void;
+  handleEmojiPickerSelect: (emojiObject: EmojiObject) => void;
+  handleCustomEmojiConfirm: () => void;
+  newlyAddedEmoji: string | null;
+  handleClose: () => void;
+  updateCommentsVisible: (isVisible: boolean) => void;
+  horizontalGesture: GestureType;
+  startLoadTimer: () => void;
+  clearLoadTimer: () => void;
+  handleVideoPlayToEnd: () => void;
+  handleVideoTimeUpdate: (params: { currentTime: number; duration: number }) => void;
+  videoProgress: number;
+};
+
 export const usePhotoDetailModal = ({
   mode = 'feed',
   photo,
@@ -53,25 +132,18 @@ export const usePhotoDetailModal = ({
   onClose,
   onReactionToggle,
   currentUserId,
-  onFriendTransition, // Callback for friend-to-friend transition with cube animation (taps)
-  onPreviousFriendTransition, // Callback for backward friend transition with reverse cube (taps)
-  onSwipeUp, // Callback when user swipes up to open comments
-  sourceRect, // Source card position for expand/collapse animation { x, y, width, height, borderRadius }
-  // Interactive swipe support
-  cubeProgress, // Reanimated SharedValue from PhotoDetailScreen for interactive gesture tracking
-  onPrepareSwipeTransition, // (direction) => boolean - prepare transition at drag start
-  onCommitSwipeTransition, // () => void - complete transition after commit animation
-  onCancelSwipeTransition, // () => void - cancel transition after spring-back animation
-  // Next-friend prefetching
-  onGetNextFriendPhotoURL, // () => string|null - returns next friend's first photo URL for prefetching
-}) => {
-  // Stories mode: current photo index
+  onFriendTransition,
+  onPreviousFriendTransition,
+  onSwipeUp,
+  sourceRect,
+  cubeProgress,
+  onPrepareSwipeTransition,
+  onCommitSwipeTransition,
+  onCancelSwipeTransition,
+  onGetNextFriendPhotoURL,
+}: UsePhotoDetailModalParams): UsePhotoDetailModalReturn => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-  // Immediately sync currentIndex when photos array changes (friend transition).
-  // Uses React's "adjust state during render" pattern so the very first render
-  // after a friend transition already has the correct index, eliminating a
-  // stale-index frame where photos[oldIndex] could show the wrong photo.
   const [prevPhotosKey, setPrevPhotosKey] = useState(photos);
   if (photos !== prevPhotosKey) {
     setPrevPhotosKey(photos);
@@ -79,50 +151,38 @@ export const usePhotoDetailModal = ({
     setCurrentIndex(validIndex);
   }
 
-  // State to track if we should re-sort or freeze current order
-  const [frozenOrder, setFrozenOrder] = useState(null);
-  const sortTimerRef = useRef(null);
+  const [frozenOrder, setFrozenOrder] = useState<string[] | null>(null);
+  const sortTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Custom emoji picker state
-  const [customEmoji, setCustomEmoji] = useState(null);
+  const [customEmoji, setCustomEmoji] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  // Track custom emojis that have been confirmed (persist in reaction row)
-  const [activeCustomEmojis, setActiveCustomEmojis] = useState([]);
-  // Track newly added emoji for highlight animation (null when no highlight needed)
-  const [newlyAddedEmoji, setNewlyAddedEmoji] = useState(null);
+  const [activeCustomEmojis, setActiveCustomEmojis] = useState<string[]>([]);
+  const [newlyAddedEmoji, setNewlyAddedEmoji] = useState<string | null>(null);
 
-  // Video progress for stories progress bar (0-1, driven by VideoPlayer time updates)
   const [videoProgress, setVideoProgress] = useState(0);
   const videoProgressRef = useRef(0);
 
-  // Auto-skip on load failure: if image doesn't load within 5 seconds, skip to next photo
-  const LOAD_FAILURE_TIMEOUT = 5000; // ms
-  const loadFailureTimeoutRef = useRef(null);
+  const LOAD_FAILURE_TIMEOUT = 5000;
+  const loadFailureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Minimum display time tracking for rapid taps (ensures each photo is briefly visible)
   const lastTapTimeRef = useRef(0);
-  const MIN_DISPLAY_TIME = 30; // ms - minimum time each photo is displayed
+  const MIN_DISPLAY_TIME = 30;
 
-  // Tap queue: instead of dropping rapid taps, defer them so every tap navigates
-  const queuedTapRef = useRef(null); // timeout ID for pending deferred tap
-  const queuedTapDirectionRef = useRef(null); // 'next' | 'prev' - direction of queued tap
+  const queuedTapRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queuedTapDirectionRef = useRef<'next' | 'prev' | null>(null);
 
-  // Animated values for swipe gesture (RN Animated - stays for vertical gestures)
   const translateY = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current; // Start invisible to prevent first-frame flash
+  const opacity = useRef(new Animated.Value(0)).current;
 
-  // Expand/collapse animation values (RN Animated - stays unchanged)
-  const openProgress = useRef(new Animated.Value(0)).current; // 0=source, 1=full-screen (start at source)
-  const dismissScale = useRef(new Animated.Value(1)).current; // shrinks during dismiss drag
-  const suckTranslateX = useRef(new Animated.Value(0)).current; // X offset for suck-back
-  const animatedBorderRadius = useRef(new Animated.Value(0)).current; // JS-driven, non-native
+  const openProgress = useRef(new Animated.Value(0)).current;
+  const dismissScale = useRef(new Animated.Value(1)).current;
+  const suckTranslateX = useRef(new Animated.Value(0)).current;
+  const animatedBorderRadius = useRef(new Animated.Value(0)).current;
 
-  // Source rect ref for close animation (stable across re-renders)
   const sourceRectRef = useRef(sourceRect);
   sourceRectRef.current = sourceRect;
 
-  // Compute source transform from sourceRect
-  const sourceTransform = useMemo(() => {
+  const sourceTransform = useMemo((): SourceTransform | null => {
     if (!sourceRect) return null;
     const scaleX = sourceRect.width / SCREEN_WIDTH;
     const scaleY = sourceRect.height / SCREEN_HEIGHT;
@@ -137,7 +197,6 @@ export const usePhotoDetailModal = ({
     };
   }, [sourceRect]);
 
-  // Opening animation - expand from source card to full screen
   const hasAnimatedOpen = useRef(false);
   useEffect(() => {
     if (!visible) {
@@ -147,7 +206,6 @@ export const usePhotoDetailModal = ({
     if (hasAnimatedOpen.current) return;
 
     if (sourceTransform) {
-      // Source rect available — play expand animation immediately
       hasAnimatedOpen.current = true;
       openProgress.setValue(0);
       opacity.setValue(0);
@@ -171,10 +229,6 @@ export const usePhotoDetailModal = ({
       return;
     }
 
-    // sourceTransform null on this render — defer one frame.
-    // If context state propagates (sourceRect arrives), the effect re-runs with
-    // truthy sourceTransform before the rAF fires, cancels this, and plays the animation.
-    // If sourceRect genuinely never comes, instant-show after one frame.
     const rafId = requestAnimationFrame(() => {
       if (!hasAnimatedOpen.current) {
         hasAnimatedOpen.current = true;
@@ -185,12 +239,10 @@ export const usePhotoDetailModal = ({
     return () => cancelAnimationFrame(rafId);
   }, [visible, sourceTransform]);
 
-  // Reset index when modal opens or initialIndex changes
   useEffect(() => {
     if (visible && mode === 'stories') {
       const validIndex = Math.min(Math.max(0, initialIndex), Math.max(0, photos.length - 1));
       setCurrentIndex(validIndex);
-      // Note: translateY/opacity resets handled by opening animation useEffect above
       logger.debug('usePhotoDetailModal: Stories mode opened', {
         photoCount: photos.length,
         startingIndex: validIndex,
@@ -198,18 +250,16 @@ export const usePhotoDetailModal = ({
     }
   }, [visible, initialIndex, photos.length, mode]);
 
-  // Batch prefetch first few photos when stories open for instant initial swiping
   useEffect(() => {
     if (!visible || mode !== 'stories' || photos.length === 0) return;
 
-    // Prefetch up to 3 photos after initialIndex (current photo loads via <Image> directly)
     const startIdx = initialIndex + 1;
     const endIdx = Math.min(startIdx + 3, photos.length);
-    const urlsToPrefetch = [];
+    const urlsToPrefetch: string[] = [];
 
     for (let i = startIdx; i < endIdx; i++) {
       if (photos[i]?.imageURL) {
-        urlsToPrefetch.push(photos[i].imageURL);
+        urlsToPrefetch.push(photos[i].imageURL!);
       }
     }
 
@@ -220,18 +270,16 @@ export const usePhotoDetailModal = ({
         count: urlsToPrefetch.length,
       });
     }
-  }, [visible, mode]); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally sparse: only run on open/close
+  }, [visible, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Prefetch adjacent photos for smooth stories navigation
   useEffect(() => {
     if (mode !== 'stories' || !visible || photos.length === 0) return;
 
-    const urlsToPrefetch = [];
+    const urlsToPrefetch: string[] = [];
 
-    // Prefetch next 3 photos at full-res for rapid tapping
     for (let i = 1; i <= 3; i++) {
       if (currentIndex + i < photos.length && photos[currentIndex + i]?.imageURL) {
-        urlsToPrefetch.push(photos[currentIndex + i].imageURL);
+        urlsToPrefetch.push(photos[currentIndex + i].imageURL!);
       }
     }
 
@@ -240,7 +288,6 @@ export const usePhotoDetailModal = ({
     }
   }, [mode, visible, currentIndex, photos]);
 
-  // Prefetch next friend's first photo when near the end of current friend's story
   useEffect(() => {
     if (mode !== 'stories' || !visible) return;
     if (currentIndex >= photos.length - 2 && onGetNextFriendPhotoURL) {
@@ -252,25 +299,19 @@ export const usePhotoDetailModal = ({
     }
   }, [mode, visible, currentIndex, photos.length, onGetNextFriendPhotoURL]);
 
-  // Derive current photo based on mode
-  // Clamp index to valid range to prevent null during friend transitions
-  // (new photos array may be shorter than old currentIndex before useEffect syncs)
-  const currentPhoto = useMemo(() => {
+  const currentPhoto = useMemo((): PhotoLike | null => {
     if (mode === 'stories') {
       if (photos.length === 0) return null;
       const safeIndex = Math.min(currentIndex, photos.length - 1);
       return photos[safeIndex] || null;
     }
-    return photo;
+    return photo || null;
   }, [mode, photo, photos, currentIndex]);
 
-  // Get curated emojis based on current photo ID (deterministic per photo)
   const curatedEmojis = useMemo(() => {
     return getCuratedEmojis(currentPhoto?.id, 5);
   }, [currentPhoto?.id]);
 
-  // Reset video progress synchronously during render when photo changes
-  // (useEffect would be one frame late, causing stale progress on the new segment)
   const [prevPhotoId, setPrevPhotoId] = useState(currentPhoto?.id);
   if (currentPhoto?.id && currentPhoto.id !== prevPhotoId) {
     setPrevPhotoId(currentPhoto.id);
@@ -280,12 +321,10 @@ export const usePhotoDetailModal = ({
     videoProgressRef.current = 0;
   }
 
-  // Update activeCustomEmojis when reactions change (picks up new custom emojis)
-  // Separated from the photo-change effect so reaction updates don't reset frozenOrder
   useEffect(() => {
     if (currentPhoto?.id) {
       const photoReactions = currentPhoto?.reactions || {};
-      const reactionEmojis = new Set();
+      const reactionEmojis = new Set<string>();
       Object.values(photoReactions).forEach(userReactions => {
         if (typeof userReactions === 'object') {
           Object.keys(userReactions).forEach(emoji => reactionEmojis.add(emoji));
@@ -296,25 +335,15 @@ export const usePhotoDetailModal = ({
     }
   }, [currentPhoto?.id, currentPhoto?.reactions, curatedEmojis]);
 
-  // Extract photo data from currentPhoto
-  const { imageURL, capturedAt, reactions = {}, user = {} } = currentPhoto || {};
-  const { username, displayName, profilePhotoURL, nameColor } = user;
+  const { imageURL, capturedAt, reactions = {}, user: photoUser = {} } = currentPhoto || {};
+  const { username, displayName, profilePhotoURL, nameColor } = photoUser as PhotoUser;
 
-  /**
-   * Get grouped reactions (emoji -> count)
-   * Read reactions directly from currentPhoto inside useMemo and depend on
-   * currentPhoto instead of destructured reactions variable. This ensures
-   * recalculation when photo changes, as React's dependency comparison on
-   * the destructured variable was unreliable.
-   */
-  const groupedReactions = useMemo(() => {
-    // Read reactions directly from currentPhoto to ensure fresh data
+  const groupedReactions = useMemo((): Record<string, number> => {
     const photoReactions = currentPhoto?.reactions || {};
-    const grouped = {};
-    Object.entries(photoReactions).forEach(([userId, userReactions]) => {
-      // userReactions is now an object: { '..': 2, '..': 1 }
+    const grouped: Record<string, number> = {};
+    Object.entries(photoReactions).forEach(([_userId, userReactions]) => {
       if (typeof userReactions === 'object') {
-        Object.entries(userReactions).forEach(([emoji, count]) => {
+        Object.entries(userReactions as Record<string, number>).forEach(([emoji, count]) => {
           if (!grouped[emoji]) {
             grouped[emoji] = 0;
           }
@@ -325,12 +354,8 @@ export const usePhotoDetailModal = ({
     return grouped;
   }, [currentPhoto]);
 
-  /**
-   * Get current user's reaction count for a specific emoji
-   * Read from currentPhoto?.reactions directly for consistency
-   */
   const getUserReactionCount = useCallback(
-    emoji => {
+    (emoji: string): number => {
       const photoReactions = currentPhoto?.reactions || {};
       if (!currentUserId || !photoReactions[currentUserId]) return 0;
       return photoReactions[currentUserId][emoji] || 0;
@@ -338,17 +363,12 @@ export const usePhotoDetailModal = ({
     [currentUserId, currentPhoto]
   );
 
-  /**
-   * Handle emoji button press (curated or custom emoji)
-   * Triggers highlight animation (purple border that fades over 1 second)
-   */
   const handleEmojiPress = useCallback(
-    emoji => {
+    (emoji: string) => {
       reactionHaptic();
       const currentCount = getUserReactionCount(emoji);
       onReactionToggle(emoji, currentCount);
 
-      // If not frozen yet, freeze the current sorted order (all emojis, not just curated)
       if (!frozenOrder) {
         const customToAdd = activeCustomEmojis.filter(e => !curatedEmojis.includes(e));
         const allEmojis = [...customToAdd, ...curatedEmojis];
@@ -362,17 +382,14 @@ export const usePhotoDetailModal = ({
         setFrozenOrder(currentSortedOrder);
       }
 
-      // Clear existing timer
       if (sortTimerRef.current) {
         clearTimeout(sortTimerRef.current);
       }
 
-      // Set new timer to unfreeze and allow re-sorting after 3 seconds of no taps
       sortTimerRef.current = setTimeout(() => {
         setFrozenOrder(null);
       }, 3000);
 
-      // Trigger highlight animation (purple border that fades over 1 second)
       setNewlyAddedEmoji(emoji);
       setTimeout(() => {
         setNewlyAddedEmoji(null);
@@ -388,31 +405,21 @@ export const usePhotoDetailModal = ({
     ]
   );
 
-  /**
-   * Get ordered emoji list (frozen or sorted by count)
-   * ALL emojis (custom + curated) are sorted by total count (highest first)
-   */
-  const orderedEmojis = useMemo(() => {
-    // Get custom emojis that aren't in curated list
+  const orderedEmojis = useMemo((): string[] => {
     const customToAdd = activeCustomEmojis.filter(e => !curatedEmojis.includes(e));
 
-    // Combine all emojis and map to count data
     const allEmojis = [...customToAdd, ...curatedEmojis];
     const allEmojiData = allEmojis.map(emoji => ({
       emoji,
       totalCount: groupedReactions[emoji] || 0,
     }));
 
-    // Sort all emojis by count (highest first)
     const sortedAll = [...allEmojiData]
       .sort((a, b) => b.totalCount - a.totalCount)
       .map(item => item.emoji);
 
     if (frozenOrder) {
-      // When frozen, keep emojis in frozen order
-      // Only include emojis that are in current set (in case emoji was removed)
       const validFrozen = frozenOrder.filter(e => allEmojis.includes(e));
-      // Add any new emojis that weren't in frozen order (at the end, sorted by count)
       const newEmojis = sortedAll.filter(e => !frozenOrder.includes(e));
       return [...validFrozen, ...newEmojis];
     }
@@ -420,33 +427,23 @@ export const usePhotoDetailModal = ({
     return sortedAll;
   }, [frozenOrder, groupedReactions, curatedEmojis, activeCustomEmojis]);
 
-  /**
-   * Open the custom emoji picker
-   */
   const handleOpenEmojiPicker = useCallback(() => {
     setShowEmojiPicker(true);
   }, []);
 
-  /**
-   * Handle emoji selection from picker
-   * Immediately adds emoji to front of row, reacts, and shows highlight for 2 seconds
-   */
   const handleEmojiPickerSelect = useCallback(
-    emojiObject => {
+    (emojiObject: EmojiObject) => {
       const selectedEmoji = emojiObject.emoji;
       setShowEmojiPicker(false);
 
-      // Immediately react with the selected emoji
       reactionHaptic();
       const currentCount = getUserReactionCount(selectedEmoji);
       onReactionToggle(selectedEmoji, currentCount);
 
-      // Add to FRONT of activeCustomEmojis if not already there (and not in curated list)
       if (!activeCustomEmojis.includes(selectedEmoji) && !curatedEmojis.includes(selectedEmoji)) {
         setActiveCustomEmojis(prev => [selectedEmoji, ...prev]);
       }
 
-      // Set for highlight animation (purple border for 2 seconds)
       setNewlyAddedEmoji(selectedEmoji);
       setTimeout(() => {
         setNewlyAddedEmoji(null);
@@ -455,41 +452,24 @@ export const usePhotoDetailModal = ({
     [getUserReactionCount, onReactionToggle, activeCustomEmojis, curatedEmojis]
   );
 
-  /**
-   * Confirm and commit the custom emoji reaction
-   * Adds emoji to FRONT of activeCustomEmojis so it appears first in the row
-   * Sets newlyAddedEmoji for highlight animation
-   */
   const handleCustomEmojiConfirm = useCallback(() => {
     if (customEmoji) {
       reactionHaptic();
       const currentCount = getUserReactionCount(customEmoji);
       onReactionToggle(customEmoji, currentCount);
 
-      // Add to FRONT of activeCustomEmojis if not already there (and not in curated list)
       if (!activeCustomEmojis.includes(customEmoji) && !curatedEmojis.includes(customEmoji)) {
         setActiveCustomEmojis(prev => [customEmoji, ...prev]);
-        // Set for highlight animation
         setNewlyAddedEmoji(customEmoji);
-        // Clear highlight after animation completes
         setTimeout(() => {
           setNewlyAddedEmoji(null);
         }, 600);
       }
 
-      // Clear preview state so "+" button shows "+" again
       setCustomEmoji(null);
     }
   }, [customEmoji, getUserReactionCount, onReactionToggle, activeCustomEmojis, curatedEmojis]);
 
-  /**
-   * Navigate to previous photo in stories mode
-   * Returns true if navigated, false if at first photo (caller should close)
-   * Uses minimum display time to ensure each photo is briefly visible during rapid tapping
-   */
-  /**
-   * Clear any pending queued tap (used on close, transition, or new tap executing)
-   */
   const clearQueuedTap = useCallback(() => {
     if (queuedTapRef.current) {
       clearTimeout(queuedTapRef.current);
@@ -498,14 +478,12 @@ export const usePhotoDetailModal = ({
     }
   }, []);
 
-  const goPrev = useCallback(() => {
+  const goPrev = useCallback((): boolean => {
     if (mode !== 'stories') return false;
 
-    // Check minimum display time for rapid tapping
     const now = Date.now();
     const timeSinceLastTap = now - lastTapTimeRef.current;
     if (timeSinceLastTap < MIN_DISPLAY_TIME) {
-      // Queue this tap to fire after remaining wait time instead of dropping it
       clearQueuedTap();
       const remaining = MIN_DISPLAY_TIME - timeSinceLastTap;
       queuedTapDirectionRef.current = 'prev';
@@ -514,10 +492,10 @@ export const usePhotoDetailModal = ({
         queuedTapDirectionRef.current = null;
         goPrev();
       }, remaining);
-      return true; // Return true to prevent close
+      return true;
     }
     lastTapTimeRef.current = now;
-    clearQueuedTap(); // Clear any pending queued tap
+    clearQueuedTap();
 
     if (currentIndex === 0) {
       logger.debug('usePhotoDetailModal: At first photo');
@@ -533,20 +511,12 @@ export const usePhotoDetailModal = ({
     return true;
   }, [mode, currentIndex, photos, onPhotoChange, clearQueuedTap]);
 
-  /**
-   * Navigate to next photo in stories mode
-   * Returns true if navigated, false if at last photo (caller should close)
-   * Uses minimum display time to ensure each photo is briefly visible during rapid tapping
-   * If onFriendTransition is provided and at last photo, triggers friend transition instead of close
-   */
-  const goNext = useCallback(() => {
+  const goNext = useCallback((): boolean => {
     if (mode !== 'stories') return false;
 
-    // Check minimum display time for rapid tapping
     const now = Date.now();
     const timeSinceLastTap = now - lastTapTimeRef.current;
     if (timeSinceLastTap < MIN_DISPLAY_TIME) {
-      // Queue this tap to fire after remaining wait time instead of dropping it
       clearQueuedTap();
       const remaining = MIN_DISPLAY_TIME - timeSinceLastTap;
       queuedTapDirectionRef.current = 'next';
@@ -555,14 +525,13 @@ export const usePhotoDetailModal = ({
         queuedTapDirectionRef.current = null;
         goNext();
       }, remaining);
-      return true; // Return true to prevent close
+      return true;
     }
     lastTapTimeRef.current = now;
-    clearQueuedTap(); // Clear any pending queued tap
+    clearQueuedTap();
 
     if (currentIndex >= photos.length - 1) {
       logger.debug('usePhotoDetailModal: At last photo');
-      // Try friend-to-friend transition if available
       if (onFriendTransition) {
         const transitioned = onFriendTransition();
         if (transitioned) {
@@ -582,9 +551,6 @@ export const usePhotoDetailModal = ({
     return true;
   }, [mode, currentIndex, photos, onPhotoChange, onFriendTransition, clearQueuedTap]);
 
-  /**
-   * Clear the load failure timeout (called on successful load, manual navigation, unmount)
-   */
   const clearLoadTimer = useCallback(() => {
     if (loadFailureTimeoutRef.current) {
       clearTimeout(loadFailureTimeoutRef.current);
@@ -592,14 +558,9 @@ export const usePhotoDetailModal = ({
     }
   }, []);
 
-  /**
-   * Start the load failure timeout (auto-skips to next photo after LOAD_FAILURE_TIMEOUT ms)
-   * Only active in stories mode for photos — videos use playToEnd for advancement
-   */
   const startLoadTimer = useCallback(() => {
     clearLoadTimer();
     if (mode !== 'stories') return;
-    // Don't start load failure timer for videos — they handle advancement via playToEnd
     if (currentPhoto?.mediaType === 'video') return;
     loadFailureTimeoutRef.current = setTimeout(() => {
       logger.warn('usePhotoDetailModal: Image load timeout, auto-skipping', {
@@ -609,14 +570,8 @@ export const usePhotoDetailModal = ({
     }, LOAD_FAILURE_TIMEOUT);
   }, [clearLoadTimer, mode, goNext, currentPhoto?.id, currentPhoto?.mediaType]);
 
-  /**
-   * Handle video play-to-end — auto-advance to next photo/video in stories mode
-   * Guarded: only advance if videoProgress > 0.5 to prevent premature firing
-   * when expo-video player is created/disposed (can emit stale playToEnd events)
-   */
   const handleVideoPlayToEnd = useCallback(() => {
     if (mode !== 'stories') return;
-    // Guard against premature playToEnd from player creation/disposal (progress ~0)
     if (videoProgressRef.current < 0.1) {
       logger.debug('usePhotoDetailModal: Ignoring premature playToEnd', {
         progress: videoProgressRef.current,
@@ -627,11 +582,7 @@ export const usePhotoDetailModal = ({
     goNext();
   }, [mode, goNext]);
 
-  /**
-   * Handle video time update — updates videoProgress for stories progress bar
-   * Triggered by VideoPlayer onTimeUpdate callback
-   */
-  const handleVideoTimeUpdate = useCallback(({ currentTime, duration }) => {
+  const handleVideoTimeUpdate = useCallback(({ currentTime, duration }: { currentTime: number; duration: number }) => {
     if (duration > 0) {
       const prog = currentTime / duration;
       setVideoProgress(prog);
@@ -642,13 +593,8 @@ export const usePhotoDetailModal = ({
     }
   }, []);
 
-  /**
-   * Close modal with animation
-   * Two-phase if sourceRect exists: settle (soft lock) -> suck-back to source
-   * Fallback: simple slide-down + fade
-   */
   const closeWithAnimation = useCallback(() => {
-    clearQueuedTap(); // Cancel any pending tap navigation
+    clearQueuedTap();
     const source = sourceRectRef.current;
     const transform = source
       ? {
@@ -662,15 +608,14 @@ export const usePhotoDetailModal = ({
     const resetAll = () => {
       setTimeout(() => {
         translateY.setValue(0);
-        opacity.setValue(0); // Keep invisible — screen is unmounting
-        openProgress.setValue(0); // Keep at source — screen is unmounting
+        opacity.setValue(0);
+        openProgress.setValue(0);
         dismissScale.setValue(1);
         suckTranslateX.setValue(0);
       }, 100);
     };
 
     if (!transform) {
-      // Fallback: slide down + fade
       Animated.parallel([
         Animated.timing(translateY, {
           toValue: SCREEN_HEIGHT,
@@ -690,7 +635,6 @@ export const usePhotoDetailModal = ({
       return;
     }
 
-    // Suck-back — fast ease-in to source position
     const suckDuration = 200;
     Animated.parallel([
       Animated.timing(translateY, {
@@ -723,22 +667,14 @@ export const usePhotoDetailModal = ({
     });
   }, [translateY, opacity, openProgress, dismissScale, suckTranslateX, onClose, clearQueuedTap]);
 
-  /**
-   * Handle tap navigation on photo area (stories mode only)
-   * Left 30%: previous (or close if first)
-   * Right 30%: next (or close if last)
-   * Center 40%: no action
-   */
   const handleTapNavigation = useCallback(
-    event => {
+    (event: GestureResponderEvent) => {
       if (mode !== 'stories') return;
 
       const { locationX } = event.nativeEvent;
 
       if (locationX < SCREEN_WIDTH * 0.3) {
-        // Left tap - previous photo, or previous friend if at first photo
         if (!goPrev()) {
-          // At first photo - try going to previous friend
           if (onPreviousFriendTransition) {
             const transitioned = onPreviousFriendTransition();
             if (transitioned) {
@@ -748,19 +684,14 @@ export const usePhotoDetailModal = ({
           closeWithAnimation();
         }
       } else if (locationX > SCREEN_WIDTH * 0.7) {
-        // Right tap - next
         if (!goNext()) {
           closeWithAnimation();
         }
       }
-      // Center 40% - no action (future: pause)
     },
     [mode, goPrev, goNext, closeWithAnimation, onPreviousFriendTransition]
   );
 
-  /**
-   * Spring back to original position
-   */
   const springBack = useCallback(() => {
     Animated.parallel([
       Animated.spring(translateY, {
@@ -784,7 +715,6 @@ export const usePhotoDetailModal = ({
     ]).start();
   }, [translateY, opacity, dismissScale]);
 
-  // Store callbacks in refs for panResponder/gesture access (created once, needs current values)
   const onSwipeUpRef = useRef(onSwipeUp);
   useEffect(() => {
     onSwipeUpRef.current = onSwipeUp;
@@ -800,7 +730,6 @@ export const usePhotoDetailModal = ({
     onPreviousFriendTransitionRef.current = onPreviousFriendTransition;
   }, [onPreviousFriendTransition]);
 
-  // Interactive swipe transition refs
   const cubeProgressRef = useRef(cubeProgress);
   useEffect(() => {
     cubeProgressRef.current = cubeProgress;
@@ -821,27 +750,20 @@ export const usePhotoDetailModal = ({
     onCancelSwipeTransitionRef.current = onCancelSwipeTransition;
   }, [onCancelSwipeTransition]);
 
-  // Gesture tracking state for interactive horizontal swipe
   const isHorizontalSwipeActiveRef = useRef(false);
-  const swipeDirectionRef = useRef(null); // 'forward' | 'backward'
+  const swipeDirectionRef = useRef<'forward' | 'backward' | null>(null);
 
-  // Track initial vertical direction so reversing mid-gesture doesn't trigger the opposite action
-  const verticalDirectionRef = useRef(null); // null | 'down' | 'up'
+  const verticalDirectionRef = useRef<'down' | 'up' | null>(null);
 
-  // Track if comments are visible (to disable swipe-to-dismiss when scrolling comments)
-  const [commentsVisible, setCommentsVisible] = useState(false);
+  const [_commentsVisible, setCommentsVisible] = useState(false);
   const commentsVisibleRef = useRef(false);
 
-  // Expose setter for parent to call when comments open/close
-  const updateCommentsVisible = useCallback(isVisible => {
+  const updateCommentsVisible = useCallback((isVisible: boolean) => {
     commentsVisibleRef.current = isVisible;
     setCommentsVisible(isVisible);
   }, []);
 
-  /**
-   * Helper: prepare horizontal swipe transition (called from Gesture.Pan via runOnJS)
-   */
-  const prepareHorizontalSwipe = useCallback((direction, absDx) => {
+  const prepareHorizontalSwipe = useCallback((direction: 'forward' | 'backward', _absDx: number) => {
     const hasCallback =
       direction === 'forward'
         ? onFriendTransitionRef.current
@@ -855,10 +777,7 @@ export const usePhotoDetailModal = ({
     swipeDirectionRef.current = direction;
   }, []);
 
-  /**
-   * Helper: complete horizontal swipe (called from Gesture.Pan via runOnJS)
-   */
-  const completeHorizontalSwipe = useCallback((dx, vx) => {
+  const completeHorizontalSwipe = useCallback((dx: number, vx: number) => {
     if (!isHorizontalSwipeActiveRef.current) return;
 
     const signedDx = swipeDirectionRef.current === 'forward' ? -dx : dx;
@@ -910,31 +829,23 @@ export const usePhotoDetailModal = ({
     swipeDirectionRef.current = null;
   }, []);
 
-  /**
-   * Gesture.Pan for horizontal friend-to-friend swipe transitions.
-   * Runs on the UI thread via react-native-gesture-handler.
-   * Only activates on horizontal movement; fails on vertical to let PanResponder handle dismiss/comments.
-   */
   const horizontalGesture = useMemo(() => {
     return Gesture.Pan()
-      .activeOffsetX([-15, 15]) // Only activate after 15px horizontal movement
-      .failOffsetY([-10, 10]) // Fail (let PanResponder take over) if vertical movement > 10px
+      .activeOffsetX([-15, 15])
+      .failOffsetY([-10, 10])
       .onStart(() => {
         'worklet';
-        // Reset tracking state at gesture start
       })
       .onUpdate(event => {
         'worklet';
         const { translationX } = event;
 
         if (!isHorizontalSwipeActiveRef.current) {
-          // First significant horizontal movement — prepare transition
           const direction = translationX < 0 ? 'forward' : 'backward';
           runOnJS(prepareHorizontalSwipe)(direction, Math.abs(translationX));
           return;
         }
 
-        // Drive cube progress from gesture
         const signedDx = swipeDirectionRef.current === 'forward' ? -translationX : translationX;
         const adjustedDx = Math.max(0, signedDx - 15);
         const progress = Math.min(1, adjustedDx / SCREEN_WIDTH);
@@ -949,40 +860,27 @@ export const usePhotoDetailModal = ({
       })
       .onFinalize(() => {
         'worklet';
-        // Handle gesture cancellation — if still active, cancel via JS thread
         if (isHorizontalSwipeActiveRef.current) {
           runOnJS(completeHorizontalSwipe)(0, 0);
         }
       });
   }, [prepareHorizontalSwipe, completeHorizontalSwipe]);
 
-  /**
-   * Pan responder for VERTICAL swipe gestures only:
-   * - Swipe DOWN: dismiss photo detail
-   * - Swipe UP: open comments
-   * Horizontal swipes are handled by Gesture.Pan (horizontalGesture) above.
-   * Excludes footer area (bottom 100px) to allow emoji taps.
-   */
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => {
-        // Don't capture initial touch - let TouchableWithoutFeedback handle taps
         return false;
       },
       onStartShouldSetPanResponderCapture: () => {
-        // Don't capture initial touch - wait for move to determine if it's a swipe
         return false;
       },
       onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // Don't respond if comments sheet is open (let it handle its own scrolling)
         if (commentsVisibleRef.current) return false;
 
-        // Don't respond if touch started in footer area
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
         if (touchY >= footerThreshold) return false;
 
-        // Only respond to vertical swipes — horizontal is handled by Gesture.Pan
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
         if (isVerticalSwipe) {
           const isDownward = gestureState.dy > 5;
@@ -993,15 +891,12 @@ export const usePhotoDetailModal = ({
         return false;
       },
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
-        // Don't capture if comments sheet is open (let it handle its own scrolling)
         if (commentsVisibleRef.current) return false;
 
-        // Don't capture if touch is in footer area
         const touchY = evt.nativeEvent.pageY;
         const footerThreshold = SCREEN_HEIGHT - 100;
         if (touchY >= footerThreshold) return false;
 
-        // Only capture vertical swipes — horizontal is handled by Gesture.Pan
         const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
         if (isVerticalSwipe) {
           const isDownward = gestureState.dy > 5;
@@ -1014,12 +909,10 @@ export const usePhotoDetailModal = ({
       onPanResponderMove: (_, gestureState) => {
         const { dy } = gestureState;
 
-        // Record initial vertical direction on first move
         if (verticalDirectionRef.current === null) {
           verticalDirectionRef.current = dy > 0 ? 'down' : 'up';
         }
 
-        // VERTICAL - only apply dismiss effects for downward gestures
         if (verticalDirectionRef.current === 'down') {
           const clampedDy = Math.max(0, dy);
           translateY.setValue(clampedDy);
@@ -1028,16 +921,13 @@ export const usePhotoDetailModal = ({
           const fadeAmount = Math.max(0, 1 - dragRatio * 0.8);
           opacity.setValue(fadeAmount);
         }
-        // Swipe-up: no visual tracking needed (commits on release)
       },
       onPanResponderRelease: (_, gestureState) => {
         const { dy, vy } = gestureState;
         const gestureDir = verticalDirectionRef.current;
 
-        // Reset vertical direction for next gesture
         verticalDirectionRef.current = null;
 
-        // SWIPE UP - open comments (only if gesture started upward)
         if (gestureDir === 'up' && (dy < -50 || vy < -0.5)) {
           if (onSwipeUpRef.current) {
             onSwipeUpRef.current();
@@ -1045,7 +935,6 @@ export const usePhotoDetailModal = ({
           return;
         }
 
-        // SWIPE DOWN - close modal (only if gesture started downward)
         if (gestureDir === 'down') {
           const dismissThreshold = SCREEN_HEIGHT / 3;
           if (dy > dismissThreshold || vy > 0.5) {
@@ -1056,17 +945,14 @@ export const usePhotoDetailModal = ({
           return;
         }
 
-        // Fallback: spring back if direction unclear
         springBack();
       },
       onPanResponderTerminate: () => {
-        // Gesture interrupted by system - reset vertical direction
         verticalDirectionRef.current = null;
       },
     })
   ).current;
 
-  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (sortTimerRef.current) {
@@ -1078,11 +964,8 @@ export const usePhotoDetailModal = ({
   }, [clearQueuedTap, clearLoadTimer]);
 
   return {
-    // Mode
     mode,
     showProgressBar: mode === 'stories',
-
-    // Current photo data
     currentPhoto,
     imageURL,
     capturedAt,
@@ -1090,34 +973,24 @@ export const usePhotoDetailModal = ({
     username,
     profilePhotoURL,
     nameColor,
-
-    // Stories navigation
     currentIndex,
     totalPhotos: photos.length,
     handleTapNavigation,
     goPrev,
     goNext,
-
-    // Animation
     translateY,
     opacity,
     panResponder,
-
-    // Expand/collapse animation
     openProgress,
     dismissScale,
     suckTranslateX,
     animatedBorderRadius,
     sourceTransform,
-
-    // Reactions
     groupedReactions,
     orderedEmojis,
     curatedEmojis,
     getUserReactionCount,
     handleEmojiPress,
-
-    // Custom emoji picker
     customEmoji,
     setCustomEmoji,
     showEmojiPicker,
@@ -1126,21 +999,11 @@ export const usePhotoDetailModal = ({
     handleEmojiPickerSelect,
     handleCustomEmojiConfirm,
     newlyAddedEmoji,
-
-    // Close handler (animated)
     handleClose: closeWithAnimation,
-
-    // Comments visibility (for disabling swipe-to-dismiss during comment scroll)
     updateCommentsVisible,
-
-    // Horizontal gesture for friend-to-friend swipe (Gesture.Pan)
     horizontalGesture,
-
-    // Load failure timer (for auto-skip on image load timeout)
     startLoadTimer,
     clearLoadTimer,
-
-    // Video support (stories auto-advance + progress bar)
     handleVideoPlayToEnd,
     handleVideoTimeUpdate,
     videoProgress,

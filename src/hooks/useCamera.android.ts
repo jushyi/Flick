@@ -1,15 +1,3 @@
-/**
- * useCamera (Android)
- *
- * Android camera hook. Uses digital zoom only — [1, 2, 3] — on both front
- * and back cameras. No physical lens switching.
- *
- * Android's lens enumeration APIs are not accessible from expo-camera's JS
- * layer (onAvailableLensesChanged never fires, getAvailableLensesAsync is
- * iOS-only, and the native CameraView ref exposes no camera info methods),
- * so ultra-wide (0.5x) is not supported on Android at this time.
- */
-
 import { useCallback } from 'react';
 import useCameraBase, {
   ZOOM_LEVELS_BASE,
@@ -26,11 +14,10 @@ import useCameraBase, {
   SPREAD_ROTATION_MULTIPLIER,
   SPREAD_OFFSET_MULTIPLIER,
 } from './useCameraBase';
+import type { ZoomLevel, UseCameraBaseReturn } from './useCameraBase';
 import logger from '../utils/logger';
 import { lightImpact } from '../utils/haptics';
 
-// Re-export layout constants so CameraScreen can import them from the single
-// 'useCamera' path without needing to know about useCameraBase.
 export {
   TAB_BAR_HEIGHT,
   FOOTER_HEIGHT,
@@ -46,22 +33,26 @@ export {
   SPREAD_OFFSET_MULTIPLIER,
 };
 
-/**
- * Custom hook for Android camera logic
- *
- * Wraps useCameraBase with Android-appropriate zoom handling.
- * Digital zoom only — [1, 2, 3] on both front and back cameras.
- */
-const useCamera = options => {
+type CameraOptions = {
+  mode?: 'normal' | 'snap';
+  onSnapCapture?: ((media: { uri: string; mediaType: 'photo' | 'video' }) => void) | null;
+};
+
+type UseCameraReturn = UseCameraBaseReturn & {
+  selectedLens: string | null;
+  zoomLevels: ZoomLevel[];
+  toggleCameraFacing: () => void;
+  handleZoomChange: (zoomLevel: ZoomLevel) => void;
+  handleAvailableLensesChanged: () => void;
+};
+
+const useCamera = (options: CameraOptions = {}): UseCameraReturn => {
   const base = useCameraBase(options);
   const { facing, setFacing, zoom, setZoom } = base;
 
-  // Android uses digital zoom only — same levels for front and back
-  const zoomLevels = ZOOM_LEVELS_BASE;
+  const zoomLevels: ZoomLevel[] = ZOOM_LEVELS_BASE;
 
-  // Reset zoom to 1x when flipping cameras
   const toggleCameraFacing = useCallback(() => {
-    // Lock facing during video recording (expo-camera stops recording on flip)
     if (base.isFacingLockedRef.current) return;
 
     lightImpact();
@@ -70,7 +61,7 @@ const useCamera = options => {
   }, [facing, setFacing, setZoom, base.isFacingLockedRef]);
 
   const handleZoomChange = useCallback(
-    zoomLevel => {
+    (zoomLevel: ZoomLevel) => {
       if (zoomLevel.value !== zoom.value) {
         lightImpact();
         setZoom(zoomLevel);
@@ -83,12 +74,11 @@ const useCamera = options => {
     [zoom.value, setZoom]
   );
 
-  // No-op: onAvailableLensesChanged never fires on Android (iOS only in expo-camera)
   const handleAvailableLensesChanged = useCallback(() => {}, []);
 
   return {
     ...base,
-    selectedLens: null, // No lens switching on Android
+    selectedLens: null,
     zoomLevels,
     toggleCameraFacing,
     handleZoomChange,

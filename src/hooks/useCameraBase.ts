@@ -1,17 +1,6 @@
-/**
- * useCameraBase — shared camera logic
- *
- * Contains all platform-independent state, effects, and handlers.
- * Consumed by useCamera.ios.js and useCamera.android.js.
- *
- * Platform-specific lens detection and zoom level logic lives in:
- *   useCamera.ios.js    — iOS ultra-wide detection via AVFoundation lens strings
- *   useCamera.android.js — Android wide-angle detection via CameraX IDs
- */
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Animated, Dimensions, Platform } from 'react-native';
-import { useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import * as ImageManipulator from 'expo-image-manipulator';
 
@@ -23,79 +12,118 @@ import { addToQueue, initializeQueue } from '../services/uploadQueueService';
 import logger from '../utils/logger';
 import { lightImpact, mediumImpact } from '../utils/haptics';
 
-// Generate UUID v4 (same pattern as uploadQueueService)
-const generateUUID = () =>
+const generateUUID = (): string =>
   'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 
-// Recording constants
 export const HOLD_THRESHOLD_MS = 500;
-export const MAX_RECORDING_DURATION = 30; // seconds
+export const MAX_RECORDING_DURATION = 30;
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Zoom level configuration
-// expo-camera zoom is 0-1 range where 0 is baseline (1x) and 1 is max zoom
-// Base zoom levels (always available on any camera)
-export const ZOOM_LEVELS_BASE = [
-  { label: '1', value: 1, lens: null, cameraZoom: 0 }, // Baseline (true 1x, no zoom)
-  { label: '2', value: 2, lens: null, cameraZoom: 0.17 }, // 2x zoom
-  { label: '3', value: 3, lens: null, cameraZoom: 0.33 }, // 3x telephoto
-];
-
-// Ultra-wide lens level — actual lens string/ID is filled in per platform
-export const ULTRA_WIDE_LEVEL = {
-  label: '0.5',
-  value: 0.5,
-  lens: 'ultra-wide', // Marker — actual lens string/ID comes from platform detection
-  cameraZoom: 0, // Ultra-wide uses native lens switch, not digital zoom
+export type ZoomLevel = {
+  label: string;
+  value: number;
+  lens: string | null;
+  cameraZoom: number;
 };
 
-// Layout constants (exported for component use)
-export const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 65 : 54; // Bottom tab navigator height
-export const FOOTER_HEIGHT = 200; // Covers ~1/4 of screen for native camera feel
-export const CAMERA_HEIGHT = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
-export const CAMERA_BORDER_RADIUS = 24; // Rounded corners for camera preview
-export const FLOATING_BUTTON_SIZE = 45; // Flash, flip buttons
-export const FLOATING_BUTTON_OFFSET = 8; // Distance above footer edge
+export const ZOOM_LEVELS_BASE: ZoomLevel[] = [
+  { label: '1', value: 1, lens: null, cameraZoom: 0 },
+  { label: '2', value: 2, lens: null, cameraZoom: 0.17 },
+  { label: '3', value: 3, lens: null, cameraZoom: 0.33 },
+];
 
-// Card dimensions for darkroom button (4:3 aspect ratio like a photo)
+export const ULTRA_WIDE_LEVEL: ZoomLevel = {
+  label: '0.5',
+  value: 0.5,
+  lens: 'ultra-wide',
+  cameraZoom: 0,
+};
+
+export const TAB_BAR_HEIGHT: number = Platform.OS === 'ios' ? 65 : 54;
+export const FOOTER_HEIGHT = 200;
+export const CAMERA_HEIGHT: number = SCREEN_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
+export const CAMERA_BORDER_RADIUS = 24;
+export const FLOATING_BUTTON_SIZE = 45;
+export const FLOATING_BUTTON_OFFSET = 8;
+
 export const CARD_WIDTH = 63;
 export const CARD_HEIGHT = 84;
 
-// Card fanning configuration
-export const BASE_ROTATION_PER_CARD = 6; // degrees
-export const BASE_OFFSET_PER_CARD = 5; // pixels
+export const BASE_ROTATION_PER_CARD = 6;
+export const BASE_OFFSET_PER_CARD = 5;
 export const SPREAD_ROTATION_MULTIPLIER = 2.5;
 export const SPREAD_OFFSET_MULTIPLIER = 2;
 
-/**
- * Shared camera base hook
- *
- * Provides all non-lens state, effects, and handlers. Platform-specific hooks
- * call this and layer their lens detection / zoom level logic on top.
- *
- * Exposes setFacing and setZoom so platform hooks can manage state transitions
- * during camera flips and zoom changes.
- */
-const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
+type DarkroomCounts = {
+  totalCount: number;
+  developingCount: number;
+  revealedCount: number;
+};
+
+type CameraBaseOptions = {
+  mode?: 'normal' | 'snap';
+  onSnapCapture?: ((media: { uri: string; mediaType: 'photo' | 'video' }) => void) | null;
+};
+
+type CameraFacing = 'front' | 'back';
+type FlashMode = 'on' | 'off' | 'auto';
+type CameraMode = 'video' | 'picture';
+
+export type UseCameraBaseReturn = {
+  user: { uid: string } | null;
+  isSnapMode: boolean;
+  permission: ReturnType<typeof useCameraPermissions>[0];
+  requestPermission: ReturnType<typeof useCameraPermissions>[1];
+  facing: CameraFacing;
+  setFacing: React.Dispatch<React.SetStateAction<CameraFacing>>;
+  flash: FlashMode;
+  zoom: ZoomLevel;
+  setZoom: React.Dispatch<React.SetStateAction<ZoomLevel>>;
+  isCapturing: boolean;
+  isRecording: boolean;
+  cameraMode: CameraMode;
+  recordingDuration: number;
+  isFacingLockedRef: React.MutableRefObject<boolean>;
+  handleCameraReady: () => void;
+  darkroomCounts: DarkroomCounts;
+  isBottomSheetVisible: boolean;
+  showFlash: boolean;
+  cameraRef: React.RefObject<CameraView | null>;
+  flashOpacity: Animated.Value;
+  cardScale: Animated.Value;
+  cardFanSpread: Animated.Value;
+  toggleFlash: () => void;
+  playFlashEffect: () => void;
+  playCardCaptureAnimation: () => void;
+  takePicture: () => Promise<string | undefined>;
+  handlePressIn: () => void;
+  handlePressOut: () => Promise<void>;
+  openBottomSheet: () => void;
+  closeBottomSheet: () => void;
+  handleBottomSheetComplete: () => void;
+  MAX_RECORDING_DURATION: number;
+};
+
+const useCameraBase = ({ mode = 'normal', onSnapCapture = null }: CameraBaseOptions = {}): UseCameraBaseReturn => {
   const isSnapMode = mode === 'snap';
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: { uid: string } | null };
   const navigation = useNavigation();
   const route = useRoute();
 
   const [permission, requestPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
 
-  const [facing, setFacing] = useState('back');
-  const [flash, setFlash] = useState('off');
-  const [zoom, setZoom] = useState(ZOOM_LEVELS_BASE[0]); // Default to 1x
+  const [facing, setFacing] = useState<CameraFacing>('back');
+  const [flash, setFlash] = useState<FlashMode>('off');
+  const [zoom, setZoom] = useState<ZoomLevel>(ZOOM_LEVELS_BASE[0]);
   const [isCapturing, setIsCapturing] = useState(false);
 
-  const [darkroomCounts, setDarkroomCounts] = useState({
+  const [darkroomCounts, setDarkroomCounts] = useState<DarkroomCounts>({
     totalCount: 0,
     developingCount: 0,
     revealedCount: 0,
@@ -103,40 +131,34 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
 
-  // Video recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  // Android can't take photos in video mode — use picture mode by default, switch for recording
-  // iOS supports both in video mode, so stay in video mode always
-  const [cameraMode, setCameraMode] = useState(Platform.OS === 'ios' ? 'video' : 'picture');
-  const holdTimerRef = useRef(null);
-  const recordingTimerRef = useRef(null);
+  const [cameraMode, setCameraMode] = useState<CameraMode>(Platform.OS === 'ios' ? 'video' : 'picture');
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isFacingLockedRef = useRef(false);
-  const recordingDurationRef = useRef(0); // Ref mirror for async access
+  const recordingDurationRef = useRef(0);
   const stopRequestedRef = useRef(false);
   const cameraReadyRef = useRef(true);
-  const cameraReadyResolverRef = useRef(null);
+  const cameraReadyResolverRef = useRef<(() => void) | null>(null);
 
-  const cameraRef = useRef(null);
+  const cameraRef = useRef<CameraView | null>(null);
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(1)).current;
   const cardFanSpread = useRef(new Animated.Value(0)).current;
 
-  // Initialize upload queue on app start (skip in snap mode)
   useEffect(() => {
     if (!isSnapMode) {
       initializeQueue();
     }
   }, [isSnapMode]);
 
-  // Request microphone permission eagerly so first recording doesn't fail
   useEffect(() => {
     if (!micPermission?.granted) {
       requestMicPermission();
     }
   }, [micPermission, requestMicPermission]);
 
-  // Load darkroom counts from PowerSync local SQLite on mount and poll every 30s
   useEffect(() => {
     if (!user) return;
 
@@ -158,15 +180,16 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
 
         const developingCount = devResult?.count ?? 0;
         const revealedCount = revResult?.count ?? 0;
-        const counts = {
+        const counts: DarkroomCounts = {
           totalCount: developingCount + revealedCount,
           developingCount,
           revealedCount,
         };
         logger.debug('useCameraBase: Darkroom counts updated', counts);
         setDarkroomCounts(counts);
-      } catch (error) {
-        logger.warn('useCameraBase: Failed to load darkroom counts', { error: error.message });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.warn('useCameraBase: Failed to load darkroom counts', { error: message });
       }
     };
 
@@ -176,7 +199,6 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     return () => clearInterval(interval);
   }, [user]);
 
-  // Reload counts when screen comes into focus (after returning from Darkroom)
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
@@ -200,16 +222,17 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
 
           const developingCount = devResult?.count ?? 0;
           const revealedCount = revResult?.count ?? 0;
-          const counts = {
+          const counts: DarkroomCounts = {
             totalCount: developingCount + revealedCount,
             developingCount,
             revealedCount,
           };
           logger.debug('useCameraBase: Darkroom counts after focus', counts);
           setDarkroomCounts(counts);
-        } catch (error) {
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
           logger.warn('useCameraBase: Failed to reload darkroom counts on focus', {
-            error: error.message,
+            error: message,
           });
         }
       };
@@ -218,10 +241,9 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     }, [user])
   );
 
-  // Handle openDarkroom param from notification deep link
   useEffect(() => {
     logger.debug('useCameraBase: route.params changed', { params: route.params });
-    if (route.params?.openDarkroom) {
+    if ((route.params as Record<string, unknown>)?.openDarkroom) {
       logger.info('useCameraBase: Opening darkroom from notification deep link');
 
       const refreshAndOpen = async () => {
@@ -242,15 +264,16 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
               ]);
               const developingCount = devResult?.count ?? 0;
               const revealedCount = revResult?.count ?? 0;
-              const counts = {
+              const counts: DarkroomCounts = {
                 totalCount: developingCount + revealedCount,
                 developingCount,
                 revealedCount,
               };
               logger.debug('useCameraBase: Fresh counts from notification', counts);
               setDarkroomCounts(counts);
-            } catch (error) {
-              logger.warn('useCameraBase: Failed to refresh counts', { error: error.message });
+            } catch (error: unknown) {
+              const message = error instanceof Error ? error.message : String(error);
+              logger.warn('useCameraBase: Failed to refresh counts', { error: message });
             }
           }
         }
@@ -258,7 +281,7 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
       };
 
       refreshAndOpen();
-      navigation.setParams({ openDarkroom: undefined });
+      (navigation as { setParams: (params: Record<string, unknown>) => void }).setParams({ openDarkroom: undefined });
     }
   }, [route.params, navigation, user]);
 
@@ -271,7 +294,6 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     });
   }, []);
 
-  // Play flash effect on capture (simulates camera shutter)
   const playFlashEffect = useCallback(() => {
     setShowFlash(true);
     flashOpacity.setValue(0);
@@ -289,7 +311,6 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     ]).start(() => setShowFlash(false));
   }, [flashOpacity]);
 
-  // Play card stack capture animation — cards fan out and enlarge, then snap back
   const playCardCaptureAnimation = useCallback(() => {
     cardScale.setValue(1);
     cardFanSpread.setValue(0);
@@ -322,7 +343,6 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     ]).start();
   }, [cardScale, cardFanSpread]);
 
-  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
@@ -330,7 +350,6 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     };
   }, []);
 
-  // Camera ready callback (needed for Android mode switches)
   const handleCameraReady = useCallback(() => {
     cameraReadyRef.current = true;
     if (cameraReadyResolverRef.current) {
@@ -341,7 +360,7 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
 
   const waitForCameraReady = useCallback(() => {
     if (cameraReadyRef.current) return Promise.resolve();
-    return new Promise(resolve => {
+    return new Promise<void>(resolve => {
       cameraReadyResolverRef.current = resolve;
       setTimeout(() => {
         if (cameraReadyResolverRef.current) {
@@ -352,9 +371,8 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     });
   }, []);
 
-  // Handle completed video recording
   const handleRecordingComplete = useCallback(
-    async result => {
+    async (result: { uri: string } | null) => {
       if (!result?.uri) {
         logger.warn('useCameraBase: recordAsync resolved with no URI');
         return;
@@ -368,18 +386,14 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         return;
       }
 
-      // Create video record in PowerSync local SQLite (immediate darkroom visibility)
       const videoId = generateUUID();
-      const revealAt = await calculateBatchRevealAt(user.uid);
-      await createPhotoRecord(user.uid, videoId, result.uri, revealAt, 'video');
+      const revealAt = await calculateBatchRevealAt(user!.uid);
+      await createPhotoRecord(user!.uid, videoId, result.uri, revealAt, 'video');
 
-      // Normal mode: queue for background upload — passes videoId for post-upload URL update
-      addToQueue(user.uid, result.uri, 'video', duration, videoId);
+      addToQueue(user!.uid, result.uri, 'video', duration, videoId);
 
-      // Play card stack animation (same as photo)
       playCardCaptureAnimation();
 
-      // Optimistically update badge count (+1 developing)
       setDarkroomCounts(prev => ({
         ...prev,
         developingCount: prev.developingCount + 1,
@@ -391,24 +405,20 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     [isSnapMode, onSnapCapture, user, playCardCaptureAnimation]
   );
 
-  // Start recording video
   const startRecording = useCallback(async () => {
     if (!cameraRef.current || !user) return;
 
-    // Check if stop was already requested (user released before we got here)
     if (stopRequestedRef.current) {
       stopRequestedRef.current = false;
       return;
     }
 
     try {
-      // Android: switch to video mode and wait for camera reconfiguration
       if (Platform.OS === 'android') {
         cameraReadyRef.current = false;
         setCameraMode('video');
         await waitForCameraReady();
 
-        // Re-check stop requested after async wait
         if (stopRequestedRef.current) {
           stopRequestedRef.current = false;
           setCameraMode('picture');
@@ -416,7 +426,6 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         }
       }
 
-      // Haptic feedback for recording start
       lightImpact();
 
       setIsRecording(true);
@@ -424,7 +433,6 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
       recordingDurationRef.current = 0;
       setRecordingDuration(0);
 
-      // Start duration tracker (every 1 second)
       recordingTimerRef.current = setInterval(() => {
         recordingDurationRef.current += 1;
         setRecordingDuration(prev => prev + 1);
@@ -434,17 +442,15 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         maxDuration: MAX_RECORDING_DURATION,
       });
 
-      // recordAsync returns a promise that resolves when recording stops
       const result = await cameraRef.current.recordAsync({
         maxDuration: MAX_RECORDING_DURATION,
       });
 
-      // Recording finished (user stopped or maxDuration reached)
-      handleRecordingComplete(result);
-    } catch (error) {
-      logger.error('useCameraBase: Error during recording', { error: error.message });
+      handleRecordingComplete(result as { uri: string } | null);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error('useCameraBase: Error during recording', { error: message });
     } finally {
-      // Clean up recording state
       setIsRecording(false);
       isFacingLockedRef.current = false;
       setRecordingDuration(0);
@@ -453,19 +459,16 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
-      // Android: switch back to picture mode
       if (Platform.OS === 'android') {
         setCameraMode('picture');
       }
     }
   }, [user, handleRecordingComplete, waitForCameraReady]);
 
-  // Handle press in (start hold timer)
   const handlePressIn = useCallback(() => {
-    // Ignore new presses while recording (prevents multi-touch interference)
     if (isRecording) return;
 
-    lightImpact(); // Immediate tactile feedback
+    lightImpact();
 
     holdTimerRef.current = setTimeout(() => {
       holdTimerRef.current = null;
@@ -473,24 +476,23 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
     }, HOLD_THRESHOLD_MS);
   }, [startRecording, isRecording]);
 
-  // Take a photo (used by handlePressOut for tap-to-capture)
-  const takePicture = useCallback(async () => {
-    if (!cameraRef.current || isCapturing || !user) return;
+  const takePicture = useCallback(async (): Promise<string | undefined> => {
+    if (!cameraRef.current || isCapturing || !user) return undefined;
 
     try {
       setIsCapturing(true);
       mediumImpact();
 
-      // Instant feedback: flash fires immediately on tap
       playFlashEffect();
 
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
 
+      if (!photo) return undefined;
+
       logger.debug('useCameraBase: Photo captured', { uri: photo.uri, facing });
 
-      // Front camera photos come out mirrored — flip horizontally to correct
       let photoUri = photo.uri;
       if (facing === 'front') {
         try {
@@ -501,31 +503,27 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
           );
           photoUri = flipped.uri;
           logger.debug('useCameraBase: Front camera photo flipped', { uri: photoUri });
-        } catch (flipError) {
+        } catch (flipError: unknown) {
+          const message = flipError instanceof Error ? flipError.message : String(flipError);
           logger.warn('useCameraBase: Failed to flip front camera photo', {
-            error: flipError.message,
+            error: message,
           });
         }
       }
 
-      // In snap mode, return photo URI directly without queueing
       if (isSnapMode) {
         logger.info('useCameraBase: Snap mode capture, returning URI directly');
         return photoUri;
       }
 
-      // Create photo record in PowerSync local SQLite (immediate darkroom visibility)
       const photoId = generateUUID();
       const revealAt = await calculateBatchRevealAt(user.uid);
       await createPhotoRecord(user.uid, photoId, photoUri, revealAt, 'photo');
 
-      // Queue for background upload (non-blocking) — passes photoId for post-upload URL update
       addToQueue(user.uid, photoUri, 'photo', null, photoId);
 
-      // Play card stack animation (fan out + scale)
       playCardCaptureAnimation();
 
-      // Optimistically update badge count (+1 developing)
       setDarkroomCounts(prev => ({
         ...prev,
         developingCount: prev.developingCount + 1,
@@ -533,44 +531,40 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
       }));
 
       logger.info('useCameraBase: Photo record created and queued for upload', { photoId });
-    } catch (error) {
-      logger.error('useCameraBase: Error capturing photo', error);
+      return undefined;
+    } catch (error: unknown) {
+      logger.error('useCameraBase: Error capturing photo', error as Record<string, unknown>);
+      return undefined;
     } finally {
       setIsCapturing(false);
     }
   }, [isCapturing, user, facing, playFlashEffect, playCardCaptureAnimation, isSnapMode]);
 
-  // Handle press out (stop recording or take photo)
   const handlePressOut = useCallback(async () => {
-    // If hold timer is still pending, it was a tap — take a photo
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
 
       if (isSnapMode && onSnapCapture) {
-        // Snap mode photo: capture and call callback
         const photoUri = await takePicture();
         if (photoUri) {
           onSnapCapture({ uri: photoUri, mediaType: 'photo' });
         }
       } else {
-        // Normal mode photo
         takePicture();
       }
       return;
     }
 
-    // If recording, stop it
     if (isRecording && cameraRef.current) {
-      lightImpact(); // Recording-stop haptic
+      lightImpact();
       try {
         cameraRef.current.stopRecording();
-      } catch (error) {
-        logger.warn('useCameraBase: Error stopping recording', { error: error.message });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.warn('useCameraBase: Error stopping recording', { error: message });
       }
     } else {
-      // Recording hasn't started yet (startRecording still pending)
-      // Signal it to abort when it runs
       stopRequestedRef.current = true;
     }
   }, [isSnapMode, onSnapCapture, isRecording, takePicture]);
@@ -591,64 +585,41 @@ const useCameraBase = ({ mode = 'normal', onSnapCapture = null } = {}) => {
       totalCount: darkroomCounts.totalCount,
     });
     setIsBottomSheetVisible(false);
-    navigation.navigate('Darkroom');
+    (navigation as { navigate: (screen: string) => void }).navigate('Darkroom');
   }, [darkroomCounts, navigation]);
 
   return {
-    // User
     user,
-
-    // Mode
     isSnapMode,
-
-    // Camera permissions
     permission,
     requestPermission,
-
-    // Camera state (setters exposed for platform hooks)
     facing,
     setFacing,
     flash,
     zoom,
     setZoom,
     isCapturing,
-
-    // Video recording state
     isRecording,
     cameraMode,
     recordingDuration,
     isFacingLockedRef,
     handleCameraReady,
-
-    // Darkroom state
     darkroomCounts,
     isBottomSheetVisible,
-
-    // Flash effect state
     showFlash,
-
-    // Refs
     cameraRef,
-
-    // Animation values
     flashOpacity,
     cardScale,
     cardFanSpread,
-
-    // Handlers
     toggleFlash,
     playFlashEffect,
     playCardCaptureAnimation,
     takePicture,
     handlePressIn,
     handlePressOut,
-
-    // Bottom sheet handlers
     openBottomSheet,
     closeBottomSheet,
     handleBottomSheetComplete,
-
-    // Constants (for UI components)
     MAX_RECORDING_DURATION,
   };
 };
