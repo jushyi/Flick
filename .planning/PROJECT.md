@@ -112,4 +112,4 @@ The messaging system now supports 5 message types (text, reaction, reply, snap, 
 
 ---
 
-_Last updated: 2026-03-25 after Phase 17 (Messaging & Social) completed — all 3 verification gaps closed_
+_Last updated: 2026-03-25 after Phase 18 (Background Jobs & Notifications) completed — all server-side automation migrated to Supabase pg_cron, Edge Functions, and triggers. Push notification pipeline rebuilt with Expo push service. LIVE-01 deferred to physical device testing._
