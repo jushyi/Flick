@@ -118,7 +118,7 @@ BEGIN
         'type', 'streak_warning',
         'user_id', _streak.user1_id,
         'data', jsonb_build_object(
-          'other_name', _streak.user2_name,
+          'otherName', _streak.user2_name,
           'day_count', _streak.day_count
         )
       ),
@@ -136,7 +136,7 @@ BEGIN
         'type', 'streak_warning',
         'user_id', _streak.user2_id,
         'data', jsonb_build_object(
-          'other_name', _streak.user1_name,
+          'otherName', _streak.user1_name,
           'day_count', _streak.day_count
         )
       ),
