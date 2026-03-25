@@ -50,6 +50,24 @@ export type UserProfile = {
   created_at: string;
   updated_at: string;
   deletion_scheduled_at: string | null;
+  readReceiptsEnabled?: boolean;
+  read_receipts_enabled?: boolean;
+  notificationPreferences?: {
+    enabled: boolean;
+    likes: boolean;
+    comments: boolean;
+    follows: boolean;
+    friendRequests: boolean;
+    mentions: boolean;
+    tags: boolean;
+    streakWarnings?: boolean;
+  };
+  soundPreferences?: {
+    shutter: boolean;
+    notifications: boolean;
+    haptics: boolean;
+  };
+  is_contributor?: boolean;
 };
 
 /**

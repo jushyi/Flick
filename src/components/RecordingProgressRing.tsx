@@ -77,8 +77,8 @@ const RecordingProgressRing = ({
   );
 
   // Build dasharray: filled segments visible, unfilled hidden
-  const buildForegroundDashArray = filled => {
-    const parts = [];
+  const buildForegroundDashArray = (filled: number) => {
+    const parts: number[] = [];
     for (let i = 0; i < segmentCount; i++) {
       if (i < filled) {
         parts.push(segmentLength);

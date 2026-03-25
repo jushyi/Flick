@@ -37,7 +37,7 @@ type Props = {
 const InAppNotificationBanner = ({ visible, title, body, avatarUrl, onPress, onDismiss }: Props) => {
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(SLIDE_START)).current;
-  const autoDismissTimer = useRef(null);
+  const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearAutoDismissTimer = useCallback(() => {
     if (autoDismissTimer.current) {

@@ -44,7 +44,7 @@ export const initializeGiphy = apiKey => {
     isGiphyInitialized = true;
     logger.info('GifPicker: Giphy SDK initialized');
   } catch (error) {
-    logger.error('GifPicker: Failed to initialize Giphy SDK', { error: error.message });
+    logger.error('GifPicker: Failed to initialize Giphy SDK', { error: (error as Error).message });
   }
 };
 
@@ -75,7 +75,7 @@ export const openGifPicker = () => {
     });
     GiphyDialog.show();
   } catch (error) {
-    logger.error('GifPicker: Failed to open dialog', { error: error.message });
+    logger.error('GifPicker: Failed to open dialog', { error: (error as Error).message });
   }
 };
 

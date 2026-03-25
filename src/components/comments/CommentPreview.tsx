@@ -29,9 +29,12 @@ import { spacing } from '../../constants/spacing';
  * @param {boolean} showViewAll - Show "View all X comments" link (default: true)
  */
 type Props = {
-  comments?: Record<string, unknown>[];
+  comments?: Record<string, any>[];
   commentCount?: number;
+  totalCount?: number;
   onPress?: () => void;
+  compact?: boolean;
+  showViewAll?: boolean;
 };
 
 const CommentPreview = ({
@@ -40,7 +43,7 @@ const CommentPreview = ({
   onPress,
   compact = false,
   showViewAll = true,
-}) => {
+}: Props) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 

@@ -39,7 +39,7 @@ type Props = {
 const FullscreenSelectsViewer = ({ visible, selects = [], initialIndex = 0, onClose }: Props) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isPaused, setIsPaused] = useState(false);
-  const intervalRef = useRef(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const insets = useSafeAreaInsets();
 
   // Animated values

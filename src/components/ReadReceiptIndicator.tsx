@@ -65,7 +65,7 @@ const ReadReceiptIndicator = ({ isRead, readAt, visible }: Props) => {
 
   const getDisplayText = () => {
     if (isRead && readAt) {
-      const date = readAt.toDate ? readAt.toDate() : new Date(readAt);
+      const date = (readAt as FirestoreTimestamp).toDate ? (readAt as FirestoreTimestamp).toDate() : new Date(readAt as string | number);
       return `Read ${format(date, 'h:mm a')}`;
     }
     return 'Delivered';

@@ -294,15 +294,15 @@ const SelectsEditOverlay = ({ visible, selects = [], onSave, onClose }) => {
     }));
   }, []);
 
-  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [selectedPhotos, setSelectedPhotos] = useState<Array<{ uri: string; assetId: string }>>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [isOverDeleteZone, setIsOverDeleteZone] = useState(false);
   const [deleteZoneY, setDeleteZoneY] = useState(0);
-  const [hoverIndex, setHoverIndex] = useState(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
-  const [initialSelects, setInitialSelects] = useState([]);
+  const [initialSelects, setInitialSelects] = useState<string[]>([]);
 
   const translateY = useSharedValue(0);
 

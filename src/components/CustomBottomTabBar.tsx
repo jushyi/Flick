@@ -7,10 +7,17 @@ import PixelIcon from './PixelIcon';
 import { colors } from '../constants/colors';
 import { profileCacheKey } from '../utils/imageUtils';
 
+type TabRoute = {
+  key: string;
+  name: string;
+  state?: { index?: number; [key: string]: unknown };
+  [key: string]: unknown;
+};
+
 type Props = {
-  state: Record<string, unknown>;
-  navigation: Record<string, unknown>;
-  userProfile?: Record<string, unknown> | null;
+  state: { routes: TabRoute[]; index: number; [key: string]: unknown };
+  navigation: { emit: (event: any) => any; jumpTo: (name: string) => void; [key: string]: unknown };
+  userProfile?: { photoURL?: string; [key: string]: unknown } | null;
   totalUnreadCount?: number;
 };
 
@@ -74,8 +81,8 @@ const CustomBottomTabBar = ({ state, navigation, userProfile, totalUnreadCount =
             icon = (
               <Image
                 source={{
-                  uri: userProfile.photoURL,
-                  cacheKey: profileCacheKey('profile-tab', userProfile.photoURL),
+                  uri: userProfile.photoURL as string,
+                  cacheKey: profileCacheKey('profile-tab', userProfile.photoURL as string),
                 }}
                 style={[
                   styles.profilePhoto,

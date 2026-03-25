@@ -140,9 +140,9 @@ const BLOCK_POSITIONS = [
   { left: 0, top: 0 }, // top-left
 ];
 
-const getBlockOpacity = (animationPhase, blockIndex) => {
-  const inputRange = [];
-  const outputRange = [];
+const getBlockOpacity = (animationPhase: Animated.Value, blockIndex: number) => {
+  const inputRange: number[] = [];
+  const outputRange: number[] = [];
 
   for (let step = 0; step <= NUM_BLOCKS; step++) {
     inputRange.push(step / NUM_BLOCKS);
@@ -241,15 +241,15 @@ type Props = {
 const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose, onComplete }: Props) => {
   const [isPressing, setIsPressing] = useState(false);
   const progressValue = useRef(new Animated.Value(0)).current;
-  const progressAnimation = useRef(null);
+  const progressAnimation = useRef<Animated.CompositeAnimation | null>(null);
   const slideAnim = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
   // Spinner animation
   const spinnerRotation = useRef(new Animated.Value(0)).current;
-  const spinnerAnimation = useRef(null);
+  const spinnerAnimation = useRef<Animated.CompositeAnimation | null>(null);
 
   // Haptic interval tracking
-  const hapticIntervalRef = useRef(null);
+  const hapticIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastHapticTimeRef = useRef(0);
 
   // Charge bar segment tracking
@@ -259,7 +259,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
   const lastActiveCount = useRef(0);
   const currentPhaseRef = useRef(0);
   const [phaseColor, setPhaseColor] = useState(CHARGE_COLORS[0]);
-  const progressPollRef = useRef(null);
+  const progressPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Completion flash + ready text
   const flashOpacity = useRef(new Animated.Value(0)).current;
@@ -421,7 +421,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
             Haptics.impactAsync(config.style);
             lastHapticTimeRef.current = now;
           } catch (error) {
-            logger.debug('DarkroomBottomSheet: Haptic failed', error);
+            logger.debug('DarkroomBottomSheet: Haptic failed', error as Record<string, unknown>);
           }
         }
       });
@@ -484,7 +484,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
         try {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch (error) {
-          logger.debug('DarkroomBottomSheet: Completion haptic failed', error);
+          logger.debug('DarkroomBottomSheet: Completion haptic failed', error as Record<string, unknown>);
         }
 
         // Completion flash animation
@@ -581,7 +581,7 @@ const DarkroomBottomSheet = ({ visible, revealedCount, developingCount, onClose,
   // Render card stack (duplicated from CameraScreen's DarkroomCardButton)
   const renderCardStack = () => {
     const cardCount = Math.min(Math.max(totalCount, 1), 4);
-    const cards = [];
+    const cards: React.JSX.Element[] = [];
 
     // Calculate center compensation
     const centerCompensation = ((cardCount - 1) * BASE_OFFSET_PER_CARD) / 2;

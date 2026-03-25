@@ -23,7 +23,7 @@ type Props = {
 
 const MonthlyAlbumsSection = ({ userId, onMonthPress }: Props) => {
   const [loading, setLoading] = useState(true);
-  const [yearData, setYearData] = useState([]);
+  const [yearData, setYearData] = useState<Array<{ year: string; months: any[] }>>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +33,7 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }: Props) => {
       }
 
       setLoading(true);
-      const result = await getUserPhotosByMonth(userId);
+      const result = await getUserPhotosByMonth(userId) as any;
 
       if (result.success && result.monthlyData) {
         // Convert object to array sorted by year descending
@@ -41,9 +41,9 @@ const MonthlyAlbumsSection = ({ userId, onMonthPress }: Props) => {
         // Convert to: [{ year: "2026", months: [...] }, { year: "2025", months: [...] }]
         const years = Object.keys(result.monthlyData)
           .sort((a, b) => parseInt(b) - parseInt(a))
-          .map(year => ({
+          .map((year: string) => ({
             year,
-            months: result.monthlyData[year].map(monthData => ({
+            months: result.monthlyData[year].map((monthData: any) => ({
               month: monthData.month,
               coverPhotoUrl: monthData.coverPhoto?.imageURL || null,
               photoCount: monthData.photoCount,

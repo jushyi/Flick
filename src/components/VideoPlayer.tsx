@@ -90,7 +90,7 @@ const VideoPlayer = ({
   const onPlayToEndRef = useRef(onPlayToEnd);
   onPlayToEndRef.current = onPlayToEnd;
 
-  useEvent(player, 'playToEnd', () => {
+  (useEvent as any)(player, 'playToEnd', () => {
     requestAnimationFrame(() => {
       onPlayToEndRef.current?.();
     });

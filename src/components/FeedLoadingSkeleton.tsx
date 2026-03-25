@@ -24,14 +24,14 @@ const FEED_PROFILE_SIZE = 36;
  * Shimmer highlight component
  * A semi-transparent bar that sweeps across skeleton elements
  */
-const ShimmerHighlight = ({ shimmerPosition, width = '100%', height = '100%' }) => {
+const ShimmerHighlight = ({ shimmerPosition, width = '100%', height = '100%' }: { shimmerPosition: Animated.Value; width?: string | number; height?: string | number }) => {
   return (
     <Animated.View
       style={[
         styles.shimmerHighlight,
         {
           width: SHIMMER_WIDTH,
-          height,
+          height: height as any,
           transform: [{ translateX: shimmerPosition }],
         },
       ]}

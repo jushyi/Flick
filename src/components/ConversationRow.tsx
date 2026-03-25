@@ -35,7 +35,7 @@ const formatMessageTime = (timestamp: string | Date | FirestoreTimestamp | undef
   const diffHours = Math.floor(diffMins / 60);
   if (diffHours < 24) return `${diffHours}h`;
   if (isYesterday(date)) return 'Yesterday';
-  if (now - date < 7 * 24 * 60 * 60 * 1000) return format(date, 'EEE');
+  if (now.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000) return format(date, 'EEE');
   return format(date, 'MMM d');
 };
 
@@ -56,14 +56,26 @@ const UnreadBadge = ({ count, isSnap = false }: UnreadBadgeProps) => {
   );
 };
 
+type LastMessage = {
+  type?: string;
+  text?: string;
+  senderId?: string;
+  emoji?: string;
+  unsent?: boolean;
+  timestamp?: FirestoreTimestamp;
+  [key: string]: unknown;
+};
+
+type StreakState = 'default' | 'building' | 'pending' | 'active' | 'warning';
+
 type ConversationData = {
   id: string;
-  lastMessage?: Record<string, unknown> | null;
+  lastMessage?: LastMessage | null;
   updatedAt?: string | Date | FirestoreTimestamp;
   unreadCount: number;
   readReceipts?: Record<string, FirestoreTimestamp>;
   participants?: string[];
-  streakState?: string;
+  streakState?: StreakState;
   streakDayCount?: number;
 };
 
@@ -116,7 +128,7 @@ const ConversationRow = ({
     showReadStatus &&
     !!friendReadReceipt &&
     !!lastMessage?.timestamp &&
-    friendReadReceipt.toMillis?.() >= lastMessage.timestamp.toMillis?.();
+    (friendReadReceipt.toMillis?.() ?? 0) >= (lastMessage?.timestamp?.toMillis?.() ?? 0);
 
   const getPreviewText = () => {
     if (!lastMessage) return 'No messages yet';
@@ -131,7 +143,7 @@ const ConversationRow = ({
     // Defensive: reaction messages should never be lastMessage (Cloud Function skips them),
     // but handle gracefully if race condition surfaces
     if (lastMessage.type === 'reaction') {
-      const emojiChar = lastMessage.emoji ? EMOJI_MAP[lastMessage.emoji] || lastMessage.emoji : '';
+      const emojiChar = lastMessage.emoji ? (EMOJI_MAP as Record<string, string>)[lastMessage.emoji] || lastMessage.emoji : '';
       return isSender
         ? emojiChar
           ? `You reacted ${emojiChar}`

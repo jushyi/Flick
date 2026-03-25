@@ -45,7 +45,7 @@ const formatTime = seconds => {
  */
 const generateWaveformData = songId => {
   const seed = songId ? songId.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : 12345;
-  const bars = [];
+  const bars: number[] = [];
 
   for (let i = 0; i < BAR_COUNT; i++) {
     // Create varied heights using sine waves and pseudo-random variation

@@ -174,7 +174,7 @@ const CommentRow = ({
     }
   }, [comment?.id, comment?.userId, user?.displayName, onAvatarPress, isOwnComment, isDeletedUser]);
 
-  const swipeableRef = useRef(null);
+  const swipeableRef = useRef<Swipeable>(null);
 
   const handleDelete = useCallback(() => {
     logger.info('CommentRow: Delete button pressed', { commentId: comment?.id });

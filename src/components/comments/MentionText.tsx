@@ -41,7 +41,7 @@ const MentionText = ({ text, onMentionPress, mentionedCommentId = null, style })
   const segments = useMemo(() => {
     if (!text) return [];
 
-    const result = [];
+    const result: Array<{ type: string; content: string; username?: string; isFirst?: boolean }> = [];
     let lastIndex = 0;
     let match;
     let isFirstMention = true;

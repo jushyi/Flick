@@ -78,7 +78,7 @@ const DMInput = ({
   const [selectedMedia, setSelectedMedia] = useState<SelectedMedia | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const inputRef = useRef(null);
+  const inputRef = useRef<TextInput>(null);
   const insets = useSafeAreaInsets();
 
   // Track keyboard visibility to adjust bottom padding per platform
@@ -146,7 +146,7 @@ const DMInput = ({
         setSelectedMedia({ uri: result.assets[0].uri, type: 'image' });
       }
     } catch (error) {
-      logger.error('DMInput: Image picker error', { error: error.message });
+      logger.error('DMInput: Image picker error', { error: (error as Error).message });
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   }, []);
@@ -167,7 +167,8 @@ const DMInput = ({
         if (selectedMedia.type === 'image') {
           // Upload image to Firebase Storage, then send as image message
           logger.debug('DMInput: Uploading image');
-          const downloadUrl = await uploadCommentImage(selectedMedia.uri);
+          const uploadResult = await uploadCommentImage(selectedMedia.uri);
+          const downloadUrl = uploadResult?.url ?? null;
           logger.info('DMInput: Image uploaded', { urlLength: downloadUrl?.length });
 
           if (onSendMessage) {
@@ -180,7 +181,7 @@ const DMInput = ({
           }
         }
       } catch (error) {
-        logger.error('DMInput: Media upload failed', { error: error.message });
+        logger.error('DMInput: Media upload failed', { error: (error as Error).message });
         Alert.alert('Upload Failed', 'Failed to upload media. Please try again.');
         setIsUploading(false);
         return;
@@ -245,7 +246,7 @@ const DMInput = ({
         <ReplyPreview
           message={replyToMessage}
           senderName={replyToSenderName}
-          onCancel={onCancelReply}
+          onCancel={onCancelReply ?? (() => {})}
         />
       )}
 
@@ -337,7 +338,7 @@ const DMInput = ({
               onPress={onOpenSnapCamera}
               testID="camera-button"
             >
-              <PixelIcon name="snap-polaroid" size={22} color={colors.textSecondary} />
+              <PixelIcon name="snap-polaroid" size={22} color={colors.text.secondary} />
             </TouchableOpacity>
           </Animated.View>
         ) : null}

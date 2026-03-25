@@ -28,12 +28,14 @@ type FriendProfile = {
 
 type MenuAnchor = { x: number; y: number; width: number; height: number };
 
+type StreakState = 'default' | 'building' | 'pending' | 'active' | 'warning';
+
 type Props = {
   friendProfile: FriendProfile | null;
   onBackPress: () => void;
   onProfilePress: () => void;
   onReportPress: () => void;
-  streakState?: string;
+  streakState?: StreakState;
   streakDayCount?: number;
 };
 
@@ -48,7 +50,7 @@ const ConversationHeader = ({
   const insets = useSafeAreaInsets();
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<MenuAnchor | null>(null);
-  const menuButtonRef = useRef<TouchableOpacity | null>(null);
+  const menuButtonRef = useRef<React.ElementRef<typeof TouchableOpacity> | null>(null);
 
   const handleMenuPress = useCallback(() => {
     menuButtonRef.current?.measureInWindow((x, y, width, height) => {

@@ -28,8 +28,19 @@ import { profileCacheKey } from '../utils/imageUtils';
  * @param {boolean} isFirst - Whether this is the first card (for left margin)
  * @param {boolean} isViewed - Whether all stories have been viewed (default false)
  */
+type FriendData = {
+  userId?: string;
+  displayName?: string;
+  profilePhotoURL?: string;
+  topPhotos?: Array<{ imageURL?: string }>;
+  thumbnailURL?: string;
+  hasPhotos?: boolean;
+  nameColor?: string;
+  [key: string]: unknown;
+};
+
 type Props = {
-  friend: Record<string, unknown>;
+  friend: FriendData;
   onPress: (...args: any[]) => void;
   onAvatarPress?: (...args: any[]) => void;
   isFirst?: boolean;
@@ -51,7 +62,7 @@ const MeStoryCardInner = ({
   const thumbnailUrl = thumbnailURL || topPhotos?.[0]?.imageURL || null;
 
   // Ref for measuring card position (expand/collapse animation)
-  const cardRef = useRef(null);
+  const cardRef = useRef<View>(null);
 
   // Prefetch the actual starting photo so it's cached before user taps
   const startingPhotoUrl = topPhotos?.[firstUnviewedIndex]?.imageURL;

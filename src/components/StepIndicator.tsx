@@ -17,7 +17,7 @@ type Props = {
 };
 
 const StepIndicator = ({ currentStep, totalSteps, style }: Props) => {
-  const squares = [];
+  const squares: React.JSX.Element[] = [];
 
   for (let i = 1; i <= totalSteps; i++) {
     const isCurrentStep = i === currentStep;

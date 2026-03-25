@@ -6,6 +6,7 @@ import { layout } from '../constants/layout';
 
 
 import type { ReactNode } from 'react';
+import type { ViewStyle } from 'react-native';
 
 type Props = {
   children: ReactNode;

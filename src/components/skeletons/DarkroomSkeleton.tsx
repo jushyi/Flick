@@ -35,7 +35,7 @@ export function DarkroomSkeleton() {
                 top: i * CARD_OFFSET,
                 zIndex: CARD_COUNT - i,
               },
-            ]}
+            ] as any}
           />
         ))}
       </View>

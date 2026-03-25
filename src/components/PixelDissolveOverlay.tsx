@@ -26,7 +26,7 @@ const pseudoRandom = seed => {
 };
 
 // Pre-compute block configs at module level (stable across renders)
-const BLOCK_CONFIGS = [];
+const BLOCK_CONFIGS: Array<{ row: number; col: number; leftPct: number; topPct: number; widthPct: number; heightPct: number; driftX: number; fallDistance: number; rotation: number; staggerNorm: number }> = [];
 
 for (let row = 0; row < ROWS; row++) {
   for (let col = 0; col < COLS; col++) {

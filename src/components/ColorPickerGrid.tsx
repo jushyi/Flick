@@ -59,7 +59,7 @@ const BAR_HEIGHT = 32;
 const THUMB_SIZE = 28;
 
 const HueBar = ({ hue, onHueChange }) => {
-  const barRef = useRef(null);
+  const barRef = useRef<View>(null);
   const barWidth = useRef(0);
   const barPageX = useRef(0);
 
@@ -105,7 +105,7 @@ const HueBar = ({ hue, onHueChange }) => {
       {...panResponder.panHandlers}
     >
       <LinearGradient
-        colors={HUE_COLORS}
+        colors={HUE_COLORS as [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradientBar}
@@ -116,7 +116,7 @@ const HueBar = ({ hue, onHueChange }) => {
 };
 
 const BrightnessBar = ({ hue, brightness, onBrightnessChange }) => {
-  const barRef = useRef(null);
+  const barRef = useRef<View>(null);
   const barWidth = useRef(0);
   const barPageX = useRef(0);
   const pureColor = hslToHex(hue, 100, 50);

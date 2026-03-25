@@ -17,8 +17,8 @@ const Input = ({
   value,
   onChangeText,
   secureTextEntry = false,
-  keyboardType = 'default',
-  autoCapitalize = 'sentences',
+  keyboardType = 'default' as const,
+  autoCapitalize = 'sentences' as const,
   error,
   style,
   showPasswordToggle = false,
@@ -26,7 +26,7 @@ const Input = ({
   maxLength,
   showCharacterCount = false,
   ...props
-}) => {
+}: { [x: string]: any; label: any; placeholder: any; value: any; onChangeText: any; secureTextEntry?: boolean; keyboardType?: string; autoCapitalize?: string; error?: any; style?: any; showPasswordToggle?: boolean; rightIcon?: any; maxLength: any; showCharacterCount?: boolean }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const shakeAnimation = useRef(new Animated.Value(0)).current;
@@ -110,8 +110,8 @@ const Input = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
+          keyboardType={keyboardType as any}
+          autoCapitalize={autoCapitalize as any}
           autoCorrect={false}
           maxLength={maxLength}
           cursorColor={colors.interactive.primary}

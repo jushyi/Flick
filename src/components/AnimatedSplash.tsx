@@ -133,7 +133,7 @@ const AnimatedSplash = ({ onAnimationComplete, fontsLoaded }: Props) => {
         <AnimatedBlurView
           style={StyleSheet.absoluteFill}
           tint="dark"
-          {...(Platform.OS === 'ios' ? { experimentalBlurMethod: 'blur' } : {})}
+          {...(Platform.OS === 'ios' ? { experimentalBlurMethod: 'blur' as any } : {})}
           animatedProps={blurAnimatedProps}
         />
       )}

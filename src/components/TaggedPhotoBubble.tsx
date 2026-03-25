@@ -26,7 +26,7 @@ import PixelSpinner from './PixelSpinner';
 import ReactionBadges from './ReactionBadges';
 
 // TODO(20-01): photoTagService - no supabase equivalent yet
-const addTaggedPhotoToFeed = async () => ({ success: true });
+const addTaggedPhotoToFeed = async (..._args: any[]) => ({ success: true } as { success: boolean; error?: string });
 
 import { styles } from '../styles/TaggedPhotoBubble.styles';
 
@@ -71,13 +71,12 @@ const TaggedPhotoBubble = ({
   const [imageError, setImageError] = useState(false);
 
   // Determine if current user already added this photo to their feed
-  const hasAdded = !!(message.addedToFeedBy && message.addedToFeedBy[currentUserId]);
+  const hasAdded = !!(message.addedToFeedBy && currentUserId && message.addedToFeedBy[currentUserId]);
 
   const formatTimestamp = () => {
     if (!message.createdAt) return '';
-    const date = message.createdAt.toDate
-      ? message.createdAt.toDate()
-      : new Date(message.createdAt);
+    const ts = message.createdAt as any;
+    const date = ts?.toDate ? ts.toDate() : new Date(ts);
     return format(date, 'h:mm a');
   };
 

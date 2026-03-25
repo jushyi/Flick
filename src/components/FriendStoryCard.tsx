@@ -35,6 +35,7 @@ type FriendData = {
   topPhotos?: Array<{ imageURL?: string }>;
   thumbnailURL?: string;
   hasPhotos?: boolean;
+  nameColor?: string;
 };
 
 type Props = {
@@ -64,7 +65,7 @@ const FriendStoryCard = ({
     : null;
 
   // Ref for measuring card position (expand/collapse animation)
-  const cardRef = useRef(null);
+  const cardRef = useRef<View>(null);
 
   // Prefetch the actual starting photo (first unviewed) so it's cached before user taps
   // Story card thumbnail uses blurRadius={20} which caches a different entry

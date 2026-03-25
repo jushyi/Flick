@@ -30,7 +30,7 @@ const AuthCodeInput = ({
   autoFocus = false,
   testID,
 }) => {
-  const inputRef = useRef(null);
+  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (value.length === CODE_LENGTH && onComplete) {
@@ -50,7 +50,7 @@ const AuthCodeInput = ({
   };
 
   const renderBoxes = () => {
-    const boxes = [];
+    const boxes: React.ReactElement[] = [];
     for (let i = 0; i < CODE_LENGTH; i++) {
       const digit = value[i] || '';
       const isActive = i === value.length && value.length < CODE_LENGTH;
