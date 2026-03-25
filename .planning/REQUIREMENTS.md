@@ -86,8 +86,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### TypeScript Migration
 
 - [x] **TS-01**: All rewritten service files are TypeScript (.ts) with Supabase-generated database types
-- [ ] **TS-02**: All rewritten hooks are TypeScript (.ts/.tsx) with proper type annotations
-- [ ] **TS-03**: Remaining untouched JS files converted to TypeScript after main migration
+- [x] **TS-02**: All rewritten hooks are TypeScript (.ts/.tsx) with proper type annotations
+- [x] **TS-03**: Remaining untouched JS files converted to TypeScript after main migration
 - [x] **TS-04**: Zero `any` types in rewritten code (strict typing for new code, allowJs for legacy)
 
 ### Cleanup
@@ -191,8 +191,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-10 | Phase 19 | Complete |
 | PERF-11 | Phase 19 | Complete |
 | TS-01 | Phase 20 | Complete |
-| TS-02 | Phase 20 | Pending |
-| TS-03 | Phase 20 | Pending |
+| TS-02 | Phase 20 | Complete |
+| TS-03 | Phase 20 | Complete |
 | TS-04 | Phase 20 | Complete |
 | CLEAN-01 | Phase 20 | Pending |
 | CLEAN-02 | Phase 20 | Pending |
