@@ -68,9 +68,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Performance
 
 - [x] **PERF-01**: TanStack Query integrated — all data fetching uses useQuery/useMutation with automatic caching
-- [ ] **PERF-02**: Stale-while-revalidate pattern on feed, conversations, and profile screens (cached data renders in <100ms)
+- [x] **PERF-02**: Stale-while-revalidate pattern on feed, conversations, and profile screens (cached data renders in <100ms)
 - [x] **PERF-03**: Skeleton screens on all list views (feed, conversations, friends, comments, notifications, albums)
-- [ ] **PERF-04**: Optimistic updates for message sending, reactions, friend requests, photo triage, and read receipts
+- [x] **PERF-04**: Optimistic updates for message sending, reactions, friend requests, photo triage, and read receipts
 - [x] **PERF-05**: Photo/video loading uses CDN-backed permanent URLs or pre-refreshed signed URLs (no expired URL flash)
 - [x] **PERF-06**: Feed images served at appropriate sizes (400px for cards, full-res only in PhotoDetail)
 - [x] **PERF-07**: Consistent empty state screens across all list views
@@ -182,9 +182,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | JOBS-09 | Phase 18 | Complete |
 | JOBS-10 | Phase 18 | Complete |
 | LIVE-01 | Phase 18 | Complete |
-| PERF-02 | Phase 19 | Pending |
+| PERF-02 | Phase 19 | Complete |
 | PERF-03 | Phase 19 | Complete |
-| PERF-04 | Phase 19 | Pending |
+| PERF-04 | Phase 19 | Complete |
 | PERF-05 | Phase 19 | Complete |
 | PERF-06 | Phase 19 | Complete |
 | PERF-07 | Phase 19 | Complete |
