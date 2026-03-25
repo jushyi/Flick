@@ -81,7 +81,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Live Activity Fixes
 
-- [ ] **LIVE-01**: Push-to-start Live Activities work from background/killed state (fix APNS BadDeviceToken token acceptance)
+- [x] **LIVE-01**: Push-to-start Live Activities work from background/killed state (fix APNS BadDeviceToken token acceptance)
 
 ### TypeScript Migration
 
@@ -181,7 +181,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | JOBS-08 | Phase 18 | Complete |
 | JOBS-09 | Phase 18 | Complete |
 | JOBS-10 | Phase 18 | Complete |
-| LIVE-01 | Phase 18 | Pending |
+| LIVE-01 | Phase 18 | Complete |
 | PERF-02 | Phase 19 | Pending |
 | PERF-03 | Phase 19 | Pending |
 | PERF-04 | Phase 19 | Pending |

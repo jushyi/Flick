@@ -41,7 +41,7 @@
 - [x] **Phase 15: Core Services -- Photos, Feed, Darkroom** - Photo CRUD, feed SQL joins, darkroom reveal, user profiles (completed 2026-03-24)
 - [x] **Phase 16: Core Services -- Social & Albums** - Friendships, comments, albums, blocks/reports, contacts, real-time subscriptions (completed 2026-03-24)
 - [x] **Phase 17: Messaging & Social** - Conversations, messages, snaps, streaks, reactions, replies, tagged photos (completed 2026-03-24)
-- [ ] **Phase 18: Background Jobs & Notifications** - pg_cron jobs, Edge Functions, push notifications, triggers, Live Activity fix
+- [x] **Phase 18: Background Jobs & Notifications** - pg_cron jobs, Edge Functions, push notifications, triggers, Live Activity fix (completed 2026-03-25)
 - [ ] **Phase 19: Performance Polish** - Skeleton screens, optimistic updates, CDN URLs, image sizing, empty states, prefetching
 - [ ] **Phase 20: TypeScript Sweep & Firebase Removal** - Convert remaining JS files, remove all Firebase packages, dead code cleanup
 
@@ -176,7 +176,7 @@ Plans:
   4. Photos and videos load via CDN-backed permanent URLs or pre-refreshed signed URLs with no expired URL flash or re-fetch delay
   5. Feed images are served at 400px for cards and full-res only in PhotoDetail, reducing bandwidth and load time
   6. All list views have consistent empty state screens (no blank white/dark screens)
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [ ] 19-01-PLAN.md -- SkeletonBase primitive + 9 skeleton screen components + Toast config + react-native-toast-message install
@@ -220,7 +220,7 @@ Phases execute in numeric order: 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 ->
 | 15. Core Services -- Photos, Feed, Darkroom | v1.2 | 4/4 | Complete    | 2026-03-24 |
 | 16. Core Services -- Social & Albums | v1.2 | 5/5 | Complete    | 2026-03-24 |
 | 17. Messaging & Social | v1.2 | 6/6 | Complete    | 2026-03-25 |
-| 18. Background Jobs & Notifications | v1.2 | 4/5 | In Progress|  |
+| 18. Background Jobs & Notifications | v1.2 | 5/5 | Complete   | 2026-03-25 |
 | 19. Performance Polish | v1.2 | 0/5 | Not started | - |
 | 20. TypeScript Sweep & Firebase Removal | v1.2 | 0/8 | Not started | - |
 
