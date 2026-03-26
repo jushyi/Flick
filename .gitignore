@@ -67,6 +67,8 @@ google-services-prod.json
 
 # Migration progress (resume file, not committed)
 scripts/.migration-progress.json
+scripts/.data-migration-progress.json
+scripts/.auth-migration-progress.json
 
 # MCP config
 .mcp.json
