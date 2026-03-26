@@ -238,13 +238,16 @@ Plans:
 
 ### Phase 21: Full verification of phases 13-20 - guided UAT of Supabase migration
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Every user flow in the app passes end-to-end on both iOS and Android against the dev Supabase environment with zero failures -- all TODO(20-01) stubs resolved, all 7 user journeys verified, both migrated and fresh account data paths confirmed working
+**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10
 **Depends on:** Phase 20
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 21 to break down)
+- [ ] 21-01-PLAN.md -- Prerequisite gate: npm test, TODO stub catalog, Edge Function verification, UAT scaffold
+- [ ] 21-02-PLAN.md -- iOS UAT: all 7 user journeys + feature-area gap sweep with inline fixes
+- [ ] 21-03-PLAN.md -- Android UAT: all 7 journeys + platform-specific checks with inline fixes
+- [ ] 21-04-PLAN.md -- Fresh account testing: new signup + core journeys on clean data
 
 ### Phase 21.1: Production deployment and final Firebase cleanup (INSERTED)
 
