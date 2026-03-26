@@ -697,7 +697,7 @@ async function migratePhotos(
       }
 
       // Rewrite image URL
-      let imageUrl = data.photoURL || data.imageUrl || data.image_url || null;
+      let imageUrl = data.imageURL || data.photoURL || data.imageUrl || data.image_url || null;
       if (imageUrl) {
         if (imageUrl.includes('firebasestorage.googleapis.com') ||
             imageUrl.includes('firebasestorage.app')) {
@@ -1273,7 +1273,7 @@ async function migrateReports(
       const data = doc.data();
 
       const reporterId = data.reporterId || data.reporter_id;
-      const reportedId = data.reportedId || data.reported_id;
+      const reportedId = data.reportedId || data.reportedUserId || data.reported_id || data.reported_user_id;
 
       if (!reporterId || !reportedId) {
         skipped++;
@@ -1883,8 +1883,14 @@ async function migrateStreaks(
     try {
       const data = doc.data();
 
-      const fbUid1 = data.user1Id || data.userId1 || data.user1_id;
-      const fbUid2 = data.user2Id || data.userId2 || data.user2_id;
+      let fbUid1 = data.user1Id || data.userId1 || data.user1_id;
+      let fbUid2 = data.user2Id || data.userId2 || data.user2_id;
+
+      // Fallback: extract from participants array (Firestore format)
+      if ((!fbUid1 || !fbUid2) && Array.isArray(data.participants) && data.participants.length >= 2) {
+        fbUid1 = data.participants[0];
+        fbUid2 = data.participants[1];
+      }
 
       if (!fbUid1 || !fbUid2) {
         skipped++;
@@ -1908,8 +1914,8 @@ async function migrateStreaks(
       const swapped = origFirst !== uuid1;
 
       // Per-user snap timestamps
-      const snapAt1Raw = toISOString(data.lastSnapAtUser1 || data.last_snap_at_user1 || data.lastSnapAt?.[fbUid1]);
-      const snapAt2Raw = toISOString(data.lastSnapAtUser2 || data.last_snap_at_user2 || data.lastSnapAt?.[fbUid2]);
+      const snapAt1Raw = toISOString(data.lastSnapAtUser1 || data.last_snap_at_user1 || data.lastSnapAt?.[fbUid1] || data.lastSnapBy?.[fbUid1]);
+      const snapAt2Raw = toISOString(data.lastSnapAtUser2 || data.last_snap_at_user2 || data.lastSnapAt?.[fbUid2] || data.lastSnapBy?.[fbUid2]);
 
       rows.push({
         id: generateUUID(),
@@ -1920,7 +1926,7 @@ async function migrateStreaks(
         last_snap_at_user2: swapped ? snapAt1Raw : snapAt2Raw,
         last_mutual_at: toISOString(data.lastMutualAt || data.last_mutual_at),
         expires_at: toISOString(data.expiresAt || data.expires_at),
-        warning_sent: data.warningSent ?? data.warning_sent ?? false,
+        warning_sent: data.warningSent ?? data.warning ?? data.warning_sent ?? false,
         created_at: toISOString(data.createdAt || data.created_at) || new Date().toISOString(),
       });
     } catch (err: unknown) {

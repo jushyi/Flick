@@ -3,7 +3,7 @@
  *
  * Runs the complete migration pipeline in sequence, stopping on first failure:
  *   1. Reset dev Supabase (dev only)
- *   2. Auth migration (manual step with user confirmation)
+ *   2. Auth migration (batch Firebase Auth -> Supabase Auth)
  *   3. Data migration (Firestore -> Supabase)
  *   4. Storage migration (Firebase Storage -> Supabase Storage)
  *   5. Verification (cross-database comparison)
@@ -101,7 +101,7 @@ ${bold('Usage:')}
 ${bold('Options:')}
   --env dev|prod    Target environment (default: dev)
   --skip-reset      Skip the Supabase reset step
-  --skip-auth       Skip the auth migration confirmation step
+  --skip-auth       Skip the batch auth migration step
   --skip-storage    Skip the storage migration step
   --skip-data       Skip the data migration step
   --dry-run         Pass --dry-run to data migration (read-only)
@@ -109,7 +109,7 @@ ${bold('Options:')}
 
 ${bold('Steps (in order):')}
   1. Reset dev Supabase (dev only, skipped for prod)
-  2. Auth migration (manual confirmation)
+  2. Batch auth migration (Firebase Auth -> Supabase Auth)
   3. Data migration (Firestore -> Supabase)
   4. Storage migration (Firebase Storage -> Supabase Storage)
   5. Cross-database verification
@@ -187,19 +187,13 @@ async function main(): Promise<void> {
     runStep('Reset Dev Supabase', 'npx tsx scripts/reset-dev-supabase.ts');
   }
 
-  // Step 2: Auth migration
+  // Step 2: Batch auth migration (Firebase Auth -> Supabase Auth)
   console.log(bold('--- Step 2/5: Auth Migration ---'));
   if (args.skipAuth) {
     console.log(yellow('  Skipped: --skip-auth'));
   } else {
-    console.log('  Ensure all Firebase users have been migrated via the');
-    console.log('  migrate-firebase-auth Edge Function or batch auth script.');
-    const answer = await prompt('  Press Enter to continue or Ctrl+C to abort... ');
-    if (answer.toLowerCase() === 'abort' || answer.toLowerCase() === 'q') {
-      console.log(yellow('Aborted.'));
-      process.exit(0);
-    }
-    console.log(green('  Auth migration confirmed.'));
+    const dryRunFlag = args.dryRun ? ' --dry-run' : '';
+    runStep('Auth Migration', `npx tsx scripts/migrate-firebase-auth-batch.ts --env ${args.env}${dryRunFlag}`);
   }
 
   // Step 3: Data migration

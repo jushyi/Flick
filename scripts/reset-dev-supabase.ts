@@ -355,6 +355,8 @@ async function main(): Promise<void> {
   // Step 3b: Delete migration progress files so scripts re-run from scratch
   const progressFiles = [
     path.join(__dirname, '.migration-progress.json'),
+    path.join(__dirname, '.auth-migration-progress.json'),
+    path.join(__dirname, '.data-migration-progress.json'),
   ];
   for (const pf of progressFiles) {
     if (fs.existsSync(pf)) {
